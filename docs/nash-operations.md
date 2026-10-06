@@ -24,7 +24,7 @@
 
 ### Steps
 
-1. Start a dev build from `desktop/orca` with `pnpm dev`, which runs `ensure:electron-runtime` and then `node config/scripts/run-electron-vite-dev.mjs`. Dev data goes to `%APPDATA%\nash-dev`. To isolate a session further, set `ORCA_DEV_USER_DATA_PATH` to an empty folder before starting. Agents in this repository do not run pnpm, because of the antivirus rules; you start it yourself.
+1. Start a dev build from `desktop` with `pnpm dev`, which runs `ensure:electron-runtime` and then `node config/scripts/run-electron-vite-dev.mjs`. Dev data goes to `%APPDATA%\nash-dev`. To isolate a session further, set `ORCA_DEV_USER_DATA_PATH` to an empty folder before starting. Agents in this repository do not run pnpm, because of the antivirus rules; you start it yourself.
 2. Leave dot off and no workspace enabled for dot. Both are the defaults. The dot settings screen is being built (package UI-C). Until it lands, the switch is the desktop method `workbench.dotIngress.settings.setEnabled`.
 3. Do not submit Workbench requests and do not click Verify.
 4. What you can look at safely:

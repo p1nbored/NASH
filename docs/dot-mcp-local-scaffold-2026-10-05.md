@@ -32,7 +32,7 @@ Fresh scaffold review found one rate-window race: a request carrying the previou
 
 The current D4 services and v1/v2 contract are present. An independent bounded run reported 37 files passing, 922 tests passing and one skipped. The earlier formatting-only golden snapshot failure is repaired.
 
-However, `finishDotIntake` in `desktop/orca/src/main/runtime/dot-ingress/dot-ingress-intake.ts` only rechecks workspace identity/binding before retrying a received request. It does not recheck global dot enablement, workspace enablement or a lowered maximum access level. `recoverDotIntake` therefore hands that request to the door again after those policies change.
+However, `finishDotIntake` in `desktop/src/main/runtime/dot-ingress/dot-ingress-intake.ts` only rechecks workspace identity/binding before retrying a received request. It does not recheck global dot enablement, workspace enablement or a lowered maximum access level. `recoverDotIntake` therefore hands that request to the door again after those policies change.
 
 The primary agent independently reran the isolated reproduction:
 
@@ -41,7 +41,7 @@ $env:ORCA_BACKGROUND_LAUNCH = '1'
 node node_modules/vitest/vitest.mjs run --config ../../.local/d4-review/vitest.config.ts --maxWorkers=1
 ```
 
-Run from `desktop/orca`: three tests failed, exit 1. Global-off, workspace-off and lowered-ceiling cases each expected zero new launches/zero submissions; each observed one new door call and `submitted: 1`. Test/config are preserved under `.local/d4-review/`, separate from App source/tests.
+Run from `desktop`: three tests failed, exit 1. Global-off, workspace-off and lowered-ceiling cases each expected zero new launches/zero submissions; each observed one new door call and `submitted: 1`. Test/config are preserved under `.local/d4-review/`, separate from App source/tests.
 
 Before E1/R1 or any live remote test, fix admission immediately before execution/recovery. A revoked or narrowed policy must prevent a previously unaccepted request from starting. Preserve idempotent reconciliation if the Workbench has already accepted the request; do not falsely report cancellation of an existing run. Add the three regression cases to the App suite and verify recovery's failure/projection behavior against the versioned contract.
 

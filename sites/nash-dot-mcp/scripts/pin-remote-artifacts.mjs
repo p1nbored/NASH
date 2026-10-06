@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const root = new URL('../../../desktop/orca/src/shared/', import.meta.url);
+const root = new URL('../../../desktop/src/shared/', import.meta.url);
 const remote = new URL('dot-remote/', root);
 const files = ['dot-mcp-tool-manifest.json', 'dot-remote-endpoints.json', 'dot-remote-conformance-vectors.json',
   'dot-remote-inbox.schema.json', 'dot-remote-ack.schema.json', 'dot-remote-receipt.schema.json',

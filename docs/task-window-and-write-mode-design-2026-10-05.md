@@ -1,6 +1,6 @@
 # Task window and write mode: design (D-024, D-025)
 
-Date: 2026-10-05. Status: design for implementation. Inputs: D-024, D-025 and the code scan in the session scratchpad (`wp-t1-scout.md`). Paths are under `desktop/orca/src/`.
+Date: 2026-10-05. Status: design for implementation. Inputs: D-024, D-025 and the code scan in the session scratchpad (`wp-t1-scout.md`). Paths are under `desktop/src/`.
 
 ## 1. Task window (D-024)
 

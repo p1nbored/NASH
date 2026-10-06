@@ -1,6 +1,6 @@
 # NASH architecture
 
-- Date: 2026-10-05. Status: describes the D-016 alignment as built in `desktop/orca`, the NASH app (an Orca fork).
+- Date: 2026-10-05. Status: describes the D-016 alignment as built in `desktop`, the NASH app (an Orca fork).
 - Authority: the user's [architecture direction](architecture-direction.md) and decisions D-013 to D-022 in the [decision log](decision-log.md). Where this document and a decision differ, the decision wins.
 - Replaces the 2026-10-02 M0 draft. That draft is archived byte-exact at `C:/Programs/autopilot-archive/2026-10-04/removed-code/d016-alignment/docs/architecture.md` (sha256 `35a77252dcae42a074a410d59086c86277e67bd842be0e7af2760a9bcfd7a6d1`).
 - Companion documents: [Clef classifier spec](clef-classifier-spec-2026-10-04.md), [Routing Table evidence](routing-table-evidence.md), [NASH operations](nash-operations.md), [remote MCP plan](dot-mcp-remote-plan.md).
@@ -28,7 +28,7 @@ The core path depends on no improvement system (section 18).
 
 ## 2. Components and ownership
 
-Paths are under `desktop/orca/src/`.
+Paths are under `desktop/src/`.
 
 | Component | Owns | Code | State |
 |---|---|---|---|
@@ -591,7 +591,7 @@ What each gate needs from the user is in [NASH operations](nash-operations.md).
 
 ## 21. Key source locations
 
-All under `desktop/orca/src/`:
+All under `desktop/src/`:
 
 - `shared/routing-table/routing-table-schema.ts`, `main/routing-table/default-routing-table.json`, `main/routing-table/route-resolver.ts`, `main/routing-table/availability/route-effort-mapping.ts`
 - `main/clef/clef-question-set.ts`, `main/clef/clef-classification-rules.ts`, `main/clef/clef-spend-ledger.ts`, `main/runtime/task-classification/task-classifier.ts`

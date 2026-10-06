@@ -15,7 +15,7 @@
 
 > **Archived records:** files marked *archived* below were moved out of the repository on 2026-10-04 into a cleanup archive that keeps each file's repository-relative path.
 
-Date: 2026-10-03. Authority: the updated project and workbench briefs plus the current user's request to continue development. Discover evidence is preserved. Pinned Orca source is maintained at `desktop/orca/`. Workbench local request registration, listing and queued cancellation are implemented through its existing runtime RPC and database owner. Requests remain routing-blocked; application execution services and native desktop acceptance remain pending. See the request-intake verification (`docs/verification/workbench-request-intake-2026-10-03.md`, archived) and the earlier integration checkpoint (`docs/verification/workbench-integration-2026-10-03.md`, archived). Local design tooling and prototype evidence remain separate from the product.
+Date: 2026-10-03. Authority: the updated project and workbench briefs plus the current user's request to continue development. Discover evidence is preserved. Pinned Orca source is maintained at `desktop/`. Workbench local request registration, listing and queued cancellation are implemented through its existing runtime RPC and database owner. Requests remain routing-blocked; application execution services and native desktop acceptance remain pending. See the request-intake verification (`docs/verification/workbench-request-intake-2026-10-03.md`, archived) and the earlier integration checkpoint (`docs/verification/workbench-integration-2026-10-03.md`, archived). Local design tooling and prototype evidence remain separate from the product.
 
 ## Current evidence and preserved work
 
@@ -58,7 +58,7 @@ The user reaffirmed that existing Orca features should be reused before adding a
 | Python RSI | Research libraries, diagnosis/proposals/replay; requests executions through the same gateway, owns no competing task registry or release credentials |
 | Validators and releases | Protected trusted services; workers submit evidence, validators commit success, human approval binds immutable hashes |
 
-The source integration location is `desktop/orca/`, preserving upstream layout and notices. An inspection checkout under `.local/upstream/orca` is development evidence. The one-shot importer `scripts/import_orca.py` and its receipt `desktop/UPSTREAM_ORCA.json` are archived; provenance will be recorded as two commits, Orca untouched at `995715b1` followed by the project's changes. Avoid two authoritative project stores when adopting existing Orca persistence. Use additive migrations and versioned cross-language schemas; preserve identities and unknown launch states. There is no existing production database migration in this checkout.
+The source integration location is `desktop/`, preserving upstream layout and notices. An inspection checkout under `.local/upstream/orca` is development evidence. The one-shot importer `scripts/import_orca.py` and its receipt `desktop/UPSTREAM_ORCA.json` are archived; provenance will be recorded as two commits, Orca untouched at `995715b1` followed by the project's changes. Avoid two authoritative project stores when adopting existing Orca persistence. Use additive migrations and versioned cross-language schemas; preserve identities and unknown launch states. There is no existing production database migration in this checkout.
 
 ## One coordinated backlog
 

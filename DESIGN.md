@@ -2,7 +2,7 @@
 
 The product identity is **D12 Paper** (decision D-009): an original, Anthropic-inspired developer workspace built on Orca's own components. It uses warm paper neutrals, restrained clay accents, a selective editorial serif, precise controls and a terminal-first density. It has no brand affiliation and copies no proprietary assets or fonts.
 
-The canonical source is `desktop/orca/src/renderer/src/assets/main.css`. `desktop/orca/docs/STYLEGUIDE.md` still governs component usage and enforcement; where it describes Orca's former monochrome identity, this file and the token tests win.
+The canonical source is `desktop/src/renderer/src/assets/main.css`. `desktop/docs/STYLEGUIDE.md` still governs component usage and enforcement; where it describes Orca's former monochrome identity, this file and the token tests win.
 
 ## Tokens
 

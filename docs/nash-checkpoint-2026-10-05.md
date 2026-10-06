@@ -11,7 +11,7 @@ Read with: `docs/decision-log.md` (D-016 to D-025 are the current direction), `d
 - Last broad test results:
   - Main process (10:40): 559 files, 6,166 tests; 6,062 pass, 88 fail, all in 16 files listed in the D-016 baseline, each at or below its baseline count.
   - Renderer, full suite (10:47, taken before the rename job fixed its stale tests): 187 of 4,258 files failed (965 of 36,373 tests). There is no renderer baseline, so the number of pre-existing failures is unknown. The rerun after the fixes was interrupted by the stop.
-- NASH has never been built as a desktop app (`desktop/orca/out/main` does not exist) or launched, and has never run against a real Claude Code, Codex, agy, Clef or dot session.
+- NASH has never been built as a desktop app (`desktop/out/main` does not exist) or launched, and has never run against a real Claude Code, Codex, agy, Clef or dot session.
 
 ## Done, tested with fakes only
 
@@ -105,6 +105,6 @@ Also:
 
 - The session scratchpad is in the system temp folder. A copy of its reports (`wp-*.md`), the master tracker (`goal-plan.md`), the agent brief (`wp-brief.md`), tools, snapshots and screenshots is in `C:/Programs/autopilot-archive/2026-10-05/session-checkpoint/scratchpad/`. The tools resolve paths relative to their own folder.
 - Tests run only through `run-vitest-safe.mjs` (spawn guard; `guard_blocked` must be 0). Never run vitest directly, call pnpm, npm or npx, or start cmd, `.cmd`/`.bat`/`.ps1` files or PowerShell during development runs: they tripped the user's antivirus. Run repo scripts with `node --import=<spawn-guard.mjs URL>`.
-- Line endings: many `desktop/orca` files and `docs/decision-log.md` are CRLF. Edit them with the Edit tool or node scripts that count CR and LF; never `sed -i`. `wire-fmt-eol.mjs` must always get explicit file paths.
+- Line endings: many `desktop` files and `docs/decision-log.md` are CRLF. Edit them with the Edit tool or node scripts that count CR and LF; never `sed -i`. `wire-fmt-eol.mjs` must always get explicit file paths.
 - Archive before deleting, under `C:/Programs/autopilot-archive/<date>/`, with a README and SHA-256 list.
 - No commits, network calls, or live or billed runs without the user's authorization. Never read, copy or log vendor credentials.

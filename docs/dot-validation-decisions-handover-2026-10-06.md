@@ -47,7 +47,7 @@ Recommended split. The generated remote contract is the interface between the tw
 
 ### 3.1 Local dot ingress (desktop endpoint)
 
-- Contract version 3, golden `desktop/orca/src/shared/dot-ingress/dot-ingress-contract-v3.schema.json` (byte-frozen), sha256 `531a90a8fcaefff5cf6ee09fca71dc55bc9dc5f45e8d26bc53d75ac173510132`. The v1 and v2 goldens are byte-identical to before (`15c0baaa…62ff4`, `76e69b29…f157a0`).
+- Contract version 3, golden `desktop/src/shared/dot-ingress/dot-ingress-contract-v3.schema.json` (byte-frozen), sha256 `531a90a8fcaefff5cf6ee09fca71dc55bc9dc5f45e8d26bc53d75ac173510132`. The v1 and v2 goldens are byte-identical to before (`15c0baaa…62ff4`, `76e69b29…f157a0`).
 - `hello` with `contractVersion: 3` lists all eleven methods, the limits `maxValidationTitleChars: 200` and `maxValidationSummaryChars: 500`, and the capability `validationDecisions: true`. `hello` at v1 or v2 never lists the validation methods; calling one at v1 or v2 answers `dot_unsupported_contract_version`. Every v2 method also answers at v3 with `contractVersion: 3` in its result.
 - `dotIngress.validations.list`: params `{ contractVersion: 3, dotRequestId?, limit? }` (limit 1 to 100, default 50, strict); result `{ contractVersion: 3, validations: View[] (at most 100), hasMore }`, oldest first (dispatch order). No cursor: the Site pages what NASH reported.
 - `dotIngress.validations.decide`: params `{ contractVersion: 3, decisionId: uuid, validationId, decision: 'waive' | 'reject' }` (strict; no reason text, no decider); result `{ contractVersion: 3, decisionId, validationId, dotRequestId, outcome: 'decided' | 'already_decided' | 'closed', decidedAt: timestamp | null, duplicate }`. `decidedAt` is `null` exactly when the outcome is `closed`. `already_decided` means the desktop or another dot decision won first; `closed` means nothing waits any more (for example a validator decided since); `duplicate: true` is a replay of this `decisionId` answered from the ledger.
@@ -102,7 +102,7 @@ Recommended split. The generated remote contract is the interface between the tw
 
 - `nash_status` returns `status.manifestSha256`: the `manifestSha256` of the manifest copy the Site serves from. It is read-only, names no owner or device, needs no pairing and creates nothing. No new endpoint: the endpoint table is unchanged at 13 routes. Do not add a Site-only route for this.
 
-### 3.7 Generated artifacts in `desktop/orca/src/shared/dot-remote/`
+### 3.7 Generated artifacts in `desktop/src/shared/dot-remote/`
 
 - Regenerated from code only (targeted file snapshot updates of `dot-remote-manifest.test.ts`, `dot-remote-envelopes-freeze.test.ts` and `dot-remote-vectors.test.ts`). Never hand-edit a generated file.
 - **Counts:** tools 10 to **12**; endpoints **13** (unchanged); conformance vectors 29 to **37** (new: `accepted.nash_list_validation_decisions`, `accepted.nash_decide_validation`, `race.validation_decided_on_desktop`, `race.validation_second_decision_id`, `race.validation_decision_replay`, `error.validation_decision_not_found`, `error.validation_decision_wrong_owner`, `error.validation_decision_input`; the six race and error ones are required cases). One payload hash example was added (`validation decision`).
@@ -165,7 +165,7 @@ Read `sites/nash-dot-mcp/README.md` and `docs/dot-mcp-sites-deployment-2026-10-0
 
 Part A was done by the NASH main session (package G7-A). For reference:
 
-**G6's decision service** is `desktop/orca/src/main/runtime/task-validation/validation-decision-service.ts`. `createValidationDecisionService({ owner, now?, announce?, readOrigin?, readWorktreeChanges? })` returns:
+**G6's decision service** is `desktop/src/main/runtime/task-validation/validation-decision-service.ts`. `createValidationDecisionService({ owner, now?, announce?, readOrigin?, readWorktreeChanges? })` returns:
 - `listPending({ limit, origin? })`: `origin` filters by who started the run, through `readWorkflowRunOrigin`. Items are the desktop view (with `processMayRun`), which never reaches dot.
 - `decide({ validationId, decision: 'waive' | 'reject', by: 'desktop_user' | 'dot' })`, a Promise because a waive reads the attempt worktree's git state first. With `by: 'dot'` it refuses any run dot did not start (`autopilot_validation_decision_not_owned`). Store errors pass through unchanged: `autopilot_validation_conflict` for a repeated, late or still-pending decision, and `autopilot_validation_not_found`. It files the notice to the primary (`validation-decision-notice.ts`) and announces it to the run.
 

@@ -19,7 +19,7 @@ node tests/tools/design-harness/capture.mjs --out ../../.local/define/<round>/ca
 node tests/tools/design-harness/probe.mjs <out.png> [width] [height] [waitMs] [?query]
 ```
 
-Run from `desktop/orca`. Without `--tokens`, only the `baseline` direction (the shipped tokens) is captured, into the round folder that `scripts/design/critic-round.mjs` reads.
+Run from `desktop`. Without `--tokens`, only the `baseline` direction (the shipped tokens) is captured, into the round folder that `scripts/design/critic-round.mjs` reads.
 
 `capture.mjs` writes PNGs and `capture-manifest.json` (renderer-and-harness tree digest, token hash, Chromium version, observed viewport/DPR/scroll/fonts/effective settings, image hashes, page errors). It uses the locally cached Playwright Chromium (`DESIGN_HARNESS_CHROMIUM` overrides the path) and never downloads a browser.
 

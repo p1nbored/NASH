@@ -8,10 +8,10 @@ The user requested review and execution if the plan has no problems. The mailbox
 
 | Finding | Evidence in this checkout | Effect |
 |---|---|---|
-| Only hello is registered | `desktop/orca/src/main/runtime/rpc/methods/dot-ingress.ts` exports one method; its test explicitly requires hello and nothing else | All planned task/control calls are unavailable despite hello advertising capabilities |
+| Only hello is registered | `desktop/src/main/runtime/rpc/methods/dot-ingress.ts` exports one method; its test explicitly requires hello and nothing else | All planned task/control calls are unavailable despite hello advertising capabilities |
 | Production startup is not wired | `installDotIngressEnabledReader`, `createOrcaPrimarySessionRuntime`/`setPrimarySessionRuntime`, `installPermissionRelay` and `createTaskExecutionRuntime` have definitions but no production installation calls | The dot endpoint remains off without its reader; primary/permission/execution adapters are not connected |
-| Intake does not start a run | `desktop/orca/src/main/runtime/workbench-intake-submit.ts` submits to the request store | A stored request is not evidence of a launched Claude session |
-| Message contract is absent | `desktop/orca/src/shared/dot-ingress/dot-ingress-params.ts` and frozen `dot-ingress-contract-v1.schema.json` | No generated message tool can be implemented against v1 |
+| Intake does not start a run | `desktop/src/main/runtime/workbench-intake-submit.ts` submits to the request store | A stored request is not evidence of a launched Claude session |
+| Message contract is absent | `desktop/src/shared/dot-ingress/dot-ingress-params.ts` and frozen `dot-ingress-contract-v1.schema.json` | No generated message tool can be implemented against v1 |
 | Proposed cloud data exceeds v1 | `dot-ingress-request.ts` permits coarse run state, requires null result, uses opaque artifact IDs and declares unsupported result/artifact capabilities; `dot-ingress-projection.ts` returns null/empty values | Progress, reviewer model, summaries and file paths require an explicit contract/disclosure decision |
 | Remote implementation is absent | No remote switch, pairing client, `/nash/v1` client or remote event outbox was found | R1/R2/UI-7 are real prerequisites, not deployment-only configuration |
 | Read-only does not cover arbitrary commands | `runtime/workflow-run/primary-session-settings-file.ts` denies Edit/Write/NotebookEdit; `runtime/permission-relay/permission-audience.ts` permits dot answers for command tools; `permission-request-service.ts` lacks a run-access check in `answerFromDot` | A future remote allow could authorize a writing shell command; enforce the ceiling before exposing this path |
@@ -60,7 +60,7 @@ Sources, checked 2026-10-05:
 
 ## Verification performed
 
-Primary review command, from `desktop/orca`, with background launch enabled:
+Primary review command, from `desktop`, with background launch enabled:
 
 ```powershell
 $env:ORCA_BACKGROUND_LAUNCH = '1'

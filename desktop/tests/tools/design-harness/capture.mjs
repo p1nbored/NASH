@@ -225,7 +225,7 @@ const manifest = {
   kind: 'real_renderer_fixture_harness',
   status: 'FIXTURE_ONLY',
   captured_at: new Date().toISOString(),
-  renderer: 'desktop/orca/src/renderer (Vite dev server, fixture preload, Playwright Chromium)',
+  renderer: 'desktop/src/renderer (Vite dev server, fixture preload, Playwright Chromium)',
   limitations: [
     'Fixture preload: no Electron main process, runtime daemon, PTY or user data.',
     'Terminal panes render scripted fixture bytes through real xterm.js, not a live process.',

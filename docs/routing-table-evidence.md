@@ -1,6 +1,6 @@
 # Routing Table evidence
 
-- Date: 2026-10-05. Scope: the bundled default Routing Table, version 1 (`desktop/orca/src/main/routing-table/default-routing-table.json`).
+- Date: 2026-10-05. Scope: the bundled default Routing Table, version 1 (`desktop/src/main/routing-table/default-routing-table.json`).
 - Purpose: keeps benchmark evidence out of runtime code, as the [architecture direction](architecture-direction.md) requires (sections 6 and 7). The table rows carry source names only. This document adds the URLs and, once the user supplies it, the snapshot date.
 - **Snapshot date: awaiting user.**
 - **No scores.** This document records no benchmark score, rank or number. Scores belong to the dated snapshot pages at the sources themselves.

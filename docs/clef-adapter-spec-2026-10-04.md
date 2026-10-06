@@ -27,7 +27,7 @@
 >   The app has no budget cap and no cost warning. Kept: the ledger as a record of spend, and 2 billed attempts per TaskSpec as a retry bound. The "per-request attempt budget" of section 7 now counts per TaskSpec. Live calls during development stay within the free tier plus US$5 as a testing rule, not an app limit.
 > - **Superseded by D-020:** the state data class is `agent_task_spec`; `user_task_summary` (section 5) no longer reaches Clef.
 
-Date: 2026-10-04. Status: the build specification for the Clef-direct routing adapter in `desktop/orca`. It consolidates the adapter design and three independent critiques (scratch research, not committed) with decision D-012. Requirement IDs (R01-R60) and conflict IDs (C1-C14) refer to the requirements checklist that the research run extracted from the project brief, workbench brief, decision log, acceptance criteria, threat model and upstream-compatibility notes; the brief governs where they conflict.
+Date: 2026-10-04. Status: the build specification for the Clef-direct routing adapter in `desktop`. It consolidates the adapter design and three independent critiques (scratch research, not committed) with decision D-012. Requirement IDs (R01-R60) and conflict IDs (C1-C14) refer to the requirements checklist that the research run extracted from the project brief, workbench brief, decision log, acceptance criteria, threat model and upstream-compatibility notes; the brief governs where they conflict.
 
 ## 1. Decisions in force
 

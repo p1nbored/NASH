@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const source = new URL('../../../desktop/orca/src/shared/dot-ingress/dot-ingress-contract-v2.schema.json', import.meta.url);
+const source = new URL('../../../desktop/src/shared/dot-ingress/dot-ingress-contract-v2.schema.json', import.meta.url);
 const bytes = readFileSync(source);
 const contract = JSON.parse(bytes.toString('utf8'));
 function inline(value) {
@@ -21,7 +21,7 @@ if (schema.properties.contractVersion.const !== 2) throw new Error('Expected con
 const output = new URL('../generated/', import.meta.url);
 mkdirSync(output, { recursive: true });
 writeFileSync(new URL('dot-hello-schema.json', output), `${JSON.stringify({
-  source: 'desktop/orca/src/shared/dot-ingress/dot-ingress-contract-v2.schema.json',
+  source: 'desktop/src/shared/dot-ingress/dot-ingress-contract-v2.schema.json',
   sourceSha256: createHash('sha256').update(bytes).digest('hex'),
   schema,
 }, null, 2)}\n`);

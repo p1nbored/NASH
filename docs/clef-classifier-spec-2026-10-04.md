@@ -1,7 +1,7 @@
 # Clef classifier specification (TaskSpec classification)
 
 - Date: 2026-10-05. The name keeps the 2026-10-04 series of the [Clef adapter spec](clef-adapter-spec-2026-10-04.md), which this document partly supersedes.
-- Status: describes what is built in `desktop/orca` (packages B1 and C2, with K1 in progress for D-022). Authority: D-016, D-020, D-022 and D-013 in the [decision log](decision-log.md).
+- Status: describes what is built in `desktop` (packages B1 and C2, with K1 in progress for D-022). Authority: D-016, D-020, D-022 and D-013 in the [decision log](decision-log.md).
 - **Not verified live.** No billed Clef call has been made. Everything below is tested with injected fakes only. The first live call is gate G4 (section 8).
 
 ## 1. Scope
@@ -20,7 +20,7 @@ Still in force from the adapter spec:
 
 This document replaces the adapter spec's question set, tuple catalog, decision policy, lifecycle and phasing (sections 5, 9, 10, 12 and 16) and its paid-call caps (D-022).
 
-Code, under `desktop/orca/src/`:
+Code, under `desktop/src/`:
 
 - `main/clef/clef-question-set.ts`: the bundle;
 - `main/clef/clef-classification-rules.ts`: the outcome rules;
