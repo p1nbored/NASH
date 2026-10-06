@@ -426,22 +426,15 @@ describe('AppearancePane', () => {
     expect(requestFontSuggestions).toHaveBeenCalledOnce()
   })
 
-  it('keeps the app icon control at the bottom of the pane, after the section rows', async () => {
+  it('hides the app icon control while NASH ships a single icon', async () => {
     mocks.state.settingsSearchQuery = ''
     const container = await renderAppearancePane(getDefaultSettings('/tmp'))
 
-    const buttons = Array.from(container.querySelectorAll('button'))
-    const interfaceRow = buttons.find((button) => button.textContent?.includes('Interface'))
-    const appIconImage = container.querySelector<HTMLImageElement>('img[alt="Selected app icon"]')
+    expect(container.querySelector('img[alt="Selected app icon"]')).toBeNull()
 
-    expect(interfaceRow).toBeDefined()
-    expect(appIconImage).not.toBeNull()
-    // The App Icon block sits after the Interface section row in document order.
-    expect(
-      interfaceRow &&
-        appIconImage &&
-        interfaceRow.compareDocumentPosition(appIconImage) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
+    mocks.state.settingsSearchQuery = 'app icon'
+    const searched = await renderAppearancePane(getDefaultSettings('/tmp'))
+    expect(searched.querySelector('img[alt="Selected app icon"]')).toBeNull()
   })
 
   it('reveals an advanced sidebar control when its search matches, even though it is hidden by default', async () => {

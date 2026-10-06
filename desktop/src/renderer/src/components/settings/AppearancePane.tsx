@@ -30,7 +30,7 @@ import { TerminalAppearanceSection } from './TerminalAppearanceSection'
 import type { UseGhosttyImportReturn } from './useGhosttyImport'
 import type { UseWarpThemeImportReturn } from './useWarpThemeImport'
 import { AppIconSelector } from './AppIconSelector'
-import { normalizeAppIconId } from '../../../../shared/app-icon'
+import { HAS_APP_ICON_CHOICE, normalizeAppIconId } from '../../../../shared/app-icon'
 import { getRendererAppPlatform } from '@/lib/renderer-app-platform'
 import { isWebClientLocation } from '@/lib/web-client-location'
 import { SHOW_UI_LANGUAGE_SETTING } from '@/i18n/supported-languages'
@@ -280,7 +280,7 @@ export function AppearancePane({
 
       {/* App icon stays at the bottom of Appearance as a small easter egg,
           matching production — not buried inside Interface advanced. */}
-      {appIconMatches ? (
+      {HAS_APP_ICON_CHOICE && appIconMatches ? (
         <SearchableSetting
           title={translate('auto.components.settings.AppearancePane.ca1590d42f', 'App Icon')}
           description={translate(

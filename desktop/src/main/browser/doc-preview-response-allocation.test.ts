@@ -45,7 +45,7 @@ afterEach(() => {
 
 describe('document preview response allocation', () => {
   it('serves existing PNG assets without a full intermediate body copy', async () => {
-    const fixtures = ['mobile/assets/icon.png', 'resources/app-icons/orca-watercolor.png'].map(
+    const fixtures = ['mobile/assets/icon.png', 'resources/build/icon.png'].map(
       (path) => {
         const bytes = readFileSync(resolve(path))
         return { bytes, expectedDigest: digest(bytes), expectedLength: bytes.byteLength }

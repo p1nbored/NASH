@@ -1,17 +1,13 @@
 import type React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import classicIconUrl from '../../../../../resources/icon.png?url'
-import watercolorIconUrl from '../../../../../resources/app-icons/orca-watercolor.png?url'
-import blueIconUrl from '../../../../../resources/app-icons/orca-blue.png?url'
 import { APP_ICON_OPTIONS, normalizeAppIconId, type AppIconId } from '../../../../shared/app-icon'
 import { Button } from '../ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { translate } from '@/i18n/i18n'
 
 const APP_ICON_URLS = {
-  classic: classicIconUrl,
-  watercolor: watercolorIconUrl,
-  blue: blueIconUrl
+  classic: classicIconUrl
 } satisfies Record<AppIconId, string>
 
 type AppIconSelectorProps = {

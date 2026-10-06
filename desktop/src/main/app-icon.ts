@@ -8,22 +8,11 @@ import { app, BrowserWindow, nativeImage } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import classicIcon from '../../resources/icon.png?asset'
 import classicDevIcon from '../../resources/icon-dev.png?asset'
-import watercolorIcon from '../../resources/app-icons/orca-watercolor.png?asset'
-import watercolorMacDockIcon from '../../resources/app-icons/orca-watercolor.png?asset&asarUnpack'
-import blueIcon from '../../resources/app-icons/orca-blue.png?asset'
-import blueMacDockIcon from '../../resources/app-icons/orca-blue.png?asset&asarUnpack'
 import { normalizeAppIconId, type AppIconId } from '../shared/app-icon'
 
 const APP_ICON_PATHS = {
-  classic: is.dev ? classicDevIcon : classicIcon,
-  watercolor: watercolorIcon,
-  blue: blueIcon
+  classic: is.dev ? classicDevIcon : classicIcon
 } satisfies Record<AppIconId, string>
-
-const MAC_DOCK_ICON_PATHS = {
-  watercolor: watercolorMacDockIcon,
-  blue: blueMacDockIcon
-} satisfies Record<Exclude<AppIconId, 'classic'>, string>
 
 type ExecFile = (
   file: string,
@@ -40,17 +29,6 @@ type PersistMacDockIconOptions = {
   isDevApp?: boolean
   platform?: NodeJS.Platform
 }
-
-const MAC_DOCK_ICON_SCRIPT = [
-  'use framework "AppKit"',
-  'use scripting additions',
-  'set appPath to system attribute "ORCA_APP_BUNDLE_PATH"',
-  'set iconPath to system attribute "ORCA_APP_ICON_PATH"',
-  "set image to current application's NSImage's alloc()'s initWithContentsOfFile:iconPath",
-  'if image is missing value then error "Orca app icon image could not be loaded"',
-  "set ok to current application's NSWorkspace's sharedWorkspace()'s setIcon:image forFile:appPath options:0",
-  'if ok is false then error "Orca app icon could not be persisted"'
-]
 
 const MAC_DOCK_ICON_CLEAR_SCRIPT = [
   'use framework "AppKit"',
@@ -84,29 +62,6 @@ export function createAppIconImage(value: unknown): Electron.NativeImage {
 function getMacAppBundlePath(): string | undefined {
   const appBundlePath = resolve(dirname(app.getPath('exe')), '..', '..')
   return appBundlePath.endsWith('.app') ? appBundlePath : undefined
-}
-
-function runMacCustomIconCommand(
-  execFile: ExecFile,
-  appBundlePath: string,
-  iconPath: string
-): Promise<void> {
-  return runBoundedMacDockIconCommand({
-    args: MAC_DOCK_ICON_SCRIPT.flatMap((line) => ['-e', line]),
-    execFile,
-    file: '/usr/bin/osascript',
-    onError: (error) => {
-      console.warn('[app-icon] failed to persist macOS dock icon:', error)
-    },
-    options: {
-      env: {
-        ...process.env,
-        ORCA_APP_BUNDLE_PATH: appBundlePath,
-        ORCA_APP_ICON_PATH: iconPath
-      }
-    },
-    timeoutWarning: '[app-icon] timed out persisting macOS dock icon'
-  })
 }
 
 type BoundedMacDockIconCommandOptions = {
@@ -259,7 +214,9 @@ function clearMacCustomIconMetadata(execFile: ExecFile, appBundlePath: string): 
   )
 }
 
-export function persistMacDockIcon(value: unknown, options: PersistMacDockIconOptions = {}): void {
+// Why: NASH ships one icon, the bundle's own (D-036), so persisting only clears a custom Dock icon
+// that an earlier build may have written into the app bundle's Finder metadata.
+export function persistMacDockIcon(_value: unknown, options: PersistMacDockIconOptions = {}): void {
   const platform = options.platform ?? process.platform
   const isDevApp = options.isDevApp ?? (is.dev || !app.isPackaged)
   if (platform !== 'darwin' || isDevApp) {
@@ -270,20 +227,13 @@ export function persistMacDockIcon(value: unknown, options: PersistMacDockIconOp
     return
   }
   const execFile = options.execFile ?? defaultExecFile
-  const iconId = normalizeAppIconId(value)
   const generation = ++macDockIconPersistenceGeneration
   enqueueMacDockIconPersistence(async () => {
-    // Why: stale queued writes must not reapply an older Dock pin icon.
+    // Why: rapid repeated requests collapse into the latest one.
     if (generation !== macDockIconPersistenceGeneration) {
       return
     }
-    if (iconId === 'classic') {
-      await clearMacCustomIconMetadata(execFile, appBundlePath)
-      return
-    }
-    // Why: a stopped app's Dock tile is resolved from Finder metadata, not
-    // Electron's live app.dock.setIcon state.
-    await runMacCustomIconCommand(execFile, appBundlePath, MAC_DOCK_ICON_PATHS[iconId])
+    await clearMacCustomIconMetadata(execFile, appBundlePath)
   })
 }
 
