@@ -1,4 +1,5 @@
 import { joinRemotePath, type RemoteHostPlatform } from '../ssh/ssh-remote-platform'
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
 import { parseCodexSessionContent } from './session-scanner-codex-parser'
 import { remoteCodexIndexedTitleReader } from './remote-session-scanner-codex-index'
 import type { RemoteSessionContent } from './remote-session-content-lines'
@@ -19,7 +20,7 @@ export function remoteCodexSources(
       remoteHome,
       '.local',
       'share',
-      'orca',
+      APP_XDG_DATA_DIR_NAME,
       'codex-runtime-home',
       'home'
     )

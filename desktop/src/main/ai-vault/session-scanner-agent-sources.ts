@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
 import { basename, dirname, join } from 'node:path'
 import { pathSegments } from './session-file-discovery'
 import { resolveAbsoluteDirOverride } from '../../shared/absolute-dir-override'
@@ -143,7 +144,15 @@ export const AI_VAULT_AGENT_SOURCES: AiVaultAgentSourceTable = {
         // Why: Orca-launched WSL Codex sessions use an Orca-owned CODEX_HOME,
         // not the user's default ~/.codex history root.
         ...wslHomeDirs.map((homeDir) =>
-          join(homeDir, '.local', 'share', 'orca', 'codex-runtime-home', 'home', 'sessions')
+          join(
+            homeDir,
+            '.local',
+            'share',
+            APP_XDG_DATA_DIR_NAME,
+            'codex-runtime-home',
+            'home',
+            'sessions'
+          )
         ),
         ...(options.additionalCodexSessionsDirs ?? [])
       ]),

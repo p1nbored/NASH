@@ -284,6 +284,37 @@ describe('openComputerUsePermissions', () => {
       expect.anything()
     )
   })
+
+  // D-017: the stale-grant reset must target NASH's helper, never a real Orca install's TCC rows.
+  it('falls back to the NASH computer-use bundle id when the helper reports none', async () => {
+    resolveHelperAppPathMock.mockReturnValue('/Applications/Orca Computer Use.app')
+    vi.mocked(readFile)
+      .mockResolvedValueOnce('{"accessibility":"granted","screenshots":"granted"}')
+      .mockResolvedValueOnce('{"accessibility":"not-granted","screenshots":"not-granted"}')
+    vi.mocked(spawnSync).mockReturnValue({ status: 0 } as ReturnType<typeof spawnSync>)
+    const previousStdout = plistBuddyStdout.value
+    plistBuddyStdout.value = ''
+
+    try {
+      await expect(resetComputerUsePermissions()).resolves.toMatchObject({
+        bundleId: 'com.pinbored.nash.computer-use'
+      })
+    } finally {
+      plistBuddyStdout.value = previousStdout
+    }
+
+    const throughChokepoint = expect.objectContaining({ shell: false, windowsHide: true })
+    expect(spawn).toHaveBeenCalledWith(
+      '/usr/bin/tccutil',
+      ['reset', 'Accessibility', 'com.pinbored.nash.computer-use'],
+      throughChokepoint
+    )
+    expect(spawn).not.toHaveBeenCalledWith(
+      '/usr/bin/tccutil',
+      ['reset', 'Accessibility', 'com.stablyai.orca.computer-use'],
+      throughChokepoint
+    )
+  })
 })
 
 function mockPermissionStatus(json: string): void {

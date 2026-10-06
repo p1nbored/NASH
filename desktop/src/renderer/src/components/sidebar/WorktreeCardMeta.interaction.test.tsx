@@ -292,7 +292,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
     ).toBe('false')
   })
 
-  it('opens the review URL in Orca browser and leaves existing actions independent', () => {
+  it('opens the review URL in NASH browser and leaves existing actions independent', () => {
     const onOpenReviewInBrowser = vi.fn()
     const onUnlinkReview = renderHover(vi.fn(), onOpenReviewInBrowser)
 
@@ -302,7 +302,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
     })
 
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in NASH browser')
     )
 
     act(() => {
@@ -324,7 +324,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       interactionMocks.onReviewMenuOpenChange?.(true)
     })
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in NASH browser')
     )
 
     act(() => {
@@ -387,7 +387,7 @@ describe('WorktreeCardDetailsHover interactions', () => {
       interactionMocks.onReviewMenuOpenChange?.(true)
     })
     const browserButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Open in Orca browser')
+      button.textContent?.includes('Open in NASH browser')
     )
 
     act(() => {

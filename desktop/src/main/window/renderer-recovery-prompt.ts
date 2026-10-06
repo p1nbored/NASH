@@ -56,7 +56,7 @@ export async function presentRendererRecoveryPrompt(
       defaultId: 0,
       // Escape retries instead of destroying the session.
       cancelId: 0,
-      title: translateMain('rendererRecovery.title', 'Orca keeps failing to load'),
+      title: translateMain('rendererRecovery.title', 'NASH keeps failing to load'),
       ...content
     })
     if (response === 1 && diagnosis) {
@@ -82,7 +82,7 @@ function describeLowCommit(availableMB: number): PromptContent {
   )
   const advice = translateMain(
     'rendererRecovery.lowCommitAdvice',
-    'Free memory by closing unused apps or Orca workspaces, or increase the Windows page file size, then click Reload.'
+    'Free memory by closing unused apps or NASH workspaces, or increase the Windows page file size, then click Reload.'
   )
   return {
     message: translateMain('rendererRecovery.lowCommitMessage', 'Windows is out of memory.'),
@@ -97,11 +97,11 @@ function describeLaunchFailure(
 ): PromptContent {
   const message = translateMain(
     'rendererRecovery.launchFailedMessage',
-    "Orca couldn't start the process that draws its window."
+    "NASH couldn't start the process that draws its window."
   )
   const retried = translateMain(
     'rendererRecovery.launchFailedDetail',
-    'Orca retried {{recoveryCount}} times without success.',
+    'NASH retried {{recoveryCount}} times without success.',
     { recoveryCount: attempts }
   )
   const cause =
@@ -113,7 +113,7 @@ function describeLaunchFailure(
       : (diagnosis?.detail ??
         translateMain(
           'rendererRecovery.launchFailedGenericDetail',
-          'The system refused to start it. Free up memory or close other apps, then click Try Again. If this keeps happening, reinstall Orca.'
+          'The system refused to start it. Free up memory or close other apps, then click Try Again. If this keeps happening, reinstall NASH.'
         ))
   return { message, detail: `${retried}\n\n${cause}` }
 }
@@ -126,11 +126,11 @@ function describeRendererCrash(
   const recoveryDetail = stalled
     ? translateMain(
         'rendererRecovery.stalledDetail',
-        'Orca reloaded the window after a crash, but it never finished loading.'
+        'NASH reloaded the window after a crash, but it never finished loading.'
       )
     : translateMain(
         'rendererRecovery.crashLoopDetail',
-        'Orca tried to recover {{recoveryCount}} times in a row without success.',
+        'NASH tried to recover {{recoveryCount}} times in a row without success.',
         { recoveryCount }
       )
   const causeDetail = diagnosis
@@ -140,7 +140,7 @@ function describeRendererCrash(
       )}`
     : translateMain(
         'rendererRecovery.genericDetail',
-        'This is often a graphics-driver or installation problem. Reload to try again, or quit and relaunch Orca.'
+        'This is often a graphics-driver or installation problem. Reload to try again, or quit and relaunch NASH.'
       )
   return {
     message: stalled

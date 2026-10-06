@@ -321,15 +321,15 @@ orca skills update --all
 
 ## Account (host-local runtime)
 
-On a headless host running Orca (`orca serve` or the desktop app), add managed Claude/Codex accounts when the remote client cannot use **Add account** (remote runtime scope disables that button):
+On a headless host running Orca (`orca serve` or the desktop app), add managed Codex, OpenCode, or Devin accounts when the remote client cannot use **Add account** (remote runtime scope disables that button):
 
 ```bash
 orca account list
-orca account add                 # Claude by default
-orca account add --agent codex
+orca account add                 # Codex by default
+orca account add --agent opencode
 ```
 
-`account add` runs `claude login` / `codex login` in **this** terminal on the host, then registers the captured credentials with the local runtime. Codex uses device authorization so the browser can finish on another machine. Run these on the machine that owns the accounts — not through a client-only remote session.
+`account add` runs the agent's login (for example `codex login`) in **this** terminal on the host, then registers the captured credentials with the local runtime. Claude Code has no managed accounts: `--agent claude` is refused, and Claude always runs on the host's own login (sign in with `claude /login`). Codex uses device authorization so the browser can finish on another machine. Run these on the machine that owns the accounts — not through a client-only remote session.
 
 ## Artifacts
 

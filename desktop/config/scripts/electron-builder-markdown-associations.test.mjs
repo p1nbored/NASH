@@ -111,7 +111,7 @@ describe('electron-builder document file associations', () => {
       expect(hooks).toContain(`ORCA_REGISTER_DOCUMENT_OPEN_WITH ".${ext}" "\${TABULAR_PROGID}"`)
       expect(hooks).toContain(`ORCA_UNREGISTER_DOCUMENT_OPEN_WITH ".${ext}" "\${TABULAR_PROGID}"`)
     }
-    expect(hooks).toContain('!define TABULAR_PROGID "Orca.Tabular"')
+    expect(hooks).toContain('!define TABULAR_PROGID "NASH.Tabular"')
     expect(hooks).toContain('ORCA_REGISTER_DOCUMENT_PROGID "${TABULAR_PROGID}" "Tabular Document"')
     expect(hooks).toContain('DeleteRegKey SHELL_CONTEXT "Software\\Classes\\${TABULAR_PROGID}"')
     expect(hooks).toMatch(/!macro\s+customInstall\b/)
@@ -130,12 +130,13 @@ describe('electron-builder document file associations', () => {
     const script = stripNsisCommentLines(await readInstallerHooks())
 
     expect(script).toMatch(/taskkill[^\n]*\/IM\s+"?\$\{APP_EXECUTABLE_FILENAME\}"?/)
-    // Legacy name, so hosts left by builds that renamed the copy still get reaped.
-    expect(script).toMatch(/taskkill[^\n]*\/IM\s+"?orca-terminal-daemon\.exe"?/)
+    // NASH never shipped a renamed host copy, and killing that Orca image name would reach a real Orca install.
+    expect(script).not.toMatch(/orca-terminal-daemon/)
     // Scopes both kills to the uninstalling user: an elevated machine-wide uninstall must
     // not reach another logged-on user's session.
     expect(script).toMatch(/\/FI\s+"USERNAME eq /)
-    expect(script).toContain('$LOCALAPPDATA\\Orca\\daemon-host')
+    expect(script).toContain('$LOCALAPPDATA\\NASH\\daemon-host')
+    expect(script).not.toContain('$LOCALAPPDATA\\Orca\\')
     // Without this guard, uninstallOldVersion would kill the daemon on every update —
     // defeating the relocation that keeps terminals alive across updates.
     expect(script).toMatch(/\$\{ifNot\}\s+\$\{isUpdated\}/)

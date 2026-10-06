@@ -42,7 +42,7 @@ describe('OnboardingFlow', () => {
 
     expect(html).toContain('Set up notifications')
     expect(html).not.toContain('Set up Orca for agents')
-    expect(html).not.toContain('Explore Orca')
+    expect(html).not.toContain('Explore NASH')
     expect(html).not.toContain('Take the tour')
     expect(html).toContain('Add your first project')
     expect(html).not.toContain('Point Orca at some code')
@@ -67,7 +67,7 @@ describe('OnboardingFlow', () => {
 
       expect(html).toContain(title)
       expect(html).not.toContain('Set up Orca for agents')
-      expect(html).not.toContain('Explore Orca')
+      expect(html).not.toContain('Explore NASH')
     }
   )
 
@@ -90,7 +90,7 @@ describe('OnboardingFlow', () => {
 
       expect(html).toContain(title)
       expect(html).not.toContain('Set up Orca for agents')
-      expect(html).not.toContain('Explore Orca')
+      expect(html).not.toContain('Explore NASH')
     }
   )
 

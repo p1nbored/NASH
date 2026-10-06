@@ -309,7 +309,7 @@ describe('registerPtyHandlers', () => {
         })
       })
       it('points OPENCODE_CONFIG_DIR at the guest overlay when the WSL relay reports it', async () => {
-        const guestDir = '/home/jin/.orca-relay/opencode-overlays/abc'
+        const guestDir = '/home/jin/.nash-relay/opencode-overlays/abc'
         const spy = vi.spyOn(wslHookRelayManager, 'getOpenCodeOverlayDir').mockReturnValue(guestDir)
         try {
           await withWin32Platform(async () => {
@@ -343,8 +343,8 @@ describe('registerPtyHandlers', () => {
         'selects the $expectedAgent guest overlay for a WSL spawn',
         async ({ launchAgent, expectedAgent }) => {
           const guestDirs = {
-            opencode: '/home/jin/.orca-relay/opencode-overlays/abc',
-            opencode2: '/home/jin/.orca-relay/opencode2-overlays/def'
+            opencode: '/home/jin/.nash-relay/opencode-overlays/abc',
+            opencode2: '/home/jin/.nash-relay/opencode2-overlays/def'
           }
           const spy = vi
             .spyOn(wslHookRelayManager, 'getOpenCodeOverlayDir')
@@ -469,7 +469,11 @@ describe('registerPtyHandlers', () => {
         })
         try {
           const env = await daemonSpawnAndGetEnv({ PATH: '/usr/bin' })
-          expect(env.PATH.split(delimiter)[0]).toBe(join('/tmp/orca-resources', 'bin'))
+          // Why two dirs: `nash` is the global command; the in-session `orca` alias sits in its own dir ahead of it.
+          expect(env.PATH.split(delimiter).slice(0, 2)).toEqual([
+            join('/tmp/orca-resources', 'session-bin'),
+            join('/tmp/orca-resources', 'bin')
+          ])
         } finally {
           if (resourcesPathDescriptor) {
             Object.defineProperty(process, 'resourcesPath', resourcesPathDescriptor)

@@ -76,7 +76,7 @@ export function BrowserUserAgentSetting({
       <span className="text-xs text-muted-foreground">
         {translate(
           'settings.browser.userAgent.remoteUnsupported',
-          'Manage browser identity on the remote host with the Orca CLI.'
+          'Manage browser identity on the remote host with the NASH CLI.'
         )}
       </span>
     )
@@ -101,7 +101,7 @@ export function BrowserUserAgentSetting({
         <div className="text-[11px] text-muted-foreground">
           {translate(
             'settings.browser.userAgent.resetRequiredCommand',
-            'Reset it from the command line: orca browser identity set --mode <mode> --reset'
+            'Reset it from the command line: nash browser identity set --mode <mode> --reset'
           )}
         </div>
       </div>
@@ -121,7 +121,7 @@ export function BrowserUserAgentSetting({
               label: translate('settings.browser.userAgent.optionClean', 'Cleaned'),
               tooltip: translate(
                 'settings.browser.userAgent.optionCleanTooltip',
-                'Removes Orca and Electron tokens to match imported Chrome sessions.'
+                'Removes NASH and Electron tokens to match imported Chrome sessions.'
               )
             },
             {

@@ -492,7 +492,7 @@ describe('a slow codex app-server start', () => {
       const server = installAppServer(0)
       expect(await launch()).toBe('approving')
       // Why: an older build's pane launch added its own form beside Orca's entry meanwhile.
-      const older = join(homes.tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh')
+      const older = join(homes.tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh')
       const hooks = readHooks()
       hooks.Stop = [...hooks.Stop, { hooks: [{ type: 'command', command: older, timeout: 10 }] }]
       writeFileSync(hooksPath(), `${JSON.stringify({ hooks }, null, 2)}\n`)
@@ -589,7 +589,7 @@ describe('a slow codex app-server start', () => {
     async () => {
       const hung = installAppServer(10 * 60_000)
       hung.start()
-      const script = `'${join(homes.tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh')}'`
+      const script = `'${join(homes.tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh')}'`
       const retired = {
         hooks: [{ type: 'command', command: `if [ -x ${script} ]; then /bin/sh ${script}; fi` }]
       }

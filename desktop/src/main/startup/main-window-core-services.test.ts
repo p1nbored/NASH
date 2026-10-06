@@ -27,7 +27,6 @@ const {
       openCodeUsage: {},
       museUsage: {},
       codexAccounts: {},
-      claudeAccounts: {},
       rateLimits: { attach: vi.fn(), start: vi.fn() },
       automations: { setWebContents: vi.fn(), start: vi.fn() },
       keybindings: {},
@@ -104,7 +103,6 @@ describe('main window profile-state update preparation', () => {
 
     expect(preserveAgentAuthBeforeRestartMock).toHaveBeenCalledWith({
       codexRuntimeHome: state.codexRuntimeHome,
-      claudeRuntimeAuth: state.claudeRuntimeAuth,
       store
     })
     expect(store.writeLatestProfileStateJsonExportAsync).not.toHaveBeenCalled()

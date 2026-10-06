@@ -1,0 +1,12 @@
+// G7: the hosted behaviour of validation decisions, which the generated schemas cannot express. A
+// separate file keeps the rules list readable; the manifest carries it as rules.validationDecisions.
+
+export const DOT_REMOTE_VALIDATION_DECISIONS_RULE = [
+  'Validation decisions are a narrow exception to the coarse run view: dot sees exactly the fields of validation_decision_pending, which the desktop masked before sending. The Site stores and returns them unchanged and never scans, masks or rewrites them.',
+  'A decision is open while the newest event for its validationId is validation_decision_pending, its request is an accepted submit of this binding, and that event is less than retentionDays old. A validation_decision_settled event closes it for good; a stale, duplicate or late pending event never reopens it.',
+  'The Site holds at most validationDecisionsOpenMax open decisions per binding: beyond that, only the oldest by createdAt and then validationId count as open, and the others wait until older ones close. NASH itself reports at most that many open decisions at a time, the oldest first.',
+  'nash_list_validation_decisions returns open decisions only, oldest first by createdAt and then validationId, at most limit per page, with nextCursor for the rest. nash_get_request keeps the newest event per validationId, so a settled decision stays visible there until retention purges it; a request stored before contract version 3 has an empty validationDecisions list.',
+  'nash_decide_validation checks deduplication on decisionId first, so a retry with the same payload returns the original receipt even after the decision closed, and the same decisionId with another payload is idempotency_conflict. A new decisionId for a decision that is not open is refused with validation_decision_not_open and stores nothing. Otherwise the Site queues one validation_decision item that depends on the accepted submit of the request named by the pending event.',
+  'NASH acknowledges decided, already_decided and closed as accepted, a repeat of a decisionId it already answered as duplicate, and an unknown validation or one of a run dot did not start as refused with dot_validation_not_found. The settled event then reports waived or rejected for whichever decision won, from dot or from the app, or closed with no decision time.',
+  'A pending event for a request this binding never accepted, for example after its records aged out or after NASH was paired again as a new device, is unknown_request; that decision can be made only in the app.'
+].join(' ')

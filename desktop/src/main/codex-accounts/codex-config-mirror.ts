@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
+import { APP_XDG_DATA_HOME_PATH } from '../../shared/app-identity-paths'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { parseWslUncPath } from '../../shared/wsl-paths'
@@ -53,7 +54,7 @@ export class CodexConfigMirror {
       return this.readHostConfig()
     }
 
-    const managedRootMarker = '/.local/share/orca/codex-accounts/'
+    const managedRootMarker = `/${APP_XDG_DATA_HOME_PATH}/codex-accounts/`
     const markerIndex = wslInfo.linuxPath.indexOf(managedRootMarker)
     if (markerIndex === -1) {
       return null

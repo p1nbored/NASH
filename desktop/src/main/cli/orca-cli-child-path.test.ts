@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { delimiter, join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const shim = vi.hoisted(() => ({ ensureLinuxTerminalOrcaCliShimDir: vi.fn() }))
@@ -53,28 +53,44 @@ describe('prependOrcaCliDirToChildPath', () => {
     expect(env.PATH).toBe('/usr/bin')
   })
 
-  it('leads packaged macOS PATH with the bundled CLI dir', () => {
+  it('leads packaged macOS PATH with the in-session orca alias dir, then the bundled NASH CLI dir', () => {
     const env: Record<string, string> = { PATH: '/usr/bin' }
-    prependOrcaCliDirToChildPath(env, {
+    const returned = prependOrcaCliDirToChildPath(env, {
       isPackaged: true,
       userDataPath: USER_DATA,
       resourcesPath: RESOURCES,
       platform: 'darwin'
     })
-    expect(env.PATH).toBe(`${join(RESOURCES, 'bin')}:/usr/bin`)
+    expect(env.PATH).toBe(
+      [join(RESOURCES, 'session-bin'), join(RESOURCES, 'bin'), '/usr/bin'].join(delimiter)
+    )
+    expect(returned).toBe(join(RESOURCES, 'bin', 'nash'))
     expect(shim.ensureLinuxTerminalOrcaCliShimDir).not.toHaveBeenCalled()
   })
 
-  it('leads packaged Windows PATH with the bundled CLI dir under the env block spelling', () => {
+  it('leads packaged Windows PATH with the alias dir and the bundled CLI dir under the env block spelling', () => {
     const env: Record<string, string> = { Path: 'C:\\Windows\\System32' }
-    prependOrcaCliDirToChildPath(env, {
+    const returned = prependOrcaCliDirToChildPath(env, {
       isPackaged: true,
       userDataPath: USER_DATA,
       resourcesPath: RESOURCES,
       platform: 'win32'
     })
-    expect(env.Path).toBe(`${join(RESOURCES, 'bin')};C:\\Windows\\System32`)
+    expect(env.Path).toBe(
+      `${join(RESOURCES, 'session-bin')};${join(RESOURCES, 'bin')};C:\\Windows\\System32`
+    )
+    expect(returned).toBe(join(RESOURCES, 'bin', 'nash.exe'))
     expect(env.PATH).toBeUndefined()
+  })
+
+  it('names the dev launcher after nash-dev', () => {
+    const env: Record<string, string> = { PATH: '/usr/bin' }
+    const returned = prependOrcaCliDirToChildPath(env, {
+      isPackaged: false,
+      userDataPath: USER_DATA,
+      platform: 'linux'
+    })
+    expect(returned).toBe(join(USER_DATA, 'cli', 'bin', 'nash-dev'))
   })
 
   it('leaves a packaged darwin/win32 PATH alone with no resources root', () => {

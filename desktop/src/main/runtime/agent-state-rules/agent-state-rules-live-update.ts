@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import { getAppEnvironment } from '../../../shared/app-environment'
 import { readFetchResponseTextWithinLimit } from '../../../shared/fetch-response-body'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
-import { getVersionChannel, MAIN_RELEASE_REPO } from '../../../shared/release-channel'
+import { getAppUpdateFeed, getUpdateFeedRepoSlug } from '../../../shared/app-update-feed'
+import { getVersionChannel } from '../../../shared/release-channel'
 import { getMainHttpClient } from '../../network/http-client'
 import { writePluginFileAtomically } from '../../plugins/plugin-atomic-file-write'
 import {
@@ -39,9 +40,14 @@ export function agentStateRulesChannelForAppVersion(
 }
 
 // Why a fixed release-download URL: no API call or rate limit, and no "latest" lookup to steer.
-export function agentStateRulesDownloadUrl(channel: AgentStateRulesChannel): string {
+// Null when the build has no release feed (decision D-017): the bundled rules stay active and nothing is fetched.
+export function agentStateRulesDownloadUrl(channel: AgentStateRulesChannel): string | null {
+  const feed = getAppUpdateFeed()
+  if (feed === null) {
+    return null
+  }
   const tag = `agent-state-rules-engine-${AGENT_STATE_RULES_ENGINE_VERSION}-${channel}`
-  return `https://github.com/${MAIN_RELEASE_REPO}/releases/download/${tag}/agent-state-rules.json`
+  return `https://github.com/${getUpdateFeedRepoSlug(feed)}/releases/download/${tag}/agent-state-rules.json`
 }
 
 // Why per channel: stable and RC builds share userData, and a stable app must not run, or be
@@ -121,7 +127,10 @@ export class AgentStateRulesLiveUpdater {
   async start(): Promise<void> {
     this.stop()
     const settings = this.deps.readSettings()
-    const live = this.deps.isPackaged && settings.agentStateRulesLiveUpdates !== false
+    const live =
+      this.deps.isPackaged &&
+      settings.agentStateRulesLiveUpdates !== false &&
+      getAppUpdateFeed() !== null
     const run = { channel: live ? agentStateRulesChannelForAppVersion(this.deps.appVersion) : null }
     this.run = run
     const overridePath = settings.agentStateRulesPath
@@ -188,8 +197,12 @@ export class AgentStateRulesLiveUpdater {
 
   /** The published file's text, or null after warning why there is none. */
   private async fetchText(channel: AgentStateRulesChannel): Promise<string | null> {
+    const url = agentStateRulesDownloadUrl(channel)
+    if (url === null) {
+      return null
+    }
     try {
-      const response = await this.deps.fetch(agentStateRulesDownloadUrl(channel), {
+      const response = await this.deps.fetch(url, {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
       })
       if (!response.ok) {

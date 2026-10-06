@@ -178,7 +178,7 @@ describe('prepareLocalCommitMessageAgentEnv', () => {
 
     const result = await prepareLocalCommitMessageAgentEnv('codex', {
       prepareForCodexLaunch: () =>
-        '\\\\wsl.localhost\\Ubuntu\\home\\tester\\.local\\share\\orca\\codex-accounts\\a\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\tester\\.local\\share\\nash\\codex-accounts\\a\\home'
     })
 
     expect(result).toEqual({ ok: true })

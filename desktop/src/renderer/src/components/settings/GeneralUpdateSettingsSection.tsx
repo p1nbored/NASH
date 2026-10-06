@@ -10,7 +10,7 @@ import { translate } from '@/i18n/i18n'
 import { getUpdateCheckClickOptions, getUpdateCheckHint } from '@/lib/update-check-click-options'
 import { GeneralRemoteServerUpdates } from './GeneralRemoteServerUpdates'
 import { ReleaseChannelSection } from './ReleaseChannelSection'
-import { getReleaseNotesUrlForVersion } from '../../../../shared/release-channel'
+import { isUpdateFeedAvailable, releaseNotesUrlFor } from '@/lib/update-feed-availability'
 
 export function GeneralUpdateSettingsSection(): React.JSX.Element {
   const updateStatus = useAppStore((s) => s.updateStatus)
@@ -30,6 +30,12 @@ export function GeneralUpdateSettingsSection(): React.JSX.Element {
   }
 
   const [appVersion, setAppVersion] = useState<string | null>(null)
+  // Why: with no release feed main never checks (D-017), so the panel must not promise a check.
+  const updateFeedAvailable = isUpdateFeedAvailable()
+  const releaseNotesHref =
+    updateStatus.state === 'available' || updateStatus.state === 'downloaded'
+      ? (updateStatus.releaseUrl ?? releaseNotesUrlFor(updateStatus.version))
+      : undefined
   const updateCheckHint = getUpdateCheckHint()
   // Why: channel switching is a power-user escape hatch that can downgrade the app
   // onto an unvetted build. Option/Alt-clicking the header reveals it rather than
@@ -85,7 +91,7 @@ export function GeneralUpdateSettingsSection(): React.JSX.Element {
         )}
         description={translate(
           'auto.components.settings.GeneralUpdateSettingsSection.ceb579abaf',
-          'Check for app updates and install a newer Orca version.'
+          'Check for app updates and install a newer NASH version.'
         )}
         keywords={['update', 'version', 'release notes', 'download']}
         className="space-y-3"
@@ -98,7 +104,11 @@ export function GeneralUpdateSettingsSection(): React.JSX.Element {
             // persistent settings toggles.
             onClick={(event) => window.api.updater.check(getUpdateCheckClickOptions(event))}
             title={updateCheckHint}
-            disabled={updateStatus.state === 'checking' || updateStatus.state === 'downloading'}
+            disabled={
+              !updateFeedAvailable ||
+              updateStatus.state === 'checking' ||
+              updateStatus.state === 'downloading'
+            }
             className="gap-2"
           >
             {updateStatus.state === 'checking' ? (
@@ -112,7 +122,8 @@ export function GeneralUpdateSettingsSection(): React.JSX.Element {
             )}
           </Button>
 
-          {updateStatus.state === 'available' && !updateStatus.externallyManaged ? (
+          {!updateFeedAvailable ? null : updateStatus.state === 'available' &&
+            !updateStatus.externallyManaged ? (
             <Button
               variant="default"
               size="sm"
@@ -150,106 +161,111 @@ export function GeneralUpdateSettingsSection(): React.JSX.Element {
           ) : null}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          {updateStatus.state === 'idle' &&
-            translate(
-              'auto.components.settings.GeneralUpdateSettingsSection.d69a09b672',
-              'Updates are checked automatically on launch.'
+        {!updateFeedAvailable ? (
+          <p className="text-xs text-muted-foreground">
+            {translate(
+              'auto.components.settings.GeneralUpdateSettingsSection.updateFeedUnavailable',
+              'Updates are not available in this build.'
             )}
-          {updateStatus.state === 'checking' &&
-            translate(
-              'auto.components.settings.GeneralUpdateSettingsSection.31fd7150cf',
-              'Checking for updates...'
-            )}
-          {updateStatus.state === 'available' && (
-            <>
-              {translate(
-                'auto.components.settings.GeneralUpdateSettingsSection.a6b37929dc',
-                'Version'
-              )}{' '}
-              {updateStatus.version}{' '}
-              {updateStatus.externallyManaged
-                ? translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.e3b9d21c07',
-                    'is available. Update Orca through your system package manager — Orca cannot install this release itself.'
-                  )
-                : translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.8311da27ba',
-                    'is available. Click "Download Update" to download it.'
-                  )}{' '}
-              {updateStatus.source !== 'local' && (
-                <a
-                  href={
-                    updateStatus.releaseUrl ?? getReleaseNotesUrlForVersion(updateStatus.version)
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground"
-                >
-                  {translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.8a52ca1d02',
-                    'Release notes'
-                  )}
-                </a>
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {updateStatus.state === 'idle' &&
+              translate(
+                'auto.components.settings.GeneralUpdateSettingsSection.d69a09b672',
+                'Updates are checked automatically on launch.'
               )}
-            </>
-          )}
-          {updateStatus.state === 'not-available' &&
-            translate(
-              'auto.components.settings.GeneralUpdateSettingsSection.f40d88390d',
-              'You’re on the latest version.'
-            )}
-          {updateStatus.state === 'downloading' &&
-            translate(
-              'auto.components.settings.GeneralUpdateSettingsSection.2a48034c4c',
-              'Downloading v{{value0}}... {{value1}}%',
-              { value0: updateStatus.version, value1: updateStatus.percent }
-            )}
-          {updateStatus.state === 'downloaded' && (
-            <>
-              {translate(
-                'auto.components.settings.GeneralUpdateSettingsSection.a6b37929dc',
-                'Version'
-              )}{' '}
-              {updateStatus.version}{' '}
-              {translate(
-                'auto.components.settings.GeneralUpdateSettingsSection.d89806cc89',
-                'is ready to install.'
-              )}{' '}
-              {updateStatus.source !== 'local' && (
-                <a
-                  href={
-                    updateStatus.releaseUrl ?? getReleaseNotesUrlForVersion(updateStatus.version)
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground"
-                >
-                  {translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.8a52ca1d02',
-                    'Release notes'
-                  )}
-                </a>
+            {updateStatus.state === 'checking' &&
+              translate(
+                'auto.components.settings.GeneralUpdateSettingsSection.31fd7150cf',
+                'Checking for updates...'
               )}
-            </>
-          )}
-          {updateStatus.state === 'error' &&
-            (updateStatus.recovery?.kind === 'linux-package-install'
-              ? updateStatus.message
-              : updateVersionRef.current
-                ? translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.b9ad70c30d',
-                    'Update error. {{value0}}',
-                    { value0: updateStatus.message }
-                  )
-                : translate(
-                    'auto.components.settings.GeneralUpdateSettingsSection.bd79d412f0',
-                    'Update check failed. {{value0}}',
-                    { value0: updateStatus.message }
-                  ))}
-        </p>
+            {updateStatus.state === 'available' && (
+              <>
+                {translate(
+                  'auto.components.settings.GeneralUpdateSettingsSection.a6b37929dc',
+                  'Version'
+                )}{' '}
+                {updateStatus.version}{' '}
+                {updateStatus.externallyManaged
+                  ? translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.e3b9d21c07',
+                      'is available. Update NASH through your system package manager — NASH cannot install this release itself.'
+                    )
+                  : translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.8311da27ba',
+                      'is available. Click "Download Update" to download it.'
+                    )}{' '}
+                {updateStatus.source !== 'local' && releaseNotesHref && (
+                  <a
+                    href={releaseNotesHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground"
+                  >
+                    {translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.8a52ca1d02',
+                      'Release notes'
+                    )}
+                  </a>
+                )}
+              </>
+            )}
+            {updateStatus.state === 'not-available' &&
+              translate(
+                'auto.components.settings.GeneralUpdateSettingsSection.f40d88390d',
+                'You’re on the latest version.'
+              )}
+            {updateStatus.state === 'downloading' &&
+              translate(
+                'auto.components.settings.GeneralUpdateSettingsSection.2a48034c4c',
+                'Downloading v{{value0}}... {{value1}}%',
+                { value0: updateStatus.version, value1: updateStatus.percent }
+              )}
+            {updateStatus.state === 'downloaded' && (
+              <>
+                {translate(
+                  'auto.components.settings.GeneralUpdateSettingsSection.a6b37929dc',
+                  'Version'
+                )}{' '}
+                {updateStatus.version}{' '}
+                {translate(
+                  'auto.components.settings.GeneralUpdateSettingsSection.d89806cc89',
+                  'is ready to install.'
+                )}{' '}
+                {updateStatus.source !== 'local' && releaseNotesHref && (
+                  <a
+                    href={releaseNotesHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground"
+                  >
+                    {translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.8a52ca1d02',
+                      'Release notes'
+                    )}
+                  </a>
+                )}
+              </>
+            )}
+            {updateStatus.state === 'error' &&
+              (updateStatus.recovery?.kind === 'linux-package-install'
+                ? updateStatus.message
+                : updateVersionRef.current
+                  ? translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.b9ad70c30d',
+                      'Update error. {{value0}}',
+                      { value0: updateStatus.message }
+                    )
+                  : translate(
+                      'auto.components.settings.GeneralUpdateSettingsSection.bd79d412f0',
+                      'Update check failed. {{value0}}',
+                      { value0: updateStatus.message }
+                    ))}
+          </p>
+        )}
       </SearchableSetting>
-      {channelSwitcherRevealed ? <ReleaseChannelSection /> : null}
+      {updateFeedAvailable && channelSwitcherRevealed ? <ReleaseChannelSection /> : null}
       <GeneralRemoteServerUpdates />
     </section>
   )

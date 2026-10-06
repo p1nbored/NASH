@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 import {
   buildManagedCommandHook,
@@ -59,7 +60,7 @@ export function getMuseRemoteConfigPath(remoteHome: string): string {
 }
 
 export function getMuseRemoteManagedHooksPath(remoteHome: string): string {
-  return `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/${MUSE_MANAGED_HOOKS_FILE_NAME}`
+  return `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/${MUSE_MANAGED_HOOKS_FILE_NAME}`
 }
 
 export function getMuseManagedCommand(scriptPath: string): string {

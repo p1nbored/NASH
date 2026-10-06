@@ -7,7 +7,8 @@ import { UpdaterScheduling } from './updater-scheduling'
 /** Handles checks initiated from the desktop menu and modifier-key variants. */
 export abstract class UpdaterMenuChecks extends UpdaterScheduling {
   protected checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
-    if (!app.isPackaged || is.dev) {
+    // Why also the feed check: with no release feed nothing may launch, so a manual check answers like an unpackaged build.
+    if (!app.isPackaged || is.dev || this.isUpdateFeedDisabled()) {
       this.sendStatus({ state: 'not-available', userInitiated: true })
       return
     }

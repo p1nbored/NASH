@@ -199,13 +199,13 @@ describe('createOrFocusDashboardPopout', () => {
 
     expect(instances).toHaveLength(1)
     const opts = instances[0].options
-    expect(opts.title).toBe('Orca Agent Dashboard')
+    expect(opts.title).toBe('NASH Agent Dashboard')
     expect(opts.minWidth).toBe(480)
     expect(opts.minHeight).toBe(360)
     // Native frame: neither a custom titleBarStyle nor frame:false is set.
     expect(opts.titleBarStyle).toBeUndefined()
     expect(opts.frame).toBeUndefined()
-    expect(opts.backgroundColor).toBe('#0a0a0a') // dark theme mock
+    expect(opts.backgroundColor).toBe('#1a1712') // dark theme mock
     expect(opts.webPreferences?.sandbox).toBe(true)
     expect(opts.webPreferences?.partition).toBe('orca-dashboard-popout')
     expect(opts.webPreferences?.webviewTag).toBe(false)

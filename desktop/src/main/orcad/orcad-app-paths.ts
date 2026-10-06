@@ -8,6 +8,8 @@
  * file rather than a missing implementation.
  */
 import { homedir, tmpdir } from 'node:os'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import type { AppPathName } from '../../shared/app-environment'
@@ -25,7 +27,7 @@ export function resolveUserDataPath(): string {
     return explicit
   }
   const xdg = env('XDG_DATA_HOME')
-  return xdg ? join(xdg, 'Orca') : join(homedir(), '.orca')
+  return xdg ? join(xdg, APP_IDENTITY.productName) : join(homedir(), APP_HOME_DIR_NAME)
 }
 
 /** Electron's `'appData'` definition, computed without Electron. */

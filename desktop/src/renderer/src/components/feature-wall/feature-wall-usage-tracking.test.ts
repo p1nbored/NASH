@@ -73,7 +73,6 @@ describe('feature wall usage tracking state', () => {
   it('marks the usage step complete from system-default provider data', () => {
     expect(
       hasFeatureWallUsageTracking({
-        claudeManagedAccountCount: 0,
         codexManagedAccountCount: 0,
         claudeRateLimits: null,
         codexRateLimits: rateLimits()

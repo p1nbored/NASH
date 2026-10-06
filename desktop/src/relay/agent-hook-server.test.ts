@@ -39,7 +39,7 @@ describe('RelayAgentHookServer', () => {
   it('keeps named-pipe endpoint files on a real filesystem path', () => {
     const endpointDir = endpointDirForRelaySocket('\\\\.\\pipe\\orca-relay-abc123')
 
-    expect(endpointDir).toBe(join(homedir(), '.orca-relay', 'agent-hooks', 'orca-relay-abc123'))
+    expect(endpointDir).toBe(join(homedir(), '.nash-relay', 'agent-hooks', 'orca-relay-abc123'))
     expect(endpointDir).not.toContain('\\\\.\\pipe')
   })
 

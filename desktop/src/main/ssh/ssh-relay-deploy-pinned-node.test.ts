@@ -16,7 +16,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn((os: string, arch: string) => {
     const normalizedOs = os.toLowerCase()
     const normalizedArch = arch.toLowerCase()
@@ -76,7 +76,7 @@ vi.mock('./ssh-relay-ripgrep-install', async (importOriginal) => ({
 // and GC. Stub them so deploy tests need no real SSH connection.
 vi.mock('./ssh-relay-versioned-install', () => ({
   readLocalFullVersion: vi.fn().mockReturnValue('0.1.0+abcdef012345'),
-  computeRemoteRelayDir: (home: string, v: string) => `${home}/.orca-remote/relay-${v}`,
+  computeRemoteRelayDir: (home: string, v: string) => `${home}/.nash-remote/relay-${v}`,
   isRelayAlreadyInstalled: vi.fn().mockResolvedValue(true),
   finalizeInstall: vi.fn().mockResolvedValue(undefined),
   abandonInstall: vi.fn().mockResolvedValue(undefined),
@@ -154,9 +154,9 @@ import { decodeRemotePowerShellScript } from './ssh-remote-powershell'
 
 const PINNED_VERSION = '0.1.0+feedfacecafe'
 const RUNTIME_SHA = NODE_RUNTIME_ASSETS['linux-x64-glibc'].executableSha256
-const PINNED_NODE = `/home/user/.orca-remote/runtimes/node-${RUNTIME_SHA}/bin/node`
+const PINNED_NODE = `/home/user/.nash-remote/runtimes/node-${RUNTIME_SHA}/bin/node`
 const COMPAT_SHA = NODE_RUNTIME_COMPAT_ASSETS['linux-x64-glibc217'].executableSha256
-const COMPAT_NODE = `/home/user/.orca-remote/runtimes/node-${COMPAT_SHA}/bin/node`
+const COMPAT_NODE = `/home/user/.nash-remote/runtimes/node-${COMPAT_SHA}/bin/node`
 
 function pinnedPlan(): PinnedRelayPlan {
   return {
@@ -264,7 +264,7 @@ describe('deployAndLaunchRelay on the pinned Node runtime', () => {
 
     expect(resolveRemoteNodePath).not.toHaveBeenCalled()
     expect(result.serverBuildId).toBe(PINNED_VERSION)
-    expect(result.remoteRelayDir).toBe(`/home/user/.orca-remote/relay-${PINNED_VERSION}`)
+    expect(result.remoteRelayDir).toBe(`/home/user/.nash-remote/relay-${PINNED_VERSION}`)
     expect(result.nodePath).toBe(PINNED_NODE)
     expect(detachedLaunchCommand(conn)).toContain(`'${PINNED_NODE}' relay.js --detached`)
     expect(
@@ -432,7 +432,7 @@ describe('deployAndLaunchRelay on the pinned Node runtime', () => {
     expect(uploadDirectory.mock.calls.map(([local]) => local)).toContain('/tmp/addons')
     expect(ensurePinnedRelayRuntime).toHaveBeenCalledWith(
       expect.objectContaining({
-        remoteRelayDir: `/home/user/.orca-remote/relay-${PINNED_VERSION}`
+        remoteRelayDir: `/home/user/.nash-remote/relay-${PINNED_VERSION}`
       }),
       false
     )
@@ -548,7 +548,7 @@ describe('deployAndLaunchRelay on the pinned Node runtime', () => {
     const conn = makeConnection('pinned-node')
     Object.assign(conn, { writeFile: vi.fn().mockResolvedValue(undefined) })
     const sha = NODE_RUNTIME_ASSETS['win32-x64'].executableSha256
-    const nodeExe = `C:/Users/me/.orca-remote/runtimes/node-${sha}/node.exe`
+    const nodeExe = `C:/Users/me/.nash-remote/runtimes/node-${sha}/node.exe`
     vi.mocked(planPinnedNodeRelay).mockResolvedValueOnce({
       ...pinnedPlan(),
       target: 'win32-x64',
@@ -568,7 +568,7 @@ describe('deployAndLaunchRelay on the pinned Node runtime', () => {
 
     expect(resolveRemoteNodePath).not.toHaveBeenCalled()
     expect(result.nodePath).toBe(nodeExe)
-    expect(result.remoteRelayDir).toBe(`C:/Users/me/.orca-remote/relay-${PINNED_VERSION}`)
+    expect(result.remoteRelayDir).toBe(`C:/Users/me/.nash-remote/relay-${PINNED_VERSION}`)
     expect(ensurePinnedRelayRuntime).toHaveBeenCalledWith(
       expect.objectContaining({ host: expect.objectContaining({ os: 'win32' }) }),
       true

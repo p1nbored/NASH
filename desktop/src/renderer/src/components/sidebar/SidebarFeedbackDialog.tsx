@@ -279,7 +279,7 @@ export function SidebarFeedbackDialog({
           <DialogDescription className="text-xs">
             {translate(
               'auto.components.sidebar.SidebarFeedbackDialog.a828fa4aee',
-              "Share what's working, what's broken, or what Orca should do next."
+              "Feedback goes to the Orca team. Share what's working, what's broken, or what should come next."
             )}
           </DialogDescription>
         </DialogHeader>

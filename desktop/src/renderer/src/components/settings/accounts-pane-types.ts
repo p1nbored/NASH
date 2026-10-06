@@ -1,10 +1,7 @@
 import type { SecretAtRestProtection } from '../../../../shared/secret-at-rest-protection'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
-import type {
-  ClaudeRateLimitAccountsState,
-  CodexRateLimitAccountsState
-} from '../../../../shared/managed-account-types'
+import type { CodexRateLimitAccountsState } from '../../../../shared/managed-account-types'
 import type {
   ProviderRateLimits,
   RateLimitRuntimeTarget
@@ -36,8 +33,6 @@ export type CodexAccountAction =
   | `remove:${string}`
   | `select:${string}`
 
-export type ClaudeAccountAction = CodexAccountAction
-
 export type RemoveAccountTarget = {
   id: string
   runtime: ProviderAccountRuntimeView
@@ -51,12 +46,6 @@ export type ProviderAccountVisibilityOptions = {
 export type CodexAccountActionRunner = (
   action: CodexAccountAction,
   operation: () => Promise<CodexRateLimitAccountsState>,
-  actionRuntime?: ProviderAccountRuntimeView
-) => Promise<void>
-
-export type ClaudeAccountActionRunner = (
-  action: ClaudeAccountAction,
-  operation: () => Promise<ClaudeRateLimitAccountsState>,
   actionRuntime?: ProviderAccountRuntimeView
 ) => Promise<void>
 
@@ -78,12 +67,6 @@ export type AccountsPaneSectionModel = {
   accountRuntimeSentenceLabel: string
   accountRuntimeUnavailable: boolean
   accountVisibilityOptions: ProviderAccountVisibilityOptions
-  claudeAccounts: ClaudeRateLimitAccountsState
-  claudeAction: ClaudeAccountAction
-  visibleClaudeAccounts: ClaudeRateLimitAccountsState['accounts']
-  systemClaudeActive: boolean
-  setRemoveClaudeTarget: Dispatch<SetStateAction<RemoveAccountTarget | null>>
-  runClaudeAccountAction: ClaudeAccountActionRunner
   codexAccounts: CodexRateLimitAccountsState
   codexAction: CodexAccountAction
   visibleCodexAccounts: CodexRateLimitAccountsState['accounts']

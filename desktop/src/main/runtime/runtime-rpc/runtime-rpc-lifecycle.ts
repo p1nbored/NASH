@@ -8,6 +8,8 @@ import type { DeviceRegistry } from '../device-registry'
 import type { E2EEKeypair } from '../e2ee-keypair'
 import { UnpairedDeviceAuthThrottle } from '../rpc/unpaired-device-auth-throttle'
 import { MobileSocketWiring } from '../rpc/mobile-socket-wiring'
+import { getDotIngressPort } from '../dot-ingress/dot-ingress-control'
+import { DotIngressListener } from '../dot-ingress/dot-ingress-listener'
 import { RuntimeRpcWebSocketDispatch } from './runtime-rpc-websocket-dispatch'
 import {
   formatWsEndpoint,
@@ -137,6 +139,28 @@ export class RuntimeRpcLifecycle extends RuntimeRpcWebSocketDispatch {
         )
       }
     })
+
+    await this.startDotIngress()
+  }
+
+  // Why: off by default and supplementary, so it starts only when the persisted switch is on and never blocks the CLI endpoint.
+  protected async startDotIngress(): Promise<void> {
+    const port = getDotIngressPort(this.runtime)
+    const listener = new DotIngressListener({
+      runtime: this.runtime,
+      userDataPath: this.userDataPath,
+      pid: this.pid,
+      platform: this.platform,
+      readEnabled: () => port.readEnabled(),
+      keepaliveIntervalMs: this.keepaliveIntervalMs
+    })
+    this.dotIngressListener = listener
+    port.installControl(listener)
+    try {
+      await listener.sync()
+    } catch (error) {
+      console.error('[runtime] Failed to start the dot ingress endpoint:', error)
+    }
   }
 
   // Why: STA-2370 — a desktop with no previously-connected device stays on loopback until the user

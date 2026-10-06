@@ -163,7 +163,7 @@ describe('NativeChatQueuedMessageList', () => {
       ])
     )
     const row = screen.getByRole('listitem')
-    expect(row.textContent).toContain('Orca restarted before this message was sent.')
+    expect(row.textContent).toContain('NASH restarted before this message was sent.')
     expect(row.textContent).not.toContain('Your message was not sent.')
   })
 
@@ -237,7 +237,7 @@ describe('NativeChatQueuedMessageList', () => {
   it('a paused queue shows one header row per reason above the cards, with Resume', () => {
     const cases = [
       ['stopped', 'Queue paused because you interrupted'],
-      ['restarted', 'Queue paused because Orca restarted'],
+      ['restarted', 'Queue paused because NASH restarted'],
       ['cleared', 'Queue paused after you cleared the conversation'],
       ['some-newer-reason', 'Queue paused']
     ] as const

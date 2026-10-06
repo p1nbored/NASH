@@ -138,7 +138,7 @@ export class CliInstaller extends CliPathRegistration {
       await this.installSymlink(status)
       await this.removeLegacyLinuxCommandIfManaged(status.launcherPath)
     } else if (this.isWindowsPackagedBundledCommand(status.commandPath, status.launcherPath)) {
-      // Why: packaged Windows already ships resources/bin/orca.exe; registration only owns the PATH entry.
+      // Why: packaged Windows already ships resources/bin/nash.exe; registration only owns the PATH entry.
     } else {
       // Why: the Windows wrapper dir is user-writable (%LOCALAPPDATA%), so mkdir here can't hit EACCES.
       await mkdir(dirname(status.commandPath), { recursive: true })

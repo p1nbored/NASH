@@ -404,7 +404,7 @@ describe('OrcaRuntimeRpcServer', () => {
       id: 'req_select_claude',
       method: 'accounts.selectClaude',
       deviceToken: mobile.token,
-      params: { accountId: 'claude-account' }
+      params: { accountId: null }
     })
     await dispatch({
       id: 'req_select_codex',
@@ -621,7 +621,6 @@ describe('OrcaRuntimeRpcServer', () => {
         error: expect.objectContaining({ code: 'forbidden' })
       })
     )
-    expect(mocks.selectClaudeAccount).toHaveBeenCalledWith('claude-account')
     expect(mocks.selectCodexAccount).toHaveBeenCalledWith(null)
     expect(mocks.consumeCodexRateLimitResetCredit).toHaveBeenCalledWith(
       '11111111-1111-4111-8111-111111111111',
@@ -795,6 +794,5 @@ describe('OrcaRuntimeRpcServer', () => {
     expect(mocks.linearTeamLabels).toHaveBeenCalledWith('team-1', 'workspace-1')
     expect(mocks.linearTeamMembers).toHaveBeenCalledWith('team-1', 'workspace-1')
     expect(mocks.linearAddIssueComment).toHaveBeenCalledWith('issue-1', 'done', 'workspace-1')
-    expect(mocks.removeClaudeAccount).not.toHaveBeenCalled()
   })
 })

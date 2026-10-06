@@ -1,30 +1,33 @@
-; electron-builder NSIS hooks for the Orca Windows installer.
+; electron-builder NSIS hooks for the NASH Windows installer.
 ;
 ; electron-builder accepts exactly ONE `nsis.include` file, so every customInstall /
-; customUnInstall hook Orca needs lives here.
+; customUnInstall hook NASH needs lives here.
 
 !include "${__FILEDIR__}\orca-process-check.nsh"
 
 ; ---------------------------------------------------------------------------
-; Markdown and CSV/TSV "Open with Orca" (issues #10138, #23225)
+; Markdown and CSV/TSV "Open with NASH" (issues #10138, #23225)
 ;
 ; Why hand-rolled instead of electron-builder's `fileAssociations` on Windows:
 ; app-builder-lib emits !insertmacro APP_ASSOCIATE, whose first line is
 ;   WriteRegStr SHELL_CONTEXT "Software\Classes\.md" "" "<ProgID>"
 ; That overwrites whichever editor currently owns .md, with no backup, for every
 ; existing user on their next UPDATE - and APP_UNASSOCIATE never restores it, so
-; uninstalling Orca would leave .md pointing at a deleted ProgID.
+; uninstalling NASH would leave .md pointing at a deleted ProgID.
 ;
 ; These writes are additive only. Registering a ProgID plus an OpenWithProgids
-; hint and an Applications\<exe>\SupportedTypes entry puts Orca in Explorer's
+; hint and an Applications\<exe>\SupportedTypes entry puts NASH in Explorer's
 ; "Open with" list and in "Choose another app", while the default handler stays
 ; exactly where the user left it. Never add a `Software\Classes\.<ext>` default
 ; value here.
 ;
 ; Keep the extension list in sync with isOsOpenedDocumentName().
 ; ---------------------------------------------------------------------------
-!define MARKDOWN_PROGID "Orca.Markdown"
-!define TABULAR_PROGID "Orca.Tabular"
+; Why not Orca.*: HKCU\Software\Classes is shared per user, so removing Orca's ProgIDs on a NASH uninstall
+; would break a real Orca install. Keep the prefix equal to documentProgIdPrefix in
+; src/shared/app-identity-constants.ts.
+!define MARKDOWN_PROGID "NASH.Markdown"
+!define TABULAR_PROGID "NASH.Tabular"
 
 !macro ORCA_REGISTER_DOCUMENT_OPEN_WITH EXT PROGID
   WriteRegNone SHELL_CONTEXT "Software\Classes\${EXT}\OpenWithProgids" "${PROGID}"
@@ -59,7 +62,7 @@
 ; Clean up the relocated terminal daemon on a REAL uninstall.
 ;
 ; Why: the daemon host is deliberately copied OUT of the install dir into
-; %LOCALAPPDATA%\Orca\daemon-host so that app UPDATES cannot kill it —
+; %LOCALAPPDATA%\NASH\daemon-host so that app UPDATES cannot kill it —
 ; electron-builder's kill sweep selects processes whose image path is under
 ; $INSTDIR, and that relocation is what keeps terminals alive across updates.
 ; The same design means a normal uninstall's process sweep and file removal both
@@ -78,7 +81,8 @@
     Push $1
     Push $2
     ; The host exe is a verbatim copy of the app exe, so the app's own image name
-    ; reaches it; the second name covers hosts left by builds that renamed the copy.
+    ; reaches it. No Orca-named image is killed here: NASH never shipped a renamed
+    ; host, and such a kill would reach a real Orca install on the same machine.
     ; Filtered to the current user like upstream's per-user KILL_PROCESS, so an
     ; elevated machine-wide uninstall cannot reach another logged-on user's session.
     ; NSIS expands USERNAME itself: routing through cmd.exe only to get %USERNAME%
@@ -95,14 +99,12 @@
     ${endIf}
     nsExec::Exec 'taskkill /F /IM "${APP_EXECUTABLE_FILENAME}" $2'
     Pop $0
-    nsExec::Exec 'taskkill /F /IM "orca-terminal-daemon.exe" $2'
-    Pop $0
     Pop $2
     Pop $1
     Pop $0
     ; Give the OS a moment to release the image lock before removing the tree.
     Sleep 500
-    RMDir /r "$LOCALAPPDATA\Orca\daemon-host"
+    RMDir /r "$LOCALAPPDATA\NASH\daemon-host"
   ${endIf}
   ; Why outside the ${isUpdated} guard: customInstall rewrites these on every update, so
   ; dropping them during uninstallOldVersion is correct and keeps the pair symmetric.

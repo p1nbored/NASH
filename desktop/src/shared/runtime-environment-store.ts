@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { APP_IDENTITY } from './app-identity-constants'
 import { JsonStringifyByteLimitError } from './node-bounded-json-stringify'
 import { readNodeFileSyncWithinLimit } from './node-bounded-file-reader'
 import { parsePairingCode, type PairingOffer } from './pairing'
@@ -54,7 +55,7 @@ export function addEnvironmentFromPairingCode(
   if (!offer) {
     throw new RuntimeEnvironmentStoreError(
       'invalid_argument',
-      'Invalid pairing code. Expected an orca://pair?... URL or bare pairing payload.'
+      `Invalid pairing code. Expected a ${APP_IDENTITY.urlScheme}://pair?... URL or bare pairing payload.`
     )
   }
   const store = readEnvironmentStore(userDataPath)
@@ -105,7 +106,7 @@ export function updateEnvironmentFromPairingCode(
   if (!offer) {
     throw new RuntimeEnvironmentStoreError(
       'invalid_argument',
-      'Invalid pairing code. Expected an orca://pair?... URL or bare pairing payload.'
+      `Invalid pairing code. Expected a ${APP_IDENTITY.urlScheme}://pair?... URL or bare pairing payload.`
     )
   }
   const store = readEnvironmentStore(userDataPath)

@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { APP_XDG_DATA_HOME_PATH } from '../../shared/app-identity-paths'
 import { dirname, join, resolve, sep } from 'node:path'
 import { isDefinitiveAbsence } from '../../shared/definitive-filesystem-absence'
 import {
@@ -159,7 +160,7 @@ export class CodexManagedHomeLifecycle {
       throw new Error('Could not resolve the active WSL home directory for Codex login.')
     }
 
-    const linuxPath = `${home.replace(/\/$/, '')}/.local/share/orca/codex-accounts/${accountId}/home`
+    const linuxPath = `${home.replace(/\/$/, '')}/${APP_XDG_DATA_HOME_PATH}/codex-accounts/${accountId}/home`
     const markerPath = `${linuxPath}/.orca-managed-home`
     const created = await runWslProcess({
       distro,
@@ -200,7 +201,7 @@ export class CodexManagedHomeLifecycle {
           'set -euo pipefail',
           `candidate=${quotePosixShell(linuxHomePath)}`,
           `expected_marker=${quotePosixShell(expectedAccountId)}`,
-          'managed_root="${HOME%/}/.local/share/orca/codex-accounts"',
+          `managed_root="\${HOME%/}/${APP_XDG_DATA_HOME_PATH}/codex-accounts"`,
           'candidate_real=$(readlink -f -- "$candidate" 2>/dev/null || true)',
           'managed_root_real=$(readlink -f -- "$managed_root" 2>/dev/null || true)',
           'test -n "$candidate_real"',

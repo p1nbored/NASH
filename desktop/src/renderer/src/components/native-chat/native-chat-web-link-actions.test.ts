@@ -96,7 +96,7 @@ describe('handleNativeChatWebLink', () => {
       kind: 'url'
     })
     expect(requests[0]?.primary.label).toBe('System Browser')
-    expect(requests[0]?.alternate?.label).toBe('Orca Browser')
+    expect(requests[0]?.alternate?.label).toBe('NASH Browser')
   })
 
   it('routes the popover actions to their destinations', () => {

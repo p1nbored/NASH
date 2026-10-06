@@ -89,12 +89,8 @@ export function useFeatureWallCompletion(
   } = persistedCompletion
 
   const readUsageAccountState = useCallback(async (): Promise<boolean> => {
-    const [claude, codex] = await Promise.all([
-      window.api.claudeAccounts.list().catch(() => null),
-      window.api.codexAccounts.list().catch(() => null)
-    ])
+    const codex = await window.api.codexAccounts.list().catch(() => null)
     return hasFeatureWallUsageTracking({
-      claudeManagedAccountCount: claude?.accounts.length ?? 0,
       codexManagedAccountCount: codex?.accounts.length ?? 0,
       claudeRateLimits: rateLimits.claude,
       codexRateLimits: rateLimits.codex

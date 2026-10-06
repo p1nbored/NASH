@@ -1,4 +1,9 @@
 import { quotePowerShellLiteral } from '../../shared/powershell-native-argument'
+import {
+  APP_WSL_DIR_NAME,
+  APP_XDG_DATA_DIR_NAME,
+  APP_XDG_DATA_HOME_PATH
+} from '../../shared/app-identity-paths'
 
 const MANAGED_MARKER = '# Orca managed WSL CLI launcher'
 const BRIDGE_MANAGED_MARKER = '# Orca managed WSL CLI PowerShell bridge'
@@ -14,7 +19,7 @@ fi`
 
 export function buildWslLauncher(
   windowsLauncherPath: string,
-  bridgePath = '${XDG_DATA_HOME:-$HOME/.local/share}/orca/orca-wsl-bridge.ps1'
+  bridgePath = `\${XDG_DATA_HOME:-$HOME/.local/share}/${APP_XDG_DATA_DIR_NAME}/orca-wsl-bridge.ps1`
 ): string {
   return buildLauncher(windowsLauncherPath, quoteShell(bridgePath), FIND_INTEROP_POWERSHELL)
 }
@@ -195,8 +200,8 @@ function bridgeLines(lines: readonly string[]): string {
 
 export function getBridgePathFromCommandPath(commandPath: string): string {
   // Why: both the current Linux command and the legacy pre-rename command
-  // share one WSL bridge under ~/.local/share/orca.
-  return `${commandPath.replace(/\/\.local\/bin\/(?:orca|orca-ide)$/, '/.local/share/orca')}/orca-wsl-bridge.ps1`
+  // share one WSL bridge under ~/.local/share/nash.
+  return `${commandPath.replace(/\/\.local\/bin\/(?:orca|orca-ide)$/, `/${APP_XDG_DATA_HOME_PATH}`)}/orca-wsl-bridge.ps1`
 }
 
 export function buildSafeReplaceGuard(path: string, managedMarker: string): string {
@@ -219,7 +224,7 @@ export function buildRegistrationLockPrelude(commandPath: string): string {
   // a second install (e.g. stable + nightly) mutating the same distro files.
   return [
     `if command -v flock >/dev/null 2>&1 && mkdir -p ${quoteShell(lockDir)} 2>/dev/null; then`,
-    `  exec 9>${quoteShell(`${lockDir}/.orca-wsl-cli.lock`)}`,
+    `  exec 9>${quoteShell(`${lockDir}/${APP_WSL_DIR_NAME}-cli.lock`)}`,
     '  flock -x -w 30 9',
     'fi'
   ].join('\n')

@@ -498,7 +498,7 @@ describe.skipIf(process.platform === 'win32')('Codex backfill supervisor owner l
     vi.stubEnv('ORCA_USER_DATA_PATH', userData)
     const home = join(userData, 'managed-home')
     const lockRoot = resolveCodexBackfillSupervisorLockRoot(home)
-    const lockParent = join(lockRoot, '.orca')
+    const lockParent = join(lockRoot, '.nash')
     const token = '00000000-0000-4000-8000-000000000000'
     const ownerPath = join(lockParent, `managed-hook-install.owner-${token}.json`)
     const lockPath = join(lockParent, 'managed-hook-install.lock')
@@ -535,7 +535,7 @@ describe.skipIf(process.platform === 'win32')('Codex backfill supervisor owner l
           readFile(
             join(
               resolveCodexBackfillSupervisorLockRoot(home),
-              '.orca',
+              '.nash',
               'managed-hook-install.lock'
             ),
             'utf8'

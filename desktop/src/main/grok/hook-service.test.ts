@@ -281,14 +281,14 @@ describe('GrokHookService', () => {
     expect(registersManagedGrokScript(config.hooks.PostToolUse[0].hooks[0].command)).toBe(true)
     if (process.platform !== 'win32') {
       const command = config.hooks.PostToolUse[0].hooks[0].command
-      expect(command).toContain(join(homeDir, '.orca'))
+      expect(command).toContain(join(homeDir, '.nash'))
       // Why: with no Orca pane in the environment the guard short-circuits, so a standalone Grok
       // session never spawns a shell for the managed script at all.
       expect(command).toMatch(/^if \[ -n "\$\{ORCA_PANE_KEY-\}" \] && /)
     }
 
     const script = readFileSync(
-      join(homeDir, '.orca', 'agent-hooks', GROK_SCRIPT_FILE_NAME),
+      join(homeDir, '.nash', 'agent-hooks', GROK_SCRIPT_FILE_NAME),
       'utf8'
     )
     expect(script).toContain('/hook/grok')

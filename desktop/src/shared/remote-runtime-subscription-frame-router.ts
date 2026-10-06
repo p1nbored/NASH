@@ -45,7 +45,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
       this.options.fail(
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
-          'Remote Orca runtime returned an undecryptable frame.'
+          'Remote NASH runtime returned an undecryptable frame.'
         )
       )
       return
@@ -64,8 +64,8 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
           readyFrame === 'invalid'
-            ? 'Remote Orca runtime returned an invalid E2EE handshake frame.'
-            : 'Remote Orca runtime returned an unexpected E2EE handshake frame.'
+            ? 'Remote NASH runtime returned an invalid E2EE handshake frame.'
+            : 'Remote NASH runtime returned an unexpected E2EE handshake frame.'
         )
       )
       return
@@ -80,7 +80,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
       this.options.fail(
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
-          'Remote Orca runtime returned an invalid E2EE auth frame.'
+          'Remote NASH runtime returned an invalid E2EE auth frame.'
         )
       )
       return
@@ -88,7 +88,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
     if (authenticated.kind !== 'authenticated') {
       const code = authenticated.unauthorized ? 'unauthorized' : 'invalid_runtime_response'
       this.options.fail(
-        new RemoteRuntimeClientError(code, 'Remote Orca runtime rejected the pairing token.')
+        new RemoteRuntimeClientError(code, 'Remote NASH runtime rejected the pairing token.')
       )
       return
     }
@@ -105,7 +105,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
       this.options.fail(
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
-          'Remote Orca runtime returned an invalid response frame.'
+          'Remote NASH runtime returned an invalid response frame.'
         )
       )
       return
@@ -125,7 +125,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
     this.options.fail(
       new RemoteRuntimeClientError(
         'invalid_runtime_response',
-        'Remote Orca runtime returned a mismatched response id.'
+        'Remote NASH runtime returned a mismatched response id.'
       )
     )
   }
@@ -135,7 +135,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
       this.options.fail(
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
-          'Remote Orca runtime returned binary data before authentication.'
+          'Remote NASH runtime returned binary data before authentication.'
         )
       )
       return
@@ -145,7 +145,7 @@ export class RemoteRuntimeSubscriptionFrameRouter<TResult> {
       this.options.fail(
         new RemoteRuntimeClientError(
           'invalid_runtime_response',
-          'Remote Orca runtime returned an undecryptable binary frame.'
+          'Remote NASH runtime returned an undecryptable binary frame.'
         )
       )
       return

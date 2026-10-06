@@ -1,6 +1,6 @@
 import { app, powerMonitor, type BrowserWindow } from 'electron'
 import { is } from '@electron-toolkit/utils'
-import { getOrcaCloudAuthConfig } from '../orca-profiles/profile-cloud-auth-config'
+import { getDesktopRelayAuthConfig } from '../orca-profiles/profile-cloud-auth-config'
 import { getProfileUserDataPath } from '../orca-profiles/profile-storage-paths'
 import {
   getCanonicalUserDataPath,
@@ -252,11 +252,12 @@ async function launchDesktopMode(
   // Why after the proxy await: the push gateway client is an app-owned fetcher, so it must not
   // issue its first request ahead of the persisted proxy.
   startDesktopPushService(runtimeRpc)
-  const cloudAuth = getOrcaCloudAuthConfig()
-  if (cloudAuth.configured) {
+  // Why: NASH builds create no relay unless ORCA_RELAY_URL is explicit (Orca cloud services off).
+  const relayAuthConfig = getDesktopRelayAuthConfig()
+  if (relayAuthConfig) {
     try {
       const relayService = new DesktopRelayService({
-        authConfig: cloudAuth.config,
+        authConfig: relayAuthConfig,
         userDataPath: getProfileUserDataPath(),
         appVersion: app.getVersion(),
         runtimeRpc,

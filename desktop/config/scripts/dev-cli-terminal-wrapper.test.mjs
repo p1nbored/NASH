@@ -15,11 +15,16 @@ describe('dev CLI terminal wrappers', () => {
       platform: 'win32'
     })
 
-    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca-dev.cmd'), 'utf8')
+    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'nash-dev.cmd'), 'utf8')
     expect(wrapper).toContain(`set "ORCA_USER_DATA_PATH=${userDataPath}"`)
     expect(wrapper).toContain('set "ORCA_DEV_CLI_INVOCATION=1"')
     expect(wrapper).toContain(`node "${path.join(root, 'out', 'cli', 'index.js')}" %*`)
+    // Why: the in-session aliases keep the names agents and skills already call inside NASH terminals.
+    expect(readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca-dev.cmd'), 'utf8')).toBe(
+      wrapper
+    )
     expect(readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca.cmd'), 'utf8')).toBe(wrapper)
+    expect(readFileSync(path.join(root, 'out', 'bin', 'nash-dev.cmd'), 'utf8')).toBe(wrapper)
     expect(readFileSync(path.join(root, 'out', 'bin', 'orca-dev.cmd'), 'utf8')).toBe(wrapper)
     expect(readFileSync(path.join(root, 'out', 'bin', 'orca.cmd'), 'utf8')).toBe(wrapper)
   })
@@ -35,7 +40,7 @@ describe('dev CLI terminal wrappers', () => {
       platform: 'win32'
     })
 
-    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca-dev.cmd'), 'utf8')
+    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'nash-dev.cmd'), 'utf8')
     expect(wrapper).toContain(`set "ORCA_USER_DATA_PATH=${userDataPath.replaceAll('%', '%%')}"`)
     expect(wrapper).toContain(
       `set "ORCA_APP_EXECUTABLE=${electronExecutable.replaceAll('%', '%%')}"`
@@ -57,13 +62,15 @@ describe('dev CLI terminal wrappers', () => {
       platform: 'linux'
     })
 
-    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca-dev'), 'utf8')
+    const wrapper = readFileSync(path.join(userDataPath, 'cli', 'bin', 'nash-dev'), 'utf8')
     expect(wrapper).toContain(`export ORCA_USER_DATA_PATH=${JSON.stringify(userDataPath)}`)
     expect(wrapper).toContain('export ORCA_DEV_CLI_INVOCATION=1')
     expect(wrapper).toContain(
       `exec node ${JSON.stringify(path.join(root, 'out', 'cli', 'index.js'))}`
     )
+    expect(readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca-dev'), 'utf8')).toBe(wrapper)
     expect(readFileSync(path.join(userDataPath, 'cli', 'bin', 'orca'), 'utf8')).toBe(wrapper)
+    expect(readFileSync(path.join(root, 'out', 'bin', 'nash-dev'), 'utf8')).toBe(wrapper)
     expect(readFileSync(path.join(root, 'out', 'bin', 'orca-dev'), 'utf8')).toBe(wrapper)
     expect(readFileSync(path.join(root, 'out', 'bin', 'orca'), 'utf8')).toBe(wrapper)
   })

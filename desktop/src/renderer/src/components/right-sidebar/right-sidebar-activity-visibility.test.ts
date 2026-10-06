@@ -37,6 +37,21 @@ const items: ActivityBarItem[] = [
 ]
 
 describe('getVisibleRightSidebarActivityItems', () => {
+  it.each([
+    { isFolder: false, isFolderWorkspace: false, isSshRepo: false },
+    { isFolder: false, isFolderWorkspace: false, isSshRepo: true },
+    { isFolder: true, isFolderWorkspace: true, isSshRepo: true },
+    { isFolder: true, isFolderWorkspace: false, isSshRepo: false }
+  ])('keeps the passive Workbench accessible in workspace context %j', (context) => {
+    const workbench: ActivityBarItem = {
+      id: 'workbench',
+      icon: Files,
+      title: 'Workbench',
+      shortcut: ''
+    }
+    expect(getVisibleRightSidebarActivityItems([workbench], context)).toEqual([workbench])
+  })
+
   it('shows ports only for SSH repos', () => {
     expect(
       getVisibleRightSidebarActivityItems(items, {

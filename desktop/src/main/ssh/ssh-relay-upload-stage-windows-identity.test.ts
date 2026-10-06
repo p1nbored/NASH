@@ -32,9 +32,9 @@ import { removeTreeSync } from '../../shared/windows-transient-lock-removal'
 
 const windows = getRemoteHostPlatform('win32-x64')
 const owner = '.sftp-namespace-123e4567e89b12d3a456426614174000'
-const pool = 'C:/Users/ada/.orca-remote/.upload-stages'
+const pool = 'C:/Users/ada/.nash-remote/.upload-stages'
 const pinned: WindowsUploadStageIdentity = {
-  node: 'C:/Users/ada/.orca-remote/runtimes/node-abc/node.exe'
+  node: 'C:/Users/ada/.nash-remote/runtimes/node-abc/node.exe'
 }
 const stage = parseReservedRelayUploadStage(
   windows,

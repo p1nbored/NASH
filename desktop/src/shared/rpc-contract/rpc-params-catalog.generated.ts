@@ -360,6 +360,13 @@ import {
   NotificationsSubscribeParams
 } from './notifications-params'
 import {
+  RunCompleteParams,
+  TaskProposeParams,
+  TaskReportParams,
+  TaskShowParams,
+  TaskStartParams
+} from './orchestration-autopilot-params'
+import {
   FederationDispatchParams,
   FederationFleetSnapshotParams,
   FederationOutputReadParams,
@@ -407,6 +414,12 @@ import {
 } from './orchestration-worker-release-schemas-params'
 import { WorkerStartParams } from './orchestration-worker-start-params'
 import { WorkerDispatchParams as WorkerDispatchParamsOfOrchestrationWorkerStopParams } from './orchestration-worker-stop-params'
+import {
+  PermissionRequestParams,
+  PermissionWaitParams,
+  WorkbenchPermissionAnswerParams,
+  WorkbenchPermissionListParams
+} from './permission-relay-params'
 import {
   PluginInvokeCommandParams,
   PluginReadPanelEntryParams,
@@ -530,6 +543,42 @@ import {
   TerminalUpdateViewport
 } from './terminal-viewport-schemas-params'
 import { UpdaterCheckParams } from './updater-params'
+import {
+  WorkbenchDotIngressDisableWorkspaceParams,
+  WorkbenchDotIngressEnableWorkspaceParams,
+  WorkbenchDotIngressRequestsListParams,
+  WorkbenchDotIngressSetEnabledParams,
+  WorkbenchDotIngressSetRateLimitsParams
+} from './workbench-dot-ingress-params'
+import { WorkbenchDotRemoteSetConnectionParams } from './workbench-dot-remote-params'
+import {
+  WorkbenchCancelParams,
+  WorkbenchClefProfilePinParams,
+  WorkbenchClefVerifyParams,
+  WorkbenchListParams,
+  WorkbenchSubmitParams
+} from './workbench-params'
+import {
+  WorkbenchRoutingTableAcceptParams,
+  WorkbenchRoutingTableCheckRoutesParams,
+  WorkbenchRoutingTableImportParams,
+  WorkbenchRoutingTableListParams,
+  WorkbenchRoutingTableRejectParams,
+  WorkbenchRoutingTableRevertParams,
+  WorkbenchRunListParams,
+  WorkbenchRunMessageParams,
+  WorkbenchRunShowParams,
+  WorkbenchRunStopParams
+} from './workbench-run-params'
+import {
+  WorkbenchAttemptTranscriptReadParams,
+  WorkbenchRunTasksParams
+} from './workbench-task-window-params'
+import {
+  WorkbenchValidationDecideParams,
+  WorkbenchValidationListDecisionsParams
+} from './workbench-validation-decision-params'
+import { WorkbenchValidationCheckPendingParams } from './workbench-validation-params'
 import { WorkspacePortKillParams, WorkspacePortScanParams } from './workspace-ports-params'
 import { WorktreeCreate, WorktreePrefetchCreateBase } from './worktree-create-params'
 import {
@@ -1021,10 +1070,13 @@ export const RPC_PARAMS_BY_METHOD = {
   'orchestration.gateList': GateListParams,
   'orchestration.gateResolve': GateResolveParams,
   'orchestration.inbox': InboxParams,
+  'orchestration.permissionRequest': PermissionRequestParams,
+  'orchestration.permissionWait': PermissionWaitParams,
   'orchestration.reply': ReplyParams,
   'orchestration.requestShow': RequestShowParams,
   'orchestration.reset': ResetParams,
   'orchestration.run': RunParams,
+  'orchestration.runComplete': RunCompleteParams,
   'orchestration.runCreate': RunCreateParams,
   'orchestration.runCurrent': RunCurrentParams,
   'orchestration.runList': RunListParams,
@@ -1034,6 +1086,10 @@ export const RPC_PARAMS_BY_METHOD = {
   'orchestration.sessionAddress': SessionAddressParams,
   'orchestration.taskCreate': TaskCreateParams,
   'orchestration.taskList': TaskListParams,
+  'orchestration.taskPropose': TaskProposeParams,
+  'orchestration.taskReport': TaskReportParams,
+  'orchestration.taskShow': TaskShowParams,
+  'orchestration.taskStart': TaskStartParams,
   'orchestration.workerAbandon': WorkerDispatchParams,
   'orchestration.workerList': WorkerListParams,
   'orchestration.workerRead': WorkerReadParams,
@@ -1188,6 +1244,42 @@ export const RPC_PARAMS_BY_METHOD = {
   'updater.download': null,
   'updater.getStatus': null,
   'updater.install': null,
+  'workbench.attempts.transcript.read': WorkbenchAttemptTranscriptReadParams,
+  'workbench.clef.profile.pin': WorkbenchClefProfilePinParams,
+  'workbench.clef.verify': WorkbenchClefVerifyParams,
+  'workbench.dotIngress.requests.list': WorkbenchDotIngressRequestsListParams,
+  'workbench.dotIngress.settings.get': null,
+  'workbench.dotIngress.settings.setEnabled': WorkbenchDotIngressSetEnabledParams,
+  'workbench.dotIngress.settings.setRateLimits': WorkbenchDotIngressSetRateLimitsParams,
+  'workbench.dotIngress.workspaces.disable': WorkbenchDotIngressDisableWorkspaceParams,
+  'workbench.dotIngress.workspaces.enable': WorkbenchDotIngressEnableWorkspaceParams,
+  'workbench.dotRemote.disable': null,
+  'workbench.dotRemote.enable': null,
+  'workbench.dotRemote.pairing.start': null,
+  'workbench.dotRemote.pairing.status': null,
+  'workbench.dotRemote.revoke': null,
+  'workbench.dotRemote.setConnection': WorkbenchDotRemoteSetConnectionParams,
+  'workbench.dotRemote.status': null,
+  'workbench.permission.answer': WorkbenchPermissionAnswerParams,
+  'workbench.permission.list': WorkbenchPermissionListParams,
+  'workbench.requests.cancel': WorkbenchCancelParams,
+  'workbench.requests.list': WorkbenchListParams,
+  'workbench.requests.submit': WorkbenchSubmitParams,
+  'workbench.routing.status': null,
+  'workbench.routingTable.accept': WorkbenchRoutingTableAcceptParams,
+  'workbench.routingTable.checkRoutes': WorkbenchRoutingTableCheckRoutesParams,
+  'workbench.routingTable.import': WorkbenchRoutingTableImportParams,
+  'workbench.routingTable.list': WorkbenchRoutingTableListParams,
+  'workbench.routingTable.reject': WorkbenchRoutingTableRejectParams,
+  'workbench.routingTable.revert': WorkbenchRoutingTableRevertParams,
+  'workbench.runs.list': WorkbenchRunListParams,
+  'workbench.runs.message': WorkbenchRunMessageParams,
+  'workbench.runs.show': WorkbenchRunShowParams,
+  'workbench.runs.stop': WorkbenchRunStopParams,
+  'workbench.runs.tasks': WorkbenchRunTasksParams,
+  'workbench.validation.checkPending': WorkbenchValidationCheckPendingParams,
+  'workbench.validation.decide': WorkbenchValidationDecideParams,
+  'workbench.validation.listDecisions': WorkbenchValidationListDecisionsParams,
   'workspacePorts.kill': WorkspacePortKillParams,
   'workspacePorts.scan': WorkspacePortScanParams,
   'worktree.activate': WorktreeActivate,

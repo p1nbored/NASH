@@ -175,7 +175,7 @@ const ACTIVE_OLD = JSON.stringify(
 )
 
 describe('orcad install lock ownership', () => {
-  const remoteDir = `/home/u/.orca-remote/orcad-${NEW_VERSION}`
+  const remoteDir = `/home/u/.nash-remote/orcad-${NEW_VERSION}`
   const install = (signal?: AbortSignal) =>
     installOrcadBundle(
       {
@@ -291,7 +291,7 @@ describe('deployOrcad', () => {
     scriptHost(script)
     await deployOrcad(options())
     expect(vi.mocked(acquireInstallLock).mock.calls[0][1]).toBe(
-      `/home/u/.orca-remote/orcad-${NEW_VERSION}`
+      `/home/u/.nash-remote/orcad-${NEW_VERSION}`
     )
     expect(vi.mocked(uploadRelayDirectory).mock.calls[0][2]).toContain(`orcad-${NEW_VERSION}`)
   })
@@ -320,7 +320,7 @@ describe('deployOrcad', () => {
         platform === 'darwin-x64'
       )
       expect(ensureRemoteOrcadNodeRuntime).toHaveBeenCalledWith(
-        expect.objectContaining({ target, slotDir: `/home/u/.orca-remote/orcad-${NEW_VERSION}` })
+        expect.objectContaining({ target, slotDir: `/home/u/.nash-remote/orcad-${NEW_VERSION}` })
       )
       expect(vi.mocked(uploadRelayDirectory).mock.invocationCallOrder[0]).toBeLessThan(
         mockExec.mock.invocationCallOrder[chmod]
@@ -342,7 +342,7 @@ describe('deployOrcad', () => {
         nodeRuntimeArchive: async () => '/cache/node.zip'
       },
       NEW_VERSION,
-      `C:/Users/u/.orca-remote/orcad-${NEW_VERSION}`
+      `C:/Users/u/.nash-remote/orcad-${NEW_VERSION}`
     )
     expect(uploadRelayDirectory).toHaveBeenCalledOnce()
     expect(finalizeInstall).toHaveBeenCalledOnce()
@@ -549,7 +549,7 @@ describe('deployOrcad', () => {
         'recovery requires a fresh host terminal census'
       )
       expect(result.outcome === 'installed-not-activated' && result.reason).toContain(
-        '/home/u/.orca-remote/orcad-state-snapshots/'
+        '/home/u/.nash-remote/orcad-state-snapshots/'
       )
       expect(mockExec.mock.calls.some(([, command]) => command.includes('echo RESTORED'))).toBe(
         false

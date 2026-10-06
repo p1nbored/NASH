@@ -6,6 +6,8 @@
  * Signals readiness to parent via IPC: { type: 'ready' }
  * Shuts down cleanly on SIGTERM.
  */
+// Why first: a daemon started from a shell never ran index.ts, so only this import scrubs the Clef variables before they reach any PTY.
+import '../startup/clef-environment-scrub-at-load'
 import { readFileSync } from 'node:fs'
 import { startDaemon, type DaemonHandle } from './daemon-main'
 import { createPtySubprocess } from './pty-subprocess'

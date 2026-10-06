@@ -110,7 +110,7 @@ describe('SSH relay hostile-host matrix', () => {
           ) {
             // Refused from the probe alone: nothing was uploaded.
             expect(
-              await hostExecStatus(target, 'ls -d /root/.orca-remote/runtimes/node-*')
+              await hostExecStatus(target, 'ls -d /root/.nash-remote/runtimes/node-*')
             ).not.toBe(0)
           }
         } finally {

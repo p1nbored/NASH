@@ -121,7 +121,7 @@ describe('mobileStructuredSendDelivery', () => {
     ).toEqual({
       outcome: 'rejected',
       operationIdSpent: true,
-      error: "Orca couldn't reach the agent. Your message was not sent. Send it again."
+      error: "NASH couldn't reach the agent. Your message was not sent. Send it again."
     })
   })
 

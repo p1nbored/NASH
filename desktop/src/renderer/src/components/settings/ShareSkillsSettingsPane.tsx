@@ -71,7 +71,7 @@ export function ShareSkillsSettingsPane(): React.JSX.Element {
         <p className="text-xs leading-relaxed text-muted-foreground">
           {translate(
             'auto.components.settings.shareSkills.linkDescription',
-            'Shared bundles are not searchable or listed in Orca. The link is the credential, so send it only to people you trust.'
+            'Shared bundles are not searchable or listed in NASH. The link is the credential, so send it only to people you trust.'
           )}
         </p>
       </section>
@@ -79,7 +79,7 @@ export function ShareSkillsSettingsPane(): React.JSX.Element {
       <SettingsSwitchRow
         label={translate(
           'auto.components.settings.shareSkills.allowAgentPublishing',
-          'Allow agents and the Orca CLI to publish skill links'
+          'Allow agents and the NASH CLI to publish skill links'
         )}
         description={
           isWebClient
@@ -122,11 +122,11 @@ export function ShareSkillsSettingsPane(): React.JSX.Element {
               {isWebClient
                 ? translate(
                     'auto.components.settings.shareSkills.signInWebDescription',
-                    'Publishing and link management are available in the Orca desktop app.'
+                    'Publishing and link management are available in the NASH desktop app.'
                   )
                 : translate(
                     'auto.components.settings.shareSkills.signInDescription',
-                    'Use your Orca account to publish bundles and manage their links. Recipients do not need an account.'
+                    'Use your Orca cloud account to publish bundles and manage their links. Recipients do not need an account.'
                   )}
             </p>
           </div>
@@ -139,7 +139,7 @@ export function ShareSkillsSettingsPane(): React.JSX.Element {
             >
               {authStatus?.state === 'reconnect-required'
                 ? translate('auto.components.settings.shareSkills.signInAgain', 'Sign in again')
-                : translate('auto.components.settings.shareSkills.signIn', 'Sign in to Orca')}
+                : translate('auto.components.settings.shareSkills.signIn', 'Sign in to Orca Cloud')}
             </Button>
           ) : null}
         </section>

@@ -826,7 +826,7 @@ describe('how a stopped child ends the start its loop was waiting on', () => {
 
     await eventually(async () => expect((await submission(second))?.dispatchState).toBe('rejected'))
     // The sentence is the constructor's, not the reason the stop was given.
-    const text = 'Codex never finished starting, so Orca stopped it.'
+    const text = 'Codex never finished starting, so NASH stopped it.'
     expect(await submission(second)).toMatchObject({
       reason: text,
       rejection: { kind: 'hostStopped' }

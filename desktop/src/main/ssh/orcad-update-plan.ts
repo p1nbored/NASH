@@ -12,7 +12,7 @@
  * daemon; at exactly zero it replaces it. Both are correct, and both mean the outgoing
  * version's directory is still load-bearing.
  *
- * **The state root is shared across versions.** `~/.orca/` (or `$ORCA_USER_DATA`) is outside
+ * **The state root is shared across versions.** `~/.nash/` (or `$ORCA_USER_DATA`) is outside
  * every version dir, and Orca's persisted state carries no schema version — migrations run
  * on load and rewrite in place. So "is the old version able to read what the new one wrote"
  * has no answer that can be computed. That is why rollback is defined against a

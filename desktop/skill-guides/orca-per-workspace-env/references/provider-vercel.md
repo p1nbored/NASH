@@ -5,7 +5,7 @@ provider. It fills section 7's skeletons with a real surface, `vercel sandbox
 create|exec|snapshot|remove`. Adapt the names and verify every flag against
 `vercel sandbox --help` for the user's CLI version.
 
-This is the Orca-server connection mode: the recipe emits a pairing URL. If the user chose SSH in
+This is the NASH-server connection mode: the recipe emits a pairing URL. If the user chose SSH in
 the interview, use `references/ssh-host.md` instead.
 
 ## Snapshot cleanup
@@ -138,11 +138,11 @@ vercel sandbox exec "$name" "${vercel_args[@]}" --timeout 20m \
       node config/scripts/run-electron-vite-build.mjs --config config/electron-vite.vm-serve.config.ts && \
       printf "%s" "$c" > .orca-built; }' >&2
 
-# 3. (remote) start orca serve in the background, writing recipe JSON to a file; poll until it parses
+# 3. (remote) start nash serve in the background, writing recipe JSON to a file; poll until it parses
 recipe_json="$(vercel sandbox exec "$name" "${vercel_args[@]}" --timeout 60s \
   --env "ORCA_PORT=$port" --env "ORCA_PROJECT_ROOT=$project_root" --env "ORCA_PAIRING_ADDRESS=$pairing_ws" \
   -- bash -lc 'set -euo pipefail; cd "$ORCA_PROJECT_ROOT"; rm -f /tmp/orca-recipe.json /tmp/orca-serve.log; \
-    nohup pnpm exec orca-dev serve --port "$ORCA_PORT" --project-root "$ORCA_PROJECT_ROOT" \
+    nohup pnpm exec nash-dev serve --port "$ORCA_PORT" --project-root "$ORCA_PROJECT_ROOT" \
       --pairing-address "$ORCA_PAIRING_ADDRESS" --recipe-json >/tmp/orca-recipe.json 2>/tmp/orca-serve.log </dev/null & \
     pid=$!; for _ in $(seq 1 80); do \
       node -e "JSON.parse(require(\"node:fs\").readFileSync(\"/tmp/orca-recipe.json\",\"utf8\"))" >/dev/null 2>&1 && { cat /tmp/orca-recipe.json; exit 0; }; \

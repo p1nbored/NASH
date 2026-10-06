@@ -54,7 +54,7 @@ export function FeatureWallTourSurface({
   className,
   panelClassName,
   doneLabel = 'Done',
-  footerText = 'Reopen any time from Help > Explore Orca.',
+  footerText = 'Reopen any time from Help > Explore NASH.',
   enableKeyboardShortcut = true,
   compactRail = false,
   detachedFooter = false,

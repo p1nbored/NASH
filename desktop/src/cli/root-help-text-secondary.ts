@@ -1,3 +1,6 @@
+import { APP_IDENTITY } from '../shared/app-identity-constants'
+import { APP_DEFAULT_WORKSPACES_DIR_SEGMENTS } from '../shared/app-identity-paths'
+
 export const ROOT_HELP_TEXT_SECONDARY = [
   '  uncheck                   Uncheck a checkbox by --element ref',
   '  focus                     Focus an element by --element ref',
@@ -42,7 +45,7 @@ export const ROOT_HELP_TEXT_SECONDARY = [
   '  orca agent-context [--json]',
   '  orca search <query> [--scope conversation|all] [--fresh] [--limit <n>] [--cursor <c>] [--agent <id>] [--path <p>] [--since <iso>] [--sort relevance|newest] [--debug] [--json]',
   '  orca search --index-status [--json]',
-  '  orca account add [--agent claude|codex] [--json]',
+  '  orca account add [--agent codex] [--json]',
   '  orca account list [--json]',
   '  orca host list [--json]',
   '  orca environment add --name <name> --pairing-code <code> [--json]',
@@ -105,7 +108,7 @@ export const ROOT_HELP_TEXT_SECONDARY = [
   '',
   'Output Options:',
   '  --json                    Emit machine-readable JSON instead of human text',
-  '  --pairing-code <code>      Connect to a remote Orca runtime using an orca://pair?... code',
+  `  --pairing-code <code>      Connect to a remote Orca runtime using a ${APP_IDENTITY.urlScheme}://pair?... code`,
   '  --environment <selector>   Connect using a saved environment id or name',
   '  --help                    Show this help message',
   '',
@@ -171,7 +174,7 @@ export const ROOT_HELP_TEXT_SECONDARY = [
   '  $ orca file open-changed --mode diff',
   '  $ orca file open src/App.tsx',
   '  $ orca terminal create --worktree active --command "codex"',
-  '  $ orca terminal list --worktree path:/Users/me/orca/workspaces/orca/cli-test-1 --json',
+  `  $ orca terminal list --worktree path:/Users/me/${APP_DEFAULT_WORKSPACES_DIR_SEGMENTS.join('/')}/orca/cli-test-1 --json`,
   '  $ orca terminal send --terminal term_123 --text "hi" --enter',
   '  $ orca terminal wait --terminal term_123 --for exit --timeout-ms 60000 --json',
   '  $ orca tab current --json',

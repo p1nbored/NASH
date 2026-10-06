@@ -2,6 +2,10 @@ import type { ITheme } from '@xterm/xterm'
 import { getTheme, getThemeNames } from './terminal-themes-data'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import {
+  AUTOPILOT_TERMINAL_DIVIDER_DARK,
+  AUTOPILOT_TERMINAL_DIVIDER_LIGHT
+} from '../../../shared/terminal-themes/autopilot'
+import {
   makeCustomTerminalThemeSelection,
   normalizeTerminalCustomThemes,
   terminalCustomThemeToXtermTheme,
@@ -17,8 +21,8 @@ import {
 export const BUILTIN_TERMINAL_THEME_NAMES = getThemeNames()
 
 export { DEFAULT_TERMINAL_THEME_DARK, DEFAULT_TERMINAL_THEME_LIGHT }
-export const DEFAULT_TERMINAL_DIVIDER_DARK = '#3f3f46'
-const DEFAULT_TERMINAL_DIVIDER_LIGHT = '#d4d4d8'
+export const DEFAULT_TERMINAL_DIVIDER_DARK = AUTOPILOT_TERMINAL_DIVIDER_DARK
+export const DEFAULT_TERMINAL_DIVIDER_LIGHT = AUTOPILOT_TERMINAL_DIVIDER_LIGHT
 
 export type EffectiveTerminalAppearance = {
   mode: 'dark' | 'light'

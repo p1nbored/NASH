@@ -13,7 +13,7 @@ import {
 
 const argv = [
   'C:\\rt\\node.exe',
-  'C:\\Users\\me user\\.orca-remote\\relay-1\\relay.js',
+  'C:\\Users\\me user\\.nash-remote\\relay-1\\relay.js',
   RELAY_WINDOWS_BREAKAWAY_LAUNCH_FLAG,
   '--stdout-file',
   'C:/Users/me user/relay.log',

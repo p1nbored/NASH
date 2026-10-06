@@ -1,5 +1,6 @@
 import type { CommandSpec } from '../args'
 import { GLOBAL_FLAGS } from '../args'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 
 export const ENVIRONMENT_COMMAND_SPECS: CommandSpec[] = [
   {
@@ -34,7 +35,9 @@ export const ENVIRONMENT_COMMAND_SPECS: CommandSpec[] = [
     summary: 'Save a remote Orca runtime environment from a pairing code',
     usage: 'orca environment add --name <name> --pairing-code <code> [--json]',
     allowedFlags: [...GLOBAL_FLAGS, 'name'],
-    examples: ['orca environment add --name work-laptop --pairing-code orca://pair?code=...']
+    examples: [
+      `orca environment add --name work-laptop --pairing-code ${APP_IDENTITY.urlScheme}://pair?code=...`
+    ]
   },
   {
     path: ['environment', 'list'],

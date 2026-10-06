@@ -19,8 +19,8 @@ export function getTerminalFileOpenHint(showActions = true): string {
 export function getTerminalOrcaFileOpenHint(showActions = true): string {
   const prefix = showActions ? 'Click for actions or ' : ''
   return isMacPlatform()
-    ? `${prefix}⌘+click to open in Orca`
-    : `${prefix}Ctrl+click to open in Orca`
+    ? `${prefix}⌘+click to open in NASH`
+    : `${prefix}Ctrl+click to open in NASH`
 }
 
 // Why: local HTML paths keep Shift+modifier as the system-browser shortcut.
@@ -66,8 +66,8 @@ export function getTerminalUrlOpenHint(options: TerminalUrlOpenHintOptions = {})
   const prefix = terminalLinkActionHintPrefix(options.showActions !== false)
   if (invertsToOrca) {
     return isMacPlatform()
-      ? `${prefix}⌘+click to open, or ⇧⌘+click to open in Orca`
-      : `${prefix}Ctrl+click to open, or Shift+Ctrl+click to open in Orca`
+      ? `${prefix}⌘+click to open, or ⇧⌘+click to open in NASH`
+      : `${prefix}Ctrl+click to open, or Shift+Ctrl+click to open in NASH`
   }
   return isMacPlatform()
     ? `${prefix}⌘+click to open, or ⇧⌘+click for system browser`
@@ -81,7 +81,7 @@ export function getTerminalUrlSystemBrowserHint(): string {
 // Why: the mirror of the system-browser hint for surfaces where inverting sends the
 // modifier the other way; a plain click there already opens the system browser.
 export function getTerminalUrlOrcaBrowserHint(): string {
-  return isMacPlatform() ? '⇧⌘+click to open in Orca' : 'Shift+Ctrl+click to open in Orca'
+  return isMacPlatform() ? '⇧⌘+click to open in NASH' : 'Shift+Ctrl+click to open in NASH'
 }
 
 export function getTerminalWorktreePathOpenHint(

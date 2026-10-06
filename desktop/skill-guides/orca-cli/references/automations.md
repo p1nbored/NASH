@@ -1,6 +1,6 @@
 # Automations
 
-An automation is a scheduled Orca prompt run by a chosen provider against either a repo-created worktree or an existing workspace.
+An automation is a scheduled NASH prompt run by a chosen provider against either a repo-created worktree or an existing workspace.
 
 ```text
 ORCA automations list --json
@@ -16,4 +16,4 @@ ORCA automations remove <automationId> --json
 
 Schedules accept `hourly`, `daily`, `weekdays`, `weekly`, 5-field cron, or RRULE. Use `--time <HH:MM>` with `daily`/`weekdays`/`weekly`, and `--day <0-6>` only with `weekly` where Sunday is `0`.
 
-Use `--repo <selector>` for a new worktree per run, or `--workspace <selector>` / `--workspace-mode existing` for an existing Orca worktree. `--repo` and `--workspace` are mutually exclusive. Use `--reuse-session` only for existing-workspace automations; if the previous terminal is gone, Orca falls back to a fresh session. Prefer `--disabled` while testing setup.
+Use `--repo <selector>` for a new worktree per run, or `--workspace <selector>` / `--workspace-mode existing` for an existing NASH worktree. `--repo` and `--workspace` are mutually exclusive. Use `--reuse-session` only for existing-workspace automations; if the previous terminal is gone, NASH falls back to a fresh session. Prefer `--disabled` while testing setup.

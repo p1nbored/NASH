@@ -55,7 +55,7 @@ describe('canonicalizeWslLinuxPath', () => {
       () => '/'
     )
 
-    expect(plan?.commandScriptPath).toBe('/.orca/agent-hooks/codex-hook.sh')
+    expect(plan?.commandScriptPath).toBe('/.nash/agent-hooks/codex-hook.sh')
     expect(plan?.trustConfigPath).toBe('/hooks.json')
   })
 

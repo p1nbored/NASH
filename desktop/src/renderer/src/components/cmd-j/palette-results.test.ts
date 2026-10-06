@@ -121,7 +121,7 @@ const sections: SettingsNavSection[] = [
   {
     id: 'servers',
     title: 'Remote Orca Servers',
-    description: 'Pair remote Orca runtimes.',
+    description: 'Pair remote NASH runtimes.',
     icon: Settings,
     searchEntries: [{ title: 'Remote Orca Servers' }],
     group: 'remote'

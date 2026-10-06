@@ -33,7 +33,7 @@ export function createZcodePlanCredentialsApi(): PreloadApi['zcodePlanCredential
   const unsupported = () =>
     Promise.reject(
       new Error(
-        'GLM Coding Plan keys can only be changed in the desktop app on the computer running Orca.'
+        'GLM Coding Plan keys can only be changed in the desktop app on the computer running NASH.'
       )
     )
   return {
@@ -59,7 +59,7 @@ export function createCursorAccountsApi(): NonNullable<Partial<PreloadApi>['curs
         tokenFresh: false,
         error: translate(
           'auto.components.web.preloadApi.cursorAccounts.hostOnly',
-          'Cursor sign-in details are only readable on the computer running Orca.'
+          'Cursor sign-in details are only readable on the computer running NASH.'
         )
       })
   }
@@ -97,18 +97,6 @@ function createEmptyManagedAccountsState(): {
     accounts: [],
     activeAccountId: null,
     activeAccountIdsByRuntime: { host: null, wsl: {} }
-  }
-}
-
-export function createClaudeAccountsApi(): PreloadApi['claudeAccounts'] {
-  const empty = createEmptyManagedAccountsState()
-  return {
-    list: () => Promise.resolve(empty),
-    add: () => Promise.resolve(empty),
-    cancelPendingLogin: () => Promise.resolve(false),
-    reauthenticate: () => Promise.resolve(empty),
-    remove: () => Promise.resolve(empty),
-    select: () => Promise.resolve(empty)
   }
 }
 

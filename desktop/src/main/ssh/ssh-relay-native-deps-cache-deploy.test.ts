@@ -16,7 +16,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn().mockReturnValue('linux-x64'),
   RELAY_SENTINEL: 'ORCA-RELAY v0.1.0 READY\n',
   RELAY_SENTINEL_TIMEOUT_MS: 10_000
@@ -55,7 +55,7 @@ vi.mock('./ssh-relay-install-marker', async (importOriginal) => ({
 
 vi.mock('./ssh-relay-versioned-install', () => ({
   readLocalFullVersion: vi.fn().mockReturnValue('0.1.0+testhash'),
-  computeRemoteRelayDir: (home: string, v: string) => `${home}/.orca-remote/relay-${v}`,
+  computeRemoteRelayDir: (home: string, v: string) => `${home}/.nash-remote/relay-${v}`,
   isRelayAlreadyInstalled: vi.fn().mockResolvedValue(false),
   finalizeInstall: vi.fn().mockResolvedValue(undefined),
   abandonInstall: vi.fn().mockResolvedValue(undefined),
@@ -165,8 +165,8 @@ describe('relay native-deps cache on the deploy path', () => {
     expect(commands.some((c) => c.includes('npm install'))).toBe(false)
     expect(commands.some((c) => c.includes('npm rebuild'))).toBe(false)
     // The bundle still gets its own directory; only the native tree is shared.
-    expect(commands.some((c) => c.includes('.orca-remote/relay-0.1.0+testhash'))).toBe(true)
-    expect(commands.some((c) => /\.orca-remote\/native\/linux-x64-[0-9a-f]{16}/.test(c))).toBe(true)
+    expect(commands.some((c) => c.includes('.nash-remote/relay-0.1.0+testhash'))).toBe(true)
+    expect(commands.some((c) => /\.nash-remote\/native\/linux-x64-[0-9a-f]{16}/.test(c))).toBe(true)
   })
 
   it('still installs on the first deploy, then publishes the tree the probe loaded', async () => {
@@ -189,7 +189,7 @@ describe('relay native-deps cache on the deploy path', () => {
     const install = commands.find((c) => c.includes('npm install')) ?? ''
     expect(install).toContain('node-pty@1.1.0')
     // The install runs in the relay directory; publication moves the finished tree afterwards.
-    expect(install).toContain('.orca-remote/relay-0.1.0+testhash')
+    expect(install).toContain('.nash-remote/relay-0.1.0+testhash')
     const promote = commands.findLast((c) => c.includes('mkdir "$cache"')) ?? ''
     expect(promote).toContain(': > "$cache/.deps-complete"')
   })
@@ -288,7 +288,7 @@ describe('relay native-deps cache on the deploy path', () => {
 
     const commands = execCommands()
     // A repair never consults the shared entry: its reset would rewrite a tree it does not own.
-    expect(commands.some((c) => c.includes('.orca-remote/native/'))).toBe(false)
+    expect(commands.some((c) => c.includes('.nash-remote/native/'))).toBe(false)
     const install = commands.find((c) => c.includes('npm install')) ?? ''
     expect(install).toContain('if [ -L node_modules ]; then rm -f node_modules; fi;')
     expect(install).toContain("rm -rf 'node_modules/node-pty'")

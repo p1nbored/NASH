@@ -774,7 +774,7 @@ describe('NativeChatStructuredSession delivery', () => {
   // reopened may have cleared, until a Retry it still stops brings it back.
   it('words a refusal seen here in full, and after a reopen only once its Retry is refused', async () => {
     const newerOrca =
-      'Chats were saved by a newer Orca. Your message was not sent. Update Orca to keep using them.'
+      'Chats were saved by a newer NASH. Your message was not sent. Update NASH to keep using them.'
     mocks.mode = 'outbox'
     mocks.call.mockResolvedValue({
       ok: false,

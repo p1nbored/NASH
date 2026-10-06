@@ -28,7 +28,7 @@ describe('live remote freeze RPC', () => {
       command: 'C:\\Program Files\\nodejs\\node.exe',
       prefixArgs: ['C:\\repo\\out\\cli\\index.js'],
       env: {
-        ORCA_USER_DATA_PATH: 'C:\\Users\\dev\\AppData\\Roaming\\orca-dev',
+        ORCA_USER_DATA_PATH: 'C:\\Users\\dev\\AppData\\Roaming\\nash-dev',
         ORCA_DEV_CLI_INVOCATION: '1',
         ORCA_APP_EXECUTABLE: 'C:\\repo\\node_modules\\electron\\dist\\electron.exe',
         ORCA_APP_EXECUTABLE_NEEDS_APP_ROOT: '1'

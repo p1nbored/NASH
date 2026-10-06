@@ -7,7 +7,7 @@ import {
 } from './hook-config'
 
 const EVENTS = ['turn_end', 'session_start', 'session_end', 'post_tool'] as const
-const MANAGED_COMMAND = '/Users/tester/.orca/agent-hooks/jcode-hook.sh'
+const MANAGED_COMMAND = '/Users/tester/.nash/agent-hooks/jcode-hook.sh'
 
 describe('jcode hook-config', () => {
   it('appends a [hooks] table when the config has none', () => {
@@ -135,7 +135,7 @@ turn_end = "~/bin/mine" # replaces agent-hooks/jcode-hook.sh
     // Why: isManaged matches any agent-hooks/jcode-hook path, but getStatus demands
     // the exact script path — a stale entry stuck the install on `partial` forever
     // with no Orca action able to repair it.
-    const stale = '/Users/old/.orca/agent-hooks/jcode-hook.sh'
+    const stale = '/Users/old/.nash/agent-hooks/jcode-hook.sh'
     const source = `[hooks]\nturn_end = ${tomlQuoteString(stale)}\n`
     const result = applyJcodeManagedHooks(source, EVENTS, MANAGED_COMMAND, 'jcode-hook.sh')
     expect(result.userOwnedEvents).toEqual([])

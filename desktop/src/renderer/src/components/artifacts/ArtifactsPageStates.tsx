@@ -40,7 +40,7 @@ export function ArtifactsPageAuthState({
           {needsReconnect
             ? translate(
                 'auto.components.artifacts.ArtifactsPage.reconnectHeading',
-                'Sign in to Orca again'
+                'Sign in to Orca Cloud again'
               )
             : translate(
                 'auto.components.artifacts.ArtifactsPage.signInHeading',
@@ -55,7 +55,7 @@ export function ArtifactsPageAuthState({
               )
             : translate(
                 'auto.components.artifacts.ArtifactsPage.signInCopy',
-                'Use your Orca account to upload artifacts and manage their public links.'
+                'Use your Orca cloud account to upload artifacts and manage their public links.'
               )}
         </p>
       </div>
@@ -66,14 +66,14 @@ export function ArtifactsPageAuthState({
                 'auto.components.artifacts.ArtifactsPage.signInAgainAction',
                 'Sign in again'
               )
-            : translate('auto.components.artifacts.ArtifactsPage.signIn', 'Sign in to Orca')}
+            : translate('auto.components.artifacts.ArtifactsPage.signIn', 'Sign in to Orca Cloud')}
         </Button>
       ) : (
         <div className="flex flex-col items-center gap-2">
           <p className="max-w-sm text-xs leading-5 text-muted-foreground">
             {translate(
               'auto.components.artifacts.ArtifactsPage.unconfiguredCopy',
-              'Orca account sign-in is not configured on this machine yet.'
+              'Orca Cloud sign-in is not configured on this machine yet.'
             )}
           </p>
           <Button variant="outline" size="sm" onClick={onOpenAccountSettings}>

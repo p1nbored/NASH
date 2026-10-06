@@ -49,14 +49,14 @@ function legacyManagedHookCommand(): string {
   if (process.platform === 'win32') {
     return join(homes.userDataDir, 'agent-hooks', 'codex-hook.cmd')
   }
-  const quoted = `'${join(homes.tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh')}'`
+  const quoted = `'${join(homes.tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh')}'`
   return `if [ -x ${quoted} ]; then /bin/sh ${quoted}; fi`
 }
 
 function currentManagedHookCommand(): string {
   const scriptPath = join(
     homes.tmpHome,
-    '.orca',
+    '.nash',
     'agent-hooks',
     process.platform === 'win32' ? 'codex-hook.cmd' : 'codex-hook.sh'
   )

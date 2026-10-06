@@ -98,10 +98,10 @@ describe('CopilotHookService', () => {
     } else {
       expect(firstPromptHook.bash).toContain('if [ -f ')
       expect(firstPromptHook.bash).toContain('] && [ -x ')
-      expect(firstPromptHook.bash).toContain('.orca/agent-hooks/copilot-hook.sh')
+      expect(firstPromptHook.bash).toContain('.nash/agent-hooks/copilot-hook.sh')
       expect(firstPromptHook.bash).toContain("ORCA_COPILOT_HOOK_EVENT='UserPromptSubmit'")
     }
-    expect(existsSync(join(tmpDir, '.orca', 'agent-hooks', 'copilot-hook.sh'))).toBe(
+    expect(existsSync(join(tmpDir, '.nash', 'agent-hooks', 'copilot-hook.sh'))).toBe(
       process.platform !== 'win32'
     )
   })

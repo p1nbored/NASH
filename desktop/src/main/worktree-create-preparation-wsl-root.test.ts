@@ -54,7 +54,7 @@ import {
 } from './worktree-create-preparation'
 
 const WSL_HOME = '\\\\wsl.localhost\\Ubuntu\\home\\jin'
-const MIRRORED_ROOT = `${WSL_HOME}\\orca\\workspaces`
+const MIRRORED_ROOT = `${WSL_HOME}\\nash\\workspaces`
 const repo = { id: 'repo-1', path: `${WSL_HOME}\\src\\repo` } as Repo
 const windowsRepo = { id: 'repo-2', path: 'C:\\src\\repo' } as Repo
 const settings = { workspaceDir: 'C:\\workspaces', nestWorkspaces: false }

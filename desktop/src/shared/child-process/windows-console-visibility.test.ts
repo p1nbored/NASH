@@ -141,9 +141,9 @@ function findOffenders(): string[] {
       // guard is about, and only the literal was being matched.
       // Recorded gap, not an oversight: `shell: process.platform === 'win32'`
       // IS shell: true on the platform this guard is about, but matching any
-      // non-`false` value also flags `shell: spawnConfig.shell`
-      // (claude-accounts/service.ts:1086), a pass-through that is false in
-      // every branch. A false positive there costs an allowlist entry, which
+      // non-`false` value would also flag a pass-through such as
+      // `shell: spawnConfig.shell` that is false in every branch. A false
+      // positive there costs an allowlist entry, which
       // disables the guard for that whole file -- worse than the gap. No
       // computed `shell:` exists in the tree today; if one appears, resolve it
       // rather than widening this regex.

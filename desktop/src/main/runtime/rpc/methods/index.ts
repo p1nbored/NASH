@@ -49,11 +49,30 @@ import { STRUCTURED_AGENT_SESSION_METHODS } from './structured-agent-session'
 import { ARTIFACT_METHODS } from './artifacts'
 import { AGENT_HOOK_METHODS } from './agent-hooks'
 import { AGENT_LAUNCH_METHODS } from './agent-launch'
+import { WORKBENCH_METHODS } from './workbench'
+import { WORKBENCH_RUN_METHODS } from './workbench-run'
+import { WORKBENCH_TASK_WINDOW_METHODS } from './workbench-task-window'
+import { WORKBENCH_ROUTING_TABLE_METHODS } from './workbench-routing-table'
+import { WORKBENCH_PERMISSION_METHODS } from './workbench-permission'
+import { WORKBENCH_DOT_INGRESS_METHODS } from './workbench-dot-ingress'
+import { WORKBENCH_DOT_REMOTE_METHODS } from './workbench-dot-remote'
+import { WORKBENCH_VALIDATION_METHODS } from './workbench-validation'
+import { ORCHESTRATION_AUTOPILOT_TASK_METHODS } from './orchestration/autopilot/autopilot-methods'
+import { ORCHESTRATION_PERMISSION_METHODS } from './orchestration/autopilot/permission-methods'
 
 // Why: a flat manifest keeps registration order explicit and provides one
 // grep-point for "what methods does the RPC server expose?" — useful when
 // auditing the security boundary or wiring new CLI commands.
+// The dot ingress methods (DOT_INGRESS_RPC_METHODS) are deliberately absent: they live on their own endpoint.
 export const ALL_RPC_METHODS = [
+  ...WORKBENCH_METHODS,
+  ...WORKBENCH_RUN_METHODS,
+  ...WORKBENCH_TASK_WINDOW_METHODS,
+  ...WORKBENCH_ROUTING_TABLE_METHODS,
+  ...WORKBENCH_PERMISSION_METHODS,
+  ...WORKBENCH_DOT_INGRESS_METHODS,
+  ...WORKBENCH_DOT_REMOTE_METHODS,
+  ...WORKBENCH_VALIDATION_METHODS,
   ...STATUS_METHODS,
   ...AGENT_HOOK_METHODS,
   ...AI_VAULT_METHODS,
@@ -74,6 +93,8 @@ export const ALL_RPC_METHODS = [
   ...BROWSER_CLIENT_FILE_CHANNEL_METHODS,
   ...BROWSER_NETWORK_TUNNEL_METHODS,
   ...ORCHESTRATION_METHODS,
+  ...ORCHESTRATION_AUTOPILOT_TASK_METHODS,
+  ...ORCHESTRATION_PERMISSION_METHODS,
   ...NOTIFICATION_METHODS,
   ...STATS_METHODS,
   ...DIAGNOSTICS_METHODS,

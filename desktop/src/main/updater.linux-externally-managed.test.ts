@@ -26,6 +26,9 @@ vi.mock('./update-install-exit-watchdog', () => moduleFactories.updateInstallExi
 vi.mock('./updater-prerelease-feed', () => moduleFactories.updaterPrereleaseFeed())
 vi.mock('./local-builds/local-build-switch', () => moduleFactories.localBuildSwitch())
 vi.mock('./local-builds/local-build-feed-server', () => moduleFactories.localBuildFeedServer())
+vi.mock('../shared/app-identity-constants', async (importOriginal) =>
+  moduleFactories.appIdentityWithFixtureFeed(await importOriginal())
+)
 
 const EXTERNALLY_MANAGED_MESSAGE =
   'This copy of Orca is managed by your system package manager, so Orca cannot install updates itself. Update Orca through your distribution instead.'

@@ -120,7 +120,7 @@ describe('MacFolderAccessFixDialog', () => {
 
     expect(screen.getByText('Fix access to your Documents folder')).toBeTruthy()
     expect(
-      screen.getByText('macOS is blocking Orca’s terminal service from this folder.')
+      screen.getByText('macOS is blocking NASH’s terminal service from this folder.')
     ).toBeTruthy()
     expect(screen.getByText('Open terminals and agents will restart.')).toBeTruthy()
   })
@@ -142,7 +142,7 @@ describe('MacFolderAccessFixDialog', () => {
     expect(footerButton('Reset permission')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Open System Settings' })).toBeNull()
     expect(screen.queryByRole('button', { name: /^Restart/ })).toBeNull()
-    expect(screen.getByText('Re-allow Orca for your Documents folder')).toBeTruthy()
+    expect(screen.getByText('Re-allow NASH for your Documents folder')).toBeTruthy()
     expect(screen.getByText(/Reset asks macOS for the permission again/)).toBeTruthy()
   })
 
@@ -166,7 +166,7 @@ describe('MacFolderAccessFixDialog', () => {
     openWith('denied', 'other-home')
     render(<MacFolderAccessFixDialog />)
 
-    expect(screen.getByText('Allow Orca under Files and Folders')).toBeTruthy()
+    expect(screen.getByText('Allow NASH under Files and Folders')).toBeTruthy()
     expect(screen.queryByText(/Reset asks macOS for the permission again/)).toBeNull()
   })
 

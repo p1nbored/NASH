@@ -26,7 +26,10 @@ export type RepoOwnershipEvidence =
   | { status: 'malformed' }
   | { status: 'contradictory' }
 
-export function resolveRepoOwnershipEvidence(repo: Repo): RepoOwnershipEvidence {
+// Why: other persisted owners (folders, groups, setups) carry the same two fields, so they share this resolver.
+export type RepoOwnerFields = { executionHostId?: string | null; connectionId?: string | null }
+
+export function resolveRepoOwnershipEvidence(repo: RepoOwnerFields): RepoOwnershipEvidence {
   const hasExplicitHost = repo.executionHostId !== null && repo.executionHostId !== undefined
   const explicitHost = hasExplicitHost ? parseExecutionHostId(repo.executionHostId) : null
   if (hasExplicitHost && !explicitHost) {
@@ -48,7 +51,7 @@ export function resolveRepoOwnershipEvidence(repo: Repo): RepoOwnershipEvidence 
 }
 
 export function findExactRepoOwner(
-  store: Store,
+  store: { getRepos(): readonly Repo[] },
   repoId: string,
   executionHostId?: ExecutionHostId
 ): Repo | undefined {

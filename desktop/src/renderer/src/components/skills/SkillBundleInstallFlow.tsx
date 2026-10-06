@@ -196,7 +196,7 @@ export function SkillBundleInstallFlow(props: {
           operation.status === 'reconnect-required'
             ? translate(
                 'auto.components.skills.install.reconnectBeforeInstalling',
-                'Reconnect your Orca account before installing.'
+                'Reconnect your Orca cloud account before installing.'
               )
             : operation.message
         )
@@ -215,7 +215,7 @@ export function SkillBundleInstallFlow(props: {
       setError(
         translate(
           'auto.components.skills.install.bundleVerificationFailed',
-          'Installation failed before Orca could verify the requested bundle.'
+          'Installation failed before NASH could verify the requested bundle.'
         )
       )
     } finally {

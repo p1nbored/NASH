@@ -43,7 +43,7 @@ export type RemoteInstallSelection =
  */
 export function selectRemoteInstallModel(input: {
   registration: RemoteHostRegistration
-  /** Raw directory names under `~/.orca-remote/`, as listed on the host. */
+  /** Raw directory names under `~/.nash-remote/`, as listed on the host. */
   installedDirNames: readonly string[]
 }): RemoteInstallSelection {
   if (input.registration === 'both') {

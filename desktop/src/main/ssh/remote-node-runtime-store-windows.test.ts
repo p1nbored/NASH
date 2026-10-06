@@ -28,7 +28,7 @@ const conn = {} as SshConnection
 const host = getRemoteHostPlatform('win32-x64')
 const mockExec = vi.mocked(execCommand)
 const sha = (c: string): string => c.repeat(64)
-const root = 'C:/Users/ada/.orca-remote'
+const root = 'C:/Users/ada/.nash-remote'
 const store = `${root}/runtimes`
 
 const powerShell = [
@@ -96,8 +96,8 @@ describe('parseRuntimeStoreInventory with Windows output', () => {
         `ENTRY node-${sha('b')}`,
         `VERIFIED node-${sha('b')}`,
         'PROCESS_CHECK cim',
-        `HOLD C:\\Users\\ada\\.orca-remote\\Runtimes\\node-${sha('b').toUpperCase()}\\node.exe`,
-        `HOLD C:\\Users\\ada\\.orca-remote\\runtimes\\.gc-tombstone-node-${sha('c')}.1.2\\node.exe`,
+        `HOLD C:\\Users\\ada\\.nash-remote\\Runtimes\\node-${sha('b').toUpperCase()}\\node.exe`,
+        `HOLD C:\\Users\\ada\\.nash-remote\\runtimes\\.gc-tombstone-node-${sha('c')}.1.2\\node.exe`,
         'HOLD C:\\Program Files\\nodejs\\node.exe',
         '__ORCA_RUNTIME_STORE__OK'
       ].join('\r\n')
@@ -207,7 +207,7 @@ describe.runIf(powerShell)('Windows runtime store commands (real PowerShell)', (
   }
 
   it('inventories refs, entries and verified order', () => {
-    const remote = join(home, '.orca-remote')
+    const remote = join(home, '.nash-remote')
     const relay = join(remote, 'relay-0.1.0+abc')
     mkdirSync(relay, { recursive: true })
     writeFileSync(join(relay, `.runtime-ref-node-${sha('a')}`), `${sha('a')}\n`)
@@ -232,7 +232,7 @@ describe.runIf(powerShell)('Windows runtime store commands (real PowerShell)', (
     'holds a runtime whose node.exe is running, found by its image path',
     { timeout: 120_000 },
     async () => {
-      const remote = join(home, '.orca-remote')
+      const remote = join(home, '.nash-remote')
       const entry = join(remote, 'runtimes', `node-${sha('d')}`)
       mkdirSync(entry, { recursive: true })
       const exe = join(entry, 'node.exe')

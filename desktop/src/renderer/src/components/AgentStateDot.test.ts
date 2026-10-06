@@ -21,6 +21,17 @@ vi.mock('@/components/StateIndicatorTooltip', async () => {
   }
 })
 
+function hexContrast(foreground: string, background: string): number {
+  const luminance = (hex: string): number => {
+    const [r, g, b] = [1, 3, 5]
+      .map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255)
+      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+  return (light + 0.05) / (dark + 0.05)
+}
+
 function renderMarkup(state: AgentDotState): string {
   return renderToStaticMarkup(React.createElement(AgentStateDot, { state }))
 }
@@ -35,13 +46,21 @@ function renderDotClassNames(state: AgentDotState): string[] {
 }
 
 describe('AgentStateDot', () => {
-  it('keeps the question glyph above the light-theme non-text contrast floor', () => {
+  // Why: the glyph's non-text floor (3:1) is the guarantee; the token values are the theme's choice.
+  it('keeps the question glyph above the non-text contrast floor on every sidebar surface', () => {
     const css = readFileSync(join(__dirname, '../assets/main.css'), 'utf8')
-    const lightTheme = css.match(/:root\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body
-    const darkTheme = css.match(/\.dark\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body
-
-    expect(lightTheme).toContain('--agent-question: var(--color-orange-600)')
-    expect(darkTheme).toContain('--agent-question: var(--color-orange-500)')
+    for (const selector of [':root', '.dark']) {
+      const start = css.indexOf(`\n${selector} {`)
+      const body = css.slice(start, css.indexOf('\n}', start))
+      const token = (name: string): string =>
+        new RegExp(`\\n\\s*${name}:\\s*(#[0-9a-f]{6});`).exec(body)?.[1] ?? ''
+      for (const surface of ['--background', '--worktree-sidebar', '--worktree-sidebar-accent']) {
+        expect(
+          hexContrast(token('--agent-question'), token(surface)),
+          `${selector} ${surface}`
+        ).toBeGreaterThanOrEqual(3)
+      }
+    }
   })
 
   it('renders working as a yellow spinner', () => {

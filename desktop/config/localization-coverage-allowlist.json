@@ -162,13 +162,6 @@
   },
   {
     "filePath": "src/renderer/src/components/settings/TerminalPane.tsx",
-    "kind": "jsx-attribute:description",
-    "text": "Choose what Orca opens for new local terminal panes.",
-    "dynamic": false,
-    "count": 1
-  },
-  {
-    "filePath": "src/renderer/src/components/settings/TerminalPane.tsx",
     "kind": "jsx-attribute:ariaLabel",
     "text": "Terminal shell",
     "dynamic": false,
@@ -199,13 +192,6 @@
     "filePath": "src/renderer/src/components/settings/TerminalPane.tsx",
     "kind": "jsx-attribute:aria-label",
     "text": "Custom shell executable",
-    "dynamic": false,
-    "count": 1
-  },
-  {
-    "filePath": "src/renderer/src/components/settings/TerminalPane.tsx",
-    "kind": "jsx-text",
-    "text": "Enter a shell name on PATH or an executable path. Orca starts it as a login shell.",
     "dynamic": false,
     "count": 1
   },

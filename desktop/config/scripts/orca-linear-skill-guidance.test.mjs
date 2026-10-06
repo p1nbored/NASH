@@ -21,7 +21,7 @@ function skillBody(skill) {
 function normalizeLegacyBody(skill) {
   return skillBody(skill).replace(
     `# Linear Tickets (Legacy Name)\n\n${legacyIntro}\n\n`,
-    '# Orca Linear\n\n'
+    '# NASH Linear\n\n'
   )
 }
 
@@ -104,7 +104,8 @@ describe('orca-linear install stubs', () => {
       expect(stub).toContain(`ORCA skills get ${name}`)
       // The safe CLI-resolution contract must survive in the stub, never a bare `orca`.
       expect(stub).toContain('ORCA_CLI_COMMAND')
-      expect(stub).toContain('orca-dev')
+      expect(stub).toContain('use `nash-dev`')
+      expect(stub).toContain('Otherwise, use `nash`.')
       expect(stub).toContain('orca-ide')
       expect(stub).toContain('GNOME Orca screen reader')
       expect(stub).not.toMatch(/^orca /mu)

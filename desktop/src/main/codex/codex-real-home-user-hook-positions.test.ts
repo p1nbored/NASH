@@ -75,7 +75,7 @@ function orcaGroup(command: string): HookDefinition {
 }
 
 function olderCommand(): string {
-  return wrapPosixHookCommand(join(homes.tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh'))
+  return wrapPosixHookCommand(join(homes.tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh'))
 }
 
 function frozenCommand(): string {

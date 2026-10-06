@@ -68,7 +68,7 @@ describe('the notice on each message that did not go through', () => {
           state: 'rejected',
           lastFailure: {
             kind: 'rejected',
-            reason: 'Claude never finished starting, so Orca stopped it.',
+            reason: 'Claude never finished starting, so NASH stopped it.',
             rejection: { kind: 'hostStopped' }
           }
         })
@@ -88,7 +88,7 @@ describe('the notice on each message that did not go through', () => {
       'Claude messages support at most 20 images'
     )
     expect(notices.get(agentJournalSubmissionKey('second'))?.text).toBe(
-      'Claude never finished starting, so Orca stopped it.'
+      'Claude never finished starting, so NASH stopped it.'
     )
     notices.get(agentJournalSubmissionKey('second'))?.onRetry?.()
     expect(retry).toHaveBeenCalledExactlyOnceWith('second')
@@ -118,7 +118,7 @@ describe('the notice on each message that did not go through', () => {
       })
     ).toEqual({
       [agentJournalSubmissionKey('held')]:
-        "Orca couldn't open this chat's history right now. Your message was not sent."
+        "NASH couldn't open this chat's history right now. Your message was not sent."
     })
     expect(
       held({
@@ -252,8 +252,8 @@ describe('the notice on each message that did not go through', () => {
     ],
     [
       'hostFault',
-      "Orca ran into a problem, so this didn't go through. Try again.",
-      "Orca ran into a problem, so this didn't go through."
+      "NASH ran into a problem, so this didn't go through. Try again.",
+      "NASH ran into a problem, so this didn't go through."
     ]
   ] as const)('leaves the step to the Retry beside a %s message', (kind, reason, shown) => {
     expect(
@@ -428,7 +428,7 @@ describe('the notice on each message that did not go through', () => {
       NOT_FAILED_HERE
     )
     expect(notices.get(agentJournalSubmissionKey('expired'))).toMatchObject({
-      text: "Orca couldn't confirm what happened. Check the chat."
+      text: "NASH couldn't confirm what happened. Check the chat."
     })
     expect(notices.get(agentJournalSubmissionKey('expired'))?.onRetry).toBeDefined()
     // A first attempt's id was replaced when it was refused, so nothing can have landed.
@@ -452,7 +452,7 @@ describe('the notice on each message that did not go through', () => {
     expect(words(NOT_FAILED_HERE)).toMatchObject({ text: 'Your message was not sent.' })
     expect(words(NOT_FAILED_HERE)?.onRetry).toBeDefined()
     expect(words(new Set(['held']))?.text).toBe(
-      'Chats were saved by a newer Orca. Your message was not sent. Update Orca to keep using them.'
+      'Chats were saved by a newer NASH. Your message was not sent. Update NASH to keep using them.'
     )
   })
 

@@ -23,9 +23,9 @@ import { WslTranscriptFsError } from './wsl-transcript-fs-gate'
 const UBUNTU_HOME = '\\\\wsl.localhost\\Ubuntu\\home\\ada'
 const DEBIAN_HOME = '\\\\wsl.localhost\\Debian\\home\\other'
 const ROLLOUT_LINUX =
-  '/home/ada/.local/share/orca/codex-runtime-home/home/sessions/2026/07/24/rollout-sess.jsonl'
+  '/home/ada/.local/share/nash/codex-runtime-home/home/sessions/2026/07/24/rollout-sess.jsonl'
 const ROLLOUT_UNC =
-  '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home\\sessions\\2026\\07\\24\\rollout-sess.jsonl'
+  '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home\\sessions\\2026\\07\\24\\rollout-sess.jsonl'
 
 beforeEach(() => {
   resetHostReadableTranscriptPathCacheForTests()
@@ -323,13 +323,13 @@ describe('wslCodexSessionsDirs', () => {
     await expect(
       wslCodexSessionsDirs({ platform: 'win32', listWslHomeDirs: async () => [UBUNTU_HOME] })
     ).resolves.toEqual([
-      `${UBUNTU_HOME}\\.local\\share\\orca\\codex-runtime-home\\home\\sessions`,
+      `${UBUNTU_HOME}\\.local\\share\\nash\\codex-runtime-home\\home\\sessions`,
       `${UBUNTU_HOME}\\.codex\\sessions`
     ])
   })
 
   it('includes WSL managed-account session roots supplied by the runtime', async () => {
-    const accountHome = `${UBUNTU_HOME}\\.local\\share\\orca\\codex-accounts\\account-1\\home`
+    const accountHome = `${UBUNTU_HOME}\\.local\\share\\nash\\codex-accounts\\account-1\\home`
     configureHostReadableTranscriptPathSources({
       getAdditionalCodexHomePaths: () => [accountHome, '/host/account/home']
     })

@@ -26,6 +26,8 @@
  * (isolation on) or the shell's default (isolation off). Nothing on disk is
  * read, written, moved, or deleted.
  */
+import { APP_REMOTE_DIR_NAME } from '../shared/app-identity-paths'
+import { escapeRegex } from '../shared/string-utils'
 
 /** 16 hex chars: `hashWorktreeId`. */
 const WORKTREE_HASH = '[0-9a-f]{16}'
@@ -43,8 +45,9 @@ const ORCA_MINTED_HISTFILE = new RegExp(
     // which reaches the guest as the /mnt/<drive>/... form of the same tail.
     `terminal-history-wsl/[^/]+/${WORKTREE_HASH}/${HISTORY_FILE}` +
     '|' +
-    // Relay: ~/.orca-remote/terminal-history/<hash>-<file>
-    `\\.orca-remote/terminal-history/${WORKTREE_HASH}-${HISTORY_FILE}` +
+    // Relay: ~/.nash-remote/terminal-history/<hash>-<file>. A real Orca relay's folder is matched too,
+    // so a pane started from an Orca pane drops that value instead of appending to Orca's history.
+    `(?:${escapeRegex(APP_REMOTE_DIR_NAME)}|\\.orca-remote)/terminal-history/${WORKTREE_HASH}-${HISTORY_FILE}` +
     ')$'
 )
 

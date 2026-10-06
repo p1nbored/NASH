@@ -13,6 +13,8 @@ import { WarpThemeImportButton } from './WarpThemeImportButton'
 import { YamlThemeImportButton } from './YamlThemeImportButton'
 import type { UseWarpThemeImportReturn } from './useWarpThemeImport'
 import {
+  DEFAULT_TERMINAL_DIVIDER_DARK,
+  DEFAULT_TERMINAL_DIVIDER_LIGHT,
   DEFAULT_TERMINAL_THEME_DARK,
   DEFAULT_TERMINAL_THEME_LIGHT,
   getAvailableTerminalThemeOptions,
@@ -108,7 +110,7 @@ export function TerminalThemeCatalogSection({
   const pickerDescription = isLightTarget
     ? translate(
         'auto.components.settings.TerminalThemeSections.d56af60e6f',
-        'Choose the theme used when Orca is in light mode.'
+        'Choose the theme used when NASH is in light mode.'
       )
     : translate(
         'auto.components.settings.TerminalThemeSections.7add204bd5',
@@ -285,7 +287,9 @@ export function TerminalThemeCatalogSection({
                       ? settings.terminalDividerColorLight
                       : settings.terminalDividerColorDark
                   }
-                  fallback={isLightTarget ? '#d4d4d8' : '#3f3f46'}
+                  fallback={
+                    isLightTarget ? DEFAULT_TERMINAL_DIVIDER_LIGHT : DEFAULT_TERMINAL_DIVIDER_DARK
+                  }
                   onChange={(value) =>
                     updateSettings(
                       isLightTarget

@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import type { AppIdentity } from '../../shared/app-identity'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 
-const BASE_APP_NAME = 'Orca'
-const BASE_APP_USER_MODEL_ID = 'com.stablyai.orca'
+const BASE_APP_NAME = APP_IDENTITY.productName
+const BASE_APP_USER_MODEL_ID = APP_IDENTITY.appId
 const MAX_LABEL_LENGTH = 80
 
 export type DevInstanceIdentity = AppIdentity & {
@@ -11,7 +12,7 @@ export type DevInstanceIdentity = AppIdentity & {
   // Why: drives app.setName → the macOS safeStorage Keychain item name
   // ("<appName> Safe Storage"). Kept stable across dev branches (unlike the
   // per-branch `name`) so every dev instance shares one Keychain key instead of
-  // creating a new one per branch and re-prompting. Distinct from prod's 'Orca'.
+  // creating a new one per branch and re-prompting. Distinct from prod's 'NASH'.
   appName: string
 }
 
@@ -90,10 +91,10 @@ export function getDevInstanceIdentity(
 
   return {
     name: dockTitle,
-    // Why: one stable Keychain key ('Orca Dev Safe Storage') for all dev
+    // Why: one stable Keychain key ('NASH Dev Safe Storage') for all dev
     // branches; the per-branch identity still shows via `name` (window title,
     // app menu, renderer label).
-    appName: `${BASE_APP_NAME} Dev`,
+    appName: APP_IDENTITY.devProductName,
     isDev: true,
     devLabel,
     devBranch: branch,

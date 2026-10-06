@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import { OrcaProfileSignOutConfirmDialog } from '../orca-profiles/OrcaProfileSignOutConfirmDialog'
+import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
 
 function accountStatusCopy(
   state: 'local' | 'unconfigured' | 'connected' | 'reconnect-required' | undefined,
@@ -24,13 +25,13 @@ function accountStatusCopy(
   if (state === 'unconfigured') {
     return translate(
       'auto.components.settings.orcaAccount.unavailable',
-      'Orca sign-in is unavailable in this build.'
+      'Orca Cloud sign-in is unavailable in this build.'
     )
   }
   if (state === 'local') {
     return translate(
       'auto.components.settings.orcaAccount.signedOut',
-      'Sign in to extend Orca with cloud features, including Artifacts and Orca Relay.'
+      'Sign in to Orca Cloud to extend NASH with cloud features, including Artifacts and Orca Relay.'
     )
   }
   return translate('auto.components.settings.orcaAccount.checking', 'Checking account status…')
@@ -58,6 +59,27 @@ function AccountBenefit({
   )
 }
 
+function OrcaAccountUnavailableInNash(): React.JSX.Element {
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <CircleUserRound className="size-5" />
+      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="text-sm font-medium">
+          {translate('auto.components.settings.orcaAccount.account', 'Orca cloud account')}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {translate(
+            'auto.components.settings.orcaAccount.nashUnavailable',
+            'Orca Cloud sign-in is not available in NASH builds.'
+          )}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function OrcaAccountSettingsPane(): React.JSX.Element {
   const authStatus = useAppStore((state) => state.orcaProfileAuthStatus)
   const connect = useAppStore((state) => state.connectCurrentOrcaProfile)
@@ -68,6 +90,11 @@ export function OrcaAccountSettingsPane(): React.JSX.Element {
   const canConnect = authStatus?.configured === true
 
   useOrcaProfileAuthStatusRefresh()
+
+  // Why: NASH has no Orca Cloud sign-in (Orca cloud services off), so nothing here can be offered.
+  if (!ORCA_CLOUD_SERVICES_ENABLED && authStatus?.state === 'unconfigured') {
+    return <OrcaAccountUnavailableInNash />
+  }
 
   const confirmSignOut = async (): Promise<void> => {
     if (signingOut) {
@@ -92,7 +119,7 @@ export function OrcaAccountSettingsPane(): React.JSX.Element {
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-medium">
                 {authStatus?.cloud?.displayName?.trim() ||
-                  translate('auto.components.settings.orcaAccount.account', 'Orca account')}
+                  translate('auto.components.settings.orcaAccount.account', 'Orca cloud account')}
               </p>
               {connected ? (
                 <Badge variant="outline" className="text-[11px] text-muted-foreground">
@@ -119,7 +146,7 @@ export function OrcaAccountSettingsPane(): React.JSX.Element {
             <Button type="button" size="sm" disabled={!canConnect} onClick={() => void connect()}>
               {authStatus?.state === 'reconnect-required'
                 ? translate('auto.components.settings.orcaAccount.signInAgain', 'Sign in again')
-                : translate('auto.components.settings.orcaAccount.signIn', 'Sign in to Orca')}
+                : translate('auto.components.settings.orcaAccount.signIn', 'Sign in to Orca Cloud')}
             </Button>
           )}
         </div>
@@ -142,7 +169,7 @@ export function OrcaAccountSettingsPane(): React.JSX.Element {
                 )}
                 description={translate(
                   'auto.components.settings.orcaAccount.artifactsDescription',
-                  'Publish HTML and Markdown files, then manage every shared link from Orca.'
+                  'Publish HTML and Markdown files, then manage every shared link from NASH.'
                 )}
               />
               <AccountBenefit

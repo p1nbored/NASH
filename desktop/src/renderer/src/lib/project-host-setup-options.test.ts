@@ -527,7 +527,7 @@ describe('buildProjectHostSetupOptions', () => {
         id: 'needs-setup:runtime:gpu',
         kind: 'needs-setup',
         label: 'GPU VM',
-        detail: 'Orca server version is incompatible',
+        detail: 'NASH server version is incompatible',
         isAvailable: false
       })
     ])
@@ -544,7 +544,7 @@ describe('buildProjectHostSetupOptions', () => {
     expect(options.at(-1)).toMatchObject({
       id: 'needs-setup:runtime:gpu',
       kind: 'needs-setup',
-      detail: 'Update Orca on this host to set up projects',
+      detail: 'Update NASH on this host to set up projects',
       isAvailable: false
     })
   })
@@ -566,7 +566,7 @@ describe('buildProjectHostSetupOptions', () => {
     expect(options.at(-1)).toMatchObject({
       id: 'needs-setup:runtime:gpu',
       kind: 'needs-setup',
-      detail: 'Update Orca on this host to set up projects',
+      detail: 'Update NASH on this host to set up projects',
       isAvailable: false
     })
   })

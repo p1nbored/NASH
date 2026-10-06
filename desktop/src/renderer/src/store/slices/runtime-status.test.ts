@@ -331,7 +331,7 @@ describe('runtime-status slice', () => {
       expect.objectContaining({
         id: 'runtime-environment-disconnected:env-a',
         description:
-          'Check that Orca is running on this server and that your network connection is working, then try again.',
+          'Check that NASH is running on this server and that your network connection is working, then try again.',
         action: expect.objectContaining({ label: 'Try again' })
       })
     )

@@ -113,7 +113,7 @@ export function BrowserUseCookieImportStep({
           <p className="text-xs text-muted-foreground">
             {translate(
               'auto.components.settings.BrowserUsePane.72d4815523',
-              'Bring your existing logins into Orca so agents can reach authenticated pages. Imports into the default profile.'
+              'Bring your existing logins into NASH so agents can reach authenticated pages. Imports into the default profile.'
             )}
           </p>
           {sourceLabel ? (

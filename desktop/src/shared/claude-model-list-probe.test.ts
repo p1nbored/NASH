@@ -57,10 +57,29 @@ describe('parseClaudeModelList', () => {
       id: 'opus[1m]',
       label: 'Opus (1M context)',
       description: 'Opus 5 with 1M context · Best for everyday, complex tasks · $5/$25 per Mtok',
+      resolvedModel: 'claude-opus-5[1m]',
       effortLevels: ['low', 'medium', 'high', 'xhigh', 'max'],
       supportsFastMode: true
     })
     expect(parsed[2]).toMatchObject({ effortLevels: [], supportsFastMode: false })
+  })
+
+  it('carries the full model id each alias resolves to and ignores a blank or non-string one', () => {
+    const parsed = parseClaudeModelList(
+      controlResponseLine([
+        { value: 'opus', resolvedModel: ' claude-opus-5-5 ', displayName: 'Opus' },
+        { value: 'sonnet', resolvedModel: '  ', displayName: 'Sonnet' },
+        { value: 'haiku', resolvedModel: 7, displayName: 'Haiku' },
+        { value: 'fable', displayName: 'Fable' }
+      ])
+    )
+    expect(parsed.map((model) => model.resolvedModel)).toEqual([
+      'claude-opus-5-5',
+      undefined,
+      undefined,
+      undefined
+    ])
+    expect(parsed[1]).not.toHaveProperty('resolvedModel')
   })
 
   it('skips init noise, CRLF endings, and duplicate values', () => {

@@ -209,7 +209,7 @@ describe('terminal link action routing', () => {
     )
     expect(request.mock.calls[0][0].primary.label).toBe('System Browser')
     expect(request.mock.calls[0][0].primary.external).toBe(true)
-    expect(request.mock.calls[0][0].alternate.label).toBe('Orca Browser')
+    expect(request.mock.calls[0][0].alternate.label).toBe('NASH Browser')
     expect(request.mock.calls[0][0].alternate.external).toBe(false)
 
     request.mock.calls[0][0].primary.run()
@@ -221,7 +221,7 @@ describe('terminal link action routing', () => {
     })
   })
 
-  it('offers Orca first and system browser second when Orca is the default', () => {
+  it('offers NASH first and system browser second when NASH is the default', () => {
     const request = vi.fn()
 
     handleTerminalHttpLink('https://example.com/path', plainEvent(), {
@@ -230,7 +230,7 @@ describe('terminal link action routing', () => {
       actionDestinations: { primary: 'orca', alternate: 'system' }
     })
 
-    expect(request.mock.calls[0][0].primary.label).toBe('Orca Browser')
+    expect(request.mock.calls[0][0].primary.label).toBe('NASH Browser')
     expect(request.mock.calls[0][0].primary.external).toBe(false)
     expect(request.mock.calls[0][0].alternate.label).toBe('System Browser')
     expect(request.mock.calls[0][0].alternate.external).toBe(true)
@@ -259,7 +259,7 @@ describe('terminal link action routing', () => {
     expect(request.mock.calls[0][0].alternate).toBeUndefined()
   })
 
-  it('routes an explicit Orca Browser action to the owning runtime', () => {
+  it('routes an explicit NASH Browser action to the owning runtime', () => {
     const request = vi.fn()
 
     handleTerminalHttpLink('https://example.com/path', plainEvent(), {
@@ -281,7 +281,7 @@ describe('terminal link action routing', () => {
     expect(createBrowserTab).not.toHaveBeenCalled()
   })
 
-  it('routes an explicit Orca Browser action through the owning SSH workspace', () => {
+  it('routes an explicit NASH Browser action through the owning SSH workspace', () => {
     const request = vi.fn()
     const url = 'http://0.0.0.0:8000/'
 

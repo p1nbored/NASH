@@ -87,7 +87,7 @@ export function useTaskPageLinearInOrcaEffects(model: TaskPageLinearListEffectsM
           setLinearError(
             translate(
               'auto.components.TaskPage.linearHasWorktreeLoadFailed',
-              'Unable to load Linear issues linked to an Orca workspace.'
+              'Unable to load Linear issues linked to a NASH workspace.'
             )
           )
           setLinearIssues([])
@@ -98,7 +98,7 @@ export function useTaskPageLinearInOrcaEffects(model: TaskPageLinearListEffectsM
           setLinearError(
             translate(
               'auto.components.TaskPage.linearHasWorktreePartialLoadFailed',
-              'Some Linear issues linked to an Orca workspace could not be loaded. Refresh to try again.'
+              'Some Linear issues linked to a NASH workspace could not be loaded. Refresh to try again.'
             )
           )
         }

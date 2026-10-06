@@ -140,9 +140,9 @@ describe('web repos preload API', () => {
   })
 
   it.each([
-    ['/home/alice', '/home/alice/orca/projects'],
-    ['/', '/orca/projects'],
-    ['C:\\', 'C:\\orca\\projects']
+    ['/home/alice', '/home/alice/nash/projects'],
+    ['/', '/nash/projects'],
+    ['C:\\', 'C:\\nash\\projects']
   ])(
     'resolves the default create-project parent from runtime host home %s',
     async (resolvedPath, expectedParent) => {
@@ -336,7 +336,7 @@ describe('web worktree preload API', () => {
     })
 
     await expect(serverAList).rejects.toThrow(
-      'The paired Orca server changed while the request was in progress.'
+      'The paired NASH server changed while the request was in progress.'
     )
     await expect(globals.window.api.worktrees.listAll()).resolves.toMatchObject([
       { id: 'worktree-b', runtimeOwnerEnvironmentId: paired.environment.id }
@@ -540,7 +540,7 @@ describe('web worktree preload API', () => {
     })
 
     await expect(detected).rejects.toThrow(
-      'The paired Orca server changed while the request was in progress.'
+      'The paired NASH server changed while the request was in progress.'
     )
     expect(runtimeCalls).toEqual(['worktree.detectedList'])
   })

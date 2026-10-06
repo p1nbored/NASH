@@ -1,91 +1,116 @@
-import type { Store } from '../persistence'
+import { join } from 'node:path'
+import type { GlobalSettings } from '../../shared/global-settings-types'
+import { resolveLocalAccountRuntimeTarget } from '../../shared/local-account-runtime'
+import { parseWslUncPath } from '../../shared/wsl-paths'
+import { getDefaultWslDistro, getWslHome } from '../wsl'
+import { ClaudeRuntimePathResolver } from './runtime-paths'
 import {
-  getSelectedClaudeAccountIdForTarget,
+  normalizeClaudeAccountSelectionTarget,
   type ClaudeAccountSelectionTarget
 } from './runtime-selection'
-import { ClaudeRuntimeAuthSync } from './runtime-auth/runtime-auth-sync'
 import type { ClaudeRuntimeAuthPreparation } from './runtime-auth/runtime-auth-types'
 
 export type { ClaudeRuntimeAuthPreparation } from './runtime-auth/runtime-auth-types'
 
-export class ClaudeRuntimeAuthService extends ClaudeRuntimeAuthSync {
-  constructor(store: Store) {
-    super(store)
-    this.initializeLastSyncedState()
-    void this.safeSyncForCurrentSelection()
+type ClaudeRuntimeSettingsSource = {
+  getSettings(): Pick<
+    GlobalSettings,
+    'localAccountRuntime' | 'localAccountWslDistro' | 'localWindowsRuntimeDefault'
+  >
+}
+
+/**
+ * Where a Claude launch finds its login. Claude Code runs only on the user's own login (account
+ * switching was removed, user decision 2026-10-06): the default ~/.claude or an inherited
+ * CLAUDE_CONFIG_DIR on the host, the distro's own ~/.claude under WSL. Nothing here writes a
+ * credential, an oauthAccount or a Keychain item, or renews a token.
+ */
+export class ClaudeRuntimeAuthService {
+  private readonly pathResolver = new ClaudeRuntimePathResolver()
+
+  constructor(private readonly settings: ClaudeRuntimeSettingsSource) {}
+
+  getPreparation(target?: ClaudeAccountSelectionTarget): ClaudeRuntimeAuthPreparation {
+    const resolved = normalizeClaudeAccountSelectionTarget(
+      this.resolveWslDefaultTarget(target ?? this.getDefaultTarget())
+    )
+    const paths = this.pathResolver.getRuntimePaths()
+    if (resolved.runtime === 'wsl') {
+      return this.getWslSystemPreparation(resolved.wslDistro, paths.configDir)
+    }
+    // Why stripAuthEnv false: with no managed account the user's own ANTHROPIC_* is their sign-in.
+    return {
+      configDir: paths.configDir,
+      runtime: 'host',
+      wslDistro: null,
+      wslLinuxConfigDir: null,
+      envPatch: paths.envPatch,
+      stripAuthEnv: false,
+      provenance: 'system'
+    }
   }
 
   async prepareForClaudeLaunch(
     target?: ClaudeAccountSelectionTarget
   ): Promise<ClaudeRuntimeAuthPreparation> {
-    const effectiveTarget = target ?? this.getDefaultAccountSelectionTarget()
-    await this.syncForCurrentSelection(effectiveTarget)
-    return this.getPreparation(effectiveTarget)
+    return this.getPreparation(target)
   }
 
   async prepareForRateLimitFetch(
     target?: ClaudeAccountSelectionTarget
   ): Promise<ClaudeRuntimeAuthPreparation> {
-    const effectiveTarget = target ?? this.getDefaultAccountSelectionTarget()
-    await this.syncForCurrentSelection(effectiveTarget)
-    return this.getPreparation(effectiveTarget)
-  }
-
-  async syncForCurrentSelection(target?: ClaudeAccountSelectionTarget): Promise<void> {
-    await this.serializeMutation(() =>
-      this.doSyncForCurrentSelection(target ?? this.getDefaultAccountSelectionTarget())
-    )
-  }
-
-  async forceMaterializeCurrentSelectionForRollback(): Promise<void> {
-    await this.serializeMutation(async () => {
-      const settings = this.store.getSettings()
-      if (!settings.activeClaudeManagedAccountId) {
-        const previousAccount = this.getActiveAccount(
-          settings.claudeManagedAccounts,
-          this.lastSyncedAccountId
-        )
-        await this.restoreSystemDefaultSnapshot(
-          previousAccount ? await this.readManagedCredentials(previousAccount) : null,
-          previousAccount ? await this.readManagedOauthAccount(previousAccount) : undefined
-        )
-        this.lastSyncedAccountId = null
-        return
-      }
-      await this.doSyncForCurrentSelection()
-    })
+    return this.getPreparation(target)
   }
 
   getRuntimeConfigDir(target?: ClaudeAccountSelectionTarget): string {
     return this.getPreparation(target).configDir
   }
 
-  private initializeLastSyncedState(): void {
-    const settings = this.store.getSettings()
-    this.lastSyncedAccountId = getSelectedClaudeAccountIdForTarget(settings, { runtime: 'host' })
-  }
-
-  private async safeSyncForCurrentSelection(): Promise<void> {
-    try {
-      await this.syncForCurrentSelection()
-    } catch (error) {
-      console.warn('[claude-runtime-auth] Failed to sync runtime auth state:', error)
+  private getWslSystemPreparation(
+    wslDistro: string | null,
+    hostConfigDir: string
+  ): ClaudeRuntimeAuthPreparation {
+    const distro = wslDistro ?? getDefaultWslDistro()
+    const wslHome = distro ? getWslHome(distro) : null
+    const wslHomeInfo = wslHome ? parseWslUncPath(wslHome) : null
+    if (distro && wslHome && wslHomeInfo) {
+      return {
+        configDir: join(wslHome, '.claude'),
+        runtime: 'wsl',
+        wslDistro: distro,
+        wslLinuxConfigDir: `${wslHomeInfo.linuxPath.replace(/\/$/, '')}/.claude`,
+        envPatch: {},
+        stripAuthEnv: true,
+        provenance: `wsl:${distro}:system`
+      }
+    }
+    return {
+      configDir: hostConfigDir,
+      runtime: 'wsl',
+      wslDistro,
+      wslLinuxConfigDir: null,
+      envPatch: {},
+      stripAuthEnv: true,
+      provenance: `wsl:${wslDistro ?? '__default__'}:system`
     }
   }
 
-  private serializeMutation<T>(fn: () => Promise<T>): Promise<T> {
-    const next = this.mutationQueue.then(fn, fn)
-    this.mutationQueue = next.catch(() => {})
-    return next
+  private getDefaultTarget(): ClaudeAccountSelectionTarget {
+    // Why: Windows auth follows the resolved account runtime; stale cross-platform WSL pins must stay local-host.
+    const resolved = resolveLocalAccountRuntimeTarget(this.settings.getSettings())
+    if (process.platform === 'win32' && resolved.runtime === 'wsl') {
+      return { runtime: 'wsl', wslDistro: resolved.wslDistro }
+    }
+    return { runtime: 'host' }
   }
 
-  // Why: re-auth/add-account write fresh managed tokens; skip the next read-back so stale runtime tokens can't overwrite them.
-  clearLastWrittenCredentialsJson(
-    accountId = this.store.getSettings().activeClaudeManagedAccountId
-  ): void {
-    if (accountId === this.store.getSettings().activeClaudeManagedAccountId) {
-      this.lastWrittenCredentialsJson = null
+  private resolveWslDefaultTarget(
+    target: ClaudeAccountSelectionTarget
+  ): ClaudeAccountSelectionTarget {
+    if (target.runtime !== 'wsl' || target.wslDistro?.trim()) {
+      return target
     }
-    this.skipNextReadBackForAccountId = accountId
+    const defaultDistro = getDefaultWslDistro()
+    return defaultDistro ? { runtime: 'wsl', wslDistro: defaultDistro } : target
   }
 }

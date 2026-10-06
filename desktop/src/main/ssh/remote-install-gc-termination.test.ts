@@ -18,7 +18,7 @@ import { getRemoteHostPlatform } from './ssh-remote-platform'
 const conn = {} as SshConnection
 const host = getRemoteHostPlatform('linux-x64')
 const home = '/home/u'
-const currentDir = `${home}/.orca-remote/relay-0.1.0+bbb`
+const currentDir = `${home}/.nash-remote/relay-0.1.0+bbb`
 const nativeKey = 'linux-x64-0123456789abcdef'
 const mockExec = vi.mocked(execCommand)
 
@@ -44,9 +44,9 @@ function collectRelayVersions(): Promise<void> {
 
 // ddd is the previous build, so it is pinned and never probed.
 const installOrder = [
-  `${home}/.orca-remote/relay-0.1.0+bbb/.install-complete`,
-  `${home}/.orca-remote/relay-0.1.0+ddd/.install-complete`,
-  `${home}/.orca-remote/relay-0.1.0+aaa/.install-complete`,
+  `${home}/.nash-remote/relay-0.1.0+bbb/.install-complete`,
+  `${home}/.nash-remote/relay-0.1.0+ddd/.install-complete`,
+  `${home}/.nash-remote/relay-0.1.0+aaa/.install-complete`,
   REMOTE_INSTALL_ORDER_OK
 ].join('\n')
 

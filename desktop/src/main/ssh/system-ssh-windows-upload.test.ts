@@ -73,7 +73,7 @@ const target = {
   port: 22
 } as unknown as SshTarget
 const hostPlatform = getRemoteHostPlatform('win32-x64')
-const remoteRoot = 'C:/Users/dev/.orca-remote'
+const remoteRoot = 'C:/Users/dev/.nash-remote'
 
 /** Recover the script from `powershell.exe ... -EncodedCommand <base64 utf-16le>`. */
 function decodePowerShellCommand(command: string): string {
@@ -230,9 +230,9 @@ describe('Windows upload over sftp', () => {
     expect(sftpBatches[0]!.script.split('\n').filter(Boolean)).toEqual([
       '-mkdir "/C:/Users"',
       '-mkdir "/C:/Users/dev"',
-      '-mkdir "/C:/Users/dev/.orca-remote"',
-      '-mkdir "/C:/Users/dev/.orca-remote/a"',
-      '-mkdir "/C:/Users/dev/.orca-remote/a/b"',
+      '-mkdir "/C:/Users/dev/.nash-remote"',
+      '-mkdir "/C:/Users/dev/.nash-remote/a"',
+      '-mkdir "/C:/Users/dev/.nash-remote/a/b"',
       expect.stringContaining('put ') as unknown as string
     ])
   })
@@ -247,7 +247,7 @@ describe('Windows upload over sftp', () => {
     // A backslash destination silently writes a file named `C` and still exits 0, so the leading
     // slash and forward separators are correctness, not style.
     expect(putDestination(putLines()[0]!)).toMatch(
-      /^\/C:\/Users\/dev\/\.orca-remote\/relay\.js\.orca-partial-[0-9a-f]{12}$/
+      /^\/C:\/Users\/dev\/\.nash-remote\/relay\.js\.orca-partial-[0-9a-f]{12}$/
     )
   })
 
@@ -381,7 +381,7 @@ describe('Windows upload over sftp', () => {
     expect(commands.some((command) => command.script.includes('StreamReader([Console]::'))).toBe(
       false
     )
-    expect(sftpBatches[0]!.script).toContain('-mkdir "/C:/Users/dev/.orca-remote"')
+    expect(sftpBatches[0]!.script).toContain('-mkdir "/C:/Users/dev/.nash-remote"')
   })
 
   it('sweeps the staged bytes when the publish is the thing that fails', async () => {
@@ -470,7 +470,7 @@ describe('Windows upload over sftp', () => {
     })
 
     expect(putLines()).toHaveLength(1)
-    expect(putDestination(putLines()[0]!)).toContain('/C:/Users/dev/.orca-remote/b.js')
+    expect(putDestination(putLines()[0]!)).toContain('/C:/Users/dev/.nash-remote/b.js')
   })
 
   it('does not let a local filename sftp cannot quote become a verdict either', async () => {

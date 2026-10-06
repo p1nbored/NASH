@@ -17,8 +17,6 @@ export const rateLimitsApi = {
     ipcRenderer.invoke('rateLimits:refreshClaudeForTarget', target),
   setPollingInterval: (ms: number): Promise<void> =>
     ipcRenderer.invoke('rateLimits:setPollingInterval', ms),
-  fetchInactiveClaudeAccounts: (): Promise<void> =>
-    ipcRenderer.invoke('rateLimits:fetchInactiveClaudeAccounts'),
   fetchInactiveCodexAccounts: (): Promise<void> =>
     ipcRenderer.invoke('rateLimits:fetchInactiveCodexAccounts'),
   refreshMiniMax: (): Promise<RateLimitState> => ipcRenderer.invoke('rateLimits:refreshMiniMax'),

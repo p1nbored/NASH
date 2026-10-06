@@ -1,7 +1,7 @@
 # Placement and remote execution
 
 Load this reference before creating a new worktree or placing work through SSH,
-WSL, or another connected Orca server.
+WSL, or another connected NASH server.
 
 ## Placement choices
 
@@ -33,13 +33,13 @@ ORCA project setup-existing-folder --project <project_id> --host <host_id> --pat
 ```
 
 Then place work on the returned workspace with an exact selector. A worktree
-selector needs the full `<repo-id>::<path>` value Orca returned, passed as
+selector needs the full `<repo-id>::<path>` value NASH returned, passed as
 `id:<newFullWorktreeId>`; a bare repo id is not a worktree id. `new-child` and
 `new-top-level` are worktree creation and do not apply to a folder.
 
 New worktrees use agent-first creation and run setup by default. Preserve the
 repository's startup policy: `start-immediately` can report setup as `running`,
-while `wait-for-setup` gates prompt delivery on success. Orca lineage, Git base,
+while `wait-for-setup` gates prompt delivery on success. NASH lineage, Git base,
 filesystem isolation, coordination parentage, UI grouping, and execution host
 are separate decisions.
 
@@ -85,6 +85,6 @@ documented older path, but must not broaden the target or cross the execution
 boundary. Changing host-published content reaches old clients even without a
 wire-shape change, so preserve established semantics or negotiate the behavior.
 
-For WSL, use the exact executable and arguments returned by Orca so the distro
+For WSL, use the exact executable and arguments returned by NASH so the distro
 and packaged launcher remain bound. Do not translate a printed `orca-ide`
 recovery command into a PATH-resolved local command.

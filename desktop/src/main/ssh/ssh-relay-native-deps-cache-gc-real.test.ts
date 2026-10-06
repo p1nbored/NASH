@@ -71,7 +71,7 @@ describe.runIf(process.platform !== 'win32').each(shells)(
       home = mkdtempSync(join(tmpdir(), 'orca native gc '))
       cache = relayNativeDepsCacheBaseDir(host, home)
       entry = relayNativeDepsCacheEntryDir(host, home, key)
-      relay = join(home, '.orca-remote', 'relay-0.1.0+abc')
+      relay = join(home, '.nash-remote', 'relay-0.1.0+abc')
       mkdirSync(relay, { recursive: true })
       mkdirSync(join(entry, 'node_modules'), { recursive: true })
       writeFileSync(join(entry, 'node_modules', 'addon.node'), 'original')
@@ -83,7 +83,7 @@ describe.runIf(process.platform !== 'win32').each(shells)(
     })
 
     afterEach(() => {
-      chmodSync(join(home, '.orca-remote'), 0o755)
+      chmodSync(join(home, '.nash-remote'), 0o755)
       chmodSync(relay, 0o755)
       rmSync(home, { recursive: true, force: true })
     })
@@ -300,7 +300,7 @@ describe.runIf(process.platform !== 'win32').each(shells)(
       async (scope) => {
         const path = tombstone()
         referenceEntry()
-        chmodSync(scope === 'root' ? join(home, '.orca-remote') : relay, 0o111)
+        chmodSync(scope === 'root' ? join(home, '.nash-remote') : relay, 0o111)
 
         await gcRelayNativeDepsCache(conn, host, home)
 

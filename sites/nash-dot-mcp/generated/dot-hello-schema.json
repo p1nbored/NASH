@@ -1,0 +1,35 @@
+{
+  "source": "desktop/orca/src/shared/dot-ingress/dot-ingress-contract-v2.schema.json",
+  "sourceSha256": "76e69b2957cda67ee843e4aecb25fe75cd82bd1f999ea9b141c7c84e59f157a0",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "contractVersion": {
+        "type": "number",
+        "const": 2
+      },
+      "client": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._+-]{1,32}$"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "contractVersion"
+    ],
+    "additionalProperties": false
+  }
+}

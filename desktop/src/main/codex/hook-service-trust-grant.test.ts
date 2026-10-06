@@ -168,7 +168,7 @@ describe('CodexHookService app-server trust grant lane', () => {
       eventLabel: 'session_start',
       groupIndex: 0,
       handlerIndex: 0,
-      command: wrapPosixHookCommand(join(tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh')),
+      command: wrapPosixHookCommand(join(tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh')),
       timeoutSec: 10
     })
     expect(trustConfig).not.toContain(selfComputed)

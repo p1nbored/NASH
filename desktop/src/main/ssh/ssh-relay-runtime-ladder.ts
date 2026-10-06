@@ -18,6 +18,7 @@ import {
   type NodeRuntimeTarget,
   type ServerTarget
 } from '../../shared/node-runtime-pin'
+import { APP_REMOTE_DIR_NAME } from '../../shared/app-identity-paths'
 import type { SshRemoteRuntime, SshRemoteRuntimeRung } from '../../shared/ssh-types'
 import type { GlibcVersion } from './orcad-deployment-target'
 import {
@@ -120,7 +121,7 @@ export function relayRuntimeStorePins(
 export type RelayRuntimeStepReason = RelayRuntimeFallbackReason
 
 /**
- * noexec defeats every rung, because each loads addons from the same `~/.orca-remote` tree;
+ * noexec defeats every rung, because each loads addons from the same `~/.nash-remote` tree;
  * no host Node rules out the npm path too, since it needs a host Node as well. A remembered
  * refusal only skips its own rung: the mount may have changed since it was proved.
  */
@@ -152,7 +153,7 @@ export function remoteRuntimeUnavailableReason(
 const REMOTE_RUNTIME_UNAVAILABLE_MESSAGES: Record<RemoteRuntimeUnavailableReason, string> = {
   home_noexec:
     "Orca can't run its remote runtime on this host: the home directory is mounted noexec, so " +
-    'nothing under ~/.orca-remote may execute. Remote terminals and file browsing are ' +
+    `nothing under ~/${APP_REMOTE_DIR_NAME} may execute. Remote terminals and file browsing are ` +
     'unavailable until an administrator allows exec there.',
   no_runtime:
     "Orca can't run its remote runtime on this host: its bundled Node.js was refused and no " +
@@ -162,7 +163,7 @@ const REMOTE_RUNTIME_UNAVAILABLE_MESSAGES: Record<RemoteRuntimeUnavailableReason
 // Why its own wording: a host Node would load addons from the same noexec tree, so installing one cannot help.
 const REMEMBERED_NOEXEC_MESSAGE =
   "Orca can't run its remote runtime on this host: an earlier connect found the home directory " +
-  'mounted noexec, so nothing under ~/.orca-remote may execute. Remote terminals and file ' +
+  `mounted noexec, so nothing under ~/${APP_REMOTE_DIR_NAME} may execute. Remote terminals and file ` +
   'browsing are unavailable until exec is allowed there; Orca re-checks on the next connect.'
 
 export function remoteRuntimeUnavailableMessage(

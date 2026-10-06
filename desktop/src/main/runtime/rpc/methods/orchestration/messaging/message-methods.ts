@@ -13,6 +13,7 @@ import { exposeMessage } from './mailbox-message-receipt'
 import { resolveOrchestrationParty } from '../../../../orchestration/orchestration-party'
 import { recordReceiptBeforeNudge, replayMutationNudge } from './mutation-replay-nudge'
 import { resolveReplyRecipient } from './recipient-routing'
+import { assertAppRunTaskUpdateAllowed } from '../../../../workflow-run/app-run-policy'
 import {
   ReplyParams,
   InboxParams,
@@ -266,6 +267,7 @@ export const ORCHESTRATION_MESSAGE_METHODS = [
           `Task ${params.id} was not found in Run ${run.id}.`
         )
       }
+      assertAppRunTaskUpdateAllowed(db, { runId: run.id, taskId: params.id, status: params.status })
       const task = db.updateTaskStatus(params.id, params.status, params.result)
       if (!task) {
         throw new Error(`Task not found: ${params.id}`)

@@ -45,7 +45,7 @@ export function SessionHistoryComputerRow({
           <span className="truncate text-sm font-medium">{name}</span>
           {version ? (
             <span className="shrink-0 text-[11px] text-muted-foreground">
-              {translate('sessionHistory.settings.serverVersion', 'Orca v{{version}}', { version })}
+              {translate('sessionHistory.settings.serverVersion', 'NASH v{{version}}', { version })}
             </span>
           ) : null}
         </div>

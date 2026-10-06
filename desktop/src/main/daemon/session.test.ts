@@ -306,7 +306,7 @@ describe('Session', () => {
     it('answers a late query itself on every backend, so no downstream view is asked', () => {
       const query = '\x1b]10;?\x07'
       // Orca's default theme: nothing reported colours for this session.
-      const reply = '\x1b]10;rgb:ffff/ffff/ffff\x1b\\'
+      const reply = '\x1b]10;rgb:e9e9/e4e4/dcdc\x1b\\'
       for (const ownerBackend of ['posix-pty', 'windows-conpty'] as const) {
         subprocess = createMockSubprocess()
         createSession({ ownerBackend })

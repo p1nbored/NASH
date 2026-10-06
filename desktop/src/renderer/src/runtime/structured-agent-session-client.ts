@@ -98,7 +98,7 @@ export async function callStructuredAgentSession<TResult>(
       AGENT_SESSION_REWIND_RUNTIME_CAPABILITY
     ))
   ) {
-    throw new Error('Rewinding requires a newer Orca server. Update the server and try again.')
+    throw new Error('Rewinding requires a newer NASH server. Update the server and try again.')
   }
   return method === 'agentSession.conversationCommand'
     ? callRuntimeRpc<TResult>(target, method, params, { timeoutMs: 195_000 })

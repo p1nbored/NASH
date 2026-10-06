@@ -207,7 +207,7 @@ describe('KeybindingService tab-switch cohort seeding', () => {
   })
 
   it('leaves the cohort pending when the seed write fails (retries next launch)', () => {
-    // homePath is a regular file, so creating `<home>/.orca/` throws. The service
+    // homePath is a regular file, so creating `<home>/.nash/` throws. The service
     // must swallow the error and NOT mark the one-shot done.
     const fileHome = join(home, 'not-a-dir')
     writeFileSync(fileHome, 'x', 'utf8')

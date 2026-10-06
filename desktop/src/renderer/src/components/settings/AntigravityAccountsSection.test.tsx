@@ -97,6 +97,21 @@ describe('native Antigravity Accounts', () => {
     expect(screen.queryByText('Session: 31% · Weekly: —')).toBeNull()
   })
 
+  it('offers no usage refresh when the host keeps the usage meters off', async () => {
+    render(
+      <AntigravityAccountsSection
+        owner={owner}
+        target={target}
+        label="This device"
+        usageShown={false}
+      />
+    )
+    await screen.findByText('Native account')
+    expect(screen.queryByRole('button', { name: 'Refresh usage' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Refresh accounts' })).toBeTruthy()
+    expect(callRuntimeRpc).not.toHaveBeenCalled()
+  })
+
   it('shows the native identity and supported CLI sign-in instructions without inventing a login', async () => {
     render(<AntigravityAccountsSection owner={owner} target={target} label="This device" />)
     await screen.findByText('Native account')

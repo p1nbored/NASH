@@ -41,7 +41,7 @@ describe('buildHttpLinkActions', () => {
       }
     )
 
-    expect(actions.primary.label).toBe('Orca Browser')
+    expect(actions.primary.label).toBe('NASH Browser')
     expect(actions.primary.external).toBe(false)
     expect(actions.alternate?.label).toBe('System Browser')
     expect(actions.alternate?.external).toBe(true)

@@ -14,6 +14,7 @@ import type {
   RemoteServerUpdateSupport
 } from '../../shared/remote-server-update'
 import { getLinuxPackageType } from '../linux-update-package-type'
+import { getLatestReleaseDownloadUrl } from '../updater-release-repo-urls'
 import { createUpdaterDiagnosticLogger } from '../linux-package-install-diagnostic'
 import { registerAutoUpdaterHandlers } from '../updater-events'
 import { getServeUpdateHandoffFailure } from '../serve-update-handoff'
@@ -141,6 +142,11 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     if (is.dev) {
       return
     }
+    // Why before the updater loads: with no release feed nothing is configured, scheduled or listened for, so no network call can start.
+    if (this.isUpdateFeedDisabled()) {
+      console.info('[updater] disabled: this build has no release feed')
+      return
+    }
 
     const autoUpdater = this.getAutoUpdater()
     autoUpdater.autoDownload = false
@@ -159,10 +165,7 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
 
     // Security: never re-add a verifyUpdateCodeSignature override — a no-op disables electron-updater's built-in Authenticode check and accepts any installer.
     if (this.activeUpdateSource === 'release') {
-      autoUpdater.setFeedURL({
-        provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
-      })
+      autoUpdater.setFeedURL({ provider: 'generic', url: getLatestReleaseDownloadUrl() })
     }
     if (this.autoUpdaterInitialized) {
       return

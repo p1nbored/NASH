@@ -50,7 +50,7 @@ export function TerminalRemoteRuntimeReconnectBanner({
             {retrying
               ? translate(
                   'auto.components.terminal.pane.TerminalRemoteRuntimeReconnectBanner.retryingBody',
-                  'Orca is retrying automatically. This terminal will resume if the connection returns.'
+                  'NASH is retrying automatically. This terminal will resume if the connection returns.'
                 )
               : translate(
                   'auto.components.terminal.pane.TerminalRemoteRuntimeReconnectBanner.disconnectedBody',

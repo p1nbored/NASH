@@ -35,6 +35,7 @@ import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type * as SidebarFeedbackDialogModule from './SidebarFeedbackDialog'
 import { translate } from '@/i18n/i18n'
 import { getUpdateCheckClickOptions, getUpdateCheckHint } from '@/lib/update-check-click-options'
+import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
 
 // Why lazy: the feedback form is only reachable from this menu's own item, so it does not
 // belong on the renderer boot graph. Shared with the menu-open warm below so both hit the
@@ -121,7 +122,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const handleMenuOpenChange = (open: boolean): void => {
     setMenuOpen(open)
     updateCheckModifiersRef.current = NO_UPDATE_CHECK_MODIFIERS
-    if (open) {
+    if (open && ORCA_CLOUD_SERVICES_ENABLED) {
       // Warm on the precursor: reading the menu and clicking Send Feedback takes hundreds of ms,
       // so the chunk is already in the module map by the time the item is selected.
       void loadSidebarFeedbackDialog().catch(() => {})
@@ -148,7 +149,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
     }
     setIsRestartingOrca(true)
     toast.info(
-      translate('auto.components.sidebar.SidebarSettingsHelpMenu.5161eef55d', 'Restarting Orca…')
+      translate('auto.components.sidebar.SidebarSettingsHelpMenu.5161eef55d', 'Restarting NASH…')
     )
     void window.api.app.restart().catch((error) => {
       if (mountedRef.current) {
@@ -156,7 +157,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
         toast.error(
           translate(
             'auto.components.sidebar.SidebarSettingsHelpMenu.4e8f5710d3',
-            "Couldn't restart Orca."
+            "Couldn't restart NASH."
           ),
           {
             description: error instanceof Error ? error.message : undefined
@@ -253,13 +254,16 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={handleOpenFeedback}>
-              <MessageSquareText className="size-3.5" />
-              {translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.4cf5b868d7',
-                'Send Feedback'
-              )}
-            </DropdownMenuItem>
+            {/* Why: NASH sends nothing to Orca, so the feedback form is not offered. */}
+            {ORCA_CLOUD_SERVICES_ENABLED ? (
+              <DropdownMenuItem onSelect={handleOpenFeedback}>
+                <MessageSquareText className="size-3.5" />
+                {translate(
+                  'auto.components.sidebar.SidebarSettingsHelpMenu.4cf5b868d7',
+                  'Send Feedback'
+                )}
+              </DropdownMenuItem>
+            ) : null}
             {showMilestones ? (
               <DropdownMenuItem onSelect={openMilestones}>
                 <img
@@ -348,7 +352,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
               <RotateCw className="size-3.5" />
               {translate(
                 'auto.components.sidebar.SidebarSettingsHelpMenu.ad3d3ed7f1',
-                'Restart Orca'
+                'Restart NASH'
               )}
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -23,12 +23,12 @@ import { CaffeinateStatusSegment } from './CaffeinateStatusSegment'
 import { RemoteServerUpdateStatusSegment } from './RemoteServerUpdateStatusSegment'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from '@/lib/floating-terminal'
 import { FloatingTerminalIconContextMenu } from '@/components/floating-terminal/FloatingTerminalIconContextMenu'
-import { ClaudeSwitcherMenu } from './ClaudeSwitcherMenu'
 import { CodexSwitcherMenu } from './CodexSwitcherMenu'
 import { ProviderDetailsMenu, CLOSE_ALL_CONTEXT_MENUS_EVENT } from './ProviderDetailsMenu'
 import { ProviderSegment, UsageOverflowChip, getUsageTone } from './StatusBarProviderSegment'
 import { useStatusBarController } from './use-status-bar-controller'
 import { StatusBarVisibilityMenu } from './StatusBarVisibilityMenu'
+import { usageRowMenuKind } from './status-bar-usage-row-menu'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 
 const PetStatusSegment = lazyWithRetry(() =>
@@ -193,21 +193,9 @@ export function StatusBarSurface({
                     onManageAccounts={handleManageAccounts}
                     onUsageDetails={handleUsageDetails}
                     renderRow={(p, rowNode) => {
-                      // Every provider drills into its detail panel (parity with the
-                      // per-provider dropdowns on main); Claude/Codex additionally get
-                      // the account switcher + runtime toggle + Codex reset credits.
-                      if (p.provider === 'claude') {
-                        return (
-                          <ClaudeSwitcherMenu
-                            claude={p}
-                            compact={compact}
-                            iconOnly={false}
-                            asSubmenu
-                            triggerContent={rowNode}
-                          />
-                        )
-                      }
-                      if (p.provider === 'codex') {
+                      // Every provider drills into its detail panel; Codex additionally gets
+                      // its account switcher and runtime toggle.
+                      if (usageRowMenuKind(p.provider) === 'codex-switcher') {
                         return (
                           <CodexSwitcherMenu
                             codex={p}

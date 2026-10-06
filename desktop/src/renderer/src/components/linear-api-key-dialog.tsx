@@ -118,8 +118,8 @@ export function LinearApiKeyDialog({
   const resolvedDescription =
     description ??
     (workspace
-      ? `Paste a Personal API key for ${workspace.organizationName}. If this workspace is already connected, Orca replaces its stored key.`
-      : 'Paste a Personal API key for the Linear workspace you want Orca to use. If that workspace is already connected, Orca replaces its stored key.')
+      ? `Paste a Personal API key for ${workspace.organizationName}. If this workspace is already connected, NASH replaces its stored key.`
+      : 'Paste a Personal API key for the Linear workspace you want NASH to use. If that workspace is already connected, NASH replaces its stored key.')
   const storageCopy =
     runtimeTarget.kind === 'environment'
       ? 'This key is stored by the active remote runtime.'
@@ -191,7 +191,7 @@ export function LinearApiKeyDialog({
             <p>
               {translate(
                 'auto.components.linear.api.key.dialog.d56d3629f4',
-                'Prefer full access when Orca should show every team the account can access in that workspace. Restricted keys only expose permitted teams, and private teams require the key owner to have access.'
+                'Prefer full access when NASH should show every team the account can access in that workspace. Restricted keys only expose permitted teams, and private teams require the key owner to have access.'
               )}
             </p>
             <p>

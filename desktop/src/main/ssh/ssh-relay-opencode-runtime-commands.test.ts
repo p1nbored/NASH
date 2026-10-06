@@ -184,10 +184,10 @@ it('carries Windows JavaScript and path arguments through the established PowerS
     host: windows,
     nodePath: "C:/Program Files/O'Brien/node.exe",
     stagedReference: 'C:/Users/a & b/.upload/ref.json',
-    reference: 'C:/Users/a & b/.orca-remote/relay-x/opencode-sqlite-runtime.json',
+    reference: 'C:/Users/a & b/.nash-remote/relay-x/opencode-sqlite-runtime.json',
     token: 'one',
     runtimeRef: {
-      path: `C:/Users/a & b/.orca-remote/relay-x/.runtime-ref-node-${runtimeSha}`,
+      path: `C:/Users/a & b/.nash-remote/relay-x/.runtime-ref-node-${runtimeSha}`,
       sha256: runtimeSha
     }
   })

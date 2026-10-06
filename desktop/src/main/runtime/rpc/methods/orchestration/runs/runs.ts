@@ -6,6 +6,10 @@ import type { OrcaRuntimeService } from '../../../../orca-runtime'
 import type { OrchestrationCallerIdentity } from '../../../../orchestration/orchestration-caller-identity'
 import { currentDispatchAssigneeRun } from '../messaging/recipient-routing'
 import {
+  assertAppRunPrimaryMayCreateRun,
+  assertAppRunUseAllowed
+} from '../../../../workflow-run/app-run-policy'
+import {
   RunCreateParams,
   RunCurrentParams,
   RunListParams,
@@ -37,6 +41,7 @@ export const ORCHESTRATION_RUN_METHODS = [
         requireStablePane: true
       })
       const db = runtime.getOrchestrationDb()
+      assertAppRunPrimaryMayCreateRun(db, caller)
       const priorRun = db.getCurrentRunForCoordinator(caller)
       const run = db.createRun({
         objective: params.objective,
@@ -86,6 +91,7 @@ export const ORCHESTRATION_RUN_METHODS = [
       }
       assertCallerHandleMatchesEvidence(runtime, params.from, orchestrationCompatibilityEvidence)
       const db = runtime.getOrchestrationDb()
+      assertAppRunUseAllowed(db, caller, params.id)
       const priorRun = db.getCurrentRunForCoordinator(caller)
       const run = db.bindRun({
         runId: params.id,

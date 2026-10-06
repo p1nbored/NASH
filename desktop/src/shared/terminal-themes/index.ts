@@ -1,3 +1,4 @@
+import { AUTOPILOT_TERMINAL_THEMES } from './autopilot'
 import { CLASSIC_TERMINAL_THEMES } from './classic'
 import { DEFAULT_TERMINAL_THEMES } from './defaults'
 import { POPULAR_DARK_TERMINAL_THEMES } from './popular-dark'
@@ -6,6 +7,7 @@ import { mergeTerminalThemeCatalogs } from './shared'
 import type { TerminalThemeMap } from './types'
 
 const THEME_CATEGORIES: readonly TerminalThemeMap[] = [
+  AUTOPILOT_TERMINAL_THEMES,
   DEFAULT_TERMINAL_THEMES,
   POPULAR_DARK_TERMINAL_THEMES,
   POPULAR_LIGHT_TERMINAL_THEMES,

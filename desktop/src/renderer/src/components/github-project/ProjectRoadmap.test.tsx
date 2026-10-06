@@ -259,7 +259,7 @@ describe('ProjectRoadmap', () => {
     expect(screen.getByText('list')).toBeTruthy()
     expect(
       screen.getByText(
-        'This roadmap view has no date or iteration field to place items on, so Orca is listing them instead.'
+        'This roadmap view has no date or iteration field to place items on, so NASH is listing them instead.'
       )
     ).toBeTruthy()
   })

@@ -209,9 +209,9 @@ describe('SidebarSettingsHelpMenu', () => {
     expect(helpIndex).toBeGreaterThan(settingsIndex)
   })
 
-  it('renders Send Feedback menu item', () => {
+  it('hides Send Feedback in NASH builds, which send nothing to Orca', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Send Feedback')
+    expect(html).not.toContain('Send Feedback')
   })
 
   it('renders Keyboard Shortcuts menu item', () => {
@@ -241,9 +241,9 @@ describe('SidebarSettingsHelpMenu', () => {
     expect(html).toContain('Onboarding')
   })
 
-  it('renders Restart Orca by default', () => {
+  it('renders Restart NASH by default', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Restart Orca')
+    expect(html).toContain('Restart NASH')
   })
 
   it('renders Docs link', () => {
@@ -326,18 +326,15 @@ describe('SidebarSettingsHelpMenu', () => {
     })
   })
 
-  // No other test in this file opens the menu or selects Send Feedback, so the 0 -> 1
-  // transition below is this warm and nothing else, whatever order the tests run in.
-  it('warms the feedback chunk when the menu opens, before Send Feedback is selected', async () => {
+  it('never loads the feedback form in NASH builds, even when the menu opens', async () => {
     const container = await renderMenu()
-    expect(mocks.feedbackChunkLoads).toBe(0)
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-testid="open-menu"]')?.click()
     })
 
-    expect(mocks.feedbackChunkLoads).toBe(1)
-    // Warming must not mount the dialog: it stays behind its own open state.
+    expect(mocks.feedbackChunkLoads).toBe(0)
+    expect(container.textContent).not.toContain('Send Feedback')
     expect(document.body.querySelector('[data-testid="feedback-dialog"]')).toBeNull()
   })
 

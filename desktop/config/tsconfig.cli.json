@@ -23,6 +23,7 @@
     "../src/main/agent-hooks/managed-toml-ownership.ts",
     "../src/main/agent-hooks/managed-agent-hook-controls.ts",
     "../src/main/agent-hooks/managed-agent-hook-registry.ts",
+    "../src/main/agent-hooks/nash-managed-hook-scope.ts",
     "../src/main/agent-hooks/managed-hook-script-refresh.ts",
     "../src/main/agent-hooks/managed-hooks-json-events.ts",
     "../src/main/agent-hooks/posix-hook-command.ts",

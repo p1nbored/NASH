@@ -137,7 +137,7 @@ export default function ProjectRoadmap({
         <div className="flex-none border-b border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
           {translate(
             'auto.components.github.project.ProjectRoadmap.be52f7b6db',
-            'This roadmap view has no date or iteration field to place items on, so Orca is listing them instead.'
+            'This roadmap view has no date or iteration field to place items on, so NASH is listing them instead.'
           )}
         </div>
         {fallback}

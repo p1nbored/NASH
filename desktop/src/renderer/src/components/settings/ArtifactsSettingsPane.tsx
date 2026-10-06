@@ -40,7 +40,7 @@ export function ArtifactsSettingsPane({
             description: isWebClient
               ? translate(
                   'auto.components.settings.artifacts.enableStepWebDescription',
-                  'Open Settings → Artifacts in the Orca desktop app on the host device and enable publishing.'
+                  'Open Settings → Artifacts in the NASH desktop app on the host device and enable publishing.'
                 )
               : translate(
                   'auto.components.settings.artifacts.enableStepDescription',
@@ -69,7 +69,7 @@ export function ArtifactsSettingsPane({
     },
     {
       key: 'manage',
-      title: translate('auto.components.settings.artifacts.manageStepTitle', 'Manage it in Orca'),
+      title: translate('auto.components.settings.artifacts.manageStepTitle', 'Manage it in NASH'),
       description: translate(
         'auto.components.settings.artifacts.manageStepDescription',
         'Open Artifacts from the sidebar to preview or remove links.'
@@ -120,7 +120,7 @@ export function ArtifactsSettingsPane({
             <p className="text-xs leading-relaxed text-muted-foreground">
               {translate(
                 'auto.components.settings.artifacts.signInDescription',
-                'Use your Orca account to upload artifacts and manage their public links.'
+                'Use your Orca cloud account to upload artifacts and manage their public links.'
               )}
             </p>
           </div>
@@ -132,7 +132,7 @@ export function ArtifactsSettingsPane({
           >
             {authStatus?.state === 'reconnect-required'
               ? translate('auto.components.settings.artifacts.signInAgain', 'Sign in again')
-              : translate('auto.components.settings.artifacts.signIn', 'Sign in to Orca')}
+              : translate('auto.components.settings.artifacts.signIn', 'Sign in to Orca Cloud')}
           </Button>
         </section>
       ) : null}

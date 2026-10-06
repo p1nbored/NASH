@@ -49,7 +49,7 @@ const plan: PinnedRelayPlan = {
 const context = {
   conn,
   host,
-  remoteRelayDir: '/home/u/.orca-remote/relay-0.1.0+feedfacecafe',
+  remoteRelayDir: '/home/u/.nash-remote/relay-0.1.0+feedfacecafe',
   plan,
   targetId: 'target-1'
 }
@@ -57,7 +57,7 @@ const context = {
 beforeEach(() => {
   vi.mocked(execCommand).mockReset()
   vi.mocked(ensureRemoteOrcadNodeRuntime).mockReset().mockResolvedValue({
-    executable: '/home/u/.orca-remote/runtimes/node-test/bin/node',
+    executable: '/home/u/.nash-remote/runtimes/node-test/bin/node',
     transfer: 'uploaded'
   })
   vi.mocked(runPinnedRuntimeSelfTest).mockReset()
@@ -113,7 +113,7 @@ describe('verifyPinnedRelayInstall', () => {
     expect(withRuntimeStoreLock).toHaveBeenCalledWith(
       conn,
       host,
-      '/home/u/.orca-remote/runtimes',
+      '/home/u/.nash-remote/runtimes',
       expect.any(Function),
       undefined
     )
@@ -143,7 +143,7 @@ describe('verifyPinnedRelayInstall', () => {
     expect(runPinnedRuntimeSelfTest).toHaveBeenCalledWith(
       conn,
       context.remoteRelayDir,
-      expect.stringMatching(/\/\.orca-remote\/runtimes\/node-[0-9a-f]{64}\/bin\/node$/),
+      expect.stringMatching(/\/\.nash-remote\/runtimes\/node-[0-9a-f]{64}\/bin\/node$/),
       undefined,
       { host, expectPinnedVersion: true }
     )
@@ -244,7 +244,7 @@ describe('pinned relay on a Windows host', () => {
   const windowsContext = {
     ...context,
     host: windowsHost,
-    remoteRelayDir: 'C:/Users/u/.orca-remote/relay-0.1.0+feedfacecafe',
+    remoteRelayDir: 'C:/Users/u/.nash-remote/relay-0.1.0+feedfacecafe',
     plan: { ...plan, target: 'win32-x64' as const, glibc: null }
   }
 
@@ -254,7 +254,7 @@ describe('pinned relay on a Windows host', () => {
     const [, command, options] = vi.mocked(execCommand).mock.calls[0]
     expect(command).toMatch(/^powershell\.exe /)
     expect(options).toMatchObject({ wrapCommand: false })
-    expect(decodeRemotePowerShellScript(command)).toContain('/.orca-remote/runtimes/node-')
+    expect(decodeRemotePowerShellScript(command)).toContain('/.nash-remote/runtimes/node-')
     expect(ensureRemoteOrcadNodeRuntime).not.toHaveBeenCalled()
   })
 
@@ -304,7 +304,7 @@ describe('pinned relay on a Windows host', () => {
     expect(withRuntimeStoreLock).toHaveBeenCalledWith(
       conn,
       windowsHost,
-      'C:/Users/u/.orca-remote/runtimes',
+      'C:/Users/u/.nash-remote/runtimes',
       expect.any(Function),
       undefined
     )
@@ -316,7 +316,7 @@ describe('pinned relay on a Windows host', () => {
       conn,
       windowsContext.remoteRelayDir,
       expect.stringMatching(
-        /^C:\/Users\/u\/\.orca-remote\/runtimes\/node-[0-9a-f]{64}\/node\.exe$/
+        /^C:\/Users\/u\/\.nash-remote\/runtimes\/node-[0-9a-f]{64}\/node\.exe$/
       ),
       undefined,
       { host: windowsHost, expectPinnedVersion: true }

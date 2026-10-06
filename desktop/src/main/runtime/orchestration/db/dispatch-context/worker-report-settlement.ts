@@ -5,6 +5,7 @@ import { settleActiveDispatchesForTask } from './dispatch-completion'
 import { getActiveDispatchForTask } from './task-dispatch-reconciliation'
 import { transitionLifecycleWithDb } from '../lifecycle-transition'
 import { runLifecycleWriteTransaction } from '../lifecycle-write-transaction-runner'
+import { assertWorkerReportNotForAppAttempt } from '../../../workflow-run/app-run-policy'
 import {
   isWorkerStateIn,
   SETTLEABLE_WORKER_STATES,
@@ -70,6 +71,7 @@ export function settleWorkerReportInTransaction(
   this: OrchestrationDb,
   params: WorkerReportSettlementParams
 ): WorkerReportSettlement {
+  assertWorkerReportNotForAppAttempt(this, params.dispatchId)
   const task = this.getTask(params.taskId)
   if (!task) {
     return { action: 'rejected', code: 'unknown_task', reason: `Unknown task ${params.taskId}.` }

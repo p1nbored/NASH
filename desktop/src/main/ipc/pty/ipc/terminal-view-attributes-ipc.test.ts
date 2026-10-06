@@ -53,11 +53,24 @@ describe('seeding PTY owner colours from saved settings', () => {
     setLocalPtyProvider(owner)
 
     installTerminalViewAttributesIpc({
+      getSettings: () => ({ ...settings, theme: 'system', terminalUseSeparateLightTheme: true }),
+      options: { systemPrefersDark: () => false }
+    })
+
+    expect(owner.pushes).toEqual([{ foreground: '#272117', background: '#fdfaf6' }])
+  })
+
+  // Why (decision D-009): by default the light shell keeps the charcoal terminal.
+  it('seeds a light-appearance host with the shared charcoal theme by default', () => {
+    const owner = new RecordingProvider()
+    setLocalPtyProvider(owner)
+
+    installTerminalViewAttributesIpc({
       getSettings: () => ({ ...settings, theme: 'system' }),
       options: { systemPrefersDark: () => false }
     })
 
-    expect(owner.pushes).toEqual([{ foreground: '#2e3434', background: '#ffffff' }])
+    expect(owner.pushes).toEqual([{ foreground: '#e9e4dc', background: '#1b1915' }])
   })
 
   it('seeds a host with no display from its saved dark theme', () => {
@@ -66,7 +79,7 @@ describe('seeding PTY owner colours from saved settings', () => {
 
     installTerminalViewAttributesIpc({ getSettings: () => ({ ...settings, theme: 'dark' }) })
 
-    expect(owner.pushes).toEqual([{ foreground: '#ffffff', background: '#282c34' }])
+    expect(owner.pushes).toEqual([{ foreground: '#e9e4dc', background: '#1b1915' }])
   })
 
   it('publishes colours a renderer already pushed instead of the saved theme', () => {
@@ -83,7 +96,7 @@ describe('seeding PTY owner colours from saved settings', () => {
 describe('one viewer colour value for every PTY owner', () => {
   const originalLocal = getLocalPtyProvider()
   const settings = getDefaultSettings('/tmp')
-  const SEED = { foreground: '#ffffff', background: '#282c34' }
+  const SEED = { foreground: '#e9e4dc', background: '#1b1915' }
 
   afterEach(() => {
     _resetTerminalViewAttributesForTest()

@@ -59,7 +59,7 @@ export function MobileEmulatorAgentSetupGuide({
               </span>
               {translate(
                 'auto.components.emulator.pane.MobileEmulatorAgentSetupGuide.installSkillPrompt',
-                'Install the Orca CLI skill when you want agents to drive this simulator.'
+                'Install the NASH CLI skill when you want agents to drive this simulator.'
               )}
             </>
           )}

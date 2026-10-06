@@ -51,7 +51,7 @@ describe('pinned runtime refusal classification', () => {
   it.each([
     [132, '', 'illegal_instruction'],
     [null, 'Illegal instruction (core dumped)', 'illegal_instruction'],
-    [126, 'sh: 1: /home/u/.orca-remote/runtimes/node-x/bin/node: Permission denied', 'noexec'],
+    [126, 'sh: 1: /home/u/.nash-remote/runtimes/node-x/bin/node: Permission denied', 'noexec'],
     [
       null,
       'Error: /r/node_modules/node-pty/build/Release/pty.node: failed to map segment from shared object',
@@ -59,7 +59,7 @@ describe('pinned runtime refusal classification', () => {
     ],
     [1, "node: /lib64/libc.so.6: version `GLIBC_2.28' not found (required by node)", 'libc_floor'],
     [1, "/lib64/libstdc++.so.6: version `GLIBCXX_3.4.26' not found", 'libc_floor'],
-    [127, 'sh: /home/u/.orca-remote/runtimes/node-x/bin/node: not found', 'wrong_libc'],
+    [127, 'sh: /home/u/.nash-remote/runtimes/node-x/bin/node: not found', 'wrong_libc'],
     [null, 'Error relocating pty.node: __snprintf_chk: symbol not found', 'wrong_libc'],
     [
       1,
@@ -75,9 +75,9 @@ describe('pinned runtime refusal classification', () => {
     [
       127,
       [
-        'Error loading shared library libstdc++.so.6: No such file or directory (needed by /root/.orca-remote/runtimes/node-x/bin/node)',
-        'Error loading shared library libgcc_s.so.1: No such file or directory (needed by /root/.orca-remote/runtimes/node-x/bin/node)',
-        'Error relocating /root/.orca-remote/runtimes/node-x/bin/node: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_createERmm: symbol not found'
+        'Error loading shared library libstdc++.so.6: No such file or directory (needed by /root/.nash-remote/runtimes/node-x/bin/node)',
+        'Error loading shared library libgcc_s.so.1: No such file or directory (needed by /root/.nash-remote/runtimes/node-x/bin/node)',
+        'Error relocating /root/.nash-remote/runtimes/node-x/bin/node: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_createERmm: symbol not found'
       ].join('\n'),
       'missing_lib'
     ]
@@ -192,15 +192,15 @@ describe('relay self-test report evaluation', () => {
 describe('Windows relay self-test', () => {
   it('is one encoded powershell.exe line that runs relay.js on node.exe from the relay dir', () => {
     const command = windowsRelayRuntimeSelfTestCommand(
-      'C:/Users/u/.orca-remote/relay-0.1.0+abc',
-      "C:/Users/o'brien/.orca-remote/runtimes/node-x/node.exe",
+      'C:/Users/u/.nash-remote/relay-0.1.0+abc',
+      "C:/Users/o'brien/.nash-remote/runtimes/node-x/node.exe",
       'feed'
     )
     expect(command).toMatch(/^powershell\.exe -NoProfile -NonInteractive -EncodedCommand \S+$/)
     expect(decodeRemotePowerShellScript(command)).toMatchInlineSnapshot(`
-      "Set-Location -LiteralPath 'C:/Users/u/.orca-remote/relay-0.1.0+abc'
+      "Set-Location -LiteralPath 'C:/Users/u/.nash-remote/relay-0.1.0+abc'
       $out = ''; $status = $null
-      try { $out = ((& 'C:/Users/o''brien/.orca-remote/runtimes/node-x/node.exe' 'relay.js' '--orca-runtime-selftest' 'feed' 2>&1) | ForEach-Object { "$_" }) -join "\`n"; $status = $LASTEXITCODE } catch { $status = -1; $out = $_.Exception.Message }
+      try { $out = ((& 'C:/Users/o''brien/.nash-remote/runtimes/node-x/node.exe' 'relay.js' '--orca-runtime-selftest' 'feed' 2>&1) | ForEach-Object { "$_" }) -join "\`n"; $status = $LASTEXITCODE } catch { $status = -1; $out = $_.Exception.Message }
       Write-Output ('ORCA_RUNTIME_EXIT=' + $status)
       Write-Output ($out.Substring(0, [Math]::Min(16000, $out.Length)))"
     `)

@@ -30,6 +30,9 @@ vi.mock('./update-install-exit-watchdog', () => moduleFactories.updateInstallExi
 vi.mock('./updater-prerelease-feed', () => moduleFactories.updaterPrereleaseFeed())
 vi.mock('./local-builds/local-build-switch', () => moduleFactories.localBuildSwitch())
 vi.mock('./local-builds/local-build-feed-server', () => moduleFactories.localBuildFeedServer())
+vi.mock('../shared/app-identity-constants', async (importOriginal) =>
+  moduleFactories.appIdentityWithFixtureFeed(await importOriginal())
+)
 vi.mock('./startup/hydrate-shell-path', () => ({
   runWithLaunchPath: (action: () => unknown): unknown => {
     launchPathScope.active = true

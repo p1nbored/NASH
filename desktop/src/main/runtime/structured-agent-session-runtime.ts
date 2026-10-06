@@ -33,10 +33,6 @@ import {
 } from '../native-chat/agent-session-wire/structured-agent-session-host'
 import { StructuredAgentSessionAdapterRouter } from '../native-chat/agent-session-wire/structured-agent-session-adapter-router'
 import { setStructuredAgentSessionHost } from '../native-chat/agent-session-wire/structured-agent-session-registry'
-import {
-  readClaudeManagedAccountGateSettings,
-  type ClaudeManagedAccountGateSettings
-} from '../native-chat/claude-structured-managed-account-support'
 import { AgentSessionRecordStore } from './agent-session-record-store'
 import type { JournalHostDatabase } from '../native-chat/agent-session-journal/journal-host-database'
 import { openStructuredAgentSessionJournalDatabase } from './structured-agent-session-journal-open'
@@ -111,8 +107,6 @@ export type StructuredAgentSessionRuntimeDeps = {
   resolveClaudePermissionMode?: () => Promise<PermissionMode> | PermissionMode
   /** The same setting for Codex, as app-server thread policy. */
   resolveCodexPermissionPolicy?: () => CodexStructuredPermissionPolicy
-  /** Raw settings getter; the reader that fails closed around it is built here, in checked code. */
-  getClaudeManagedAccountGateSettings?: () => ClaudeManagedAccountGateSettings
   resolveEnvironment?: () => Promise<NodeJS.ProcessEnv>
   /** Which login-shell variables Codex and Claude children inherit; absent inherits all. */
   resolveShellEnvironmentPolicy?: () => NativeChatShellEnvironmentPolicy
@@ -285,12 +279,6 @@ async function installOnJournal(
     resolveClaudeAuthPolicy: deps.resolveClaudeAuthPolicy,
     ...(deps.resolveClaudePermissionMode
       ? { resolveClaudePermissionMode: deps.resolveClaudePermissionMode }
-      : {}),
-    ...(deps.getClaudeManagedAccountGateSettings
-      ? {
-          readClaudeManagedAccountGate: () =>
-            readClaudeManagedAccountGateSettings(deps.getClaudeManagedAccountGateSettings!)
-        }
       : {}),
     onLifecycleEvent: (event) => lifecycle.deliver(event),
     onChildWorkEvidence: (sessionId, evidence) =>

@@ -3,6 +3,8 @@ import type {
   CheckRunDetailsTabPatch,
   OpenCheckRunDetailsState
 } from '@/components/editor/check-run-details-tab'
+import type { OpenTaskWindowState } from '@/components/task-window/task-window-tab'
+import type { WorkbenchRunTaskAttempt } from '../../../../../../shared/rpc-contract/workbench-task-window-params'
 import type {
   GitBranchChangeEntry,
   GitBranchCompareSummary,
@@ -161,6 +163,9 @@ export type EditorFilesSlice = {
     state: CheckRunDetailsTabPatch
   ) => void
   reloadOpenCheckRunDetailsTab: (fileId: string) => Promise<void>
+  openTaskWindow: (worktreeId: string, input: OpenTaskWindowState) => void
+  selectTaskWindowAttempt: (fileId: string, dispatchId: string) => void
+  patchTaskWindowAttempts: (fileId: string, attempts: readonly WorkbenchRunTaskAttempt[]) => void
   openBranchAllDiffs: (
     worktreeId: string,
     worktreePath: string,

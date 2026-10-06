@@ -1,8 +1,8 @@
-//! Launches the Orca CLI by running the packaged Electron binary as Node.
+//! Launches the NASH CLI by running the packaged Electron binary as Node.
 //!
 //! Why a native binary rather than the `.cmd` alone: `cmd.exe` reparses `%*` and
 //! executes or truncates embedded newlines, so orchestration message bodies
-//! cannot survive it (#8374). `orca.cmd` refuses those subcommands and defers
+//! cannot survive it (#8374). `nash.cmd` refuses those subcommands and defers
 //! here.
 //!
 //! Why not a managed assembly: a small freshly-compiled MSIL image in a
@@ -17,26 +17,26 @@ use std::process::{exit, Command};
 fn main() {
     let launcher = match env::current_exe() {
         Ok(path) => path,
-        Err(error) => fail(&format!("Unable to start the Orca CLI: {error}")),
+        Err(error) => fail(&format!("Unable to start the NASH CLI: {error}")),
     };
 
     let Some(resources_directory) = launcher.parent().and_then(Path::parent) else {
         fail(&format!(
-            "Unable to locate Orca.exe next to \"{}\"",
+            "Unable to locate NASH.exe next to \"{}\"",
             launcher.display()
         ))
     };
     let Some(app_directory) = resources_directory.parent() else {
         fail(&format!(
-            "Unable to locate Orca.exe next to \"{}\"",
+            "Unable to locate NASH.exe next to \"{}\"",
             resources_directory.display()
         ))
     };
 
-    let electron_path = app_directory.join("Orca.exe");
+    let electron_path = app_directory.join("NASH.exe");
     if !electron_path.is_file() {
         fail(&format!(
-            "Unable to locate Orca.exe next to \"{}\"",
+            "Unable to locate NASH.exe next to \"{}\"",
             resources_directory.display()
         ));
     }
@@ -48,7 +48,7 @@ fn main() {
         .join("index.js");
     if !cli_path.is_file() {
         fail(&format!(
-            "Unable to locate the Orca CLI entrypoint at \"{}\"",
+            "Unable to locate the NASH CLI entrypoint at \"{}\"",
             cli_path.display()
         ));
     }
@@ -81,7 +81,7 @@ fn main() {
 
     match command.status() {
         Ok(status) => exit(status.code().unwrap_or(1)),
-        Err(error) => fail(&format!("Unable to start the Orca CLI: {error}")),
+        Err(error) => fail(&format!("Unable to start the NASH CLI: {error}")),
     }
 }
 

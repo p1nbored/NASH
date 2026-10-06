@@ -4,6 +4,7 @@ import { getOrcaCloudAuthConfig } from '../orca-profiles/profile-cloud-auth-conf
 import { runWithFreshOrcaCloudSession } from '../orca-profiles/profile-cloud-session-refresh'
 import {
   allowsArtifactCloudAuthOverride,
+  orcaShareServiceUnavailableMessage,
   resolveArtifactCloudApiUrl
 } from '../artifacts/artifact-cloud-config'
 
@@ -12,6 +13,11 @@ export async function runSkillCloudOperation<T>(input: {
   options: SkillCloudOptions
   operation(token: string, apiUrl: string): Promise<T>
 }): Promise<SkillCloudOperation<T>> {
+  const unavailable = orcaShareServiceUnavailableMessage()
+  if (unavailable) {
+    // Why: NASH has no default share origin (Orca cloud services off); refuse before any request.
+    return { status: 'unconfigured', message: unavailable }
+  }
   const apiUrl = resolveArtifactCloudApiUrl(input.options.apiUrl)
   const active = ensureActiveOrcaProfile(input.userDataPath)
   const stamp = {

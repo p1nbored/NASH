@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { APP_XDG_DATA_HOME_PATH } from '../../shared/app-identity-paths'
 import { join, resolve } from 'node:path'
 import { app } from 'electron'
 import { quotePosixShell } from '../../shared/wsl-login-shell-command'
@@ -57,14 +58,16 @@ export class CodexManagedHomePath {
       })
     }
     if (
-      !wslInfo.linuxPath.includes('/.local/share/orca/codex-accounts/') ||
+      !wslInfo.linuxPath.includes(`/${APP_XDG_DATA_HOME_PATH}/codex-accounts/`) ||
       !wslInfo.linuxPath.endsWith('/home')
     ) {
       throw new Error('Managed WSL Codex home is outside Orca account storage.')
     }
     if (
       expectedAccountId !== undefined &&
-      !wslInfo.linuxPath.endsWith(`/.local/share/orca/codex-accounts/${expectedAccountId}/home`)
+      !wslInfo.linuxPath.endsWith(
+        `/${APP_XDG_DATA_HOME_PATH}/codex-accounts/${expectedAccountId}/home`
+      )
     ) {
       throw new Error('Managed WSL Codex home does not match its persisted account ID.')
     }
@@ -93,7 +96,7 @@ export class CodexManagedHomePath {
       account.managedHomeRuntime !== 'wsl' ||
       account.wslDistro !== wslInfo.distro ||
       account.wslLinuxHomePath !== wslInfo.linuxPath ||
-      !wslInfo.linuxPath.endsWith(`/.local/share/orca/codex-accounts/${account.id}/home`)
+      !wslInfo.linuxPath.endsWith(`/${APP_XDG_DATA_HOME_PATH}/codex-accounts/${account.id}/home`)
     ) {
       return
     }
@@ -132,7 +135,7 @@ export class CodexManagedHomePath {
         [
           'set -euo pipefail',
           `candidate=${quotePosixShell(wslInfo.linuxPath)}`,
-          'managed_root="${HOME%/}/.local/share/orca/codex-accounts"',
+          `managed_root="\${HOME%/}/${APP_XDG_DATA_HOME_PATH}/codex-accounts"`,
           'candidate_real=$(readlink -f -- "$candidate")',
           'managed_root_real=$(readlink -f -- "$managed_root")',
           'test -f "$candidate_real/.orca-managed-home"',

@@ -207,7 +207,7 @@ function unsupportedReason(
   return runtimeTarget
     ? translate(
         'auto.components.skills.SkillDelete.hostUpdateRequired',
-        'Update Orca on the selected machine to delete skills.'
+        'Update NASH on the selected machine to delete skills.'
       )
     : translate(
         'auto.components.skills.SkillDelete.hostUnresolved',

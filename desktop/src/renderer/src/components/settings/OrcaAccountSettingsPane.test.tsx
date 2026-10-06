@@ -92,14 +92,26 @@ describe('OrcaAccountSettingsPane', () => {
 
     expect(
       screen.getByText(
-        'Sign in to extend Orca with cloud features, including Artifacts and Orca Relay.'
+        'Sign in to Orca Cloud to extend NASH with cloud features, including Artifacts and Orca Relay.'
       )
     ).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Sign in to Orca' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in to Orca Cloud' }))
     expect(mocks.connect).toHaveBeenCalledOnce()
-    expect(screen.getByRole('button', { name: 'Sign in to Orca' })).toBeEnabled()
-    await user.click(screen.getByRole('button', { name: 'Sign in to Orca' }))
+    expect(screen.getByRole('button', { name: 'Sign in to Orca Cloud' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Sign in to Orca Cloud' }))
     expect(mocks.connect).toHaveBeenCalledTimes(2)
+  })
+
+  it('says sign-in is not available in NASH builds instead of offering it', () => {
+    mocks.state.orcaProfileAuthStatus = { configured: false, state: 'unconfigured' }
+    render(<OrcaAccountSettingsPane />)
+
+    expect(
+      screen.getByText('Orca Cloud sign-in is not available in NASH builds.')
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sign in to Orca Cloud' })).toBeNull()
+    expect(screen.queryByText('Included with your account')).toBeNull()
+    expect(mocks.connect).not.toHaveBeenCalled()
   })
 
   it('loads account status when it is not hydrated yet', () => {
@@ -107,6 +119,6 @@ describe('OrcaAccountSettingsPane', () => {
     render(<OrcaAccountSettingsPane />)
 
     expect(mocks.fetchAuthStatus).toHaveBeenCalledOnce()
-    expect(screen.getByRole('button', { name: 'Sign in to Orca' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Sign in to Orca Cloud' })).toBeDisabled()
   })
 })

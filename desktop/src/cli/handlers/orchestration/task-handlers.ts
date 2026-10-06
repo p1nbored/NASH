@@ -2,6 +2,7 @@ import type { CommandHandler } from '../../dispatch'
 import { printResult } from '../../format'
 import { getOptionalStringFlag, getRequiredStringFlag } from '../../flags'
 import { RuntimeClientError } from '../../runtime-client'
+import { neutralizeDisplayControls } from '../../../shared/display-control-characters'
 import { abbreviateOrchestrationTasks } from '../../../shared/orchestration-task-summary'
 import { callOrchestrationMutation } from './mutation-request'
 import { resolveCoordinatorTerminalHandle, runScopedSessionCaller } from './terminal-identity'
@@ -77,7 +78,8 @@ export const ORCHESTRATION_TASK_HANDLERS: Record<string, CommandHandler> = {
       }
       const tasks = r.tasks
         .map((task) => {
-          const label = task.display_name ?? task.task_title ?? task.spec
+          // Why: stored TaskSpec text may hold terminal or bidi controls that would rewrite the line.
+          const label = neutralizeDisplayControls(task.display_name ?? task.task_title ?? task.spec)
           const head = `${task.id} [${task.status}] ${label.slice(0, 60)}`
           if (task.status === 'dispatched' && task.assignee_handle) {
             return `${head} -> ${task.assignee_handle} (${task.dispatch_id ?? '?'})`

@@ -1,4 +1,5 @@
 import { resolve, relative, isAbsolute, posix, sep, win32 } from 'node:path'
+import { APP_DEFAULT_WORKSPACES_DIR_SEGMENTS } from '../../shared/app-identity-paths'
 import type { GlobalSettings, OrcaWorkspaceLayout } from '../../shared/global-settings-types'
 import type { Repo } from '../../shared/repo-types'
 import { isWindowsAbsolutePathLike, resolveRuntimePath } from '../../shared/cross-platform-path'
@@ -97,7 +98,7 @@ export function ensurePathWithinWorkspace(targetPath: string, workspaceDir: stri
  * must also live on the WSL filesystem. Creating them on the Windows side
  * (/mnt/c/...) would be extremely slow due to cross-filesystem I/O and
  * the terminal would open a Windows shell instead of WSL. We mirror the
- * Windows workspace layout inside ~/orca/workspaces on the WSL filesystem
+ * Windows workspace layout inside ~/nash/workspaces on the WSL filesystem
  * (e.g. \\wsl.localhost\Ubuntu\home\user\orca\workspaces\repo\feature).
  */
 export function computeWorktreePath(
@@ -195,7 +196,7 @@ function workspaceRootForMirrorHome(
   // terminals stay on the WSL filesystem; repo-relative roots can resolve
   // directly against the WSL repo path.
   return wslHome
-    ? win32.join(wslHome, 'orca', 'workspaces')
+    ? win32.join(wslHome, ...APP_DEFAULT_WORKSPACES_DIR_SEGMENTS)
     : resolveWorkspaceDirForRepo(repoPath, workspaceDir)
 }
 

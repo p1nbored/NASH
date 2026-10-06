@@ -112,10 +112,10 @@ export function getTerminalOutputMaxQueueChars(): number {
 // xterm stops repainting until the latch closes or its 1000ms timeout fires — the
 // pane freezes on its last frame, so the warning itself would go unseen for a second.
 export const BACKGROUND_BACKLOG_WARNING =
-  '\x18\x1b[?2026l\x1b[0m\r\n[Orca skipped hidden terminal output because the backlog grew too large.]\r\n'
+  '\x18\x1b[?2026l\x1b[0m\r\n[NASH skipped hidden terminal output because the backlog grew too large.]\r\n'
 // Why a separate foreground message: a visible pane hitting the cap means the drain couldn't keep up with a flood (starved renderer), not merely output produced while hidden.
 export const FOREGROUND_BACKLOG_WARNING =
-  '\x18\x1b[?2026l\x1b[0m\r\n[Orca skipped a burst of terminal output because the backlog grew too large.]\r\n'
+  '\x18\x1b[?2026l\x1b[0m\r\n[NASH skipped a burst of terminal output because the backlog grew too large.]\r\n'
 export const ALWAYS_REFRESH_FOREGROUND_SYNCHRONOUSLY = (): boolean => true
 
 export const queuedByTerminal = new Map<TerminalOutputTarget, QueueEntry>()

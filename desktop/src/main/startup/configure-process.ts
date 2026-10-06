@@ -4,6 +4,7 @@ import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { getVersionManagerBinPaths } from '../codex-cli/command'
 import { getMainE2EConfig } from '../e2e-config'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { DISABLED_CHROMIUM_FEATURES } from './disabled-chromium-features'
 import { readHttp1CompatibilityMarker } from './http1-compatibility-marker'
 import {
@@ -209,6 +210,8 @@ export function configureDevUserDataPath(isDev: boolean): void {
   }
 
   if (!isDev) {
+    // Why: pinned rather than left to Electron's package-name derivation, so NASH's data folder cannot drift onto Orca's; the CLI resolves the same name.
+    app.setPath('userData', join(app.getPath('appData'), APP_IDENTITY.userDataDirName))
     return
   }
   const overrideUserDataPath = process.env.ORCA_DEV_USER_DATA_PATH
@@ -217,8 +220,8 @@ export function configureDevUserDataPath(isDev: boolean): void {
     app.setPath('userData', overrideUserDataPath)
     return
   }
-  // Why: without a dev-only path, pnpm dev overwrites the packaged app's runtime pointer under userData and breaks the orca CLI.
-  app.setPath('userData', join(app.getPath('appData'), 'orca-dev'))
+  // Why: without a dev-only path, pnpm dev overwrites the packaged app's runtime pointer under userData and breaks the nash CLI.
+  app.setPath('userData', join(app.getPath('appData'), APP_IDENTITY.devUserDataDirName))
 }
 
 function areSameE2EHomePath(left: string, right: string): boolean {

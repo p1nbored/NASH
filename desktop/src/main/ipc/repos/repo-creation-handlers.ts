@@ -1,4 +1,5 @@
 import type { BrowserWindow } from 'electron'
+import { APP_DEFAULT_PROJECTS_DIR_SEGMENTS } from '../../../shared/app-identity-paths'
 import { ipcMain } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
@@ -37,7 +38,7 @@ export async function probeLocalGitAvailability(): Promise<boolean> {
  * override for the local host, which is the only scope this handler answers for.
  *
  * Why the untouched default does not count: `workspaceDir` is never blank -- new
- * installs seed it with `~/orca/workspaces`. Treating that seeded value as a choice
+ * installs seed it with `~/nash/workspaces`. Treating that seeded value as a choice
  * would silently relocate every existing user's projects into the worktree root,
  * where each project would then host its own worktrees inside its working tree.
  */
@@ -56,7 +57,7 @@ function getDefaultCreateProjectParent(store: Store): string {
   if (configured && !isUntouchedDefault) {
     return configured
   }
-  return join(home, 'orca', 'projects')
+  return join(home, ...APP_DEFAULT_PROJECTS_DIR_SEGMENTS)
 }
 
 export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: Store): void {
@@ -164,7 +165,7 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       let createdDir = false
       let targetExists = false
       try {
-        // Why: the default parent (~/orca/projects) may not exist on a fresh install; create only the parent before probing the target.
+        // Why: the default parent (~/nash/projects) may not exist on a fresh install; create only the parent before probing the target.
         await mkdir(parentPath, { recursive: true })
         await access(targetPath)
         targetExists = true

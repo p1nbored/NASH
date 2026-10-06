@@ -6,9 +6,8 @@ import { setupPtyIpcSuite } from './pty-ipc-test-harness'
 import { LocalPtyProvider } from '../providers/local-pty-provider'
 import { __resetPersistedWindowsPathCacheForTests } from '../pty/windows-environment-path'
 import { __setWindowsPathRegistryLoaderForTests } from '../pty/windows-path-registry-reader'
-import { hasLiveClaudePtys, markClaudePtySpawned } from '../claude-accounts/live-pty-gate'
 import { wslHookRelayManager } from '../agent-hooks/wsl-hook-relay-manager'
-import { registerPtyHandlers, buildPtyHostEnv, clearProviderPtyState } from './pty'
+import { registerPtyHandlers, buildPtyHostEnv } from './pty'
 import { buildJcodeRuntimeDir, shouldInjectJcodeRuntimeDir } from '../../shared/jcode-runtime-dir'
 import { makePaneKey } from '../../shared/stable-pane-id'
 
@@ -196,7 +195,7 @@ describe('registerPtyHandlers', () => {
 
     it('passes the PTY-resolved Codex home to the WSL relay lane', () => {
       const runtimeHome =
-        '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-runtime-home\\home'
       const ensureForDistro = vi
         .spyOn(wslHookRelayManager, 'ensureForDistro')
         .mockImplementation(async () => {})
@@ -284,7 +283,7 @@ describe('registerPtyHandlers', () => {
         id: expect.any(String)
       })
     })
-    it('marks local Claude launches live until the PTY is killed', async () => {
+    it('prepares a local Claude launch once and kills it without an account gate', async () => {
       let exitCb: ((info: { exitCode: number }) => void) | undefined
       spawnMock.mockReturnValue({
         onData: vi.fn(() => makeDisposable()),
@@ -302,7 +301,7 @@ describe('registerPtyHandlers', () => {
         configDir: '/tmp/claude',
         envPatch: {},
         stripAuthEnv: false,
-        provenance: 'managed:account-1'
+        provenance: 'system'
       }))
       registerPtyHandlers(mainWindow as never, undefined, undefined, undefined, prepareClaudeAuth)
 
@@ -313,19 +312,8 @@ describe('registerPtyHandlers', () => {
       })) as { id: string }
 
       expect(prepareClaudeAuth).toHaveBeenCalledTimes(1)
-      expect(hasLiveClaudePtys()).toBe(true)
 
-      await handlers.get('pty:kill')!(null, { id: spawnResult.id })
-
-      expect(hasLiveClaudePtys()).toBe(false)
-    })
-    it('clears Claude live-PTY tracking from shared provider teardown', () => {
-      markClaudePtySpawned('ssh-claude-pty')
-      expect(hasLiveClaudePtys()).toBe(true)
-
-      clearProviderPtyState('ssh-claude-pty')
-
-      expect(hasLiveClaudePtys()).toBe(false)
+      await expect(handlers.get('pty:kill')!(null, { id: spawnResult.id })).resolves.not.toThrow()
     })
     it('defaults LANG to en_US.UTF-8 when not inherited from process.env', async () => {
       const env = await spawnAndGetEnv(undefined, { LANG: undefined })
@@ -398,7 +386,7 @@ describe('registerPtyHandlers', () => {
       const env = await spawnAndGetEnv()
       expect(env.TERM).toBe('xterm-256color')
       expect(env.COLORTERM).toBe('truecolor')
-      expect(env.TERM_PROGRAM).toBe('Orca')
+      expect(env.TERM_PROGRAM).toBe('NASH')
     })
     it('hints inline-image support to agents via ORCA_IMAGE_PROTOCOL', async () => {
       const env = await spawnAndGetEnv()

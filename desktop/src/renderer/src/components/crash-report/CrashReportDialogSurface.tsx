@@ -21,6 +21,7 @@ import {
   type CrashReportRecord
 } from '../../../../shared/crash-reporting'
 import type { GitHubViewer } from '../../../../shared/github/pull-request-types'
+import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
 import { translate } from '@/i18n/i18n'
 import {
   CRASH_REPORT_SUBMIT_FAILURE_TOAST_ID,
@@ -45,17 +46,23 @@ function getDialogTitle(report: CrashReportRecord | null): string {
     return 'Report a crash'
   }
   return report && isReactErrorBoundaryReport(report)
-    ? 'Orca hit a recoverable UI error'
-    : 'Orca closed unexpectedly'
+    ? 'NASH hit a recoverable UI error'
+    : 'NASH closed unexpectedly'
 }
 
 function getDialogDescription(report: CrashReportRecord | null): string {
+  if (!ORCA_CLOUD_SERVICES_ENABLED) {
+    return translate(
+      'auto.components.crash.report.CrashReportDialog.nashNotSent',
+      'NASH does not send crash reports. Copy the details to keep them.'
+    )
+  }
   if (!report) {
-    return 'Send a privacy-safe crash report. Recent redacted diagnostic logs are included when available.'
+    return 'Send a privacy-safe crash report to the Orca team. Recent redacted diagnostic logs are included when available.'
   }
   return report && isReactErrorBoundaryReport(report)
-    ? 'Send a privacy-safe diagnostic report to help us understand the failed UI surface.'
-    : 'Send a privacy-safe diagnostic report to help us understand what happened.'
+    ? 'Send a privacy-safe diagnostic report to the Orca team about the failed UI surface.'
+    : 'Send a privacy-safe diagnostic report to the Orca team about what happened.'
 }
 
 function getNotesPlaceholder(report: CrashReportRecord | null): string {
@@ -64,7 +71,7 @@ function getNotesPlaceholder(report: CrashReportRecord | null): string {
   }
   return report && isReactErrorBoundaryReport(report)
     ? 'Optional: what were you doing before this UI error?'
-    : 'Optional: what were you doing before Orca closed?'
+    : 'Optional: what were you doing before NASH closed?'
 }
 
 type CrashReportDialogSurfaceProps = {
@@ -128,7 +135,10 @@ export function CrashReportDialogSurface({
       return
     }
     setIncludeDiagnosticLogs(true)
-    loadViewerForOpenDialog()
+    // Why: the GitHub login only labels a sent report, and NASH sends none.
+    if (ORCA_CLOUD_SERVICES_ENABLED) {
+      loadViewerForOpenDialog()
+    }
   }, [clearViewer, loadViewerForOpenDialog, open])
 
   const showSubmitFailure = (
@@ -249,7 +259,7 @@ export function CrashReportDialogSurface({
                 <div className="font-medium text-foreground">{formatSummary(report)}</div>
                 <div className="mt-1 text-muted-foreground">
                   {new Date(report.createdAt).toLocaleString()} · {report.platform} {report.arch} ·
-                  {translate('auto.components.crash.report.CrashReportDialog.835037edc9', 'Orca')}{' '}
+                  {translate('auto.components.crash.report.CrashReportDialog.835037edc9', 'NASH')}{' '}
                   {report.appVersion}
                 </div>
               </div>
@@ -272,10 +282,15 @@ export function CrashReportDialogSurface({
                     'auto.components.crash.report.CrashReportDialog.765591798d',
                     'Checking for crash reports...'
                   )
-                : translate(
-                    'auto.components.crash.report.CrashReportDialog.ead6fc0510',
-                    'No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.'
-                  )}
+                : ORCA_CLOUD_SERVICES_ENABLED
+                  ? translate(
+                      'auto.components.crash.report.CrashReportDialog.ead6fc0510',
+                      'No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.'
+                    )
+                  : translate(
+                      'auto.components.crash.report.CrashReportDialog.nashNoReport',
+                      'No automatic crash report was captured.'
+                    )}
             </div>
           )}
           <div className="space-y-1">
@@ -295,29 +310,31 @@ export function CrashReportDialogSurface({
               {notes.length.toLocaleString()} / {MAX_USER_NOTES_LENGTH.toLocaleString()}
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-md border border-border/70 bg-muted/20 p-3">
-            <Checkbox
-              id="crash-report-attach-diagnostics"
-              checked={includeDiagnosticLogs}
-              onCheckedChange={(checked) => setIncludeDiagnosticLogs(checked === true)}
-              disabled={submitting}
-              className="mt-0.5"
-            />
-            <div className="space-y-1">
-              <Label htmlFor="crash-report-attach-diagnostics" className="text-xs">
-                {translate(
-                  'auto.components.crash.report.CrashReportDialog.b082f27490',
-                  'Attach recent diagnostic logs'
-                )}
-              </Label>
-              <div className="text-xs leading-5 text-muted-foreground">
-                {translate(
-                  'auto.components.crash.report.CrashReportDialog.e59f0b9427',
-                  'Sends a capped redacted log bundle with the report.'
-                )}
+          {ORCA_CLOUD_SERVICES_ENABLED ? (
+            <div className="flex items-start gap-2 rounded-md border border-border/70 bg-muted/20 p-3">
+              <Checkbox
+                id="crash-report-attach-diagnostics"
+                checked={includeDiagnosticLogs}
+                onCheckedChange={(checked) => setIncludeDiagnosticLogs(checked === true)}
+                disabled={submitting}
+                className="mt-0.5"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="crash-report-attach-diagnostics" className="text-xs">
+                  {translate(
+                    'auto.components.crash.report.CrashReportDialog.b082f27490',
+                    'Attach recent diagnostic logs'
+                  )}
+                </Label>
+                <div className="text-xs leading-5 text-muted-foreground">
+                  {translate(
+                    'auto.components.crash.report.CrashReportDialog.e59f0b9427',
+                    'Sends a capped redacted log bundle with the report.'
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
 
         <DialogFooter className="gap-2">
@@ -338,12 +355,20 @@ export function CrashReportDialogSurface({
             onClick={handleDismiss}
             disabled={submitting}
           >
-            {translate('auto.components.crash.report.CrashReportDialog.88fea8e84e', "Don't Send")}
+            {ORCA_CLOUD_SERVICES_ENABLED
+              ? translate('auto.components.crash.report.CrashReportDialog.88fea8e84e', "Don't Send")
+              : translate('auto.components.crash.report.CrashReportDialog.nashClose', 'Close')}
           </Button>
-          <Button type="button" size="sm" onClick={handleSubmit} disabled={loading || submitting}>
-            <Send className="size-3.5" />
-            {translate('auto.components.crash.report.CrashReportDialog.b4951cd27c', 'Send Report')}
-          </Button>
+          {/* Why: NASH sends nothing to Orca, so there is no Send action. */}
+          {ORCA_CLOUD_SERVICES_ENABLED ? (
+            <Button type="button" size="sm" onClick={handleSubmit} disabled={loading || submitting}>
+              <Send className="size-3.5" />
+              {translate(
+                'auto.components.crash.report.CrashReportDialog.b4951cd27c',
+                'Send Report'
+              )}
+            </Button>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

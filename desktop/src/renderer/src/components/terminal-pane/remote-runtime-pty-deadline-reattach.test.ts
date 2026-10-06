@@ -346,7 +346,7 @@ describe('remote runtime pty reattach after the bounded recovery window', () => 
             ok: false,
             error: {
               code: 'remote_runtime_unavailable',
-              message: 'Remote Orca runtime connection closed'
+              message: 'Remote NASH runtime connection closed'
             }
           }
         }

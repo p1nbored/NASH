@@ -52,7 +52,7 @@ export function useZcodePlanCredentials(updatedAt: number | undefined) {
         typeof next.zcodeCliConfigured !== 'boolean'
       ) {
         throw new Error(
-          'GLM Coding Plan keys can only be changed in the desktop app on the computer running Orca.'
+          'GLM Coding Plan keys can only be changed in the desktop app on the computer running NASH.'
         )
       }
       setStatus(next)

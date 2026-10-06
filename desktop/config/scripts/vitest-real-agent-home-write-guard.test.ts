@@ -4,6 +4,7 @@ import { writeFile } from 'node:fs/promises'
 import { homedir, tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { APP_RELAY_HOME_DIR_NAME, APP_REMOTE_DIR_NAME } from '../../src/shared/app-identity-paths'
 import { takeRealAgentHomeWriteViolations } from './vitest-real-agent-home-write-guard'
 
 // Why never-created paths: each sits under a missing folder or is a forced no-op removal, so even
@@ -34,6 +35,22 @@ describe('vitest real-agent-home write guard', () => {
       /real-agent-home guard/
     )
   })
+
+  it('refuses a removal under the real ~/.nash, the app home folder holding its credentials', () => {
+    expect(() => rmSync(missingRealFolder('.nash'), { recursive: true, force: true })).toThrow(
+      /real-agent-home guard/
+    )
+  })
+
+  // Why: relay test runs once left ~/.orca-relay and ~/.orca-remote in the real home.
+  it.each([APP_RELAY_HOME_DIR_NAME, APP_REMOTE_DIR_NAME])(
+    'refuses a removal under the real ~/%s, the relay folders a test may otherwise create',
+    (entry) => {
+      expect(() => rmSync(missingRealFolder(entry), { recursive: true, force: true })).toThrow(
+        /real-agent-home guard/
+      )
+    }
+  )
 
   it('still records a refusal the writer swallowed, so the test fails afterwards', () => {
     try {

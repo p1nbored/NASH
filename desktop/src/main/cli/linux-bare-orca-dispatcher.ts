@@ -27,7 +27,7 @@ export type LinuxBareOrcaDispatcherOptions = {
   homePath?: string
   /** Trusted caller override; production requires the complete AppImage runtime identity. */
   appImagePath?: string | null
-  /** Test seam — defaults to $XDG_CACHE_HOME/orca/appimage. */
+  /** Test seam — defaults to $XDG_CACHE_HOME/<app data folder>/appimage. */
   appImageCacheRootPath?: string
   /** Test seam — defaults to running the AppImage's own `--appimage-extract`. */
   appImageExtractRunner?: (appImagePath: string, cwd: string) => Promise<void>

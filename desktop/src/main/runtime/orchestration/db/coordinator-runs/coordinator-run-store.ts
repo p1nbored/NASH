@@ -50,34 +50,11 @@ export function getActiveCoordinatorRun(this: OrchestrationDb): CoordinatorRun |
     .get() as CoordinatorRun | undefined
 }
 
-// ── Queries for Coordinator ──
-
-export function getIdleTerminals(this: OrchestrationDb, excludeHandles: string[] = []): string[] {
-  const active = this.db
-    .prepare(
-      "SELECT DISTINCT assignee_handle FROM dispatch_contexts WHERE status IN ('pending', 'dispatched')"
-    )
-    .all() as { assignee_handle: string }[]
-  const busyHandles = new Set(active.map((r) => r.assignee_handle))
-  for (const h of excludeHandles) {
-    busyHandles.add(h)
-  }
-  // Return handles from message history that aren't busy
-  const allHandles = this.db
-    .prepare(
-      // Why: alias the UNION column — otherwise the row shape depends on the first branch's column name.
-      'SELECT DISTINCT to_handle AS handle FROM messages UNION SELECT DISTINCT from_handle FROM messages'
-    )
-    .all() as { handle: string }[]
-  return [...new Set(allHandles.map((r) => r.handle))].filter((h) => !busyHandles.has(h))
-}
-
 export type CoordinatorRunStoreMethods = {
   createCoordinatorRun: typeof createCoordinatorRun
   getCoordinatorRun: typeof getCoordinatorRun
   updateCoordinatorRun: typeof updateCoordinatorRun
   getActiveCoordinatorRun: typeof getActiveCoordinatorRun
-  getIdleTerminals: typeof getIdleTerminals
 }
 
 export function attachCoordinatorRunStore(ctor: { prototype: object }): void {
@@ -85,7 +62,6 @@ export function attachCoordinatorRunStore(ctor: { prototype: object }): void {
     createCoordinatorRun,
     getCoordinatorRun,
     updateCoordinatorRun,
-    getActiveCoordinatorRun,
-    getIdleTerminals
+    getActiveCoordinatorRun
   })
 }

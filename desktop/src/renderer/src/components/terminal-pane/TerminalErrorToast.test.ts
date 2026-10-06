@@ -73,7 +73,7 @@ describe('humanizeTerminalError', () => {
     const humanized = humanizeTerminalError('terminal_pane_owner_unverified')
     expect(humanized).not.toContain('terminal_pane_owner_unverified')
     expect(humanized).toContain('Click Retry to try reconnecting now')
-    expect(humanized).toContain('Orca left the saved session unchanged')
+    expect(humanized).toContain('NASH left the saved session unchanged')
     expect(humanized).not.toContain('was not closed or deleted')
   })
 
@@ -86,7 +86,7 @@ describe('humanizeTerminalError', () => {
   it('humanizes an owner marker without classifying mixed errors as safe warnings', () => {
     const mixed = humanizeTerminalError('Paste failed.\nterminal_pane_owner_unverified')
     expect(mixed).toContain('Paste failed.')
-    expect(mixed).toContain("Orca couldn't verify this terminal's owner.")
+    expect(mixed).toContain("NASH couldn't verify this terminal's owner.")
     expect(mixed).not.toContain('terminal_pane_owner_unverified')
     expect(isPaneOwnerUnverifiedError('Paste failed.\nterminal_pane_owner_unverified')).toBe(false)
   })
@@ -242,7 +242,7 @@ describe('isExplainedTerminalError', () => {
     ).toBe(true)
   })
 
-  it('keeps the issue link for errors Orca cannot explain', () => {
+  it('keeps the issue link for errors NASH cannot explain', () => {
     expect(isExplainedTerminalError('Paste failed.')).toBe(false)
     expect(isExplainedTerminalError('node-pty: open_slave failed: EMFILE')).toBe(false)
     expect(isExplainedTerminalError('terminal_gone')).toBe(false)
@@ -282,7 +282,7 @@ describe('shouldOfferDaemonRestart', () => {
   it('matches stale daemon node-pty install failures', () => {
     expect(
       shouldOfferDaemonRestart(
-        "Daemon's node-pty install is gone (worktree deleted?). Restart Orca. node-pty: posix_spawn failed: ENOENT (errno 2, No such file or directory) - helper='/Applications/Orca.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/build/Release/spawn-helper'"
+        "Daemon's node-pty install is gone (worktree deleted?). Restart NASH. node-pty: posix_spawn failed: ENOENT (errno 2, No such file or directory) - helper='/Applications/Orca.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/build/Release/spawn-helper'"
       )
     ).toBe(true)
   })
@@ -290,7 +290,7 @@ describe('shouldOfferDaemonRestart', () => {
   it('matches stale daemon cwd failures', () => {
     expect(
       shouldOfferDaemonRestart(
-        "Daemon's working directory is gone (worktree deleted?). Restart Orca. node-pty: daemon_cwd failed: ENOENT (errno 2, No such file or directory) - cwd='<unavailable>'"
+        "Daemon's working directory is gone (worktree deleted?). Restart NASH. node-pty: daemon_cwd failed: ENOENT (errno 2, No such file or directory) - cwd='<unavailable>'"
       )
     ).toBe(true)
   })
@@ -370,7 +370,7 @@ describe('TerminalErrorToast environment footer', () => {
     const toast = view.container.querySelector('[data-terminal-error-toast]')
     expect(toast?.getAttribute('data-terminal-error-kind')).toBe('owner-unverified')
     expect(toast?.querySelector('a')).toBeNull()
-    expect(toast?.textContent).toContain('Orca left the saved session unchanged')
+    expect(toast?.textContent).toContain('NASH left the saved session unchanged')
     expect(view.getByRole('button', { name: 'Retry' }).getAttribute('data-slot')).toBe('button')
     fireEvent.click(view.getByRole('button', { name: 'Retry' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
@@ -423,7 +423,7 @@ describe('TerminalErrorToast folder workspace path errors', () => {
 
     expect(humanized).not.toContain('folder_workspace_path_missing')
     expect(humanized).toBe(
-      "Error invoking remote method 'pty:spawn': Error: Orca cannot find /Users/me/ara_company. Remove and re-import the folder."
+      "Error invoking remote method 'pty:spawn': Error: NASH cannot find /Users/me/ara_company. Remove and re-import the folder."
     )
   })
 
@@ -445,7 +445,7 @@ describe('TerminalErrorToast folder workspace path errors', () => {
 
     const toast = view.container.querySelector('[data-terminal-error-toast]')
     expect(toast?.textContent).toContain(
-      'Orca cannot tell which SSH connection owns this folder scope.'
+      'NASH cannot tell which SSH connection owns this folder scope.'
     )
     expect(toast?.textContent).not.toContain('folder_workspace_connection_ambiguous')
     expect(toast?.querySelector('a')).toBeNull()
@@ -460,7 +460,7 @@ describe('TerminalErrorToast folder workspace path errors', () => {
     )
 
     const toast = view.container.querySelector('[data-terminal-error-toast]')
-    expect(toast?.textContent).toContain('Orca cannot find /Users/me/ara_company')
+    expect(toast?.textContent).toContain('NASH cannot find /Users/me/ara_company')
     expect(toast?.querySelector('a')?.textContent).toBe('file an issue')
   })
 
@@ -473,7 +473,7 @@ describe('TerminalErrorToast folder workspace path errors', () => {
     )
 
     const toast = view.container.querySelector('[data-terminal-error-toast]')
-    expect(toast?.textContent).toContain('Orca cannot find /Users/me/ara_company')
+    expect(toast?.textContent).toContain('NASH cannot find /Users/me/ara_company')
     expect(toast?.textContent).not.toContain('folder_workspace_path_missing')
     expect(toast?.textContent).not.toContain('If this persists')
     expect(toast?.querySelector('a')).toBeNull()

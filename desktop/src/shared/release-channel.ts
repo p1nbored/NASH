@@ -1,4 +1,9 @@
 import { compareAppVersions, isValidAppVersion } from './app-version'
+import {
+  getAppUpdateFeed,
+  getUpdateFeedRepoSlug,
+  requireAppUpdateFeed
+} from './app-update-feed'
 
 export type ReleaseChannel = 'stable' | 'rc' | 'hourly' | 'daily' | 'adhoc'
 
@@ -18,26 +23,10 @@ export const RELEASE_CHANNEL_LABELS: Readonly<Record<ReleaseChannel, string>> = 
   adhoc: 'Adhoc'
 }
 
-/** Dev builds live in their own repos so their tags never enter the main
- *  releases atom feed, which only exposes the 10 newest entries — 24 hourly
- *  tags a day would evict every stable/RC entry and strand real users. */
-export const HOURLY_RELEASE_REPO = 'stablyai/orca-hourly'
-export const DAILY_RELEASE_REPO = 'stablyai/orca-daily'
-export const ADHOC_RELEASE_REPO = 'stablyai/orca-adhoc'
-export const MAIN_RELEASE_REPO = 'stablyai/orca'
-
 /** The dev channels, each published to its own repo rather than the main one. */
 const DEDICATED_REPO_CHANNELS = ['hourly', 'daily', 'adhoc'] as const
 
 export type DedicatedRepoChannel = (typeof DEDICATED_REPO_CHANNELS)[number]
-
-const CHANNEL_RELEASE_REPOS: Record<ReleaseChannel, string> = {
-  stable: MAIN_RELEASE_REPO,
-  rc: MAIN_RELEASE_REPO,
-  hourly: HOURLY_RELEASE_REPO,
-  daily: DAILY_RELEASE_REPO,
-  adhoc: ADHOC_RELEASE_REPO
-}
 
 export function isReleaseChannel(value: unknown): value is ReleaseChannel {
   return typeof value === 'string' && RELEASE_CHANNELS.includes(value as ReleaseChannel)
@@ -110,8 +99,16 @@ export function requiresManualDevChannelInstall(options: {
   return runningChannel === null || !hasDedicatedReleaseRepo(runningChannel)
 }
 
+/**
+ * The `owner/repo` that publishes a channel, taken from the configured release feed. Dev builds live
+ * in their own repos so their tags never enter the main releases atom feed, which only exposes the 10
+ * newest entries — 24 hourly tags a day would evict every stable/RC entry and strand real users.
+ * Throws when the build has no release feed (decision D-017), so no caller can reach a foreign feed.
+ */
 export function getReleaseRepoForChannel(channel: ReleaseChannel): string {
-  return CHANNEL_RELEASE_REPOS[channel]
+  const feed = requireAppUpdateFeed()
+  // Why the channel name is the suffix: dev builds publish to `<feed repo>-hourly`, `-daily` and `-adhoc`.
+  return getUpdateFeedRepoSlug(feed, hasDedicatedReleaseRepo(channel) ? channel : undefined)
 }
 
 export function normalizeTagToVersion(tag: string): string {
@@ -224,11 +221,16 @@ export function getVersionChannel(version: string): ReleaseChannel | null {
  * Release-notes page for a version, in whichever repo published it. Dev-channel
  * tags exist only in their own repo, so a main-repo tag URL for one 404s.
  * A null version falls back to the plain releases listing (not /releases/latest
- * — /latest also breaks when GitHub's API is degraded).
+ * — /latest also breaks when GitHub's API is degraded). Empty when the build has no
+ * release feed: there are no release notes to link, and none may point at a foreign feed.
  */
 export function getReleaseNotesUrlForVersion(version: string | null): string {
+  const feed = getAppUpdateFeed()
+  if (feed === null) {
+    return ''
+  }
   const channel = version ? getVersionChannel(version) : null
-  const repo = channel ? getReleaseRepoForChannel(channel) : MAIN_RELEASE_REPO
+  const repo = getReleaseRepoForChannel(channel ?? 'stable')
   return version
     ? `https://github.com/${repo}/releases/tag/v${normalizeTagToVersion(version)}`
     : `https://github.com/${repo}/releases`

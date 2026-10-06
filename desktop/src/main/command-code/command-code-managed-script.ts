@@ -5,6 +5,11 @@ import {
   buildWindowsHookEnvironmentGuardLines,
   buildWindowsHookStdinDrainEpilogue
 } from '../agent-hooks/hook-stdin-contract'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
+
+// Why: the endpoint files live in the app's own profile folders, never a real Orca install's.
+const PROFILE = APP_IDENTITY.userDataDirName
+const DEV_PROFILE = APP_IDENTITY.devUserDataDirName
 
 export type CommandCodeManagedScriptTarget = 'local' | 'posix'
 
@@ -22,8 +27,8 @@ export function buildCommandCodeManagedScript(
       'exit /b 0',
       ':sourceEndpointByPort',
       'if not defined APPDATA exit /b 0',
-      'if exist "%APPDATA%\\orca-dev\\agent-hooks" for /r "%APPDATA%\\orca-dev\\agent-hooks" %%F in (endpoint.cmd) do call :maybeSourceEndpoint "%%~fF"',
-      'if "%ORCA_AGENT_HOOK_TOKEN%"=="" if exist "%APPDATA%\\orca\\agent-hooks" for /r "%APPDATA%\\orca\\agent-hooks" %%F in (endpoint.cmd) do call :maybeSourceEndpoint "%%~fF"',
+      `if exist "%APPDATA%\\${DEV_PROFILE}\\agent-hooks" for /r "%APPDATA%\\${DEV_PROFILE}\\agent-hooks" %%F in (endpoint.cmd) do call :maybeSourceEndpoint "%%~fF"`,
+      `if "%ORCA_AGENT_HOOK_TOKEN%"=="" if exist "%APPDATA%\\${PROFILE}\\agent-hooks" for /r "%APPDATA%\\${PROFILE}\\agent-hooks" %%F in (endpoint.cmd) do call :maybeSourceEndpoint "%%~fF"`,
       'exit /b 0',
       ':maybeSourceEndpoint',
       'if not "%ORCA_AGENT_HOOK_TOKEN%"=="" exit /b 0',
@@ -106,12 +111,12 @@ export function buildCommandCodeManagedScript(
     '# matching endpoint file by the unstripped loopback port.',
     'if [ -z "$ORCA_AGENT_HOOK_TOKEN" ] && [ -n "$ORCA_AGENT_HOOK_PORT" ]; then',
     '  for endpoint in \\',
-    '    "$HOME/Library/Application Support/orca-dev/agent-hooks"/*/endpoint.env \\',
-    '    "$HOME/Library/Application Support/orca-dev/agent-hooks/endpoint.env" \\',
-    '    "${XDG_CONFIG_HOME:-$HOME/.config}/orca-dev/agent-hooks"/*/endpoint.env \\',
-    '    "${XDG_CONFIG_HOME:-$HOME/.config}/orca-dev/agent-hooks/endpoint.env" \\',
-    '    "$HOME/Library/Application Support/orca/agent-hooks/endpoint.env" \\',
-    '    "${XDG_CONFIG_HOME:-$HOME/.config}/orca/agent-hooks/endpoint.env"; do',
+    `    "$HOME/Library/Application Support/${DEV_PROFILE}/agent-hooks"/*/endpoint.env \\`,
+    `    "$HOME/Library/Application Support/${DEV_PROFILE}/agent-hooks/endpoint.env" \\`,
+    `    "\${XDG_CONFIG_HOME:-$HOME/.config}/${DEV_PROFILE}/agent-hooks"/*/endpoint.env \\`,
+    `    "\${XDG_CONFIG_HOME:-$HOME/.config}/${DEV_PROFILE}/agent-hooks/endpoint.env" \\`,
+    `    "$HOME/Library/Application Support/${PROFILE}/agent-hooks/endpoint.env" \\`,
+    `    "\${XDG_CONFIG_HOME:-$HOME/.config}/${PROFILE}/agent-hooks/endpoint.env"; do`,
     '    [ -r "$endpoint" ] || continue',
     '    endpoint_port=$(sed -n "s/^ORCA_AGENT_HOOK_PORT=//p" "$endpoint" | head -n 1)',
     '    if [ "$endpoint_port" = "$ORCA_AGENT_HOOK_PORT" ]; then',

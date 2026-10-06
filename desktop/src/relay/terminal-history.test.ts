@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
+import type * as NodeOs from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
 import { hashWorktreeId } from '../main/terminal-history-id'
 import { fishHistorySessionName, relayFishHistorySessionName } from '../main/fish-history-session'
 import {
@@ -10,8 +11,18 @@ import {
   injectRelayHistoryEnv
 } from './terminal-history'
 
+// Why: relay history lives under the home (~/.nash-remote), which a test must never write.
+const testHome = vi.hoisted(() => ({ dir: '' }))
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof NodeOs>()
+  testHome.dir = `${actual.tmpdir()}/relay-history-home-${process.pid}-${Date.now()}`
+  const homedir = () => testHome.dir
+  return { ...actual, default: { ...actual, homedir }, homedir }
+})
+afterAll(() => rmSync(testHome.dir, { recursive: true, force: true }))
+
 const worktreeId = 'relay-test::/remote/worktree'
-const historyDir = join(homedir(), '.orca-remote', 'terminal-history')
+const historyDir = join(homedir(), '.nash-remote', 'terminal-history')
 const historyPrefix = hashWorktreeId(worktreeId)
 
 afterEach(() => {
@@ -39,6 +50,16 @@ describe('relay shell history', () => {
 
   it.each([
     ['relay', join(historyDir, `${hashWorktreeId('relay-test::/remote/other')}-zsh_history`)],
+    // D-017: a relay started from a real Orca relay pane must not append to that Orca's history either.
+    [
+      'real Orca relay',
+      join(
+        homedir(),
+        '.orca-remote',
+        'terminal-history',
+        `${hashWorktreeId('relay-test::/remote/other')}-zsh_history`
+      )
+    ],
     [
       'desktop',
       join(

@@ -4,14 +4,14 @@ import { searchKeywords } from './settings-search-keywords'
 export function getAgentWorkspaceTrustTitle(): string {
   return translate(
     'auto.components.settings.agent-workspace-trust-copy.title',
-    'Trust the folder when Orca starts an agent'
+    'Trust the folder when NASH starts an agent'
   )
 }
 
 export function getAgentWorkspaceTrustDescription(): string {
   return translate(
     'auto.components.settings.agent-workspace-trust-copy.description',
-    'Agents Orca starts skip their "Do you trust this folder?" prompt, so the project\'s agent hooks and settings run right away. Without this, each agent asks the first time it runs in a folder. Agents running without you watching, such as orchestration workers, automations and agents started from your phone, will wait at that question until you answer it in their terminal. Folders already trusted stay trusted.'
+    'Agents NASH starts skip their "Do you trust this folder?" prompt, so the project\'s agent hooks and settings run right away. Without this, each agent asks the first time it runs in a folder. Agents running without you watching, such as orchestration workers, automations and agents started from your phone, will wait at that question until you answer it in their terminal. Folders already trusted stay trusted.'
   )
 }
 

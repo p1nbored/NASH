@@ -1,5 +1,12 @@
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+
+const { devCliCommandName } = createRequire(import.meta.url)(
+  '../../src/shared/app-identity-constants.json'
+)
+// Why: agents inside NASH dev terminals still call `orca` and `orca-dev`; only the global dev command is renamed.
+const IN_SESSION_ALIAS_NAMES = ['orca-dev', 'orca']
 
 function escapeWindowsBatchValue(value) {
   // Why: cmd.exe expands %NAME% even inside quotes, so literal path percent signs must be doubled.
@@ -21,14 +28,16 @@ export function prepareDevCliTerminalWrappers({
   if (platform === 'win32') {
     const wrapperContent = `@echo off\r\nset "ORCA_USER_DATA_PATH=${escapeWindowsBatchValue(userDataPath)}"\r\nset "ORCA_DEV_CLI_INVOCATION=1"\r\nset "ORCA_APP_EXECUTABLE=${escapeWindowsBatchValue(electronExecutable)}"\r\nset "ORCA_APP_EXECUTABLE_NEEDS_APP_ROOT=1"\r\nnode "${escapeWindowsBatchValue(cliPath)}" %*\r\n`
     for (const targetDir of [binDir, userDataBinDir]) {
-      for (const commandName of ['orca-dev.cmd', 'orca.cmd']) {
+      for (const commandName of [devCliCommandName, ...IN_SESSION_ALIAS_NAMES].map(
+        (name) => `${name}.cmd`
+      )) {
         writeFileSync(path.join(targetDir, commandName), wrapperContent, 'utf8')
       }
     }
   } else {
     const wrapperContent = `#!/usr/bin/env bash\nexport ORCA_USER_DATA_PATH=${JSON.stringify(userDataPath)}\nexport ORCA_DEV_CLI_INVOCATION=1\nexport ORCA_APP_EXECUTABLE=${JSON.stringify(electronExecutable)}\nexport ORCA_APP_EXECUTABLE_NEEDS_APP_ROOT=1\nexec node ${JSON.stringify(cliPath)} "$@"\n`
     for (const targetDir of [binDir, userDataBinDir]) {
-      for (const commandName of ['orca-dev', 'orca']) {
+      for (const commandName of [devCliCommandName, ...IN_SESSION_ALIAS_NAMES]) {
         const wrapperPath = path.join(targetDir, commandName)
         writeFileSync(wrapperPath, wrapperContent, 'utf8')
         chmodSync(wrapperPath, 0o755)

@@ -8,6 +8,7 @@ import {
   renameSync,
   unlinkSync
 } from 'node:fs'
+import { APP_AGENT_HOOKS_HOME_PATH, APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -74,10 +75,10 @@ export function createManagedCommandMatcher(
   const scriptStem = scriptFileName.replace(/\.(?:cmd|ps1|sh)$/, '')
   // Why: installs use .cmd/.ps1 (Windows) or .sh (SSH/POSIX); match all so a platform switch still sweeps stale hooks.
   const needles = [
-    `agent-hooks/${scriptFileName}`,
-    `agent-hooks/${scriptStem}.cmd`,
-    `agent-hooks/${scriptStem}.ps1`,
-    `agent-hooks/${scriptStem}.sh`
+    `${APP_AGENT_HOOKS_HOME_PATH}/${scriptFileName}`,
+    `${APP_AGENT_HOOKS_HOME_PATH}/${scriptStem}.cmd`,
+    `${APP_AGENT_HOOKS_HOME_PATH}/${scriptStem}.ps1`,
+    `${APP_AGENT_HOOKS_HOME_PATH}/${scriptStem}.sh`
   ]
   return (command) => {
     if (!command) {
@@ -104,7 +105,7 @@ function decodePowerShellEncodedCommand(command: string): string | null {
 
 // Why: prod/dev/parallel Orca instances must write the same managed entry, not race between per-userData script paths.
 export function getSharedManagedScriptPath(scriptFileName: string): string {
-  return join(homedir(), '.orca', 'agent-hooks', scriptFileName)
+  return join(homedir(), APP_HOME_DIR_NAME, 'agent-hooks', scriptFileName)
 }
 
 export { wrapPosixHookCommand } from './posix-hook-command'

@@ -269,6 +269,14 @@ describe('parseEphemeralVmRecipeResult', () => {
     ).toEqual([])
   })
 
+  it('redacts a pairing link of the NASH scheme and, defensively, of the Orca scheme', () => {
+    expect(
+      redactEphemeralVmRecipeDiagnosticText(
+        'run nash://pair?code=AbC_-123 then orca://pair?code=XyZ_456'
+      )
+    ).toBe('run nash://pair?code=[redacted] then orca://pair?code=[redacted]')
+  })
+
   it('redacts pairing material and secret-looking fields in diagnostics', () => {
     const pairingCode = makePairingCode()
 
@@ -303,7 +311,7 @@ describe('parseEphemeralVmRecipeResult', () => {
       })
     ).toEqual({
       schemaVersion: 1,
-      pairingCode: 'orca://pair?code=[redacted]',
+      pairingCode: 'nash://pair?code=[redacted]',
       projectRoot: '/workspace/repo',
       userData: {
         providerResourceId: 'sandbox-123',

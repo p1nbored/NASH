@@ -12,6 +12,8 @@ import {
 } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
+import { readInheritedUserDataPath } from '../../shared/inherited-user-data-path'
 import {
   clearCopiedResourceMarker,
   markCopiedResource,
@@ -60,18 +62,26 @@ export function getCodexSessionBackfillStateDirPath(): string {
 }
 
 export function getOrcaUserDataPath(): string {
-  if (process.env.ORCA_USER_DATA_PATH) {
-    return process.env.ORCA_USER_DATA_PATH
+  // Why filtered: an inherited real-Orca profile path must never be used (decision D-017).
+  const inheritedUserDataPath = readInheritedUserDataPath()
+  if (inheritedUserDataPath) {
+    return inheritedUserDataPath
   }
   // Why: CLI hook commands import this module outside Electron. Mirror the CLI
   // runtime metadata path so offline hook status/on/off uses the same userData.
   if (process.platform === 'darwin') {
-    return join(homedir(), 'Library', 'Application Support', 'orca')
+    return join(homedir(), 'Library', 'Application Support', APP_IDENTITY.userDataDirName)
   }
   if (process.platform === 'win32') {
-    return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'orca')
+    return join(
+      process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'),
+      APP_IDENTITY.userDataDirName
+    )
   }
-  return join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'orca')
+  return join(
+    process.env.XDG_CONFIG_HOME || join(homedir(), '.config'),
+    APP_IDENTITY.userDataDirName
+  )
 }
 
 // Why: each managed home (the shared runtime mirror, or a per-account

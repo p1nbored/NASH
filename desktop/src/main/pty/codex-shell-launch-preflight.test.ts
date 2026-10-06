@@ -425,7 +425,7 @@ describe('Codex shell launch preflight command', () => {
       hooksEnabled: true,
       isPackaged: true,
       isWsl: true,
-      managedHomePath: '/home/jin/.local/share/orca/codex-runtime-home/home',
+      managedHomePath: '/home/jin/.local/share/nash/codex-runtime-home/home',
       resourcesPath,
       platform: 'win32' as const
     }

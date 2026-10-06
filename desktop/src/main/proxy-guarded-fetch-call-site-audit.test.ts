@@ -22,7 +22,17 @@ const AUDITED_NON_NET_FETCH_CALLS = new Map<string, number>([
   // (main/host/electron-http-client.ts) or to the global-fetch-audited Node fallback.
   ['main/jira/authenticated-request.ts', 1],
   // The same injected HttpClient, and the updater's deps.fetch that it is passed as.
-  ['main/runtime/agent-state-rules/agent-state-rules-live-update.ts', 2]
+  ['main/runtime/agent-state-rules/agent-state-rules-live-update.ts', 2],
+  // Injected HttpClient (getMainHttpClient), not a session: net.fetch on defaultSession, with the
+  // proxy readied by ensureElectronProxyFromEnvironment before the first attempt.
+  ['main/clef/clef-transport.ts', 1],
+  // The same injected HttpClient's fetch, handed to the attempt loop as context.fetch.
+  ['main/clef/clef-transport-attempt.ts', 1],
+  // Injected HttpClient (getMainHttpClient), not a session: net.fetch on defaultSession, with the
+  // proxy readied by ensureElectronProxyFromEnvironment before each request (memoized).
+  ['main/runtime/dot-remote/dot-remote-proxied-fetch.ts', 1],
+  // The same injected HttpClient fetch, passed to the Sites client as deps.fetch.
+  ['main/runtime/dot-remote/dot-remote-site-client.ts', 1]
 ])
 
 // `globalThis.fetch` / `global.fetch` belong to global-fetch-call-site-audit.test.ts.

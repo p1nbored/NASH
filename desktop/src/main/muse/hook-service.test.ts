@@ -12,13 +12,17 @@ import { MUSE_HOOK_EVENTS } from './hook-settings'
 // real ~/.orca or ~/.config/muse. os.homedir() resolves $HOME on POSIX.
 let home: string
 let originalHome: string | undefined
+let originalUserProfile: string | undefined
 let originalXdg: string | undefined
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'orca-muse-hook-'))
   originalHome = process.env.HOME
+  originalUserProfile = process.env.USERPROFILE
   originalXdg = process.env.XDG_CONFIG_HOME
   process.env.HOME = home
+  // Why: os.homedir() reads USERPROFILE on Windows, so HOME alone would leave the real home exposed.
+  process.env.USERPROFILE = home
   delete process.env.XDG_CONFIG_HOME
 })
 
@@ -27,6 +31,11 @@ afterEach(() => {
     delete process.env.HOME
   } else {
     process.env.HOME = originalHome
+  }
+  if (originalUserProfile === undefined) {
+    delete process.env.USERPROFILE
+  } else {
+    process.env.USERPROFILE = originalUserProfile
   }
   if (originalXdg === undefined) {
     delete process.env.XDG_CONFIG_HOME
@@ -37,8 +46,8 @@ afterEach(() => {
 })
 
 const configPath = (): string => join(home, '.config', 'muse', 'settings.json')
-const managedHooksPath = (): string => join(home, '.orca', 'agent-hooks', 'muse-hooks.json')
-const scriptPath = (): string => join(home, '.orca', 'agent-hooks', 'muse-hook.sh')
+const managedHooksPath = (): string => join(home, '.nash', 'agent-hooks', 'muse-hooks.json')
+const scriptPath = (): string => join(home, '.nash', 'agent-hooks', 'muse-hook.sh')
 
 describe('MuseHookService', () => {
   it('reports not_installed before install', () => {
@@ -117,8 +126,8 @@ describe('MuseHookService', () => {
 
   it('treats malformed managed hook entries as absent instead of throwing', () => {
     mkdirSync(join(home, '.config', 'muse'), { recursive: true })
-    mkdirSync(join(home, '.orca', 'agent-hooks'), { recursive: true })
-    const managedPath = join(home, '.orca', 'agent-hooks', 'muse-hooks.json')
+    mkdirSync(join(home, '.nash', 'agent-hooks'), { recursive: true })
+    const managedPath = join(home, '.nash', 'agent-hooks', 'muse-hooks.json')
     writeFileSync(configPath(), JSON.stringify({ schema_version: 1 }))
     const service = new MuseHookService()
     expect(service.install().state).toBe('installed')

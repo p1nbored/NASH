@@ -2,11 +2,6 @@ import type { AgentSessionExecutionLocation } from '../../shared/agent-session-r
 import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import { hasExplicitTuiLaunchCommand } from '../../shared/tui-agent-launch-command-override'
-import {
-  readClaudeManagedAccountGateSettings,
-  structuredClaudeMatchesActiveManagedAccount,
-  type ClaudeManagedAccountGateSettings
-} from './claude-structured-managed-account-support'
 
 export type StructuredAgentSessionCreateSupport = {
   supported: boolean
@@ -22,8 +17,7 @@ export function resolveStructuredAgentSessionCreateSupport(input: {
   agent: 'claude' | 'codex'
   location: AgentSessionExecutionLocation
   adapterSupportsCreate: boolean
-  getSettings: () => ClaudeManagedAccountGateSettings &
-    Partial<Pick<GlobalSettings, 'agentCmdOverrides'>>
+  getSettings: () => Partial<Pick<GlobalSettings, 'agentCmdOverrides'>>
 }): StructuredAgentSessionCreateSupport {
   if (!input.adapterSupportsCreate) {
     return {
@@ -40,17 +34,6 @@ export function resolveStructuredAgentSessionCreateSupport(input: {
   // client asked; a client routes on its own override for its own machine only.
   if (hasExplicitTuiLaunchCommand(readSettingsOrNull(input.getSettings), input.agent)) {
     return { supported: false, reason: 'agent' }
-  }
-  // Claude only: Codex resolves its account on a different path, so its answer is untouched here.
-  // `wsl` is the closest existing reason — the cause is a WSL-bound account rather than a WSL
-  // workspace — and no client reads the field, so it stays as-is.
-  if (
-    input.agent === 'claude' &&
-    !structuredClaudeMatchesActiveManagedAccount(
-      readClaudeManagedAccountGateSettings(input.getSettings)
-    )
-  ) {
-    return { supported: false, reason: 'wsl' }
   }
   return { supported: true }
 }

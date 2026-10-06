@@ -1,29 +1,22 @@
 import type * as NodeCliCommandResolutionModule from '../../shared/node-cli-command-resolution'
 import { EventEmitter } from 'node:events'
-import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { delimiter } from 'node:path'
 import type * as NodeFs from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
-  deleteKeychainMock,
   getVersionManagerBinPathsMock,
-  readKeychainMock,
   resolveCliCommandMock,
   rmSyncMock,
   spawnMock,
-  stdioForWindowsInteractiveChildMock,
-  writeKeychainMock
+  stdioForWindowsInteractiveChildMock
 } = vi.hoisted(() => ({
-  deleteKeychainMock: vi.fn(),
   getVersionManagerBinPathsMock: vi.fn(),
-  readKeychainMock: vi.fn(),
   resolveCliCommandMock: vi.fn(),
   rmSyncMock: vi.fn(),
   spawnMock: vi.fn(),
-  stdioForWindowsInteractiveChildMock: vi.fn(),
-  writeKeychainMock: vi.fn()
+  stdioForWindowsInteractiveChildMock: vi.fn()
 }))
 
 // Why: keep real temp-dir cleanup by default so leak assertions stay honest,
@@ -38,11 +31,6 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
   execFileSync: vi.fn(),
   spawn: spawnMock
-}))
-vi.mock('../../main/claude-accounts/keychain', () => ({
-  deleteActiveClaudeKeychainCredentialsStrict: deleteKeychainMock,
-  readActiveClaudeKeychainCredentialsStrict: readKeychainMock,
-  writeActiveClaudeKeychainCredentials: writeKeychainMock
 }))
 // Why importOriginal: withCliRuntimeOnPath is a pure filesystem-probing helper,
 // and the PATH assertions below are only meaningful against the real one.
@@ -122,9 +110,6 @@ describe('account CLI handlers', () => {
     }))
     resolveCliCommandMock.mockReset().mockImplementation((command: string) => command)
     getVersionManagerBinPathsMock.mockReset().mockReturnValue([])
-    readKeychainMock.mockReset().mockResolvedValue(null)
-    deleteKeychainMock.mockReset().mockResolvedValue(undefined)
-    writeKeychainMock.mockReset().mockResolvedValue(undefined)
     callMock.mockReset().mockImplementation((method: string) =>
       Promise.resolve({
         id: 'test',
@@ -306,39 +291,6 @@ describe('account CLI handlers', () => {
     expect(pathValues).toContain(`${nodeBin}${delimiter}${effectivePathBefore}`)
   })
 
-  it('removes scoped Claude credentials and restores the legacy Keychain item', async () => {
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
-    readKeychainMock.mockResolvedValue('legacy-credentials')
-
-    await ACCOUNT_HANDLERS['account add'](context('claude'))
-
-    const configDir = spawnMock.mock.calls[0]?.[2].env.CLAUDE_CONFIG_DIR
-    expect(deleteKeychainMock).toHaveBeenCalledWith(configDir)
-    expect(writeKeychainMock).toHaveBeenCalledWith('legacy-credentials')
-    expect(callMock).toHaveBeenCalledWith('accounts.addClaudeFromConfigDir', {
-      configDir,
-      previousLegacyCredentialsSha256: createHash('sha256')
-        .update('legacy-credentials')
-        .digest('hex')
-    })
-    expect(existsSync(configDir)).toBe(false)
-  })
-
-  it('attributes a Claude account added through the WSL bridge to the cwd distro', async () => {
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
-
-    await ACCOUNT_HANDLERS['account add'](
-      context('claude', false, String.raw`\\wsl.localhost\Ubuntu-22.04\home\user\project`)
-    )
-
-    const configDir = spawnMock.mock.calls[0]?.[2].env.CLAUDE_CONFIG_DIR
-    expect(callMock).toHaveBeenCalledWith('accounts.addClaudeFromConfigDir', {
-      configDir,
-      runtime: 'wsl',
-      wslDistro: 'Ubuntu-22.04'
-    })
-  })
-
   it('attributes a Codex account added through the WSL bridge to the cwd distro', async () => {
     Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
 
@@ -360,27 +312,24 @@ describe('account CLI handlers', () => {
     process.env.ORCA_CLI_WSL_DISTRO = 'Debian'
 
     await ACCOUNT_HANDLERS['account add'](
-      context('claude', false, String.raw`\\wsl.localhost\Ubuntu-22.04\home\user`)
+      context('codex', false, String.raw`\\wsl.localhost\Ubuntu-22.04\home\user`)
     )
 
     expect(callMock).toHaveBeenCalledWith(
-      'accounts.addClaudeFromConfigDir',
+      'accounts.addCodexFromHome',
       expect.objectContaining({ runtime: 'wsl', wslDistro: 'Debian' })
     )
   })
 
-  it.each(['claude', 'codex'])(
-    'attributes %s from a Windows mount to the bridge distro',
-    async (agent) => {
-      Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
-      process.env.ORCA_CLI_WSL_DISTRO = 'Ubuntu Work'
-      await ACCOUNT_HANDLERS['account add'](context(agent, false, String.raw`C:\work with spaces`))
-      expect(callMock).toHaveBeenCalledWith(
-        agent === 'claude' ? 'accounts.addClaudeFromConfigDir' : 'accounts.addCodexFromHome',
-        expect.objectContaining({ runtime: 'wsl', wslDistro: 'Ubuntu Work' })
-      )
-    }
-  )
+  it('attributes codex from a Windows mount to the bridge distro', async () => {
+    Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
+    process.env.ORCA_CLI_WSL_DISTRO = 'Ubuntu Work'
+    await ACCOUNT_HANDLERS['account add'](context('codex', false, String.raw`C:\work with spaces`))
+    expect(callMock).toHaveBeenCalledWith(
+      'accounts.addCodexFromHome',
+      expect.objectContaining({ runtime: 'wsl', wslDistro: 'Ubuntu Work' })
+    )
+  })
 
   it('ignores an ambient WSL distro in a native Windows account add', async () => {
     Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
@@ -470,62 +419,6 @@ describe('account CLI handlers', () => {
     exitSpy.mockRestore()
   })
 
-  it('waits for in-flight cleanup when a second signal arrives', async () => {
-    // Why: a boolean latch lets the second signal's process.exit fire while the
-    // first cleanup is still inside a Keychain call, stranding the credentials.
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
-    readKeychainMock.mockResolvedValue('legacy-credentials')
-    let releaseKeychainDelete: (() => void) | undefined
-    deleteKeychainMock.mockImplementationOnce(
-      () =>
-        new Promise<void>((resolvePromise) => {
-          releaseKeychainDelete = () => resolvePromise()
-        })
-    )
-    const child = Object.assign(new EventEmitter(), { kill: vi.fn() })
-    let configDir = ''
-    spawnMock.mockImplementation((_command, _args, options: { env: Record<string, string> }) => {
-      configDir = options.env.CLAUDE_CONFIG_DIR
-      return child
-    })
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
-    const sigintBefore = process.listeners('SIGINT')
-    const sigtermBefore = process.listeners('SIGTERM')
-
-    const pending = ACCOUNT_HANDLERS['account add'](context('claude')).catch(() => {})
-    await vi.waitFor(() => expect(configDir).not.toBe(''))
-
-    const onSigint = newSignalListener('SIGINT', sigintBefore)
-    const onSigterm = newSignalListener('SIGTERM', sigtermBefore)
-    // Why: `rawListeners` exposes the `once` wrapper, so this fails if the handler
-    // is registered with `once` — where a second Ctrl-C falls through to Node's
-    // default and kills the process mid-cleanup.
-    expect(process.rawListeners('SIGINT')).toContain(onSigint)
-
-    onSigint('SIGINT')
-    await vi.waitFor(() => expect(child.kill).toHaveBeenCalledWith('SIGINT'))
-    child.emit('exit', 1)
-    child.emit('close', 1)
-    await vi.waitFor(() => expect(deleteKeychainMock).toHaveBeenCalledWith(configDir))
-    onSigterm('SIGTERM')
-    await new Promise<void>((resolvePromise) => {
-      setImmediate(resolvePromise)
-    })
-
-    expect(exitSpy).not.toHaveBeenCalled()
-    expect(writeKeychainMock).not.toHaveBeenCalled()
-    expect(existsSync(configDir)).toBe(true)
-
-    releaseKeychainDelete?.()
-    await vi.waitFor(() => expect(exitSpy).toHaveBeenCalled())
-    expect(writeKeychainMock).toHaveBeenCalledWith('legacy-credentials')
-    expect(existsSync(configDir)).toBe(false)
-    expect(child.kill).toHaveBeenCalledOnce()
-
-    await pending
-    exitSpy.mockRestore()
-  })
-
   it('warns that the account may already be registered when interrupted mid-RPC', async () => {
     // Why: the runtime finishes the add independently of this process, so an
     // interrupt after sign-in cannot honestly be reported as "not added".
@@ -567,32 +460,6 @@ describe('account CLI handlers', () => {
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('may still have been registered'))
     warnSpy.mockRestore()
     exitSpy.mockRestore()
-  })
-
-  it('stays armed for signals until post-success cleanup finishes', async () => {
-    // Why: detaching the handlers before cleanup leaves the multi-second Keychain
-    // calls covered only by Node's default handling, which kills mid-cleanup.
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
-    readKeychainMock.mockResolvedValue('legacy-credentials')
-    let releaseKeychainDelete: (() => void) | undefined
-    deleteKeychainMock.mockImplementationOnce(
-      () =>
-        new Promise<void>((resolvePromise) => {
-          releaseKeychainDelete = () => resolvePromise()
-        })
-    )
-
-    const listenersBefore = process.listeners('SIGINT')
-
-    const pending = ACCOUNT_HANDLERS['account add'](context('claude'))
-    await vi.waitFor(() => expect(deleteKeychainMock).toHaveBeenCalled())
-
-    // Why: cleanup is still in flight here, so this add's guard must still be installed.
-    const handler = newSignalListener('SIGINT', listenersBefore)
-
-    releaseKeychainDelete?.()
-    await pending
-    expect(process.listeners('SIGINT')).not.toContain(handler)
   })
 
   it('fails before the login when the runtime is unreachable', async () => {
@@ -699,24 +566,39 @@ describe('account CLI handlers', () => {
     expect(logSpy).not.toHaveBeenCalled()
   })
 
-  it('fails a successful Claude add when Keychain cleanup fails', async () => {
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
-    readKeychainMock.mockResolvedValue('legacy-credentials')
-    deleteKeychainMock.mockRejectedValueOnce(new Error('Keychain denied cleanup'))
+  it('adds a Codex account when no --agent is given', async () => {
+    await ACCOUNT_HANDLERS['account add']({ ...context('codex'), flags: new Map() })
 
-    await expect(ACCOUNT_HANDLERS['account add'](context('claude'))).rejects.toThrow(
-      'Failed to clean up Claude login artifacts'
+    expect(spawnMock).toHaveBeenCalledOnce()
+    expect(spawnMock.mock.calls[0]?.[0]).toBe('codex')
+    expect(spawnMock.mock.calls[0]?.[1]).toEqual(['login', '--device-auth'])
+    expect(callMock).toHaveBeenCalledWith(
+      'accounts.addCodexFromHome',
+      expect.objectContaining({ sourceHome: expect.any(String) })
     )
-    expect(writeKeychainMock).toHaveBeenCalledWith('legacy-credentials')
   })
 
-  it('rejects `--agent` with no value instead of defaulting to Claude', async () => {
+  it('refuses `--agent claude` and points to the user own Claude login', async () => {
+    const error: unknown = await ACCOUNT_HANDLERS['account add'](context('claude')).then(
+      () => null,
+      (caught: unknown) => caught
+    )
+
+    expect(error).toMatchObject({
+      code: 'claude_accounts_removed',
+      message: expect.stringContaining('claude /login')
+    })
+    expect(spawnMock).not.toHaveBeenCalled()
+    expect(callMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects `--agent` with no value instead of defaulting to Codex', async () => {
     // Why: the parser turns a valueless flag into boolean true, so a silent
     // default would run a full OAuth login for the wrong provider.
     await expect(
-      ACCOUNT_HANDLERS['account add']({ ...context('claude'), flags: new Map([['agent', true]]) })
+      ACCOUNT_HANDLERS['account add']({ ...context('codex'), flags: new Map([['agent', true]]) })
     ).rejects.toThrow(
-      'Missing a value for --agent. Use `--agent claude`, `--agent codex`, `--agent opencode`, or `--agent devin`.'
+      'Missing a value for --agent. Use `--agent codex`, `--agent opencode`, or `--agent devin`.'
     )
     expect(spawnMock).not.toHaveBeenCalled()
   })
@@ -726,19 +608,21 @@ describe('account CLI handlers', () => {
       id: 'test',
       ok: true,
       result: {
-        claude: {
-          accounts: [{ id: 'claude-wsl', email: 'claude@example.com' }],
+        claude: { accounts: [], activeAccountId: null },
+        codex: {
+          accounts: [{ id: 'codex-wsl', email: 'codex@example.com' }],
           activeAccountId: null,
-          activeAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'claude-wsl' } }
-        },
-        codex: { accounts: [], activeAccountId: null }
+          activeAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'codex-wsl' } }
+        }
       },
       _meta: { runtimeId: 'test-runtime' }
     })
 
     await ACCOUNT_HANDLERS['account list']({ ...context('claude'), flags: new Map() })
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('claude@example.com (active)'))
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('codex@example.com (active)'))
+    // Why: Claude has no managed accounts, so its always-empty roster is not rendered.
+    expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining('Claude'))
   })
 
   it('lists accounts without forcing a provider usage refresh', async () => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CalendarClock, ExternalLink, RefreshCw, Sparkles } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '../../store'
+import { UsageMetersOffNote } from '../settings/usage-meters-off-note'
 import { Button } from '../ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import { StatCard } from './StatCard'
@@ -10,6 +11,7 @@ import { formatUpdatedAt } from './usage-formatters'
 export function GrokUsagePane(): React.JSX.Element {
   const grok = useAppStore((s) => s.rateLimits.grok)
   const grokAuthConfigured = useAppStore((s) => s.rateLimits.grokAuthConfigured)
+  const usageMetersOff = useAppStore((s) => s.rateLimits.usageMetersDisabled === true)
   const refreshGrokRateLimits = useAppStore((s) => s.refreshGrokRateLimits)
   const openSettingsPage = useAppStore((s) => s.openSettingsPage)
   const openSettingsTarget = useAppStore((s) => s.openSettingsTarget)
@@ -33,6 +35,17 @@ export function GrokUsagePane(): React.JSX.Element {
   }
 
   const paneTitle = translate('auto.components.stats.GrokUsagePane.g8h9i0j1k2', 'Grok usage')
+
+  if (usageMetersOff) {
+    return (
+      <div
+        className="rounded-lg border border-border/60 bg-card/40 p-4"
+        data-testid="grok-usage-pane"
+      >
+        <UsageMetersOffNote />
+      </div>
+    )
+  }
 
   if (!grokAuthConfigured) {
     return (

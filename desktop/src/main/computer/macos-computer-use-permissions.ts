@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process'
+import { APP_COMPUTER_USE_BUNDLE_ID } from '../../shared/app-identity-bundle-ids'
 import { RuntimeClientError } from './runtime-client-error'
 import { readMacosBundleId, resetMacosTccPermission } from '../macos-tcc-reset'
 import { resolveMacOSComputerUseAppPath } from './macos-native-provider-paths'
@@ -10,7 +11,7 @@ import type {
   ComputerUsePermissionStatusResult
 } from '../../shared/computer-use-permissions-types'
 
-const DEFAULT_COMPUTER_USE_BUNDLE_ID = 'com.stablyai.orca.computer-use'
+const DEFAULT_COMPUTER_USE_BUNDLE_ID = APP_COMPUTER_USE_BUNDLE_ID
 
 export { getComputerUsePermissionStatus } from './macos-computer-use-permission-status'
 

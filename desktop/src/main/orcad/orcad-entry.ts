@@ -10,6 +10,8 @@
  * the runtime factory, but only when an Electron serve sidecar or an operator-supplied
  * Chromium proves available at startup.
  */
+// Why first: this host starts without Electron, so only this import scrubs the Clef variables before any module reads the environment.
+import '../startup/clef-environment-scrub-at-load'
 import process from 'node:process'
 import { setAppEnvironment, type AppEnvironment } from '../../shared/app-environment'
 import { setSecretStore, type SecretStore } from '../../shared/secret-store'
@@ -319,11 +321,11 @@ async function startOrcadRuntime(
     ...(options.port !== undefined ? { wsPort: options.port, preferPinnedWsPort: true } : {})
   })
   await rpc.start()
-  const pushService = DesktopPushService.create({
-    runtime,
-    runtimeRpc: rpc,
-    gatewayUrl: resolvePushGatewayOrigin(process.env, getAppEnvironment().isPackaged())
-  })
+  // Why: NASH builds have no push gateway (Orca cloud services off), so orcad starts no push.
+  const gatewayUrl = resolvePushGatewayOrigin(process.env, getAppEnvironment().isPackaged())
+  const pushService = gatewayUrl
+    ? DesktopPushService.create({ runtime, runtimeRpc: rpc, gatewayUrl })
+    : null
   pushService?.start()
   getAppEnvironment().onWillQuit(() => pushService?.stop())
   console.error(`[orcad] ${describeOrcadBindExposure(bindHost)}`)

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
 import { existsSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { getAppEnvironment } from '../../shared/app-environment'
@@ -158,7 +159,7 @@ async function prepare(distro: string): Promise<OpenCodeWslRuntime> {
     }
     // Same layout and checks as an SSH host's store; a legacy vault-sqlite/ Bun is left alone.
     const host = getRemoteHostPlatform(arch === 'x86_64' ? 'linux-x64' : 'linux-arm64')
-    const runtimeDir = nodeRuntimeStoreDir(host, `${home}/.cache/orca`, target)
+    const runtimeDir = nodeRuntimeStoreDir(host, `${home}/.cache/${APP_XDG_DATA_DIR_NAME}`, target)
     executable = posixNodeRuntimeExecutable(host, runtimeDir)
     const probe = await run({
       script: probeRemoteNodeRuntimeCommand(host, runtimeDir, target),

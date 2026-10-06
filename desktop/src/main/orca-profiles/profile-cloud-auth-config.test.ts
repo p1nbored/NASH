@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   allowsPlaintextOrcaCloudSession,
+  getDesktopRelayAuthConfig,
   getOrcaCloudAuthConfig,
+  getOrcaPushGatewayUrl,
   isOrcaCloudDevAuthEnabled
 } from './profile-cloud-auth-config'
 
@@ -15,7 +17,7 @@ describe('Orca cloud auth config', () => {
   it('reports unconfigured without both API URL and client ID', () => {
     expect(getOrcaCloudAuthConfig({})).toEqual({
       configured: false,
-      setupMessage: 'Orca Cloud sign-in is not configured for this build.'
+      setupMessage: 'Orca Cloud sign-in is not available in NASH builds.'
     })
   })
 
@@ -44,23 +46,26 @@ describe('Orca cloud auth config', () => {
     })
   })
 
-  it('uses first-party production endpoints without runtime env in packaged builds', () => {
+  it('has no packaged Orca Cloud default in NASH builds', () => {
     expect(getOrcaCloudAuthConfig({}, true)).toEqual({
-      configured: true,
-      config: {
-        apiBaseUrl: 'https://login.onorca.dev',
-        authorizeEndpoint: 'https://login.onorca.dev/v1/desktop/auth/authorize',
-        sessionEndpoint: 'https://login.onorca.dev/v1/desktop/auth/session',
-        refreshEndpoint: 'https://login.onorca.dev/v1/desktop/auth/refresh',
-        capabilitiesEndpoint: 'https://login.onorca.dev/v1/desktop/auth/capabilities',
-        profileEndpoint: 'https://login.onorca.dev/v1/desktop/auth/profile',
-        orgEndpoint: 'https://login.onorca.dev/v1/desktop/auth/org',
-        logoutEndpoint: 'https://login.onorca.dev/v1/desktop/auth/logout',
-        relayTokenEndpoint: 'https://login.onorca.dev/v1/desktop/auth/relay-token',
-        relayDirectorUrl: 'https://relay.onorca.dev',
-        clientId: 'orca-desktop',
-        scope: 'openid profile email offline_access'
-      }
+      configured: false,
+      setupMessage: 'Orca Cloud sign-in is not available in NASH builds.'
+    })
+  })
+
+  it('creates no desktop relay without an explicit relay URL in NASH builds', () => {
+    const override = {
+      ORCA_CLOUD_API_URL: 'https://cloud.example.test',
+      ORCA_CLOUD_CLIENT_ID: 'desktop-client'
+    }
+
+    expect(getDesktopRelayAuthConfig({}, true)).toBeNull()
+    expect(getDesktopRelayAuthConfig(override, true)).toBeNull()
+    expect(
+      getDesktopRelayAuthConfig({ ...override, ORCA_RELAY_URL: 'https://relay.example.test' }, true)
+    ).toMatchObject({
+      apiBaseUrl: 'https://cloud.example.test',
+      relayDirectorUrl: 'https://relay.example.test'
     })
   })
 
@@ -101,6 +106,13 @@ describe('Orca cloud auth config', () => {
         ORCA_CLOUD_CLIENT_ID: 'desktop-client'
       })
     ).toMatchObject({ configured: false })
+  })
+
+  it('has no push gateway without an explicit override in NASH builds', () => {
+    expect(getOrcaPushGatewayUrl({}, true)).toBeNull()
+    expect(
+      getOrcaPushGatewayUrl({ ORCA_PUSH_GATEWAY_URL: 'https://push.example.test' }, true)
+    ).toBe('https://push.example.test')
   })
 
   it('allows dev plaintext sessions only outside production', () => {

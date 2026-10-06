@@ -1,0 +1,132 @@
+import {
+  WorkbenchRoutingTableCheckResultSchema,
+  WorkbenchRoutingTableDecisionResultSchema,
+  WorkbenchRoutingTableListResultSchema,
+  type RoutingTableRefusalView,
+  type WorkbenchRoutingTableCheckResult,
+  type WorkbenchRoutingTableDecisionResult,
+  type WorkbenchRoutingTableListResult
+} from '../../../shared/workbench-routing-table-view'
+import {
+  listRoutingTableVersions,
+  resolveActiveRoutingTable
+} from '../../routing-table/routing-table-activation'
+import type { RoutingTableContext } from '../../routing-table/routing-table-context'
+import { listRoutingTableProposals } from '../../routing-table/routing-table-proposals'
+import type { RoutingTable } from '../../../shared/routing-table/routing-table-schema'
+import type { RoutingTableAvailabilityView } from '../../../shared/workbench-route-availability-view'
+import {
+  checkedTableAvailability,
+  listedTableAvailability,
+  type RoutingTableAvailabilitySource
+} from './routing-table-availability-view'
+
+/** The fields any routing-table refusal may carry; numbers and other extras are not shown. */
+type Refusal = {
+  readonly ok: false
+  readonly reason: string
+  readonly detail?: string
+  readonly existingProposalId?: string | null
+}
+
+type Success = { readonly ok: true; readonly version?: number; readonly sha256?: string }
+
+export function routingTableRefusalView(refusal: Refusal): RoutingTableRefusalView {
+  return {
+    ok: false,
+    reason: refusal.reason,
+    detail: refusal.detail ?? null,
+    existingProposalId: refusal.existingProposalId ?? null
+  }
+}
+
+/** One result shape for accept, reject, import and revert, parsed strictly before it leaves main. */
+export function routingTableDecisionView(
+  result: Success | Refusal,
+  proposalId: string | null
+): WorkbenchRoutingTableDecisionResult {
+  return WorkbenchRoutingTableDecisionResultSchema.parse(
+    result.ok
+      ? {
+          ok: true,
+          version: result.version ?? null,
+          sha256: result.sha256 ?? null,
+          proposalId
+        }
+      : routingTableRefusalView(result)
+  )
+}
+
+// Why null on failure: the table, proposals and revert stay usable when availability cannot be read.
+async function listedAvailabilityOrNull(
+  availability: RoutingTableAvailabilitySource,
+  table: RoutingTable
+): Promise<RoutingTableAvailabilityView | null> {
+  try {
+    return await listedTableAvailability(availability, table)
+  } catch (error) {
+    console.warn(
+      `[routing-table] route availability not listed: ${error instanceof Error ? error.name : 'unknown'}`
+    )
+    return null
+  }
+}
+
+/** The active table, versions, proposals and cached route availability; a damaged store is shown, not hidden. */
+export async function routingTableListView(
+  ctx: RoutingTableContext,
+  availability: RoutingTableAvailabilitySource | null
+): Promise<WorkbenchRoutingTableListResult> {
+  const active = resolveActiveRoutingTable(ctx)
+  const versions = listRoutingTableVersions(ctx)
+  const proposals = listRoutingTableProposals(ctx)
+  const routes =
+    active.ok && availability !== null
+      ? await listedAvailabilityOrNull(availability, active.table)
+      : null
+  return WorkbenchRoutingTableListResultSchema.parse({
+    active: active.ok
+      ? {
+          ok: true,
+          version: active.version,
+          sha256: active.sha256,
+          source: active.source,
+          table: active.table
+        }
+      : routingTableRefusalView(active),
+    activeVersion: versions.ok ? versions.activeVersion : null,
+    versions: versions.ok
+      ? versions.versions.map((entry) => ({
+          version: entry.table_version,
+          sha256: entry.sha256,
+          source: entry.source,
+          acceptedAt: entry.accepted_at,
+          proposalId: entry.proposal_id
+        }))
+      : [],
+    proposals: proposals.entries.map((entry) => ({
+      proposal: entry.proposal,
+      decision: entry.decision,
+      stale: entry.stale
+    })),
+    unreadableProposalIds: [...proposals.unreadable],
+    availability: routes
+  })
+}
+
+/** "Check now" on the active table; a table that cannot be read is refused and nothing is checked. */
+export async function routingTableCheckView(
+  ctx: RoutingTableContext,
+  availability: RoutingTableAvailabilitySource
+): Promise<WorkbenchRoutingTableCheckResult> {
+  const active = resolveActiveRoutingTable(ctx)
+  if (!active.ok) {
+    return WorkbenchRoutingTableCheckResultSchema.parse(routingTableRefusalView(active))
+  }
+  return WorkbenchRoutingTableCheckResultSchema.parse({
+    ok: true,
+    version: active.version,
+    sha256: active.sha256,
+    availability: await checkedTableAvailability(availability, active.table)
+  })
+}

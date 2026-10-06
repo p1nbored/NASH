@@ -13,7 +13,6 @@ export type {
   InactiveAccountUsage,
   RateLimitRuntimeTarget
 } from '../../../shared/rate-limit-types'
-export type { InactiveClaudeAccountInfo } from '../claude-fetcher'
 export type { ClaudeStatusLineRateLimits } from '../../../shared/claude-statusline-rate-limits'
 export type { NetworkProxySettings } from '../../../shared/network-proxy'
 export type { ClaudeRuntimeAuthPreparation } from '../../claude-accounts/runtime-auth-service'

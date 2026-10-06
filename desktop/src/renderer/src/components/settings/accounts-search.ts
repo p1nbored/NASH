@@ -22,24 +22,23 @@ export const getAccountsLocationSearchEntries = createLocalizedCatalog(() => [
   }
 ])
 
-export const getAccountsClaudeSearchEntries = createLocalizedCatalog(() => [
+// Why: Claude account switching is removed; Claude usage lives in the CLI usage section.
+export const getAccountsCliUsageSearchEntries = createLocalizedCatalog(() => [
   {
-    title: translate('auto.components.settings.accounts.search.75682e1b62', 'Claude Accounts'),
+    title: translate('auto.components.settings.cliUsageReadings.title', 'Usage from the CLIs'),
     description: translate(
-      'auto.components.settings.accounts.search.dd75a73991',
-      'Optional account switching for Claude while preserving shared chat context.'
+      'auto.components.settings.cliUsageReadings.body',
+      "NASH reads usage only from each CLI: Claude Code's status line, codex app-server and agy /usage. It reads no sign-in and asks no vendor for usage."
     ),
     keywords: [
       ...translateSearchKeyword('auto.components.settings.accounts.search.e14049e1a8', 'claude'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.06662af91e', 'account'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.5b3f18ef4a', 'switch'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.8b06729e0f', 'active'),
+      ...translateSearchKeyword('auto.components.settings.accounts.search.70d1b8def5', 'codex'),
       ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.86edc96bc9',
-        'status bar'
+        'auto.components.settings.accounts.search.cursor.kw.usage',
+        'usage'
       ),
       ...translateSearchKeyword('auto.components.settings.accounts.search.c759741d77', 'quota'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.f2d666a886', 'optional')
+      ...translateSearchKeyword('auto.components.settings.accounts.search.86edc96bc9', 'status bar')
     ]
   }
 ])
@@ -299,7 +298,7 @@ export const getAccountsZcodePlanSearchEntries = createLocalizedCatalog(() => [
 
 export const getAccountsPaneSearchEntries = createLocalizedCatalog((): SettingsSearchEntry[] => [
   ...getAccountsLocationSearchEntries(),
-  ...getAccountsClaudeSearchEntries(),
+  ...getAccountsCliUsageSearchEntries(),
   ...getAccountsCodexSearchEntries(),
   ...getAccountsGeminiSearchEntries(),
   ...getAccountsOpencodeSearchEntries(),

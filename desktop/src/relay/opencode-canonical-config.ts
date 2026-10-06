@@ -1,11 +1,12 @@
 import { existsSync, mkdirSync } from 'node:fs'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import { resolveOpenCodeConfigDirectory } from '../shared/opencode-config-directory'
 import { isInstalledOpenCodePluginCurrent } from '../shared/opencode-installed-plugin'
 import { writeCanonicalOpenCodePluginAtomically } from '../shared/opencode-plugin-atomic-write'
 import { writeOpenCodeTuiPlugin } from '../shared/opencode-tui-plugin-install'
 
-const RELAY_HOOKS_DIR = '.orca-relay'
+const RELAY_HOOKS_DIR = APP_RELAY_HOME_DIR_NAME
 
 export type OpenCodeAgent = 'opencode' | 'opencode2'
 

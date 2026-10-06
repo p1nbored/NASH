@@ -46,7 +46,7 @@ async function withManagedCli(
     wsl([
       'sh',
       '-c',
-      'for file in "$HOME/.profile" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.zshenv" "$HOME/.local/bin/orca" "$HOME/.local/bin/orca-ide" "$HOME/.local/bin/orca-dev" "$HOME/.local/share/orca/orca-wsl-bridge.ps1"; do if [ -f "$file" ]; then sha256sum "$file"; fi; done; printf "PATH=%s\\n" "$PATH"'
+      'for file in "$HOME/.profile" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.zshenv" "$HOME/.local/bin/orca" "$HOME/.local/bin/orca-ide" "$HOME/.local/bin/orca-dev" "$HOME/.local/share/nash/orca-wsl-bridge.ps1"; do if [ -f "$file" ]; then sha256sum "$file"; fi; done; printf "PATH=%s\\n" "$PATH"'
     ])
   try {
     const before = await snapshot()

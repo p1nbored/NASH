@@ -41,7 +41,7 @@ const NOT_JOINED: CodexSharedServerStatus = { joined: false }
 const OLD_TAB_JOINED: CodexSharedServerStatus = { joined: true, openedBeforeWrapper: true }
 const TITLE = 'This Codex is sharing a server'
 const OLD_TAB_BODY =
-  'This terminal was opened before Orca started giving each Codex its own server.'
+  'This terminal was opened before NASH started giving each Codex its own server.'
 let paneElement: HTMLDivElement
 let root: Root
 let isCodexOnSharedServer: ReturnType<
@@ -202,7 +202,7 @@ describe('CodexSharedServerBanner', () => {
     await act(async () => button('Fix').click())
     await act(async () => button('Turn off').click())
 
-    expect(document.body.textContent).toContain("Orca couldn't turn this off.")
+    expect(document.body.textContent).toContain("NASH couldn't turn this off.")
     expect(document.body.textContent).not.toContain('Turned off')
     await act(async () => button('Copy').click())
     expect(writeClipboardText).toHaveBeenCalledWith(CODEX_DISABLE_AUTO_START_COMMAND)

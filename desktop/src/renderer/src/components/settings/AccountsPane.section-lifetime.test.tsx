@@ -58,11 +58,6 @@ vi.mock('@/store', () => ({
     })
 }))
 vi.mock('@/runtime/runtime-provider-accounts-client', () => ({
-  emptyClaudeAccountsState: () => ({
-    accounts: [],
-    activeAccountId: null,
-    activeAccountIdsByRuntime: { host: null, wsl: {} }
-  }),
   emptyCodexAccountsState: () => ({
     accounts: [],
     activeAccountId: null,
@@ -71,9 +66,7 @@ vi.mock('@/runtime/runtime-provider-accounts-client', () => ({
   hasRemoteProviderAccountOwner: (settings: { activeRuntimeEnvironmentId?: string }) =>
     Boolean(settings.activeRuntimeEnvironmentId),
   watchProviderAccounts: fake.watcher,
-  selectClaudeProviderAccount: fake.write,
   selectCodexProviderAccount: fake.write,
-  removeClaudeProviderAccount: fake.write,
   removeCodexProviderAccount: fake.write
 }))
 beforeEach(() => {

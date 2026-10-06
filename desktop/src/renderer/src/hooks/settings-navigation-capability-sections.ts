@@ -68,7 +68,7 @@ export function buildCapabilitySettingsSections({
       title: translate('auto.hooks.useSettingsNavigationMetadata.58a868e8e4', 'Orchestration'),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.cd50cec5d7',
-        'Coordinate multiple coding agents through Orca.'
+        'Coordinate multiple coding agents through NASH.'
       ),
       icon: Network,
       searchEntries: getOrchestrationPaneSearchEntries({
@@ -85,7 +85,7 @@ export function buildCapabilitySettingsSections({
             title: translate('auto.hooks.useSettingsNavigationMetadata.linearTitle', 'Linear'),
             description: translate(
               'auto.hooks.useSettingsNavigationMetadata.linearDescription',
-              'How Linear works in Orca, setup checklist, agent skill, and example prompts.'
+              'How Linear works in NASH, setup checklist, agent skill, and example prompts.'
             ),
             icon: LinearIcon,
             searchEntries: getLinearAgentSkillPaneSearchEntries(),
@@ -132,7 +132,7 @@ export function buildSetupSettingsSections({
       ? [
           {
             id: 'orca-account',
-            title: translate('auto.components.settings.orcaAccount.title', 'Orca Account'),
+            title: translate('auto.components.settings.orcaAccount.title', 'Orca Cloud Account'),
             description: translate(
               'auto.components.settings.orcaAccount.description',
               'Share work instantly and reach your desktop from Orca Mobile wherever you are.'
@@ -151,7 +151,7 @@ export function buildSetupSettingsSections({
       ),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.5f32ac08f3',
-        'Finish the onboarding checklist for core Orca workflows.'
+        'Finish the onboarding checklist for core NASH workflows.'
       ),
       icon: OrcaLogoSettingsIcon,
       searchEntries: [
@@ -168,7 +168,7 @@ export function buildSetupSettingsSections({
             translate('auto.hooks.useSettingsNavigationMetadata.ea0b1bc7b8', 'setup guide'),
             translate(
               'auto.hooks.useSettingsNavigationMetadata.0505d0df29',
-              'get started with Orca'
+              'get started with NASH'
             ),
             translate('auto.hooks.useSettingsNavigationMetadata.724c440e72', 'getting started')
           ]

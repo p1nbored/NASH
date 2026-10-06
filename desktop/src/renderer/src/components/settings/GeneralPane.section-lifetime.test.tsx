@@ -42,6 +42,11 @@ vi.mock('@/components/settings/GeneralSupportSection', () => ({
 vi.mock('@/components/settings/ReleaseChannelSection', () => ({
   ReleaseChannelSection: () => <div>Release picker open</div>
 }))
+// Why: the release picker only exists in builds with an update feed; this build ships none (D-017).
+vi.mock('../../../../shared/app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../../../../shared/app-update-feed.test-fixture')
+  return withFixtureUpdateFeed(await importOriginal())
+})
 vi.mock('@/components/settings/DefaultWindowsProjectRuntimeSetting', () => ({
   DefaultWindowsProjectRuntimeSetting: () => null
 }))

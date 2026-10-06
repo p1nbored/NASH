@@ -25,6 +25,7 @@ import { makePaneKey } from '../../shared/stable-pane-id'
 import { runtimeWorktreeIdsEqual } from './runtime-worktree-path-identity'
 
 export class OrcaRuntimeWithAutomationOperations extends OrcaRuntimeWithPtyForegroundProcessReads {
+  private orchestrationDbDeliveryInitialized = false
   protected fenceAutomationOwner(
     id: string,
     expectedOwner: AutomationOwnerPrecondition | undefined,
@@ -151,13 +152,25 @@ export class OrcaRuntimeWithAutomationOperations extends OrcaRuntimeWithPtyForeg
   // Why: lazy initialization — the DB path depends on Electron's userData
   // which may not be finalized until after app.ready. Also allows unit tests
   // to inject an in-memory DB without touching the filesystem.
-  getOrchestrationDb(): OrchestrationDb {
+  getOrchestrationDb(options: { passive?: boolean } = {}): OrchestrationDb {
     if (!this._orchestrationDb) {
       this._orchestrationDb = new OrchestrationDb(this.orchestrationDbPath())
-      this.ensureOrchestrationFederationRelay()
-      this.scheduleRestoredMessageRepoints()
+    }
+    if (!options.passive && !this.orchestrationDbDeliveryInitialized) {
+      this.initializeOrchestrationDbDelivery()
     }
     return this._orchestrationDb
+  }
+
+  private initializeOrchestrationDbDelivery(): void {
+    this.orchestrationDbDeliveryInitialized = true
+    try {
+      this.ensureOrchestrationFederationRelay()
+      this.scheduleRestoredMessageRepoints()
+    } catch (error) {
+      this.orchestrationDbDeliveryInitialized = false
+      throw error
+    }
   }
 
   /** The database, opened only if it already exists: a profile without one has no mail to redrive. */
@@ -175,8 +188,8 @@ export class OrcaRuntimeWithAutomationOperations extends OrcaRuntimeWithPtyForeg
     this.orchestrationFederation.resetForDatabaseChange()
     this.mailPointerRepointScheduler.clear()
     this._orchestrationDb = db
-    this.ensureOrchestrationFederationRelay()
-    this.scheduleRestoredMessageRepoints()
+    this.orchestrationDbDeliveryInitialized = false
+    this.initializeOrchestrationDbDelivery()
   }
 
   protected async flushWorkspaceSessionOrThrowAsync(): Promise<void> {

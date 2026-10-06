@@ -165,7 +165,7 @@ unset __orca_initializing_wrapper
     [join(bashDir, 'rcfile'), bashRc]
   ] as const
 
-  // Why: relay wrapper files persist under ~/.orca-relay across app upgrades.
+  // Why: relay wrapper files persist under ~/.nash-relay across app upgrades.
   // Existence alone is not enough; stale wrappers would miss later fixes such
   // as preserving post-.zshenv ZDOTDIR.
   const stale = files.filter(([path, content]) => readFileOrNull(path) !== content)

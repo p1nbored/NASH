@@ -6,6 +6,13 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as ScopeModule from './nash-managed-hook-scope'
+
+// Why: these cover Orca's per-agent mechanics; NASH's Claude-only scope has its own tests.
+vi.mock('./nash-managed-hook-scope', async (importOriginal) => ({
+  ...(await importOriginal<typeof ScopeModule>()),
+  isNashManagedHookAgent: () => true
+}))
 
 import { RelayDispatcher } from '../../relay/dispatcher'
 import { registerWslHookFsHandlers } from '../../relay/wsl-hook-fs-bridge'
@@ -137,7 +144,7 @@ describe.skipIf(process.platform === 'win32')(
         readFileSync(join(home, '.claude', 'settings.json'), 'utf8')
       )
       expect(claudeSettings.hooks).toBeTruthy()
-      const script = readFileSync(join(home, '.orca', 'agent-hooks', 'claude-hook.sh'), 'utf8')
+      const script = readFileSync(join(home, '.nash', 'agent-hooks', 'claude-hook.sh'), 'utf8')
       expect(script).toContain('/hook/claude')
     }, 20_000)
   }
@@ -149,9 +156,9 @@ describe('WslHookRelayManager', () => {
   // the wslfs.home request and never touches the real filesystem.
   const home = '/home/wsl-test-user'
   const codexHome =
-    '\\\\wsl.localhost\\Ubuntu\\home\\wsl-test-user\\.local\\share\\orca\\codex-runtime-home\\home'
-  const opencodeOverlayDir = `${home}/.orca-relay/opencode-overlays/deadbeefcafe`
-  const opencode2OverlayDir = `${home}/.orca-relay/opencode2-overlays/deadbeefcafe`
+    '\\\\wsl.localhost\\Ubuntu\\home\\wsl-test-user\\.local\\share\\nash\\codex-runtime-home\\home'
+  const opencodeOverlayDir = `${home}/.nash-relay/opencode-overlays/deadbeefcafe`
+  const opencode2OverlayDir = `${home}/.nash-relay/opencode2-overlays/deadbeefcafe`
   let harnesses: GuestHarness[]
 
   beforeEach(() => {
@@ -246,7 +253,7 @@ describe('WslHookRelayManager', () => {
       installCodex: vi.fn(async () => ({
         agent: 'codex' as const,
         state: 'installed' as const,
-        configPath: `${home}/.local/share/orca/codex-runtime-home/home/hooks.json`,
+        configPath: `${home}/.local/share/nash/codex-runtime-home/home/hooks.json`,
         managedHooksPresent: true,
         detail: null
       })),
@@ -272,7 +279,7 @@ describe('WslHookRelayManager', () => {
     })
 
     expect(manager.getGuestEndpointFilePath('Ubuntu')).toBe(
-      `${home}/.orca-wsl/agent-hooks/instance-testinstance/endpoint.env`
+      `${home}/.nash-wsl/agent-hooks/instance-testinstance/endpoint.env`
     )
 
     const guest = harnesses[0].guestDispatcher
@@ -455,7 +462,7 @@ describe('WslHookRelayManager', () => {
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(deps.spawnRelay).toHaveBeenCalledTimes(1)
     expect(manager.getGuestEndpointFilePath(null)).toBe(
-      `${home}/.orca-wsl/agent-hooks/instance-testinstance/endpoint.env`
+      `${home}/.nash-wsl/agent-hooks/instance-testinstance/endpoint.env`
     )
     manager.disposeAll()
   })

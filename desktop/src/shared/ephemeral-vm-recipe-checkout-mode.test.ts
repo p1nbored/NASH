@@ -17,7 +17,7 @@ describe('ephemeral VM recipe checkout mode', () => {
     expect(
       getEphemeralVmRecipeCheckoutModeError(defaultRecipe, {
         schemaVersion: 1,
-        pairingCode: 'orca://pair?code=test',
+        pairingCode: 'nash://pair?code=test',
         projectRoot: '/workspace/repo'
       })
     ).toBeNull()
@@ -27,7 +27,7 @@ describe('ephemeral VM recipe checkout mode', () => {
     const provisionedRootResult = {
       schemaVersion: 2 as const,
       checkoutMode: 'provisioned-root' as const,
-      pairingCode: 'orca://pair?code=test',
+      pairingCode: 'nash://pair?code=test',
       projectRoot: '/workspace/repo'
     }
     expect(getEphemeralVmRecipeCheckoutModeError(defaultRecipe, provisionedRootResult)).toBe(

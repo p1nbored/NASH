@@ -202,7 +202,7 @@ describe('WSL SQLite runtime preparation', () => {
     )
     expect(result[0]).toEqual({
       distro: 'Ubuntu',
-      executable: `/home/ada $literal/.cache/orca/runtimes/node-${expected}/bin/node`,
+      executable: `/home/ada $literal/.cache/nash/runtimes/node-${expected}/bin/node`,
       readerPath: '/mnt/c/reader $literal.cjs'
     })
     const install = mocks.run.mock.calls

@@ -8,10 +8,36 @@ const projectDir = path.resolve(import.meta.dirname, '../..')
 const packageJson = JSON.parse(readFileSync(path.join(projectDir, 'package.json'), 'utf8'))
 const wrapperPath = path.join(projectDir, 'config', 'scripts', 'orca-dev.mjs')
 
-describe('orca-dev package bin', () => {
+const identity = JSON.parse(
+  readFileSync(path.join(projectDir, 'src', 'shared', 'app-identity-constants.json'), 'utf8')
+)
+
+describe('nash-dev package bin', () => {
+  it('publishes the NASH package name and global commands, never the Orca ones', () => {
+    expect(packageJson.name).toBe(identity.cliCommandName)
+    expect(packageJson.bin[identity.cliCommandName]).toBe('./out/cli/index.js')
+    expect(Object.keys(packageJson.bin).sort()).toEqual(
+      [identity.cliCommandName, identity.devCliCommandName].sort()
+    )
+  })
+
   it('uses a Node entrypoint for cross-platform package installs', () => {
-    expect(packageJson.bin['orca-dev']).toBe('./config/scripts/orca-dev.mjs')
+    expect(packageJson.bin[identity.devCliCommandName]).toBe('./config/scripts/orca-dev.mjs')
     expect(readFileSync(wrapperPath, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/)
+  })
+
+  it('keeps the Bash wrapper and the dev installer on the NASH dev profile and command', () => {
+    const bashWrapper = readFileSync(path.join(projectDir, 'config', 'scripts', 'orca-dev'), 'utf8')
+    expect(bashWrapper).toContain(`/${identity.devUserDataDirName}"`)
+    expect(bashWrapper).not.toContain('/orca-dev"')
+    const installer = readFileSync(
+      path.join(projectDir, 'config', 'scripts', 'install-dev-cli.mjs'),
+      'utf8'
+    )
+    // Why: the installer reads the command name from the shared identity JSON instead of spelling it out.
+    expect(installer).toContain('/usr/local/bin/${devCliCommandName}')
+    expect(installer).toContain('app-identity-constants.json')
+    expect(installer).not.toContain('/usr/local/bin/orca-dev')
   })
 
   it('runs the dev CLI through Node without requiring Bash', () => {

@@ -15,7 +15,7 @@ describe('SkillShareDeepLinkState', () => {
     const publish = vi.fn()
 
     state.capture(['orca', 'https://app.orca.dev/skills/share/share_first'])
-    expect(state.capture(['orca', 'orca://skills/share/share_second'], publish)).toBe(true)
+    expect(state.capture(['nash', 'nash://skills/share/share_second'], publish)).toBe(true)
 
     expect(publish).toHaveBeenCalledWith('share_second')
     expect(state.consume()).toBe('share_second')

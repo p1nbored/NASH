@@ -50,6 +50,8 @@ beforeEach(async () => {
   mkdirSync(custom)
   writeFileSync(join(custom, 'opencode.json'), '{"model":"fixture"}')
   vi.stubEnv('HOME', root)
+  // Why: on Windows os.homedir() reads USERPROFILE, so HOME alone left overlays in the real home.
+  vi.stubEnv('USERPROFILE', root)
   vi.stubEnv('XDG_CONFIG_HOME', join(root, 'xdg'))
   for (const key of [
     'OPENCODE_CONFIG_DIR',

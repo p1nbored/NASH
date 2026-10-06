@@ -14,6 +14,7 @@ import {
   normalizePluginConsents,
   normalizePluginIdList
 } from '../../shared/plugins/plugin-consent-state'
+import { ORCA_CLOUD_SERVICES_ENABLED } from '../../shared/orca-cloud-services'
 import { projectPluginAgentStatusChangedPayload } from '../plugins/plugin-agent-status-event'
 import { setMainPluginLanguagePacks, setMainUiLanguage } from '../i18n/main-i18n'
 import { rebuildAppMenu } from '../menu/register-app-menu'
@@ -39,13 +40,25 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
     getKillListEntry: (pluginKey) => state.pluginKillListService?.find(pluginKey) ?? null
   })
   const requestOfficialMarketplaceSeed = (): void => {
-    if (store.getSettings().pluginSystemEnabled !== true) {
+    // Why: NASH clones no stablyai/orca-plugins repository (Orca cloud services off).
+    if (!ORCA_CLOUD_SERVICES_ENABLED || store.getSettings().pluginSystemEnabled !== true) {
       return
     }
     void state.pluginMarketplaceService
       ?.seedOfficialSource()
       .catch((error) =>
         console.warn('[plugins] failed to configure the official marketplace:', error)
+      )
+  }
+  const requestKillListRefresh = (): void => {
+    // Why: NASH fetches no onorca.dev safety list and keeps the cached copy (cloud services off).
+    if (!ORCA_CLOUD_SERVICES_ENABLED || !app.isPackaged) {
+      return
+    }
+    void state.pluginKillListService
+      ?.refresh()
+      .catch((error) =>
+        console.warn('[plugins] failed to refresh plugin safety list; using cached state:', error)
       )
   }
   state.pluginMarketplaceInstaller = new PluginMarketplaceInstaller({
@@ -101,12 +114,8 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
       requestBundledPluginBootstrap()
       requestOfficialMarketplaceSeed()
     }
-    if (app.isPackaged && updates.pluginSystemEnabled === true) {
-      void state.pluginKillListService
-        ?.refresh()
-        .catch((error) =>
-          console.warn('[plugins] failed to refresh plugin safety list; using cached state:', error)
-        )
+    if (updates.pluginSystemEnabled === true) {
+      requestKillListRefresh()
     }
   })
   // Why: headless `orca serve` clients reach plugins through the runtime RPC
@@ -129,12 +138,8 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
       })
     })
     .catch((error) => console.warn('[plugins] failed to initialize plugin service:', error))
-  if (app.isPackaged && store.getSettings().pluginSystemEnabled === true) {
-    void state.pluginKillListService
-      .refresh()
-      .catch((error) =>
-        console.warn('[plugins] failed to refresh plugin safety list; using cached state:', error)
-      )
+  if (store.getSettings().pluginSystemEnabled === true) {
+    requestKillListRefresh()
   }
   state.pluginService.onChanged((event) => {
     if (

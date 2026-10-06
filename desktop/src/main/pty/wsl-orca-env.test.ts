@@ -149,7 +149,7 @@ describe('addOrcaWslInteropEnv', () => {
     expect(windowsEnv.WSLENV).toContain('ORCA_AGENT_HOOK_ENDPOINT/p')
 
     const guestEnv: Record<string, string> = {
-      ORCA_AGENT_HOOK_ENDPOINT: '/home/jin/.orca-wsl/agent-hooks/port-4567/endpoint.env'
+      ORCA_AGENT_HOOK_ENDPOINT: '/home/jin/.nash-wsl/agent-hooks/port-4567/endpoint.env'
     }
     addOrcaWslInteropEnv(guestEnv)
     expect(guestEnv.WSLENV).toContain('ORCA_AGENT_HOOK_ENDPOINT/u')
@@ -230,8 +230,8 @@ describe('addOrcaWslInteropEnv', () => {
 
   it('crosses a guest-side OpenCode config overlay untranslated (/u)', () => {
     const env: Record<string, string> = {
-      OPENCODE_CONFIG_DIR: '/home/jin/.orca-relay/opencode-overlays/abc',
-      ORCA_OPENCODE_CONFIG_DIR: '/home/jin/.orca-relay/opencode-overlays/abc'
+      OPENCODE_CONFIG_DIR: '/home/jin/.nash-relay/opencode-overlays/abc',
+      ORCA_OPENCODE_CONFIG_DIR: '/home/jin/.nash-relay/opencode-overlays/abc'
     }
     addOrcaWslInteropEnv(env)
     expect(env.WSLENV).toContain('OPENCODE_CONFIG_DIR/u')

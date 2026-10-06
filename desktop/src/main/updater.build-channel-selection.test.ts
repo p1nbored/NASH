@@ -24,6 +24,9 @@ vi.mock('./update-install-exit-watchdog', () => moduleFactories.updateInstallExi
 vi.mock('./updater-prerelease-feed', () => moduleFactories.updaterPrereleaseFeed())
 vi.mock('./local-builds/local-build-switch', () => moduleFactories.localBuildSwitch())
 vi.mock('./local-builds/local-build-feed-server', () => moduleFactories.localBuildFeedServer())
+vi.mock('../shared/app-identity-constants', async (importOriginal) =>
+  moduleFactories.appIdentityWithFixtureFeed(await importOriginal())
+)
 
 /** Mirrors AUTO_UPDATE_CHECK_INTERVAL_MS in updater.ts. */
 const AUTO_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
@@ -225,7 +228,7 @@ describe('updater', () => {
       expect(autoUpdaterMock.disableDifferentialDownload).toBe(false)
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/latest/download'
       })
     }
   )
@@ -268,7 +271,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/latest/download'
       })
     }
   )
@@ -308,7 +311,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/latest/download'
       })
     }
   )
@@ -365,7 +368,7 @@ describe('updater', () => {
       expect(send).toHaveBeenCalledWith('updater:status', { state: 'not-available' })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/latest/download'
       })
     }
   )
@@ -411,7 +414,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/latest/download'
       })
     }
   )
@@ -479,7 +482,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/download/v1.3.18-rc.1'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/download/v1.3.18-rc.1'
       })
       expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1)
     })
@@ -506,7 +509,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/download/v1.4.121-rc.6.perf'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/download/v1.4.121-rc.6.perf'
       })
       expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1)
     })
@@ -573,7 +576,7 @@ describe('updater', () => {
       })
       expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/download/v1.4.121'
+        url: 'https://github.com/fixture-owner/fixture-app/releases/download/v1.4.121'
       })
     })
   })

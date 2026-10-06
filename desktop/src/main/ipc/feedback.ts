@@ -20,6 +20,10 @@ import type {
   FeedbackSubmitArgs,
   FeedbackSubmitResult
 } from '../../shared/feedback-submit-contract'
+import {
+  ORCA_CLOUD_SERVICES_ENABLED,
+  ORCA_CLOUD_SERVICES_OFF_CODE
+} from '../../shared/orca-cloud-services'
 
 export type {
   FeedbackDiagnosticBundleAttachment,
@@ -199,6 +203,15 @@ async function submitFeedbackWithDiagnosticBundle(
 export async function submitFeedback(
   args: InternalFeedbackSubmitArgs
 ): Promise<FeedbackSubmitResult> {
+  if (!ORCA_CLOUD_SERVICES_ENABLED) {
+    // Why: NASH sends nothing to Orca; both lanes stop here before a body or request exists.
+    return {
+      ok: false,
+      status: null,
+      code: ORCA_CLOUD_SERVICES_OFF_CODE,
+      error: 'Sending feedback and crash reports to Orca is not available in NASH builds.'
+    }
+  }
   // Why: buildSubmitBody drops images on the crash lane, so validating them
   // there would abort a crash report over attachments it never meant to send.
   if (args.submissionType !== 'crash' && args.images !== undefined) {

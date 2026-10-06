@@ -1,4 +1,5 @@
 import { win32 as pathWin32 } from 'node:path'
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
 import {
   foldWslUncPathCaseInsensitiveParts,
   parseWslUncPath,
@@ -30,7 +31,9 @@ function isOrcaManagedWslCodexHome(linuxHomePath: string): boolean {
   const segments = linuxHomePath.split('/').filter(Boolean)
   const orcaIndex = segments.findIndex(
     (segment, index) =>
-      segment === 'orca' && segments[index - 1] === 'share' && segments[index - 2] === '.local'
+      segment === APP_XDG_DATA_DIR_NAME &&
+      segments[index - 1] === 'share' &&
+      segments[index - 2] === '.local'
   )
   if (orcaIndex === -1) {
     return false

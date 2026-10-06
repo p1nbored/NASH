@@ -19,10 +19,10 @@ function deps() {
 
 describe('requestGuestOpenCodeOverlayDir', () => {
   it('reports the guest overlay dir', async () => {
-    const { mux } = fakeMux(async () => ({ overlayDirs: { opencode: '/home/jin/.orca-relay/x' } }))
+    const { mux } = fakeMux(async () => ({ overlayDirs: { opencode: '/home/jin/.nash-relay/x' } }))
     await expect(requestGuestOpenCodeOverlayDir(mux, deps(), 'Ubuntu')).resolves.toEqual({
       kind: 'dir',
-      dir: '/home/jin/.orca-relay/x'
+      dir: '/home/jin/.nash-relay/x'
     })
   })
 
@@ -31,24 +31,24 @@ describe('requestGuestOpenCodeOverlayDir', () => {
   it('carries the per-major guest overlay dirs independently', async () => {
     const { mux } = fakeMux(async () => ({
       overlayDirs: {
-        opencode: '/home/jin/.orca-relay/opencode-overlays/x',
-        opencode2: '/home/jin/.orca-relay/opencode2-overlays/y'
+        opencode: '/home/jin/.nash-relay/opencode-overlays/x',
+        opencode2: '/home/jin/.nash-relay/opencode2-overlays/y'
       }
     }))
     await expect(requestGuestOpenCodeOverlayDir(mux, deps(), 'Ubuntu')).resolves.toEqual({
       kind: 'dir',
-      dir: '/home/jin/.orca-relay/opencode-overlays/x',
-      dir2: '/home/jin/.orca-relay/opencode2-overlays/y'
+      dir: '/home/jin/.nash-relay/opencode-overlays/x',
+      dir2: '/home/jin/.nash-relay/opencode2-overlays/y'
     })
   })
 
   it('reports an OpenCode 2 overlay even when the v1 overlay is missing', async () => {
     const { mux } = fakeMux(async () => ({
-      overlayDirs: { opencode2: '/home/jin/.orca-relay/opencode2-overlays/y' }
+      overlayDirs: { opencode2: '/home/jin/.nash-relay/opencode2-overlays/y' }
     }))
     await expect(requestGuestOpenCodeOverlayDir(mux, deps(), 'Ubuntu')).resolves.toEqual({
       kind: 'dir',
-      dir2: '/home/jin/.orca-relay/opencode2-overlays/y'
+      dir2: '/home/jin/.nash-relay/opencode2-overlays/y'
     })
   })
 

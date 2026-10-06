@@ -377,6 +377,27 @@ describe('model discovery parsers', () => {
     ])
   })
 
+  it('keeps the full model id a Claude alias resolves to, so a pinned id can be matched', () => {
+    const stdout = `${JSON.stringify({
+      type: 'control_response',
+      response: {
+        subtype: 'success',
+        request_id: 'orca-model-discovery',
+        response: {
+          models: [
+            { value: 'opus', resolvedModel: 'claude-opus-5-5', displayName: 'Opus' },
+            { value: 'haiku', displayName: 'Haiku' }
+          ]
+        }
+      }
+    })}
+`
+    expect(parseClaudeModels(stdout)).toEqual([
+      { id: 'opus', label: 'Opus', resolvedModel: 'claude-opus-5-5' },
+      { id: 'haiku', label: 'Haiku' }
+    ])
+  })
+
   it('returns no Claude models when the CLI lacks list_models so the seed stays', () => {
     expect(
       parseClaudeModels(

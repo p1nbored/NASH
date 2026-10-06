@@ -10,9 +10,11 @@ import {
   resetRateLimitProviderMocks
 } from './rate-limit-service-test-harness'
 
+// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
+vi.mock('./usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
+
 vi.mock('./claude-fetcher', () => ({
-  fetchClaudeRateLimits: vi.fn(),
-  fetchManagedAccountUsage: vi.fn()
+  fetchClaudeRateLimits: vi.fn()
 }))
 
 vi.mock('./codex-fetcher', () => ({
@@ -72,7 +74,7 @@ describe('RateLimitService', () => {
   it('passes the selected WSL Codex home into active account rate-limit fetches', async () => {
     const service = new RateLimitService()
     const wslCodexHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
     const hostCodexHome = 'C:\\Users\\jin\\.orca\\codex-accounts\\host\\home'
     const resolver = vi.fn((target) => ({
       kind: 'ready' as const,
@@ -318,7 +320,7 @@ describe('RateLimitService', () => {
   it('uses the initialized WSL target for active Codex rate-limit fetches', async () => {
     const service = new RateLimitService()
     const wslCodexHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
     const hostCodexHome = 'C:\\Users\\jin\\.orca\\codex-accounts\\host\\home'
     const resolver = vi.fn((target) => ({
       kind: 'ready' as const,
@@ -472,7 +474,7 @@ describe('RateLimitService', () => {
   it('does not cache host Codex usage under an outgoing WSL account', async () => {
     const service = new RateLimitService()
     const wslCodexHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
     const hostCodexHome = 'C:\\Users\\jin\\.orca\\codex-accounts\\host\\home'
     service.setCodexHomePathResolver((target) => ({
       kind: 'ready',
@@ -549,42 +551,40 @@ describe('RateLimitService', () => {
     )
   })
 
-  it('does not cache host Claude usage under an outgoing WSL account', async () => {
+  it('tells account-change listeners which provider switched, and only for an account change', async () => {
     const service = new RateLimitService()
-    service.setInactiveClaudeAccountsResolver(() => [
-      { id: 'wsl-account-1', managedAuthPath: '/tmp/account-1/auth' }
-    ])
-    service.setClaudeAuthPreparationResolver(async (target) => ({
-      configDir:
-        target?.runtime === 'wsl'
-          ? '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.claude'
-          : 'C:\\Users\\jin\\.claude',
-      runtime: target?.runtime ?? 'host',
-      wslDistro: target?.wslDistro ?? null,
-      wslLinuxConfigDir: target?.runtime === 'wsl' ? '/home/jin/.claude' : null,
-      envPatch: {},
-      stripAuthEnv: target?.runtime === 'wsl',
-      provenance: target?.runtime === 'wsl' ? 'managed:wsl-account-1:wsl:Ubuntu' : 'system'
-    }))
-
-    vi.mocked(fetchClaudeRateLimits)
-      .mockResolvedValueOnce(okProvider('claude', 20, Date.now()))
-      .mockResolvedValueOnce(okProvider('claude', 40, Date.now()))
-    vi.mocked(fetchCodexRateLimits).mockResolvedValueOnce(okProvider('codex', 20, Date.now()))
+    service.setCodexHomePathResolver(() => ({ kind: 'skip' }))
+    vi.mocked(fetchClaudeRateLimits).mockResolvedValue(okProvider('claude', 10, Date.now()))
+    const changes: string[] = []
+    service.onAccountChange((provider) => changes.push(provider))
 
     await service.refresh()
-    await service.refreshForClaudeAccountChange('wsl-account-1', {
-      runtime: 'wsl',
-      wslDistro: 'Ubuntu'
+    await service.refreshClaudeForTarget({ runtime: 'host' })
+    await service.refreshCodexForTarget({ runtime: 'host' })
+    expect(changes).toEqual([])
+
+    await service.refreshForCodexAccountChange('outgoing-codex', { runtime: 'host' })
+    expect(changes).toEqual(['codex'])
+  })
+
+  it('finishes the switch when a listener throws, and stops telling one that unsubscribed', async () => {
+    const service = new RateLimitService()
+    service.setCodexHomePathResolver(() => ({ kind: 'skip' }))
+    const failing = vi.fn(() => {
+      throw new Error('FIXTURE_ONLY listener failure')
     })
+    const later = vi.fn()
+    service.onAccountChange(failing)
+    const unsubscribe = service.onAccountChange(later)
 
-    expect(fetchClaudeRateLimits).toHaveBeenLastCalledWith(
-      expect.objectContaining({ allowPtyFallback: true, allowUsagePanelSupplement: true })
-    )
+    await service.refreshForCodexAccountChange(null, { runtime: 'host' })
+    expect(failing).toHaveBeenCalledWith('codex')
+    expect(later).toHaveBeenCalledWith('codex')
 
-    expect(service.getState().inactiveClaudeAccounts).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ accountId: 'wsl-account-1' })])
-    )
+    unsubscribe()
+    await service.refreshForCodexAccountChange(null, { runtime: 'host' })
+    expect(later).toHaveBeenCalledTimes(1)
+    expect(failing).toHaveBeenCalledTimes(2)
   })
 })
 

@@ -46,7 +46,7 @@ describe('ripgrep cache shell transactions', () => {
 
   beforeEach(() => {
     home = mkdtempSync(join(tmpdir(), 'orca rg gc '))
-    root = join(home, '.orca-remote')
+    root = join(home, '.nash-remote')
     cache = join(root, 'ripgrep')
     relay = join(root, 'relay-0.1.0+abc')
     mkdirSync(relay, { recursive: true })

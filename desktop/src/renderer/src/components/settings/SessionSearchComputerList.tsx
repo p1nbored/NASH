@@ -35,7 +35,7 @@ export function SessionSearchComputerList({
       {local}
       {showSubheads ? (
         <p className="pt-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-          {translate('sessionHistory.settings.remoteServers', 'Orca remote servers')}
+          {translate('sessionHistory.settings.remoteServers', 'NASH remote servers')}
         </p>
       ) : null}
       {shownServers.map((server) => (

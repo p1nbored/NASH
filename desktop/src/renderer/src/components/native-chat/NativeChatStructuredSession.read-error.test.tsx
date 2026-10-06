@@ -79,7 +79,7 @@ it("names a history that couldn't open right now once, in its one line", () => {
 
   renderPane()
 
-  expect(screen.getAllByText("Orca couldn't open this chat's history right now.")).toHaveLength(1)
+  expect(screen.getAllByText("NASH couldn't open this chat's history right now.")).toHaveLength(1)
   expect(screen.queryByText('Could not load conversation')).toBeNull()
   expect(screen.queryByText(/keeps trying/)).toBeNull()
   expect(screen.queryByText(/Try again/)).toBeNull()
@@ -111,7 +111,7 @@ it('says only that the history did not load for a chat its host cannot run', () 
   renderPane()
 
   expect(screen.getAllByText("This chat's history couldn't be loaded.")).toHaveLength(1)
-  expect(screen.queryByText(/isn't available|newer Orca/)).toBeNull()
+  expect(screen.queryByText(/isn't available|newer NASH/)).toBeNull()
 })
 
 it("says a newer Orca's words alone", () => {
@@ -121,7 +121,7 @@ it("says a newer Orca's words alone", () => {
 
   renderPane()
 
-  expect(screen.getByText(/^Chats were saved by a newer Orca\./)).toBeTruthy()
+  expect(screen.getByText(/^Chats were saved by a newer NASH\./)).toBeTruthy()
   expect(screen.queryByText(/keeps trying/)).toBeNull()
 })
 
@@ -143,5 +143,5 @@ it('words a failed reconnect beside a transcript it keeps', () => {
   renderPane()
 
   expect(screen.getByTestId('message-list')).toBeTruthy()
-  expect(screen.getByText("Orca couldn't open this chat's history right now.")).toBeTruthy()
+  expect(screen.getByText("NASH couldn't open this chat's history right now.")).toBeTruthy()
 })

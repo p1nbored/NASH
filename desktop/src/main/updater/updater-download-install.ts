@@ -9,6 +9,7 @@ import { UpdaterRemoteStatus } from './updater-remote-status'
 export abstract class UpdaterDownloadInstall extends UpdaterRemoteStatus {
   protected quitAndInstall(): void {
     if (
+      this.isUpdateFeedDisabled() ||
       this.localBuildSelectionInProgress ||
       this.pinnedBuildSelectionInProgress ||
       this.pendingQuitAndInstallTimer ||
@@ -39,6 +40,7 @@ export abstract class UpdaterDownloadInstall extends UpdaterRemoteStatus {
 
   protected downloadUpdate(): void {
     if (
+      this.isUpdateFeedDisabled() ||
       this.localBuildSelectionInProgress ||
       this.pinnedBuildSelectionInProgress ||
       this.downloadInFlight

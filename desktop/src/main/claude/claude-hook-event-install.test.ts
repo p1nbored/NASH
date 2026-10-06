@@ -6,7 +6,7 @@ import { getClaudeManagedHookPlan } from './claude-managed-hook-events'
 import { applyManagedHooks } from './hook-settings'
 
 const SCRIPT_FILE_NAME = 'claude-hook.sh'
-const MANAGED_COMMAND = '/home/dev/.orca/agent-hooks/claude-hook.sh'
+const MANAGED_COMMAND = '/home/dev/.nash/agent-hooks/claude-hook.sh'
 const managedHook = { type: 'command' as const, command: MANAGED_COMMAND }
 const enums: Record<string, string[]> = fixture.enums
 const topLevelSettings: Record<string, { keys: string[] }> = fixture.topLevelSettings
@@ -113,7 +113,7 @@ describe('Claude managed hook events by resolved version', () => {
       // Why: even an entry from an older hook command stays byte-identical; only a known version may rewrite it.
       const staleHook = {
         type: 'command' as const,
-        command: '/old/.orca/agent-hooks/claude-hook.sh'
+        command: '/old/.nash/agent-hooks/claude-hook.sh'
       }
       const stale = { hooks: { StopFailure: [{ hooks: [staleHook] }] } }
       const written = install(stale, version)

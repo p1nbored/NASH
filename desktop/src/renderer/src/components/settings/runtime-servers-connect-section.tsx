@@ -84,7 +84,7 @@ export function RuntimeServersConnectSection({
           <p className="text-xs text-muted-foreground">
             {translate(
               'auto.components.settings.RuntimeEnvironmentsPane.connectToRemoteServersHelp',
-              'Pair another Orca runtime, then connect or disconnect it here.'
+              'Pair another NASH runtime, then connect or disconnect it here.'
             )}
           </p>
         </div>

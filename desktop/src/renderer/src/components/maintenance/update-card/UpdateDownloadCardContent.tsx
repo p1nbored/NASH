@@ -1,6 +1,6 @@
 import { Minus } from 'lucide-react'
 import type { ChangelogData } from '../../../../../shared/update-status-types'
-import { getReleaseNotesUrlForVersion } from '../../../../../shared/release-channel'
+import { releaseNotesUrlFor } from '@/lib/update-feed-availability'
 import { Button } from '../../ui/button'
 import { Progress } from '../../ui/progress'
 import { translate } from '@/i18n/i18n'
@@ -33,6 +33,7 @@ export function UpdateDownloadingContent({
   showReleaseNotes: boolean
 }): React.JSX.Element {
   const release = changelog?.release
+  const releaseNotesUrl = release ? release.releaseNotesUrl : releaseNotesUrlFor(version)
   const showMedia =
     release?.mediaUrl && !mediaFailed && !(prefersReducedMotion && isAnimatedGif(release.mediaUrl))
   return (
@@ -78,19 +79,15 @@ export function UpdateDownloadingContent({
       <p className="text-sm text-muted-foreground">
         {release
           ? release.description
-          : translate('auto.components.UpdateCard.93794ea932', 'Orca v{{value0}} is downloading.', {
+          : translate('auto.components.UpdateCard.93794ea932', 'NASH v{{value0}} is downloading.', {
               value0: version
             })}
       </p>
-      {showReleaseNotes && (
+      {showReleaseNotes && releaseNotesUrl && (
         <button
           type="button"
           className="text-xs text-muted-foreground underline hover:text-foreground self-start"
-          onClick={() =>
-            void window.api.shell.openUrl(
-              release ? release.releaseNotesUrl : getReleaseNotesUrlForVersion(version)
-            )
-          }
+          onClick={() => void window.api.shell.openUrl(releaseNotesUrl)}
         >
           {release
             ? translate('auto.components.UpdateCard.aad383aecc', 'Read the full release notes')
@@ -135,7 +132,7 @@ export function UpdateReadyToInstallContent({
       <p className="text-sm text-muted-foreground">
         {translate(
           'auto.components.UpdateCard.6714206e5a',
-          "Orca v{{value0}} is downloaded. Restart when you're ready.",
+          "NASH v{{value0}} is downloaded. Restart when you're ready.",
           { value0: version }
         )}
       </p>

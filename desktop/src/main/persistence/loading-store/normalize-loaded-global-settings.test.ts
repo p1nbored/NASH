@@ -1,5 +1,5 @@
 import { homedir } from 'node:os'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { getDefaultPersistedState } from '../../../shared/constants'
 import { normalizeLoadedGlobalSettings } from './normalize-loaded-global-settings'
 import { prepareLoadedTerminalSettings } from './prepare-loaded-terminal-settings'
@@ -33,6 +33,45 @@ describe('retired Agents sidebar setting', () => {
     })
     expect('showAgentsSidebar' in normalized).toBe(false)
     expect(normalized.agentsSidebarMigratedFromExperimental).toBe(true)
+  })
+})
+
+describe('retired Claude managed-account settings', () => {
+  // FIXTURE_ONLY: what a profile written before Claude account switching was removed may hold.
+  const retired = {
+    claudeManagedAccounts: [
+      { id: 'retired-a', email: 'a@example.invalid', managedAuthPath: '/fixture/a/auth' },
+      { id: 'retired-b', email: 'b@example.invalid', managedAuthPath: '/fixture/b/auth' }
+    ],
+    activeClaudeManagedAccountId: 'retired-a',
+    activeClaudeManagedAccountIdsByRuntime: { host: 'retired-a', wsl: {} }
+  }
+
+  it('drops the three keys on load and warns once with the count only', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const normalized = normalizeLegacyProfile(retired)
+
+      for (const key of Object.keys(retired)) {
+        expect(key in normalized).toBe(false)
+      }
+      expect(warn).toHaveBeenCalledOnce()
+      const line = warn.mock.calls[0]?.map(String).join(' ') ?? ''
+      expect(line).toContain('2')
+      expect(line).not.toMatch(/example\.invalid|fixture|retired-a|retired-b/)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it('stays quiet for a profile without managed Claude accounts', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      normalizeLegacyProfile({ claudeManagedAccounts: [], activeClaudeManagedAccountId: null })
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
   })
 })
 

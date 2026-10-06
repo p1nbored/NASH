@@ -21,7 +21,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn().mockReturnValue('linux-x64'),
   RELAY_SENTINEL: 'ORCA-RELAY v0.1.0 READY\n',
   RELAY_SENTINEL_TIMEOUT_MS: 10_000
@@ -51,7 +51,7 @@ vi.mock('./ssh-relay-install-marker', async (importOriginal) => ({
 
 vi.mock('./ssh-relay-versioned-install', () => ({
   readLocalFullVersion: vi.fn().mockReturnValue('0.1.0+testhash'),
-  computeRemoteRelayDir: (home: string, v: string) => `${home}/.orca-remote/relay-${v}`,
+  computeRemoteRelayDir: (home: string, v: string) => `${home}/.nash-remote/relay-${v}`,
   isRelayAlreadyInstalled: vi.fn().mockResolvedValue(false),
   finalizeInstall: vi.fn().mockResolvedValue(undefined),
   abandonInstall: vi.fn().mockResolvedValue(undefined),
@@ -179,7 +179,7 @@ describe('relay pty fd-leak patch on the install path', () => {
   })
 
   it('patches the private tree before it is published to the shared native-deps cache', async () => {
-    // Promotion moves `node_modules` into `~/.orca-remote/native/<key>` and leaves a symlink
+    // Promotion moves `node_modules` into `~/.nash-remote/native/<key>` and leaves a symlink
     // behind, and a published entry is immutable by contract. Patching afterwards would rename,
     // rebuild and roll back inside a tree every other relay on the host links -- and the
     // `.deps-complete` written by promotion would have published an unpatched tree that every

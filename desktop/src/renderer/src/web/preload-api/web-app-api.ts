@@ -1,4 +1,5 @@
 import type { PreloadApi } from '../../../../preload/api-types'
+import { APP_IDENTITY } from '../../../../shared/app-identity-constants'
 import { sanitizeWebRuntimeWorkspaceSession } from '../web-workspace-session'
 import { sessionStorageKeyForHost } from './web-workspace-session-api'
 import { mergeWebUIState } from './web-preference-normalization'
@@ -10,7 +11,7 @@ export function createWebAppApi(): Partial<PreloadApi> {
     app: {
       getIdentity: () =>
         Promise.resolve({
-          name: 'Orca',
+          name: APP_IDENTITY.productName,
           isDev: false,
           devLabel: null,
           devBranch: null,

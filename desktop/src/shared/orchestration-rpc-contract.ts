@@ -39,7 +39,12 @@ const ORCHESTRATION_MUTATION_METHODS = new Set([
   'orchestration.federationAck',
   'orchestration.federationImport',
   'orchestration.federationStop',
-  'orchestration.federationRelease'
+  'orchestration.federationRelease',
+  // D-016 task API; taskShow is a read, and the permission hook is one-shot with no receipt.
+  'orchestration.taskPropose',
+  'orchestration.taskStart',
+  'orchestration.taskReport',
+  'orchestration.runComplete'
 ])
 
 const RETIRED_ORCHESTRATION_METHODS = new Set(['orchestration.run', 'orchestration.runStop'])

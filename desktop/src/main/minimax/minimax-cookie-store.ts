@@ -1,4 +1,5 @@
 import { safeStorage } from 'electron'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -16,7 +17,7 @@ type MiniMaxCookieEnvelope = {
 }
 
 function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+  return join(homedir(), APP_HOME_DIR_NAME)
 }
 
 function getMiniMaxCookiePath(): string {

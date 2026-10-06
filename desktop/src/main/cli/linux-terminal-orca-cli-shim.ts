@@ -32,7 +32,7 @@ export type LinuxTerminalOrcaCliShimOptions = {
   resourcesPath?: string | null
   /** Trusted caller override; production requires the complete AppImage runtime identity. */
   appImagePath?: string | null
-  /** Test seam — defaults to $XDG_CACHE_HOME/orca/appimage. */
+  /** Test seam — defaults to $XDG_CACHE_HOME/<app data folder>/appimage. */
   appImageCacheRootPath?: string
 }
 

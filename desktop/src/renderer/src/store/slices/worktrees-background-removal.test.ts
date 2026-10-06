@@ -153,7 +153,7 @@ describe('removing a worktree the host deletes in the background', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     seedRow(store, { removing: true })
     hostListsOnRefresh('unmarked')
-    mockApi.worktrees.remove.mockRejectedValue(new Error('Remote Orca runtime connection closed.'))
+    mockApi.worktrees.remove.mockRejectedValue(new Error('Remote NASH runtime connection closed.'))
 
     await expect(
       store.getState().removeWorktree({ id: worktreeId, executionHostId: null })
@@ -173,7 +173,7 @@ describe('removing a worktree the host deletes in the background', () => {
   it('reports the lost reply when the host listing cannot be read either', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     seedRow(store)
-    hostListsOnRefresh(new Error('Remote Orca runtime is not connected.'))
+    hostListsOnRefresh(new Error('Remote NASH runtime is not connected.'))
     mockApi.worktrees.remove.mockRejectedValue(new Error('Request timed out: worktree.rm'))
 
     await expect(

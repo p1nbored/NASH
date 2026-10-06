@@ -12,7 +12,6 @@ export function createRateLimitsApi(): NonNullable<Partial<PreloadApi>['rateLimi
     consumeCodexResetCredit: () => Promise.resolve({ outcome: 'noCredit', state: empty }),
     refreshClaudeForTarget: () => Promise.resolve(empty),
     setPollingInterval: () => Promise.resolve(),
-    fetchInactiveClaudeAccounts: () => Promise.resolve(),
     fetchInactiveCodexAccounts: () => Promise.resolve(),
     refreshMiniMax: () => Promise.resolve(empty),
     refreshGrok: () => Promise.resolve(empty),

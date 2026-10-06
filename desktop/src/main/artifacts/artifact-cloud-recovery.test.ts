@@ -25,11 +25,14 @@ beforeEach(() => {
   // Keep fixed response expirations independent of the runner's wall clock.
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime('2026-08-07T00:00:00.000Z')
+  // Only an environment origin enables sharing in NASH builds; a request's apiUrl alone does not.
+  vi.stubEnv('ORCA_ARTIFACTS_API_URL', apiUrl)
 })
 
 afterEach(async () => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
   await Promise.all(
     createdPaths.splice(0).map((path) => rm(path, { recursive: true, force: true }))
   )

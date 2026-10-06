@@ -260,10 +260,10 @@ describe('managed hook command contract', () => {
       const extension = platform === 'win32' && agent !== 'kimi' ? 'cmd' : 'sh'
       const homes =
         platform === 'win32' ? ['C:/Users/test', 'C:/Users/test user'] : ['/home/test user']
-      const paths = homes.map((home) => `${home}/.orca/agent-hooks/${agent}-hook.${extension}`)
+      const paths = homes.map((home) => `${home}/.nash/agent-hooks/${agent}-hook.${extension}`)
       const commands = [
         ...paths.flatMap((path) => builders.local(path)),
-        ...builders.remote(`/home/remote user/.orca/agent-hooks/${agent}-hook.sh`)
+        ...builders.remote(`/home/remote user/.nash/agent-hooks/${agent}-hook.sh`)
       ]
       expect(commands.length).toBeGreaterThan(0)
       for (const command of commands) {

@@ -54,7 +54,7 @@ export function getHostDetailsSummary(details: RuntimeHostDetails | undefined): 
   if (details.runtimeStatus === null && details.compatibility === null) {
     return translate(
       'auto.components.settings.RuntimeEnvironmentsPane.serverRuntimeUnavailable',
-      'Orca unavailable'
+      'NASH unavailable'
     )
   }
   if (details.compatibility?.kind === 'blocked') {
@@ -78,7 +78,7 @@ export function getHostDetailsDescription(details: RuntimeHostDetails | undefine
   if (details.runtimeStatus === null && details.compatibility === null) {
     const unavailableDescription = translate(
       'auto.components.settings.RuntimeEnvironmentsPane.serverRuntimeUnavailableDescription',
-      'SSH transport is connected, but the Orca runtime did not answer. The host may still be running.'
+      'SSH transport is connected, but the NASH runtime did not answer. The host may still be running.'
     )
     return details.error ? `${unavailableDescription} ${details.error}` : unavailableDescription
   }
@@ -160,7 +160,7 @@ export function getActiveServerModeDescription(allowLocalRuntime: boolean): stri
       )
     : translate(
         'auto.components.settings.RuntimeEnvironmentsPane.2c85efb3e8',
-        'Selecting a saved server makes this browser use that paired Orca runtime as its default Host.'
+        'Selecting a saved server makes this browser use that paired NASH runtime as its default Host.'
       )
 }
 
@@ -216,7 +216,7 @@ export function getRuntimeServerConnectionLabel(state: RuntimeServerConnectionSt
     case 'runtime-unavailable':
       return translate(
         'auto.components.settings.RuntimeEnvironmentsPane.serverRuntimeUnavailable',
-        'Orca unavailable'
+        'NASH unavailable'
       )
     case 'workspace-window-closed':
       return translate(

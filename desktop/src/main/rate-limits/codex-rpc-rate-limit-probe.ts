@@ -15,6 +15,7 @@ import {
 import type { CodexRateLimitFetchOptions } from './codex-rate-limit-fetch-options'
 import { abortedCodexRateLimitResult } from './codex-rate-limit-fetch-result'
 import { mapCodexRateLimitWindow } from './codex-rate-limit-window-mapper'
+import { pushedRateLimitsOf, readingFromPushedRateLimits } from './codex-rpc-rate-limit-update'
 import {
   mapRpcRateLimitResetCredits,
   type RpcRateLimitResetCredits
@@ -80,6 +81,7 @@ export function readCodexRateLimitsViaRpc(
     let resolved = false
     let rpcId = 0
     let timeout: ReturnType<typeof setTimeout> | null = null
+    let pushedRateLimits: CodexRateLimitWindowsSnapshot | null = null
 
     function cleanupListeners(): void {
       if (timeout) {
@@ -99,14 +101,19 @@ export function readCodexRateLimitsViaRpc(
       }
       resolved = true
       cleanupListeners()
+      // Why: a failed read still has the windows app-server pushed while it ran.
+      const answer =
+        result.status === 'error' && pushedRateLimits && !fetchOptions?.signal?.aborted
+          ? readingFromPushedRateLimits(pushedRateLimits)
+          : result
       if (settleOptions?.kill) {
         void options.terminate().then(
-          () => resolve(result),
-          () => resolve(result)
+          () => resolve(answer),
+          () => resolve(answer)
         )
         return
       }
-      resolve(result)
+      resolve(answer)
     }
 
     function onAbort(): void {
@@ -212,6 +219,7 @@ export function readCodexRateLimitsViaRpc(
         try {
           const message = JSON.parse(line) as RpcResponse
           if (message.id == null) {
+            pushedRateLimits = pushedRateLimitsOf(message) ?? pushedRateLimits
             continue
           }
           if (message.id === initId) {

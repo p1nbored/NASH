@@ -15,7 +15,7 @@ const SCOPE_OPTIONS: { value: MuseUsageScope; label: string }[] = [
   {
     value: 'orca',
     get label() {
-      return translate('auto.components.stats.OpenCodeUsagePane.e04c58327c', 'Orca worktrees only')
+      return translate('auto.components.stats.OpenCodeUsagePane.e04c58327c', 'NASH worktrees only')
     }
   },
   {

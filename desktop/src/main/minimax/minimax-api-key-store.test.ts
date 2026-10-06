@@ -41,7 +41,7 @@ vi.mock('../../shared/secure-file', () => ({
   writeSecureFile: writeSecureFileMock
 }))
 
-const storePath = '/home/test/.orca/minimax-api-key.enc'
+const storePath = '/home/test/.nash/minimax-api-key.enc'
 const envelope = (kind: 'encrypted' | 'plaintext', value: string): string =>
   `orca-minimax-api-key:v1:${kind}:${Buffer.from(value, 'utf8').toString('base64')}`
 

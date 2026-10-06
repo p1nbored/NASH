@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { join } from 'node:path'
 import {
   SKILL_BUNDLE_INSTALL_CAPABILITY,
@@ -92,7 +93,7 @@ export class SkillInstallHandler {
     } = {}
   ) {
     this.homeDirectory = options.homeDirectory ?? homedir()
-    this.stateDirectory = options.stateDirectory ?? join(this.homeDirectory, '.orca')
+    this.stateDirectory = options.stateDirectory ?? join(this.homeDirectory, APP_HOME_DIR_NAME)
     this.uploads = new SkillUploadSessionService(
       join(this.stateDirectory, 'skill-installs', SKILL_UPLOAD_STAGING_ROOT_NAME)
     )

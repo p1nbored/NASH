@@ -17,7 +17,7 @@ import { delimiter, join } from 'node:path'
 import { readInheritedPath } from '../ipc/pty/host-env/path'
 import { resolvePathEnvKey } from '../pty/windows-environment-path'
 import { ensureLinuxTerminalOrcaCliShimDir } from './linux-terminal-orca-cli-shim'
-import { getBundledLauncherPath } from './bundled-cli-launcher-path'
+import { getBundledLauncherPath, getSessionAliasBinDir } from './bundled-cli-launcher-path'
 import { DEV_COMMAND_NAME } from './cli-install-constants'
 
 export type OrcaCliChildPathOptions = {
@@ -62,13 +62,15 @@ export function prependOrcaCliDirToChildPath(
       return join(shimDir, 'orca')
     }
   } else if (opts.resourcesPath && (platform === 'darwin' || platform === 'win32')) {
-    // Why: global CLI registration is optional, but agents in Orca-managed PTYs must always reach this app's bundled CLI.
-    const bundledCliBin = join(opts.resourcesPath, 'bin')
+    // Why: global CLI registration is optional, but agents in NASH-managed PTYs must always reach this app's bundled CLI,
+    // under both its own `nash` name and the in-session `orca` alias that lives in a separate directory.
+    const cliDirs = [getSessionAliasBinDir(opts.resourcesPath), join(opts.resourcesPath, 'bin')]
     const inheritedPath = readInheritedPath(env, platform)
-    env[resolvePathEnvKey(env, platform)] = inheritedPath
-      ? `${bundledCliBin}${pathDelimiter}${inheritedPath}`
-      : bundledCliBin
-    // Why the native launcher on Windows: `orca.cmd` refuses message bodies cmd.exe would mangle.
+    env[resolvePathEnvKey(env, platform)] = [
+      ...cliDirs,
+      ...(inheritedPath ? [inheritedPath] : [])
+    ].join(pathDelimiter)
+    // Why the native launcher on Windows: the .cmd shim refuses message bodies cmd.exe would mangle.
     return getBundledLauncherPath(platform, opts.resourcesPath)
   }
   return null

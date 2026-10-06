@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { join } from 'node:path'
 import {
   encodeShellStartupFeatures,
@@ -8,7 +9,7 @@ import {
 } from '../main/shell-startup-features'
 import { inheritedZdotdirEnv, resolveInheritedZdotdir } from '../main/zsh-wrapper-dir-ownership'
 import { ensureOverlayRestoreWrappers } from './pty-shell-overlay-wrappers'
-const RELAY_SHELL_READY_DIR = '.orca-relay/shell-ready'
+const RELAY_SHELL_READY_DIR = `${APP_RELAY_HOME_DIR_NAME}/shell-ready`
 const POSIX_LOGIN_ARGS = ['-l']
 
 export type RelayShellLaunchConfig = {

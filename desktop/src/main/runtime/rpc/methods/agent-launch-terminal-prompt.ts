@@ -40,9 +40,8 @@ type TerminalPromptRuntime = Pick<OrcaRuntimeService, 'waitForTerminal' | 'sendT
  * A stalled submission is deliberately `true`. The stall is raised by the verifier that runs AFTER
  * the write, so it proves only that a turn start went unobserved, never that the paste is missing.
  * Reporting it as undelivered would invite a resend that pastes the whole prompt a second time into
- * an agent already working on it — the failure `coordinator-task-dispatch` documents at its own
- * send. Here the usual preference flips: under-claiming normally costs one wasted resend, but a
- * resend into a live TUI costs a duplicate turn.
+ * an agent already working on it. Here the usual preference flips: under-claiming normally costs one
+ * wasted resend, but a resend into a live TUI costs a duplicate turn.
  */
 export async function deliverTerminalAgentLaunchPrompt(args: {
   runtime: TerminalPromptRuntime

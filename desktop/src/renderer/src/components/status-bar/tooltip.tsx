@@ -18,6 +18,7 @@ import {
 } from '../../../../shared/usage-percentage-display'
 import { formatUsagePercentageLabel } from './usage-percentage-label'
 import { useResetCountdownClock } from '@/hooks/useResetCountdownClock'
+import { getUsageReadingSourceLabel } from './usage-reading-source'
 
 // Re-exported from its shared home so status-bar callers keep a single import.
 export { clampUsedPercent }
@@ -329,6 +330,7 @@ export function ProviderPanel({
   }
 
   const updatedAgo = p.updatedAt ? `Updated ${formatTimeAgo(p.updatedAt)}` : 'Not yet updated'
+  const readingSource = getUsageReadingSourceLabel(p)
   const resetCreditCount =
     showResetCredits && p.provider === 'codex'
       ? (p.rateLimitResetCredits?.availableCount ?? null)
@@ -346,6 +348,13 @@ export function ProviderPanel({
           {name}
         </div>
         <div className={faintClass}>{updatedAgo}</div>
+        {readingSource ? (
+          <div className={faintClass}>
+            {translate('auto.components.status.bar.usageReadingSource.from', 'From {{source}}', {
+              source: readingSource
+            })}
+          </div>
+        ) : null}
         {resetCreditCount !== null && resetCreditCount !== undefined ? (
           <div className={mutedClass}>
             {resetCreditCount === 1

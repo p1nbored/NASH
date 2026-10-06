@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH_WINDOWS } from '../../shared/app-identity-paths'
 import { basename, extname, join, win32 } from 'node:path'
 import {
   buildManagedCommandHook,
@@ -127,7 +128,9 @@ export function getWindowsManagedLifecycleHook(scriptPath: string): HookCommandC
 
 function getWindowsPowerShellLifecycleCommand(scriptPath: string): string {
   const scriptFileName = win32.basename(scriptPath)
-  const quotedRelativePath = quotePowerShellLiteral(`.orca\\agent-hooks\\${scriptFileName}`)
+  const quotedRelativePath = quotePowerShellLiteral(
+    `${APP_AGENT_HOOKS_HOME_PATH_WINDOWS}\\${scriptFileName}`
+  )
   return (
     `$scriptPath = Join-Path $env:USERPROFILE ${quotedRelativePath}; ` +
     'if (Test-Path -LiteralPath $scriptPath -PathType Leaf) { & $scriptPath; exit $LASTEXITCODE }; ' +
@@ -182,42 +185,13 @@ export function applyManagedHooks(
   return { ...config, hooks: nextHooks }
 }
 
-export type StatusLineSlotState = 'managed' | 'user' | 'empty'
-
-// Why: install policy needs "user owns the slot" vs "slot is empty" vs "ours" — an empty slot
-// after a prior install means the user deleted the managed entry, which install must respect.
-export function getStatusLineSlotState(
-  config: HooksConfig,
-  scriptFileName = getStatusLineScriptFileName()
-): StatusLineSlotState {
-  const isManagedCommand = createManagedCommandMatcher(scriptFileName)
-  const current = config.statusLine
-  const currentCommand =
-    isPlainObject(current) && typeof current.command === 'string' ? current.command : null
-  if (!currentCommand) {
-    return 'empty'
-  }
-  return isManagedCommand(currentCommand) ? 'managed' : 'user'
-}
-
-// Why: records that the managed statusline was installed once, so a later empty slot reads as user opt-out.
+// Why kept: an earlier build's install marker is removed with its managed statusLine.
 export function getStatusLineInstallMarkerPath(settings = CLAUDE_HOOK_SETTINGS): string {
   return getSharedManagedScriptPath(`${getStatusLineScriptBaseName(settings)}.installed`)
 }
 
-// Why: statusLine is a single settings slot, not a hooks array — never overwrite a
-// user-owned status line; the usage feed then simply falls back to the OAuth poll.
-export function applyManagedStatusLine(
-  config: HooksConfig,
-  command: string,
-  scriptFileName = getStatusLineScriptFileName()
-): HooksConfig {
-  if (getStatusLineSlotState(config, scriptFileName) === 'user') {
-    return config
-  }
-  return { ...config, statusLine: { type: 'command', command } }
-}
-
+// Why removal only: NASH never writes the user-global statusLine slot (G8, user decision of
+// 2026-10-06); it removes an entry only when the command is its own managed relay.
 export function removeManagedStatusLine(
   config: HooksConfig,
   scriptFileName = getStatusLineScriptFileName()

@@ -1,0 +1,14 @@
+{
+  "appId": "com.pinbored.nash",
+  "productName": "NASH",
+  "devProductName": "NASH Dev",
+  "userDataDirName": "nash",
+  "devUserDataDirName": "nash-dev",
+  "windowsExecutableBaseName": "NASH",
+  "localAppDataRootName": "NASH",
+  "cliCommandName": "nash",
+  "devCliCommandName": "nash-dev",
+  "documentProgIdPrefix": "NASH",
+  "urlScheme": "nash",
+  "updateFeed": null
+}

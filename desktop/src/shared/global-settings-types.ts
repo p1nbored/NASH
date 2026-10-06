@@ -17,8 +17,6 @@ import type { ComputerAwakeMode } from './computer-awake-mode'
 import type { CommitMessageAiSettings } from './commit-message-ai-types'
 import type { HostSettingOverrides } from './host-setting-overrides'
 import type {
-  ClaudeManagedAccount,
-  ClaudeManagedAccountRuntimeSelection,
   CodexManagedAccount,
   CodexManagedAccountRuntimeSelection
 } from './managed-account-types'
@@ -304,7 +302,7 @@ export type GlobalSettings = {
   floatingTerminalCwdMigratedToAppWorkspace?: boolean
   /** Where the Floating Workspace toggle is shown; defaults to the floating button for discoverability. */
   floatingTerminalTriggerLocation: FloatingTerminalTriggerLocation
-  /** Legacy keyboard-shortcut overrides; new writes go to ~/.orca/keybindings.json, migrated once when present. */
+  /** Legacy keyboard-shortcut overrides; new writes go to ~/.nash/keybindings.json, migrated once when present. */
   keybindings?: KeybindingOverrides
   diffDefaultView: 'inline' | 'side-by-side'
   diffWordWrap: boolean
@@ -323,10 +321,6 @@ export type GlobalSettings = {
   codexManagedAccounts: CodexManagedAccount[]
   activeCodexManagedAccountId: string | null
   activeCodexManagedAccountIdsByRuntime?: CodexManagedAccountRuntimeSelection
-  /** Why: persist only per-account auth (not a CLAUDE_CONFIG_DIR swap) so switching accounts doesn't fork Claude's shared chat/session context. */
-  claudeManagedAccounts: ClaudeManagedAccount[]
-  activeClaudeManagedAccountId: string | null
-  activeClaudeManagedAccountIdsByRuntime?: ClaudeManagedAccountRuntimeSelection
   /** Per-worktree shell history so ArrowUp doesn't surface other worktrees' commands (a HISTFILE for
    *  bash/zsh, a `fish_history` session name for fish). Defaults to true. */
   terminalScopeHistoryByWorktree: boolean

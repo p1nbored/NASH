@@ -112,7 +112,7 @@ export function SessionHistoryServerRow({
         dimmed
         checked={false}
         disabled
-        status={translate('sessionHistory.settings.serverTooOld', 'Needs a newer version of Orca.')}
+        status={translate('sessionHistory.settings.serverTooOld', 'Needs a newer version of NASH.')}
         action={{
           label: translate('sessionHistory.settings.updateServer', 'Update server'),
           onClick: openServerSettings

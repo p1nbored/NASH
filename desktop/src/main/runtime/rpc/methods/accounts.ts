@@ -1,5 +1,9 @@
 import { defineMethod, defineStreamingMethod } from '../core'
 import {
+  ClaudeAccountsRemovedError,
+  createEmptyClaudeAccountsState
+} from '../../../../shared/claude-accounts-removed'
+import {
   AddDataAccountParams,
   SelectDataAccountParams,
   RemoveDataAccountParams,
@@ -19,14 +23,12 @@ import {
 // registerSubscriptionCleanup's existing-key eviction path.
 let accountsSubscriptionSeq = 0
 
-// Why: bridges the desktop ClaudeAccountService / CodexAccountService /
-// RateLimitService into the WebSocket / local-socket RPC. Read + switch +
-// remove for all clients; interactive add/re-auth flows spawn `claude login`
-// / `codex login` PTYs that need a desktop browser, so they intentionally
-// remain desktop-only. `accounts.addClaudeFromConfigDir` is the exception: it
-// captures an already-authenticated CLAUDE_CONFIG_DIR (no PTY) so the local
-// `orca account add` CLI can register accounts on a headless host; it is gated
-// to the local runtime connection, never a mobile device token. See #1438.
+// Why: bridges the desktop CodexAccountService / RateLimitService into the
+// WebSocket / local-socket RPC. Read + switch + remove for all clients;
+// interactive add/re-auth flows spawn `codex login` PTYs that need a desktop
+// browser, so they intentionally remain desktop-only. Claude account switching
+// was removed (Claude runs on the user's own login): the Claude methods stay as
+// stubs so mixed-version clients get a clear claude_accounts_removed code.
 export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.listData',
@@ -72,7 +74,13 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.selectClaude',
     params: SelectAccountParams,
-    handler: async (params, { runtime }) => runtime.selectClaudeAccount(params.accountId)
+    handler: async (params) => {
+      // Why: selecting the system default is what an old client sends to leave a managed account.
+      if (params.accountId === null) {
+        return createEmptyClaudeAccountsState()
+      }
+      throw new ClaudeAccountsRemovedError()
+    }
   }),
   defineMethod({
     name: 'accounts.selectCodex',
@@ -96,7 +104,9 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.removeClaude',
     params: RemoveAccountParams,
-    handler: async (params, { runtime }) => runtime.removeClaudeAccount(params.accountId)
+    handler: async () => {
+      throw new ClaudeAccountsRemovedError()
+    }
   }),
   defineMethod({
     name: 'accounts.removeCodex',
@@ -106,17 +116,12 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.addClaudeFromConfigDir',
     params: AddClaudeFromConfigDirParams,
-    handler: async (params, { runtime, clientKind }) => {
-      // Why: capturing a host filesystem path is local-socket-only; paired
-      // mobile and remote-runtime tokens must never read host credential paths.
+    handler: async (_params, { clientKind }) => {
+      // Why: keep the paired-device refusal first so a remote token learns nothing new.
       if (clientKind !== undefined) {
         throw new Error('Adding Claude accounts is only available on the Orca host runtime.')
       }
-      return runtime.addClaudeAccountFromConfigDir(params.configDir, {
-        runtime: params.runtime,
-        wslDistro: params.wslDistro ?? null,
-        previousLegacyCredentialsSha256: params.previousLegacyCredentialsSha256
-      })
+      throw new ClaudeAccountsRemovedError()
     }
   }),
   defineMethod({

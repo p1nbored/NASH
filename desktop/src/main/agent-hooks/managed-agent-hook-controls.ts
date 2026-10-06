@@ -5,12 +5,15 @@ import {
 } from '../../shared/managed-agent-hook-targets'
 import { normalizeDisabledTuiAgents } from '../../shared/tui-agent-selection'
 import type { GlobalSettings } from '../../shared/global-settings-types'
+import type { TuiAgent } from '../../shared/tui-agent'
 import {
   isAgentStatusHooksEnabled,
-  isAgentStatusHooksEnabledForAgent
+  isAgentStatusHooksEnabledForAgent as isEnabledInSettings,
+  type AgentStatusHooksSettings
 } from '../../shared/agent-status-hooks-setting'
 import { probeClaudeCliVersion } from '../claude/claude-hook-event-versions'
 import { detectLocalManagedAgentCliPresence } from './local-agent-cli-presence'
+import { isNashManagedHookAgent, NASH_MANAGED_HOOK_SCOPE_DETAIL } from './nash-managed-hook-scope'
 import {
   MANAGED_AGENT_HOOK_ASYNC_REMOVERS,
   MANAGED_AGENT_HOOK_INSTALLERS,
@@ -22,10 +25,18 @@ import {
 } from './managed-agent-hook-registry'
 
 export { MANAGED_AGENT_HOOK_INSTALLERS } from './managed-agent-hook-registry'
-export {
-  isAgentStatusHooksEnabled,
-  isAgentStatusHooksEnabledForAgent
-} from '../../shared/agent-status-hooks-setting'
+export { isAgentStatusHooksEnabled } from '../../shared/agent-status-hooks-setting'
+
+/**
+ * The settings' answer narrowed to `NASH_MANAGED_HOOK_AGENTS` (Claude Code only), so startup, the
+ * Settings switch and Codex launch preparation never write another CLI's hooks.
+ */
+export function isAgentStatusHooksEnabledForAgent(
+  settings: AgentStatusHooksSettings,
+  agent: TuiAgent
+): boolean {
+  return isNashManagedHookAgent(agent) && isEnabledInSettings(settings, agent)
+}
 
 type ManagedHookSettings = Partial<
   Pick<GlobalSettings, 'agentCmdOverrides' | 'agentStatusHooksEnabled' | 'disabledTuiAgents'>
@@ -149,7 +160,11 @@ export async function installManagedAgentHooks(
   await refreshExistingManagedScripts(options)
   const installers = selectedInstallers(options)
   const disabled = new Set(normalizeDisabledTuiAgents(settings?.disabledTuiAgents))
-  const enabledInstallers = installers.filter(([agent]) => !disabled.has(agent))
+  // Why scoped before detection: other CLIs are never probed or configured; the refresh above
+  // only rewrites NASH scripts already on disk (NASH_MANAGED_HOOK_AGENTS).
+  const enabledInstallers = installers.filter(
+    ([agent]) => !disabled.has(agent) && isNashManagedHookAgent(agent)
+  )
   const targets = enabledInstallers.flatMap(([agent]) => {
     const target = getManagedAgentHookTarget(agent)
     return target ? [target] : []
@@ -161,16 +176,23 @@ export async function installManagedAgentHooks(
     })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
-    return installers.map(([agent]) =>
-      disabled.has(agent)
+    return installers.map(([agent]) => {
+      if (!isNashManagedHookAgent(agent)) {
+        return skippedStatus(agent, 'hooks_disabled', NASH_MANAGED_HOOK_SCOPE_DETAIL)
+      }
+      return disabled.has(agent)
         ? skippedStatus(agent, 'agent_disabled', 'Agent is disabled in Settings.')
         : skippedStatus(agent, 'cli_presence_unknown', detail)
-    )
+    })
   }
 
   const results: AgentHookInstallStatus[] = []
   for (const entry of installers) {
     const [agent] = entry
+    if (!isNashManagedHookAgent(agent)) {
+      results.push(skippedStatus(agent, 'hooks_disabled', NASH_MANAGED_HOOK_SCOPE_DETAIL))
+      continue
+    }
     if (disabled.has(agent)) {
       results.push(skippedStatus(agent, 'agent_disabled', 'Agent is disabled in Settings.'))
       continue

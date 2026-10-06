@@ -1,3 +1,4 @@
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { parsePairingCode, type PairingOffer } from '../../shared/pairing'
 import { resolveEnvironmentPairingOffer } from './environments'
 import { RuntimeClientError } from './types'
@@ -23,7 +24,7 @@ export function resolveRemotePairing(
   if (!pairing) {
     throw new RuntimeClientError(
       'invalid_argument',
-      'Invalid remote pairing code. Expected an orca://pair?... URL or bare pairing payload.'
+      `Invalid remote pairing code. Expected a ${APP_IDENTITY.urlScheme}://pair?... URL or bare pairing payload.`
     )
   }
   return pairing

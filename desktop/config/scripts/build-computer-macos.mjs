@@ -1,6 +1,10 @@
 import { spawnSync } from 'node:child_process'
 import { chmodSync, copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+
+// Why a JSON twin: this script is plain Node and cannot import src/shared/app-identity-constants.ts.
+const identity = createRequire(import.meta.url)('../../src/shared/app-identity-constants.json')
 
 const repoRoot = path.resolve(import.meta.dirname, '../..')
 const packagePath = path.join(repoRoot, 'native', 'computer-use-macos')
@@ -14,7 +18,8 @@ const entitlementsPath = path.join(
   'build',
   'entitlements.computer-use.mac.plist'
 )
-const bundleId = process.env.ORCA_COMPUTER_MACOS_BUNDLE_ID ?? 'com.stablyai.orca.computer-use'
+// Why derived: TCC rows key on this id, so it must never name a real Orca install's helper (D-017).
+const bundleId = process.env.ORCA_COMPUTER_MACOS_BUNDLE_ID ?? `${identity.appId}.computer-use`
 const displayName = 'Orca Computer Use'
 const signingIdentity = resolveSigningIdentity()
 const universalTriples = ['arm64-apple-macosx', 'x86_64-apple-macosx']

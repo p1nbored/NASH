@@ -40,7 +40,7 @@ export function legacyMigrationUnsupportedRowsToAliasEntries(
   return aliasEntries
 }
 
-// Why: bounds a corrupt/bloated persisted list — the gate only needs the few Claude sessions a daemon can keep alive.
+// Why: bounds a corrupt/bloated copy of the retired Claude live-PTY id list (persisted format kept).
 export const MAX_CLAUDE_LIVE_PTY_SESSION_IDS = 200
 
 // Why: bound removed-SSH-target history so remove/re-add churn can't grow the file unbounded.
@@ -50,7 +50,7 @@ export function normalizeClaudeLivePtySessionIds(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return []
   }
-  // Why: scan newest-first so the cap keeps the most recent ids, matching addClaudeLivePtySessionId's eviction policy.
+  // Why: scan newest-first so the cap keeps the most recent ids; the list is retired and only read as written.
   const ids: string[] = []
   for (let index = value.length - 1; index >= 0; index -= 1) {
     const entry = value[index]

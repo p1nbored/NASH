@@ -213,7 +213,7 @@ describe('structured agent-session create intent', () => {
     expect(runtime.structuredAgentSessionLaunchSeedOptions('claude')).toEqual(intent.options)
   })
 
-  it('uses the managed Claude launch home before falling back to ~/.claude', async () => {
+  it('uses the Claude runtime config dir before falling back to ~/.claude', async () => {
     const prepareCodexStructuredLaunch = vi.fn()
     const getRuntimeConfigDir = vi.fn(() => '/accounts/managed/claude-home')
     const runtime = new OrcaRuntimeService(
@@ -226,7 +226,7 @@ describe('structured agent-session create intent', () => {
       { prepareCodexStructuredLaunch }
     )
     runtime.setAccountServices({
-      claudeAccounts: { getRuntimeConfigDir } as never,
+      claudeRuntimeAuth: { getRuntimeConfigDir } as never,
       codexAccounts: {} as never,
       rateLimits: {} as never
     })

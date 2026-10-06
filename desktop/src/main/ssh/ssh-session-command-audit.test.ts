@@ -6,9 +6,9 @@ import {
 import { powerShellCommand } from './ssh-remote-powershell'
 import { reserveWindowsRelayUploadStageCommand } from './ssh-relay-upload-stage-windows-commands'
 
-const POOL = 'C:/Users/orca/.orca-remote/.upload-stages'
+const POOL = 'C:/Users/orca/.nash-remote/.upload-stages'
 const OWNER = '.sftp-namespace-0123456789abcdef0123456789abcdef'
-const NODE = 'C:/Users/orca/.orca-remote/runtimes/node-abc/node.exe'
+const NODE = 'C:/Users/orca/.nash-remote/runtimes/node-abc/node.exe'
 
 describe('Windows session command audit', () => {
   it('sees Add-Type through -EncodedCommand in the legacy stage fence', () => {

@@ -183,7 +183,7 @@ export default function FeatureTipsModal(): JSX.Element | null {
             toast.success(
               translate(
                 'auto.components.feature.tips.FeatureTipsModal.ce13a742d0',
-                'Registered `orca` in PATH.'
+                'Registered `nash` in PATH.'
               )
             )
             setSkillTerminalOpen(true)
@@ -197,7 +197,7 @@ export default function FeatureTipsModal(): JSX.Element | null {
           toast.warning(
             translate(
               'auto.components.feature.tips.FeatureTipsModal.1da82af45b',
-              'Orca CLI needs attention'
+              'NASH CLI needs attention'
             ),
             {
               description:
@@ -211,7 +211,7 @@ export default function FeatureTipsModal(): JSX.Element | null {
           closeModal()
           openCliSettings()
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to install Orca CLI.'
+          const message = error instanceof Error ? error.message : 'Failed to install NASH CLI.'
           if (
             import.meta.env.DEV &&
             message.includes('Development mode uses a generated launcher for validation only')

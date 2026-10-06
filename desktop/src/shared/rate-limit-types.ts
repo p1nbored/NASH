@@ -176,6 +176,17 @@ export type RateLimitState = {
    * keep the ZCode bar visible across reloads between snapshot refreshes.
    */
   zcodePlanApiKeyConfigured?: boolean
+  /**
+   * True when the host keeps Orca's vendor usage meters off (NASH, D-023 correction): no
+   * provider is read through a stored credential or a vendor endpoint, so clients hide those
+   * providers instead of waiting for them. Absent on older hosts.
+   */
+  usageMetersDisabled?: boolean
+  /**
+   * True when the host reads Claude, Codex and agy usage only through each CLI (NASH): the
+   * Claude status line, codex app-server and agy /usage. Absent on older hosts.
+   */
+  cliUsageReadings?: boolean
   claudeTarget: RateLimitRuntimeTarget
   codexTarget: RateLimitRuntimeTarget
   inactiveClaudeAccounts: InactiveAccountUsage[]

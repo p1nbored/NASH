@@ -87,7 +87,7 @@ export function useIpynbCellExecution({
             )
           : translate(
               'auto.components.editor.IpynbViewer.pythonOnly',
-              'Only Python notebooks can run in Orca.'
+              'Only Python notebooks can run in NASH.'
             )
       )
       return

@@ -3,7 +3,7 @@
 The injected preamble is authoritative. Copy its command rather than
 reconstructing flags. In particular, preserve the exact executable, worker
 handle, Task ID, and Dispatch ID, and keep any other flag it carries (an older
-Orca host adds `--dispatch-capability`).
+host adds `--dispatch-capability`).
 
 ## Heartbeat
 
@@ -19,7 +19,7 @@ liveness, never completion.
 
 ## Ask and resume
 
-Use Orca `ask` whenever the coordinator must answer. Never open a local question
+Use the orchestration `ask` whenever the coordinator must answer. Never open a local question
 TUI the coordinator cannot answer.
 
 ```text

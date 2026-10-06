@@ -1,7 +1,8 @@
 import './mock-descendant-sweep'
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { existsSync, rmSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
+import type * as NodeOs from 'node:os'
 import { join } from 'node:path'
 import { hashWorktreeId } from '../main/terminal-history-id'
 
@@ -23,6 +24,16 @@ const { mockPtySpawn, mockPtyInstance, mockCreateShellPromptReadinessProbe } = v
     resume: vi.fn()
   }
 }))
+
+// Why: relay history lives under the home (~/.nash-remote), which a test must never write.
+const testHome = vi.hoisted(() => ({ dir: '' }))
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof NodeOs>()
+  testHome.dir = `${actual.tmpdir()}/relay-revive-home-${process.pid}-${Date.now()}`
+  const homedir = () => testHome.dir
+  return { ...actual, default: { ...actual, homedir }, homedir }
+})
+afterAll(() => rmSync(testHome.dir, { recursive: true, force: true }))
 
 vi.mock('node-pty', () => ({
   spawn: mockPtySpawn
@@ -114,7 +125,7 @@ describe('PtyHandler', () => {
     expect(callArgs.env.ORCA_AGENT_HOOK_PORT).toBe('12345')
     expect(callArgs.env.ORCA_AGENT_HOOK_TOKEN).toBe('abc-uuid')
     expect(callArgs.env.TERM).toBe('xterm-256color')
-    expect(callArgs.env.TERM_PROGRAM).toBe('Orca')
+    expect(callArgs.env.TERM_PROGRAM).toBe('NASH')
     expect(callArgs.env.ORCA_SHELL_FEATURES).not.toContain('ready')
     expect(callArgs.env.ORCA_SHELL_FEATURES).not.toContain('identity')
   })
@@ -555,7 +566,7 @@ describe('PtyHandler', () => {
     const worktreeId = 'r::/remote/wsl-worktree'
     const historyFile = join(
       homedir(),
-      '.orca-remote',
+      '.nash-remote',
       'terminal-history',
       `${hashWorktreeId(worktreeId)}-bash_history`
     )

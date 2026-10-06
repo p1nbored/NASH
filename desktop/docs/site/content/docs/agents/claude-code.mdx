@@ -2,7 +2,7 @@
 title: Claude Code in Orca
 ---
 
-Claude Code is Anthropic's agentic CLI. Orca runs it as a first-class terminal agent, with account-aware session start, usage tracking, and account hot-swapping.
+Claude Code is Anthropic's agentic CLI. Orca runs it as a first-class terminal agent, with usage tracking, on your own Claude login.
 
 ## Setup
 
@@ -18,9 +18,9 @@ In any worktree, open a terminal and pick **Claude Code** from the agent combobo
 
 Orca reads your local `~/.claude` usage state and shows current usage plus rate-limit proximity in the status bar. See [Usage & rate-limit tracking](/docs/agents/usage-tracking).
 
-## Account hot-swap
+## Your own login
 
-Orca supports multiple Claude accounts and can swap between them in one click, matching the Codex flow. Switching accounts works even with live Claude sessions running — Orca holds the in-progress switch behind a guard so you don't trigger overlapping auth refreshes. See [Hot-swap Codex accounts](/docs/agents/codex-hot-swap) — the Claude flow is identical in shape.
+Claude Code has no managed accounts in Orca. Every Claude launch uses your own login: `~/.claude`, or the `CLAUDE_CONFIG_DIR` you set (inside WSL, that distro's `~/.claude`). Orca never writes Claude credentials or renews Claude tokens. To change accounts, run `claude /login` in your own terminal. Account switching for Codex and other agents is unchanged; see [Hot-swap Codex accounts](/docs/agents/codex-hot-swap).
 
 ## Subagents and teams
 

@@ -64,7 +64,7 @@ names an inspecting command is asking for evidence, not for cleanup.
 
 `worker-read --source auto` uses a proven provider transcript when available and
 otherwise returns bounded terminal output with a typed `fallbackReason`.
-Continue with its top-level cursor, which is pinned to that source. If Orca
+Continue with its top-level cursor, which is pinned to that source. If NASH
 reports `source_changed`, restart without the old cursor. A bounded initial
 transcript tail can return an EOF cursor that follows only newly appended records;
 read `contentComplete`, `clipping`, and `warnings` before assuming omitted older
@@ -75,7 +75,7 @@ remote terminal handle.
 
 When a mutation's response was lost and named no Dispatch, do not replay blind.
 Every orchestration mutation accepts `--retry-request <id>`, which reuses one
-operation identity so Orca can replay, join, or recover it instead of starting a
+operation identity so NASH can replay, join, or recover it instead of starting a
 duplicate. Ask what happened first:
 
 ```text
@@ -84,7 +84,7 @@ ORCA orchestration request-show --request <request_id> --json
 
 `completed` means the mutation already took effect; read its recorded receipt
 instead of rerunning. `pending` means the original mutation is still running or
-Orca restarted before recording its outcome; replay the original command with
+NASH restarted before recording its outcome; replay the original command with
 `--retry-request <request_id>`. `absent` means this runtime holds no receipt
 under your caller identity — that is not proof nothing happened, so inspect the
 affected Task, Dispatch, and terminal before deciding whether to retry.
@@ -132,7 +132,7 @@ ORCA orchestration worker-abandon --dispatch <dispatch_id> --json
 deletes the worktree, setup terminal, configured tabs, or unrelated processes.
 `worker-abandon` fences orchestration while accepting that resources may remain
 live; it performs no remote, process, or filesystem action. When it settles a
-worker, it retains an owned terminal by the same rule as `worker-retain`, so Orca
+worker, it retains an owned terminal by the same rule as `worker-retain`, so NASH
 stops owing its release; a release already committed (`releasing`,
 `release_unknown`) is left as it is. An already-settled worker is left untouched.
 

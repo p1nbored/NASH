@@ -279,7 +279,7 @@ describe('scanAiVaultSessions', () => {
     const wslHome = join(root, 'wsl', 'Ubuntu', 'home', 'ada')
     await mkdir(join(wslHome, '.claude', 'projects', 'repo'), { recursive: true })
     await mkdir(
-      join(wslHome, '.local', 'share', 'orca', 'codex-runtime-home', 'home', 'sessions'),
+      join(wslHome, '.local', 'share', 'nash', 'codex-runtime-home', 'home', 'sessions'),
       {
         recursive: true
       }
@@ -302,7 +302,7 @@ describe('scanAiVaultSessions', () => {
         wslHome,
         '.local',
         'share',
-        'orca',
+        'nash',
         'codex-runtime-home',
         'home',
         'sessions',
@@ -338,7 +338,7 @@ describe('scanAiVaultSessions', () => {
       'Codex WSL title'
     ])
     expect(result.sessions.find((session) => session.agent === 'codex')?.codexHome).toBe(
-      join(wslHome, '.local', 'share', 'orca', 'codex-runtime-home', 'home')
+      join(wslHome, '.local', 'share', 'nash', 'codex-runtime-home', 'home')
     )
   })
 

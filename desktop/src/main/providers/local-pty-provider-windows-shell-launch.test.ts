@@ -187,9 +187,9 @@ describe('LocalPtyProvider', () => {
       provider.configure({
         buildSpawnEnv: (_id, env) => {
           env.CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           env.ORCA_CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           return env
         }
       })
@@ -231,9 +231,9 @@ describe('LocalPtyProvider', () => {
       provider.configure({
         buildSpawnEnv: (_id, env) => {
           env.CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           env.ORCA_CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           return env
         }
       })
@@ -246,9 +246,9 @@ describe('LocalPtyProvider', () => {
 
       const spawnCall = spawnMock.mock.calls.at(-1)!
       expect(spawnCall[0]).toBe('wsl.exe')
-      expect(spawnCall[2].env.CODEX_HOME).toBe('/home/jin/.local/share/orca/codex-accounts/a/home')
+      expect(spawnCall[2].env.CODEX_HOME).toBe('/home/jin/.local/share/nash/codex-accounts/a/home')
       expect(spawnCall[2].env.ORCA_CODEX_HOME).toBe(
-        '/home/jin/.local/share/orca/codex-accounts/a/home'
+        '/home/jin/.local/share/nash/codex-accounts/a/home'
       )
       expect(spawnCall[2].env.WSLENV).toContain('CODEX_HOME')
       expect(spawnCall[2].env.WSLENV).toContain('ORCA_CODEX_HOME')
@@ -259,9 +259,9 @@ describe('LocalPtyProvider', () => {
       provider.configure({
         buildSpawnEnv: (_id, env) => {
           env.CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           env.ORCA_CODEX_HOME =
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
           return env
         }
       })

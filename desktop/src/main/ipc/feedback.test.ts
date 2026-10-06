@@ -16,6 +16,12 @@ vi.mock('electron', () => ({
   net: { fetch: (...args: unknown[]) => fetchMock(...args) }
 }))
 
+// Why: these cases cover the upstream sending lanes; feedback-orca-cloud-off.test.ts covers NASH.
+vi.mock('../../shared/orca-cloud-services', () => ({
+  ORCA_CLOUD_SERVICES_ENABLED: true,
+  ORCA_CLOUD_SERVICES_OFF_CODE: 'orca_cloud_services_off'
+}))
+
 import {
   MAX_FEEDBACK_IMAGE_RESPONSE_BYTES,
   MAX_FEEDBACK_IMAGE_TOTAL_BYTES

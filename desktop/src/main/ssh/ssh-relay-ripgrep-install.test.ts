@@ -72,10 +72,10 @@ describe('ensureRemoteBundledRipgrep', () => {
 
   it('keys the cache on the binary content hash and platform, not the relay version', () => {
     expect(remoteRipgrepLayout(LINUX, '/home/me')?.binaryPath).toBe(
-      '/home/me/.orca-remote/ripgrep/c0ffee0123456789-linux-x64/rg'
+      '/home/me/.nash-remote/ripgrep/c0ffee0123456789-linux-x64/rg'
     )
     expect(remoteRipgrepLayout(WINDOWS, 'C:/Users/me user')?.binaryPath).toBe(
-      'C:/Users/me user/.orca-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe'
+      'C:/Users/me user/.nash-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe'
     )
   })
 
@@ -98,7 +98,7 @@ describe('ensureRemoteBundledRipgrep', () => {
 
     expect(execCommandMock).toHaveBeenCalledTimes(1)
     expect(execScripts()[0]).toContain(
-      "-x '/home/me/.orca-remote/ripgrep/c0ffee0123456789-linux-x64/rg'"
+      "-x '/home/me/.nash-remote/ripgrep/c0ffee0123456789-linux-x64/rg'"
     )
     expect(uploadRelayDirectoryMock).not.toHaveBeenCalled()
   })
@@ -110,19 +110,19 @@ describe('ensureRemoteBundledRipgrep', () => {
     execCommandMock.mockResolvedValueOnce('').mockResolvedValueOnce('ORCA-RG-PRESENT\n')
 
     await ensureRemoteBundledRipgrep(connection(), LINUX, '/home/me', {
-      relayDir: '/home/me/.orca-remote/relay-1.2.3'
+      relayDir: '/home/me/.nash-remote/relay-1.2.3'
     })
 
     const ref = execScripts()[0]
     expect(ref).toContain('c0ffee0123456789-linux-x64')
-    expect(ref).toContain('/home/me/.orca-remote/relay-1.2.3/.ripgrep-ref')
+    expect(ref).toContain('/home/me/.nash-remote/relay-1.2.3/.ripgrep-ref')
   })
 
   it('does not inspect or upload the binary after its reference write fails', async () => {
     execCommandMock.mockRejectedValueOnce(new Error('read-only relay directory'))
     await expect(
       ensureRemoteBundledRipgrep(connection(), LINUX, '/home/me', {
-        relayDir: '/home/me/.orca-remote/relay-1.2.3'
+        relayDir: '/home/me/.nash-remote/relay-1.2.3'
       })
     ).resolves.toBe('failed')
     expect(execCommandMock).toHaveBeenCalledTimes(1)
@@ -133,7 +133,7 @@ describe('ensureRemoteBundledRipgrep', () => {
     resolveBundledRipgrepPathMock.mockReturnValue(null)
 
     await ensureRemoteBundledRipgrep(connection(), LINUX, '/home/me', {
-      relayDir: '/home/me/.orca-remote/relay-1.2.3'
+      relayDir: '/home/me/.nash-remote/relay-1.2.3'
     })
 
     expect(execScripts().some((script) => script.includes('.ripgrep-ref'))).toBe(false)
@@ -151,7 +151,7 @@ describe('ensureRemoteBundledRipgrep', () => {
     const [, source, payloadDir, host, options] = uploadRelayDirectoryMock.mock.calls[0]
     expect(source).toBe(dirname(localBinary))
     expect(payloadDir).toMatch(
-      /^\/home\/me\/\.orca-remote\/ripgrep\/\.upload-[0-9a-f]{16}\/payload$/
+      /^\/home\/me\/\.nash-remote\/ripgrep\/\.upload-[0-9a-f]{16}\/payload$/
     )
     expect(host).toBe(LINUX)
     // Why: a chrooted SFTP subsystem must resolve the stage through its marker, like relay uploads.
@@ -161,7 +161,7 @@ describe('ensureRemoteBundledRipgrep', () => {
     expect(promote).toContain('"1234"')
     expect(promote).toContain('chmod 755')
     expect(promote).toContain(
-      `mv -f '${payloadDir}/rg' '/home/me/.orca-remote/ripgrep/c0ffee0123456789-linux-x64/rg'`
+      `mv -f '${payloadDir}/rg' '/home/me/.nash-remote/ripgrep/c0ffee0123456789-linux-x64/rg'`
     )
   })
 
@@ -173,7 +173,7 @@ describe('ensureRemoteBundledRipgrep', () => {
       'failed'
     )
 
-    expect(execScripts()[1]).toMatch(/^rm -rf '\/home\/me\/\.orca-remote\/ripgrep\/\.upload-/)
+    expect(execScripts()[1]).toMatch(/^rm -rf '\/home\/me\/\.nash-remote\/ripgrep\/\.upload-/)
   })
 
   describe.each([
@@ -210,7 +210,7 @@ describe('ensureRemoteBundledRipgrep', () => {
           ensureRemoteBundledRipgrep(connection(), host, home, {
             relayDir:
               phase === 'reference'
-                ? joinRemotePath(host, home, '.orca-remote', 'relay-1.2.3')
+                ? joinRemotePath(host, home, '.nash-remote', 'relay-1.2.3')
                 : undefined
           })
         ).rejects.toBe(error)
@@ -287,7 +287,7 @@ describe('ensureRemoteBundledRipgrep', () => {
     expect(execCommandMock.mock.calls.every(([, , opts]) => opts.wrapCommand === false)).toBe(true)
     const [probe, promote] = execScripts()
     expect(probe).toContain(
-      "Test-Path -LiteralPath 'C:/Users/me user/.orca-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe'"
+      "Test-Path -LiteralPath 'C:/Users/me user/.nash-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe'"
     )
     expect(promote).toContain('Move-Item -LiteralPath $src -Destination $bin')
     expect(promote).toContain('.Length -eq 1234')
@@ -343,8 +343,8 @@ describe.runIf(process.platform !== 'win32').each(SHELLS)(
     })
 
     const installed = (): string =>
-      join(home, '.orca-remote', 'ripgrep', 'c0ffee0123456789-linux-x64', 'rg')
-    const cacheEntries = (): string[] => readdirSync(join(home, '.orca-remote', 'ripgrep'))
+      join(home, '.nash-remote', 'ripgrep', 'c0ffee0123456789-linux-x64', 'rg')
+    const cacheEntries = (): string[] => readdirSync(join(home, '.nash-remote', 'ripgrep'))
 
     it('installs an executable binary once and leaves no stage behind', async () => {
       await expect(ensureRemoteBundledRipgrep(connection(), LINUX, home)).resolves.toBe('installed')
@@ -378,7 +378,7 @@ describe.runIf(process.platform !== 'win32').each(SHELLS)(
     })
 
     it('keeps an old binary usable by a relay pinned to an earlier client build', async () => {
-      const previous = join(home, '.orca-remote', 'ripgrep', 'previous-linux-x64', 'rg')
+      const previous = join(home, '.nash-remote', 'ripgrep', 'previous-linux-x64', 'rg')
       mkdirSync(dirname(previous), { recursive: true })
       writeFileSync(previous, '#!/bin/sh\necho ripgrep previous\n', { mode: 0o755 })
       execFileSync('touch', ['-t', '200001010000', dirname(previous)])
@@ -391,7 +391,7 @@ describe.runIf(process.platform !== 'win32').each(SHELLS)(
     })
 
     it('sweeps an abandoned stage older than an hour but keeps a live one', async () => {
-      const cache = join(home, '.orca-remote', 'ripgrep')
+      const cache = join(home, '.nash-remote', 'ripgrep')
       mkdirSync(join(cache, '.upload-stale', 'payload'), { recursive: true })
       mkdirSync(join(cache, '.upload-live', 'payload'), { recursive: true })
       execFileSync('touch', ['-t', '200001010000', join(cache, '.upload-stale')])

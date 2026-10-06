@@ -2,8 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { RpcContext } from '../../../core'
 import type { OrchestrationDb } from '../../../../orchestration/db'
 import type { OrcaRuntimeService } from '../../../../orca-runtime'
-import { openDecisionGateFromMessage } from '../../../../orchestration/coordinator-decision-gates'
-import { applyEscalationToDispatch } from '../../../../orchestration/coordinator-escalation-triage'
 import { createOrchestrationRpcHarness } from '../rpc-test-harness'
 import { createRootDispatch } from '../../../../orchestration/db/root-dispatch-test-fixture'
 
@@ -111,7 +109,7 @@ describe('orchestration.send Dispatch authority', () => {
   )
 
   it.each(['escalation', 'decision_gate'] as const)(
-    'binds queued legacy %s mail to its exact Dispatch before handle reuse',
+    'binds queued legacy %s mail to its exact Dispatch so handle reuse cannot retarget it',
     async (type) => {
       setup()
       const task = db.createTask({ spec: 'legacy re-dispatch target' })
@@ -128,15 +126,13 @@ describe('orchestration.send Dispatch authority', () => {
       })) as { message: { id: string; payload: string } }
 
       expect(JSON.parse(sent.message.payload)).toMatchObject({ dispatchId: first.id })
-      db.failDispatch(first.id, 'worker stopped before coordinator read its mail')
+      db.failDispatch(first.id, 'worker stopped before its mail was read')
       const second = createRootDispatch(db, task.id, 'term_legacy')
 
-      if (type === 'escalation') {
-        applyEscalationToDispatch(db, db.getMessageById(sent.message.id)!, () => {})
-      } else {
-        openDecisionGateFromMessage(db, db.getMessageById(sent.message.id)!, () => {})
-      }
-
+      // Why: the stored mail keeps the first Dispatch, so a later reader cannot act on the second.
+      const stored = JSON.parse(db.getMessageById(sent.message.id)?.payload ?? '{}')
+      expect(stored).toMatchObject({ taskId: task.id, dispatchId: first.id })
+      expect(stored.dispatchId).not.toBe(second.id)
       expect(db.getTask(task.id)?.status).toBe('dispatched')
       expect(db.getDispatchContextById(second.id)?.status).toBe('dispatched')
       expect(db.listGates({ taskId: task.id })).toHaveLength(0)

@@ -123,7 +123,7 @@ function createConnection(fixture: TargetFixture): SshConnection {
 }
 
 function readInventory(fixture: TargetFixture, remoteRelayDir: string): RemoteInventory {
-  const stagePool = '/root/.orca-remote/.upload-stages'
+  const stagePool = '/root/.nash-remote/.upload-stages'
   const raw = dockerExec(
     fixture,
     [
@@ -154,7 +154,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
 
   it('recovers a post-promotion install lock from a previous execution-host boot', async () => {
     const activeFixture = fixture as TargetFixture
-    const remoteRelayDir = '/root/.orca-remote/relay-reboot-lock-oracle'
+    const remoteRelayDir = '/root/.nash-remote/relay-reboot-lock-oracle'
     const previousBootId = 'linux:00000000-0000-0000-0000-000000000000:0'
     dockerExec(
       activeFixture,
@@ -196,7 +196,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
     const localRelayDir = join(process.cwd(), 'out', 'relay', 'linux-arm64')
     const relayVersion = readFileSync(join(localRelayDir, '.version'), 'utf8').trim()
     const relayJsSize = statSync(join(localRelayDir, 'relay.js')).size
-    const remoteRelayDir = `/root/.orca-remote/relay-${relayVersion}`
+    const remoteRelayDir = `/root/.nash-remote/relay-${relayVersion}`
     const connection = createConnection(activeFixture)
     await connection.connect()
     const sentinelPid = dockerExec(activeFixture, 'sleep 300 </dev/null >/dev/null 2>&1 & echo $!')
@@ -256,7 +256,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
     const partialRemoteBytes = Number(
       dockerExec(
         activeFixture,
-        "find /root/.orca-remote/.upload-stages -type f -path '*/slot-*/payload/relay.js' -printf '%s\\n'"
+        "find /root/.nash-remote/.upload-stages -type f -path '*/slot-*/payload/relay.js' -printf '%s\\n'"
       )
     )
     const operationController = (
@@ -288,7 +288,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
       join(process.cwd(), 'out', 'relay', 'linux-arm64', '.version'),
       'utf8'
     ).trim()
-    const remoteRelayDir = `/root/.orca-remote/relay-${relayVersion}`
+    const remoteRelayDir = `/root/.nash-remote/relay-${relayVersion}`
     const firstConnection = createConnection(activeFixture)
     const progress: string[] = []
     await firstConnection.connect()
@@ -349,7 +349,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
       const replacedStage = firstInventory.uploadStages[0]!
       const originalStage = `${replacedStage}.original`
       const foreignTarget = '/root/orca-pr10207-foreign-stage-target'
-      const stagePool = '/root/.orca-remote/.upload-stages'
+      const stagePool = '/root/.nash-remote/.upload-stages'
       const symlinkStage = `${stagePool}/slot-2`
       const ownerMarker = '.orca-upload-owner'
       const identityMarker = '.orca-upload-identity'
@@ -364,7 +364,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
           `printf foreign > ${shellQuote(`${replacedStage}/payload/foreign`)}`,
           `printf alive > ${shellQuote(`${foreignTarget}/sentinel`)}`,
           `ln -s ${shellQuote(foreignTarget)} ${shellQuote(symlinkStage)}`,
-          `i=0; while [ "$i" -lt 15197 ]; do mkdir ${shellQuote(`/root/.orca-remote/relay-${relayVersion}.upload-scale-`)}"$i"; i=$((i + 1)); done`
+          `i=0; while [ "$i" -lt 15197 ]; do mkdir ${shellQuote(`/root/.nash-remote/relay-${relayVersion}.upload-scale-`)}"$i"; i=$((i + 1)); done`
         ].join(' && ')
       )
       const adversarialInventory = readInventory(activeFixture, remoteRelayDir)
@@ -398,7 +398,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
 
       const listing = await execCommand(
         cleanupConnection,
-        listRelayBaseDirsCommand(getRemoteHostPlatform('linux-arm64'), '/root/.orca-remote')
+        listRelayBaseDirsCommand(getRemoteHostPlatform('linux-arm64'), '/root/.nash-remote')
       )
       const gcStartedAt = Date.now()
       await gcOldRelayVersions(
@@ -430,7 +430,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
       const scaleEntries = Number(
         dockerExec(
           activeFixture,
-          `find /root/.orca-remote -mindepth 1 -maxdepth 1 -type d -name ${shellQuote(`relay-${relayVersion}.upload-scale-*`)} | wc -l`
+          `find /root/.nash-remote -mindepth 1 -maxdepth 1 -type d -name ${shellQuote(`relay-${relayVersion}.upload-scale-*`)} | wc -l`
         )
       )
       expect(scaleEntries).toBe(15_197)
@@ -449,9 +449,9 @@ describe.skipIf(!RUN_REVIEW_ORACLE)('SSH relay upload cancellation recovery', ()
       expect(firstInventory.uploadStages.length).toBeGreaterThan(0)
       expect(finalInventory?.installLock).toBe(false)
       expect(finalInventory!.uploadStages).toEqual([
-        '/root/.orca-remote/.upload-stages/slot-0',
-        '/root/.orca-remote/.upload-stages/slot-0.original',
-        '/root/.orca-remote/.upload-stages/slot-2'
+        '/root/.nash-remote/.upload-stages/slot-0',
+        '/root/.nash-remote/.upload-stages/slot-0.original',
+        '/root/.nash-remote/.upload-stages/slot-2'
       ])
     } else {
       expect(firstInventory.installLock).toBe(true)

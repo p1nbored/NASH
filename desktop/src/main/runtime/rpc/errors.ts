@@ -8,6 +8,8 @@ import {
   type AgentSessionRefusalError
 } from '../../../shared/agent-session-wire-refusals'
 import type { RpcEnvelopeMeta, RpcFailure, RpcSuccess } from './core'
+import { autopilotErrorPassthrough, maskedRefusalWire } from './autopilot-error-passthrough'
+import { OrchestrationError } from '../orchestration/orchestration-error'
 import { ORCHESTRATION_SESSION_CALLER_ERROR_CODES } from '../../../shared/orchestration-session-caller-codes'
 import { computerUseErrorRecoveryData } from '../../../shared/computer-use-error-recovery'
 import { COMPUTER_ERROR_CODES } from '../../../shared/runtime-types'
@@ -33,6 +35,7 @@ import { NESTED_WORKER_DEPTH_EXCEEDED_CODE } from '../../../shared/nested-worker
 import { WORKTREE_CREATE_COLLISION_CODE } from '../../../shared/new-workspace/worktree-create-collision'
 import { AGENT_LAUNCH_PANE_ALREADY_LIVE_CODE } from '../../../shared/agent-launch-pane-already-live'
 import { AGENT_LAUNCH_SESSION_ALREADY_EXISTS_CODE } from '../../../shared/agent-launch-session-already-exists'
+import { CLAUDE_ACCOUNTS_REMOVED_CODE } from '../../../shared/claude-accounts-removed'
 
 export function successResponse(id: string, meta: RpcEnvelopeMeta, result: unknown): RpcSuccess {
   return {
@@ -160,13 +163,29 @@ const STRUCTURED_RUNTIME_PASSTHROUGH_CODES: ReadonlySet<string> = new Set([
   // Why: an owner conflict is a distinct client decision (reload the host, re-adopt,
   // stop offering the action) — flattened to runtime_error it can only be guessed at.
   ...Object.values(AUTOMATION_OWNER_CONFLICT_CODES),
-  ...Object.values(ORCHESTRATION_SESSION_CALLER_ERROR_CODES)
+  ...Object.values(ORCHESTRATION_SESSION_CALLER_ERROR_CODES),
+  // Why: a retired Claude account call is a distinct answer (sign in with Claude itself), not a crash.
+  CLAUDE_ACCOUNTS_REMOVED_CODE
 ])
 
 export function mapRuntimeError(id: string, meta: RpcEnvelopeMeta, error: unknown): RpcFailure {
   const message = error instanceof Error ? error.message : String(error)
   if (isAgentSessionRefusalError(error)) {
     return agentSessionRefusalErrorResponse(id, meta, error)
+  }
+  // Why: Workbench refusals are stable codes the renderer maps to messages; their data (a refused
+  // run stop's stopCode) is masked and bounded like the D-016 refusals below.
+  if (error instanceof OrchestrationError && error.code.startsWith('workbench_')) {
+    const workbench = maskedRefusalWire(error)
+    return errorResponse(id, meta, workbench.code, workbench.message, workbench.data)
+  }
+  if (error instanceof OrchestrationError && error.code === 'unsupported_host') {
+    return errorResponse(id, meta, error.code, message)
+  }
+  // Why: D-016 refusals carry recovery data (next command, reason); text and data arrive masked.
+  const autopilot = autopilotErrorPassthrough(error)
+  if (autopilot) {
+    return errorResponse(id, meta, autopilot.code, autopilot.message, autopilot.data)
   }
   if (
     error instanceof Error &&

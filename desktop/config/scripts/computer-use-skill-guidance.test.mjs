@@ -24,7 +24,7 @@ describe('computer-use skill guidance', () => {
       'Use only when a visible window needs GUI control those cannot reach.'
     )
     expect(description).toContain('external browser windows')
-    expect(description).toContain("Do not use for Orca's embedded browser (`orca-cli`)")
+    expect(description).toContain("Do not use for NASH's embedded browser (`orca-cli`)")
     expect(description).not.toMatch(/Playwright/iu)
     expect(description).not.toContain('page-only')
     expect(description).not.toContain('OS/window-level')
@@ -36,7 +36,7 @@ describe('computer-use skill guidance', () => {
   it('keeps web-app targeting on the computer-use surface', () => {
     const skill = readFileSync(guidePath, 'utf8')
 
-    expect(skill).toContain('Use this skill to drive a visible app window through `orca computer`')
+    expect(skill).toContain('Use this skill to drive a visible app window through `nash computer`')
     expect(skill).toContain(
       'Prefer a programmatic path (shell, filesystem, git, HTTP, existing CLIs) whenever it can complete the task'
     )
@@ -104,7 +104,8 @@ describe('computer-use install stub', () => {
     expect(stub).toContain('ORCA skills get computer-use')
     // The safe CLI-resolution contract must survive in the stub, never a bare `orca`.
     expect(stub).toContain('ORCA_CLI_COMMAND')
-    expect(stub).toContain('orca-dev')
+    expect(stub).toContain('use `nash-dev`')
+    expect(stub).toContain('Otherwise, use `nash`.')
     expect(stub).toContain('orca-ide')
     expect(stub).toContain('GNOME Orca screen reader')
     expect(stub).not.toMatch(/^orca /mu)

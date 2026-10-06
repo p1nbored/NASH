@@ -26,7 +26,7 @@ function writeLegacyLinearFiles(token: string, viewer: Record<string, unknown>):
 }
 
 function writeLegacyLinearToken(token: string | Buffer, viewer: Record<string, unknown>): void {
-  const orcaDir = join(tempHome, '.orca')
+  const orcaDir = join(tempHome, '.nash')
   mkdirSync(orcaDir, { recursive: true })
   writeFileSync(join(orcaDir, 'linear-token.enc'), token)
   writeFileSync(join(orcaDir, 'linear-viewer.json'), JSON.stringify(viewer), {
@@ -37,7 +37,7 @@ function writeLegacyLinearToken(token: string | Buffer, viewer: Record<string, u
 function workspaceTokenPath(workspaceId: string): string {
   return join(
     tempHome,
-    '.orca',
+    '.nash',
     'linear-tokens',
     `${Buffer.from(workspaceId).toString('base64url')}.enc`
   )
@@ -47,7 +47,7 @@ function writeMultiWorkspaceFiles(
   workspaces: { id: string; token: string | Buffer }[],
   selectedWorkspaceId: string
 ): void {
-  const orcaDir = join(tempHome, '.orca')
+  const orcaDir = join(tempHome, '.nash')
   mkdirSync(join(orcaDir, 'linear-tokens'), { recursive: true })
   writeFileSync(
     join(orcaDir, 'linear-workspaces.json'),
@@ -212,8 +212,8 @@ describe('Linear client workspace storage', () => {
       workspaces: [{ id: 'org-alpha', organizationName: 'Alpha' }]
     })
     expect(status.workspaces?.some((workspace) => workspace.id === 'legacy')).toBe(false)
-    expect(existsSync(join(tempHome, '.orca', 'linear-token.enc'))).toBe(false)
-    expect(readFileSync(join(tempHome, '.orca', 'linear-workspaces.json'), 'utf-8')).toContain(
+    expect(existsSync(join(tempHome, '.nash', 'linear-token.enc'))).toBe(false)
+    expect(readFileSync(join(tempHome, '.nash', 'linear-workspaces.json'), 'utf-8')).toContain(
       'org-alpha'
     )
   })
@@ -240,7 +240,7 @@ describe('Linear client workspace storage', () => {
   })
 
   it('does not pass encrypted safeStorage bytes to the Linear SDK when encryption is unavailable', async () => {
-    const tokenPath = join(tempHome, '.orca', 'linear-token.enc')
+    const tokenPath = join(tempHome, '.nash', 'linear-token.enc')
     writeLegacyLinearToken(Buffer.from([0x76, 0x31, 0x30, 0xff, 0xfe]), {
       displayName: 'Ada',
       email: 'ada@example.com',
@@ -265,7 +265,7 @@ describe('Linear client workspace storage', () => {
   })
 
   it('does not clear the Linear token when safeStorage decryption fails', async () => {
-    const tokenPath = join(tempHome, '.orca', 'linear-token.enc')
+    const tokenPath = join(tempHome, '.nash', 'linear-token.enc')
     writeLegacyLinearToken(Buffer.from([0x76, 0x31, 0x30, 0xff, 0xfe]), {
       displayName: 'Ada',
       email: 'ada@example.com',

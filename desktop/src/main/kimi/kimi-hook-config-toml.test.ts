@@ -8,7 +8,7 @@ import {
 } from './kimi-hook-config-toml'
 
 const COMMAND =
-  "if [ -x '/home/u/.orca/agent-hooks/kimi-hook.sh' ]; then /bin/sh '/home/u/.orca/agent-hooks/kimi-hook.sh'; fi"
+  "if [ -x '/home/u/.nash/agent-hooks/kimi-hook.sh' ]; then /bin/sh '/home/u/.nash/agent-hooks/kimi-hook.sh'; fi"
 const isManaged = (command: string | undefined): boolean =>
   typeof command === 'string' && command.includes('agent-hooks/kimi-hook.sh')
 

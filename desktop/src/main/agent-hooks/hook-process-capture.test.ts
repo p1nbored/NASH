@@ -14,7 +14,7 @@ describe('Claude outer hook process capture', () => {
     async (timeZone) => {
       const home = await mkdtemp(join(tmpdir(), 'orca-presence-hook-'))
       try {
-        const dir = join(home, '.orca', 'agent-hooks')
+        const dir = join(home, '.nash', 'agent-hooks')
         await mkdir(dir, { recursive: true })
         await writeFile(
           join(dir, 'claude-hook.sh'),

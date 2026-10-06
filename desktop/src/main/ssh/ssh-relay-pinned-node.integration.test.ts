@@ -95,14 +95,14 @@ describe.skipIf(!ready)('pinned-Node relay on a local POSIX host', () => {
       NODE_RUNTIME_ASSETS[target!].executableSha256,
       addons.digest
     )
-    const relayDir = join(home, '.orca-remote', `relay-${fullVersion}`)
+    const relayDir = join(home, '.nash-remote', `relay-${fullVersion}`)
     cpSync(localRelayDir, relayDir, { recursive: true })
     cpSync(addons.dir, relayDir, { recursive: true })
     await addons.dispose()
     writeFileSync(join(relayDir, '.version'), fullVersion)
 
     const runtimeDir = remoteNodeRuntimeDir(host, relayDir, target!)
-    const stageDir = join(home, '.orca-remote', 'runtimes', '.stage-e2e')
+    const stageDir = join(home, '.nash-remote', 'runtimes', '.stage-e2e')
     mkdirSync(stageDir, { recursive: true })
     copyFileSync(archive!, join(stageDir, NODE_RUNTIME_ASSETS[target!].archive))
     const promoted = sh(

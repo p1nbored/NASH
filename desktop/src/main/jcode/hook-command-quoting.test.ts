@@ -52,12 +52,12 @@ function tokenizeLikeJcode(raw: string): string[] {
 
 describe('jcode managed hook command quoting', () => {
   const paths = [
-    'C:\\Users\\me\\.orca\\agent-hooks\\jcode-hook.cmd',
-    'C:\\Users\\First Last\\.orca\\agent-hooks\\jcode-hook.cmd',
-    '/home/me/.orca/agent-hooks/jcode-hook.sh',
-    '/Users/First Last/.orca/agent-hooks/jcode-hook.sh',
-    "/Users/o'brien/.orca/agent-hooks/jcode-hook.sh",
-    '/Users/quote"odd/.orca/agent-hooks/jcode-hook.sh'
+    'C:\\Users\\me\\.nash\\agent-hooks\\jcode-hook.cmd',
+    'C:\\Users\\First Last\\.nash\\agent-hooks\\jcode-hook.cmd',
+    '/home/me/.nash/agent-hooks/jcode-hook.sh',
+    '/Users/First Last/.nash/agent-hooks/jcode-hook.sh',
+    "/Users/o'brien/.nash/agent-hooks/jcode-hook.sh",
+    '/Users/quote"odd/.nash/agent-hooks/jcode-hook.sh'
   ]
 
   it.each(paths)('survives jcode\u2019s tokenizer as one argument: %s', (scriptPath) => {
@@ -66,9 +66,9 @@ describe('jcode managed hook command quoting', () => {
 
   it('is what a bare path fails to do, which is why the quoting exists', () => {
     // Regression anchor: the unquoted Windows path loses every separator, so jcode
-    // execs `C:Usersme.orcaagent-hooksjcode-hook.cmd` and no hook ever fires.
-    expect(tokenizeLikeJcode('C:\\Users\\me\\.orca\\agent-hooks\\jcode-hook.cmd')).toEqual([
-      'C:Usersme.orcaagent-hooksjcode-hook.cmd'
+    // execs `C:Usersme.nashagent-hooksjcode-hook.cmd` and no hook ever fires.
+    expect(tokenizeLikeJcode('C:\\Users\\me\\.nash\\agent-hooks\\jcode-hook.cmd')).toEqual([
+      'C:Usersme.nashagent-hooksjcode-hook.cmd'
     ])
   })
 

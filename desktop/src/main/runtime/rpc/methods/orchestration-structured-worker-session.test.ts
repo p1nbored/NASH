@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentJournalSubmission } from '../../../../shared/agent-session-journal-types'
 import { getAppEnvironment } from '../../../../shared/app-environment'
+import { APP_IDENTITY } from '../../../../shared/app-identity-constants'
 import { DISPATCH_REJECTED_WRITE_FAILED } from '../../../../shared/structured-agent-session-dispatch-rejection'
 
 const hostRef: { current: unknown } = { current: null }
@@ -101,7 +102,9 @@ describe('structured worker session', () => {
         getAppEnvironment().getPath('userData'),
         'cli',
         'bin',
-        process.platform === 'win32' ? 'orca-dev.cmd' : 'orca-dev'
+        process.platform === 'win32'
+          ? `${APP_IDENTITY.devCliCommandName}.cmd`
+          : APP_IDENTITY.devCliCommandName
       )
     )
     expect(envAtSpawn?.ORCA_PANE_KEY).toBeUndefined()

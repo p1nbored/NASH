@@ -39,8 +39,8 @@ beforeEach(() => {
 })
 
 describe.each([
-  { platform: 'linux-x64' as const, remoteDir: '/home/u/.orca-remote/orcad-version' },
-  { platform: 'win32-x64' as const, remoteDir: 'C:/Users/u/.orca-remote/orcad-version' }
+  { platform: 'linux-x64' as const, remoteDir: '/home/u/.nash-remote/orcad-version' },
+  { platform: 'win32-x64' as const, remoteDir: 'C:/Users/u/.nash-remote/orcad-version' }
 ])('orcad install termination on $platform', ({ platform, remoteDir }) => {
   const host = getRemoteHostPlatform(platform)
   const completionCommandNumber = host.os === 'win32' ? 3 : 4

@@ -24,7 +24,7 @@ describe('Codex Windows hook command', () => {
     (profile) => {
       vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
       vi.stubEnv('SystemRoot', 'D:\\Windows')
-      const path = `C:\\Users\\${profile}\\.orca\\agent-hooks\\codex-hook.cmd`
+      const path = `C:\\Users\\${profile}\\.nash\\agent-hooks\\codex-hook.cmd`
       const command = getManagedCommand(path)
       expect(command).not.toMatch(/powershell\.exe|EncodedCommand|Set-ExecutionPolicy/)
       expect(command).toBe(
@@ -37,8 +37,8 @@ describe('Codex Windows hook command', () => {
 
   it('writes a bare forward-slash path when the profile is one token', () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
-    expect(getManagedCommand('C:\\Users\\alice\\.orca\\agent-hooks\\codex-hook.cmd')).toBe(
-      'C:/Users/alice/.orca/agent-hooks/codex-hook.cmd'
+    expect(getManagedCommand('C:\\Users\\alice\\.nash\\agent-hooks\\codex-hook.cmd')).toBe(
+      'C:/Users/alice/.nash/agent-hooks/codex-hook.cmd'
     )
   })
 })

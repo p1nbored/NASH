@@ -29,9 +29,9 @@ const mockExec = vi.mocked(execCommand)
 describe('parseCompletedInstallsNewestFirst', () => {
   it('keeps only this model’s version dirs, in host order', () => {
     const output = [
-      '/h/.orca-remote/relay-0.2.0+bbb/.install-complete',
-      '/h/.orca-remote/orcad-0.2.0+bbb/.install-complete',
-      '/h/.orca-remote/relay-0.1.0+aaa/.install-complete',
+      '/h/.nash-remote/relay-0.2.0+bbb/.install-complete',
+      '/h/.nash-remote/orcad-0.2.0+bbb/.install-complete',
+      '/h/.nash-remote/relay-0.1.0+aaa/.install-complete',
       REMOTE_INSTALL_ORDER_OK
     ].join('\n')
     expect(parseCompletedInstallsNewestFirst(output, RELAY_INSTALL_MODEL)).toEqual([
@@ -43,7 +43,7 @@ describe('parseCompletedInstallsNewestFirst', () => {
   it('is null when the host did not finish the listing', () => {
     expect(
       parseCompletedInstallsNewestFirst(
-        '/h/.orca-remote/relay-0.1.0+aaa/.install-complete',
+        '/h/.nash-remote/relay-0.1.0+aaa/.install-complete',
         RELAY_INSTALL_MODEL
       )
     ).toBeNull()
@@ -115,13 +115,13 @@ describe('relay GC keeps the previous build', () => {
       .mockResolvedValueOnce('relay-0.1.0+aaa\n')
       .mockResolvedValueOnce(
         [
-          '/home/u/.orca-remote/relay-0.2.0+bbb/.install-complete',
-          '/home/u/.orca-remote/relay-0.1.0+aaa/.install-complete',
+          '/home/u/.nash-remote/relay-0.2.0+bbb/.install-complete',
+          '/home/u/.nash-remote/relay-0.1.0+aaa/.install-complete',
           REMOTE_INSTALL_ORDER_OK
         ].join('\n')
       )
 
-    await gcOldRelayVersions(conn, '/home/u', '/home/u/.orca-remote/relay-0.2.0+bbb', host)
+    await gcOldRelayVersions(conn, '/home/u', '/home/u/.nash-remote/relay-0.2.0+bbb', host)
 
     expect(mockExec).toHaveBeenCalledTimes(2)
   })
@@ -133,7 +133,7 @@ describe('relay GC keeps the previous build', () => {
         Object.assign(new Error('ls failed'), { sshChannelCloseConfirmed: true })
       )
 
-    await gcOldRelayVersions(conn, '/home/u', '/home/u/.orca-remote/relay-0.2.0+bbb', host)
+    await gcOldRelayVersions(conn, '/home/u', '/home/u/.nash-remote/relay-0.2.0+bbb', host)
 
     expect(mockExec).toHaveBeenCalledTimes(2)
   })
@@ -148,7 +148,7 @@ describe('relay GC keeps the previous build', () => {
         Object.assign(new Error('SSH command timed out'), { sshChannelCloseConfirmed: true })
       )
 
-    await gcOldRelayVersions(conn, '/home/u', '/home/u/.orca-remote/relay-0.2.0+bbb', host, {
+    await gcOldRelayVersions(conn, '/home/u', '/home/u/.nash-remote/relay-0.2.0+bbb', host, {
       nodePath: '/usr/bin/node'
     })
 

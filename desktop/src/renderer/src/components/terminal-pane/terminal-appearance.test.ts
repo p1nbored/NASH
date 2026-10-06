@@ -225,7 +225,8 @@ describe('applyTerminalAppearance theme assignment', () => {
     const pane = makePane(1)
     const settings = getDefaultSettings('/tmp')
 
-    apply(pane, { ...settings, theme: 'light' })
+    // Why: defaults keep a dark terminal in the light shell; opt into the light terminal slot.
+    apply(pane, { ...settings, theme: 'light', terminalUseSeparateLightTheme: true })
 
     expect(pane.terminal.options.minimumContrastRatio).toBe(4.5)
   })
@@ -243,7 +244,7 @@ describe('applyTerminalAppearance theme assignment', () => {
 
   it('re-gates contrast correction when the theme flips live', () => {
     const pane = makePane(1)
-    const settings = getDefaultSettings('/tmp')
+    const settings = { ...getDefaultSettings('/tmp'), terminalUseSeparateLightTheme: true }
 
     apply(pane, { ...settings, theme: 'light' })
     expect(pane.terminal.options.minimumContrastRatio).toBe(4.5)
@@ -286,7 +287,13 @@ describe('applyTerminalAppearance theme assignment', () => {
     const pane = makePane(1)
     const settings = getDefaultSettings('/tmp')
 
-    apply(pane, { ...settings, theme: 'light', terminalMinimumContrastRatio: 1 })
+    // Why: defaults keep a dark terminal in the light shell; opt into the light terminal slot.
+    apply(pane, {
+      ...settings,
+      theme: 'light',
+      terminalUseSeparateLightTheme: true,
+      terminalMinimumContrastRatio: 1
+    })
 
     expect(pane.terminal.options.minimumContrastRatio).toBe(1)
   })

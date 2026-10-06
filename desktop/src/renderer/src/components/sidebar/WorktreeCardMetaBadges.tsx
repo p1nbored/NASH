@@ -102,7 +102,7 @@ export const WorktreeCardMetaBadges = React.forwardRef<
         <MetaIconBadge
           label={translate(
             'auto.components.sidebar.WorktreeCardMeta.cliCreated',
-            'Created by Orca CLI'
+            'Created by NASH CLI'
           )}
         >
           <SquareTerminal className="text-muted-foreground" />

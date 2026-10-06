@@ -10,7 +10,7 @@ accepted steering.
 ## Coordinator delivery loop
 
 `check` names its caller with `--terminal <handle>` and is the only verb that
-rejects `--from`. Omit `--terminal` inside an Orca terminal, where Orca resolves
+rejects `--from`. Omit `--terminal` inside a NASH terminal, where NASH resolves
 the caller; pass it explicitly from anywhere else, including a dispatched
 worker reading coordinator follow-ups.
 

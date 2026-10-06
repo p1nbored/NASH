@@ -2,12 +2,8 @@ import { vi } from 'vitest'
 import type { Mock } from 'vitest'
 import { fetchViaPty } from './claude-pty'
 import {
-  deleteActiveClaudeKeychainCredentialsStrict,
   readActiveClaudeKeychainCredentials,
-  readActiveClaudeKeychainCredentialsStrict,
-  readManagedClaudeKeychainCredentials,
-  writeActiveClaudeKeychainCredentials,
-  writeManagedClaudeKeychainCredentials
+  readActiveClaudeKeychainCredentialsStrict
 } from '../claude-accounts/keychain'
 
 /** Electron/fs mocks each claude-fetcher test file declares via its own `vi.mock` factories. */
@@ -41,10 +37,6 @@ export function primeClaudeFetcherMocks(mocks: ClaudeFetcherHoistedMocks): void 
   mocks.readFileMock.mockRejectedValue(new Error('missing file'))
   vi.mocked(readActiveClaudeKeychainCredentials).mockResolvedValue(null)
   vi.mocked(readActiveClaudeKeychainCredentialsStrict).mockResolvedValue(null)
-  vi.mocked(readManagedClaudeKeychainCredentials).mockResolvedValue(null)
-  vi.mocked(writeActiveClaudeKeychainCredentials).mockResolvedValue()
-  vi.mocked(deleteActiveClaudeKeychainCredentialsStrict).mockResolvedValue()
-  vi.mocked(writeManagedClaudeKeychainCredentials).mockResolvedValue()
   mocks.appGetPathMock.mockReturnValue('/tmp/orca-claude-fetcher-test')
   mocks.resolveProxyMock.mockResolvedValue('DIRECT')
   mocks.netFetchMock.mockResolvedValue(

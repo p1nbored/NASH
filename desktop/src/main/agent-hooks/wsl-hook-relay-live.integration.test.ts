@@ -76,7 +76,7 @@ describe.skipIf(process.platform === 'win32')(
       const server = orcaServer
 
       const warns: string[] = []
-      const codexHome = join(fakeHome, '.local', 'share', 'orca', 'codex-runtime-home', 'home')
+      const codexHome = join(fakeHome, '.local', 'share', 'nash', 'codex-runtime-home', 'home')
       manager = new WslHookRelayManager({
         platform: () => 'win32',
         remoteHooksEnabled: () => true,
@@ -131,7 +131,7 @@ describe.skipIf(process.platform === 'win32')(
         { timeout: 15_000 }
       )
       const claudeScript = readFileSync(
-        join(fakeHome, '.orca', 'agent-hooks', 'claude-hook.sh'),
+        join(fakeHome, '.nash', 'agent-hooks', 'claude-hook.sh'),
         'utf8'
       )
       expect(claudeScript).toContain('/hook/claude')
@@ -144,7 +144,7 @@ describe.skipIf(process.platform === 'win32')(
       // endpoint file rather than assuming the preferred port bind won.
       const endpointFile = join(
         fakeHome,
-        '.orca-wsl',
+        '.nash-wsl',
         'agent-hooks',
         'instance-liveinstance',
         'endpoint.env'

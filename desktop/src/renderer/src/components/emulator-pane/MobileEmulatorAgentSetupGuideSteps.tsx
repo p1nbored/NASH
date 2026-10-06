@@ -27,7 +27,7 @@ export function MobileEmulatorAgentSetupGuideSteps({
       <p className="text-sm font-medium">
         {translate(
           'auto.components.emulator.pane.MobileEmulatorAgentSetupGuideSteps.21f5687c07',
-          'Orca CLI skill'
+          'NASH CLI skill'
         )}
       </p>
       <AgentSkillSetupPanel
@@ -36,7 +36,7 @@ export function MobileEmulatorAgentSetupGuideSteps({
         className="min-w-0"
         title={translate(
           'auto.components.emulator.pane.MobileEmulatorAgentSetupGuideSteps.21f5687c07',
-          'Orca CLI skill'
+          'NASH CLI skill'
         )}
         description={translate(
           'auto.components.emulator.pane.MobileEmulatorAgentSetupGuideSteps.64fb057667',
@@ -45,11 +45,11 @@ export function MobileEmulatorAgentSetupGuideSteps({
         command={skillInstallCommand}
         terminalTitle={translate(
           'auto.components.emulator.pane.MobileEmulatorAgentSetupGuideSteps.5c59ea96ca',
-          'Mobile emulator Orca CLI skill setup'
+          'Mobile emulator NASH CLI skill setup'
         )}
         terminalAriaLabel={translate(
           'auto.components.emulator.pane.MobileEmulatorAgentSetupGuideSteps.bff5341ac3',
-          'Mobile emulator Orca CLI skill install terminal'
+          'Mobile emulator NASH CLI skill install terminal'
         )}
         terminalWorktreeId={terminalWorktreeId}
         terminalShellOverride={activeSkillRuntime.terminalShellOverride}

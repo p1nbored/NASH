@@ -179,7 +179,7 @@ describe('a failed real-home trust session with a concurrent edit', () => {
     async () => {
       resolveCodexCommandMock.mockReturnValue(process.execPath)
       const older = wrapPosixHookCommand(
-        join(homes.tmpHome, '.orca', 'agent-hooks', 'codex-hook.sh')
+        join(homes.tmpHome, '.nash', 'agent-hooks', 'codex-hook.sh')
       )
       const olderGroup: HookDefinition = {
         hooks: [{ type: 'command', command: older, timeout: 10 }]

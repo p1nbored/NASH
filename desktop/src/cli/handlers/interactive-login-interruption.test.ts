@@ -6,7 +6,9 @@ import {
   LOGIN_PROCESS_POSIX_GRACE_MS,
   terminateInteractiveLoginProcess,
   terminateWindowsLoginProcessTree,
-  WINDOWS_LOGIN_TREE_KILL_TIMEOUT_MS
+  WINDOWS_LOGIN_TREE_KILL_TIMEOUT_MS,
+  withInteractiveLoginCleanup,
+  type InteractiveLoginSession
 } from './interactive-login-interruption'
 
 function loginChild(pid = 4321): ChildProcess & EventEmitter {
@@ -117,5 +119,87 @@ describe('terminateInteractiveLoginProcess', () => {
 
     await vi.advanceTimersByTimeAsync(LOGIN_PROCESS_CLOSE_FALLBACK_MS)
     await pending
+  })
+})
+
+// Why identified by set difference: vitest installs its own once-wrapped SIGINT teardown.
+function newSignalListener(
+  signal: NodeJS.Signals,
+  before: readonly unknown[]
+): (signal: NodeJS.Signals) => void {
+  const added = process.listeners(signal).filter((listener) => !before.includes(listener))
+  if (added.length !== 1) {
+    throw new Error(`Expected 1 new ${signal} listener, found ${added.length}`)
+  }
+  return added[0] as (signal: NodeJS.Signals) => void
+}
+
+function idleSession(): InteractiveLoginSession {
+  return { child: null, registering: false, terminationPromise: null }
+}
+
+describe('withInteractiveLoginCleanup', () => {
+  it('waits for in-flight cleanup when a second signal arrives', async () => {
+    let releaseCleanup: (() => void) | undefined
+    const cleanup = vi.fn(
+      () =>
+        new Promise<void>((resolvePromise) => {
+          releaseCleanup = resolvePromise
+        })
+    )
+    let finishAdd: ((value: string) => void) | undefined
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
+    const sigintBefore = process.listeners('SIGINT')
+    const sigtermBefore = process.listeners('SIGTERM')
+
+    const pending = withInteractiveLoginCleanup(
+      idleSession(),
+      cleanup,
+      () =>
+        new Promise<string>((resolvePromise) => {
+          finishAdd = resolvePromise
+        })
+    )
+    const onSigint = newSignalListener('SIGINT', sigintBefore)
+    const onSigterm = newSignalListener('SIGTERM', sigtermBefore)
+    // Why: a `once` handler would let a second Ctrl-C fall through to Node's default mid-cleanup.
+    expect(process.rawListeners('SIGINT')).toContain(onSigint)
+
+    onSigint('SIGINT')
+    await vi.waitFor(() => expect(cleanup).toHaveBeenCalledOnce())
+    onSigterm('SIGTERM')
+    await new Promise<void>((resolvePromise) => {
+      setImmediate(resolvePromise)
+    })
+    expect(exitSpy).not.toHaveBeenCalled()
+
+    releaseCleanup?.()
+    await vi.waitFor(() => expect(exitSpy).toHaveBeenCalled())
+    expect(cleanup).toHaveBeenCalledOnce()
+
+    finishAdd?.('added')
+    await pending
+    exitSpy.mockRestore()
+  })
+
+  it('stays armed for signals until post-success cleanup finishes', async () => {
+    let releaseCleanup: (() => void) | undefined
+    const cleanup = vi.fn(
+      () =>
+        new Promise<void>((resolvePromise) => {
+          releaseCleanup = resolvePromise
+        })
+    )
+    const listenersBefore = process.listeners('SIGINT')
+
+    const pending = withInteractiveLoginCleanup(idleSession(), cleanup, async () => 'added')
+    await vi.waitFor(() => expect(cleanup).toHaveBeenCalled())
+
+    // Why: cleanup is still in flight here, so the guard must still be installed.
+    const handler = newSignalListener('SIGINT', listenersBefore)
+
+    releaseCleanup?.()
+    await expect(pending).resolves.toBe('added')
+    expect(process.listeners('SIGINT')).not.toContain(handler)
   })
 })

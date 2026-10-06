@@ -172,7 +172,7 @@ it('keeps an entry another Orca trusted during the failed session', async () => 
 it.skipIf(process.platform === 'win32')(
   "puts an older build's entry back in its slot when the one-time conversion cannot be trusted",
   async () => {
-    const older = wrapPosixHookCommand(join(homeDir, '.orca', 'agent-hooks', 'codex-hook.sh'))
+    const older = wrapPosixHookCommand(join(homeDir, '.nash', 'agent-hooks', 'codex-hook.sh'))
     const { events } = getCodexManagedHookInstallMaterial()
     const original = writeHooks({
       hooks: Object.fromEntries(
@@ -199,7 +199,7 @@ it.skipIf(process.platform === 'win32')(
 it.skipIf(process.platform === 'win32')(
   'withdraws the copy the failed conversion wrote, not an earlier frozen copy in a matcher group',
   async () => {
-    const older = wrapPosixHookCommand(join(homeDir, '.orca', 'agent-hooks', 'codex-hook.sh'))
+    const older = wrapPosixHookCommand(join(homeDir, '.nash', 'agent-hooks', 'codex-hook.sh'))
     const { command, events } = getCodexManagedHookInstallMaterial()
     const matched = { matcher: 'Bash', hooks: [{ type: 'command' as const, command }] }
     const original = writeHooks({

@@ -8,6 +8,13 @@ import { fileURLToPath } from 'node:url'
 
 import { createJiti } from 'jiti'
 
+// Why: the folder name comes from the app identity, never a literal Orca folder (decision D-017).
+const APP_DATA_NAME = JSON.parse(
+  readFileSync(new URL('../../src/shared/app-identity-constants.json', import.meta.url), 'utf8')
+).userDataDirName
+const APP_HOME_DIR_NAME = `.${APP_DATA_NAME}`
+const APP_WSL_DIR_NAME = `.${APP_DATA_NAME}-wsl`
+
 const DEFAULT_SAMPLES = 20
 const PANE_KEY = 'wsl-relay-bench:11111111-1111-4111-8111-111111111111'
 const WSL_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
@@ -339,11 +346,18 @@ async function main() {
       await run('wsl.exe', wslArgs(distro, ['/bin/sh', '-c', 'printf %s "$HOME"']))
     ).stdout.trim()
     const instanceKey = `bench-${process.pid}-${Date.now().toString(36)}`
-    const benchmarkRoot = `${guestHome}/.orca-wsl/benchmarks/${instanceKey}`
-    const scriptPath = `${benchmarkRoot}/.orca/agent-hooks/codex-hook.sh`
-    const endpointPath = `${guestHome}/.orca-wsl/agent-hooks/instance-${instanceKey}/endpoint.env`
-    cleanupPaths = [benchmarkRoot, `${guestHome}/.orca-wsl/agent-hooks/instance-${instanceKey}`]
-    if (cleanupPaths.some((cleanupPath) => !cleanupPath.startsWith(`${guestHome}/.orca-wsl/`))) {
+    const benchmarkRoot = `${guestHome}/${APP_WSL_DIR_NAME}/benchmarks/${instanceKey}`
+    const scriptPath = `${benchmarkRoot}/${APP_HOME_DIR_NAME}/agent-hooks/codex-hook.sh`
+    const endpointPath = `${guestHome}/${APP_WSL_DIR_NAME}/agent-hooks/instance-${instanceKey}/endpoint.env`
+    cleanupPaths = [
+      benchmarkRoot,
+      `${guestHome}/${APP_WSL_DIR_NAME}/agent-hooks/instance-${instanceKey}`
+    ]
+    if (
+      cleanupPaths.some(
+        (cleanupPath) => !cleanupPath.startsWith(`${guestHome}/${APP_WSL_DIR_NAME}/`)
+      )
+    ) {
       throw new Error('Refusing to use an unexpected guest cleanup path')
     }
     const disabledTuiAgents = MANAGED_AGENT_HOOK_TARGETS.filter(

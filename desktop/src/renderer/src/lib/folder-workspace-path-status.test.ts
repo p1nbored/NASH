@@ -54,10 +54,10 @@ describe('getFolderWorkspacePathStatusTitle', () => {
 describe('getFolderWorkspacePathStatusDescription', () => {
   it('keeps the declared reasons on their own copy', () => {
     expect(getFolderWorkspacePathStatusDescription(wireStatus('missing'))).toBe(
-      'Orca cannot find /srv/scans. Remove and re-import this folder workspace.'
+      'NASH cannot find /srv/scans. Remove and re-import this folder workspace.'
     )
     expect(getFolderWorkspacePathStatusDescription(wireStatus(undefined))).toBe(
-      'Orca cannot verify this folder right now. Check the runtime or SSH connection and try again.'
+      'NASH cannot verify this folder right now. Check the runtime or SSH connection and try again.'
     )
   })
 
@@ -75,7 +75,7 @@ describe('getFolderWorkspacePathStatusDescription', () => {
     expect(typeof description).toBe('string')
     expect(description).not.toBe('')
     expect(description).not.toBe(
-      'Orca cannot find /srv/scans. Remove and re-import this folder workspace.'
+      'NASH cannot find /srv/scans. Remove and re-import this folder workspace.'
     )
   })
 })
@@ -84,7 +84,7 @@ describe('getFolderWorkspacePathErrorCopy', () => {
   it('maps each main-process path error code to its own copy', () => {
     expect(getFolderWorkspacePathErrorCopy('folder_workspace_path_missing:/srv/scans')).toEqual({
       title: 'Folder not found',
-      description: 'Orca cannot find /srv/scans. Remove and re-import the folder.'
+      description: 'NASH cannot find /srv/scans. Remove and re-import the folder.'
     })
     expect(
       getFolderWorkspacePathErrorCopy('folder_workspace_path_not_directory:/srv/scans')?.title
@@ -103,7 +103,7 @@ describe('getFolderWorkspacePathErrorCopy', () => {
     )
 
     expect(copy?.description).toBe(
-      'Orca cannot find /Users/me/My Project. Remove and re-import the folder.'
+      'NASH cannot find /Users/me/My Project. Remove and re-import the folder.'
     )
   })
 
@@ -139,7 +139,7 @@ it.each(['/srv/project: folder', 'C:\\work\\My Project:backup', '/tmp/$& folder'
   (path) => {
     const prefix = "Error invoking remote method 'pty:spawn': Error: "
     expect(humanizeFolderWorkspacePathError(`${prefix}folder_workspace_path_missing:${path}`)).toBe(
-      `${prefix}Orca cannot find ${path}. Remove and re-import the folder.`
+      `${prefix}NASH cannot find ${path}. Remove and re-import the folder.`
     )
   }
 )
@@ -159,14 +159,14 @@ it('preserves multiline paths in the existing create-folder formatter', () => {
   const path = '/tmp/folder\nwith\rline breaks'
   expect(
     formatFolderWorkspaceCreateError(`folder_workspace_path_missing:${path}`).description
-  ).toBe(`Orca cannot find ${path}. Remove and re-import the folder.`)
+  ).toBe(`NASH cannot find ${path}. Remove and re-import the folder.`)
 })
 
 it('uses the existing English fallback when a language pack has no folder-path translation', async () => {
   await i18n.changeLanguage('test-missing-folder-copy')
   try {
     expect(humanizeFolderWorkspacePathError('folder_workspace_path_missing:/tmp/project')).toBe(
-      'Orca cannot find /tmp/project. Remove and re-import the folder.'
+      'NASH cannot find /tmp/project. Remove and re-import the folder.'
     )
   } finally {
     await i18n.changeLanguage('en')

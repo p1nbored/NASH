@@ -50,7 +50,7 @@ export function OpenCodeGoCredentials({ onSaved }: { onSaved: () => void }): Rea
       )}
       description={translate(
         'auto.components.settings.AccountsPane.opencodeGo.apiKey.description',
-        'Optional override. Orca otherwise uses the key OpenCode saved when you ran /connect, then OPENCODE_API_KEY.'
+        'Optional override. NASH otherwise uses the key OpenCode saved when you ran /connect, then OPENCODE_API_KEY.'
       )}
       keywords={['opencode', 'go', 'api', 'key', 'connect', 'rate limit', 'status bar']}
       className="space-y-2"

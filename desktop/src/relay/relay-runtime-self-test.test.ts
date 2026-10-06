@@ -17,7 +17,7 @@ afterEach(() => {
 describe('relay runtime identity', () => {
   it('names the pinned store layout pinned-node and anything else host-node', () => {
     const sha = 'a'.repeat(64)
-    expect(describeRelayRuntime(`/h/.orca-remote/runtimes/node-${sha}/bin/node`).kind).toBe(
+    expect(describeRelayRuntime(`/h/.nash-remote/runtimes/node-${sha}/bin/node`).kind).toBe(
       'pinned-node'
     )
     expect(describeRelayRuntime('/usr/bin/node').kind).toBe('host-node')
@@ -28,8 +28,8 @@ describe('relay runtime identity', () => {
   it('recognizes node.exe at the Windows store root', () => {
     const sha = 'b'.repeat(64)
     const win = (execPath: string): string => describeRelayRuntime(execPath, path.win32).kind
-    expect(win(`C:\\Users\\u\\.orca-remote\\runtimes\\node-${sha}\\node.exe`)).toBe('pinned-node')
-    expect(win(`C:/Users/u/.orca-remote/runtimes/node-${sha}/NODE.EXE`)).toBe('pinned-node')
+    expect(win(`C:\\Users\\u\\.nash-remote\\runtimes\\node-${sha}\\node.exe`)).toBe('pinned-node')
+    expect(win(`C:/Users/u/.nash-remote/runtimes/node-${sha}/NODE.EXE`)).toBe('pinned-node')
     expect(win('C:\\Program Files\\nodejs\\node.exe')).toBe('host-node')
     expect(win(`C:\\Users\\u\\runtimes\\node-${sha}\\bun.exe`)).toBe('host-node')
   })

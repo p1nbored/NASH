@@ -25,7 +25,7 @@ import { resolveTuiAgentLaunchEnv } from '../../shared/tui-agent-launch-defaults
 import { nativeChatShellEnvironmentPolicy } from '../../shared/native-chat-shell-environment'
 import { claudeStructuredPermissionModeForSettings } from '../claude/claude-structured-permission-mode'
 import { codexStructuredPermissionPolicyForSettings } from '../codex/codex-structured-permission-policy'
-import { claudeStructuredAuthPolicyForSettings } from '../claude-accounts/claude-structured-auth-policy'
+import { claudeStructuredAuthPolicy } from '../claude-accounts/claude-structured-auth-policy'
 
 export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVisibleReadProbe {
   async getWorktreePs(
@@ -156,16 +156,13 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
         resolveTuiAgentLaunchEnv('claude', this.requireStore().getSettings().agentDefaultEnv),
       resolveShellEnvironmentPolicy: () =>
         nativeChatShellEnvironmentPolicy(this.requireStore().getSettings()),
-      resolveClaudeAuthPolicy: () =>
-        claudeStructuredAuthPolicyForSettings(this.requireStore().getSettings()),
+      resolveClaudeAuthPolicy: () => claudeStructuredAuthPolicy(),
       // Re-read per acquisition, like the auth policy above it: the Agent Permissions setting is
       // the one copy of this fact, and the configured CLI arguments never reach a structured launch.
       resolveClaudePermissionMode: () =>
         claudeStructuredPermissionModeForSettings(this.requireStore().getSettings()),
       resolveCodexPermissionPolicy: () =>
         codexStructuredPermissionPolicyForSettings(this.requireStore().getSettings()),
-      // Same gate and same settings as agentSession.createSupport, re-read on every acquisition.
-      getClaudeManagedAccountGateSettings: () => this.requireStore().getSettings(),
       resolveAgentAccountHome: (agent) => this.resolveStructuredAgentAccountHome(agent),
       // Structured chat has no agent CLI hooks, so this projection is what the first-work
       // workspace rename listens to instead of `agentStatus:set`.

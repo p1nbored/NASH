@@ -13,7 +13,7 @@ import {
   type PressAndHoldRecord
 } from './macos-press-and-hold-default'
 
-const ORCA_DOMAIN = 'com.stablyai.orca'
+const ORCA_DOMAIN = 'com.pinbored.nash'
 
 type HostOverrides = Partial<PressAndHoldHost> & { record?: PressAndHoldRecord | null }
 
@@ -141,11 +141,14 @@ describe('ensureMacPressAndHoldDefault', () => {
     })
 
     it('accepts Orca and its channel-scoped bundles, and nothing else', () => {
-      expect(isOrcaPreferencesDomain('com.stablyai.orca')).toBe(true)
-      expect(isOrcaPreferencesDomain('com.stablyai.orca.dev')).toBe(true)
+      expect(isOrcaPreferencesDomain('com.pinbored.nash')).toBe(true)
+      expect(isOrcaPreferencesDomain('com.pinbored.nash.dev')).toBe(true)
       expect(isOrcaPreferencesDomain('com.github.Electron')).toBe(false)
+      // Why: a real Orca install's preferences domain is never this app's to write (decision D-017).
+      expect(isOrcaPreferencesDomain('com.stablyai.orca')).toBe(false)
+      expect(isOrcaPreferencesDomain('com.stablyai.orca.dev')).toBe(false)
       // Why: a prefix test without the dot would accept a lookalike bundle id.
-      expect(isOrcaPreferencesDomain('com.stablyai.orcafake')).toBe(false)
+      expect(isOrcaPreferencesDomain('com.pinbored.nashfake')).toBe(false)
     })
   })
 
@@ -245,10 +248,10 @@ describe('readBundleIdentifierFromExecutablePath', () => {
   it('reads CFBundleIdentifier from the plist beside the executable', () => {
     const exe = bundleWithPlist(
       '<plist><dict>\n<key>CFBundleName</key>\n<string>Orca</string>\n' +
-        '<key>CFBundleIdentifier</key>\n\t<string>com.stablyai.orca</string>\n</dict></plist>'
+        '<key>CFBundleIdentifier</key>\n\t<string>com.pinbored.nash</string>\n</dict></plist>'
     )
 
-    expect(readBundleIdentifierFromExecutablePath(exe)).toBe('com.stablyai.orca')
+    expect(readBundleIdentifierFromExecutablePath(exe)).toBe('com.pinbored.nash')
   })
 
   it('returns null when the plist is missing or carries no identifier', () => {

@@ -199,7 +199,7 @@ describe('dead structured-session generation settlement', () => {
     expect(statuses).toEqual([
       {
         kind: 'status',
-        text: "Orca ran into a problem, so this didn't go through. Try again.",
+        text: "NASH ran into a problem, so this didn't go through. Try again.",
         failure: { kind: 'hostFault' },
         tone: 'error'
       }

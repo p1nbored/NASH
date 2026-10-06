@@ -1,19 +1,25 @@
 import { net } from 'electron'
 import { parse } from 'yaml'
+import { escapeRegex } from '../shared/string-utils'
 import { compareVersions, isPrereleaseVersion, isValidVersion } from './updater-fallback'
+import {
+  getReleaseRepoUrl,
+  getReleasesAtomUrl,
+  getReleasesDownloadBase
+} from './updater-release-repo-urls'
 
-const ATOM_FEED_URL = 'https://github.com/stablyai/orca/releases.atom'
-const RELEASES_DOWNLOAD_BASE = 'https://github.com/stablyai/orca/releases/download'
 const FETCH_TIMEOUT_MS = 5000
 const MAX_MANIFEST_PROBE_CANDIDATES = 6
 
 // Why: GitHub's atom feed lists every release (prerelease or stable) in a
 // single flat list. Each entry has a /releases/tag/<tag> URL we can mine
 // without any channel filtering.
-const TAG_HREF_RE = /href="https:\/\/github\.com\/stablyai\/orca\/releases\/tag\/([^"]+)"/g
+function createTagHrefPattern(): RegExp {
+  return new RegExp(`href="${escapeRegex(getReleaseRepoUrl())}/releases/tag/([^"]+)"`, 'g')
+}
 
 export function getReleaseDownloadUrl(tag: string): string {
-  return `${RELEASES_DOWNLOAD_BASE}/${encodeURIComponent(tag)}`
+  return `${getReleasesDownloadBase()}/${encodeURIComponent(tag)}`
 }
 
 function getPlatformManifestName(): string {
@@ -57,14 +63,16 @@ export function isPerfPrereleaseTag(tag: string): boolean {
 
 async function fetchReleaseFeedTags(): Promise<ReleaseFeedTag[] | null> {
   try {
-    const res = await net.fetch(ATOM_FEED_URL, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+    const res = await net.fetch(getReleasesAtomUrl(), {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    })
     if (!res.ok) {
       return null
     }
     const body = await res.text()
     const tags: ReleaseFeedTag[] = []
 
-    for (const match of body.matchAll(TAG_HREF_RE)) {
+    for (const match of body.matchAll(createTagHrefPattern())) {
       const tag = match[1]
       const version = normalizeTagToVersion(tag)
       if (isValidVersion(version)) {
@@ -153,7 +161,7 @@ async function getReleaseAssetReadiness(tag: string, assetName: string): Promise
   const isGitHubReleaseAsset =
     process.platform === 'win32' &&
     (isRelativeAsset ||
-      /^https:\/\/github\.com\/stablyai\/orca\/releases\/download\//i.test(assetName))
+      assetName.toLowerCase().startsWith(`${getReleasesDownloadBase().toLowerCase()}/`))
   const assetUrl = isRelativeAsset
     ? getReleaseAssetUrl(tag, assetName.split('/').findLast(Boolean) ?? assetName)
     : assetName

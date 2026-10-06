@@ -117,6 +117,36 @@ describe('claude model catalog probe', () => {
     expect(envs[1]).toMatchObject({ CLAUDE_CONFIG_DIR: '/homes/account-a' })
   })
 
+  it('reports the full model id each listed alias resolves to, beside the unchanged models', async () => {
+    const probe = createClaudeModelCatalogProbe({
+      ...probeDeps(),
+      discover: async () => {
+        const listed = listedResult()
+        return listed.success
+          ? {
+              ...listed,
+              models: [
+                { ...listed.models[0]!, id: 'opus', resolvedModel: 'claude-opus-5-5' },
+                { id: 'haiku', label: 'Haiku' }
+              ]
+            }
+          : listed
+      }
+    })
+    const success = await probe('/homes/account-a')
+    expect([...success.resolvedModelByModel]).toEqual([['opus', 'claude-opus-5-5']])
+    expect(success.models.map((model) => model.id)).toEqual(['opus', 'haiku'])
+    expect(success.models[0]).not.toHaveProperty('resolvedModel')
+  })
+
+  it('reports an empty resolved-id map when the listing names none', async () => {
+    const probe = createClaudeModelCatalogProbe({
+      ...probeDeps(),
+      discover: async () => listedResult()
+    })
+    expect((await probe('/homes/account-a')).resolvedModelByModel.size).toBe(0)
+  })
+
   it('refuses a static-fallback answer rather than reporting it as a catalog', async () => {
     const probe = createClaudeModelCatalogProbe({
       ...probeDeps(),

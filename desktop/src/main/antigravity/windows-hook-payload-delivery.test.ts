@@ -212,7 +212,7 @@ describe.skipIf(process.platform !== 'win32')('Antigravity Windows hook payload 
     homedirMock.mockReturnValue(home)
     expect(new AntigravityHookService().install().state).toBe('installed')
 
-    const hooksDir = join(home, '.orca', 'agent-hooks')
+    const hooksDir = join(home, '.nash', 'agent-hooks')
     const coreScript = readFileSync(join(hooksDir, 'antigravity-hook.cmd'), 'utf8')
     expect(coreScript).not.toMatch(/powershell/i)
 
@@ -273,7 +273,7 @@ describe.skipIf(process.platform !== 'win32')('Antigravity Windows hook payload 
       const listener = await startHookListener()
       server = listener.server
       const result = await runWrapper(
-        join(home, '.orca', 'agent-hooks', 'antigravity-pre-invocation.cmd'),
+        join(home, '.nash', 'agent-hooks', 'antigravity-pre-invocation.cmd'),
         hookEnvironment({
           ORCA_AGENT_HOOK_PORT: String(listener.port),
           ORCA_AGENT_HOOK_TOKEN: HOOK_TOKEN,
@@ -303,7 +303,7 @@ describe.skipIf(process.platform !== 'win32')('Antigravity Windows hook payload 
     const listener = await startHookListener()
     server = listener.server
     const result = await runWrapper(
-      join(home, '.orca', 'agent-hooks', 'antigravity-pre-invocation.cmd'),
+      join(home, '.nash', 'agent-hooks', 'antigravity-pre-invocation.cmd'),
       hookEnvironment({
         USERPROFILE: home,
         HOME: home,
@@ -327,7 +327,7 @@ describe.skipIf(process.platform !== 'win32')('Antigravity Windows hook payload 
     home = mkdtempSync(join(tmpdir(), 'orca-antigravity-fallback-'))
     homedirMock.mockReturnValue(home)
     expect(new AntigravityHookService().install().state).toBe('installed')
-    const hooksDir = join(home, '.orca', 'agent-hooks')
+    const hooksDir = join(home, '.nash', 'agent-hooks')
     rmSync(join(hooksDir, 'antigravity-hook.cmd'))
     return hooksDir
   }
@@ -396,7 +396,7 @@ describe.skipIf(process.platform !== 'win32')('Antigravity Windows hook payload 
     // Why (#11549): outside an Orca pane the caller may abandon stdin rather than close it,
     // so the guard must exit before the read — otherwise the console lingers indefinitely.
     const result = await runWrapper(
-      join(home, '.orca', 'agent-hooks', 'antigravity-pre-tool-use.cmd'),
+      join(home, '.nash', 'agent-hooks', 'antigravity-pre-tool-use.cmd'),
       hookEnvironment({ USERPROFILE: home, HOME: home }),
       null
     )

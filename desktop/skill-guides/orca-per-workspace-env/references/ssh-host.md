@@ -1,16 +1,16 @@
 # SSH connection mode, including provisioned root
 
-Load this when the recipe connects over SSH instead of starting `orca serve`, and when the user has
+Load this when the recipe connects over SSH instead of starting `nash serve`, and when the user has
 explicitly asked for `checkoutMode: provisioned-root`.
 
-SSH mode is a different shape, not the Orca-server templates relabeled. `create` runs no
-`orca serve` and emits no `pairingCode`. Orca connects over its SSH relay, brings up the git and
+SSH mode is a different shape, not the NASH-server templates relabeled. `create` runs no
+`nash serve` and emits no `pairingCode`. NASH connects over its SSH relay, brings up the git and
 filesystem providers, and imports the repo. The script only readies the host and prints the SSH
-details Orca dials.
+details NASH dials.
 
 ## The result shape
 
-Orca rejects anything else. Required fields only; add optionals from the next section as the
+NASH rejects anything else. Required fields only; add optionals from the next section as the
 network needs them.
 
 ```json
@@ -33,7 +33,7 @@ network needs them.
 
 ## Which optional `target` fields to set
 
-These describe how the user's desktop reaches the box; there is no `orca serve` URL in SSH mode.
+These describe how the user's desktop reaches the box; there is no `nash serve` URL in SSH mode.
 
 - A public IP or DNS name, or a Tailscale or VPN address, is the `host`; the SSH port is `port`,
   usually 22.
@@ -45,7 +45,7 @@ These describe how the user's desktop reaches the box; there is no `orca serve` 
 - A service port the workspace needs is an entry in `portForwards`. Each entry requires
   `localPort`, `remoteHost`, and `remotePort`, and takes an optional `label`. The entry schema is
   strict, so an invented key such as `local` or `remote` fails validation.
-- `relayGracePeriodSeconds` bounds how long Orca keeps the SSH relay alive after the workspace
+- `relayGracePeriodSeconds` bounds how long NASH keeps the SSH relay alive after the workspace
   detaches. **`0` means unbounded**: the relay stays up until something explicitly terminates it, so
   it is the wrong value for a disposable runtime. Any other value must be between 60 and 604800
   seconds. A value between 1 and 59, such as `30`, is rejected and takes the whole recipe result
@@ -86,7 +86,7 @@ ssh_opts=(-p "$ssh_port" -o BatchMode=yes -o StrictHostKeyChecking=yes)
 [ -n "$jump_host" ] && ssh_opts+=(-J "$jump_host")
 [ -n "$proxy_command" ] && ssh_opts+=(-o "ProxyCommand=$proxy_command")
 
-# 1. ensure the repo is present and at the right commit on the host (NO orca serve here).
+# 1. ensure the repo is present and at the right commit on the host (NO nash serve here).
 #    printf %q quotes every value for the remote shell, so a space or quote in a path or
 #    ref cannot break out of the command.
 remote_sync='set -euo pipefail
@@ -97,7 +97,7 @@ ssh "${ssh_opts[@]}" "$ssh_target" "$(printf \
   'project_root=%q repo_url=%q repo_ref=%q bash -lc %q' \
   "$project_root" "$repo_url" "$repo_ref" "$remote_sync")" >&2
 
-# 2. print the SSH connection block (NO pairingCode, NO orca serve). host/port/username tell Orca's
+# 2. print the SSH connection block (NO pairingCode, NO nash serve). host/port/username tell NASH's
 #    relay how to dial in; identityFile/jumpHost/proxyCommand/portForwards are emitted when set.
 node -e 'const [host,port,user,idf,jh,pc,root]=process.argv.slice(1);
   const target={ label:"per-workspace-host", host, port:Number(port), username:user };
@@ -108,13 +108,13 @@ node -e 'const [host,port,user,idf,jh,pc,root]=process.argv.slice(1);
 ```
 
 On a persistent host there is usually nothing to tear down, so set `destroy: none` and omit suspend
-and resume. Orca still disconnects and reconnects its own SSH relay on sleep, wake, and delete, which
+and resume. NASH still disconnects and reconnects its own SSH relay on sleep, wake, and delete, which
 is separate from these scripts.
 
 If the SSH host is instead an ephemeral, snapshot-capable VM — the user's hypervisor, or a cloud VM
 with image support — keep the base-image model from `references/provider-vercel.md` for
 provisioning, but still emit the `connection.type:"ssh"` block above instead of starting
-`orca serve`.
+`nash serve`.
 
 ## Provisioned root
 
@@ -123,7 +123,7 @@ For an explicitly requested one-VM-per-workspace checkout, the create script rea
 `ORCA_REPO_BRANCH`. Use `ORCA_REPO_REF` to fetch the selected source, but create `ORCA_REPO_BRANCH`
 at the exact `ORCA_REPO_REF_HEAD` commit, because resolving the symbolic ref again can race with an
 upstream update. `ORCA_REPO_URL` and `ORCA_REPO_REF` are a matched fetch pair, and the URL is the
-remote Orca resolved the base ref against, which is not necessarily named `origin` on the desktop.
+remote NASH resolved the base ref against, which is not necessarily named `origin` on the desktop.
 Fetch from the URL the pair supplies:
 
 ```bash

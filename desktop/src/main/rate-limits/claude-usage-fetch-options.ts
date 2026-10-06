@@ -8,9 +8,3 @@ export type ClaudeRateLimitFetchOptions = {
   networkProxySettings?: NetworkProxySettings
   signal?: AbortSignal
 }
-
-export type ClaudeManagedAccountUsageOptions = {
-  allowUsagePanelSupplement?: boolean
-  networkProxySettings?: NetworkProxySettings
-  signal?: AbortSignal
-}

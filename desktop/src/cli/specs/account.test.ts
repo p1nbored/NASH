@@ -42,7 +42,7 @@ describe('account command specs', () => {
   it('describes --agent as the account provider, not a terminal agent', () => {
     const help = formatCommandHelp(spec('account add'))
 
-    expect(help).toContain('Account provider: claude, codex, opencode, or devin (default claude)')
+    expect(help).toContain('Account provider: codex, opencode, or devin (default codex)')
     expect(help).not.toContain('TUI agent')
     expect(spec('account add').usage).toContain('[--integration <id>]')
   })

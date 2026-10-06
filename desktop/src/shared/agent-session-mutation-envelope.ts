@@ -16,6 +16,7 @@ import type { AgentSessionLease } from './agent-session-record'
 import { terminalOwnerRefusalMessage } from './agent-session-legacy-handoff-lease'
 import type { AgentSessionMutationEnvelope, AgentSessionWireRefusal } from './agent-session-wire'
 import { refuse } from './agent-session-wire-refusals'
+import { canonicalJson } from './canonical-json'
 
 /**
  * Stable digest over the fields that define what this call DOES. Keys are
@@ -38,20 +39,7 @@ export function computeAgentSessionPayloadFingerprint(input: {
 /** The same digest for an operation that has no session to name — a launch decides which surface it
  *  gets, so it has no session id until after it runs. */
 export function canonicalAgentSessionDigest(value: Record<string, unknown>): string {
-  return createHash('sha256').update(canonicalize(value)).digest('hex')
-}
-
-function canonicalize(value: unknown): string {
-  if (value === null || typeof value !== 'object') {
-    return JSON.stringify(value ?? null)
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalize).join(',')}]`
-  }
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, entry]) => entry !== undefined)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalize(entry)}`).join(',')}}`
+  return createHash('sha256').update(canonicalJson(value)).digest('hex')
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   taskNotStartableError
 } from '../../../../orchestration/task-dispatch-refusal'
 import { resolveRunScope } from './run-scope'
+import { assertAppRunUsesTaskStart } from '../../../../workflow-run/app-run-policy'
 import { DispatchParams, DispatchShowParams } from '../schemas'
 import {
   orcaSessionIdOrHandle,
@@ -51,6 +52,7 @@ export const ORCHESTRATION_DISPATCH_METHODS = [
           runId: run.id
         })
       }
+      assertAppRunUsesTaskStart(db, { runId: run.id, command: 'dispatch', taskId: task.id })
       const assignee = params.to ? resolveDispatchAssigneeParty(params.to, db).address : undefined
 
       // Why: dry-run previews the preamble without mutating state, so it skips the ready-status check and uses a placeholder dispatchId.

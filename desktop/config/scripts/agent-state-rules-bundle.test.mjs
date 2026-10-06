@@ -2,7 +2,7 @@
 // carries only agents whose transcripts the census replays, and only the protected workflow can
 // publish it.
 import { readdirSync, readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parse } from 'yaml'
 import {
   BUNDLED_AGENT_STATE_RULES_VERSION,
@@ -24,7 +24,13 @@ import {
 } from './agent-state-rules-bundle.mjs'
 import { agentStateRulesTag } from './release-tag-patterns.mjs'
 
-const REPO = 'stablyai/orca'
+// Why: the shipped identity has no release feed, so the app would fetch nothing; run against a fixture feed.
+vi.mock('../../src/shared/app-identity-constants.ts', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../../src/shared/app-update-feed.test-fixture.ts')
+  return withFixtureUpdateFeed(await importOriginal())
+})
+
+const REPO = 'fixture-owner/fixture-app'
 const NEXT = agentStateRulesTag(1, 'next')
 const STABLE = agentStateRulesTag(1, 'stable')
 

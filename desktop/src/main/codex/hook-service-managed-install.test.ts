@@ -206,7 +206,7 @@ describe('CodexHookService', () => {
         for (const eventName of localManagedCodexEvents()) {
           const command = hooksConfig.hooks[eventName]?.[0]?.hooks?.[0]?.command
           expect(command).toBe(
-            getManagedCommand(join(homedir(), '.orca', 'agent-hooks', 'codex-hook.cmd'))
+            getManagedCommand(join(homedir(), '.nash', 'agent-hooks', 'codex-hook.cmd'))
           )
         }
       } finally {
@@ -237,7 +237,7 @@ describe('CodexHookService', () => {
         for (const eventName of localManagedCodexEvents()) {
           const command = hooksConfig.hooks[eventName]?.[0]?.hooks?.[0]?.command
           expect(command).toBe(
-            getManagedCommand(join(homedir(), '.orca', 'agent-hooks', 'codex-hook.cmd'))
+            getManagedCommand(join(homedir(), '.nash', 'agent-hooks', 'codex-hook.cmd'))
           )
         }
       } finally {
@@ -263,13 +263,13 @@ describe('CodexHookService', () => {
       // Why: the temp home is normally cmd-safe; guard so a runner whose tmpdir
       // holds an exotic character still asserts the correct (fallback) branch.
       const command = hooksConfig.hooks.Stop?.[0]?.hooks?.[0]?.command ?? ''
-      const cmdSafe = /^[A-Za-z0-9_.:\\~-]+$/.test(join(homes.tmpHome, '.orca', 'agent-hooks'))
+      const cmdSafe = /^[A-Za-z0-9_.:\\~-]+$/.test(join(homes.tmpHome, '.nash', 'agent-hooks'))
       if (cmdSafe) {
         expect(command).not.toMatch(/powershell/i)
         expect(command).toMatch(/\/agent-hooks\/codex-hook\.cmd$/)
       } else {
         expect(command).toBe(
-          getManagedCommand(join(homedir(), '.orca', 'agent-hooks', 'codex-hook.cmd'))
+          getManagedCommand(join(homedir(), '.nash', 'agent-hooks', 'codex-hook.cmd'))
         )
       }
     }
@@ -282,7 +282,7 @@ describe('CodexHookService', () => {
     'posts hook payloads via the curl-based managed script preserving UTF-8 and spaced metadata',
     async () => {
       await new CodexHookService().install()
-      const scriptPath = join(homedir(), '.orca', 'agent-hooks', 'codex-hook.cmd')
+      const scriptPath = join(homedir(), '.nash', 'agent-hooks', 'codex-hook.cmd')
       expect(existsSync(scriptPath)).toBe(true)
 
       // Why: resolve when the listener has fully read the hook POST. spawnSync

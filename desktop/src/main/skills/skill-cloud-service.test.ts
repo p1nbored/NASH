@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SkillCloudVersion } from '../../shared/skill-cloud-contract'
 import { SkillCloudService } from './skill-cloud-service'
 
@@ -67,6 +67,9 @@ function publishRequest(archivePath: string, archiveSha256: string, compressedBy
 }
 
 describe('SkillCloudService bearer links', () => {
+  // Only an environment origin enables sharing in NASH builds; a request's apiUrl alone does not.
+  beforeEach(() => vi.stubEnv('ORCA_ARTIFACTS_API_URL', 'http://127.0.0.1:8787'))
+
   it('resolves and grants downloads without an Orca session', async () => {
     const requests: RequestInit[] = []
     vi.stubGlobal(
@@ -123,7 +126,39 @@ describe('SkillCloudService bearer links', () => {
   })
 })
 
+describe('SkillCloudService in NASH builds (Orca cloud services off)', () => {
+  it('refuses a shared-skill link install without any request', async () => {
+    packaged.value = true
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const service = new SkillCloudService(userDataPath())
+    const refusal = {
+      status: 'unconfigured',
+      message: 'Installing shared skills from Orca links is not available in NASH builds.'
+    }
+
+    await expect(service.resolveShare('share_1', {})).resolves.toEqual(refusal)
+    await expect(service.createDownloadGrant('share_1', {})).resolves.toEqual(refusal)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('refuses publishing and share management without any request', async () => {
+    packaged.value = true
+    vi.stubEnv('ORCA_CLOUD_AUTH_TOKEN', 'desktop-e2e-token')
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(new SkillCloudService(userDataPath()).listOwnedShares({})).resolves.toEqual({
+      status: 'unconfigured',
+      message: 'Orca artifact and skill sharing is not available in NASH builds.'
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('SkillCloudService publication retries', () => {
+  beforeEach(() => vi.stubEnv('ORCA_ARTIFACTS_API_URL', 'http://127.0.0.1:8787'))
+
   it('reuses a reserved upload after its create response is lost', async () => {
     vi.stubEnv('ORCA_CLOUD_AUTH_TOKEN', 'desktop-e2e-token')
     const root = userDataPath()

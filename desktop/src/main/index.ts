@@ -1,3 +1,5 @@
+// Why first: removes the Clef credential variables before any other module can read or copy them.
+import './startup/clef-environment-scrub-at-load'
 import { app, clipboard, dialog, type BrowserWindow } from 'electron'
 import { parseSkillShareId } from '../shared/skill-share-link'
 import { createMacAppActivationHandler } from './window/macos-app-activation'

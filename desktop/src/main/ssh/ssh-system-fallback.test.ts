@@ -689,7 +689,7 @@ describe('spawnSystemSsh', () => {
 
     const promise = writeFileViaSystemSsh(
       createTarget(),
-      'C:/Users/me/.orca-remote/relay/.version',
+      'C:/Users/me/.nash-remote/relay/.version',
       '0.1.0',
       { hostPlatform }
     )
@@ -699,7 +699,7 @@ describe('spawnSystemSsh', () => {
     // finds it momentarily empty, so the bytes must not travel that way at all.
     const batch = String(spawned[0]!.stdin.end.mock.calls[0]?.[0] ?? '')
     expect(batch).toContain('put ')
-    expect(batch).toContain('/C:/Users/me/.orca-remote/relay/.version.orca-partial-')
+    expect(batch).toContain('/C:/Users/me/.nash-remote/relay/.version.orca-partial-')
     const sftpArgs = spawnMock.mock.calls[0][1] as string[]
     expect(sftpArgs).toContain('-b')
     // The rename that publishes it reads the staged file, never a pipe.
@@ -764,7 +764,7 @@ describe('spawnSystemSsh', () => {
 
     const promise = writeFileViaSystemSsh(
       createTarget(),
-      'C:/Users/me/.orca-remote/relay/.version',
+      'C:/Users/me/.nash-remote/relay/.version',
       '0.1.0',
       { hostPlatform, disableControlMaster: true }
     )
@@ -795,7 +795,7 @@ describe('spawnSystemSsh', () => {
       await uploadDirectoryViaSystemSsh(
         createTarget(),
         localDir,
-        'C:/Users/me/.orca-remote/relay',
+        'C:/Users/me/.nash-remote/relay',
         { hostPlatform: getRemoteHostPlatform('win32-x64') }
       )
     } finally {
@@ -805,10 +805,10 @@ describe('spawnSystemSsh', () => {
     // #16432: directories first, then the file — but both over sftp now, so the only PowerShell
     // left is the rename that publishes the staged file, which reads a file rather than a pipe.
     const mkdirBatch = String(spawned[0]!.stdin.end.mock.calls[0]?.[0] ?? '')
-    expect(mkdirBatch).toBe('-mkdir "/C:/Users/me/.orca-remote/relay"\n')
+    expect(mkdirBatch).toBe('-mkdir "/C:/Users/me/.nash-remote/relay"\n')
     const putBatch = String(spawned[1]!.stdin.end.mock.calls[0]?.[0] ?? '')
     expect(putBatch).toContain('put ')
-    expect(putBatch).toContain('/C:/Users/me/.orca-remote/relay/relay.js.orca-partial-')
+    expect(putBatch).toContain('/C:/Users/me/.nash-remote/relay/relay.js.orca-partial-')
     const commands = spawnMock.mock.calls.map((call) => (call[1] as string[]).at(-1) ?? '')
     expect(commands.every((command) => !command.includes('/bin/sh'))).toBe(true)
     expect(commands.join('\n')).not.toContain('tar -xzf')
@@ -831,7 +831,7 @@ describe('spawnSystemSsh', () => {
       await uploadDirectoryViaSystemSsh(
         createTarget(),
         localDir,
-        'C:/Users/me/.orca-remote/relay',
+        'C:/Users/me/.nash-remote/relay',
         { hostPlatform: getRemoteHostPlatform('win32-x64'), disableControlMaster: true }
       )
     } finally {

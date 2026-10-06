@@ -8,9 +8,9 @@ import {
 
 describe('getDefaultSettings', () => {
   it('uses platform-consistent separators for the default workspace directory', () => {
-    expect(getDefaultSettings('/Users/alice').workspaceDir).toBe('/Users/alice/orca/workspaces')
+    expect(getDefaultSettings('/Users/alice').workspaceDir).toBe('/Users/alice/nash/workspaces')
     expect(getDefaultSettings('C:\\Users\\alice').workspaceDir).toBe(
-      'C:\\Users\\alice\\orca\\workspaces'
+      'C:\\Users\\alice\\nash\\workspaces'
     )
   })
 
@@ -46,8 +46,9 @@ describe('getDefaultSettings', () => {
     expect(getDefaultSettings('/tmp').terminalAllowOsc52ClipboardDefaultedOnForAllUsers).toBe(true)
   })
 
-  it('enables separate light terminal theme by default', () => {
-    expect(getDefaultSettings('/tmp').terminalUseSeparateLightTheme).toBe(true)
+  // Why (decision D-009): the warm charcoal terminal stays dark inside the light shell.
+  it('keeps the charcoal terminal in both app themes by default', () => {
+    expect(getDefaultSettings('/tmp').terminalUseSeparateLightTheme).toBe(false)
   })
 
   it('keeps inactive terminal panes readable by default', () => {

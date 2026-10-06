@@ -287,7 +287,7 @@ describe('bash-only payloads declare their interpreter', () => {
     // demand `shell: 'bash'` on POSIX payloads that must not have it.
     // A ternary only makes the call opaque when it CHOOSES the spec, i.e. it
     // sits before the first `{`. One inside the object picks a script line and
-    // is both common and harmless (claude-accounts/service.ts:977).
+    // is both common and harmless.
     const isExotic = (text: string): boolean => {
       const body = text.replace(/^\(/, '')
       const firstBrace = body.indexOf('{')

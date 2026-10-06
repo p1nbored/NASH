@@ -16,20 +16,6 @@ function method(name: string) {
 describe('account RPC methods', () => {
   it.each([
     {
-      methodName: 'accounts.addClaudeFromConfigDir',
-      params: {
-        configDir: join(tmpdir(), 'claude-login'),
-        previousLegacyCredentialsSha256: 'a'.repeat(64)
-      },
-      runtimeMethod: 'addClaudeAccountFromConfigDir',
-      expectedSource: join(tmpdir(), 'claude-login'),
-      expectedOptions: {
-        runtime: undefined,
-        wslDistro: null,
-        previousLegacyCredentialsSha256: 'a'.repeat(64)
-      }
-    },
-    {
       methodName: 'accounts.addCodexFromHome',
       params: { sourceHome: join(tmpdir(), 'codex-login') },
       runtimeMethod: 'addCodexAccountFromHome',
@@ -58,7 +44,6 @@ describe('account RPC methods', () => {
     ]
   ])('rejects paired-device calls to %s', async (methodName, params) => {
     const runtime = {
-      addClaudeAccountFromConfigDir: vi.fn(),
       addCodexAccountFromHome: vi.fn()
     } as unknown as OrcaRuntimeService
     const addMethod = method(methodName)
@@ -71,7 +56,6 @@ describe('account RPC methods', () => {
         /only available on the Orca host runtime/
       )
     }
-    expect(runtime.addClaudeAccountFromConfigDir).not.toHaveBeenCalled()
     expect(runtime.addCodexAccountFromHome).not.toHaveBeenCalled()
   })
 

@@ -2,6 +2,7 @@
 // policy (per-user $HOME default, sibling-of-socket layout, Windows named-pipe path flattening) and
 // the ORCA_AGENT_HOOK_* env vars injected into relay-spawned PTYs. IO-free.
 import { basename, dirname, join } from 'node:path'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { homedir } from 'node:os'
 
 import {
@@ -10,7 +11,7 @@ import {
 } from '../shared/agent-hook-types'
 
 // Why: relay's userData equivalent under $HOME so each user on a shared dev box gets their own 0o700 dir.
-const RELAY_HOOKS_DIR_NAME = '.orca-relay'
+const RELAY_HOOKS_DIR_NAME = APP_RELAY_HOME_DIR_NAME
 const RELAY_HOOKS_SUBDIR = 'agent-hooks'
 
 export function defaultEndpointDir(): string {

@@ -360,7 +360,7 @@ describe('CodexAccountService config sync', () => {
       ),
       managedHomeRuntime: 'wsl' as const,
       wslDistro: 'Ubuntu',
-      wslLinuxHomePath: '/home/test/.local/share/orca/codex-accounts/account-wsl/home',
+      wslLinuxHomePath: '/home/test/.local/share/nash/codex-accounts/account-wsl/home',
       providerAccountId: 'provider-wsl',
       workspaceLabel: null,
       workspaceAccountId: 'provider-wsl',

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OrcaRuntimeService } from '../../orca-runtime'
 import { eraseRpcMethods, isStreamingMethod, type RpcContext } from '../core'
+import type * as ScopeModule from '../../../agent-hooks/nash-managed-hook-scope'
 
 const { installForRuntimeHomeSerializedMock, realpathMock } = vi.hoisted(() => ({
   installForRuntimeHomeSerializedMock: vi.fn(),
@@ -12,15 +13,26 @@ vi.mock('../../../codex/hook-service', () => ({
 }))
 vi.mock('node:fs/promises', () => ({ realpath: realpathMock }))
 
+// Why an override: Orca's install mechanics need Codex inside NASH's Claude-only scope.
+const scope = vi.hoisted(() => ({ override: null as readonly string[] | null }))
+vi.mock('../../../agent-hooks/nash-managed-hook-scope', async (importOriginal) => {
+  const actual = await importOriginal<typeof ScopeModule>()
+  return {
+    ...actual,
+    isNashManagedHookAgent: (agent: string) =>
+      scope.override ? scope.override.includes(agent) : actual.isNashManagedHookAgent(agent)
+  }
+})
+
 import { AGENT_HOOK_METHODS } from './agent-hooks'
 import {
   _internals as managedWslHomeRegistryInternals,
   recordManagedWslCodexHome
 } from '../../../codex/managed-wsl-codex-home-registry'
 
-const LINUX_HOME = '/home/jin/.local/share/orca/codex-runtime-home/home'
+const LINUX_HOME = '/home/jin/.local/share/nash/codex-runtime-home/home'
 const RUNTIME_HOME =
-  '\\\\wsl.localhost\\Ubuntu-24.04\\home\\jin\\.local\\share\\orca\\codex-runtime-home\\home'
+  '\\\\wsl.localhost\\Ubuntu-24.04\\home\\jin\\.local\\share\\nash\\codex-runtime-home\\home'
 
 function prepareMethod() {
   const method = eraseRpcMethods(AGENT_HOOK_METHODS).find(
@@ -48,6 +60,20 @@ describe('agent hook RPC methods', () => {
     realpathMock.mockImplementation(async (path: string) => path)
     managedWslHomeRegistryInternals.clearRecordedManagedWslCodexHomes()
     recordManagedWslCodexHome('Ubuntu-24.04', RUNTIME_HOME)
+    scope.override = ['claude', 'codex']
+  })
+
+  it('installs no Codex hooks under NASH scope even when hooks are enabled', async () => {
+    scope.override = null
+    const method = prepareMethod()
+    const params = method.params!.parse({
+      codexHome: LINUX_HOME,
+      orcaCodexHome: LINUX_HOME,
+      wslDistro: 'Ubuntu-24.04'
+    })
+
+    await expect(method.handler(params, { runtime: runtimeWithSettings() })).resolves.toBeNull()
+    expect(installForRuntimeHomeSerializedMock).not.toHaveBeenCalled()
   })
 
   it('installs the pane-selected WSL home once and returns its status', async () => {
@@ -73,8 +99,8 @@ describe('agent hook RPC methods', () => {
   ])('does not install when hooks are disabled (%s, %j)', async (enabled, disabledTuiAgents) => {
     const method = prepareMethod()
     const params = method.params!.parse({
-      codexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
-      orcaCodexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
+      codexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
+      orcaCodexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
       wslDistro: 'Ubuntu-24.04'
     })
 
@@ -87,8 +113,8 @@ describe('agent hook RPC methods', () => {
   it.each(['runtime', 'mobile'] as const)('rejects non-local %s callers', async (clientKind) => {
     const method = prepareMethod()
     const params = method.params!.parse({
-      codexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
-      orcaCodexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
+      codexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
+      orcaCodexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
       wslDistro: 'Ubuntu-24.04'
     })
 
@@ -105,8 +131,8 @@ describe('agent hook RPC methods', () => {
     installForRuntimeHomeSerializedMock.mockRejectedValue(new Error('install failed'))
     const method = prepareMethod()
     const params = method.params!.parse({
-      codexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
-      orcaCodexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
+      codexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
+      orcaCodexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
       wslDistro: 'Ubuntu-24.04'
     })
 
@@ -136,8 +162,8 @@ describe('agent hook RPC methods', () => {
 
     expect(() =>
       method.params!.parse({
-        codexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
-        orcaCodexHome: '/home/jin/.local/share/orca/codex-runtime-home/home',
+        codexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
+        orcaCodexHome: '/home/jin/.local/share/nash/codex-runtime-home/home',
         wslDistro: 'Ubuntu\\..\\host'
       })
     ).toThrow()

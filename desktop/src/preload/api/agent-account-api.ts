@@ -1,8 +1,5 @@
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
-import type {
-  ClaudeRateLimitAccountsState,
-  CodexRateLimitAccountsState
-} from '../../shared/managed-account-types'
+import type { CodexRateLimitAccountsState } from '../../shared/managed-account-types'
 import type { CodexConfigSyncStatus } from '../../shared/codex-config-sync-types'
 import type { CursorAccountStatus, GrokAccountStatus } from '../../shared/rate-limit-types'
 import type { ZcodePlanCredentialsStatus } from '../../shared/zcode-plan-sites'
@@ -42,22 +39,6 @@ export type CodexAccountsApi = {
   listRecordedPaneLanes: (args: { ptyIds: string[] }) => Promise<Record<string, string>>
   /** Drops launch records so a dismissed prompt stays dismissed across restarts. */
   forgetStalePanes: (args: { ptyIds: string[] }) => Promise<void>
-}
-
-export type ClaudeAccountsApi = {
-  list: () => Promise<ClaudeRateLimitAccountsState>
-  add: (args?: {
-    runtime?: 'host' | 'wsl'
-    wslDistro?: string | null
-  }) => Promise<ClaudeRateLimitAccountsState>
-  cancelPendingLogin: () => Promise<boolean>
-  reauthenticate: (args: { accountId: string }) => Promise<ClaudeRateLimitAccountsState>
-  remove: (args: { accountId: string }) => Promise<ClaudeRateLimitAccountsState>
-  select: (args: {
-    accountId: string | null
-    runtime?: 'host' | 'wsl'
-    wslDistro?: string | null
-  }) => Promise<ClaudeRateLimitAccountsState>
 }
 
 export type GrokAccountsApi = {

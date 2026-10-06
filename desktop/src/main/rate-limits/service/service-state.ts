@@ -18,11 +18,14 @@ import {
   type GeminiCliOAuthEnabledResolver,
   type NormalizedCodexAccountSelectionTarget,
   type NormalizedClaudeAccountSelectionTarget,
-  type InactiveClaudeAccountInfo,
   type NetworkProxySettings,
   DEFAULT_POLL_MS
 } from './service-types'
 import { readGrokAuthSession } from '../grok-auth'
+import { USAGE_METER_SOURCE } from '../usage-meters-policy'
+
+/** The providers whose selected account Orca switches; the routing table re-reads them on a switch. */
+export type RateLimitAccountProvider = 'claude' | 'codex'
 
 export abstract class RateLimitServiceState {
   protected state: InternalRateLimitState = {
@@ -37,7 +40,9 @@ export abstract class RateLimitServiceState {
     cursor: null,
     zcode: null
   }
-  protected grokAuthConfigured = readGrokAuthSession().status === 'ok'
+  // Why gated here: a field initializer runs before the CLI usage layer can intervene.
+  protected grokAuthConfigured =
+    USAGE_METER_SOURCE === 'orca-inherited' && readGrokAuthSession().status === 'ok'
   // Why: the Cursor probe reads the macOS Keychain, so it cannot run synchronously
   // at construction the way Grok's auth-file probe does; each fetch cycle sets it.
   protected cursorAuthConfigured = false
@@ -108,19 +113,15 @@ export abstract class RateLimitServiceState {
   protected zcodePlanConfigResolver: (() => ZcodePlanRateLimitConfig) | null = null
   protected geminiCliOAuthEnabledResolver: GeminiCliOAuthEnabledResolver | null = null
   protected antigravityUsageEnabledResolver: AntigravityUsageEnabledResolver | null = null
-  protected inactiveClaudeAccountsResolver: (() => InactiveClaudeAccountInfo[]) | null = null
   protected inactiveCodexAccountsResolver: (() => InactiveCodexAccountInfo[]) | null = null
   protected networkProxySettingsResolver: (() => NetworkProxySettings) | null = null
-  protected inactiveClaudeCache = new Map<string, ProviderRateLimits>()
   protected inactiveCodexCache = new Map<string, ProviderRateLimits>()
-  protected inactiveClaudeFetching = new Set<string>()
   protected inactiveCodexFetching = new Set<string>()
   protected inactiveCodexFetchInFlight = false
-  protected lastInactiveClaudeFetchAt = 0
-  protected inactiveClaudeAccountsGeneration = 0
   protected lastInactiveCodexFetchAt = 0
   protected inactiveCodexAccountsGeneration = 0
   protected stateListeners = new Set<(state: RateLimitState) => void>()
+  protected accountChangeListeners = new Set<(provider: RateLimitAccountProvider) => void>()
 
   constructor() {}
 
@@ -128,6 +129,24 @@ export abstract class RateLimitServiceState {
     this.stateListeners.add(listener)
     return () => {
       this.stateListeners.delete(listener)
+    }
+  }
+
+  /** The selected Claude or Codex account changed (select, remove, add or re-login); returns the unsubscribe. */
+  onAccountChange(listener: (provider: RateLimitAccountProvider) => void): () => void {
+    this.accountChangeListeners.add(listener)
+    return () => {
+      this.accountChangeListeners.delete(listener)
+    }
+  }
+
+  protected notifyAccountChange(provider: RateLimitAccountProvider): void {
+    for (const listener of this.accountChangeListeners) {
+      try {
+        listener(provider)
+      } catch {
+        // ignore — a listener's failure must not stall or undo the account switch
+      }
     }
   }
 

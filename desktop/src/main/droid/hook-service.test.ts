@@ -77,7 +77,7 @@ describe('DroidHookService', () => {
       process.platform === 'win32' ? WINDOWS_POWERSHELL_LAUNCHER : /droid-hook/
     )
     if (process.platform !== 'win32') {
-      expect(config.hooks.PreToolUse[0].hooks[0].command).toContain(join(homeDir, '.orca'))
+      expect(config.hooks.PreToolUse[0].hooks[0].command).toContain(join(homeDir, '.nash'))
     }
     expect(config.hooks.PreToolUse[0].hooks[0].command).not.toContain(userDataDir)
   })

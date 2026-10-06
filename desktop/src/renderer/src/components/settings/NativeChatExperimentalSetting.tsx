@@ -141,7 +141,7 @@ export function NativeChatExperimentalSetting({
                 <p className="text-xs text-muted-foreground">
                   {translate(
                     'auto.components.settings.ExperimentalPane.nativeChat.structuredScope',
-                    'Runs on this machine and on paired Orca servers running a version that supports it; older servers keep terminal chat. WSL and SSH hosts continue to use terminal chat, and Windows falls back to it unless Orca can read process start times.'
+                    'Runs on this machine and on paired NASH servers running a version that supports it; older servers keep terminal chat. WSL and SSH hosts continue to use terminal chat, and Windows falls back to it unless NASH can read process start times.'
                   )}
                 </p>
               </div>
@@ -173,7 +173,7 @@ export function NativeChatExperimentalSetting({
                 <p className="text-xs text-muted-foreground">
                   {translate(
                     'auto.components.settings.ExperimentalPane.nativeChat.resumeCopy',
-                    'When Orca quits or installs an update, chats that were working are automatically resumed when Orca is reopened.'
+                    'When NASH quits or installs an update, chats that were working are automatically resumed when NASH is reopened.'
                   )}
                 </p>
               </div>

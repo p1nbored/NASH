@@ -6,10 +6,10 @@ async function openFeatureTourFromMenu(electronApp: ElectronApplication): Promis
   await electronApp.evaluate(({ BrowserWindow, Menu }) => {
     const featureTourItem = Menu.getApplicationMenu()
       ?.items.find((item) => item.label === 'Help')
-      ?.submenu?.items.find((item) => item.label === 'Explore Orca')
+      ?.submenu?.items.find((item) => item.label === 'Explore NASH')
 
     if (!featureTourItem) {
-      throw new Error('Explore Orca menu item was not registered')
+      throw new Error('Explore NASH menu item was not registered')
     }
 
     const window = BrowserWindow.getAllWindows()[0]
@@ -34,10 +34,10 @@ test.describe('Feature tour modal', () => {
   }) => {
     await openFeatureTourFromMenu(electronApp)
 
-    await expect(orcaPage.getByRole('dialog', { name: 'Get to know Orca' })).toBeVisible({
+    await expect(orcaPage.getByRole('dialog', { name: 'Get to know NASH' })).toBeVisible({
       timeout: 10_000
     })
-    await expect(orcaPage.getByText('Reopen any time from Help > Explore Orca.')).toBeVisible()
+    await expect(orcaPage.getByText('Reopen any time from Help > Explore NASH.')).toBeVisible()
 
     // Five workflow rows in the rail.
     const rail = orcaPage.getByRole('navigation', { name: 'Workflows' })
@@ -109,7 +109,7 @@ test.describe('Feature tour modal', () => {
       store.getState().openModal('feature-wall', { source: 'help_menu' })
     })
 
-    await expect(orcaPage.getByRole('dialog', { name: 'Get to know Orca' })).toBeVisible({
+    await expect(orcaPage.getByRole('dialog', { name: 'Get to know NASH' })).toBeVisible({
       timeout: 10_000
     })
     await orcaPage
@@ -118,7 +118,7 @@ test.describe('Feature tour modal', () => {
       .click()
     await expect(orcaPage.getByText('Start work directly from GitHub or Linear.')).toBeVisible()
     await expect(orcaPage.getByText('Connect GitHub or Linear once')).toHaveCount(0)
-    await expect(orcaPage.getByRole('dialog', { name: 'Get to know Orca' })).toBeVisible()
+    await expect(orcaPage.getByRole('dialog', { name: 'Get to know NASH' })).toBeVisible()
     await expect
       .poll(async () => getStoreState<string>(orcaPage, 'activeView'))
       .not.toBe('settings')

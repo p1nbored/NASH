@@ -120,7 +120,7 @@ function runPowerShellCommand(executable: string, script: string): Promise<strin
 describe('ssh remote command builders', () => {
   it('keeps POSIX deploy commands POSIX-native', () => {
     expect(readRemoteHomeCommand(posix)).toBe('echo $HOME')
-    expect(makeRemoteDirectoryCommand(posix, '/home/me/.orca-remote')).toContain('mkdir -p')
+    expect(makeRemoteDirectoryCommand(posix, '/home/me/.nash-remote')).toContain('mkdir -p')
     const probe = probeRelayInstalledCommand(posix, '/home/me/relay')
     expect(probe).toContain('test -d')
     expect(probe).toContain('managed-hook-runtime.js')
@@ -190,7 +190,7 @@ describe('ssh remote command builders', () => {
 
   it('uses encoded PowerShell for Windows deploy commands', () => {
     expect(readRemoteHomeCommand(windows)).toContain('powershell.exe')
-    expect(makeRemoteDirectoryCommand(windows, 'C:/Users/me/.orca-remote')).toContain(
+    expect(makeRemoteDirectoryCommand(windows, 'C:/Users/me/.nash-remote')).toContain(
       '-EncodedCommand'
     )
     const probe = probeRelayInstalledCommand(windows, 'C:/Users/me/relay')
@@ -201,10 +201,10 @@ describe('ssh remote command builders', () => {
 
   it('uses a legacy-visible Windows lock directory with an exclusive owner file', () => {
     const mkdirScript = decodePowerShellCommand(
-      makeRemoteDirectoryCommand(windows, 'C:/Users/me/.orca-remote')
+      makeRemoteDirectoryCommand(windows, 'C:/Users/me/.nash-remote')
     )
     const lockScript = decodePowerShellCommand(
-      tryCreateInstallLockCommand(windows, 'C:/Users/me/.orca-remote/relay/.install-lock')
+      tryCreateInstallLockCommand(windows, 'C:/Users/me/.nash-remote/relay/.install-lock')
     )
 
     expect(mkdirScript).toContain('New-Item -ItemType Directory -Force -Path')
@@ -228,7 +228,7 @@ describe('ssh remote command builders', () => {
   })
 
   it('emits an explicit POSIX liveness result so GC can fail closed', () => {
-    const command = relayLivenessProbeCommand(posix, '/home/u/.orca-remote/relay-0.1.0')
+    const command = relayLivenessProbeCommand(posix, '/home/u/.nash-remote/relay-0.1.0')
 
     expect(command).toContain('state=DEAD')
     expect(command).toContain('[ -S "$f" ] && state=ALIVE')
@@ -236,7 +236,7 @@ describe('ssh remote command builders', () => {
   })
 
   it('uses named pipe try-connect liveness for Windows GC', () => {
-    const command = relayLivenessProbeCommand(windows, 'C:/Users/me/.orca-remote/relay-0.1.0', {
+    const command = relayLivenessProbeCommand(windows, 'C:/Users/me/.nash-remote/relay-0.1.0', {
       nodePath: 'C:/Program Files/nodejs/node.exe',
       pipePaths: ['\\\\.\\pipe\\orca-relay-1234567890abcdef1234']
     })
@@ -248,7 +248,7 @@ describe('ssh remote command builders', () => {
     expect(script).toContain('markerCount===0&&pipes.length===0')
     expect(script).toContain('C:\\Program Files\\nodejs')
     expect(script).not.toContain('Win32_Process')
-    expect(listRelayBaseDirsCommand(windows, 'C:/Users/me/.orca-remote')).toContain(
+    expect(listRelayBaseDirsCommand(windows, 'C:/Users/me/.nash-remote')).toContain(
       '-EncodedCommand'
     )
   })
@@ -292,7 +292,7 @@ describe('ssh remote command builders', () => {
 
   it('escapes double quotes before passing JavaScript to native Windows commands', () => {
     const script = decodePowerShellCommand(
-      relayLivenessProbeCommand(windows, 'C:/Users/me/.orca-remote/relay-0.1.0', {
+      relayLivenessProbeCommand(windows, 'C:/Users/me/.nash-remote/relay-0.1.0', {
         nodePath: 'C:/Program Files/nodejs/node.exe',
         pipePaths: ['\\\\.\\pipe\\orca-relay-1234567890abcdef1234']
       })
@@ -307,7 +307,7 @@ describe('ssh remote command builders', () => {
       commandWithNodePath(
         windows,
         'C:/Program Files/nodejs/node.exe',
-        'C:/Users/me/.orca-remote/relay-0.1.0',
+        'C:/Users/me/.nash-remote/relay-0.1.0',
         "'READY'"
       )
     )
@@ -317,7 +317,7 @@ describe('ssh remote command builders', () => {
 
   it('keeps the Windows install-lock try/catch parseable', () => {
     const script = decodePowerShellCommand(
-      tryCreateInstallLockCommand(windows, 'C:/Users/me/.orca-remote/relay/.install-lock')
+      tryCreateInstallLockCommand(windows, 'C:/Users/me/.nash-remote/relay/.install-lock')
     )
 
     expect(script).toContain('$stream = $null; try {')
@@ -326,9 +326,9 @@ describe('ssh remote command builders', () => {
   })
 
   it('computes install-lock age on the remote host clock', () => {
-    const posixCommand = lockAgeSecondsCommand(posix, '/home/me/.orca-remote/relay/.install-lock')
+    const posixCommand = lockAgeSecondsCommand(posix, '/home/me/.nash-remote/relay/.install-lock')
     const windowsScript = decodePowerShellCommand(
-      lockAgeSecondsCommand(windows, 'C:/Users/me/.orca-remote/relay/.install-lock')
+      lockAgeSecondsCommand(windows, 'C:/Users/me/.nash-remote/relay/.install-lock')
     )
 
     expect(posixCommand).toContain('date +%s')
@@ -340,11 +340,11 @@ describe('ssh remote command builders', () => {
   it('serializes stale recovery with unbounded numbered sibling claims', () => {
     const posixCommand = tryStealInstallLockCommand(
       posix,
-      '/home/me/.orca-remote/relay/.install-lock',
+      '/home/me/.nash-remote/relay/.install-lock',
       20 * 60
     )
     const windowsScript = decodePowerShellCommand(
-      tryStealInstallLockCommand(windows, 'C:/Users/me/.orca-remote/relay/.install-lock', 20 * 60)
+      tryStealInstallLockCommand(windows, 'C:/Users/me/.nash-remote/relay/.install-lock', 20 * 60)
     )
 
     expect(posixCommand).toContain('.install-lock')
@@ -371,7 +371,7 @@ describe('ssh remote command builders', () => {
       const script = decodePowerShellCommand(
         tryStealInstallLockCommand(
           windows,
-          'C:/Users/orca-missing/.orca-remote/relay/.install-lock',
+          'C:/Users/orca-missing/.nash-remote/relay/.install-lock',
           20 * 60
         )
       )
@@ -638,13 +638,13 @@ describe('ssh remote command builders', () => {
       commandWithNodePath(
         windows,
         'C:/Program Files/nodejs/node.exe',
-        'C:/Users/me/.orca-remote/relay-0.1.0',
+        'C:/Users/me/.nash-remote/relay-0.1.0',
         "'READY'"
       )
     )
 
     expect(nodeScopedCommand).toContain(
-      "Set-Location -ErrorAction Stop -LiteralPath 'C:/Users/me/.orca-remote/relay-0.1.0'"
+      "Set-Location -ErrorAction Stop -LiteralPath 'C:/Users/me/.nash-remote/relay-0.1.0'"
     )
   })
 })

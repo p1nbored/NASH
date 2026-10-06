@@ -106,7 +106,7 @@ export async function sendRemoteRuntimeRequestOnSocket<TResult>(
       finishError(
         new RemoteRuntimeClientError(
           'runtime_timeout',
-          'Timed out waiting for the remote Orca runtime to respond.',
+          'Timed out waiting for the remote NASH runtime to respond.',
           { pairingStage: router.pairingStage }
         )
       )
@@ -158,7 +158,7 @@ export async function sendRemoteRuntimeRequestOnSocket<TResult>(
         finishError(
           new RemoteRuntimeClientError(
             'remote_runtime_unavailable',
-            'Remote Orca runtime request was released before it could be sent.'
+            'Remote NASH runtime request was released before it could be sent.'
           )
         )
         return
@@ -238,7 +238,7 @@ export async function sendRemoteRuntimeRequestOnSocket<TResult>(
         finishError(
           new RemoteRuntimeClientError(
             'invalid_runtime_response',
-            'Remote Orca runtime returned an unexpected binary frame.',
+            'Remote NASH runtime returned an unexpected binary frame.',
             {
               pairingStage:
                 router.state === 'awaiting_ready' ? 'host-identity' : router.pairingStage

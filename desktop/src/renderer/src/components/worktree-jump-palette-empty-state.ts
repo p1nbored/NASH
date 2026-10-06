@@ -65,7 +65,7 @@ export function getWorktreeJumpPaletteEmptyState(controller: WorktreeJumpPalette
     ),
     subtitle: translate(
       'auto.components.WorktreeJumpPalette.f7fda8d562',
-      'Create a worktree or open a tab in Orca to get started.'
+      'Create a worktree or open a tab in NASH to get started.'
     )
   }
 }

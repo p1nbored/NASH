@@ -1,4 +1,5 @@
-import { existsSync, rmSync, writeFileSync } from 'node:fs'
+import { rmSync } from 'node:fs'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import type { AgentHookSource } from '../../shared/agent-hook-relay'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -26,11 +27,9 @@ export { getManagedScript }
 import { getManagedStatusLineScript } from './statusline-script'
 import {
   applyManagedHooks,
-  applyManagedStatusLine,
   CLAUDE_HOOK_SETTINGS,
   getManagedScriptFileName,
   getConfigPath,
-  getManagedCommand,
   getManagedLifecycleHook,
   getManagedScriptPath,
   getPosixManagedScriptFileName,
@@ -39,7 +38,6 @@ import {
   getStatusLineInstallMarkerPath,
   getStatusLineScriptFileName,
   getStatusLineScriptPath,
-  getStatusLineSlotState,
   hasSameManagedHookInvocation,
   removeManagedHooks,
   removeManagedStatusLine,
@@ -186,37 +184,14 @@ export class ClaudeHookService {
     } else {
       writeManagedScript(scriptPath, payload)
     }
-    if (plan.statusLine === 'install') {
-      nextConfig = this.installManagedStatusLine(nextConfig)
-    } else if (plan.statusLine === 'retire') {
+    // Why (G8, user decision of 2026-10-06): Claude usage reaches NASH only through the relay in the
+    // primary sessions' own --settings file, so NASH never writes the user-global statusLine slot;
+    // where Orca would install its feed, NASH only removes an entry an earlier build wrote.
+    if (plan.statusLine !== 'leave') {
       nextConfig = this.retireManagedStatusLine(nextConfig)
     }
     writeHooksJson(configPath, nextConfig)
     return this.getStatus(options)
-  }
-
-  // Why: the statusline feed is opportunistic (usage display, not agent status); a user who deleted the
-  // managed entry has opted out, and the marker distinguishes that deletion from a first install.
-  private installManagedStatusLine(config: HooksConfig): HooksConfig {
-    const scriptFileName = getStatusLineScriptFileName(this.options.settings)
-    const markerPath = getStatusLineInstallMarkerPath(this.options.settings)
-    const slot = getStatusLineSlotState(config, scriptFileName)
-    if (slot === 'user' || (slot === 'empty' && existsSync(markerPath))) {
-      return config
-    }
-    const statusLineScriptPath = getStatusLineScriptPath(this.options.settings)
-    writeManagedScript(statusLineScriptPath, getManagedStatusLineScript('local'))
-    const next = applyManagedStatusLine(
-      config,
-      getManagedCommand(statusLineScriptPath),
-      scriptFileName
-    )
-    try {
-      writeFileSync(markerPath, '')
-    } catch {
-      // Best-effort: a missing marker only means one future user deletion gets re-installed once.
-    }
-    return next
   }
 
   // Why: a Claude that predates statusLine discards the whole settings file over Orca's; dropping the
@@ -245,7 +220,7 @@ export class ClaudeHookService {
     // Why: remote Windows is unsupported; local process.platform cannot identify the remote OS.
     const remoteConfigPath = getRemoteConfigPath(remoteHome, this.options.settings)
     const remoteScriptFileName = getPosixManagedScriptFileName(this.options.settings)
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/${remoteScriptFileName}`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/${remoteScriptFileName}`
     // Why: surface fallible SFTP installs as structured errors.
     try {
       const config = await readHooksJsonRemote(sftp, remoteConfigPath)

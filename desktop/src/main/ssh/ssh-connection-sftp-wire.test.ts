@@ -10,7 +10,7 @@ import { getRemoteHostPlatform } from './ssh-remote-platform'
 
 const SHELL_HOME = '/var/services/homes/alice'
 const SFTP_HOME = '/homes/alice'
-const RELAY_DIR = '.orca-remote/relay-0.1.0+wire'
+const RELAY_DIR = '.nash-remote/relay-0.1.0+wire'
 const SHELL_RELAY_DIR = `${SHELL_HOME}/${RELAY_DIR}`
 const SFTP_RELAY_DIR = `${SFTP_HOME}/${RELAY_DIR}`
 const MARKER_FILE = `.sftp-namespace-${'a'.repeat(32)}`

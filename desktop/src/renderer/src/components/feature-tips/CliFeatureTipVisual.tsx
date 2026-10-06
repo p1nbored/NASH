@@ -6,12 +6,13 @@ import {
 } from '@/components/feature-wall/agents-orchestration/orchestration-types'
 import { usePrefersReducedMotion } from '@/components/feature-wall/feature-wall-modal-helpers'
 import { translate } from '@/i18n/i18n'
+import { APP_IDENTITY } from '../../../../shared/app-identity-constants'
 
 const CLI_AGENT_COMMANDS = [
-  'orca worktree create --name auth-pr-1',
-  'orca worktree create --name auth-pr-2',
-  'orca orchestration dispatch --task pr1 --to w1',
-  'orca orchestration dispatch --task pr2 --to w2'
+  `${APP_IDENTITY.cliCommandName} worktree create --name auth-pr-1`,
+  `${APP_IDENTITY.cliCommandName} worktree create --name auth-pr-2`,
+  `${APP_IDENTITY.cliCommandName} orchestration dispatch --task pr1 --to w1`,
+  `${APP_IDENTITY.cliCommandName} orchestration dispatch --task pr2 --to w2`
 ]
 
 export function CliFeatureTipVisual(): JSX.Element {

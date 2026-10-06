@@ -51,7 +51,7 @@ describe.runIf(process.platform !== 'win32').each(SHELLS)(
   (shell) => {
     let home: string
 
-    const relayDir = (version: string): string => join(home, '.orca-remote', `relay-${version}`)
+    const relayDir = (version: string): string => join(home, '.nash-remote', `relay-${version}`)
 
     function sh(command: string): string {
       return execFileSync(shell, ['-c', command], { encoding: 'utf-8' })
@@ -89,7 +89,7 @@ describe.runIf(process.platform !== 'win32').each(SHELLS)(
 
     beforeEach(() => {
       home = mkdtempSync(join(tmpdir(), 'orca-relay-cache-'))
-      mkdirSync(join(home, '.orca-remote'), { recursive: true })
+      mkdirSync(join(home, '.nash-remote'), { recursive: true })
     })
 
     afterEach(() => {

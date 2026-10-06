@@ -12,7 +12,7 @@ const ENTRY: CodexTrustEntry = {
   eventLabel: 'stop',
   groupIndex: 1,
   handlerIndex: 0,
-  command: ': orca-agent-hook-form=1; /bin/sh "${HOME-}/.orca/agent-hooks/codex-hook.sh"',
+  command: ': orca-agent-hook-form=1; /bin/sh "${HOME-}/.nash/agent-hooks/codex-hook.sh"',
   timeoutSec: 10
 }
 

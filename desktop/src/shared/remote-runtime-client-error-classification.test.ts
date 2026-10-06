@@ -34,7 +34,7 @@ describe('remote runtime client error classification', () => {
     expect(
       isRecoverableRemoteRuntimeConnectionError({
         code: 'unauthorized',
-        message: 'Remote Orca runtime closed the connection.'
+        message: 'Remote NASH runtime closed the connection.'
       })
     ).toBe(false)
   })
@@ -49,14 +49,26 @@ describe('remote runtime client error classification', () => {
   })
 
   it.each([
-    'Could not connect to the remote Orca runtime.',
-    'Remote Orca runtime closed the connection.',
-    'Remote Orca runtime connection closed.',
-    'Remote Orca runtime is not connected.',
+    'Could not connect to the remote NASH runtime.',
+    'Remote NASH runtime closed the connection.',
+    'Remote NASH runtime connection closed.',
+    'Remote NASH runtime is not connected.',
+    'Timed out waiting for the remote NASH runtime to respond.',
     "Error invoking remote method 'runtimeEnvironments:call': RuntimeRpcCallQueueOverloadError: Remote runtime call queue is full; retry after current calls finish.",
     'Remote runtime subscription closed before it started.'
   ])('normalizes unstructured connection failure: %s', (message) => {
     const error = toRemoteRuntimeClientErrorLike(new Error(message))
     expect(isRecoverableRemoteRuntimeConnectionError(error)).toBe(true)
+  })
+
+  // Why: a peer built before the NASH rename still words these failures with Orca.
+  it.each([
+    'Could not connect to the remote Orca runtime.',
+    'Remote Orca runtime closed the connection.',
+    'Remote Orca runtime connection closed.',
+    'Remote Orca runtime is not connected.',
+    'Timed out waiting for the remote Orca runtime to respond.'
+  ])('still recovers from the pre-rename wording: %s', (message) => {
+    expect(isRecoverableRemoteRuntimeConnectionError({ message })).toBe(true)
   })
 })

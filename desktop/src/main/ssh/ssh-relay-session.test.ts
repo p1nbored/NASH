@@ -7,6 +7,13 @@ import {
 } from '../../shared/agent-hook-relay'
 import { SSH_RELAY_CONFIGURE_GRACE_TIME_METHOD } from '../../shared/ssh-types'
 import { createMockDeps, mockDeploySuccess } from './ssh-relay-session-test-fixtures'
+import type * as ScopeModule from '../agent-hooks/nash-managed-hook-scope'
+
+// Why: these cover Orca's per-agent mechanics; NASH's Claude-only scope has its own tests.
+vi.mock('../agent-hooks/nash-managed-hook-scope', async (importOriginal) => ({
+  ...(await importOriginal<typeof ScopeModule>()),
+  isNashManagedHookAgent: () => true
+}))
 
 const { acceptOutputDataMock, muxRequestMock, openConsumerSessionMock, pauseAdapterMock } =
   vi.hoisted(() => ({
@@ -301,7 +308,7 @@ describe('SshRelaySession', () => {
       platform: 'win32-x64',
       hostPlatform: getRemoteHostPlatform('win32-x64'),
       remoteHome: 'C:/Users/me',
-      remoteRelayDir: 'C:/Users/me/.orca-remote/relay-v1',
+      remoteRelayDir: 'C:/Users/me/.nash-remote/relay-v1',
       nodePath: 'C:/Program Files/nodejs/node.exe',
       sockPath: '\\\\.\\pipe\\orca-relay-123'
     })
@@ -402,7 +409,7 @@ describe('SshRelaySession', () => {
       platform: 'win32-x64',
       hostPlatform: getRemoteHostPlatform('win32-x64'),
       remoteHome: 'C:/Users/me',
-      remoteRelayDir: 'C:/Users/me/.orca-remote/relay-v1',
+      remoteRelayDir: 'C:/Users/me/.nash-remote/relay-v1',
       nodePath: 'C:/Program Files/nodejs/node.exe',
       sockPath: '\\\\.\\pipe\\orca-relay-123'
     })
@@ -415,7 +422,7 @@ describe('SshRelaySession', () => {
     expect(vi.mocked(execCommand).mock.calls[0]?.[1]).toContain('powershell.exe')
     expect(vi.mocked(execCommand).mock.calls[0]?.[2]).toEqual({ wrapCommand: false })
     expect(mockConn.writeFile).toHaveBeenCalledWith(
-      'C:/Users/me/.orca-relay/bin/orca-launcher.cs',
+      'C:/Users/me/.nash-relay/bin/orca-launcher.cs',
       expect.stringContaining('ProcessStartInfo'),
       { hostPlatform: getRemoteHostPlatform('win32-x64') }
     )

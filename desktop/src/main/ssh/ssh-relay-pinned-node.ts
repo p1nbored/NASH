@@ -148,7 +148,7 @@ export async function stagePinnedRelayAddons(
   }
 }
 
-/** `~/.orca-remote/runtimes/node-<sha>/bin/node` (`…\\node.exe` on Windows), shared with orcad slots. */
+/** `~/.nash-remote/runtimes/node-<sha>/bin/node` (`…\\node.exe` on Windows), shared with orcad slots. */
 export function pinnedRelayNodePath(
   host: RemoteHostPlatform,
   remoteRelayDir: string,

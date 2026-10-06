@@ -11,6 +11,8 @@ import type {
 import type { RuntimeCapability } from '../../../shared/protocol-version'
 import type { OrchestrationCompatibilityEvidence } from '../../../shared/orchestration-compatibility-evidence'
 import type { OrchestrationSessionCaller } from '../orchestration/orchestration-caller-identity'
+import type { WorkbenchCaller } from '../workbench-caller'
+import type { DotIngressCaller } from '../dot-ingress/dot-ingress-caller'
 
 export type PairingRpcContext = {
   getEndpoints(params: PairingGetEndpointsParams): Promise<PairingGetEndpointsResult>
@@ -63,6 +65,9 @@ export type LegacyCoordinatorAuthorityProof = Readonly<{
 
 export type RpcContext = {
   runtime: OrcaRuntimeService
+  workbenchCaller?: WorkbenchCaller
+  // Why: a different brand from workbenchCaller, set only by the dedicated dot ingress endpoint after its token is proven.
+  dotIngressCaller?: DotIngressCaller
   // Why: lets long-poll handlers release immediately on client disconnect instead of running down timeoutMs. See design doc §3.1.
   signal?: AbortSignal
   // Why: per-WebSocket key so the server reaps a closing socket's subscriptions without touching sibling sockets sharing the deviceToken.

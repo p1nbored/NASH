@@ -71,7 +71,7 @@ export function SettingsSection({
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5">
         <div className="min-w-0 space-y-2">
           <h2
-            className="flex flex-wrap items-center gap-2 text-2xl font-semibold leading-tight text-foreground"
+            className="flex flex-wrap items-center gap-2 font-display text-2xl font-normal leading-tight text-foreground"
             onClick={onTitleClick}
           >
             {title}

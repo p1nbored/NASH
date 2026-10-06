@@ -252,7 +252,7 @@ export function SettingsSidebar({
                             {installStatusLabel(section.installStatus)}
                           </span>
                         ) : section.badge ? (
-                          <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+                          <span className="ml-auto rounded-full border border-border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
                             {section.badge}
                           </span>
                         ) : null}

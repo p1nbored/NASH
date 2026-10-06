@@ -116,10 +116,11 @@ describe('AccountsPane', () => {
     expect(markup).toContain(
       'Showing accounts managed by the remote server. Add or re-authenticate accounts on that server.'
     )
-    // Both the Claude and Codex sections must say local accounts are intact and
-    // link the default-runtime control, so the scoped list never reads as loss.
-    expect(markup.split('Accounts managed on this desktop are unchanged').length - 1).toBe(2)
-    expect(markup.split('Open Remote Servers').length - 1).toBe(2)
+    // The Codex section must say local accounts are intact and link the
+    // default-runtime control, so the scoped list never reads as loss. Claude has
+    // no account section since Claude account switching was removed.
+    expect(markup.split('Accounts managed on this desktop are unchanged').length - 1).toBe(1)
+    expect(markup.split('Open Remote Servers').length - 1).toBe(1)
     // Before the saved-server list loads there is no name to interpolate, so the
     // scope label must stay bare instead of stuttering the prose fallback.
     expect(markup).toContain('Account scope: Remote server<')

@@ -18,7 +18,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn((os: string, arch: string) => {
     const normalizedOs = os.toLowerCase()
     const normalizedArch = arch.toLowerCase()
@@ -77,7 +77,7 @@ vi.mock('./ssh-relay-ripgrep-install', async (importOriginal) => ({
 // and GC. Stub them so deploy tests need no real SSH connection.
 vi.mock('./ssh-relay-versioned-install', () => ({
   readLocalFullVersion: vi.fn().mockReturnValue('0.1.0+abcdef012345'),
-  computeRemoteRelayDir: (home: string, v: string) => `${home}/.orca-remote/relay-${v}`,
+  computeRemoteRelayDir: (home: string, v: string) => `${home}/.nash-remote/relay-${v}`,
   isRelayAlreadyInstalled: vi.fn().mockResolvedValue(true),
   finalizeInstall: vi.fn().mockResolvedValue(undefined),
   abandonInstall: vi.fn().mockResolvedValue(undefined),
@@ -187,14 +187,14 @@ describe('deployAndLaunchRelay on Windows remotes', () => {
       .filter((script): script is string => script !== null)
     const launchScript = decodedScripts.find((script) => script.includes('Invoke-CimMethod')) ?? ''
     expect(launchScript).toContain(
-      '"C:/Users/me user/.orca-remote/relay-0.1.0+abcdef012345/relay.js"'
+      '"C:/Users/me user/.nash-remote/relay-0.1.0+abcdef012345/relay.js"'
     )
     expect(launchScript).toContain(
-      '"C:/Users/me user/.orca-remote/relay-0.1.0+abcdef012345/agent-hooks/orca-relay-'
+      '"C:/Users/me user/.nash-remote/relay-0.1.0+abcdef012345/agent-hooks/orca-relay-'
     )
     expect(launchScript).toContain('--endpoint-dir')
     expect(launchScript).toContain(
-      '--ripgrep-path "C:/Users/me user/.orca-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe"'
+      '--ripgrep-path "C:/Users/me user/.nash-remote/ripgrep/c0ffee0123456789-win32-x64/rg.exe"'
     )
     expect(launchScript).not.toContain('--pty-source-credit-v1')
     expect(launchScript).not.toContain('.pty-source-credit-policy')

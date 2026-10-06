@@ -93,7 +93,7 @@ export function TaskPageLinearFilters({
                   <TooltipContent side="bottom" sideOffset={6}>
                     {translate(
                       'auto.components.TaskPage.linearModeHasWorktreeTooltip',
-                      'Linear tickets linked to an Orca workspace'
+                      'Linear tickets linked to a NASH workspace'
                     )}
                   </TooltipContent>
                 </Tooltip>
@@ -253,7 +253,7 @@ export function TaskPageLinearFilters({
                 linearMode === 'in-orca'
                   ? translate(
                       'auto.components.TaskPage.linearHasWorktreeSearchPlaceholder',
-                      'Filter issues linked to an Orca workspace...'
+                      'Filter issues linked to a NASH workspace...'
                     )
                   : translate('auto.components.TaskPage.eec0c5c079', 'Search Linear issues...')
               }

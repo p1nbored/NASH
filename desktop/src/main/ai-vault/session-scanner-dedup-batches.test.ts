@@ -68,7 +68,7 @@ describe('session scan batch deduplication', () => {
 
   it('replaces aliases across remote batches without consuming the unique-session budget', async () => {
     const provider = new MemoryRemoteProvider()
-    const managedHome = '/home/ada/.local/share/orca/codex-runtime-home/home'
+    const managedHome = '/home/ada/.local/share/nash/codex-runtime-home/home'
     const content = (id: string) =>
       jsonLines([
         { type: 'session_meta', payload: { id, cwd: '/repo/folder' } },

@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
 import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
+
+const { devUserDataDirName } = createRequire(import.meta.url)(
+  '../../src/shared/app-identity-constants.json'
+)
 
 const repoRoot = resolve(import.meta.dirname, '..', '..')
 const cliPath =
@@ -170,12 +175,15 @@ function runCli(cliArgs, options = {}) {
 
 function defaultDevUserDataPath() {
   if (process.platform === 'darwin') {
-    return resolve(homedir(), 'Library', 'Application Support', 'orca-dev')
+    return resolve(homedir(), 'Library', 'Application Support', devUserDataDirName)
   }
   if (process.platform === 'win32') {
-    return resolve(process.env.APPDATA ?? resolve(homedir(), 'AppData', 'Roaming'), 'orca-dev')
+    return resolve(
+      process.env.APPDATA ?? resolve(homedir(), 'AppData', 'Roaming'),
+      devUserDataDirName
+    )
   }
-  return resolve(process.env.XDG_CONFIG_HOME ?? resolve(homedir(), '.config'), 'orca-dev')
+  return resolve(process.env.XDG_CONFIG_HOME ?? resolve(homedir(), '.config'), devUserDataDirName)
 }
 
 function unwrapResult(value) {

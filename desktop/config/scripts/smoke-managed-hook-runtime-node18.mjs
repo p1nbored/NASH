@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict'
-import { constants } from 'node:fs'
+import { constants, readFileSync } from 'node:fs'
 import { access, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
@@ -18,6 +18,11 @@ const PLATFORMS = [
 ]
 const ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const require = createRequire(import.meta.url)
+// Why: the folder name comes from the app identity, never a literal Orca folder (decision D-017).
+const APP_DATA_NAME = JSON.parse(
+  readFileSync(new URL('../../src/shared/app-identity-constants.json', import.meta.url), 'utf8')
+).userDataDirName
+const APP_HOME_DIR_NAME = `.${APP_DATA_NAME}`
 
 assert.match(process.versions.node, /^18\./, 'This smoke test must run under Node 18')
 
@@ -42,10 +47,10 @@ try {
 
   const codexHooks = await readFile(join(home, '.codex', 'hooks.json'), 'utf8')
   const claudeSettings = await readFile(join(home, '.claude', 'settings.json'), 'utf8')
-  assert.match(codexHooks, /\.orca\/agent-hooks\/codex-hook\.sh/)
-  assert.match(claudeSettings, /\.orca\/agent-hooks\/claude-hook\.sh/)
-  await access(join(home, '.orca', 'agent-hooks', 'codex-hook.sh'), constants.X_OK)
-  await access(join(home, '.orca', 'agent-hooks', 'claude-hook.sh'), constants.X_OK)
+  assert.ok(codexHooks.includes(`${APP_HOME_DIR_NAME}/agent-hooks/codex-hook.sh`))
+  assert.ok(claudeSettings.includes(`${APP_HOME_DIR_NAME}/agent-hooks/claude-hook.sh`))
+  await access(join(home, APP_HOME_DIR_NAME, 'agent-hooks', 'codex-hook.sh'), constants.X_OK)
+  await access(join(home, APP_HOME_DIR_NAME, 'agent-hooks', 'claude-hook.sh'), constants.X_OK)
 } finally {
   if (originalHome === undefined) {
     delete process.env.HOME

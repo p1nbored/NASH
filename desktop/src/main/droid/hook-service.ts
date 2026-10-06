@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -251,14 +252,14 @@ export class DroidHookService {
   }
 
   // Why: SSH remotes run the Droid CLI on the remote host, so its hook config
-  // and managed script must be written into the remote ~/.factory + ~/.orca via
+  // and managed script must be written into the remote ~/.factory + the app home folder via
   // SFTP. Without this, Droid never fires the managed hook over SSH and its
   // status row is absent from the task tree (issue #7253). Mirrors the local
   // install() but always emits POSIX script/paths — even from a Windows host.
   async installRemote(sftp: SFTPWrapper, remoteHome: string): Promise<AgentHookInstallStatus> {
     const home = remoteHome.replace(/\/$/, '')
     const remoteConfigPath = `${home}/.factory/settings.json`
-    const remoteScriptPath = `${home}/.orca/agent-hooks/droid-hook.sh`
+    const remoteScriptPath = `${home}/${APP_AGENT_HOOKS_HOME_PATH}/droid-hook.sh`
     try {
       const config = await readHooksJsonRemote(sftp, remoteConfigPath)
       if (!config) {

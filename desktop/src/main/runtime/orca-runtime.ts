@@ -3,8 +3,35 @@ import { OrcaRuntimeWithResolveWaiter } from './orca-runtime-resolve-waiter'
 import type { RuntimeCommandSurfaceHost } from './orca-runtime-core'
 import { registerWorktreeChangeInvalidator } from '../ipc/worktree-change-invalidators'
 import { registerDetectedWorktreeScanInvalidation } from '../ipc/worktrees/listing/register-detected-worktree-scan-invalidation'
+import { requireLocalWorkbenchWorkspace } from './workbench-local-workspace'
+import { OrchestrationError } from './orchestration/orchestration-error'
+import {
+  getDotIngressPort,
+  type DotIngressControl,
+  type DotIngressEnabledReader
+} from './dot-ingress/dot-ingress-control'
 
 class OrcaRuntimeService extends OrcaRuntimeWithResolveWaiter {
+  requireWorkbenchWorkspace(workspaceId: string) {
+    if (!this.store) {
+      throw new OrchestrationError(
+        'workbench_workspace_unavailable',
+        'Workspace catalog is unavailable.'
+      )
+    }
+    return requireLocalWorkbenchWorkspace(this.store, workspaceId)
+  }
+
+  // Why: the desktop settings handler flips the persisted dot switch, then asks this control to align the endpoint with it.
+  requireDotIngressControl(): DotIngressControl {
+    return getDotIngressPort(this).requireControl()
+  }
+
+  // Why: whoever owns the database installs the reader of the persisted switch, so the RPC server never opens the database itself.
+  installDotIngressEnabledReader(reader: DotIngressEnabledReader): void {
+    getDotIngressPort(this).installEnabledReader(reader)
+  }
+
   constructor(...args: ConstructorParameters<typeof OrcaRuntimeWithResolveWaiter>) {
     super(...args)
     // Why: the runtime listing re-runs a scan the worktree-change generation overtook and re-lists

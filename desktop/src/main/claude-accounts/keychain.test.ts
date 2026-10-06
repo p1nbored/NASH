@@ -4,12 +4,10 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import * as keychain from './keychain'
 import {
-  deleteActiveClaudeKeychainCredentials,
   readActiveClaudeKeychainCredentials,
-  readActiveClaudeKeychainCredentialsStrict,
-  writeActiveClaudeKeychainCredentials,
-  writeActiveClaudeKeychainCredentialsForRuntime
+  readActiveClaudeKeychainCredentialsStrict
 } from './keychain'
 
 vi.mock('node:child_process', () => ({
@@ -119,60 +117,6 @@ describe('Claude Keychain credentials', () => {
     ])
   })
 
-  it('writes active credentials to the config-scoped Claude Code service', async () => {
-    const scopedService = serviceForConfigDir(configDir)
-    execFileMock.mockImplementationOnce((_file, _args, _options, callback) => {
-      invokeExecFileCallback(callback, null, '', '')
-      return null as never
-    })
-
-    await writeActiveClaudeKeychainCredentials('credentials-json', configDir)
-
-    expect(execFileMock.mock.calls[0][1]).toEqual([
-      'add-generic-password',
-      '-U',
-      '-s',
-      scopedService,
-      '-a',
-      TEST_USER,
-      '-w',
-      'credentials-json'
-    ])
-  })
-
-  it('writes runtime credentials to scoped and legacy services for old Claude Code compatibility', async () => {
-    const scopedService = serviceForConfigDir(configDir)
-    execFileMock.mockImplementation((_file, _args, _options, callback) => {
-      invokeExecFileCallback(callback, null, '', '')
-      return null as never
-    })
-
-    await writeActiveClaudeKeychainCredentialsForRuntime('credentials-json', configDir)
-
-    expect(execFileMock.mock.calls.map((call) => call[1])).toEqual([
-      [
-        'add-generic-password',
-        '-U',
-        '-s',
-        scopedService,
-        '-a',
-        TEST_USER,
-        '-w',
-        'credentials-json'
-      ],
-      [
-        'add-generic-password',
-        '-U',
-        '-s',
-        'Claude Code-credentials',
-        '-a',
-        TEST_USER,
-        '-w',
-        'credentials-json'
-      ]
-    ])
-  })
-
   it('strictly reads only the requested active credentials service', async () => {
     const scopedService = serviceForConfigDir(configDir)
     execFileMock.mockImplementationOnce((_file, _args, _options, callback) => {
@@ -222,21 +166,6 @@ describe('Claude Keychain credentials', () => {
     expect(killMock).toHaveBeenCalled()
   })
 
-  it('deletes both scoped and legacy active credentials for config-dir cleanup', async () => {
-    const scopedService = serviceForConfigDir(configDir)
-    execFileMock.mockImplementation((_file, _args, _options, callback) => {
-      invokeExecFileCallback(callback, null, '', '')
-      return null as never
-    })
-
-    await deleteActiveClaudeKeychainCredentials(configDir)
-
-    expect(execFileMock.mock.calls.map((call) => call[1])).toEqual([
-      ['delete-generic-password', '-s', scopedService, '-a', TEST_USER],
-      ['delete-generic-password', '-s', 'Claude Code-credentials', '-a', TEST_USER]
-    ])
-  })
-
   it('looks up claude-code-user when $USER contains @ (#12857)', async () => {
     process.env.USER = SSO_USER
     execFileMock.mockImplementationOnce((_file, _args, _options, callback) => {
@@ -257,21 +186,7 @@ describe('Claude Keychain credentials', () => {
     ])
   })
 
-  it('cleans both Claude Code and raw $USER Keychain accounts after a failed SSO login', async () => {
-    process.env.USER = SSO_USER
-    const scopedService = serviceForConfigDir(configDir)
-    execFileMock.mockImplementation((_file, _args, _options, callback) => {
-      invokeExecFileCallback(callback, null, '', '')
-      return null as never
-    })
-
-    await deleteActiveClaudeKeychainCredentials(configDir)
-
-    expect(execFileMock.mock.calls.map((call) => call[1])).toEqual([
-      ['delete-generic-password', '-s', scopedService, '-a', 'claude-code-user'],
-      ['delete-generic-password', '-s', scopedService, '-a', SSO_USER],
-      ['delete-generic-password', '-s', 'Claude Code-credentials', '-a', 'claude-code-user'],
-      ['delete-generic-password', '-s', 'Claude Code-credentials', '-a', SSO_USER]
-    ])
+  it('exports no Keychain write or delete: NASH never writes Claude credentials', () => {
+    expect(Object.keys(keychain).filter((name) => /write|delete/i.test(name))).toEqual([])
   })
 })

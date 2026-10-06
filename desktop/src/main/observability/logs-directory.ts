@@ -1,9 +1,10 @@
 // Single source of truth for the app's logs directory and the files inside it.
-// macOS convention is `~/Library/Application Support/Orca/logs/`; Windows and
+// macOS convention is `~/Library/Application Support/nash/logs/`; Windows and
 // Linux resolve the same intent via the host's `userData` dir. Falls back to a
 // homedir-derived path when no AppEnvironment is installed (unit tests).
 
 import { getAppEnvironment, hasAppEnvironment } from '../../shared/app-environment'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { homedir, platform } from 'node:os'
 import { join } from 'node:path'
 
@@ -18,12 +19,12 @@ function getUserDataDir(): string {
   }
   const home = homedir()
   if (platform() === 'darwin') {
-    return join(home, 'Library', 'Application Support', 'Orca')
+    return join(home, 'Library', 'Application Support', APP_IDENTITY.userDataDirName)
   }
   if (platform() === 'win32') {
-    return join(process.env.APPDATA ?? home, 'Orca')
+    return join(process.env.APPDATA ?? home, APP_IDENTITY.userDataDirName)
   }
-  return join(home, '.config', 'Orca')
+  return join(home, '.config', APP_IDENTITY.userDataDirName)
 }
 
 export function getLogsDirectory(): string {

@@ -1,8 +1,8 @@
 ---
 name: orca-emulator-android
 description: >-
-  Android device and emulator control from inside Orca over adb, with the live
-  device view in Orca's emulator pane. Use when driving an adb-connected emulator
+  Android device and emulator control from inside NASH over adb, with the live
+  device view in NASH's emulator pane. Use when driving an adb-connected emulator
   or phone on Windows, Linux, or macOS: booting AVDs, taps, swipes, typing,
   hardware buttons, rotation, app install and launch, runtime permissions, the
   accessibility tree, and logcat. For an iOS simulator use the iOS emulator
@@ -10,7 +10,7 @@ description: >-
 license: Apache-2.0
 ---
 
-# Orca Emulator (Android)
+# NASH Emulator (Android)
 
 `ORCA` is a placeholder for the executable you resolved in the stub; substitute it before running.
 
@@ -36,7 +36,7 @@ scope.
 ## Prerequisites
 
 - Android Studio or the Android SDK installed, with `ANDROID_HOME` or `ANDROID_SDK_ROOT`
-  set. Orca also checks the per-OS default location (`%LOCALAPPDATA%\Android\Sdk`,
+  set. NASH also checks the per-OS default location (`%LOCALAPPDATA%\Android\Sdk`,
   `~/Library/Android/sdk`, `~/Android/Sdk`).
 - `adb` and `emulator` on the SDK path, plus at least one AVD (Android Studio ▸ Device
   Manager) or a connected device with USB debugging.
@@ -44,7 +44,7 @@ scope.
   listed with `state: shutdown` and must be started first, by `ORCA emulator attach`,
   Android Studio, or `emulator @<avd>`.
 
-Orca returns a clear message when the SDK is missing
+NASH returns a clear message when the SDK is missing
 (`Android SDK not found. Install Android Studio and set ANDROID_HOME.`).
 
 ## Operations
@@ -89,14 +89,14 @@ commands target it. Pass a selector only to override that or reach a second devi
 
 ## Constraints
 
-- All coordinates are normalized 0..1 with a top-left origin, never pixels. Orca scales them
+- All coordinates are normalized 0..1 with a top-left origin, never pixels. NASH scales them
   to the device's live resolution.
 - Prefer `tap` over `gesture` for a single tap.
 - `type` uses `adb shell input text`: US-ASCII only, spaces handled, newlines not. Use the
   app UI directly for unicode-heavy input.
 - `gesture` is a straight swipe between the first and last point, so it fits scrolling and
   swiping but not a true multi-touch path.
-- Run `kill` when you are done. A helper left running holds the device until Orca quits.
+- Run `kill` when you are done. A helper left running holds the device until NASH quits.
 
 ## Examples
 

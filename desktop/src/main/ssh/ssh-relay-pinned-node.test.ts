@@ -163,8 +163,8 @@ describe('pinned runtime layout', () => {
   it('launches from the shared runtimes store beside the version dirs', () => {
     const host = getRemoteHostPlatform('linux-x64')
     expect(
-      pinnedRelayNodePath(host, '/home/u/.orca-remote/relay-0.1.0+abc', 'linux-x64-glibc')
-    ).toBe(`/home/u/.orca-remote/runtimes/node-${SHA}/bin/node`)
+      pinnedRelayNodePath(host, '/home/u/.nash-remote/relay-0.1.0+abc', 'linux-x64-glibc')
+    ).toBe(`/home/u/.nash-remote/runtimes/node-${SHA}/bin/node`)
   })
 
   it('keeps node.exe under its real name at the runtime root on Windows', () => {
@@ -172,12 +172,12 @@ describe('pinned runtime layout', () => {
     const sha = NODE_RUNTIME_ASSETS['win32-x64'].executableSha256
     const nodePath = pinnedRelayNodePath(
       host,
-      'C:/Users/u/.orca-remote/relay-0.1.0+abc',
+      'C:/Users/u/.nash-remote/relay-0.1.0+abc',
       'win32-x64'
     )
-    expect(nodePath).toBe(`C:/Users/u/.orca-remote/runtimes/node-${sha}/node.exe`)
+    expect(nodePath).toBe(`C:/Users/u/.nash-remote/runtimes/node-${sha}/node.exe`)
     expect(path.win32.normalize(nodePath)).toBe(
-      `C:\\Users\\u\\.orca-remote\\runtimes\\node-${sha}\\node.exe`
+      `C:\\Users\\u\\.nash-remote\\runtimes\\node-${sha}\\node.exe`
     )
     expect(path.win32.basename(nodePath)).toBe('node.exe')
   })

@@ -23,6 +23,9 @@ vi.mock('./update-install-exit-watchdog', () => moduleFactories.updateInstallExi
 vi.mock('./updater-prerelease-feed', () => moduleFactories.updaterPrereleaseFeed())
 vi.mock('./local-builds/local-build-switch', () => moduleFactories.localBuildSwitch())
 vi.mock('./local-builds/local-build-feed-server', () => moduleFactories.localBuildFeedServer())
+vi.mock('../shared/app-identity-constants', async (importOriginal) =>
+  moduleFactories.appIdentityWithFixtureFeed(await importOriginal())
+)
 
 warmUpdaterModule()
 
@@ -442,7 +445,7 @@ describe('updater', () => {
     })
     expect(autoUpdaterMock.setFeedURL).toHaveBeenLastCalledWith({
       provider: 'generic',
-      url: 'https://github.com/stablyai/orca/releases/download/v1.4.36-rc.5'
+      url: 'https://github.com/fixture-owner/fixture-app/releases/download/v1.4.36-rc.5'
     })
     expect(
       sendMock.mock.calls

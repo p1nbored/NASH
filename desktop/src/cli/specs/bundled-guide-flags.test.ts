@@ -10,8 +10,8 @@ type GuideInvocation = {
   snippet: string
 }
 
-// Why: guides write examples as `orca ...`, `orca-dev ...`, or the `ORCA` placeholder.
-const CLI_INVOCATION = /(?:^|[\s`(])(?:orca|orca-dev|orca-ide|ORCA)\s+([^\n`]*)/g
+// Why: guides write examples as `nash ...`, `nash-dev ...`, `orca-ide ...`, or the `ORCA` placeholder.
+const CLI_INVOCATION = /(?:^|[\s`(])(?:nash|nash-dev|orca|orca-dev|orca-ide|ORCA)\s+([^\n`]*)/g
 
 // Longest path first so `orchestration worker-start` never resolves as `orchestration worker`.
 const SPECS_BY_DEPTH: CommandSpec[] = [...COMMAND_SPECS].sort(

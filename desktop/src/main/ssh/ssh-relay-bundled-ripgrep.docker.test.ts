@@ -128,7 +128,7 @@ describe.skipIf(!RUN)('SSH relay bundled ripgrep', () => {
       ? 'linux-arm64'
       : 'linux-x64'
     const entry = `${bundledRipgrepContentKey(platform)}-${platform}`
-    const remoteBinary = `/root/.orca-remote/ripgrep/${entry}/rg`
+    const remoteBinary = `/root/.nash-remote/ripgrep/${entry}/rg`
     const connection = createConnection(active)
     await connection.connect()
     try {
@@ -146,7 +146,7 @@ describe.skipIf(!RUN)('SSH relay bundled ripgrep', () => {
       expect(dockerExec(active, "ps -eo args | grep '[r]elay.js --detached'")).toContain(
         `--ripgrep-path ${remoteBinary}`
       )
-      expect(dockerExec(active, `ls /root/.orca-remote/ripgrep/${entry}`)).toBe('rg')
+      expect(dockerExec(active, `ls /root/.nash-remote/ripgrep/${entry}`)).toBe('rg')
 
       const mux = new SshChannelMultiplexer(deployed.transport)
       try {
@@ -180,14 +180,14 @@ describe.skipIf(!RUN)('SSH relay bundled ripgrep', () => {
 
   it('reuses the installed binary on the next deploy without re-uploading', async () => {
     const active = fixture!
-    const before = dockerExec(active, 'stat -c %Y /root/.orca-remote/ripgrep/*/rg')
+    const before = dockerExec(active, 'stat -c %Y /root/.nash-remote/ripgrep/*/rg')
     const connection = createConnection(active)
     await connection.connect()
     try {
       await deployAndLaunchRelay(connection, undefined, 60)
       await new Promise((resolve) => setTimeout(resolve, 3_000))
-      expect(dockerExec(active, 'stat -c %Y /root/.orca-remote/ripgrep/*/rg')).toBe(before)
-      expect(dockerExec(active, 'ls -A /root/.orca-remote/ripgrep | grep -c upload || true')).toBe(
+      expect(dockerExec(active, 'stat -c %Y /root/.nash-remote/ripgrep/*/rg')).toBe(before)
+      expect(dockerExec(active, 'ls -A /root/.nash-remote/ripgrep | grep -c upload || true')).toBe(
         '0'
       )
     } finally {

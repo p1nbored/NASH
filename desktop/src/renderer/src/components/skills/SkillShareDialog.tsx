@@ -32,7 +32,7 @@ function operationError(status: string): string {
   return status === 'reconnect-required'
     ? translate(
         'auto.components.skills.SkillShareDialog.reconnect',
-        'Reconnect your Orca account before sharing.'
+        'Reconnect your Orca cloud account before sharing.'
       )
     : translate(
         'auto.components.skills.SkillShareDialog.unconfigured',
@@ -234,7 +234,7 @@ export function SkillShareDialog({
       setError(
         translate(
           'auto.components.skills.SkillShareDialog.cancelRequestFailed',
-          'Orca could not send the cancellation request. The upload may still finish.'
+          'NASH could not send the cancellation request. The upload may still finish.'
         )
       )
     }

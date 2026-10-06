@@ -48,7 +48,7 @@ describe('appimage extracted root', () => {
     const previous = process.env.XDG_CACHE_HOME
     process.env.XDG_CACHE_HOME = '/xdg-cache'
     try {
-      expect(getAppImageCacheRootPath('/home/u')).toBe(join('/xdg-cache', 'orca', 'appimage'))
+      expect(getAppImageCacheRootPath('/home/u')).toBe(join('/xdg-cache', 'nash', 'appimage'))
     } finally {
       if (previous === undefined) {
         delete process.env.XDG_CACHE_HOME
@@ -63,7 +63,7 @@ describe('appimage extracted root', () => {
     process.env.XDG_CACHE_HOME = 'relative-cache'
     try {
       expect(getAppImageCacheRootPath('/home/u')).toBe(
-        join('/home/u', '.cache', 'orca', 'appimage')
+        join('/home/u', '.cache', 'nash', 'appimage')
       )
     } finally {
       if (previous === undefined) {

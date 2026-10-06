@@ -34,7 +34,7 @@ export function UnsealedCredentialNotice({
       <p className="min-w-0 text-xs leading-snug">
         {translate(
           'auto.components.settings.UnsealedCredentialNotice.body',
-          '{{credential}} is stored unencrypted — this system has no OS keyring Orca can use. Anyone who can read your disk or a backup of it can read the credential. Install and unlock gnome-keyring or kwallet, then save it again to seal it.',
+          '{{credential}} is stored unencrypted — this system has no OS keyring NASH can use. Anyone who can read your disk or a backup of it can read the credential. Install and unlock gnome-keyring or kwallet, then save it again to seal it.',
           { credential: credentialName }
         )}
       </p>

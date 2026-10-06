@@ -123,13 +123,13 @@ describe('CursorHookService', () => {
         process.platform === 'win32' ? WINDOWS_POWERSHELL_LAUNCHER : /cursor-hook/
       )
       if (process.platform !== 'win32') {
-        expect(definition?.command).toContain(join(homeDir, '.orca'))
+        expect(definition?.command).toContain(join(homeDir, '.nash'))
       }
       expect(definition?.hooks).toBeUndefined()
     }
 
     const script = readFileSync(
-      join(homeDir, '.orca', 'agent-hooks', CURSOR_SCRIPT_FILE_NAME),
+      join(homeDir, '.nash', 'agent-hooks', CURSOR_SCRIPT_FILE_NAME),
       'utf8'
     )
     expect(script).toContain('/hook/cursor')
@@ -184,10 +184,10 @@ describe('CursorHookService', () => {
           hooks: {
             beforeSubmitPrompt: [
               { command: '/usr/local/bin/user-hook' },
-              { command: '/old/path/.orca/agent-hooks/cursor-hook.sh' }
+              { command: '/old/path/.nash/agent-hooks/cursor-hook.sh' }
             ],
             retiredEvent: [
-              { command: '/old/path/.orca/agent-hooks/cursor-hook.sh' },
+              { command: '/old/path/.nash/agent-hooks/cursor-hook.sh' },
               { command: '/usr/local/bin/retired-user-hook' }
             ]
           }
@@ -251,7 +251,7 @@ describe('CursorHookService', () => {
       homedirMock.mockReturnValue(installHome)
       expect(new CursorHookService().install().state).toBe('installed')
       const config = readInstalledCursorHooks(installHome)
-      unlinkSync(join(installHome, '.orca', 'agent-hooks', CURSOR_SCRIPT_FILE_NAME))
+      unlinkSync(join(installHome, '.nash', 'agent-hooks', CURSOR_SCRIPT_FILE_NAME))
 
       for (const eventName of CURSOR_EVENTS) {
         const command = requireRegisteredCommand(config, eventName)

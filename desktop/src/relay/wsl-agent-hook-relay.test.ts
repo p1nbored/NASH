@@ -172,16 +172,16 @@ describe('RelayAgentHookServer host-given coordinates (WSL relay)', () => {
 describe('wsl hook relay endpoint contract', () => {
   it('derives the endpoint dir from guest home and the restart-stable instance key', () => {
     expect(wslHookRelayEndpointDir('/home/u', 'abc123')).toBe(
-      '/home/u/.orca-wsl/agent-hooks/instance-abc123'
+      '/home/u/.nash-wsl/agent-hooks/instance-abc123'
     )
     expect(wslHookRelayEndpointDir('/home/u/', 'abc123')).toBe(
-      '/home/u/.orca-wsl/agent-hooks/instance-abc123'
+      '/home/u/.nash-wsl/agent-hooks/instance-abc123'
     )
   })
 
   it('names the guest endpoint file endpoint.env regardless of host platform', () => {
     expect(wslHookRelayEndpointFilePath('/home/u', 'k1')).toBe(
-      '/home/u/.orca-wsl/agent-hooks/instance-k1/endpoint.env'
+      '/home/u/.nash-wsl/agent-hooks/instance-k1/endpoint.env'
     )
   })
 

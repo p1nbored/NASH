@@ -17,6 +17,12 @@ import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+// Why: the folder name comes from the app identity, never a literal Orca folder (decision D-017).
+const APP_DATA_NAME = JSON.parse(
+  readFileSync(new URL('../../src/shared/app-identity-constants.json', import.meta.url), 'utf8')
+).userDataDirName
+const APP_HOME_DIR_NAME = `.${APP_DATA_NAME}`
+
 const MANAGED_SCRIPTS = [
   ['antigravity-hook.sh', 'antigravity'],
   ['claude-hook.sh', 'claude'],
@@ -124,7 +130,7 @@ function assertProtocolStdout(fileName, stdout) {
 }
 
 function readGeneratedScripts(home, minMtime) {
-  const hooksDir = join(home, '.orca', 'agent-hooks')
+  const hooksDir = join(home, APP_HOME_DIR_NAME, 'agent-hooks')
   return MANAGED_SCRIPTS.map(([fileName, source]) => {
     const path = join(hooksDir, fileName)
     const stats = statSync(path)
@@ -320,7 +326,7 @@ async function verifyInstalledLauncher(home, payload) {
   )
   if (
     !command ||
-    !command.includes('"${HOME-}/.orca/agent-hooks/claude-hook.sh"') ||
+    !command.includes(`"\${HOME-}/${APP_HOME_DIR_NAME}/agent-hooks/claude-hook.sh"`) ||
     !command.includes('] && [ -r ') ||
     !command.includes('else { command -p cat')
   ) {
@@ -335,8 +341,8 @@ async function verifyInstalledLauncher(home, payload) {
     )
     assertSuccessfulWrite(missingResult, 'installed missing-script launcher')
 
-    const failingPath = join(scratch, '.orca', 'agent-hooks', 'claude-hook.sh')
-    mkdirSync(join(scratch, '.orca', 'agent-hooks'), { recursive: true })
+    const failingPath = join(scratch, APP_HOME_DIR_NAME, 'agent-hooks', 'claude-hook.sh')
+    mkdirSync(join(scratch, APP_HOME_DIR_NAME, 'agent-hooks'), { recursive: true })
     writeFileSync(failingPath, '#!/bin/sh\ncat >/dev/null\nexit 7\n', 'utf8')
     chmodSync(failingPath, 0o755)
     const failingResult = await runShell(

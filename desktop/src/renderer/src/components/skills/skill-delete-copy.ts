@@ -11,7 +11,7 @@ export function skillDeleteBlockReasonLabel(reason: SkillDeleteBlockReason): str
     case 'bundled': {
       return translate(
         'auto.components.skills.SkillDelete.reasonBundled',
-        'Bundled with Orca — it would be restored'
+        'Bundled with NASH — it would be restored'
       )
     }
     case 'plugin': {
@@ -23,7 +23,7 @@ export function skillDeleteBlockReasonLabel(reason: SkillDeleteBlockReason): str
     case 'unowned': {
       return translate(
         'auto.components.skills.SkillDelete.reasonUnowned',
-        'This skill lives outside Orca’s skill folders — delete it where it is stored'
+        'This skill lives outside NASH’s skill folders — delete it where it is stored'
       )
     }
     case 'missing': {

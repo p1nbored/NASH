@@ -98,7 +98,7 @@ export function ColorPicker({
               '{{value0}} picker',
               { value0: label }
             )}
-            className="[&_.react-colorful__hue]:rounded-b-md [&_.react-colorful__interactive:focus_.react-colorful__pointer]:ring-[3px] [&_.react-colorful__interactive:focus_.react-colorful__pointer]:ring-ring/50 [&_.react-colorful__pointer]:border-popover"
+            className="[&_.react-colorful__hue]:rounded-b-md [&_.react-colorful__interactive:focus_.react-colorful__pointer]:ring-2 [&_.react-colorful__interactive:focus_.react-colorful__pointer]:ring-ring [&_.react-colorful__pointer]:border-popover"
             style={{ width: '100%', height: 180 }}
           />
           <div className="flex items-center justify-between gap-3">

@@ -177,7 +177,7 @@ describe('ExternalChromiumBrowserProcess', () => {
 describe('cross-platform browser provider paths', () => {
   it('resolves installed Electron launchers on macOS, Linux, and Windows', () => {
     expect(installedElectronCandidates('darwin', '/Users/test', {})).toContain(
-      '/Users/test/Applications/Orca.app/Contents/MacOS/Orca'
+      '/Users/test/Applications/NASH.app/Contents/MacOS/NASH'
     )
     expect(installedElectronCandidates('linux', '/home/test', {})).toContain(
       '/home/test/.local/bin/orca-ide'
@@ -186,7 +186,19 @@ describe('cross-platform browser provider paths', () => {
       installedElectronCandidates('win32', 'C:\\Users\\test', {
         LOCALAPPDATA: 'C:\\Users\\test\\AppData\\Local'
       })
-    ).toContain('C:\\Users\\test\\AppData\\Local\\Programs\\Orca\\Orca.exe')
+    ).toContain('C:\\Users\\test\\AppData\\Local\\Programs\\NASH\\NASH.exe')
+  })
+
+  it('never launches a real Orca install as the browser sidecar', () => {
+    const candidates = [
+      ...installedElectronCandidates('darwin', '/Users/test', {}),
+      ...installedElectronCandidates('win32', 'C:\\Users\\test', {
+        LOCALAPPDATA: 'C:\\Users\\test\\AppData\\Local',
+        ProgramFiles: 'C:\\Program Files'
+      })
+    ]
+
+    expect(candidates.filter((candidate) => /Orca/i.test(candidate))).toEqual([])
   })
 
   it('uses platform-specific bundled agent-browser names', () => {

@@ -9,6 +9,7 @@ import {
   unlinkSync,
   writeFileSync
 } from 'node:fs'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { homedir } from 'node:os'
 import { dirname, join, posix as pathPosix } from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -242,7 +243,7 @@ export class KimiHookService {
     const remoteConfigPath = pathPosix.join(remoteHome, '.kimi-code', 'config.toml')
     const remoteScriptPath = pathPosix.join(
       remoteHome,
-      '.orca',
+      APP_HOME_DIR_NAME,
       'agent-hooks',
       MANAGED_SCRIPT_FILE_NAME
     )

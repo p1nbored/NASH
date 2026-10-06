@@ -201,7 +201,7 @@ describe('Orca cloud profile service', () => {
       state: 'unconfigured',
       persistence: 'encrypted',
       cloud: cloudSummary,
-      setupMessage: 'Orca Cloud sign-in is not configured for this build.'
+      setupMessage: 'Orca Cloud sign-in is not available in NASH builds.'
     })
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).organizations).toBeUndefined()
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).capabilities).toBeUndefined()

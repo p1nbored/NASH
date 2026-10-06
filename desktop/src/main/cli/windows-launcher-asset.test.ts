@@ -7,8 +7,9 @@ describe('packaged Windows CLI launcher asset', () => {
     const launcherPath = join(process.cwd(), 'resources', 'win32', 'bin', 'orca.cmd')
     const launcher = readFileSync(launcherPath, 'utf8')
 
-    expect(launcher).toContain('set "LAUNCHER=%SCRIPT_DIR%orca.exe"')
-    expect(launcher).toContain('orca.cmd cannot safely forward orchestration message bodies')
+    expect(launcher).toContain('set "LAUNCHER=%SCRIPT_DIR%nash.exe"')
+    expect(launcher).toContain('nash.cmd cannot safely forward orchestration message bodies')
+    expect(launcher).not.toContain('orca.exe')
     expect(launcher).not.toContain('"%ELECTRON%" "%CLI%" %*')
   })
 
@@ -22,6 +23,9 @@ describe('packaged Windows CLI launcher asset', () => {
     expect(source).toContain('env::var("ORCA_CLI_COMMAND")')
     expect(source).toContain('if requested_command == "orca-ide"')
     expect(source).toContain('command.status()')
+    // Why: the launcher finds the NASH app image, never an Orca install's Orca.exe.
+    expect(source).toContain('app_directory.join("NASH.exe")')
+    expect(source).not.toContain('Orca.exe')
     expect(source).toContain('exit(status.code().unwrap_or(1))')
   })
 })

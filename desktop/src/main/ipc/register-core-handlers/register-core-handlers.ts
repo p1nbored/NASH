@@ -60,9 +60,11 @@ import { registerCodexAccountHandlers } from '../codex-accounts'
 import { registerAgentHookHandlers } from '../agent-hooks'
 import { registerCodexConfigSyncHandlers } from '../codex-config-sync'
 import { getPtyIdForPaneKey } from '../pty'
-import { registerClaudeAccountHandlers } from '../claude-accounts'
 import { registerOpenCodeGoCredentialsHandlers } from '../opencode-go-credentials'
 import { registerMiniMaxCredentialsHandlers } from '../minimax-credentials'
+import { registerClefCredentialsHandlers } from '../clef-credentials'
+import { installClefCredentialStore } from '../../startup/clef-credential-store-install'
+import { liftClefAuthLatchForCurrentCredentials } from '../../clef/clef-call-circuit-owner'
 import { registerZcodePlanCredentialsHandlers } from '../zcode-plan-credentials'
 import { registerGrokAccountHandlers } from '../grok-accounts'
 import { registerCursorAccountHandlers } from '../cursor-accounts'
@@ -78,7 +80,6 @@ import type { OpenCodeUsageStore } from '../../opencode-usage/store'
 import type { MuseUsageStore } from '../../muse-usage/store'
 import type { RateLimitService } from '../../rate-limits/service'
 import type { CodexAccountService } from '../../codex-accounts/service'
-import type { ClaudeAccountService } from '../../claude-accounts/service'
 import type { AutomationService } from '../../automations/service'
 import type { AgentAwakeService } from '../../agent-awake-service'
 import type { CrashReportStore } from '../../crash-reporting/crash-report-store'
@@ -119,7 +120,6 @@ export function registerCoreHandlers(
   openCodeUsage: OpenCodeUsageStore,
   museUsage: MuseUsageStore,
   codexAccounts: CodexAccountService,
-  claudeAccounts: ClaudeAccountService,
   rateLimits: RateLimitService,
   mainWindowWebContentsId: number | null = null,
   automations?: AutomationService,
@@ -151,10 +151,13 @@ export function registerCoreHandlers(
   registerCodexAccountHandlers(codexAccounts, () => store.getSettings())
   registerAgentHookHandlers(runtime, { getPtyIdForPaneKey })
   registerCodexConfigSyncHandlers(codexAccounts.runtimeHomeService)
-  registerClaudeAccountHandlers(claudeAccounts)
   registerOpenCodeGoCredentialsHandlers(rateLimits)
   registerMiniMaxCredentialsHandlers(rateLimits)
   registerZcodePlanCredentialsHandlers(rateLimits)
+  // Same store instance the credential port serves; a save or clear lifts the auth latch.
+  registerClefCredentialsHandlers(installClefCredentialStore(), {
+    onCredentialsChanged: liftClefAuthLatchForCurrentCredentials
+  })
   registerGrokAccountHandlers()
   registerCursorAccountHandlers()
   registerRateLimitHandlers(rateLimits, codexAccounts)

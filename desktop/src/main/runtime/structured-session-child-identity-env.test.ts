@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { delimiter, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installFakeAppEnvironment } from '../../../config/scripts/vitest-host-ports-setup'
 
@@ -119,26 +119,31 @@ describe('structuredSessionChildIdentityEnv', () => {
       pinPlatform('darwin')
       installFakeAppEnvironment({ isPackaged: () => true, getPath: () => USER_DATA })
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { PATH: '/usr/bin' })
-      expect(env.PATH).toBe(`${join(RESOURCES, 'bin')}:/usr/bin`)
-      expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'orca'))
+      // Why two dirs: `nash` is the global command; the in-session `orca` alias sits in its own dir.
+      expect(env.PATH).toBe(
+        [join(RESOURCES, 'session-bin'), join(RESOURCES, 'bin'), '/usr/bin'].join(delimiter)
+      )
+      expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'nash'))
     })
 
     it('on packaged Windows, through the bundled CLI dir under the env block spelling', () => {
       pinPlatform('win32')
       installFakeAppEnvironment({ isPackaged: () => true, getPath: () => USER_DATA })
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { Path: 'C:\\Windows' })
-      expect(env.Path).toBe(`${join(RESOURCES, 'bin')};C:\\Windows`)
+      expect(env.Path).toBe(
+        `${join(RESOURCES, 'session-bin')};${join(RESOURCES, 'bin')};C:\\Windows`
+      )
       expect(env.PATH).toBeUndefined()
-      // The native launcher: `orca.cmd` refuses message bodies cmd.exe would mangle.
-      expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'orca.exe'))
+      // The native launcher: the .cmd shim refuses message bodies cmd.exe would mangle.
+      expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'nash.exe'))
     })
 
     it('unpackaged, through the dev launcher dir', () => {
       pinPlatform('darwin')
       installFakeAppEnvironment({ isPackaged: () => false, getPath: () => USER_DATA })
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { PATH: '/usr/bin' })
-      expect(env.PATH).toBe(`${join(USER_DATA, 'cli', 'bin')}:/usr/bin`)
-      expect(env.ORCA_CLI_COMMAND).toBe(join(USER_DATA, 'cli', 'bin', 'orca-dev'))
+      expect(env.PATH).toBe(`${join(USER_DATA, 'cli', 'bin')}${delimiter}/usr/bin`)
+      expect(env.ORCA_CLI_COMMAND).toBe(join(USER_DATA, 'cli', 'bin', 'nash-dev'))
     })
   })
 

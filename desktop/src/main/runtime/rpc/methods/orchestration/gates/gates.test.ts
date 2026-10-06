@@ -1,7 +1,17 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { RpcContext } from '../../../core'
 import { createOrchestrationRpcHarness } from '../rpc-test-harness'
 import type { OrchestrationDb } from '../../../../orchestration/db'
+import {
+  GateCreateParams,
+  GateListParams,
+  GateResolveParams,
+  RunParams,
+  RunStopParams
+} from '../../../../../../shared/rpc-contract/orchestration-gates-params'
+import { ORCHESTRATION_GATE_METHODS } from './gates'
 
 describe('orchestration RPC methods', () => {
   const h = createOrchestrationRpcHarness()
@@ -20,6 +30,68 @@ describe('orchestration RPC methods', () => {
   async function call(name: string, params: Record<string, unknown>) {
     return h.call(name, params, ctx)
   }
+
+  describe('retired coordinator loop', () => {
+    function coordinatorRunCount(): number {
+      return (db.db.prepare('SELECT COUNT(*) AS n FROM coordinator_runs').get() as { n: number }).n
+    }
+
+    it('imports no coordinator module', () => {
+      const source = readFileSync(join(import.meta.dirname, 'gates.ts'), 'utf8')
+      const specifiers = [...source.matchAll(/from\s+'([^']+)'/g)].map((match) => match[1])
+
+      expect(specifiers.filter((specifier) => /coordinator/i.test(specifier ?? ''))).toEqual([])
+    })
+
+    it('keeps the retired names registered next to the unchanged gate methods', () => {
+      expect(ORCHESTRATION_GATE_METHODS.map((method) => method.name)).toEqual([
+        'orchestration.run',
+        'orchestration.runStop',
+        'orchestration.gateCreate',
+        'orchestration.gateResolve',
+        'orchestration.gateList'
+      ])
+      expect(findMethod('orchestration.run').params).toBe(RunParams)
+      expect(findMethod('orchestration.runStop').params).toBe(RunStopParams)
+      expect(findMethod('orchestration.gateCreate').params).toBe(GateCreateParams)
+      expect(findMethod('orchestration.gateResolve').params).toBe(GateResolveParams)
+      expect(findMethod('orchestration.gateList').params).toBe(GateListParams)
+    })
+
+    it.each([
+      ['orchestration.run', { spec: 'build the feature' }],
+      ['orchestration.runStop', {}]
+    ])(
+      '%s refuses with orchestration_migration_required and applies no effect',
+      async (name, params) => {
+        setup()
+
+        await expect(call(name, params)).rejects.toMatchObject({
+          code: 'orchestration_migration_required',
+          data: { reason: 'command_retired', effectsApplied: false }
+        })
+
+        expect(coordinatorRunCount()).toBe(0)
+        expect(db.getActiveCoordinatorRun()).toBeUndefined()
+      }
+    )
+
+    it('does not stop or touch an existing legacy coordinator run row', async () => {
+      setup()
+      const legacy = db.createCoordinatorRun({
+        spec: 'legacy spec',
+        coordinatorHandle: 'term_coord',
+        pollIntervalMs: 2000
+      })
+
+      await expect(call('orchestration.runStop', {})).rejects.toMatchObject({
+        code: 'orchestration_migration_required'
+      })
+
+      expect(db.getCoordinatorRun(legacy.id)?.status).toBe('running')
+      expect(coordinatorRunCount()).toBe(1)
+    })
+  })
 
   describe('orchestration.gateCreate', () => {
     it('creates a decision gate and blocks the task', async () => {

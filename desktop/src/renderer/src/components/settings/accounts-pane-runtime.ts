@@ -1,6 +1,5 @@
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type {
-  ClaudeRateLimitAccountsState,
   CodexRateLimitAccountsState,
   CodexSystemDefaultIdentity
 } from '../../../../shared/managed-account-types'
@@ -40,31 +39,11 @@ export function getCodexSystemDefaultSubtitle(
   )
 }
 
-export function getClaudeAccountLabel(
-  state: ClaudeRateLimitAccountsState,
-  accountId: string | null | undefined
-): string {
-  if (accountId == null) {
-    return 'System default'
-  }
-  return state.accounts.find((account) => account.id === accountId)?.email ?? 'Claude account'
-}
-
 export function getCodexAccountRuntimeLabel(
   account: CodexRateLimitAccountsState['accounts'][number],
   hostLabel = getHostRuntimeLabel()
 ): string {
   if (account.managedHomeRuntime === 'wsl') {
-    return account.wslDistro ? `WSL ${account.wslDistro}` : 'WSL'
-  }
-  return hostLabel
-}
-
-export function getClaudeAccountRuntimeLabel(
-  account: ClaudeRateLimitAccountsState['accounts'][number],
-  hostLabel = getHostRuntimeLabel()
-): string {
-  if (account.managedAuthRuntime === 'wsl') {
     return account.wslDistro ? `WSL ${account.wslDistro}` : 'WSL'
   }
   return hostLabel

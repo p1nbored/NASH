@@ -13,15 +13,8 @@ import { startPreGoneCrashSampling } from '../crash-reporting/process-gone-diagn
 import { recordProcessGoneCrash } from './main-window-lifecycle-flags'
 import { handleGpuChildCrash } from './gpu-lifecycle'
 import { isGpuFallbackCrashCandidate } from '../crash-reporting/gpu-crash-fallback-decision'
-import { ensureRealHomeCodexHookState } from '../codex/codex-real-home-hook-install'
-import {
-  installManagedAgentHooks,
-  resolveStartupManagedHookAction,
-  shouldContinueManagedHookStartup,
-  shouldInstallStartupManagedAgentHook
-} from '../agent-hooks/managed-agent-hook-controls'
+import { reconcileStartupManagedHooks } from './startup-managed-hooks'
 import { shouldInstallManagedHooks } from './configure-process'
-import { recordManagedHookInstallFailure } from '../agent-hooks/install-telemetry'
 import { mainProcessState as state } from './main-process-state'
 import { initializeMainProcessObservers } from './main-process-observers'
 import { initializeMainProcessAccountServices } from './main-process-account-services'
@@ -30,6 +23,7 @@ import {
   configureRuntimeServices
 } from './main-process-runtime-service'
 import { initializeMainProcessAutomations } from './main-process-automations'
+import { initializeMainProcessAutopilotRuntime } from './main-process-autopilot-runtime'
 import { initializeMainProcessPlugins } from './main-process-plugins'
 import { collectWorktreeTrashSweepRoots, sweepStaleWorktreeTrash } from '../worktree-trash'
 import { loadWorktreeRemovalRecordsForStore } from './worktree-removal-records-load'
@@ -52,6 +46,11 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   const runtime = initializeMainProcessRuntime()
   initializeMainProcessAutomations()
   configureRuntimeServices(runtime)
+  // Why here: after the runtime and account services, before the RPC server, the window or any renderer can submit a request.
+  await initializeMainProcessAutopilotRuntime(runtime, {
+    settings: () => store.getSettings(),
+    rateLimits: () => state.rateLimits
+  })
   await initializeMainProcessPlugins(runtime)
   state.starNag = new StarNagService(store, state.stats!)
   state.starNag.start()
@@ -98,48 +97,17 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
     refreshInstalledOpenCodeStatusPlugins(store.getSettings())
   }, WORKTREE_TRASH_SWEEP_FALLBACK_MS)
   nativeTheme.themeSource = store.getSettings().theme ?? 'system'
-  // Why: the real-home ensure stays ordered before managed-hook reconciliation, so its
-  // in-slot conversion lands before the managed install's retired-form sweep removes
-  // the prior command. Codex's approval then runs in the background (#16441).
-  const startupManagedHookSettings = store.getSettings()
-  const shouldReconcileStartupManagedHooks =
-    shouldInstallManagedHooks(is.dev) &&
-    resolveStartupManagedHookAction(startupManagedHookSettings) === 'install'
-  const realHomeCodexHookState =
-    shouldReconcileStartupManagedHooks &&
-    shouldInstallStartupManagedAgentHook(startupManagedHookSettings, 'codex') &&
-    state.codexRuntimeHome?.isHostSystemDefaultRealHomeSelected()
-      ? ensureRealHomeCodexHookState({
-          hooksEnabled: true,
-          userDataPath: app.getPath('userData'),
-          // Why app start: the one place an older build's entry becomes the frozen command.
-          writePolicy: 'convert-older-forms'
-        }).catch((error: unknown) => {
-          console.warn('[codex-real-home-hooks] startup ensure failed:', error)
-        })
-      : Promise.resolve()
-  // Why skip rather than remove when the off switch is set: the hook files are user-global but this
-  // decision reads only THIS profile's settings, so removing here deletes the hooks every other Orca
-  // instance depends on (STA-5679). Skipping already keeps removed hooks from reappearing on launch.
-  if (shouldReconcileStartupManagedHooks) {
-    const managedHookStore = store
-    void realHomeCodexHookState
-      .then(() =>
-        installManagedAgentHooks(managedHookStore.getSettings(), {
-          shouldHydrateShellPath: app.isPackaged,
-          onInstallError: recordManagedHookInstallFailure,
-          shouldContinue: (agent) =>
-            shouldContinueManagedHookStartup(
-              state.isQuitting,
-              managedHookStore.getSettings(),
-              agent
-            )
-        })
-      )
-      .catch((error: unknown) =>
-        console.warn('[agent-hooks] failed to reconcile managed hooks on startup:', error)
-      )
-  }
+  // Why a module: the startup hook install follows NASH's Claude-only scope (user decision of
+  // 2026-10-06) and is tested there; it runs in the background and never rejects.
+  void reconcileStartupManagedHooks({
+    managedHooksAllowed: shouldInstallManagedHooks(is.dev),
+    settings: () => store.getSettings(),
+    isQuitting: () => state.isQuitting,
+    hydrateShellPath: app.isPackaged,
+    userDataPath: () => app.getPath('userData'),
+    isRealCodexHomeSelected: () =>
+      state.codexRuntimeHome?.isHostSystemDefaultRealHomeSelected() === true
+  })
   // Why: process-gone metrics only see survivors, and the gone-time host memory
   // read lands after the corpse released its pages; both need a live pre-gone
   // sample to compare against in crash reports.

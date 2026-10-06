@@ -46,7 +46,7 @@ describe('computeWorktreePath WSL layout', () => {
     const root = await pendingRoot
     for (const name of ['feature', 'feature-2', 'feature-3']) {
       expect(computeWorktreePath(name, repoPath, settings, root)).toBe(
-        win32.join(home, 'orca', 'workspaces', 'repo', name)
+        win32.join(home, 'nash', 'workspaces', 'repo', name)
       )
     }
     expect(getWslHomeAsyncMock).toHaveBeenCalledExactlyOnceWith('Ubuntu')
@@ -65,7 +65,7 @@ describe('computeWorktreePath WSL layout', () => {
         nestWorkspaces: true,
         workspaceDir: 'C:\\workspaces'
       })
-    ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\orca\\workspaces\\repo\\feature')
+    ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\nash\\workspaces\\repo\\feature')
   })
 
   it('falls back to the configured Windows workspace when WSL home lookup fails', () => {
@@ -163,7 +163,7 @@ describe('computeWorktreePath WSL layout', () => {
         repo.path,
         getWorktreePathSettings(repo, { nestWorkspaces: false, workspaceDir: 'C:\\workspaces' })
       )
-    ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\orca\\workspaces\\feature')
+    ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\nash\\workspaces\\feature')
   })
 
   it('classifies whatever creation produces for Linux bases, dotted or not', () => {
@@ -192,7 +192,7 @@ describe('computeWorktreePath WSL layout', () => {
       )
       const layouts = buildKnownOrcaWorkspaceLayouts({ ...settings, workspaceDirHistory: [] }, repo)
       // Why containment, not just ownership: a regressed resolver lands in the
-      // ~/orca/workspaces mirror layout, which also classifies 'external'.
+      // ~/nash/workspaces mirror layout, which also classifies 'external'.
       // layouts[0] is the repo-base layout — it is always pushed first.
       expect(relativePathInsideRoot(layouts[0].path, createdPath)).not.toBeNull()
       expect(
@@ -296,7 +296,7 @@ describe('computeWorktreePath WSL layout', () => {
           workspaceDir: 'C:\\workspaces',
           wslMirrorDistro: 'Ubuntu'
         })
-      ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\orca\\workspaces\\feature')
+      ).toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\nash\\workspaces\\feature')
     })
 
     it('keeps Windows placement when the project has no WSL runtime', () => {
@@ -360,7 +360,7 @@ describe('computeWorktreePath WSL layout', () => {
           workspaceDir: 'C:\\workspaces',
           wslMirrorDistro: 'Ubuntu'
         })
-      ).resolves.toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\orca\\workspaces\\feature')
+      ).resolves.toBe('\\\\wsl.localhost\\Ubuntu\\home\\jin\\nash\\workspaces\\feature')
     })
   })
 })

@@ -1,8 +1,15 @@
 # Windows daemon-host relocation
 
+> NASH identity (decision D-017): this fork is named NASH. Its app image is `NASH.exe` and the
+> relocation folder is `%LOCALAPPDATA%\NASH` (`localAppDataRootName` in
+> `src/shared/app-identity-constants.ts`), so it never shares a daemon host, an uninstall sweep or
+> a LOCALAPPDATA folder with a real Orca install. Below, `Orca.exe`, `Orca` and
+> `orca-terminal-daemon.exe` describe the upstream investigation and measurements; read them as
+> `NASH.exe` and the NASH folder, and note that NASH never shipped the renamed host.
+
 On Windows the terminal daemon does not run from the install directory. Before it forks the
-daemon, Orca materializes a trimmed copy of its own runtime under
-`%LOCALAPPDATA%\Orca\daemon-host\<app version>\` and forks the daemon from there
+daemon, NASH materializes a trimmed copy of its own runtime under
+`%LOCALAPPDATA%\NASH\daemon-host\<app version>\` and forks the daemon from there
 (`src/main/daemon/daemon-host-relocation.ts`). This is what keeps live terminals alive across an
 auto-update and across a crash of the main process.
 
@@ -103,7 +110,8 @@ stop being scored.
   app's own exe, which is correct on a genuine uninstall — the product is being removed — but its
   `${isUpdated}` guard must stay: electron-builder runs the uninstaller during every update's
   `uninstallOldVersion`, and killing the daemon there defeats the whole feature. The legacy
-  `orca-terminal-daemon.exe` name stays in the macro to reap hosts left by older builds.
+  upstream `orca-terminal-daemon.exe` name is deliberately absent from NASH's macro: NASH never
+  shipped a renamed host, and a kill by that image name would reach a real Orca install.
 - `LOCAL_HOST_ROOT_NAME` in `daemon-host-relocation.ts` and the path in the uninstall macro are the
   same directory. Change both together.
 - Every native module the daemon bundle `require()`s must be in the copy plan

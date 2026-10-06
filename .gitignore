@@ -1,0 +1,55 @@
+# Runtime state, original user messages, receipts, and user artifacts never enter version control.
+/var/
+/state/
+/runs/
+/artifacts/
+/experiments/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+*.jsonl.gz
+/logs/
+*.log
+
+# Credentials and local configuration overrides. Treat anything here as a secret.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+/config/local/
+/config/*.local.*
+secrets/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+/dist/
+/build/
+*.egg-info/
+
+# Node / Orca desktop tooling
+node_modules/
+
+# Private design exploration inputs and local browser profiles. Never ship these.
+/.local/
+/out/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store

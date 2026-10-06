@@ -1,7 +1,7 @@
 /**
  * Installs Orca's own ripgrep on an SSH host so remote Quick Open and text search do not depend
  * on the user having `rg`. The binary lives at
- * `~/.orca-remote/ripgrep/<content-hash>-<platform>/rg[.exe]`, a sibling of the
+ * `~/.nash-remote/ripgrep/<content-hash>-<platform>/rg[.exe]`, a sibling of the
  * `relay-<version>` dirs keyed on the binary's bytes alone, so a relay upgrade never re-uploads it.
  *
  * Uploads land in a private `.upload-<token>` stage and are renamed into place only after a size

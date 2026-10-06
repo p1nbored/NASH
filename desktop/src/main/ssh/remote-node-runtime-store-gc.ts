@@ -1,5 +1,5 @@
 /**
- * Collects the shared `~/.orca-remote/runtimes/node-<sha256>/` store (design D5 GC).
+ * Collects the shared `~/.nash-remote/runtimes/node-<sha256>/` store (design D5 GC).
  *
  * A runtime is deleted only when all of these hold: no retained directory references it
  * (`.runtime-node` or `.runtime-ref-node-<sha>`), it is neither a pin this client runs nor the

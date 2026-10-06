@@ -2,6 +2,10 @@ import type { GlobalSettings } from './global-settings-types'
 import type { NotificationSettings } from './notification-settings-types'
 import type { VoiceSettings } from './speech-types'
 import { DEFAULT_TERMINAL_FONT_WEIGHT, DEFAULT_TERMINAL_FONT_WEIGHT_BOLD } from './terminal-fonts'
+import {
+  AUTOPILOT_TERMINAL_DIVIDER_DARK,
+  AUTOPILOT_TERMINAL_DIVIDER_LIGHT
+} from './terminal-themes/autopilot'
 import { getDefaultTerminalQuickCommands } from './terminal-quick-commands'
 import { TASK_PROVIDERS } from './task-providers'
 import { getDefaultSourceControlAiSettings } from './source-control-ai'
@@ -78,12 +82,13 @@ export function buildDefaultSettings(args: {
     terminalCursorStyle: 'block',
     terminalCursorStyleDefaultedToBlock: true,
     terminalCursorBlink: true,
-    terminalThemeDark: 'Ghostty Default Style Dark',
-    terminalDividerColorDark: '#3f3f46',
-    terminalUseSeparateLightTheme: true,
-    terminalThemeLight: 'Builtin Tango Light',
+    // Why (decision D-009): the warm charcoal terminal stays dark inside the light shell.
+    terminalThemeDark: 'Autopilot Charcoal',
+    terminalDividerColorDark: AUTOPILOT_TERMINAL_DIVIDER_DARK,
+    terminalUseSeparateLightTheme: false,
+    terminalThemeLight: 'Autopilot Paper',
     terminalCustomThemes: [],
-    terminalDividerColorLight: '#d4d4d8',
+    terminalDividerColorLight: AUTOPILOT_TERMINAL_DIVIDER_LIGHT,
     terminalInactivePaneOpacity: args.terminalInactivePaneOpacity,
     terminalActivePaneOpacity: 1,
     terminalPaneOpacityTransitionMs: 140,
@@ -179,8 +184,6 @@ export function buildDefaultSettings(args: {
     codexManagedAccounts: [],
     activeCodexManagedAccountId: null,
     activeCodexManagedAccountIdsByRuntime: { host: null, wsl: {} },
-    claudeManagedAccounts: [],
-    activeClaudeManagedAccountId: null,
     terminalScopeHistoryByWorktree: true,
     terminalHiddenViewParking: true,
     // C1 kill switches — runtime reads stay `!== false` so older persisted

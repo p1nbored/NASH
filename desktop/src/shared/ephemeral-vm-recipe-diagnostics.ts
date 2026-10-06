@@ -1,3 +1,4 @@
+import { APP_IDENTITY } from './app-identity-constants'
 import { parsePairingCode } from './pairing'
 import { stripCredentialsFromMessage } from './git-remote-error'
 import {
@@ -6,6 +7,9 @@ import {
   type EphemeralVmRecipeResult,
   type JsonValue
 } from './ephemeral-vm-recipes'
+
+const PAIRING_LINK_SCHEMES = [APP_IDENTITY.urlScheme, 'orca']
+const REDACTED_PAIRING_LINK = `${APP_IDENTITY.urlScheme}://pair?code=[redacted]`
 
 export type EphemeralVmRecipeResultWarning = {
   id: string
@@ -40,7 +44,11 @@ export function redactEphemeralVmRecipeDiagnosticText(text: string): string {
     return text
   }
   return stripCredentialsFromMessage(text)
-    .replace(/orca:\/\/pair\?code=[A-Za-z0-9_-]+/g, 'orca://pair?code=[redacted]')
+    // Why both schemes: a recipe or script may still echo an Orca-scheme link, and any pairing link is a secret.
+    .replace(
+      new RegExp(`(${PAIRING_LINK_SCHEMES.join('|')})://pair\\?code=[A-Za-z0-9_-]+`, 'g'),
+      '$1://pair?code=[redacted]'
+    )
     .replace(
       /("(?:pairingCode|deviceToken|publicKeyB64|token|secret|password|apiKey|accessToken|identityFile|identityAgent|proxyCommand)"\s*:\s*)"[^"]*"/gi,
       '$1"[redacted]"'
@@ -60,14 +68,14 @@ export function redactEphemeralVmRecipeResultForDiagnostics(
   }
   return {
     ...result,
-    pairingCode: 'orca://pair?code=[redacted]',
+    pairingCode: REDACTED_PAIRING_LINK,
     ...(userData ? { userData } : {})
   }
 }
 
 function redactConnection(connection: EphemeralVmRecipeConnection): EphemeralVmRecipeConnection {
   if (connection.type === 'orca-server') {
-    return { ...connection, pairingCode: 'orca://pair?code=[redacted]' }
+    return { ...connection, pairingCode: REDACTED_PAIRING_LINK }
   }
   return {
     ...connection,

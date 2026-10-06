@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FolderOpen, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { APP_IDENTITY } from '../../../../shared/app-identity-constants'
 import type { CliInstallStatus } from '../../../../shared/cli-install-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import {
@@ -50,19 +51,20 @@ function getRevealLabel(platform: string): string {
 
 function getInstallDescription(platform: string): string {
   if (platform === 'darwin') {
-    return 'Register `orca` in /usr/local/bin.'
+    return `Register \`${APP_IDENTITY.cliCommandName}\` in /usr/local/bin.`
   }
   if (platform === 'linux') {
     return 'Register `orca-ide` in ~/.local/bin.'
   }
   if (platform === 'win32') {
-    return 'Register `orca` in your user PATH.'
+    return `Register \`${APP_IDENTITY.cliCommandName}\` in your user PATH.`
   }
   return 'CLI registration is not yet available on this platform.'
 }
 
 function getFallbackCommandName(platform: string): string {
-  return platform === 'linux' ? 'orca-ide' : 'orca'
+  // Why orca-ide on Linux: Linux packaging still ships that command name (WP-ID follow-up).
+  return platform === 'linux' ? 'orca-ide' : APP_IDENTITY.cliCommandName
 }
 
 export function CliSection({
@@ -166,12 +168,12 @@ export function CliSection({
     <section className="space-y-4" data-settings-section="cli">
       <div className="space-y-1">
         <h2 className="text-sm font-semibold">
-          {translate('auto.components.settings.CliSection.c5c0f2641d', 'Orca CLI')}
+          {translate('auto.components.settings.CliSection.c5c0f2641d', 'NASH CLI')}
         </h2>
         <p className="text-xs text-muted-foreground">
           {translate(
             'auto.components.settings.CliSection.outsideOrcaDescription',
-            'Orca terminals already have `orca`. Turn this on to use `orca` from other terminals outside Orca.'
+            'NASH terminals already have `nash`. Turn this on to use `nash` from other terminals outside NASH.'
           )}
         </p>
       </div>
@@ -312,7 +314,7 @@ export function CliSection({
               <p className="text-xs text-muted-foreground">
                 {translate(
                   'auto.components.settings.CliSection.36a6f919ba',
-                  'Give agents Orca-aware workspace, terminal, and progress workflows.'
+                  'Give agents NASH-aware workspace, terminal, and progress workflows.'
                 )}
               </p>
             </div>
@@ -323,7 +325,7 @@ export function CliSection({
               title={translate('auto.components.settings.CliSection.6053cf736c', 'CLI skill')}
               description={translate(
                 'auto.components.settings.CliSection.e8012c03a1',
-                'Enables agents to use Orca workspace, terminal, and progress commands.'
+                'Enables agents to use NASH workspace, terminal, and progress commands.'
               )}
               command={cliSkillInstallCommand}
               installedCommand={cliSkillUpdateCommand}

@@ -73,7 +73,7 @@ describe('CodexConfigMirror without ~/.codex/config.toml', () => {
     )
 
     wslMirror.safeSyncIntoManagedHome(
-      '\\\\wsl.localhost\\Ubuntu\\home\\u\\.local\\share\\orca\\codex-accounts\\acct\\home',
+      '\\\\wsl.localhost\\Ubuntu\\home\\u\\.local\\share\\nash\\codex-accounts\\acct\\home',
       undefined,
       'acct'
     )

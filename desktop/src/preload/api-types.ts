@@ -1,5 +1,4 @@
 import type {
-  ClaudeAccountsApi,
   CodexAccountsApi,
   CodexConfigSyncApi,
   CursorAccountsApi,
@@ -8,6 +7,7 @@ import type {
   ZcodePlanCredentialsApi
 } from './api/agent-account-api'
 import type { HooksApi } from './api/agent-hook-api'
+import type { ClefCredentialsApi } from './api/clef-credentials-api'
 import type { SkillsApi } from './api/agent-skill-api'
 import type { AgentAwakeApi, AgentStatusApi } from './api/agent-status-api'
 import type {
@@ -104,7 +104,6 @@ export type PreloadApi = {
   localhostWorktreeLabels: LocalhostWorktreeLabelsApi
   keybindings: KeybindingsApi
   codexAccounts: CodexAccountsApi
-  claudeAccounts: ClaudeAccountsApi
   cli: CliApi
   codexConfigSync: CodexConfigSyncApi
   preflight: PreflightApi
@@ -149,6 +148,7 @@ export type PreloadApi = {
   }
   minimaxCredentials: MinimaxCredentialsApi
   zcodePlanCredentials: ZcodePlanCredentialsApi
+  clefCredentials: ClefCredentialsApi
   grokAccounts: GrokAccountsApi
   cursorAccounts: CursorAccountsApi
   ssh: SshApi

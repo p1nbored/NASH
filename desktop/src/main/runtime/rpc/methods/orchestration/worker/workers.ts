@@ -13,6 +13,7 @@ import {
   resolveWorkerStartReadinessTimeoutMs
 } from '../../../../../../shared/orchestration-timing-budgets'
 import { assertWorkerStartTaskSpecWithinPromptBudget } from './worker-start-prompt-budget'
+import { assertAppRunUsesTaskStart } from '../../../../workflow-run/app-run-policy'
 
 export const ORCHESTRATION_WORKER_START_METHODS = [
   defineMethod({
@@ -42,6 +43,7 @@ export const ORCHESTRATION_WORKER_START_METHODS = [
           'worker-start requires the coordinator terminal currently bound to the Task Run.'
         )
       }
+      assertAppRunUsesTaskStart(db, { runId: run.id, command: 'worker-start', taskId: params.task })
       const existingTask = params.task ? db.getTask(params.task) : undefined
       if (params.task && (!existingTask || existingTask.run_id !== run.id)) {
         throw new OrchestrationError(

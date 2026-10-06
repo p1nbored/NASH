@@ -184,7 +184,7 @@ describe.skipIf(!RUN_REVIEW_ORACLE)(
       const activeFixture = fixture as TargetFixture
       dockerExec(
         activeFixture,
-        'rm -rf /usr/local/include/node /root/.orca-remote /root/.cache/node-gyp'
+        'rm -rf /usr/local/include/node /root/.nash-remote /root/.cache/node-gyp'
       )
       const connection = createConnection(activeFixture)
       await connection.connect()

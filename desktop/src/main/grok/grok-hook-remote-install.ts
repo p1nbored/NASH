@@ -1,4 +1,5 @@
 import type { SFTPWrapper } from 'ssh2'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 
 import type { AgentHookInstallStatus } from '../../shared/agent-hook-types'
 import { wrapPosixHookCommand } from '../agent-hooks/installer-utils'
@@ -47,7 +48,7 @@ export async function installRemoteGrokHook(
 ): Promise<AgentHookInstallStatus> {
   const home = remoteHome.replace(/\/$/, '')
   const configPath = `${remoteGrokHome(home, remoteGrokHomeDir)}/hooks/orca-status.json`
-  const scriptPath = `${home}/.orca/agent-hooks/grok-hook.sh`
+  const scriptPath = `${home}/${APP_AGENT_HOOKS_HOME_PATH}/grok-hook.sh`
   try {
     const config = await readHooksJsonRemote(sftp, configPath)
     if (!config) {

@@ -1,8 +1,9 @@
 import { defineMethod } from '../../../core'
 import type { GateStatus } from '../../../../orchestration/db'
-import { Coordinator } from '../../../../orchestration/coordinator'
+import { OrchestrationError } from '../../../../orchestration/orchestration-error'
 import { resolveRunScope } from '../runs/run-scope'
 import { taskNotFoundError } from '../../../../orchestration/task-dispatch-refusal'
+import { orchestrationMigrationData } from '../../../../../../shared/orchestration-rpc-contract'
 import {
   GateCreateParams,
   GateListParams,
@@ -11,74 +12,28 @@ import {
   RunStopParams
 } from '../../../../../../shared/rpc-contract/orchestration-gates-params'
 
-// Why: the coordinator instance is stored at module scope so orchestration.runStop
-// can signal it to halt. Only one coordinator can run at a time (enforced by
-// the DB's active-run check), so a single reference suffices.
-let activeCoordinator: Coordinator | null = null
+// Why: the Claude Code primary session plans and dispatches; the Orca coordinator loop is gone, so a
+// retired call must refuse with no effect even if a caller path skipped the dispatcher's fence.
+function refuseRetiredCoordinatorLoop(): never {
+  throw new OrchestrationError(
+    'orchestration_migration_required',
+    'The Orca coordinator loop is retired; the Claude Code primary session plans and dispatches. No effects were applied.',
+    orchestrationMigrationData('command_retired')
+  )
+}
 
 export const ORCHESTRATION_GATE_METHODS = [
-  // Why: Section 4.12 — orchestration.run returns immediately with a run ID.
-  // The coordinator loop runs in the background; progress is queried via
-  // orchestration.taskList. This prevents the RPC call from blocking the
-  // CLI (or any caller) for the entire duration of the pipeline.
+  // Why: the names stay registered so an old client reads orchestration_migration_required, not method_not_found.
   defineMethod({
     name: 'orchestration.run',
     params: RunParams,
-    handler: (params, { runtime }) => {
-      const db = runtime.getOrchestrationDb()
-
-      const existing = db.getActiveCoordinatorRun()
-      if (existing) {
-        throw new Error(`Coordinator already running: ${existing.id}`)
-      }
-
-      const coordinatorHandle = params.from ?? 'coordinator'
-      const coordinator = new Coordinator(db, runtime, {
-        spec: params.spec,
-        coordinatorHandle,
-        pollIntervalMs: params.pollIntervalMs,
-        maxConcurrent: params.maxConcurrent,
-        worktree: params.worktree
-      })
-
-      activeCoordinator = coordinator
-
-      const run = db.createCoordinatorRun({
-        spec: params.spec,
-        coordinatorHandle,
-        pollIntervalMs: params.pollIntervalMs
-      })
-
-      // Why: fire-and-forget — the coordinator loop runs in the event loop
-      // background. Results are persisted to the DB; callers query via
-      // orchestration.taskList or orchestration.runStatus.
-      coordinator.runFromExistingRun(run.id).finally(() => {
-        if (activeCoordinator === coordinator) {
-          activeCoordinator = null
-        }
-      })
-
-      return { runId: run.id, status: 'running' }
-    }
+    handler: refuseRetiredCoordinatorLoop
   }),
 
   defineMethod({
     name: 'orchestration.runStop',
     params: RunStopParams,
-    handler: (_params, { runtime }) => {
-      const db = runtime.getOrchestrationDb()
-      const run = db.getActiveCoordinatorRun()
-      if (!run) {
-        throw new Error('No active coordinator run')
-      }
-
-      if (activeCoordinator) {
-        activeCoordinator.stop()
-        activeCoordinator = null
-      }
-
-      return { runId: run.id, stopped: true }
-    }
+    handler: refuseRetiredCoordinatorLoop
   }),
 
   defineMethod({

@@ -82,12 +82,12 @@ describe('ClientHostedBrowserPagePane popup notices', () => {
     emitPopup()
 
     expect(toastMocks.message).toHaveBeenCalledWith(
-      'https://accounts.example.com tried to open a popup Orca does not support here.',
+      'https://accounts.example.com tried to open a popup NASH does not support here.',
       { id: 'browser-popup:page-a:blocked:https://accounts.example.com' }
     )
   })
 
-  it('silences in-Orca opens but reports external opens', () => {
+  it('silences in-NASH opens but reports external opens', () => {
     renderPane()
 
     emitPopup({ action: 'opened-in-orca' })

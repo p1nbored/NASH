@@ -55,7 +55,7 @@ describe('CommandCodeHookService', () => {
       process.platform === 'win32' ? WINDOWS_POWERSHELL_LAUNCHER : /command-code-hook/
     )
     if (process.platform !== 'win32') {
-      expect(config.hooks.PreToolUse[0].hooks[0].command).toContain(join(homeDir, '.orca'))
+      expect(config.hooks.PreToolUse[0].hooks[0].command).toContain(join(homeDir, '.nash'))
     }
     if (process.platform !== 'win32') {
       expect(config.hooks.PreToolUse[0].hooks[0].command).toMatch(/^if \[ -f /)
@@ -92,7 +92,7 @@ describe('CommandCodeHookService', () => {
 
     const scriptFileName =
       process.platform === 'win32' ? 'command-code-hook.cmd' : 'command-code-hook.sh'
-    const script = readFileSync(join(homeDir, '.orca', 'agent-hooks', scriptFileName), 'utf8')
+    const script = readFileSync(join(homeDir, '.nash', 'agent-hooks', scriptFileName), 'utf8')
 
     if (process.platform === 'win32') {
       expect(script).toContain('sourceEndpointByPort')
@@ -148,7 +148,7 @@ describe('CommandCodeHookService', () => {
     try {
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
       const address = server.address() as AddressInfo
-      const scriptPath = join(homeDir, '.orca', 'agent-hooks', 'command-code-hook.sh')
+      const scriptPath = join(homeDir, '.nash', 'agent-hooks', 'command-code-hook.sh')
       const child = spawn('/bin/sh', [scriptPath], {
         env: {
           ...process.env,

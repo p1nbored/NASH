@@ -25,7 +25,7 @@ export async function warnIfZCodeCannotOpenSession(): Promise<void> {
       id: 'zcode-missing-tui',
       description: translate(
         'auto.components.terminal.pane.zcode.missing.tui.description',
-        "Orca's hooks installed correctly — the zcode on your PATH just cannot open a session. The ZCode desktop app bundles the agent runtime without its terminal UI. Install a zcode that ships the TUI, then run zcode outside Orca to confirm."
+        "NASH's hooks installed correctly — the zcode on your PATH just cannot open a session. The ZCode desktop app bundles the agent runtime without its terminal UI. Install a zcode that ships the TUI, then run zcode outside NASH to confirm."
       ),
       duration: 20_000
     }

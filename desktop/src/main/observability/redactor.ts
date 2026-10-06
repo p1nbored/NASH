@@ -32,8 +32,16 @@ const PROVIDER_PATTERNS: { tag: string; re: RegExp }[] = [
     tag: 'pem',
     // Lazy `[\s\S]+?` so two back-to-back PEM blocks redact independently, not as one gobbled span.
     re: /-----BEGIN [A-Z ]+-----[\s\S]+?-----END [A-Z ]+-----/g
+  },
+  {
+    // Last, so every prefixed provider key keeps its specific tag. Cloudflare tokens have no prefix: 32+ token characters with a digit and an uppercase letter. Runs of only hex digits and hyphens (git ids, digests, GUIDs) are left alone.
+    tag: 'cloudflare-token',
+    re: /(?<![A-Za-z0-9_-])(?![0-9A-Fa-f-]*(?![A-Za-z0-9_-]))(?=[A-Za-z0-9_-]*[0-9])(?=[A-Za-z0-9_-]*[A-Z])[A-Za-z0-9_-]{32,}/g
   }
 ]
+
+// Spec section 7: the account id in `/accounts/<id>` is dropped; a `{account_id}` style placeholder survives so recorded URL templates stay readable.
+const CLOUDFLARE_ACCOUNT_PATH = /(\/accounts\/)(?!\{[^}/\s]*\}(?:[/?#\s"'\\]|$))[^/\s?#"'\\]+/gi
 
 // Strip URL userinfo — both `user:pass@` and bare-token `<pat>@` (seen in failing git stderr); keep host+path for debug context.
 const URL_USERINFO = /(https?:\/\/)([^/@\s]+)@/g
@@ -95,7 +103,7 @@ function shouldDropAttributeKey(key: string, mode: RedactorMode): boolean {
   return false
 }
 
-/** Apply rules 1–4 to a string. Idempotent, which makes triple-application safe. */
+/** Apply rules 1–4 (and 3b) to a string. Idempotent, which makes triple-application safe. */
 export function redactString(input: string): string {
   if (typeof input !== 'string' || input.length === 0) {
     return input
@@ -112,6 +120,9 @@ export function redactString(input: string): string {
 
   // Rule 3 — URL userinfo. After rule 2 so a key-shaped userinfo value gets the more specific redaction first.
   out = out.replace(URL_USERINFO, '$1[redacted]@')
+
+  // Rule 3b — Cloudflare account path. Constant replacement text keeps the pass idempotent.
+  out = out.replace(CLOUDFLARE_ACCOUNT_PATH, '$1[redacted:cloudflare-account]')
 
   // Rule 4 — .env-shape line: keep key, redact value. Last so rule 1 wins over a coincidentally .env-shaped substring.
   out = redactEnvironmentLines(out)

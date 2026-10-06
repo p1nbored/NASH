@@ -78,7 +78,7 @@ export async function publishArtifactFromSurface(
       toast.error(
         translate(
           'auto.components.artifacts.artifact-publish-flow.bba20daa6d',
-          'Sign in to Orca and try again.'
+          'Sign in to Orca Cloud and try again.'
         )
       )
       return null
@@ -133,7 +133,7 @@ function artifactPreparationErrorDescription(code: ArtifactPublishPreparationErr
     case 'unreadable':
       return translate(
         'auto.components.artifacts.artifact-publish-flow.e2ed5acd8c',
-        "Orca couldn't read this file. Open it from a workspace and try again."
+        "NASH couldn't read this file. Open it from a workspace and try again."
       )
     case 'unsupported':
       return translate(

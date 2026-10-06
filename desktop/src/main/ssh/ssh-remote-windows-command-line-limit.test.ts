@@ -18,7 +18,7 @@ import {
 
 const windows = getRemoteHostPlatform('win32-x64')
 const owner = '.sftp-namespace-123e4567e89b12d3a456426614174000'
-const pool = 'C:\\Users\\orca\\.orca-remote\\.upload-stages'
+const pool = 'C:\\Users\\orca\\.nash-remote\\.upload-stages'
 const stage: RelayUploadStageSlot = {
   poolDir: pool,
   slotName: 'slot-0',
@@ -36,21 +36,21 @@ describe('Windows remote command line limit', () => {
     ['reserve upload stage', reserveRelayUploadStageCommand(windows, pool, owner)],
     [
       'promote upload stage',
-      promoteOwnedRelayUploadStageCommand(windows, stage, owner, 'C:\\Users\\orca\\.orca-remote')
+      promoteOwnedRelayUploadStageCommand(windows, stage, owner, 'C:\\Users\\orca\\.nash-remote')
     ],
     ['cleanup upload stage', cleanupOwnedRelayUploadStageCommand(windows, stage, owner)],
     [
       'steal stale install lock',
-      tryStealInstallLockCommand(windows, 'C:\\Users\\orca\\.orca-remote\\relay', 1_200)
+      tryStealInstallLockCommand(windows, 'C:\\Users\\orca\\.nash-remote\\relay', 1_200)
     ],
     // F11 flagged these two as uncovered. They carry one path literal each, so they are the file
     // commands whose length a caller can actually move.
-    ['write file', makeWindowsWriteFileCommand('C:\\Users\\orca\\.orca-remote\\relay.js')],
+    ['write file', makeWindowsWriteFileCommand('C:\\Users\\orca\\.nash-remote\\relay.js')],
     [
       'publish staged file',
       makeWindowsPublishStagedFileCommand(
-        'C:\\Users\\orca\\.orca-remote\\relay.js.orca-partial-0123456789ab',
-        'C:\\Users\\orca\\.orca-remote\\relay.js',
+        'C:\\Users\\orca\\.nash-remote\\relay.js.orca-partial-0123456789ab',
+        'C:\\Users\\orca\\.nash-remote\\relay.js',
         'create'
       )
     ]

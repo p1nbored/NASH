@@ -1,3 +1,4 @@
+import { APP_IDENTITY } from '../../../shared/app-identity-constants'
 import { RuntimeClientError } from '../../runtime-client'
 
 export function resolveCompatibilityCliCommand(): 'orca' | 'orca-ide' | 'orca-dev' {
@@ -37,6 +38,6 @@ export async function flushOrchestrationStdout(): Promise<void> {
 export function isDevCliInvocation(): boolean {
   return (
     process.env.ORCA_DEV_CLI_INVOCATION === '1' ||
-    (process.env.ORCA_USER_DATA_PATH?.includes('orca-dev') ?? false)
+    (process.env.ORCA_USER_DATA_PATH?.includes(APP_IDENTITY.devUserDataDirName) ?? false)
   )
 }

@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { skillCloudRequest, type SkillCloudRequestError } from './skill-cloud-request'
 
 vi.mock('electron', () => ({ app: { isPackaged: false } }))
 
 describe('skillCloudRequest', () => {
+  // Only an environment origin enables sharing in NASH builds; a request's apiUrl alone does not.
+  beforeEach(() => vi.stubEnv('ORCA_ARTIFACTS_API_URL', 'http://127.0.0.1:8787'))
+  afterEach(() => vi.unstubAllEnvs())
+
   it('bounds requests that do not have a caller-owned cancellation signal', async () => {
     vi.useFakeTimers()
     const fetcher = vi.fn(

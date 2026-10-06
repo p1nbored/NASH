@@ -2,6 +2,7 @@
 // Why: single authority for all relay lifecycle state per SSH target (previously scattered across module Maps/Sets with duplicated paths).
 
 import { randomUUID } from 'node:crypto'
+import { APP_RELAY_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import type { BrowserWindow } from 'electron'
 import { deployAndLaunchRelay } from './ssh-relay-deploy'
 import { RemoteRuntimeUnavailableError } from './ssh-relay-runtime-resolution'
@@ -582,7 +583,7 @@ export class SshRelaySession {
         remoteHome && remoteRelayDir && nodePath && sockPath && hostPlatform
           ? {
               remoteHome,
-              binDir: joinRemotePath(hostPlatform, remoteHome, '.orca-relay', 'bin'),
+              binDir: joinRemotePath(hostPlatform, remoteHome, APP_RELAY_HOME_DIR_NAME, 'bin'),
               relayDir: remoteRelayDir,
               nodePath,
               sockPath,
@@ -749,7 +750,7 @@ export class SshRelaySession {
         remoteHome && remoteRelayDir && nodePath && sockPath && hostPlatform
           ? {
               remoteHome,
-              binDir: joinRemotePath(hostPlatform, remoteHome, '.orca-relay', 'bin'),
+              binDir: joinRemotePath(hostPlatform, remoteHome, APP_RELAY_HOME_DIR_NAME, 'bin'),
               relayDir: remoteRelayDir,
               nodePath,
               sockPath,

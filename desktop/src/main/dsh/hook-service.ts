@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, rmSync } from 'node:fs'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { dirname } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 
@@ -213,7 +214,7 @@ export class DshHookService {
   /** Install on an SSH execution host, where DSH's shell contract is always POSIX. */
   async installRemote(sftp: SFTPWrapper, remoteHome: string): Promise<AgentHookInstallStatus> {
     const remoteConfigPath = getDshRemoteConfigPath(remoteHome)
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/dsh-hook.sh`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/dsh-hook.sh`
     const remoteManagedHooksPath = getDshRemoteManagedHooksPath(remoteHome)
     try {
       const body = (await readTextFileRemote(sftp, remoteConfigPath)) ?? ''

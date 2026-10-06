@@ -1,0 +1,259 @@
+{
+  "tableVersion": 1,
+  "headers": {
+    "service": "OAI-Sites-Authorization",
+    "session": "Nash-Session",
+    "deviceCredential": "Nash-Device-Credential",
+    "ownerIdentity": "oai-authenticated-user-id"
+  },
+  "errorSchema": "dot-remote-ack.schema.json#/properties/error.endpoint",
+  "ownerPages": {
+    "pairingApproval": "/pairing"
+  },
+  "endpoints": [
+    {
+      "name": "pairing.challenge.create",
+      "method": "POST",
+      "path": "/nash/v1/pairing/challenges",
+      "caller": "nash",
+      "auth": [
+        "service"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/challenge.request",
+      "response": "dot-remote-pairing.schema.json#/properties/challenge.response",
+      "errors": [
+        "payload_invalid",
+        "rate_limited"
+      ]
+    },
+    {
+      "name": "pairing.approve",
+      "method": "POST",
+      "path": "/pairing/approve",
+      "caller": "owner",
+      "auth": [
+        "owner_identity"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/approval.request",
+      "response": "dot-remote-pairing.schema.json#/properties/approval.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "challenge_not_found",
+        "challenge_expired",
+        "challenge_used"
+      ]
+    },
+    {
+      "name": "pairing.session.issue",
+      "method": "POST",
+      "path": "/nash/v1/pairing/session",
+      "caller": "nash",
+      "auth": [
+        "service"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/session.issue.request",
+      "response": "dot-remote-pairing.schema.json#/properties/session.issue.response",
+      "errors": [
+        "payload_invalid",
+        "rate_limited",
+        "challenge_not_found",
+        "challenge_expired",
+        "challenge_used",
+        "challenge_denied"
+      ]
+    },
+    {
+      "name": "pairing.session.renew",
+      "method": "POST",
+      "path": "/nash/v1/session/renew",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/session.renew.request",
+      "response": "dot-remote-pairing.schema.json#/properties/session.renew.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked",
+        "pairing_expired"
+      ]
+    },
+    {
+      "name": "pairing.session.refresh",
+      "method": "POST",
+      "path": "/nash/v1/session/refresh",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "device_credential"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/session.refresh.request",
+      "response": "dot-remote-pairing.schema.json#/properties/session.refresh.response",
+      "errors": [
+        "payload_invalid",
+        "rate_limited",
+        "device_credential_invalid",
+        "device_credential_reused",
+        "pairing_expired",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "pairing.revoke",
+      "method": "POST",
+      "path": "/nash/v1/pairing/revoke",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/revoke.request",
+      "response": "dot-remote-pairing.schema.json#/properties/revoke.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "pairing.owner.revoke",
+      "method": "POST",
+      "path": "/pairing/revoke",
+      "caller": "owner",
+      "auth": [
+        "owner_identity"
+      ],
+      "request": "dot-remote-pairing.schema.json#/properties/revoke.request",
+      "response": "dot-remote-pairing.schema.json#/properties/revoke.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "inbox.lease",
+      "method": "POST",
+      "path": "/nash/v1/inbox/lease",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-inbox.schema.json#/properties/lease.request",
+      "response": "dot-remote-inbox.schema.json#/properties/lease.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "inbox.renew",
+      "method": "POST",
+      "path": "/nash/v1/inbox/{itemId}/renew",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-inbox.schema.json#/properties/lease.renew.request",
+      "response": "dot-remote-inbox.schema.json#/properties/lease.renew.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked",
+        "lease_lost"
+      ]
+    },
+    {
+      "name": "inbox.ack",
+      "method": "POST",
+      "path": "/nash/v1/inbox/{itemId}/ack",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-ack.schema.json#/properties/ack.request",
+      "response": "dot-remote-ack.schema.json#/properties/ack.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked",
+        "lease_lost",
+        "ack_conflict"
+      ]
+    },
+    {
+      "name": "events.post",
+      "method": "POST",
+      "path": "/nash/v1/events",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-events.schema.json#/properties/events.request",
+      "response": "dot-remote-events.schema.json#/properties/events.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "workspaces.put",
+      "method": "PUT",
+      "path": "/nash/v1/workspaces",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-presence.schema.json#/properties/workspaces.request",
+      "response": "dot-remote-presence.schema.json#/properties/workspaces.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked"
+      ]
+    },
+    {
+      "name": "heartbeat.post",
+      "method": "POST",
+      "path": "/nash/v1/heartbeat",
+      "caller": "nash",
+      "auth": [
+        "service",
+        "session"
+      ],
+      "request": "dot-remote-presence.schema.json#/properties/heartbeat.request",
+      "response": "dot-remote-presence.schema.json#/properties/heartbeat.response",
+      "errors": [
+        "unauthorized",
+        "payload_invalid",
+        "rate_limited",
+        "session_expired",
+        "generation_revoked"
+      ]
+    }
+  ]
+}

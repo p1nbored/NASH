@@ -5,6 +5,8 @@ import { OrcaRuntimeService } from '../orca-runtime'
 import { OrchestrationDb } from '../orchestration/db'
 import { defineMethod, type RpcRequest } from './core'
 import { RpcDispatcher } from './dispatcher'
+import { ORCHESTRATION_METHODS } from './methods/orchestration'
+import { ORCHESTRATION_GATE_METHODS } from './methods/orchestration/gates/gates'
 
 describe('orchestration contract fence', () => {
   const databases: OrchestrationDb[] = []
@@ -133,5 +135,90 @@ describe('orchestration contract fence', () => {
       error: { code: 'orchestration_migration_required' }
     })
     expect(effect).not.toHaveBeenCalled()
+  })
+
+  describe('registered retired coordinator-loop stubs', () => {
+    const retiredCalls = [
+      ['orchestration.run', { spec: 'build the feature' }],
+      ['orchestration.runStop', {}]
+    ] as const
+
+    function createStubHarness() {
+      const database = new OrchestrationDb(':memory:')
+      databases.push(database)
+      const runtime = new OrcaRuntimeService()
+      runtime.setOrchestrationDb(database)
+      const dispatcher = new RpcDispatcher({ runtime, methods: ORCHESTRATION_GATE_METHODS })
+      return { database, dispatcher }
+    }
+
+    function coordinatorRunCount(database: OrchestrationDb): number {
+      return (
+        database.db.prepare('SELECT COUNT(*) AS n FROM coordinator_runs').get() as { n: number }
+      ).n
+    }
+
+    it('keeps both names in the production orchestration registry', () => {
+      const names = ORCHESTRATION_METHODS.map((method) => method.name)
+
+      expect(names).toContain('orchestration.run')
+      expect(names).toContain('orchestration.runStop')
+    })
+
+    it.each(retiredCalls)(
+      '%s answers command_retired for the current contract, not method_not_found',
+      async (method, params) => {
+        const { database, dispatcher } = createStubHarness()
+        const response = await dispatcher.dispatch(
+          request({
+            method,
+            params,
+            orchestrationContractVersion: ORCHESTRATION_CONTRACT_VERSION
+          })
+        )
+
+        expect(response).toMatchObject({
+          ok: false,
+          error: {
+            code: 'orchestration_migration_required',
+            data: { reason: 'command_retired', effectsApplied: false }
+          }
+        })
+        expect(coordinatorRunCount(database)).toBe(0)
+        const callerFingerprint = database.getOrCreateLocalMutationCallerFingerprint()
+        expect(database.getMutationReceipt(callerFingerprint, 'mutation_1')).toBeUndefined()
+      }
+    )
+
+    it.each(retiredCalls)(
+      '%s stays retired for a client with no contract and malformed params',
+      async (method) => {
+        const { database, dispatcher } = createStubHarness()
+        const response = await dispatcher.dispatch(
+          request({ method, params: { malformed: true }, orchestrationContractVersion: undefined })
+        )
+
+        expect(response).toMatchObject({
+          ok: false,
+          error: { code: 'orchestration_migration_required', data: { reason: 'command_retired' } }
+        })
+        expect(coordinatorRunCount(database)).toBe(0)
+      }
+    )
+
+    it.each(retiredCalls)('%s is retired on WebSocket dispatch too', async (method, params) => {
+      const { database, dispatcher } = createStubHarness()
+      const replies: string[] = []
+      await dispatcher.dispatchStreaming(
+        request({ method, params, orchestrationContractVersion: ORCHESTRATION_CONTRACT_VERSION }),
+        (reply) => replies.push(reply)
+      )
+
+      expect(JSON.parse(replies[0] ?? '{}')).toMatchObject({
+        ok: false,
+        error: { code: 'orchestration_migration_required', data: { reason: 'command_retired' } }
+      })
+      expect(coordinatorRunCount(database)).toBe(0)
+    })
   })
 })

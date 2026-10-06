@@ -127,6 +127,7 @@ vi.mock('../runtime/push/push-gateway-client', () => ({
 afterEach(() => {
   rmSync(state.root, { recursive: true, force: true })
   vi.clearAllMocks()
+  vi.unstubAllEnvs()
 })
 
 it('refuses recovery overlap before initializing the browser provider or runtime', async () => {
@@ -142,7 +143,38 @@ it('refuses recovery overlap before initializing the browser provider or runtime
   }
 })
 
-it('starts push after RPC identity is available and stops dispatch on shutdown', async () => {
+it('starts no push in NASH builds, so no notification reaches a gateway', async () => {
+  state.root = mkdtempSync(join(tmpdir(), 'orca-headless-push-off-'))
+  state.controller = new RuntimeMobileNotificationController()
+  state.registry = new DeviceRegistry(state.root)
+  const phone = state.registry.addDevice('headless-phone', 'mobile')
+  const { startOrcad } = await import('./orcad-entry')
+  const host = await startOrcad({ noPairing: true, json: true })
+  try {
+    const result = await state.controller.registerPushDevice({
+      deviceId: phone.deviceId,
+      platform: 'android',
+      token: 'test-token',
+      filter: { onlyWhenDesktopAway: true }
+    })
+    expect(result).toMatchObject({ registered: false })
+    state.controller.dispatch({
+      type: 'notification',
+      source: 'agent-task-complete',
+      title: 'QA',
+      body: 'QA'
+    })
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(state.register).not.toHaveBeenCalled()
+    expect(state.send).not.toHaveBeenCalled()
+  } finally {
+    await host.stop()
+  }
+  acquireProfileStateMaintenance(state.root).release()
+})
+
+it('starts push for an explicit gateway after RPC identity is available and stops dispatch on shutdown', async () => {
+  vi.stubEnv('ORCA_PUSH_GATEWAY_URL', 'https://push.example.test')
   state.root = mkdtempSync(join(tmpdir(), 'orca-headless-push-'))
   state.controller = new RuntimeMobileNotificationController()
   state.registry = new DeviceRegistry(state.root)

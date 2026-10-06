@@ -5,9 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AgentSessionRecord } from '../../shared/agent-session-record'
 import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
 import type { AgentSessionRecordStore } from '../runtime/agent-session-record-store'
-import { AgentSessionPreSpawnError } from '../native-chat/agent-session-wire/structured-agent-session-adapter'
-import { claudeStructuredAuthPolicyForSettings } from '../claude-accounts/claude-structured-auth-policy'
-import type { ClaudeManagedAccountGateSettings } from '../native-chat/claude-structured-managed-account-support'
+import { claudeStructuredAuthPolicy } from '../claude-accounts/claude-structured-auth-policy'
 import {
   CLAUDE_DEFAULT_SETTING_SOURCES,
   CLAUDE_SESSION_STATE_EVENTS_ENV,
@@ -70,33 +68,6 @@ function resolverFor(
     hasTranscript,
     ...(resolveEnv ? { resolveEnv } : {})
   })
-}
-
-function managedAccount(id: string, managedAuthRuntime: 'host' | 'wsl') {
-  return {
-    id,
-    email: `${id}@example.com`,
-    managedAuthPath: `/managed/${id}`,
-    managedAuthRuntime,
-    authMethod: 'subscription-oauth' as const,
-    createdAt: 0,
-    updatedAt: 0,
-    lastAuthenticatedAt: 0
-  }
-}
-
-const HOST_SELECTED: ClaudeManagedAccountGateSettings = {
-  claudeManagedAccounts: [managedAccount('host-1', 'host')],
-  activeClaudeManagedAccountId: 'host-1',
-  activeClaudeManagedAccountIdsByRuntime: { host: 'host-1', wsl: {} }
-}
-
-/** The normalized steady state of a Windows user whose only Claude account is WSL-managed: the
- *  prune drops the WSL account out of the host slot and persists that. */
-const WSL_ONLY_NORMALIZED: ClaudeManagedAccountGateSettings = {
-  claudeManagedAccounts: [managedAccount('wsl-1', 'wsl')],
-  activeClaudeManagedAccountId: null,
-  activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'wsl-1' } }
 }
 
 const RESUMABLE = record({
@@ -169,7 +140,7 @@ describe('claude structured launch resolution', () => {
 
     expect(launch.env).toMatchObject({
       ORCA_AGENT_SESSION_ID: SESSION_ID,
-      ORCA_CLI_COMMAND: expect.stringMatching(/^[^:;]*[\\/]cli[\\/]bin[\\/]orca-dev$/)
+      ORCA_CLI_COMMAND: expect.stringMatching(/^[^:;]*[\\/]cli[\\/]bin[\\/]nash-dev$/)
     })
     expect(launch.env?.ORCA_AGENT_SESSION_ID).not.toBe(launch.providerSessionId)
   })
@@ -472,56 +443,19 @@ describe('claude structured launch resolution', () => {
     ).rejects.toThrow(/CLAUDE_CONFIG_DIR/)
   })
 
-  /** The account state can change while a session lives, and a reacquire after an unexpected child
-   *  exit re-resolves the launch. Without the gate here, that reacquire spawns under whatever the
-   *  account state has become. */
-  describe('managed-account gate on every acquisition', () => {
-    function resolverWithGate(read: () => ClaudeManagedAccountGateSettings | null) {
-      return createClaudeStructuredLaunchResolver({
-        store: { getRecord: () => RESUMABLE } as unknown as AgentSessionRecordStore,
-        resolveWorkspacePath: async (id) => `/repos/${id}`,
-        resolveCommand: () => '/usr/local/bin/claude',
-        // Derived, not a literal: the gate and the policy must read the SAME account state, so a
-        // hardcoded value could assert a pairing production cannot produce.
-        resolveAuthPolicy: () => {
-          const settings = read()
-          if (!settings) {
-            throw new Error('the gate refuses before the auth policy is computed')
-          }
-          return claudeStructuredAuthPolicyForSettings(settings)
-        },
-        readManagedAccountGate: read
-      })
-    }
-
-    it('refuses a reacquire once the account state becomes the refused shape', async () => {
-      let gate: ClaudeManagedAccountGateSettings | null = HOST_SELECTED
-      const resolve = resolverWithGate(() => gate)
-
-      // Created while supported: the launch resolves and would spawn.
-      await expect(resolve({ identity: identityAt('leaf-current') })).resolves.toMatchObject({
-        providerSessionId: 'provider-current'
-      })
-
-      gate = WSL_ONLY_NORMALIZED
-
-      // Reacquire after the account state changed: refused before anything spawns, naming the
-      // account shape a person can change.
-      const refused = resolve({ identity: identityAt('leaf-current') })
-      await expect(refused).rejects.toBeInstanceOf(AgentSessionPreSpawnError)
-      await expect(refused).rejects.toMatchObject({ reason: 'managedAccountUnsupported' })
+  // Why no account gate: Claude account switching is gone, so every acquisition runs on the own login.
+  it('resolves every reacquire on the user own login with the system policy', async () => {
+    const resolve = createClaudeStructuredLaunchResolver({
+      store: { getRecord: () => RESUMABLE } as unknown as AgentSessionRecordStore,
+      resolveWorkspacePath: async (id) => `/repos/${id}`,
+      resolveCommand: () => '/usr/local/bin/claude',
+      resolveAuthPolicy: () => claudeStructuredAuthPolicy()
     })
 
-    it('fails closed when the account state cannot be read, naming no situation', async () => {
-      const refused = resolverWithGate(() => null)({ identity: identityAt('leaf-current') })
-      await expect(refused).rejects.toBeInstanceOf(AgentSessionPreSpawnError)
-      await expect(refused).rejects.toMatchObject({ reason: undefined })
-    })
+    const first = await resolve({ identity: identityAt('leaf-current') })
+    const reacquired = await resolve({ identity: identityAt('leaf-current') })
 
-    it('keeps resolving when no gate is wired, so other embedders are unaffected', async () => {
-      await expect(
-        resolverFor(RESUMABLE)({ identity: identityAt('leaf-current') })
-      ).resolves.toMatchObject({ providerSessionId: 'provider-current' })
-    })
+    expect(first.providerSessionId).toBe('provider-current')
+    expect(reacquired.providerSessionId).toBe('provider-current')
   })
 })

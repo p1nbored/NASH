@@ -21,6 +21,7 @@ import type { RuntimeClient } from './runtime-client'
 import { COMMAND_SPECS } from './specs'
 import { resolveOrchestrationCliExecutable } from './runtime/orchestration-recovery-command'
 import { refuseConflictingSessionCallerFlags } from './session-caller-flags'
+import { rejectRemoteSelectionFlags } from './remote-selection-flag-rejection'
 
 export { COMMAND_SPECS } from './specs'
 export { buildCurrentWorktreeSelector, normalizeWorktreeSelector } from './selectors'
@@ -40,7 +41,9 @@ function shouldIgnoreRemoteSelection(commandPath: string[]): boolean {
     commandPath[0] === 'agent' ||
     commandPath[0] === 'vm' ||
     commandPath[0] === 'agent-context' ||
-    commandPath[0] === 'profile'
+    commandPath[0] === 'profile' ||
+    // Why: the dot client talks to this machine's dot interface endpoint, never a runtime selected here.
+    commandPath[0] === 'dot'
   )
 }
 
@@ -116,6 +119,12 @@ export async function main(
       findCommandSpec(COMMAND_SPECS, parsed.commandPath),
       parsed.flags
     )
+    if (parsed.commandPath[0] === 'dot') {
+      rejectRemoteSelectionFlags(
+        parsed.flags,
+        'dot commands; they talk only to the dot interface of this machine.'
+      )
+    }
     const RuntimeClientClass = await loadRuntimeClientClass()
     const ignoreRemoteSelection = shouldIgnoreRemoteSelection(parsed.commandPath)
     const pairingCode = ignoreRemoteSelection ? null : parsed.flags.get('pairing-code')

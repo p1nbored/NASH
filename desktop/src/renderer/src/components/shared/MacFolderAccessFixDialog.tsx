@@ -68,7 +68,7 @@ function allowStepHelper(mismatch: PtyManagementFolderAccessMismatch): string | 
   if (canResetPermission(mismatch)) {
     return translate(
       'auto.components.shared.MacFolderAccessFixDialog.stepAllowDenied',
-      'Orca is already allowed, but macOS isn’t applying it to the terminal service. Reset asks macOS for the permission again. Click Allow when it prompts.'
+      'NASH is already allowed, but macOS isn’t applying it to the terminal service. Reset asks macOS for the permission again. Click Allow when it prompts.'
     )
   }
   return undefined
@@ -94,12 +94,12 @@ function FixSteps({
             canResetPermission(mismatch)
               ? translate(
                   'auto.components.shared.MacFolderAccessFixDialog.stepReallow',
-                  'Re-allow Orca for your {{folder}}',
+                  'Re-allow NASH for your {{folder}}',
                   { folder }
                 )
               : translate(
                   'auto.components.shared.MacFolderAccessFixDialog.stepAllow',
-                  'Allow Orca under Files and Folders'
+                  'Allow NASH under Files and Folders'
                 )
           }
           helper={restartState === 'done' ? undefined : allowStepHelper(mismatch)}
@@ -108,7 +108,7 @@ function FixSteps({
           done={restartState === 'done'}
           label={translate(
             'auto.components.shared.MacFolderAccessFixDialog.stepRestart',
-            'Restart Orca’s terminal service'
+            'Restart NASH’s terminal service'
           )}
           helper={
             restartState === 'done'
@@ -344,7 +344,7 @@ function FolderAccessFix({
           <DialogDescription>
             {translate(
               'auto.components.shared.MacFolderAccessFixDialog.lead',
-              'macOS is blocking Orca’s terminal service from this folder.'
+              'macOS is blocking NASH’s terminal service from this folder.'
             )}
           </DialogDescription>
         </DialogHeader>

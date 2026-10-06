@@ -49,6 +49,12 @@ describe('dev-electron-bundle-identity', () => {
     expect({ ...process.env }).toEqual(snapshot)
   })
 
+  it('keeps the dev bundle under the NASH app id so it never shares a macOS identity with Orca', () => {
+    expect(DEV_BUNDLE_ID).toBe('com.pinbored.nash.dev')
+    expect(DEV_BUNDLE_DISPLAY_NAME).toBe('NASH Dev')
+    expect(DEV_BUNDLE_ID.startsWith('com.stablyai.')).toBe(false)
+  })
+
   it('patches a stable bundle id for the app and its helper', () => {
     expect(getDevHelperPlistPatches()).toEqual([
       { key: 'CFBundleIdentifier', value: DEV_HELPER_BUNDLE_ID }

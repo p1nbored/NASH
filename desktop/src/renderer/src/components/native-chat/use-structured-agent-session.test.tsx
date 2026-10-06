@@ -261,7 +261,7 @@ describe('useStructuredAgentSession options', () => {
     // Said once, without the transport's text, and without claiming an outcome the failure
     // cannot prove; nothing stays behind under the composer.
     expect(mocks.toastError).toHaveBeenCalledWith(
-      "Orca couldn't confirm what happened. Check the chat."
+      "NASH couldn't confirm what happened. Check the chat."
     )
     expect(result.current.error).toBeNull()
     expect(result.current.optionSnapshot.find((entry) => entry.id === 'model')).toMatchObject({

@@ -1,5 +1,3 @@
-import type { ClaudeManagedAccount } from '../../shared/managed-account-types'
-
 export const CLAUDE_AUTH_ENV_VARS = [
   'ANTHROPIC_API_KEY',
   'ANTHROPIC_AUTH_TOKEN',
@@ -46,32 +44,10 @@ export function applyClaudeEnvPatch(
 /** One string for every transport, so a terminal launch and a structured launch
  *  cannot drift into telling the user two different things about one refusal. */
 export const CLAUDE_AUTH_ENV_CONFLICT_MESSAGE =
-  'This Claude launch defines explicit Anthropic auth environment variables. Remove those overrides before using a managed Claude account.'
-
-export const CLAUDE_AUTH_SWITCH_IN_PROGRESS_MESSAGE =
-  'A Claude account switch is in progress. Try again after it finishes.'
+  'This Claude launch defines explicit Anthropic auth environment variables, but it runs on the Claude login of its own runtime. Remove those overrides.'
 
 /**
- * Whether a launch on the host runtime must drop inherited Anthropic auth.
- *
- * Only a pinned host-managed account owns the credential, so only it may strip:
- * with no managed account the user's own `ANTHROPIC_*` is their sign-in, and
- * removing it signs them out of a CLI that would otherwise have worked.
- */
-export function shouldStripClaudeAuthEnvForAccount(
-  accounts: readonly ClaudeManagedAccount[] | undefined,
-  activeAccountId: string | null | undefined
-): boolean {
-  if (!activeAccountId) {
-    return false
-  }
-  return (
-    (accounts ?? []).find((account) => account.id === activeAccountId)?.managedAuthRuntime !== 'wsl'
-  )
-}
-
-/**
- * Whether a launch's explicit env carries Anthropic auth a managed account must own.
+ * Whether a launch's explicit env carries Anthropic auth that a stripping launch (the WSL lane) refuses.
  *
  * The key comparison mirrors applyClaudeEnvPatch's strip exactly: case-insensitive on
  * win32, where the OS folds env names so `anthropic_api_key` is an effective

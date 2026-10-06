@@ -181,7 +181,7 @@ describe('a journal a newer Orca wrote', () => {
     // As the wire carries it (the mobile and older-client tests read this shape).
     expect(JSON.parse(JSON.stringify(journalOpenRefusal(readOnly())))).toEqual({
       code: 'agent_session_journal_unreadable',
-      message: 'Chats were saved by a newer Orca. Update Orca to keep using them.',
+      message: 'Chats were saved by a newer NASH. Update NASH to keep using them.',
       details: { reason: 'journalWrittenByNewerOrca' }
     })
     expect(journalOpenRefusalError(readOnly()).refusal).toMatchObject({

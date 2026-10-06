@@ -1,4 +1,5 @@
 import { Menu, Tray, nativeImage, nativeTheme, type NativeImage } from 'electron'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import menuBarIconPath from '../../../resources/tray/orca-menu-barTemplate.png?asset&asarUnpack'
 import menuBarIconRetinaPath from '../../../resources/tray/orca-menu-barTemplate@2x.png?asset&asarUnpack'
 import { deferAppKitSceneMutation } from '../appkit-scene-mutation'
@@ -47,9 +48,10 @@ let nativeThemeUpdatedListener: (() => void) | null = null
 // tooltip carries the worktree/branch label so hovering tells them apart.
 function baseTooltip(): string {
   if (!devIndicator) {
-    return 'Orca'
+    return APP_IDENTITY.productName
   }
-  return devIndicator.label ? `Orca DEV (${devIndicator.label})` : 'Orca DEV'
+  const devName = `${APP_IDENTITY.productName} DEV`
+  return devIndicator.label ? `${devName} (${devIndicator.label})` : devName
 }
 
 // Why: on Windows the notification area expects a 16px icon; the app icon PNG
@@ -88,7 +90,7 @@ function applyTrayImage(): void {
         tray.setToolTip(
           devIndicator
             ? `${baseTooltip()} - ${translateMain('tray.activityWaitingSuffix', 'activity waiting')}`
-            : translateMain('tray.activityWaiting', 'Orca - activity waiting')
+            : translateMain('tray.activityWaiting', 'NASH - activity waiting')
         )
         return
       } catch (error) {
@@ -261,7 +263,7 @@ export function createSystemTray(opts: SystemTrayOptions): Tray | null {
         ] as Electron.MenuItemConstructorOptions[])
       : []),
     {
-      label: translateMain('tray.openOrca', 'Open Orca'),
+      label: translateMain('tray.openOrca', 'Open NASH'),
       click: safeMenuAction(() => opts.onOpen())
     },
     { type: 'separator' },

@@ -12,11 +12,11 @@ vi.mock('electron', () => ({
 }))
 
 describe('runtime extraction regressions', () => {
-  it('wires the managed Claude config directory into skill discovery', async () => {
+  it('wires the Claude runtime config directory into skill discovery', async () => {
     const runtime = new OrcaRuntimeService()
     const getRuntimeConfigDir = vi.fn(() => '/accounts/claude/managed')
     runtime.setAccountServices({
-      claudeAccounts: { getRuntimeConfigDir },
+      claudeRuntimeAuth: { getRuntimeConfigDir },
       codexAccounts: {},
       rateLimits: {}
     } as never)

@@ -1,8 +1,10 @@
-/** Guest-relative layout of Orca's retired WSL CODEX_HOME, retained for migration reads. */
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
+
+/** Guest-relative layout of the app's WSL CODEX_HOME, under the NASH data folder. */
 export const WSL_CODEX_RUNTIME_HOME_SEGMENTS = [
   '.local',
   'share',
-  'orca',
+  APP_XDG_DATA_DIR_NAME,
   'codex-runtime-home',
   'home'
 ] as const

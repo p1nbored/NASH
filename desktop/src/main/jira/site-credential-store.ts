@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { getSecretStore } from '../../shared/secret-store'
@@ -26,7 +27,7 @@ const cachedTokens = new Map<string, string>()
 export const credentialErrors = new Map<string, string>()
 
 function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+  return join(homedir(), APP_HOME_DIR_NAME)
 }
 
 function getSiteFilePath(): string {

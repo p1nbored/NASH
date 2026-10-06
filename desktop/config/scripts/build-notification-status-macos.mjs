@@ -10,7 +10,11 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+
+// Why a JSON twin: this script is plain Node and cannot import src/shared/app-identity-constants.ts.
+const identity = createRequire(import.meta.url)('../../src/shared/app-identity-constants.json')
 
 const repoRoot = path.resolve(import.meta.dirname, '../..')
 const sourcePath = path.join(repoRoot, 'native', 'notification-status-macos', 'main.swift')
@@ -28,7 +32,7 @@ if (process.platform !== 'darwin') {
 }
 
 const args = process.argv.slice(2)
-const bundleId = readArg('--bundle-id') ?? 'com.stablyai.orca'
+const bundleId = readArg('--bundle-id') ?? identity.appId
 const outputPath = readArg('--output') ?? defaultOutputPath
 // Why: dev launches only need the host architecture; release builds ship a
 // universal binary matching the app's x64 + arm64 targets.

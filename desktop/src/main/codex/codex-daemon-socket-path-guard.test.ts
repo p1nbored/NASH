@@ -61,7 +61,7 @@ describe('codexDaemonSocketPathExceedsLimit', () => {
       '/home/u/.codex-orca/app-server-control/app-server-control.sock'
     )
     expect(codexDaemonSocketPathExceedsLimit(shortWsl, 'win32')).toBe(false)
-    const managedWsl = `\\\\wsl.localhost\\Ubuntu\\home\\u\\.local\\share\\orca\\codex-accounts\\${UUID}\\home`
+    const managedWsl = `\\\\wsl.localhost\\Ubuntu\\home\\u\\.local\\share\\nash\\codex-accounts\\${UUID}\\home`
     expect(codexDaemonSocketPathExceedsLimit(managedWsl, 'win32')).toBe(true)
   })
 

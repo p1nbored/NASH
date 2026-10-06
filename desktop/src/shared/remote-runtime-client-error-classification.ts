@@ -14,16 +14,21 @@ export const RECOVERABLE_CODES: ReadonlySet<string> = new Set([
   'timeout'
 ])
 
+// Why both words: a peer built before the NASH rename (D-017) still words these failures with Orca.
+const PRODUCT_RUNTIME_FRAGMENTS: readonly string[] = [
+  'could not connect to the remote {product} runtime',
+  'remote {product} runtime closed the connection',
+  'remote {product} runtime connection closed',
+  'remote {product} runtime is not connected',
+  'timed out waiting for the remote {product} runtime'
+].flatMap((fragment) => ['nash', 'orca'].map((product) => fragment.replace('{product}', product)))
+
 export const RECOVERABLE_MESSAGE_FRAGMENTS: readonly string[] = [
-  'could not connect to the remote orca runtime',
-  'remote orca runtime closed the connection',
-  'remote orca runtime connection closed',
-  'remote orca runtime is not connected',
+  ...PRODUCT_RUNTIME_FRAGMENTS,
   RUNTIME_RPC_QUEUE_OVERLOAD_MESSAGE_FRAGMENT,
   'remote runtime connection closed',
   'remote runtime subscription closed before it started',
-  'remote terminal stream is not connected',
-  'timed out waiting for the remote orca runtime'
+  'remote terminal stream is not connected'
 ]
 
 export function isRuntimeRpcQueueOverloadError(error: RemoteRuntimeClientErrorLike): boolean {

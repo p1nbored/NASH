@@ -11,12 +11,13 @@ import {
 } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import * as path from 'node:path'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { execFileSync, spawn as spawnChild } from 'node:child_process'
 import { build } from 'esbuild'
 import { JSONC_PARSER_ESM_ALIAS } from '../../config/build-plugins/jsonc-parser-esm'
 import { spawnRelay, type RelayProcess } from './subprocess-test-utils'
 import { getEndpointFileName } from '../shared/agent-hook-listener/endpoint-publication'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { relayTestSocketPath } from './relay-test-socket-path'
 
 const RELAY_TS_ENTRY = path.resolve(__dirname, 'relay.ts')
@@ -209,6 +210,21 @@ describe('Subprocess: Relay entry point', () => {
     expect(repaired.error).toBeUndefined()
     // Why: a spawn that never loaded node-pty must not burn a mint sequence, so the repair is still :1.
     expect(repaired.result).toMatchObject({ id: expect.stringMatching(/^pty2:[^:]+:1$/) })
+  }, 10_000)
+
+  // Why: a terminal spawn writes overlays under the relay's home, and the real-home guard cannot see a child.
+  it('runs the relay child in its own temp home, where a terminal spawn writes its overlays', async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), 'relay-temp-home-'))
+    const relayCopy = path.join(tmpDir, 'relay.js')
+    copyFileSync(relayEntry, relayCopy)
+    writeMockNodePty(tmpDir, WORKING_NODE_PTY_MODULE)
+    relay = spawnRelayEntry(relayCopy)
+    await relay.sentinelReceived
+    const spawned = await relay.waitForResponse(relay.send('pty.spawn', { cols: 80, rows: 24 }))
+    expect(spawned.error).toBeUndefined()
+    expect(relay.home).not.toBe(homedir())
+    const overlays = path.join(relay.home, APP_RELAY_HOME_DIR_NAME, 'omp-managed-status-extension')
+    expect(existsSync(overlays)).toBe(true)
   }, 10_000)
 
   it('reloads node-pty after a late native binding failure without restarting', async () => {
@@ -892,7 +908,8 @@ describe('Subprocess: Relay entry point', () => {
     relay = spawn()
     await relay.sentinelReceived
 
-    const homeDir = require('node:os').homedir()
+    // Why the child's home: spawnRelay runs the relay in a temp home, never the real one.
+    const homeDir = relay.home
 
     const id1 = relay.send('session.resolveHome', { path: '~' })
     const id2 = relay.send('session.resolveHome', { path: '~/projects' })

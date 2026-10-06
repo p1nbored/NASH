@@ -97,7 +97,7 @@ describe('ShareSkillsSettingsPane', () => {
 
     expect(screen.getByText('Sign in to share skills')).toBeInTheDocument()
     expect(screen.getByText(/Recipients do not need an account/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Sign in to Orca' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in to Orca Cloud' }))
     expect(mocks.connect).toHaveBeenCalledOnce()
   })
 
@@ -111,7 +111,7 @@ describe('ShareSkillsSettingsPane', () => {
 
     await user.click(
       screen.getByRole('switch', {
-        name: 'Allow agents and the Orca CLI to publish skill links'
+        name: 'Allow agents and the NASH CLI to publish skill links'
       })
     )
     expect(mocks.updateSettings).toHaveBeenCalledWith({ agentSkillSharingEnabled: true })
@@ -126,12 +126,12 @@ describe('ShareSkillsSettingsPane', () => {
       </TooltipProvider>
     )
 
-    expect(screen.getByText(/available in the Orca desktop app/)).toBeInTheDocument()
+    expect(screen.getByText(/available in the NASH desktop app/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Open Skills/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Sign in to Orca' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sign in to Orca Cloud' })).not.toBeInTheDocument()
     expect(
       screen.getByRole('switch', {
-        name: 'Allow agents and the Orca CLI to publish skill links'
+        name: 'Allow agents and the NASH CLI to publish skill links'
       })
     ).toBeDisabled()
   })

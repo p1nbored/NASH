@@ -32,7 +32,6 @@ export function attachMainWindowCoreServices(
   const openCodeUsage = state.openCodeUsage
   const museUsage = state.museUsage
   const codexAccounts = state.codexAccounts
-  const claudeAccounts = state.claudeAccounts
   const rateLimits = state.rateLimits
   const automations = state.automations
   const keybindings = state.keybindings
@@ -47,7 +46,6 @@ export function attachMainWindowCoreServices(
     !openCodeUsage ||
     !museUsage ||
     !codexAccounts ||
-    !claudeAccounts ||
     !rateLimits ||
     !automations ||
     !keybindings ||
@@ -65,7 +63,6 @@ export function attachMainWindowCoreServices(
     openCodeUsage,
     museUsage,
     codexAccounts,
-    claudeAccounts,
     rateLimits,
     window.webContents.id,
     automations,
@@ -87,11 +84,7 @@ export function attachMainWindowCoreServices(
       onBeforeRelaunch: async () => {
         state.isQuitting = true
         state.desktopRelayService?.fenceAndCloseNow()
-        await preserveAgentAuthBeforeRestart({
-          codexRuntimeHome,
-          claudeRuntimeAuth,
-          store
-        })
+        await preserveAgentAuthBeforeRestart({ codexRuntimeHome, store })
       },
       onOrcaProfileAuthMutation: () => state.desktopRelayService?.authMutated(),
       // Sign-out is the one fence a paired phone can be told about; quit and
@@ -127,7 +120,7 @@ export function attachMainWindowCoreServices(
       onCodexHomePtySpawned: handleCodexHomePtySpawned,
       onPtyExit: handlePtyExit,
       onBeforeUpdateQuit: async () => {
-        await preserveAgentAuthBeforeRestart({ codexRuntimeHome, claudeRuntimeAuth, store })
+        await preserveAgentAuthBeforeRestart({ codexRuntimeHome, store })
         await store.writeLatestProfileStateJsonCompatibilityExportAsync()
       },
       onBeforeUpdateQuitFailure: 'abort',

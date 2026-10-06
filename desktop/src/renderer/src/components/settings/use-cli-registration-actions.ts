@@ -26,7 +26,7 @@ export type CliRegistrationActions = {
 function unknownReason(): string {
   return translate(
     'auto.components.settings.CliSection.installFailureUnknownReason',
-    'Orca could not finish CLI registration and reported no reason.'
+    'NASH could not finish CLI registration and reported no reason.'
   )
 }
 

@@ -14,14 +14,14 @@ import { decodeRemotePowerShellScript } from './ssh-remote-powershell'
 
 const host = getRemoteHostPlatform('win32-x64')
 const opts = {
-  nodePath: 'C:/Users/me user/.orca-remote/runtimes/node-abc/node.exe',
-  remoteDir: 'C:/Users/me user/.orca-remote/relay-1',
+  nodePath: 'C:/Users/me user/.nash-remote/runtimes/node-abc/node.exe',
+  remoteDir: 'C:/Users/me user/.nash-remote/relay-1',
   sockPath: '\\\\.\\pipe\\orca-relay-1',
-  endpointDir: 'C:/Users/me user/.orca-remote/relay-1/agent-hooks/orca-relay-1',
+  endpointDir: 'C:/Users/me user/.nash-remote/relay-1/agent-hooks/orca-relay-1',
   graceTime: 300,
-  logFile: 'C:/Users/me user/.orca-remote/relay-1/relay.log',
-  errFile: 'C:/Users/me user/.orca-remote/relay-1/relay.err.log',
-  credentialFile: 'C:/Users/me user/.orca-remote/relay-1/orca-relay-1.credential'
+  logFile: 'C:/Users/me user/.nash-remote/relay-1/relay.log',
+  errFile: 'C:/Users/me user/.nash-remote/relay-1/relay.err.log',
+  credentialFile: 'C:/Users/me user/.nash-remote/relay-1/orca-relay-1.credential'
 }
 
 function launchScript(): string {
@@ -42,7 +42,7 @@ describe('windowsRelayLaunchCommand', () => {
     expect(wmiBranch.indexOf('Invoke-CimMethod')).toBeGreaterThan(0)
     expect(wmiBranch.indexOf('Invoke-CimMethod')).toBeLessThan(wmiBranch.indexOf('elseif'))
     expect(script).toContain(
-      `"C:/Users/me user/.orca-remote/relay-1/relay.js" --detached --grace-time 300`
+      `"C:/Users/me user/.nash-remote/relay-1/relay.js" --detached --grace-time 300`
     )
     expect(script).toContain(`1>"${opts.logFile}" 2>"${opts.errFile}"`)
   })

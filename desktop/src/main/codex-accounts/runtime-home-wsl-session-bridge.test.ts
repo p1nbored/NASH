@@ -69,7 +69,7 @@ describe('CodexRuntimeHomeService', () => {
         wslHome,
         '.local',
         'share',
-        'orca',
+        'nash',
         'codex-runtime-home',
         'home'
       )
@@ -119,7 +119,7 @@ describe('CodexRuntimeHomeService', () => {
         wslHome,
         '.local',
         'share',
-        'orca',
+        'nash',
         'codex-runtime-home',
         'home'
       )
@@ -208,7 +208,7 @@ describe('CodexRuntimeHomeService', () => {
           candidate.includes('codex-accounts/debian-account/home')
             ? {
                 distro: 'Debian',
-                linuxPath: '/home/alice/.local/share/orca/codex-accounts/debian-account/home'
+                linuxPath: '/home/alice/.local/share/nash/codex-accounts/debian-account/home'
               }
             : null
       }
@@ -227,7 +227,7 @@ describe('CodexRuntimeHomeService', () => {
             managedHomePath,
             managedHomeRuntime: 'wsl',
             wslDistro: 'Debian',
-            wslLinuxHomePath: '/home/alice/.local/share/orca/codex-accounts/debian/home',
+            wslLinuxHomePath: '/home/alice/.local/share/nash/codex-accounts/debian/home',
             providerAccountId: null,
             workspaceLabel: null,
             workspaceAccountId: null,
@@ -275,7 +275,7 @@ describe('CodexRuntimeHomeService', () => {
       getDefaultWslDistro: () => 'Ubuntu',
       getWslHome: () => wslHome
     }))
-    const managedHomePath = join(wslHome, '.local', 'share', 'orca', 'codex-accounts', 'a', 'home')
+    const managedHomePath = join(wslHome, '.local', 'share', 'nash', 'codex-accounts', 'a', 'home')
     const retiredBridgeRuns = vi.fn()
     vi.doMock('./legacy-wsl-runtime-auth-drain', async (importOriginal) => ({
       ...(await importOriginal<typeof LegacyWslRuntimeAuthDrain>()),
@@ -426,7 +426,7 @@ describe('CodexRuntimeHomeService', () => {
         ...(await importOriginal<typeof CodexConfigMirror>()),
         syncSystemConfigIntoManagedCodexHome: vi.fn()
       }))
-      const retiredHome = join(guestHome, '.local', 'share', 'orca', 'codex-runtime-home', 'home')
+      const retiredHome = join(guestHome, '.local', 'share', 'nash', 'codex-runtime-home', 'home')
       const relativeSessionPath = join('sessions', '2026', '08', '26', 'retired.jsonl')
       const retiredSessionPath = join(retiredHome, relativeSessionPath)
       mkdirSync(join(retiredSessionPath, '..'), { recursive: true })

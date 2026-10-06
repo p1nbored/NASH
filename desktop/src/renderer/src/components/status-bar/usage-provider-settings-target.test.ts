@@ -3,7 +3,7 @@ import { getUsageProviderAccountsSectionId } from './usage-provider-settings-tar
 
 describe('getUsageProviderAccountsSectionId', () => {
   it('routes providers only to settings sections that exist', () => {
-    expect(getUsageProviderAccountsSectionId('claude')).toBe('accounts-claude')
+    expect(getUsageProviderAccountsSectionId('claude')).toBe('accounts-cli-usage')
     expect(getUsageProviderAccountsSectionId('codex')).toBe('accounts-codex')
     expect(getUsageProviderAccountsSectionId('gemini')).toBe('accounts-gemini')
     expect(getUsageProviderAccountsSectionId('opencode-go')).toBe('accounts-opencode-go')

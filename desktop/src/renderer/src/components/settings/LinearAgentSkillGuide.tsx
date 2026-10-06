@@ -172,7 +172,7 @@ export function LinearAgentSkillGuide({
             <p className="text-xs text-muted-foreground">
               {translate(
                 'auto.components.settings.LinearAgentSkillGuide.setupConnectBody',
-                'Personal API key so Orca can list issues and open linked workspaces.'
+                'Personal API key so NASH can list issues and open linked workspaces.'
               )}
             </p>
           </div>

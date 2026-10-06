@@ -9,6 +9,7 @@ import { projectSourceControlAiToLegacyCommitMessageAi } from '../../../shared/s
 import { normalizeUiLanguage } from '../../../shared/ui-language'
 import { normalizeNativeChatShellEnvironmentVariables } from '../../../shared/native-chat-shell-environment'
 import { stripRetiredGlobalSettings } from '../applying-settings/terminal-settings-migrations'
+import { warnAboutRetiredClaudeAccounts } from '../applying-settings/retired-claude-account-settings'
 import { readLegacySidekickFlag } from '../applying-settings/onboarding-normalization'
 import { normalizeMachineName } from '../../../shared/machine-name'
 import type { PersistedState } from '../../../shared/persisted-state-types'
@@ -53,6 +54,7 @@ export function normalizeLoadedGlobalSettings(
     normalizedNotifications,
     normalizedSourceControlGroupOrder
   } = profile
+  warnAboutRetiredClaudeAccounts(parsed.settings)
 
   return {
     ...defaults.settings,

@@ -11,17 +11,17 @@ export function renderServersSettingsSection(context: SettingsRenderContext): Re
   return (
     <SettingsSection
       id="servers"
-      title={translate('auto.components.settings.Settings.bd0181eeca', 'Remote Orca Servers')}
+      title={translate('auto.components.settings.Settings.bd0181eeca', 'Remote NASH Servers')}
       badge="Beta"
       description={
         model.isWebClient
           ? translate(
               'auto.components.settings.Settings.7686cb5c36',
-              'Connect this browser to a saved Orca server.'
+              'Connect this browser to a saved NASH server.'
             )
           : translate(
               'auto.components.settings.Settings.b5ee17826b',
-              'Pair remote Orca runtimes for persistent sessions, richer remote state, and web or mobile handoff.'
+              'Pair remote NASH runtimes for persistent sessions, richer remote state, and web or mobile handoff.'
             )
       }
       searchEntries={navigation.getSectionSearchEntries('servers')}

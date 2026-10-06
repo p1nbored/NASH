@@ -179,7 +179,7 @@ export function listRelayNativeDepsCacheEntriesCommand(
 }
 
 /**
- * Every symlinked `node_modules` under `~/.orca-remote/`, as its raw target.
+ * Every symlinked `node_modules` under `~/.nash-remote/`, as its raw target.
  *
  * The scan is deliberately wider than `relay-*`: a directory this client does not recognise still
  * counts as a referrer. An unreadable link or an overrun listing answers `REFS_ERR`, which stops

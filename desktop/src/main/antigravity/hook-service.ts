@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -201,7 +202,7 @@ export class AntigravityHookService {
   async installRemote(sftp: SFTPWrapper, remoteHome: string): Promise<AgentHookInstallStatus> {
     const home = remoteHome.replace(/\/$/, '')
     const remoteConfigPath = `${home}/.gemini/config/hooks.json`
-    const remoteScriptPath = `${home}/.orca/agent-hooks/antigravity-hook.sh`
+    const remoteScriptPath = `${home}/${APP_AGENT_HOOKS_HOME_PATH}/antigravity-hook.sh`
     try {
       const config = await readHooksJsonRemote(sftp, remoteConfigPath)
       if (!config) {

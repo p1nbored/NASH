@@ -8,6 +8,7 @@ import { normalizeDisabledTuiAgents } from '../../shared/tui-agent-selection'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import type { TuiAgentDetectionCommand } from '../ipc/tui-agent-detection-commands'
 import { parseClaudeCliVersion } from '../claude/claude-hook-event-versions'
+import { isNashManagedHookAgent } from './nash-managed-hook-scope'
 
 export type ManagedHookDetectionSettings = Partial<
   Pick<GlobalSettings, 'agentCmdOverrides' | 'disabledTuiAgents' | 'agentStatusHooksEnabled'>
@@ -18,22 +19,23 @@ export function buildManagedHookDetectionCommands(
   platform: NodeJS.Platform
 ): TuiAgentDetectionCommand[] {
   const disabled = new Set(normalizeDisabledTuiAgents(settings?.disabledTuiAgents))
-  return MANAGED_AGENT_HOOK_TARGETS.filter((target) => !disabled.has(target.tuiAgent)).flatMap(
-    (target) => {
-      const commands = new Set(target.executableCandidates)
-      const override = extractExecutableToken(settings?.agentCmdOverrides?.[target.tuiAgent], {
-        platform
-      })
-      if (override && isSafeOverrideExecutableToken(override)) {
-        commands.add(override)
-      }
-      return [...commands].map((cmd) => ({
-        id: target.tuiAgent,
-        cmd,
-        ...(target.agent === 'claude' ? { reportVersion: true as const } : {})
-      }))
+  // Why scoped: SSH and WSL guest installs follow NASH's Claude-only hook decision too.
+  return MANAGED_AGENT_HOOK_TARGETS.filter(
+    (target) => isNashManagedHookAgent(target.agent) && !disabled.has(target.tuiAgent)
+  ).flatMap((target) => {
+    const commands = new Set(target.executableCandidates)
+    const override = extractExecutableToken(settings?.agentCmdOverrides?.[target.tuiAgent], {
+      platform
+    })
+    if (override && isSafeOverrideExecutableToken(override)) {
+      commands.add(override)
     }
-  )
+    return [...commands].map((cmd) => ({
+      id: target.tuiAgent,
+      cmd,
+      ...(target.agent === 'claude' ? { reportVersion: true as const } : {})
+    }))
+  })
 }
 
 export function detectedManagedHookAgents(values: unknown): AgentHookTarget[] {
@@ -41,9 +43,9 @@ export function detectedManagedHookAgents(values: unknown): AgentHookTarget[] {
     return []
   }
   const detected = new Set(values.filter((value): value is string => typeof value === 'string'))
-  return MANAGED_AGENT_HOOK_TARGETS.filter((target) => detected.has(target.tuiAgent)).map(
-    (target) => target.agent
-  )
+  return MANAGED_AGENT_HOOK_TARGETS.filter(
+    (target) => isNashManagedHookAgent(target.agent) && detected.has(target.tuiAgent)
+  ).map((target) => target.agent)
 }
 
 export function readManagedHookDetectionResult(value: unknown): {

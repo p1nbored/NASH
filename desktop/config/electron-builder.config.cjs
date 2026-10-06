@@ -38,6 +38,9 @@ const {
 const { verifySkillsCliRuntime } = require('./scripts/verify-skills-cli-runtime.cjs')
 const { verifyStaticAppImagePackage } = require('./scripts/static-appimage-package-contract.cjs')
 const { signWindowsUninstallerViaSignPath } = require('./scripts/windows-uninstaller-signing.cjs')
+// Why a JSON twin: this config is plain CJS and cannot import src/shared/app-identity-constants.ts; a test keeps them equal.
+const appIdentity = require('../src/shared/app-identity-constants.json')
+const { resolveBuilderPublishConfig } = require('./scripts/update-feed-publish.cjs')
 
 // Why: dev-channel builds must carry the *release* identity — same bundle id,
 // Developer ID signature, and notarization ticket — or Squirrel.Mac refuses to
@@ -73,15 +76,17 @@ const devChannelBuildVersion = isHourlyChannel
 // day would evict every stable/RC entry and strand users on a feed with nothing
 // to install. Keeping adhoc/daily separate from hourly too means a branch build
 // or a once-a-day cut cannot be picked up by someone who only meant to ride
-// main's hourlies.
-const devChannelRepo = isHourlyChannel
-  ? 'orca-hourly'
+// main's hourlies. The repos derive from the identity's release feed (null = nothing publishes).
+const devChannel = isHourlyChannel
+  ? 'hourly'
   : isDailyChannel
-    ? 'orca-daily'
+    ? 'daily'
     : isAdhocChannel
-      ? 'orca-adhoc'
+      ? 'adhoc'
       : null
-const appId = 'com.stablyai.orca'
+const appId = appIdentity.appId
+// Why the launcher is built under the command name: the PE OriginalFilename must match the file users invoke.
+const cliLauncherExe = `${appIdentity.cliCommandName}.exe`
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -182,8 +187,9 @@ const windowsRuntimeResources = existsSync(
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId,
-  productName: 'Orca',
-  protocols: [{ name: 'Orca', schemes: ['orca'] }],
+  productName: appIdentity.productName,
+  // Why from the identity: the OS routes this scheme to the app, so NASH must never register or answer Orca's.
+  protocols: [{ name: appIdentity.productName, schemes: [appIdentity.urlScheme] }],
   toolsets: { appimage: '1.0.3' },
   ...(devChannelBuildVersion
     ? { extraMetadata: { version: devChannelBuildVersion } }
@@ -452,7 +458,7 @@ module.exports = {
     }
   },
   win: {
-    executableName: 'Orca',
+    executableName: appIdentity.windowsExecutableBaseName,
     // Why: Windows installers are signed after electron-builder packaging by
     // SignPath, so the packager cannot infer the updater publisherName.
     //
@@ -481,11 +487,16 @@ module.exports = {
       winSpeechNativeResource,
       {
         from: 'resources/win32/bin/orca.cmd',
-        to: 'bin/orca.cmd'
+        to: `bin/${appIdentity.cliCommandName}.cmd`
       },
       {
-        from: 'native/windows-cli-launcher/.build/orca.exe',
-        to: 'bin/orca.exe'
+        from: `native/windows-cli-launcher/.build/${cliLauncherExe}`,
+        to: `bin/${cliLauncherExe}`
+      },
+      // Why: the in-session `orca` alias sits beside, not inside, resources/bin so the global PATH registration never exposes it.
+      {
+        from: `native/windows-cli-launcher/.build/${cliLauncherExe}`,
+        to: 'session-bin/orca.exe'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-win32-x64.exe',
@@ -499,7 +510,7 @@ module.exports = {
     ]
   },
   nsis: {
-    artifactName: 'orca-windows-setup.${ext}',
+    artifactName: `${appIdentity.cliCommandName}-windows-setup.\${ext}`,
     shortcutName: '${productName}',
     uninstallDisplayName: '${productName}',
     createDesktopShortcut: 'always',
@@ -574,7 +585,12 @@ module.exports = {
       macSpeechNativeResource,
       {
         from: 'resources/darwin/bin/orca',
-        to: 'bin/orca'
+        to: `bin/${appIdentity.cliCommandName}`
+      },
+      // Why: the in-session `orca` alias sits beside, not inside, resources/bin so the global PATH registration never exposes it.
+      {
+        from: 'resources/darwin/bin/orca',
+        to: 'session-bin/orca'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-darwin-${arch}',
@@ -614,7 +630,7 @@ module.exports = {
   // silently downgrading to ad-hoc artifacts that look shippable in CI logs.
   forceCodeSigning: isMacRelease,
   dmg: {
-    artifactName: 'orca-macos-${arch}.${ext}'
+    artifactName: `${appIdentity.cliCommandName}-macos-\${arch}.\${ext}`
   },
   linux: {
     // Why mimeTypes and not fileAssociations: shared-mime-info already maps *.md/*.markdown to
@@ -710,16 +726,8 @@ module.exports = {
   // on Intel Macs. The beforeBuild hook performs Orca's targeted rebuild and
   // returns false so electron-builder does not rebuild optional cpu-features.
   npmRebuild: true,
-  publish: {
-    provider: 'github',
-    owner: 'stablyai',
-    repo: devChannelRepo ?? 'orca',
-    // Why draft on the main repo: `--publish always` otherwise creates a
-    // public GitHub release as soon as the first platform uploads, and
-    // /releases/latest serves a missing Windows exe. release-cut undrafts
-    // only after every required asset exists.
-    releaseType: devChannelRepo ? 'prerelease' : 'draft'
-  }
+  // Why from the identity's release feed: null (no NASH feed yet) publishes nothing and writes no app-update.yml.
+  publish: resolveBuilderPublishConfig(appIdentity.updateFeed, devChannel)
 }
 
 // Stamp the effective channel version where node-mode CLI code can read it.
@@ -736,8 +744,12 @@ function chmodUnixCliLaunchers(resourcesDir, electronPlatformName) {
   if (electronPlatformName === 'win32') {
     return
   }
-  for (const launcherName of ['orca', 'orca-ide']) {
-    const launcherPath = join(resourcesDir, 'bin', launcherName)
+  for (const launcherRelativePath of [
+    join('bin', appIdentity.cliCommandName),
+    join('bin', 'orca-ide'),
+    join('session-bin', 'orca')
+  ]) {
+    const launcherPath = join(resourcesDir, launcherRelativePath)
     if (!existsSync(launcherPath)) {
       continue
     }

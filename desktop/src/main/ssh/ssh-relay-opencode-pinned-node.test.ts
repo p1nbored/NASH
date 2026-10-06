@@ -24,7 +24,7 @@ import { preparePinnedNodeForVault } from './ssh-relay-opencode-pinned-node'
 const conn = {} as SshConnection
 
 function prepare(platform: 'linux-x64' | 'win32-x64', exec: (command: string) => Promise<string>) {
-  const relayDir = `${platform === 'win32-x64' ? 'C:/Users/ada' : '/home/ada'}/.orca-remote/relay-build`
+  const relayDir = `${platform === 'win32-x64' ? 'C:/Users/ada' : '/home/ada'}/.nash-remote/relay-build`
   return preparePinnedNodeForVault({
     conn,
     host: getRemoteHostPlatform(platform),
@@ -48,10 +48,10 @@ describe('pinned Node for the SSH vault reader', () => {
     'installs the official archive into the shared runtimes/ store on %s hosts',
     async (platform, target, glibc, home, executableName) => {
       const sha = NODE_RUNTIME_ASSETS[target].executableSha256
-      const executable = `${home}/.orca-remote/runtimes/node-${sha}/${executableName}`
+      const executable = `${home}/.nash-remote/runtimes/node-${sha}/${executableName}`
       mocks.target.mockResolvedValue({ target, glibc })
       mocks.ensure.mockImplementation(async (options) => {
-        expect(options).toMatchObject({ slotDir: `${home}/.orca-remote/relay-build`, target })
+        expect(options).toMatchObject({ slotDir: `${home}/.nash-remote/relay-build`, target })
         await options.archivePath()
         return { executable, transfer: 'uploaded' }
       })
@@ -71,7 +71,7 @@ describe('pinned Node for the SSH vault reader', () => {
 
   it('installs the glibc 2.17 compat Node for the reader on a host below the default floor', async () => {
     const sha = NODE_RUNTIME_COMPAT_ASSETS['linux-x64-glibc217'].executableSha256
-    const executable = `/home/ada/.orca-remote/runtimes/node-${sha}/bin/node`
+    const executable = `/home/ada/.nash-remote/runtimes/node-${sha}/bin/node`
     mocks.target.mockResolvedValue({ target: 'linux-x64-glibc', glibc: { major: 2, minor: 17 } })
     mocks.ensure.mockImplementation(async (options) => {
       expect(options).toMatchObject({ target: 'linux-x64-glibc217' })

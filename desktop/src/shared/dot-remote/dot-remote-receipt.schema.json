@@ -1,0 +1,2263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "receipt": {
+      "anyOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema1"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema3"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema4"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "queued"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/__schema6"
+            },
+            {
+              "$ref": "#/$defs/__schema7"
+            },
+            {
+              "$ref": "#/$defs/__schema9"
+            },
+            {
+              "$ref": "#/$defs/__schema11"
+            },
+            {
+              "$ref": "#/$defs/__schema12"
+            }
+          ]
+        },
+        {
+          "$ref": "#/$defs/__schema13"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema22"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "queued"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema22"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "claimed"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema22"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "accepted"
+                },
+                "duplicate": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "duplicate"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema22"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "refused"
+                },
+                "refusal": {
+                  "$ref": "#/$defs/__schema10"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "refusal"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema22"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "expired"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema23"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "queued"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema23"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "claimed"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema23"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "accepted"
+                },
+                "duplicate": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "duplicate"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema23"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "refused"
+                },
+                "refusal": {
+                  "$ref": "#/$defs/__schema10"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "refusal"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema23"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "expired"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema24"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "queued"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema24"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "claimed"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema24"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "accepted"
+                },
+                "duplicate": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "duplicate"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema24"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "refused"
+                },
+                "refusal": {
+                  "$ref": "#/$defs/__schema10"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state",
+                "refusal"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "kind": {
+                  "$ref": "#/$defs/__schema24"
+                },
+                "payloadSha256": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "dependsOnItemId": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "dotRequestId": {
+                  "$ref": "#/$defs/__schema8"
+                },
+                "createdAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "expiresAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "updatedAt": {
+                  "$ref": "#/$defs/__schema5"
+                },
+                "state": {
+                  "type": "string",
+                  "const": "expired"
+                }
+              },
+              "required": [
+                "itemId",
+                "kind",
+                "payloadSha256",
+                "dependsOnItemId",
+                "dotRequestId",
+                "createdAt",
+                "expiresAt",
+                "updatedAt",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    },
+    "cancel.output": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "const": "canceled_before_claim"
+            },
+            "target": {
+              "$ref": "#/$defs/__schema12"
+            },
+            "cancel": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "outcome",
+            "target",
+            "cancel"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "const": "forwarded"
+            },
+            "target": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/__schema6"
+                },
+                {
+                  "$ref": "#/$defs/__schema7"
+                },
+                {
+                  "$ref": "#/$defs/__schema9"
+                },
+                {
+                  "$ref": "#/$defs/__schema11"
+                }
+              ]
+            },
+            "cancel": {
+              "$ref": "#/$defs/__schema13"
+            }
+          },
+          "required": [
+            "outcome",
+            "target",
+            "cancel"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "const": "nothing_to_cancel"
+            },
+            "target": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/__schema9"
+                },
+                {
+                  "$ref": "#/$defs/__schema11"
+                }
+              ]
+            },
+            "cancel": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "outcome",
+            "target",
+            "cancel"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "error.tool": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "nash_never_paired"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH is not paired with this Site. Pair it from the NASH desktop app first."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "unauthorized"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This caller is not allowed to use this NASH pairing."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "payload_invalid"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The input does not match its schema. Fix the input and try again."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "yes"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "rate_limited"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Too many calls in a short time. Try again later."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "later"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "inbox_full"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Too many items are waiting for NASH. Try again later."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "later"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "idempotency_conflict"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This key was already used with different content. Use a new key for new content."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "receipt_not_found"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "No item with this id was found."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "request_not_found"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH has not reported a request with this id."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "decision_not_open"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH has not reported an open permission prompt with this id."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "decision_allow_not_permitted"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH reported that dot may only deny this permission prompt. Allowing it is possible only in the app."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "validation_decision_not_open"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH has not reported a validation decision with this id that is still waiting. Decide it in the app."
+                },
+                "retryable": {
+                  "type": "string",
+                  "const": "no"
+                }
+              },
+              "required": [
+                "code",
+                "message",
+                "retryable"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "receipt",
+    "cancel.output",
+    "error.tool"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema1": {
+      "type": "string",
+      "const": "submit"
+    },
+    "__schema2": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "__schema3": {
+      "type": "null"
+    },
+    "__schema4": {
+      "type": "null"
+    },
+    "__schema5": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "__schema6": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "claimed"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema7": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "accepted"
+        },
+        "duplicate": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state",
+        "duplicate"
+      ],
+      "additionalProperties": false
+    },
+    "__schema8": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema9": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "refused"
+        },
+        "refusal": {
+          "$ref": "#/$defs/__schema10"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state",
+        "refusal"
+      ],
+      "additionalProperties": false
+    },
+    "__schema10": {
+      "anyOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_ingress_disabled"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The dot interface is turned off in the app."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_ingress_forbidden"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This caller is not allowed to use the dot interface."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_unsupported_contract_version"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Unsupported contract version. Supported versions: 1."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_workspace_unknown"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This workspace reference is not enabled for dot requests."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_workspace_unavailable"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The workspace is not available right now. Local workspaces only; try again later."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_requirement_not_english"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Rewrite the requirement in English. Put names, paths and quotations that must not be translated inside double quotes, typographic double quotes or backticks."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_requirement_unclear"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The requirement is blank or has no prose outside quoted text. Describe the task in English sentences."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_requirement_too_long"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The requirement is too long. Shorten the prose or reduce the quoted spans."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_requirement_rejected_content"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_deliverable_language_invalid"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_idempotency_conflict"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This idempotency key was already used for a different request."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_request_not_found"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The request was not found."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_request_not_cancelable"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Only a request that was handed to the workbench and is not yet canceled can be canceled."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_capacity_exceeded"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "Too many dot requests are waiting or stored. Try again later."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_rate_limited"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The submission limit set in the app was reached. Try again later."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_recovery_required"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The dot request store needs recovery in the app. Nothing was changed."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_decision_not_found"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The permission prompt was not found."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_decision_desktop_only"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This permission prompt can only be answered in the app."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_access_above_maximum"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The requested access is above the maximum the user set for this workspace. Ask for less access, or ask the user to raise the maximum in the app."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_decision_deny_only"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "This run may only read, so dot can deny this permission prompt but not allow it. Allowing it is possible only in the app."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_request_busy"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The run could not be stopped yet or the request is still changing, so nothing was canceled. Try again later."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "nash"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "dot_validation_not_found"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The validation decision was not found."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "site"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "cancel_target_not_admitted"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "NASH did not accept the task this cancel was for, so there is nothing to cancel."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "const": "site"
+                },
+                "code": {
+                  "type": "string",
+                  "const": "pairing_revoked"
+                },
+                "message": {
+                  "type": "string",
+                  "const": "The pairing was revoked before NASH took this item, so it was not delivered."
+                }
+              },
+              "required": [
+                "by",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    },
+    "__schema11": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "expired"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema12": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "canceled_before_claim"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema13": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/__schema14"
+        },
+        {
+          "$ref": "#/$defs/__schema18"
+        },
+        {
+          "$ref": "#/$defs/__schema19"
+        },
+        {
+          "$ref": "#/$defs/__schema20"
+        },
+        {
+          "$ref": "#/$defs/__schema21"
+        }
+      ]
+    },
+    "__schema14": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema16"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema17"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "queued"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema15": {
+      "type": "string",
+      "const": "cancel"
+    },
+    "__schema16": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/__schema2"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "__schema17": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/__schema8"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "__schema18": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema16"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema17"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "claimed"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema19": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "accepted"
+        },
+        "duplicate": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state",
+        "duplicate"
+      ],
+      "additionalProperties": false
+    },
+    "__schema20": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema16"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema17"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "refused"
+        },
+        "refusal": {
+          "$ref": "#/$defs/__schema10"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state",
+        "refusal"
+      ],
+      "additionalProperties": false
+    },
+    "__schema21": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "kind": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema16"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "dotRequestId": {
+          "$ref": "#/$defs/__schema17"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "state": {
+          "type": "string",
+          "const": "expired"
+        }
+      },
+      "required": [
+        "itemId",
+        "kind",
+        "payloadSha256",
+        "dependsOnItemId",
+        "dotRequestId",
+        "createdAt",
+        "expiresAt",
+        "updatedAt",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "__schema22": {
+      "type": "string",
+      "const": "permission_answer"
+    },
+    "__schema23": {
+      "type": "string",
+      "const": "message"
+    },
+    "__schema24": {
+      "type": "string",
+      "const": "validation_decision"
+    }
+  }
+}

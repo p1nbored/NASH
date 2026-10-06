@@ -41,7 +41,7 @@ function setupCopy(mode: SetupMode, env: string, folder: string) {
         ),
         description: translate(
           'auto.components.editor.IpynbViewer.venvDescription',
-          "Orca will create a .venv in {{folder}} from '{{env}}', install ipykernel into it, and run this notebook there.",
+          "NASH will create a .venv in {{folder}} from '{{env}}', install ipykernel into it, and run this notebook there.",
           { env, folder }
         ),
         action: translate('auto.components.editor.IpynbViewer.createVenv', 'Create .venv')

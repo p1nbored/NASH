@@ -1,3 +1,4 @@
+import { getDotIngressPort } from '../dot-ingress/dot-ingress-control'
 import { RuntimeRpcMobilePairing } from './runtime-rpc-mobile-pairing'
 
 export class RuntimeRpcShutdown extends RuntimeRpcMobilePairing {
@@ -18,15 +19,22 @@ export class RuntimeRpcShutdown extends RuntimeRpcMobilePairing {
       })
     }
     const transports = this.activeTransports
+    const dotIngress = this.dotIngressListener
     this.activeTransports = []
     this.transports = []
+    this.dotIngressListener = null
+    if (dotIngress) {
+      getDotIngressPort(this.runtime).uninstallControl(dotIngress)
+    }
     this.metadataOwnershipWatch?.stop()
     this.metadataOwnershipWatch = null
     this.mobileSocketWiring = null
     this.detachWebSocketWiring = null
-    const stopResults = await Promise.allSettled(
-      transports.map(async (transport) => transport.stop())
-    )
+    // Why: the dot endpoint removes its own discovery file; the CLI metadata file stays (see below).
+    const stopResults = await Promise.allSettled([
+      ...transports.map(async (transport) => transport.stop()),
+      ...(dotIngress ? [dotIngress.shutdown()] : [])
+    ])
     // Why: before-quit fences relay input; direct auth can still refresh lastSeen while these transports close.
     this.deviceRegistry?.flushPendingLastSeen()
     const failedStop = stopResults.find((result) => result.status === 'rejected')

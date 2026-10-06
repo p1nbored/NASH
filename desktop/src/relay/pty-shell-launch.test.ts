@@ -95,7 +95,7 @@ describe('getRelayShellLaunchConfig', () => {
         HOME: homeDir,
         ORCA_OPENCODE_CONFIG_DIR: '/tmp/orca-opencode-overlay'
       })
-      const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+      const zshRoot = join(homeDir, '.nash-relay', 'shell-ready', 'zsh')
 
       expect(config.args).toEqual(['-l'])
       expect(config.env.ZDOTDIR).toBe(zshRoot)
@@ -144,17 +144,17 @@ describe('getRelayShellLaunchConfig', () => {
       const env = buildSshPtySpawnEnv({
         env: { HOME: homeDir, PATH: '/usr/bin:/bin' },
         remoteCliBridgeEnv: {
-          binDir: '/home/remote/.orca-relay/bin',
-          relayDir: '/home/remote/.orca-relay',
-          nodePath: '/home/remote/.orca-relay/node',
-          sockPath: '/home/remote/.orca-relay/relay.sock'
+          binDir: '/home/remote/.nash-relay/bin',
+          relayDir: '/home/remote/.nash-relay',
+          nodePath: '/home/remote/.nash-relay/node',
+          sockPath: '/home/remote/.nash-relay/relay.sock'
         }
       })
       env.ORCA_HISTFILE = join(homeDir, 'orca-history', 'zsh_history')
 
       const config = getRelayShellLaunchConfig('/bin/zsh', env)
 
-      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.orca-relay', 'shell-ready', 'zsh'))
+      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.nash-relay', 'shell-ready', 'zsh'))
       expect(config.env.ORCA_SHELL_FEATURES).toBe('overlay,history,markers')
     }
   )
@@ -171,7 +171,7 @@ describe('getRelayShellLaunchConfig', () => {
 
       const config = getRelayShellLaunchConfig('/bin/zsh', env)
 
-      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.orca-relay', 'shell-ready', 'zsh'))
+      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.nash-relay', 'shell-ready', 'zsh'))
       expect(config.env.ORCA_SHELL_FEATURES).toBe('history')
     }
   )
@@ -198,7 +198,7 @@ describe('getRelayShellLaunchConfig', () => {
   })
 
   it.skipIf(process.platform === 'win32')('rewrites stale persistent wrapper files', () => {
-    const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+    const zshRoot = join(homeDir, '.nash-relay', 'shell-ready', 'zsh')
     mkdirSync(zshRoot, { recursive: true })
     writeFileSync(join(zshRoot, '.zshenv'), '# stale relay wrapper\n')
 
@@ -219,7 +219,7 @@ describe('getRelayShellLaunchConfig', () => {
         HOME: homeDir,
         ORCA_MIMOCODE_HOME: '/tmp/orca-mimocode-overlay'
       })
-      const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+      const zshRoot = join(homeDir, '.nash-relay', 'shell-ready', 'zsh')
       // Why .zshenv: the overlay restores live in the one epilogue defined there.
       const zshenv = readFileSync(join(zshRoot, '.zshenv'), 'utf8')
 
@@ -236,7 +236,7 @@ describe('getRelayShellLaunchConfig', () => {
     'wraps bash even without overlay env for OSC 133 lifecycle markers',
     () => {
       const config = getRelayShellLaunchConfig('/bin/bash', { HOME: homeDir })
-      const rcfile = join(homeDir, '.orca-relay', 'shell-ready', 'bash', 'rcfile')
+      const rcfile = join(homeDir, '.nash-relay', 'shell-ready', 'bash', 'rcfile')
       const bashRc = readFileSync(rcfile, 'utf8')
 
       expect(config.args).toEqual(['--rcfile', rcfile])
@@ -254,7 +254,7 @@ describe('getRelayShellLaunchConfig', () => {
       const config = getRelayShellLaunchConfig('/bin/zsh', { HOME: homeDir }, 'linux', {
         emitReadyMarker: true
       })
-      const zshRoot = join(homeDir, '.orca-relay', 'shell-ready', 'zsh')
+      const zshRoot = join(homeDir, '.nash-relay', 'shell-ready', 'zsh')
       const zshenv = readFileSync(join(zshRoot, '.zshenv'), 'utf8')
 
       expect(config.args).toEqual(['-l'])
@@ -293,7 +293,7 @@ describe('getRelayShellLaunchConfig', () => {
         emitStartupIdentity: true
       })
 
-      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.orca-relay', 'shell-ready', 'zsh'))
+      expect(config.env.ZDOTDIR).toBe(join(homeDir, '.nash-relay', 'shell-ready', 'zsh'))
       expect(config.env.ORCA_SHELL_FEATURES).toContain('identity')
       // Why the negative half: identity emission alone must not arm the
       // readiness handshake, or the delivering side waits for a marker that

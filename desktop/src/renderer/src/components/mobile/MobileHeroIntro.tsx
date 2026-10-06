@@ -19,7 +19,7 @@ export function HeroIntro({ onStart }: { onStart: () => void }): React.JSX.Eleme
       <p className="mp-lead">
         {translate(
           'auto.components.mobile.MobileHero.b4ccce5cb7',
-          "Control Orca from your phone. Check on agents, review changes, and kick off tasks while you're away from your desk."
+          "Control NASH from your phone. Check on agents, review changes, and kick off tasks while you're away from your desk."
         )}
       </p>
       <div

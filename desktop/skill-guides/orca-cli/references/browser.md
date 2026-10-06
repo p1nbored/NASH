@@ -51,7 +51,7 @@ Browser rules:
 - Refs like `@e1` are assigned by `snapshot`, scoped to one tab, and invalidated by navigation or tab switch.
 - Browser commands default to the current worktree and its active tab. Use `--worktree all` only intentionally.
 - For concurrent browser work, run `ORCA tab list --json`, read `tabs[].browserPageId`, and pass `--page <browserPageId>` on later commands.
-- Use typed tab commands (`ORCA tab list/create/close/switch`), not `ORCA exec --command "tab ..."`, so Orca keeps UI state synchronized.
+- Use typed tab commands (`ORCA tab list/create/close/switch`), not `ORCA exec --command "tab ..."`, so NASH keeps UI state synchronized.
 - Prefer `wait --text`, `--url`, `--selector`, or `--load` after async page changes instead of bare timeouts.
 - Anything not listed above goes through `ORCA exec --command "<agent-browser command>"`.
 - If `fill` or `type` fails on a custom input, try `ORCA focus --element @e1 --json` then `ORCA inserttext --text "text" --json`.

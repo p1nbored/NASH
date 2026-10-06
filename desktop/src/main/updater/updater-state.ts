@@ -2,6 +2,7 @@ import type { BrowserWindow } from 'electron'
 import type { ElectronAutoUpdater } from '../electron-updater-loader'
 import type { LocalBuildFeed } from '../local-builds/local-build-feed-server'
 import type { UpdateSource, UpdateStatus } from '../../shared/update-status-types'
+import { getAppUpdateFeed } from '../../shared/app-update-feed'
 import type { ReleaseChannel } from '../../shared/release-channel'
 import type { PrimaryEventSuppression, UpdateCheckVariant } from './updater-types'
 
@@ -122,4 +123,9 @@ export abstract class UpdaterState {
   protected readonly installFailureCauseMaxLength = 200
 
   constructor() {}
+
+  /** True when the build has no release feed (decision D-017): every check, download and install entry point refuses. */
+  protected isUpdateFeedDisabled(): boolean {
+    return getAppUpdateFeed() === null
+  }
 }

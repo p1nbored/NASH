@@ -1,11 +1,13 @@
 import { cp, mkdtemp, rm } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 import assert from 'node:assert/strict'
 
 const execFileAsync = promisify(execFile)
+const appIdentity = createRequire(import.meta.url)('../../src/shared/app-identity-constants.json')
 
 function readAppDirArg(argv) {
   const explicit = argv.find((arg) => arg.startsWith('--app-dir='))
@@ -13,7 +15,7 @@ function readAppDirArg(argv) {
     return explicit.slice('--app-dir='.length)
   }
   if (process.platform === 'darwin') {
-    return 'dist/mac-arm64/Orca.app'
+    return `dist/mac-arm64/${appIdentity.productName}.app`
   }
   if (process.platform === 'win32') {
     return 'dist/win-unpacked'
@@ -23,10 +25,10 @@ function readAppDirArg(argv) {
 
 function getPackagedCliPath(appDir) {
   if (process.platform === 'darwin' || appDir.endsWith('.app')) {
-    return join(appDir, 'Contents', 'Resources', 'bin', 'orca')
+    return join(appDir, 'Contents', 'Resources', 'bin', appIdentity.cliCommandName)
   }
   if (process.platform === 'win32') {
-    return join(appDir, 'resources', 'bin', 'orca.exe')
+    return join(appDir, 'resources', 'bin', `${appIdentity.cliCommandName}.exe`)
   }
   return join(appDir, 'resources', 'bin', 'orca-ide')
 }
@@ -78,7 +80,7 @@ try {
   smokeFailure = error
 }
 
-// Why: on Windows the launcher above spawns the copied Orca.exe (and its crashpad/utility children)
+// Why: on Windows the launcher above spawns the copied NASH.exe (and its crashpad/utility children)
 // once per command; those handles can outlive execFile's exit by a few ms, so this cleanup hits
 // EBUSY on our own just-exited process after every assertion already passed. Same retry treatment
 // as removeHostTree(); a lock that never clears still throws — unless the smoke run itself failed,

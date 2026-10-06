@@ -211,7 +211,7 @@ describe('orca cli worktree awareness', () => {
 
   it('passes dev mode to injected orchestration dispatches', async () => {
     process.env.ORCA_TERMINAL_HANDLE = 'term_sender'
-    process.env.ORCA_USER_DATA_PATH = '/tmp/orca-dev'
+    process.env.ORCA_USER_DATA_PATH = '/tmp/nash-dev'
     callMock.mockResolvedValueOnce({
       id: 'req_dispatch',
       ok: true,

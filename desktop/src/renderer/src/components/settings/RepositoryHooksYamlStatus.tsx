@@ -49,7 +49,7 @@ function getYamlStateCopy(yamlState: string): { heading: string; description: st
         ),
         description: translate(
           'auto.components.settings.RepositoryHooksSection.aba825233f',
-          'The file contains configuration keys that this version of Orca does not recognize. You may need to update Orca, or check the file for typos.'
+          'The file contains configuration keys that this version of NASH does not recognize. You may need to update NASH, or check the file for typos.'
         )
       }
     case 'invalid':
@@ -60,7 +60,7 @@ function getYamlStateCopy(yamlState: string): { heading: string; description: st
         ),
         description: translate(
           'auto.components.settings.RepositoryHooksSection.0cc712b823',
-          'The core configuration file exists in the repo root, but Orca could not parse the supported hook definitions yet.'
+          'The core configuration file exists in the repo root, but NASH could not parse the supported hook definitions yet.'
         )
       }
     default:
@@ -163,7 +163,7 @@ export function RepositoryHooksYamlStatus({
               <p>
                 {translate(
                   'auto.components.settings.RepositoryHooksSection.af49e2a19e',
-                  'The file is present, but Orca could not find valid `scripts` or `issueCommand` definitions.'
+                  'The file is present, but NASH could not find valid `scripts` or `issueCommand` definitions.'
                 )}
               </p>
               <ol className="space-y-1.5 pl-4 text-[11.5px]">

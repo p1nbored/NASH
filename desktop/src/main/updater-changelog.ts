@@ -1,5 +1,6 @@
 import { net } from 'electron'
 import type { ChangelogData } from '../shared/update-status-types'
+import { getAppUpdateFeed } from '../shared/app-update-feed'
 import { compareVersions } from './updater-fallback'
 
 type ChangelogEntry = {
@@ -9,8 +10,6 @@ type ChangelogEntry = {
   mediaUrl?: string
   releaseNotesUrl: string
 }
-
-const CHANGELOG_URL = 'https://onorca.dev/changelog'
 
 function isValidEntry(entry: ChangelogEntry): boolean {
   return (
@@ -42,7 +41,12 @@ export async function fetchChangelog(
   incomingVersion: string,
   localVersion: string
 ): Promise<ChangelogData | null> {
-  const res = await net.fetch('https://onorca.dev/whats-new/changelog.json', {
+  // Why: the changelog belongs to the configured what's-new service; with none, nothing is fetched (decision D-017).
+  const whatsNew = getAppUpdateFeed()?.whatsNew
+  if (!whatsNew) {
+    return null
+  }
+  const res = await net.fetch(whatsNew.changelogJsonUrl, {
     signal: AbortSignal.timeout(5000)
   })
   if (!res.ok) {
@@ -127,7 +131,7 @@ export async function fetchChangelog(
     const { version: _, ...release } = candidate
     // Why: the shown content is from an older entry, not the incoming version.
     // Point to the generic changelog page so the link doesn't mislead.
-    return { release: { ...release, releaseNotesUrl: CHANGELOG_URL }, releasesBehind }
+    return { release: { ...release, releaseNotesUrl: whatsNew.changelogPageUrl }, releasesBehind }
   }
 
   return null

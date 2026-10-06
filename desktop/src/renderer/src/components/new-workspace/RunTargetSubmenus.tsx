@@ -169,11 +169,11 @@ export function AddHostSubmenuRow({
               icon={<Cloud className="size-3.5 shrink-0 text-muted-foreground" />}
               label={translate(
                 'auto.components.NewWorkspaceComposerCard.addRemoteOrcaServer',
-                'Add Remote Orca Server'
+                'Add Remote NASH Server'
               )}
               detail={translate(
                 'auto.components.NewWorkspaceComposerCard.addRemoteOrcaServerHint',
-                'Pair another Orca runtime'
+                'Pair another NASH runtime'
               )}
               armed={hoveredKey === 'remote'}
               current={false}

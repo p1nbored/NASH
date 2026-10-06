@@ -5,7 +5,7 @@ import ko from './locales/ko.json'
 
 const correctedValues = {
   'auto.components.settings.AutoRenameBranchFromWorkSetting.d9b65054ef':
-    ') 작업을 요약하는 짧은 이름으로 변경됩니다. Orca가 직접 이름 붙인 브랜치만 이름을 바꾸며, 푸시된 후에는 이름을 바꾸지 않습니다.',
+    ') 작업을 요약하는 짧은 이름으로 변경됩니다. NASH가 직접 이름 붙인 브랜치만 이름을 바꾸며, 푸시된 후에는 이름을 바꾸지 않습니다.',
   'auto.components.settings.source.control.action.recipe.options.commitMessage':
     '스테이징된 변경 사항에서 commit 메시지를 생성합니다.',
   'auto.components.settings.DevToolsPane.orcaCloudDescription':
@@ -20,9 +20,9 @@ const correctedValues = {
   'auto.components.right.sidebar.source.control.primary.action.5a477d80cb':
     '모든 변경 사항 스테이징',
   'auto.components.settings.DeveloperPermissionsPane.f903bf20b5':
-    '터미널과 개발 도구가 로컬 네트워크의 서비스에 연결할 수 있도록 허용합니다. macOS는 이 권한의 현재 상태를 Orca에 보고하지 않습니다.',
+    '터미널과 개발 도구가 로컬 네트워크의 서비스에 연결할 수 있도록 허용합니다. macOS는 이 권한의 현재 상태를 NASH에 보고하지 않습니다.',
   'auto.components.sidebar.AddRemoteHostDialog.sshImportSynced':
-    '{{value0}} 호스트{{value1}}을(를) Orca에 추가했습니다.',
+    '{{value0}} 호스트{{value1}}을(를) NASH에 추가했습니다.',
   'auto.components.editor.CheckRunJobs.1c0a4d7e02': '성공',
   'components.native-chat.approval.allow': '허용',
   'components.native-chat.approval.deny': '거부'

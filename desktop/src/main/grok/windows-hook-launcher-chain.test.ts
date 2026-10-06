@@ -74,7 +74,7 @@ describe('Windows Grok managed hook launch shape', () => {
   // #6078 fallback by design. These synthetic-path cases carry the invariant on every CI leg;
   // the install-based ones below re-check it against a real generated path on Windows.
   describe('registered command, from a synthetic Windows path', () => {
-    const scriptPath = 'C:\\Users\\dev\\.orca\\agent-hooks\\grok-hook.cmd'
+    const scriptPath = 'C:\\Users\\dev\\.nash\\agent-hooks\\grok-hook.cmd'
 
     it('registers a cmd-safe script path as the command itself (#14828)', () => {
       const command = withWin32(() => getManagedCommandForTests(scriptPath))
@@ -89,7 +89,7 @@ describe('Windows Grok managed hook launch shape', () => {
     })
 
     it('still wraps a path cmd.exe would split or expand (#6078)', () => {
-      const spaced = 'C:\\Users\\Jane Doe\\.orca\\agent-hooks\\grok-hook.cmd'
+      const spaced = 'C:\\Users\\Jane Doe\\.nash\\agent-hooks\\grok-hook.cmd'
       const command = withWin32(() => getManagedCommandForTests(spaced))
 
       expect(command).toMatch(/-EncodedCommand \S+$/)
@@ -116,7 +116,7 @@ describe('Windows Grok managed hook launch shape', () => {
     it.skipIf(process.platform !== 'win32')(
       'writes the generated script path itself to every managed event',
       () => {
-        const scriptPath = join(home, '.orca', 'agent-hooks', 'grok-hook.cmd')
+        const scriptPath = join(home, '.nash', 'agent-hooks', 'grok-hook.cmd')
         const commands = withWin32(() => {
           expect(new GrokHookService().install().state).toBe('installed')
           return registeredCommands(readInstalledConfig(home))
@@ -133,7 +133,7 @@ describe('Windows Grok managed hook launch shape', () => {
     it.skipIf(process.platform !== 'win32')(
       'replaces a previously installed encoded-PowerShell entry on reinstall',
       () => {
-        const scriptPath = join(home, '.orca', 'agent-hooks', 'grok-hook.cmd')
+        const scriptPath = join(home, '.nash', 'agent-hooks', 'grok-hook.cmd')
         const staleCommand = wrapWindowsHookCommand(scriptPath)
         const configPath = join(home, '.grok', 'hooks', 'orca-status.json')
         mkdirSync(dirname(configPath), { recursive: true })

@@ -7,6 +7,7 @@ import {
   openSync,
   unlinkSync
 } from 'node:fs'
+import { APP_REMOTE_DIR_NAME } from '../shared/app-identity-paths'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
 import { toLinuxPath } from '../shared/wsl-paths'
@@ -19,7 +20,7 @@ import {
   resolveFishHistoryDir
 } from '../main/fish-history-session'
 
-const HISTORY_ROOT = join(homedir(), '.orca-remote', 'terminal-history')
+const HISTORY_ROOT = join(homedir(), APP_REMOTE_DIR_NAME, 'terminal-history')
 
 function historyFilename(shell: string): string | null {
   const name = basename(shell).toLowerCase()

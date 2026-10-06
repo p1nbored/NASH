@@ -80,7 +80,7 @@
         "0e587e31fb": "yaml",
         "2132b670da": "both",
         "7711ad5122": "Local setup command",
-        "addHostHint": "Register another machine or Orca server",
+        "addHostHint": "Register another machine or NASH server",
         "cloneDestinationPlaceholder": "/parent/directory/on/host",
         "cloneHostSetup": "Clone",
         "cloneProjectOnHost": "Clone project",
@@ -209,7 +209,7 @@
         "ArtifactsPage": {
           "openArtifact": "Open artifact",
           "signInCopy": "Sign in to view and manage artifacts shared through your account.",
-          "signInHeading": "Sign in to Orca"
+          "signInHeading": "Sign in to Orca Cloud"
         },
         "artifact-publish-flow": {
           "5cb4f5ec36": "Copy link"
@@ -354,7 +354,7 @@
         "report": {
           "CrashReportDialog": {
             "56a3dfa283": "Failed to send crash report.",
-            "835037edc9": "· Orca",
+            "835037edc9": "· NASH",
             "b175e90213": "No crash report is available.",
             "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
           }
@@ -480,7 +480,7 @@
                 }
               },
               "steps": {
-                "description": "Enable agents to manage and coordinate Orca workspaces to execute larger tasks.",
+                "description": "Enable agents to manage and coordinate NASH workspaces to execute larger tasks.",
                 "name": "Orchestration",
                 "subtitle": "Orchestration"
               },
@@ -591,7 +591,7 @@
             "c3b81ddea2": "DRAFT_ISSUE"
           },
           "ProjectViewWrapper": {
-            "1bf8c01c8b": "Switch to a Table view to work with this project in Orca."
+            "1bf8c01c8b": "Switch to a Table view to work with this project in NASH."
           }
         }
       },
@@ -661,18 +661,18 @@
           "a74c6d6b18": "not-installed"
         },
         "NotificationStep": {
-          "2c47f5465f": "Turn on Allow notifications for Orca in System Settings. This step updates automatically once enabled.",
+          "2c47f5465f": "Turn on Allow notifications for NASH in System Settings. This step updates automatically once enabled.",
           "8124d085a6": "Open Mac Settings",
           "94562ba367": "macOS is asking for permission. Click Allow in the dialog and this step updates automatically.",
-          "aa36281b00": "Open System Settings and make sure Orca is allowed to send notifications.",
-          "d2dba86837": "Allow Orca in macOS"
+          "aa36281b00": "Open System Settings and make sure NASH is allowed to send notifications.",
+          "d2dba86837": "Allow NASH in macOS"
         },
         "OnboardingFlow": {
           "35bbaf5ae0": "notifications",
           "984338477a": "theme",
           "a5e5da02f7": "integrations",
           "c47e1bd149": "agent",
-          "ff92d15436": "Orca will notify you know when agents are done or need help."
+          "ff92d15436": "NASH will notify you know when agents are done or need help."
         },
         "ThemeStep": {
           "ad19e5c916": "Importing…"
@@ -850,10 +850,10 @@
             "tooManyChanges": "Too many changes detected. Only the first {{value0}} changes are shown."
           },
           "SourceControlAgentActionDialogForm": {
-            "1bb611240f": "Use {basePrompt} for Orca's default prompt.",
+            "1bb611240f": "Use {basePrompt} for NASH's default prompt.",
             "3e8f21954f": "error",
             "74168d7ada": "idle",
-            "d8f40128ee": "{basePrompt} is Orca's default prompt."
+            "d8f40128ee": "{basePrompt} is NASH's default prompt."
           },
           "activity": {
             "bar": {
@@ -901,7 +901,7 @@
                   "title": "{{provider}} authentication failed"
                 },
                 "auth_required": {
-                  "body": "{{provider}} must be connected in this environment before Orca can create a {{reviewLabel}}.",
+                  "body": "{{provider}} must be connected in this environment before NASH can create a {{reviewLabel}}.",
                   "title": "Connect {{provider}}"
                 },
                 "base_missing": {
@@ -909,7 +909,7 @@
                   "title": "Base branch not on remote"
                 },
                 "cli": {
-                  "body": "Orca could not run {{provider}} CLI in this environment. Set it up here, then retry.",
+                  "body": "NASH could not run {{provider}} CLI in this environment. Set it up here, then retry.",
                   "title": "{{provider}} CLI unavailable"
                 },
                 "default_branch": {
@@ -925,7 +925,7 @@
                   "title": "Commit changes first"
                 },
                 "fork": {
-                  "body": "Orca cannot create a {{reviewLabel}} from this fork head here.",
+                  "body": "NASH cannot create a {{reviewLabel}} from this fork head here.",
                   "title": "Fork head unsupported"
                 },
                 "needs_sync": {
@@ -946,7 +946,7 @@
                 },
                 "skipped": {
                   "archived": {
-                    "body": "This repository is archived, so Orca is not refreshing {{reviewLabel}} status.",
+                    "body": "This repository is archived, so NASH is not refreshing {{reviewLabel}} status.",
                     "title": "Repository archived"
                   },
                   "bare": {
@@ -954,20 +954,20 @@
                     "title": "Bare repository"
                   },
                   "disconnected": {
-                    "body": "This repository's execution host is disconnected, so Orca cannot refresh {{reviewLabel}} status.",
+                    "body": "This repository's execution host is disconnected, so NASH cannot refresh {{reviewLabel}} status.",
                     "title": "Host disconnected"
                   },
                   "not_git": {
-                    "body": "Orca could not treat this folder as a Git repository for {{reviewLabel}} status.",
+                    "body": "NASH could not treat this folder as a Git repository for {{reviewLabel}} status.",
                     "title": "Not a Git repository"
                   },
                   "remote": {
-                    "body": "Orca could not refresh {{reviewLabel}} status for this remote context. Retry after the host is available.",
+                    "body": "NASH could not refresh {{reviewLabel}} status for this remote context. Retry after the host is available.",
                     "title": "Remote-only context"
                   }
                 },
                 "unsupported": {
-                  "body": "This repository provider does not support creating a {{reviewLabel}} from Orca.",
+                  "body": "This repository provider does not support creating a {{reviewLabel}} from NASH.",
                   "title": "{{reviewLabelCap}} not supported here"
                 }
               }
@@ -1070,7 +1070,7 @@
           "338820326a": ") or the full cookie header (e.g.",
           "3455cf43fa": "Claude login.",
           "350b2a1aa7": "Use your current",
-          "4e32e030b2": "Stored locally. Orca sends it only to platform.minimax.io for usage refreshes.",
+          "4e32e030b2": "Stored locally. NASH sends it only to platform.minimax.io for usage refreshes.",
           "566d9a99ab": "_token=…; minimax_group_id_v2=…",
           "5e08b0fe57": "Stored locally and sent only to platform.minimax.io for usage refreshes.",
           "79418c782a": "Open platform.minimax.io/console/usage in your browser, sign in, then copy the Cookie request header from DevTools (Network → any remains request → Cookie).",
@@ -1112,9 +1112,9 @@
           "df123171d1": "Not installed"
         },
         "AppearancePane": {
-          "0f28e7b30c": "Choose how Orca looks in the app window.",
-          "2df8f79aa5": "Show Orca in the titlebar.",
-          "42554f615f": "Choose the font used by the Orca interface.",
+          "0f28e7b30c": "Choose how NASH looks in the app window.",
+          "2df8f79aa5": "Show NASH in the titlebar.",
+          "42554f615f": "Choose the font used by the NASH interface.",
           "4de76f6902": "Control what appears in the application titlebar.",
           "5db6ba961f": "Show the Orca Mobile button at the top of the left sidebar.",
           "622e1c3465": "Scale the entire application interface.",
@@ -1135,7 +1135,7 @@
         "AutoRenameBranchPromptEditor": {
           "0691753cf2": "Unsaved changes",
           "182d419b97": "built-in branch-name prompt",
-          "2f5dc661fe": "Appended to Orca's",
+          "2f5dc661fe": "Appended to NASH's",
           "39278f4411": "; your branch prefix setting still applies.",
           "4416b25d29": "Prefer domain nouns from the task, avoid ticket IDs, and keep names reviewer-friendly.",
           "54ac229ad4": "Saving...",
@@ -1143,7 +1143,7 @@
           "63121132c0": "Discard",
           "7d6176f506": "Prompt",
           "af0831a590": "Saved",
-          "af2d9a2cc6": ". Orca generates only the final segment, like",
+          "af2d9a2cc6": ". NASH generates only the final segment, like",
           "ebb942a2ec": "fix-login-flow"
         },
         "BrowserPane": {
@@ -1168,7 +1168,7 @@
         },
         "CliSkillRuntimeSetup": {
           "04325573f8": "WSL",
-          "0c9f3cf9da": "Choose where Orca checks and installs global agent skills.",
+          "0c9f3cf9da": "Choose where NASH checks and installs global agent skills.",
           "7c776ff9d8": "wsl",
           "a58ba464ad": "Skill location",
           "f00d6aa9b5": "WSL is not available on this machine."
@@ -1227,7 +1227,7 @@
           "a0832ccdb1": "downloaded"
         },
         "GeneralWorkspaceSettingsSection": {
-          "externalWorktreesDescription": "Choose whether worktrees created outside Orca appear by default.",
+          "externalWorktreesDescription": "Choose whether worktrees created outside NASH appear by default.",
           "hide": "Hide",
           "show": "Show"
         },
@@ -1235,7 +1235,7 @@
           "f35007e6e8": "git-username"
         },
         "GrokAccountsSection": {
-          "c3d4e5f6a7": "Signed in. Orca only reads that file on disk — run grok login again if usage fails.",
+          "c3d4e5f6a7": "Signed in. NASH only reads that file on disk — run grok login again if usage fails.",
           "d4e5f6a7b8": "Session expired — run grok login in a terminal to refresh."
         },
         "IntegrationsPane": {
@@ -1246,7 +1246,7 @@
           "0879860c58": "Pull requests and build statuses via Bitbucket Cloud API tokens.",
           "09285e9fe6": "The GitHub CLI is installed but not authenticated. Run this command in a terminal:",
           "15cf990798": "Not authenticated",
-          "1a62c295c6": "Gitea credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart Orca if environment variables changed.",
+          "1a62c295c6": "Gitea credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart NASH if environment variables changed.",
           "1fac9b4910": "{{value0}} · Pull requests and commit statuses",
           "2122e15517": "Each connected Linear workspace has one key stored by the active runtime. Full-access keys can cover all teams the key owner can access; restricted keys can be replaced any time.",
           "264a9b6128": "Linear",
@@ -1257,7 +1257,7 @@
           "35a3379372": "Install the GitLab CLI to enable merge requests, issues, and pipelines.",
           "3614887c40": "checking",
           "399cf46867": "Install GitHub CLI",
-          "3c3cf05c63": "Bitbucket credentials are configured but could not authenticate. Check the token and repository permissions, then restart Orca if environment variables changed.",
+          "3c3cf05c63": "Bitbucket credentials are configured but could not authenticate. Check the token and repository permissions, then restart NASH if environment variables changed.",
           "44cde4aa01": "ORCA_BITBUCKET_API_TOKEN",
           "45bf5e6e4b": "Auth failed",
           "4831ba1083": "Re-check",
@@ -1267,7 +1267,7 @@
           "4ee74d1470": "Set",
           "51000487c4": "gh auth login",
           "513abfe47d": "GitLab",
-          "5a1f86225a": "only when Orca cannot derive the API URL from the remote.",
+          "5a1f86225a": "only when NASH cannot derive the API URL from the remote.",
           "5ee6ef6405": "ORCA_AZURE_DEVOPS_TOKEN",
           "5efce6953d": "Azure DevOps",
           "6193444689": "ORCA_GITEA_API_BASE_URL",
@@ -1278,12 +1278,12 @@
           "67a9f26a80": ". Set",
           "6bd148dcb5": "Pull requests and commit statuses via the Gitea REST API.",
           "6e0ff3403e": "ORCA_BITBUCKET_ACCESS_TOKEN",
-          "6f317f5132": "only when Orca cannot derive the API base URL from the git remote.",
+          "6f317f5132": "only when NASH cannot derive the API base URL from the git remote.",
           "70c5f74f36": "GitHub",
           "8489c0aa49": "Bitbucket",
           "8e078e480c": "Disconnect {{value0}}",
           "8f960935c1": "ORCA_AZURE_DEVOPS_ACCESS_TOKEN",
-          "953b7bf6f7": "Azure DevOps credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart Orca if environment variables changed.",
+          "953b7bf6f7": "Azure DevOps credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart NASH if environment variables changed.",
           "95b9a87e7e": "Test",
           "9707523939": "Pull requests and build statuses",
           "98ded79cd7": "{{value0}} workspace{{value1}} connected",
@@ -1322,11 +1322,11 @@
         },
         "MobileEmulatorAgentControlRow": {
           "1861982430": "Failed to load CLI status.",
-          "cdeaed9e37": "Registered the Orca CLI in PATH."
+          "cdeaed9e37": "Registered the NASH CLI in PATH."
         },
         "MobileEmulatorSdkStatus": {
           "536026130e": "Emulator SDKs",
-          "dde0ec1cd8": "Toolchains Orca uses to run emulators. Android works on any OS via the Android SDK; iOS Simulators need Xcode on macOS."
+          "dde0ec1cd8": "Toolchains NASH uses to run emulators. Android works on any OS via the Android SDK; iOS Simulators need Xcode on macOS."
         },
         "MobileNetworkInterfaceSection": {
           "1dc87a7fbc": "Tailscale",
@@ -1370,7 +1370,7 @@
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub Releases",
           "b0088412a1": "or the Android APK from",
-          "c8491c17ef": "Control Orca from your phone by scanning a QR code. Beta / early preview - expect bugs and breaking changes. Get the iOS app from the"
+          "c8491c17ef": "Control NASH from your phone by scanning a QR code. Beta / early preview - expect bugs and breaking changes. Get the iOS app from the"
         },
         "NotificationsPane": {
           "274af61bc0": "system",
@@ -1449,12 +1449,12 @@
           "54ebacc600": "Server name",
           "55fcc964cd": "on the server and paste the printed pairing URL.",
           "7b5986c8df": "Saved {{value0}}. Use Active Server to switch when ready.",
-          "8cf8790697": "Saved servers route this browser through a paired Orca runtime.",
-          "960e901ae4": "orca serve --pairing-address <host>",
+          "8cf8790697": "Saved servers route this browser through a paired NASH runtime.",
+          "960e901ae4": "nash serve --pairing-address <host>",
           "9bc9b83474": "Pairing code",
-          "9f7665a01b": "Removing the active server first switches Orca back to Local desktop. Existing host sessions are left alone.",
+          "9f7665a01b": "Removing the active server first switches NASH back to Local desktop. Existing host sessions are left alone.",
           "b2fda48c39": "Removing the active server disconnects this browser from that host. Existing host sessions are left alone.",
-          "c3d772c514": "orca://pair?code=...",
+          "c3d772c514": "nash://pair?code=...",
           "e038625857": "Dev box",
           "f3a3d6d834": "{{value0}} capabilities",
           "f75ce1c7a5": "Local keeps today's desktop behavior. Saved servers route supported client calls through the remote runtime.",
@@ -1502,14 +1502,14 @@
         },
         "SshPane": {
           "94c5284560": "Targets",
-          "a7d28dff81": "Add a remote host to connect to it in Orca."
+          "a7d28dff81": "Add a remote host to connect to it in NASH."
         },
         "SshTargetCard": {
           "47e94bd6ba": "connected",
           "f0871e6bfb": "connect"
         },
         "SshTargetForm": {
-          "137e88ce8d": "Remote terminals keep running after Orca disconnects from this host.",
+          "137e88ce8d": "Remote terminals keep running after NASH disconnects from this host.",
           "29af933cd5": "New SSH Target",
           "4a342f44c1": "Advanced Connection",
           "92f80edbfd": "Remote Terminal Persistence",
@@ -1577,9 +1577,9 @@
         },
         "agent-awake-copy": {
           "95d3031db2": "Keeps this computer and display awake while agents are working. Lid-close behavior follows this device's power settings.",
-          "a42f6fbdd8": "Keeps this computer and display awake while agents are working. Orca also asks this device to stay awake when the lid is closed, subject to its power policy.",
+          "a42f6fbdd8": "Keeps this computer and display awake while agents are working. NASH also asks this device to stay awake when the lid is closed, subject to its power policy.",
           "e5995ce268": "Keep computer awake while agents are working",
-          "modeDescriptionDefault": "Choose On, Agent, or Off. Agent mode stays awake while agents are working. Orca also asks this device to stay awake when the lid is closed, subject to its power policy.",
+          "modeDescriptionDefault": "Choose On, Agent, or Off. Agent mode stays awake while agents are working. NASH also asks this device to stay awake when the lid is closed, subject to its power policy.",
           "modeDescriptionWindows": "Choose On, Agent, or Off. Agent mode stays awake while agents are working; lid-close behavior follows this device's power settings.",
           "modeTitle": "Keep computer awake"
         },
@@ -1589,7 +1589,7 @@
         },
         "agent-status-hooks-copy": {
           "7707c15abb": "Agent status hooks",
-          "a68a642835": "Shows working, waiting, and done states in Orca. Turn off to remove Orca-managed hooks and stop reinstalling them."
+          "a68a642835": "Shows working, waiting, and done states in NASH. Turn off to remove NASH-managed hooks and stop reinstalling them."
         },
         "agents": {
           "search": {
@@ -1644,7 +1644,7 @@
           }
         },
         "artifacts": {
-          "account": "Orca account",
+          "account": "Orca cloud account",
           "connected": "Connected",
           "enable": "Enable Artifacts",
           "enableDescription": "Add Artifacts to the sidebar so you can open and delete shared files.",
@@ -1715,7 +1715,7 @@
             "c61b14be7c": "grok",
             "db11502270": "Default Agent",
             "e2da948f59": "Pre-select an AI coding agent in the new-workspace composer.",
-            "e3b1d42f95": "Proxy URL for Orca network requests and local terminal children.",
+            "e3b1d42f95": "Proxy URL for NASH network requests and local terminal children.",
             "e55d62dfa4": "launchpad",
             "eb8946b2c9": "Hosts that should bypass the configured HTTP proxy.",
             "f472e97440": "aider"
@@ -1780,7 +1780,7 @@
           "environments": {
             "search": {
               "3517fb2ec0": "Active Server",
-              "4575341c77": "Choose local desktop, add a saved remote Orca server, or generate a pairing URL."
+              "4575341c77": "Choose local desktop, add a saved remote NASH server, or generate a pairing URL."
             }
           }
         },
@@ -1857,7 +1857,7 @@
       "sidebar": {
         "AddRemoteHostDialog": {
           "pairingCode": "Pairing code",
-          "pairingCommand": "orca serve --pairing-address <host>",
+          "pairingCommand": "nash serve --pairing-address <host>",
           "pairingHelpPrefix": "Run",
           "pairingHelpSuffix": "on the server and paste the printed pairing URL.",
           "serverName": "Server name",
@@ -1866,7 +1866,7 @@
           "sshPersistenceDefault": "Remote terminals on this host stay alive until you end them or reset the relay."
         },
         "AddRepoHostSelector": {
-          "addRemoteHostTooltip": "Choose SSH for a machine you can log into, or remote server for an Orca server.",
+          "addRemoteHostTooltip": "Choose SSH for a machine you can log into, or remote server for a NASH server.",
           "local": "Local",
           "runtime": "Server",
           "ssh": "SSH"
@@ -1895,7 +1895,7 @@
           "63f36455cc": "Reconnect"
         },
         "LinearAgentSkillSetupPrompt": {
-          "missingBoth": "Orca CLI and Linear agent skill are missing.",
+          "missingBoth": "NASH CLI and Linear agent skill are missing.",
           "panelDescription": "Install the host agent skill for linked Linear task handoffs.",
           "panelTitle": "Linear agent skill"
         },
@@ -1909,7 +1909,7 @@
         "ProjectGroupDeleteDialog": {
           "897e5d3d4c": "Delete Group and Remove Projects",
           "9be10d49ea": "and ungroup its projects.",
-          "eeabb8e8e4": "Remove {{value0}} contained {{value1}} from Orca"
+          "eeabb8e8e4": "Remove {{value0}} contained {{value1}} from NASH"
         },
         "ProjectOrderManualDefaultNotice": {
           "822ff300ad": "Dismiss",
@@ -2024,8 +2024,8 @@
                 "0e0379f24a_other": "{{count}} branches kept",
                 "6310412304_one": "Review {{count}} Branch",
                 "6310412304_other": "Review {{count}} Branches",
-                "a3cdd9d9e6_one": "Git kept {{count}} local branch because it may contain unmerged commits. Kept branches do not retain workspace folders; their commits remain in the repository. Orca may continue freeing workspace disk space in the background.",
-                "a3cdd9d9e6_other": "Git kept {{count}} local branches because they may contain unmerged commits. Kept branches do not retain workspace folders; their commits remain in the repository. Orca may continue freeing workspace disk space in the background.",
+                "a3cdd9d9e6_one": "Git kept {{count}} local branch because it may contain unmerged commits. Kept branches do not retain workspace folders; their commits remain in the repository. NASH may continue freeing workspace disk space in the background.",
+                "a3cdd9d9e6_other": "Git kept {{count}} local branches because they may contain unmerged commits. Kept branches do not retain workspace folders; their commits remain in the repository. NASH may continue freeing workspace disk space in the background.",
                 "cea24c2b7d_one": "{{count}} workspace removed",
                 "cea24c2b7d_other": "{{count}} workspaces removed",
                 "d42f1f14e0_one": "Retry {{count}} Branch",
@@ -2092,18 +2092,18 @@
           "linkCopied": "Share link copied"
         },
         "SkillInstallDialog": {
-          "4a00d133c5": "Orca verifies access and package identity before changing the selected machine."
+          "4a00d133c5": "NASH verifies access and package identity before changing the selected machine."
         },
         "SkillInstallManagementDialog": {
-          "070654c6d1": "Orca will preserve them unless you explicitly discard the local changes.",
+          "070654c6d1": "NASH will preserve them unless you explicitly discard the local changes.",
           "1c9e7f420a": "Installed bundle skills",
           "2ae587d39c": "Retry incomplete coverage",
           "34c2ef9e71": "Install {{count}} skills",
-          "3677ae58e7": "Update, roll back, or safely remove versions installed by Orca.",
+          "3677ae58e7": "Update, roll back, or safely remove versions installed by NASH.",
           "44d118a8f7": "Manage installed skills",
           "470d8d2476": "Confirm remove",
           "561e49ccd1": "Install selected version",
-          "64c71cf7b9": "No Orca-managed skill installs were found on this machine.",
+          "64c71cf7b9": "No NASH-managed skill installs were found on this machine.",
           "74b70892ea": "Local files were modified",
           "86ed219b55": "Choose a version",
           "9c04bd0120": "Installed version",
@@ -2140,7 +2140,7 @@
           "descriptionV2": "Review the exact files, then publish an immutable version behind an unlisted link.",
           "newVersionDescription": "Review the exact files, then publish an immutable version to the existing Cloud package.",
           "peopleRequired": "Select at least one teammate.",
-          "readyDescription": "Recipients authenticate with Orca before they can inspect or install it.",
+          "readyDescription": "Recipients authenticate with Orca Cloud before they can inspect or install it.",
           "readyDescriptionV2": "Anyone with this unlisted link can inspect and install the skills."
         },
         "SkillShareReviewContent": {
@@ -2282,10 +2282,10 @@
           "ResourceUsageStatusSegment": {
             "1b24a32d3a": "Memory",
             "4bb076fa89": "Kill",
-            "6449a95c78": "How much of this machine's physical RAM the Orca-tracked processes are sitting on.",
+            "6449a95c78": "How much of this machine's physical RAM the NASH-tracked processes are sitting on.",
             "6d9793d4bc": "Resource Manager - Terminals",
             "996295bff2": "orphan terminal",
-            "9e2525c89f": "Resident memory held by Orca plus the processes under each worktree's terminals.",
+            "9e2525c89f": "Resident memory held by NASH plus the processes under each worktree's terminals.",
             "e7ccce7e87": "of system RAM"
           },
           "SshStatusSegment": {
@@ -2513,15 +2513,15 @@
             "3eed73394f": "Your keyboard is paused"
           },
           "TerminalErrorToast": {
-            "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in Orca or another program, then try again.",
+            "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in NASH or another program, then try again.",
             "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again."
           },
           "TerminalRemoteRuntimeReconnectBanner": {
-            "retryingBody": "Orca will retry for up to one minute. This terminal will resume if the connection returns."
+            "retryingBody": "NASH will retry for up to one minute. This terminal will resume if the connection returns."
           },
           "TerminalSessionStateSaveFailureDialog": {
             "678c780a2c": "Disk space is unavailable",
-            "e2fcf07c0d": "Orca could not save this terminal session because local storage is full or not writable. Open the disk space analyzer to find workspace storage you can clean up."
+            "e2fcf07c0d": "NASH could not save this terminal session because local storage is full or not writable. Open the disk space analyzer to find workspace storage you can clean up."
           },
           "TerminalSshReconnectOverlay": {
             "connectButton": "Connect",
@@ -2594,11 +2594,11 @@
             "d1094dd529": "Needs review",
             "d3eef9463d": "No inactive workspaces to delete.",
             "dba753e94f": "to delete",
-            "e0b5a4deaa": "Review inactive workspaces before deleting their local files and Orca state.",
+            "e0b5a4deaa": "Review inactive workspaces before deleting their local files and NASH state.",
             "e94b1f8bb4": "Clear filters",
             "ee81adfcef": "View",
             "efb3843e75": "Filter and sort workspaces",
-            "f637f63882": "Resource Manager counts {{value0}}; this list found {{value1}}. That counter reads Orca's activity record alone, while this scan also checks each workspace's git history and skips disconnected remotes.",
+            "f637f63882": "Resource Manager counts {{value0}}; this list found {{value1}}. That counter reads NASH's activity record alone, while this scan also checks each workspace's git history and skips disconnected remotes.",
             "f68d538c63": "No workspaces in this cleanup set.",
             "fc49f79434": "mixed",
             "gitFilter": "Git",
@@ -2638,8 +2638,8 @@
         "dropPartiallyAttached_other": "{{failureCount}} of {{count}} items could not be attached."
       },
       "useGlobalFileDrop": {
-        "nativeDropTempCopyFailed_one": "Orca couldn't copy {{count}} dropped file.",
-        "nativeDropTempCopyFailed_other": "Orca couldn't copy {{count}} dropped files."
+        "nativeDropTempCopyFailed_one": "NASH couldn't copy {{count}} dropped file.",
+        "nativeDropTempCopyFailed_other": "NASH couldn't copy {{count}} dropped files."
       },
       "useIpcEvents": {
         "60428567b4": "Local terminal reveal is unavailable while a remote runtime is active",
@@ -2654,7 +2654,7 @@
         "cookie": {
           "import": {
             "toast": {
-              "googleCookiesSkipped": "Google cookies were not imported. Open a browser in Orca on {{value0}} with this profile, then sign into Google."
+              "googleCookiesSkipped": "Google cookies were not imported. Open a browser in NASH on {{value0}} with this profile, then sign into Google."
             }
           }
         }
@@ -2711,7 +2711,7 @@
           "4e6496f3d2": "{{value0}} deleted, branch kept",
           "670864ab52": "Keeping local {{value0}} up to date",
           "889487d8bb": "Dismiss",
-          "d1d78a7baa": "Git could not safely delete branch \"{{value0}}\"{{value1}}, so Orca kept it to avoid losing local commits.",
+          "d1d78a7baa": "Git could not safely delete branch \"{{value0}}\"{{value1}}, so NASH kept it to avoid losing local commits.",
           "f4503ca505": "Open Settings > Git and try again.",
           "fa9299a66f": "Your new worktree is current, but local {{value0}} is {{value1}} {{value2}} behind. AI diffs may miss recent commits."
         }
@@ -2771,10 +2771,10 @@
         "couldNotStart": "{{agent}} couldn't start.",
         "emptyMessage": "This message is empty, so it was not sent.",
         "historyTooLarge": "This conversation's history is too large to restore here.",
-        "hostFault": "Orca ran into a problem, so this didn't go through.",
-        "hostFaultTryAgain": "Orca ran into a problem, so this didn't go through. Try again.",
-        "hostRestarted": "Orca restarted before this message was sent.",
-        "hostStopped": "{{agent}} never finished starting, so Orca stopped it.",
+        "hostFault": "NASH ran into a problem, so this didn't go through.",
+        "hostFaultTryAgain": "NASH ran into a problem, so this didn't go through. Try again.",
+        "hostRestarted": "NASH restarted before this message was sent.",
+        "hostStopped": "{{agent}} never finished starting, so NASH stopped it.",
         "managedAccountEnvOverride": "This Claude launch sets its own Anthropic sign-in variables. Remove them to use a managed Claude account.",
         "managedAccountUnsupported": "While a Claude account is added in WSL, Claude chats need a Windows Claude account.",
         "noTurnToStop": "{{agent}} had no turn running to stop.",
@@ -2799,7 +2799,7 @@
         "stopRefused": "{{agent}} didn't stop.",
         "stopRefusedQuoted": "{{agent}} didn't stop: {{detail}}.",
         "theAgent": "The agent",
-        "writeFailed": "Orca couldn't hand this message to the agent, so it was not sent."
+        "writeFailed": "NASH couldn't hand this message to the agent, so it was not sent."
       },
       "notices": {
         "historyItemTooLarge": "This part of the chat was too large to show.",
@@ -2857,16 +2857,16 @@
         "agentStarting": "The agent is still starting.",
         "answerFirst": "Answer the question or approval first.",
         "backgroundTasksRunning": "Background tasks are still running.",
-        "capacity": "Orca has received too many requests in the last day.",
-        "chatNotFound": "Orca can't find this chat.",
+        "capacity": "NASH has received too many requests in the last day.",
+        "chatNotFound": "NASH can't find this chat.",
         "clearUnfinished": "The last /clear didn't finish.",
         "commandRunning": "A /compact or /clear is still running.",
         "conversationCleared": "This conversation has been cleared.",
         "goalsUnsupported": "This agent doesn't support goals.",
-        "historyUnavailable": "Orca couldn't open this chat's history right now.",
-        "historyUnreadable": "Orca couldn't read this chat's saved history.",
+        "historyUnavailable": "NASH couldn't open this chat's history right now.",
+        "historyUnreadable": "NASH couldn't read this chat's saved history.",
         "historyUnusable": "Unable to load this chat.",
-        "hostReconciling": "Orca is still checking on this chat after restarting.",
+        "hostReconciling": "NASH is still checking on this chat after restarting.",
         "messageNotSaved": "Couldn't save your message.",
         "messagesUnsettled": "A message you sent earlier isn't confirmed yet.",
         "notAvailable": "This isn't available in this chat.",
@@ -2881,26 +2881,26 @@
         "notDoneStopTasks": "The background tasks weren't stopped.",
         "openCurrentConversation": "Open the current conversation to continue.",
         "optionRejected": "The agent didn't accept this setting.",
-        "outcomeUnknown": "Orca couldn't confirm what happened. Check the chat.",
-        "sendOutcomeLost": "Orca couldn't confirm your message reached the agent. Check the chat, then send it again if needed.",
+        "outcomeUnknown": "NASH couldn't confirm what happened. Check the chat.",
         "ownerUnproven": "The previous agent in this chat may still be running.",
         "promptPending": "The agent is waiting for an answer to a question or approval.",
         "questionChanged": "This question was already answered or has changed.",
         "quitTerminalAgent": "Quit that agent to continue the chat here.",
-        "recordFailed": "Orca couldn't save this to the chat's history.",
-        "recordUnreadable": "Orca couldn't read this chat's saved state.",
+        "recordFailed": "NASH couldn't save this to the chat's history.",
+        "recordUnreadable": "NASH couldn't read this chat's saved state.",
         "reopenChat": "Reopen the chat to check again.",
         "restartFailed": "The agent couldn't restart.",
-        "savedByNewerOrca": "Chats were saved by a newer Orca.",
+        "savedByNewerOrca": "Chats were saved by a newer NASH.",
+        "sendOutcomeLost": "NASH couldn't confirm your message reached the agent. Check the chat, then send it again if needed.",
         "settleEarlierMessage": "Wait for your earlier message to go through, or retry it.",
         "startNewChat": "Start a new chat to continue.",
         "terminalAgentHoldsChat": "This chat is still open in a terminal agent.",
         "tryAgain": "Try again.",
         "tryAgainComposerSend": "Send it again.",
         "turnActive": "The agent is still responding.",
-        "unreachable": "Orca couldn't reach the agent.",
-        "unsupported": "This needs a newer Orca on the computer running this chat. Update Orca there, then try again.",
-        "updateOrcaToKeepUsing": "Update Orca to keep using them.",
+        "unreachable": "NASH couldn't reach the agent.",
+        "unsupported": "This needs a newer NASH on the computer running this chat. Update NASH there, then try again.",
+        "updateOrcaToKeepUsing": "Update NASH to keep using them.",
         "waitForBackgroundTasks": "Wait for the background tasks to finish.",
         "waitForCommand": "Wait for the /compact or /clear to finish.",
         "waitForStart": "Wait for the agent to finish starting.",
@@ -2911,8 +2911,8 @@
     "onboarding": {
       "integrations": {
         "capabilities": {
-          "browseIssues": "Browse GitHub issues and pull requests in the Tasks view without leaving Orca",
-          "managePullRequests": "Read, comment on, and merge pull requests without leaving Orca",
+          "browseIssues": "Browse GitHub issues and pull requests in the Tasks view without leaving NASH",
+          "managePullRequests": "Read, comment on, and merge pull requests without leaving NASH",
           "reviewStatus": "See issue state, review status, and CI checks on every worktree",
           "startWorkspaceFromIssue": "Start a workspace from any GitHub issue or pull request, prefilled with its title and context"
         }
@@ -2975,11 +2975,11 @@
   "runtimeRpc": {
     "startupFailure": {
       "guidance": {
-        "addressInUse": "Another process may be holding the port. Restart Orca to try again.",
-        "invalidPath": "Orca's data folder may be missing, moved, or at a path that is too long. Restore it or use a shorter path, then restart Orca.",
-        "permissionDenied": "Orca couldn't write its runtime file. Check permissions on Orca's data folder, then restart.",
-        "storageUnavailable": "Your disk may be full or read-only. Free up space, then restart Orca.",
-        "unknown": "Restart Orca to try again."
+        "addressInUse": "Another process may be holding the port. Restart NASH to try again.",
+        "invalidPath": "NASH's data folder may be missing, moved, or at a path that is too long. Restore it or use a shorter path, then restart NASH.",
+        "permissionDenied": "NASH couldn't write its runtime file. Check permissions on NASH's data folder, then restart.",
+        "storageUnavailable": "Your disk may be full or read-only. Free up space, then restart NASH.",
+        "unknown": "Restart NASH to try again."
       }
     }
   },

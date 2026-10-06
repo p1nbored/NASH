@@ -28,7 +28,15 @@ describe('useTerminalViewerColorPublication', () => {
     Object.assign(window, {
       api: { pty: { publishTerminalViewAttributes: mocks.publishTerminalViewAttributes } }
     })
-    useAppStore.setState({ settings: { ...getDefaultSettings('/tmp'), theme: 'dark' } })
+    // Why: the default keeps Charcoal in both app themes; opt into a separate light theme so a
+    // theme flip still changes the published colours.
+    useAppStore.setState({
+      settings: {
+        ...getDefaultSettings('/tmp'),
+        theme: 'dark',
+        terminalUseSeparateLightTheme: true
+      }
+    })
   })
 
   afterEach(() => {
@@ -40,8 +48,8 @@ describe('useTerminalViewerColorPublication', () => {
   it('publishes a theme change with no terminal pane open, to main and to paired hosts', () => {
     const { unmount } = renderHook(() => useTerminalViewerColorPublication())
     expect(mocks.setColors).toHaveBeenLastCalledWith({
-      foreground: '#ffffff',
-      background: '#282c34'
+      foreground: '#e9e4dc',
+      background: '#1b1915'
     })
 
     act(() => {
@@ -51,8 +59,8 @@ describe('useTerminalViewerColorPublication', () => {
 
     expect(mocks.publishTerminalViewAttributes).toHaveBeenCalledTimes(2)
     expect(mocks.setColors).toHaveBeenLastCalledWith({
-      foreground: '#2e3434',
-      background: '#ffffff'
+      foreground: '#272117',
+      background: '#fdfaf6'
     })
     unmount()
   })

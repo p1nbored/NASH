@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as NashManagedHookScope from './nash-managed-hook-scope'
 
 const mocks = vi.hoisted(() => ({
   detect: vi.fn(),
@@ -21,6 +22,14 @@ vi.mock('./local-agent-cli-presence', () => ({
 
 vi.mock('../claude/claude-hook-event-versions', () => ({
   probeClaudeCliVersion: mocks.probeClaudeVersion
+}))
+
+// Why: these tests pin Orca's generic install mechanics on a two-agent registry; NASH's real scope
+// (Claude Code only) is pinned against the full registry in nash-managed-hook-scope.test.ts.
+vi.mock('./nash-managed-hook-scope', async (importOriginal) => ({
+  ...(await importOriginal<typeof NashManagedHookScope>()),
+  NASH_MANAGED_HOOK_AGENTS: ['claude', 'codex'],
+  isNashManagedHookAgent: (agent: string) => agent === 'claude' || agent === 'codex'
 }))
 
 vi.mock('./managed-agent-hook-registry', () => ({

@@ -1,12 +1,12 @@
 {
-  "name": "orca",
+  "name": "nash",
   "version": "1.4.214",
   "description": "Next-gen IDE for parallel agentic development",
   "homepage": "https://github.com/stablyai/orca",
   "author": "stablyai",
   "bin": {
-    "orca": "./out/cli/index.js",
-    "orca-dev": "./config/scripts/orca-dev.mjs"
+    "nash": "./out/cli/index.js",
+    "nash-dev": "./config/scripts/orca-dev.mjs"
   },
   "main": "./out/main/index.js",
   "scripts": {

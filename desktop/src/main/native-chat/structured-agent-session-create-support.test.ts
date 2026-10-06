@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import type { AgentSessionExecutionLocation } from '../../shared/agent-session-record'
-import type { ClaudeManagedAccountGateSettings } from './claude-structured-managed-account-support'
 import { resolveStructuredAgentSessionCreateSupport } from './structured-agent-session-create-support'
 
 const LOCAL: AgentSessionExecutionLocation = {
@@ -10,31 +9,6 @@ const LOCAL: AgentSessionExecutionLocation = {
   workspaceKind: 'git-worktree'
 }
 
-function managedAccount(id: string, managedAuthRuntime: 'host' | 'wsl') {
-  return {
-    id,
-    email: `${id}@example.com`,
-    managedAuthPath: `/managed/${id}`,
-    managedAuthRuntime,
-    authMethod: 'subscription-oauth' as const,
-    createdAt: 0,
-    updatedAt: 0,
-    lastAuthenticatedAt: 0
-  }
-}
-
-const HOST_SELECTED: ClaudeManagedAccountGateSettings = {
-  claudeManagedAccounts: [managedAccount('host-1', 'host')],
-  activeClaudeManagedAccountId: 'host-1',
-  activeClaudeManagedAccountIdsByRuntime: { host: 'host-1', wsl: {} }
-}
-
-const WSL_ONLY: ClaudeManagedAccountGateSettings = {
-  claudeManagedAccounts: [managedAccount('wsl-1', 'wsl')],
-  activeClaudeManagedAccountId: null,
-  activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'wsl-1' } }
-}
-
 function support(
   overrides: Partial<Parameters<typeof resolveStructuredAgentSessionCreateSupport>[0]> = {}
 ) {
@@ -42,32 +16,34 @@ function support(
     agent: 'claude',
     location: LOCAL,
     adapterSupportsCreate: true,
-    getSettings: () => HOST_SELECTED,
+    getSettings: () => ({}),
     ...overrides
   })
 }
 
 describe('resolveStructuredAgentSessionCreateSupport', () => {
-  it('supports Claude under a selected host account', () => {
+  it('supports Claude on the user own login', () => {
     expect(support()).toEqual({ supported: true })
   })
 
-  it('refuses Claude under a WSL-only managed account', () => {
-    expect(support({ getSettings: () => WSL_ONLY })).toEqual({ supported: false, reason: 'wsl' })
+  it('ignores retired managed-account keys a profile may still carry', () => {
+    // FIXTURE_ONLY: a WSL-only selection used to refuse structured Claude.
+    const retired = {
+      agentCmdOverrides: {},
+      claudeManagedAccounts: [{ id: 'wsl-1', managedAuthRuntime: 'wsl' }],
+      activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'wsl-1' } }
+    }
+    expect(support({ getSettings: () => retired })).toEqual({ supported: true })
   })
 
-  it('fails closed for Claude when the settings throw', () => {
+  it('keeps supporting Claude when the settings throw', () => {
     expect(
       support({
         getSettings: () => {
           throw new Error('no store')
         }
       })
-    ).toEqual({ supported: false, reason: 'wsl' })
-  })
-
-  it('leaves Codex to the adapter answer under the same WSL-only account', () => {
-    expect(support({ agent: 'codex', getSettings: () => WSL_ONLY })).toEqual({ supported: true })
+    ).toEqual({ supported: true })
   })
 
   it.each([
@@ -87,15 +63,15 @@ describe('resolveStructuredAgentSessionCreateSupport', () => {
       expect(
         support({
           agent,
-          getSettings: () => ({ ...HOST_SELECTED, agentCmdOverrides: { [agent]: 'wrapper' } })
+          getSettings: () => ({ agentCmdOverrides: { [agent]: 'wrapper' } })
         })
       ).toEqual({ supported: false, reason: 'agent' })
     }
   )
 
   it('ignores a blank launch command override', () => {
-    expect(
-      support({ getSettings: () => ({ ...HOST_SELECTED, agentCmdOverrides: { claude: '  ' } }) })
-    ).toEqual({ supported: true })
+    expect(support({ getSettings: () => ({ agentCmdOverrides: { claude: '  ' } }) })).toEqual({
+      supported: true
+    })
   })
 })

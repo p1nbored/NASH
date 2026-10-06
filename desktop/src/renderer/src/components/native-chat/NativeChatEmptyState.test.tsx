@@ -36,10 +36,10 @@ it("says the structured chat's own words for the failure once, as the title, and
     <NativeChatEmptyState
       kind="error"
       retrying
-      headline="Orca couldn't open this chat's history right now."
+      headline="NASH couldn't open this chat's history right now."
     />
   )
-  expect(screen.getByText("Orca couldn't open this chat's history right now.")).toHaveClass(
+  expect(screen.getByText("NASH couldn't open this chat's history right now.")).toHaveClass(
     'font-medium'
   )
   expect(screen.queryByText('Could not load conversation')).toBeNull()

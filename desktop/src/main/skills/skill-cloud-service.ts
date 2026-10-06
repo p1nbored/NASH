@@ -11,13 +11,18 @@ import type {
   SkillCloudShare,
   SkillCloudVersion
 } from '../../shared/skill-cloud-contract'
-import { resolveArtifactCloudApiUrl } from '../artifacts/artifact-cloud-config'
+import {
+  orcaShareServiceUnavailableMessage,
+  resolveArtifactCloudApiUrl
+} from '../artifacts/artifact-cloud-config'
 import { runSkillCloudOperation } from './skill-cloud-auth'
 import { uploadSkillPackageToSignedPolicy } from './skill-cloud-direct-upload'
 import { skillCloudRequest } from './skill-cloud-request'
 import { startSkillPhaseOperation } from './skill-operation-observability'
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/
+const SHARED_SKILL_INSTALL_OFF_MESSAGE =
+  'Installing shared skills from Orca links is not available in NASH builds.'
 
 function publishUploadIdempotencyKey(request: SkillCloudPublishRequest): string {
   return (
@@ -294,6 +299,10 @@ export class SkillCloudService {
     options: SkillCloudOptions,
     operation: (apiUrl: string) => Promise<T>
   ): Promise<SkillCloudOperation<T>> {
+    if (orcaShareServiceUnavailableMessage()) {
+      // Why: a share link would reach share.onorca.dev and storage.googleapis.com; NASH refuses first.
+      return { status: 'unconfigured', message: SHARED_SKILL_INSTALL_OFF_MESSAGE }
+    }
     const value = await operation(resolveArtifactCloudApiUrl(options.apiUrl))
     return { status: 'ok', value }
   }

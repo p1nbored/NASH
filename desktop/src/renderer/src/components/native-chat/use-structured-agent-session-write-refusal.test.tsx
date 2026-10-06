@@ -92,7 +92,7 @@ describe('a chat write the host refused', () => {
               ok: false,
               error: {
                 code: 'runtime_timeout',
-                message: 'Timed out waiting for the remote Orca runtime to respond.'
+                message: 'Timed out waiting for the remote NASH runtime to respond.'
               },
               _meta: { runtimeId: 'runtime-1' }
             })
@@ -112,7 +112,7 @@ describe('a chat write the host refused', () => {
     })
 
     expect(mocks.toastError).toHaveBeenCalledWith(
-      "Orca couldn't confirm what happened. Check the chat."
+      "NASH couldn't confirm what happened. Check the chat."
     )
   })
 
@@ -152,7 +152,7 @@ describe('a chat write the host refused', () => {
     })
 
     expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith(
-      "Orca couldn't open this chat's history right now. The agent wasn't stopped. Try again."
+      "NASH couldn't open this chat's history right now. The agent wasn't stopped. Try again."
     )
   })
 
@@ -165,7 +165,7 @@ describe('a chat write the host refused', () => {
             // As the host answers it (pinned in `journal-open-failure.test.ts`).
             refusal: {
               code: 'agent_session_journal_unreadable',
-              message: 'Chats were saved by a newer Orca. Update Orca to keep using them.',
+              message: 'Chats were saved by a newer NASH. Update NASH to keep using them.',
               details: { reason: 'journalWrittenByNewerOrca' }
             }
           })
@@ -184,7 +184,7 @@ describe('a chat write the host refused', () => {
     })
 
     expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith(
-      "Chats were saved by a newer Orca. The agent wasn't stopped. Update Orca to keep using them."
+      "Chats were saved by a newer NASH. The agent wasn't stopped. Update NASH to keep using them."
     )
   })
 

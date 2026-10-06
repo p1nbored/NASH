@@ -10,6 +10,7 @@ import {
   hasUsageProviderSettingsForProvider,
   isUsageEmptyState,
   isProviderConfigured,
+  usageProviderSettingsFor,
   type UsageProviderSettings
 } from './status-bar-provider-visibility'
 
@@ -69,7 +70,6 @@ describe('isProviderConfigured', () => {
 function usageSettings(overrides: Partial<UsageProviderSettings> = {}): UsageProviderSettings {
   return {
     codexManagedAccounts: [],
-    claudeManagedAccounts: [],
     opencodeSessionCookie: '',
     geminiCliOAuthEnabled: false,
     antigravityUsageConfigured: false,
@@ -100,24 +100,6 @@ describe('hasUsageProviderSettings', () => {
               id: 'codex-account-1',
               email: 'dev@example.com',
               managedHomePath: '/tmp/codex-account-1',
-              createdAt: 1,
-              updatedAt: 1,
-              lastAuthenticatedAt: 1
-            }
-          ]
-        })
-      )
-    ).toBe(true)
-
-    expect(
-      hasUsageProviderSettings(
-        usageSettings({
-          claudeManagedAccounts: [
-            {
-              id: 'claude-account-1',
-              email: 'dev@example.com',
-              managedAuthPath: '/tmp/claude-account-1',
-              authMethod: 'subscription-oauth',
               createdAt: 1,
               updatedAt: 1,
               lastAuthenticatedAt: 1
@@ -267,21 +249,20 @@ describe('getVisibleUsageProvider', () => {
 
   it('keeps configured providers visible when a fetch returns unavailable', () => {
     const unavailable = provider('unavailable', {
-      provider: 'claude',
-      error: 'Claude OAuth access token unavailable'
+      provider: 'codex',
+      error: 'Codex usage unavailable'
     })
 
     expect(
       getVisibleUsageProvider(
-        'claude',
+        'codex',
         unavailable,
         usageSettings({
-          claudeManagedAccounts: [
+          codexManagedAccounts: [
             {
-              id: 'claude-account-1',
+              id: 'codex-account-1',
               email: 'dev@example.com',
-              managedAuthPath: '/tmp/claude-account-1',
-              authMethod: 'subscription-oauth',
+              managedHomePath: '/tmp/codex-account-1',
               createdAt: 1,
               updatedAt: 1,
               lastAuthenticatedAt: 1
@@ -551,5 +532,41 @@ describe('isUsageEmptyState', () => {
         usageSettings()
       )
     ).toBe(true)
+  })
+})
+
+describe('usageProviderSettingsFor', () => {
+  const managed = usageSettings({ geminiCliOAuthEnabled: true })
+
+  it('earns no bar, skeleton or setup prompt when the host keeps the usage meters off', () => {
+    const rateLimits = createEmptyRateLimitState({
+      usageMetersDisabled: true,
+      grokAuthConfigured: true
+    })
+    const settings = usageProviderSettingsFor({
+      settings: managed,
+      rateLimits,
+      antigravityUsageConfigured: true
+    })
+    expect(settings).toBeNull()
+    expect(getVisibleUsageProvider('gemini', rateLimits.gemini, settings)).toBeNull()
+    expect(getVisibleUsageProvider('antigravity', rateLimits.antigravity, settings)).toBeNull()
+    expect(isUsageEmptyState({ ...rateLimits }, settings)).toBe(false)
+  })
+
+  it('merges the durable flags the host reports while the meters are on', () => {
+    const rateLimits = createEmptyRateLimitState({ grokAuthConfigured: true })
+    const settings = usageProviderSettingsFor({
+      settings: managed,
+      rateLimits,
+      antigravityUsageConfigured: true
+    })
+    expect(settings).toMatchObject({
+      geminiCliOAuthEnabled: true,
+      antigravityUsageConfigured: true,
+      grokAuthConfigured: true,
+      cursorAuthConfigured: false
+    })
+    expect(getVisibleUsageProvider('gemini', null, settings)?.status).toBe('fetching')
   })
 })

@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  ClaudeRateLimitAccountsState,
-  CodexRateLimitAccountsState
-} from '../../../../shared/managed-account-types'
+import type { CodexRateLimitAccountsState } from '../../../../shared/managed-account-types'
 import {
   getProviderAccountActiveIdForView,
   getProviderAccountRuntime,
@@ -36,19 +33,6 @@ const codexHostAccount = {
   lastAuthenticatedAt: 1
 } satisfies CodexRateLimitAccountsState['accounts'][number]
 
-const claudeHostAccount = {
-  id: 'claude-host',
-  email: 'host@example.com',
-  managedAuthRuntime: 'host',
-  wslDistro: null,
-  authMethod: 'subscription-oauth',
-  organizationUuid: null,
-  organizationName: null,
-  createdAt: 1,
-  updatedAt: 1,
-  lastAuthenticatedAt: 1
-} satisfies ClaudeRateLimitAccountsState['accounts'][number]
-
 describe('providerAccountMatchesView', () => {
   it('shows WSL accounts owned by a Windows server regardless of the client platform', () => {
     expect(
@@ -76,7 +60,7 @@ describe('providerAccountMatchesView', () => {
     ).toBe(false)
     expect(
       providerAccountMatchesView(
-        claudeHostAccount,
+        codexHostAccount,
         { runtime: 'wsl' },
         {
           remoteOwner: true,

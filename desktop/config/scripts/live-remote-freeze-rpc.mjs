@@ -1,5 +1,10 @@
 import { spawn, spawnSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+
+const { devUserDataDirName } = createRequire(import.meta.url)(
+  '../../src/shared/app-identity-constants.json'
+)
 
 export const MAX_ORCA_RPC_OUTPUT_BYTES = 20 * 1024 * 1024
 
@@ -36,7 +41,7 @@ export function resolveOrcaCliInvocation({
   ) {
     const defaultUserDataPath = path.win32.join(
       env.APPDATA ?? path.win32.join(env.USERPROFILE ?? '', 'AppData', 'Roaming'),
-      'orca-dev'
+      devUserDataDirName
     )
     return {
       command: nodeExecutable,

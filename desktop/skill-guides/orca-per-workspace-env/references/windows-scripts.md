@@ -11,7 +11,7 @@ The remote-side commands you run inside the Linux environment stay bash regardle
 $ErrorActionPreference = 'Stop'
 # resolve env→state→fallback; run the provider CLI / ssh the same way;
 # capture provider output; build the result object for the chosen mode and write ONE line of JSON to stdout.
-# Orca-server mode: @{ schemaVersion=1; pairingCode=$pairingCode; projectRoot=$projectRoot; userData=@{...} }
+# NASH-server mode: @{ schemaVersion=1; pairingCode=$pairingCode; projectRoot=$projectRoot; userData=@{...} }
 # SSH mode:        @{ schemaVersion=1; connection=@{ type="ssh"; projectRoot=$projectRoot;
 #                     target=@{ label=$label; host=$host; port=$port; username=$user } } }
 ($result | ConvertTo-Json -Compress -Depth 6)

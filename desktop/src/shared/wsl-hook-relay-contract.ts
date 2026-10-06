@@ -4,9 +4,10 @@
 // which JSON-RPC methods the fs bridge speaks, or which exit codes signal
 // "reinstall me" vs "no usable node".
 // See docs/agent-status-over-wsl.md (STA-1515).
+import { APP_WSL_DIR_NAME } from './app-identity-paths'
 
 /** Guest-side install dir for the relay bundle, relative to `$HOME`. */
-export const WSL_HOOK_RELAY_DIR = '.orca-wsl/hook-relay'
+export const WSL_HOOK_RELAY_DIR = `${APP_WSL_DIR_NAME}/hook-relay`
 export const WSL_HOOK_RELAY_BUNDLE_NAME = 'wsl-agent-hook-relay.js'
 export const WSL_HOOK_RELAY_VERSION_FILE = '.version'
 
@@ -61,7 +62,7 @@ export type WslFsResult<T extends object = object> = ({ ok: true } & T) | WslFsF
  *  that rewrite is what re-coordinates them onto fresh port/token. */
 export function wslHookRelayEndpointDir(guestHome: string, instanceKey: string): string {
   const home = guestHome.endsWith('/') ? guestHome.slice(0, -1) : guestHome
-  return `${home}/.orca-wsl/agent-hooks/instance-${instanceKey}`
+  return `${home}/${APP_WSL_DIR_NAME}/agent-hooks/instance-${instanceKey}`
 }
 
 /** Keep instance keys shell/path-inert on both sides of the boundary. */

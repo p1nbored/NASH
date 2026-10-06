@@ -14,9 +14,11 @@ import {
   resetRateLimitProviderMocks
 } from './rate-limit-service-test-harness'
 
+// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
+vi.mock('./usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
+
 vi.mock('./claude-fetcher', () => ({
-  fetchClaudeRateLimits: vi.fn(),
-  fetchManagedAccountUsage: vi.fn()
+  fetchClaudeRateLimits: vi.fn()
 }))
 
 vi.mock('./codex-fetcher', () => ({
@@ -414,7 +416,7 @@ describe('RateLimitService', () => {
     }
   })
 
-  it('does not restore the outgoing account auth snapshot when the account switches mid-resolve', async () => {
+  it('does not restore the outgoing auth snapshot when the Claude target switches mid-resolve', async () => {
     vi.useFakeTimers()
     try {
       const staleClaudeFetch = deferred<ProviderRateLimits>()
@@ -448,7 +450,7 @@ describe('RateLimitService', () => {
       // The first cycle is parked inside the outgoing account's resolver await when the switch lands.
       const firstRefresh = service.refresh()
       await flushMicrotasks()
-      const switchPromise = service.refreshForClaudeAccountChange('outgoing-account')
+      const switchPromise = service.refreshClaudeForTarget({ runtime: 'wsl', wslDistro: 'Ubuntu' })
       await flushMicrotasks()
       authGate.resolve()
       await flushMicrotasks(8)
@@ -476,52 +478,5 @@ describe('RateLimitService', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  describe('refreshAfterClaudeLivePtysDrained', () => {
-    function deferredClaudeResult(): ProviderRateLimits {
-      return {
-        ...errorProvider('claude', 'Waiting for Claude session'),
-        usageMetadata: {
-          failureKind: 'deferred-by-live-session',
-          deferredByLiveClaudeSession: true
-        }
-      }
-    }
-
-    it('refetches Claude usage when the current result was deferred by a live session', async () => {
-      const service = new RateLimitService()
-      vi.mocked(fetchClaudeRateLimits).mockResolvedValueOnce(deferredClaudeResult())
-      await service.refresh()
-      expect(service.getState().claude?.usageMetadata?.deferredByLiveClaudeSession).toBe(true)
-      vi.mocked(fetchClaudeRateLimits).mockClear()
-      vi.mocked(fetchClaudeRateLimits).mockResolvedValueOnce(okProvider('claude', 10, Date.now()))
-
-      await service.refreshAfterClaudeLivePtysDrained()
-
-      expect(fetchClaudeRateLimits).toHaveBeenCalledTimes(1)
-      expect(service.getState().claude?.status).toBe('ok')
-    })
-
-    it('does not refetch when the current Claude result was not deferred', async () => {
-      const service = new RateLimitService()
-      vi.mocked(fetchClaudeRateLimits).mockResolvedValueOnce(
-        errorProvider('claude', 'Token expired')
-      )
-      await service.refresh()
-      vi.mocked(fetchClaudeRateLimits).mockClear()
-
-      await service.refreshAfterClaudeLivePtysDrained()
-
-      expect(fetchClaudeRateLimits).not.toHaveBeenCalled()
-    })
-
-    it('does not refetch when there is no Claude state yet', async () => {
-      const service = new RateLimitService()
-
-      await service.refreshAfterClaudeLivePtysDrained()
-
-      expect(fetchClaudeRateLimits).not.toHaveBeenCalled()
-    })
   })
 })

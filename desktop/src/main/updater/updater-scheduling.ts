@@ -57,7 +57,7 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     if (this.backgroundCheckLaunchPending || this.currentStatus.state === 'checking') {
       return false
     }
-    if (!app.isPackaged || is.dev) {
+    if (!app.isPackaged || is.dev || this.isUpdateFeedDisabled()) {
       this.sendStatus({ state: 'not-available' })
       return false
     }

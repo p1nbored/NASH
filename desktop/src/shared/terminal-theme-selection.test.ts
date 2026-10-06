@@ -41,7 +41,11 @@ describe('the terminal colours a host configures', () => {
     ).toEqual({ foreground: '#ffffff', background: '#101010' })
     expect(
       resolveConfiguredTerminalColors({ ...base, terminalThemeDark: 'no such theme' }, true)
-    ).toEqual({ foreground: '#ffffff', background: '#282c34' })
+    ).toEqual({
+      // Why: concrete Autopilot Charcoal values, so a missing catalog entry cannot pass vacuously.
+      foreground: '#e9e4dc',
+      background: '#1b1915'
+    })
   })
 
   it('keeps using the dark theme in light mode when no separate light theme is set', () => {

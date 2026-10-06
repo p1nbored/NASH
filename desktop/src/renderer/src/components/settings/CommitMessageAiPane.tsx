@@ -236,7 +236,7 @@ export function CommitMessageAiPane({
         ),
         description: translate(
           'auto.components.settings.CommitMessageAiPane.1ef29f8c29',
-          'Command line Orca runs when a text recipe uses Custom command.'
+          'Command line NASH runs when a text recipe uses Custom command.'
         ),
         keywords: [
           translate('auto.components.settings.CommitMessageAiPane.25350d670f', 'custom'),
@@ -257,7 +257,7 @@ export function CommitMessageAiPane({
         )}
         description={translate(
           'auto.components.settings.CommitMessageAiPane.1ef29f8c29',
-          'Command line Orca runs when a text recipe uses Custom command.'
+          'Command line NASH runs when a text recipe uses Custom command.'
         )}
         keywords={['custom', 'command', 'cli', 'binary', 'prompt', 'placeholder']}
         className="space-y-2 py-2"
@@ -276,7 +276,7 @@ export function CommitMessageAiPane({
             </code>{' '}
             {translate(
               'auto.components.settings.CommitMessageAiPane.3f1b26cc91',
-              'to pass the command input as an argument; otherwise Orca pipes it on stdin.'
+              'to pass the command input as an argument; otherwise NASH pipes it on stdin.'
             )}
           </p>
         </div>

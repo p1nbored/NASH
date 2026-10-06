@@ -1,4 +1,5 @@
 import { BrowserWindow, nativeTheme, powerMonitor, screen } from 'electron'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'node:path'
 import { getAppIconPath } from '../app-icon'
@@ -102,13 +103,14 @@ export function createMainWindow(
     ...(savedBounds ? { x: savedBounds.x, y: savedBounds.y } : {}),
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
-    title: opts?.title ?? 'Orca',
+    title: opts?.title ?? APP_IDENTITY.productName,
     show: false,
     // Why: macOS swallows the app-activating click by default, so clicking back into Orca needed a second click (Windows/Linux already deliver it).
     acceptFirstMouse: true,
     // Why: auto-hide the Windows/Linux menu bar to save a row (Alt reveals it); macOS uses the system menu bar anyway.
     autoHideMenuBar: true,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0a0a0a' : '#ffffff',
+    // Why: matches the frozen main.css --background tokens so first paint has no flash.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1712' : '#fbf5ed',
     // Why: macOS 'hiddenInset' keeps native traffic lights in our custom titlebar; Windows 'hidden' removes the OS title bar so it doesn't double up.
     titleBarStyle:
       process.platform === 'darwin'

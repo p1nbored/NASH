@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "policy_status": "protected_local_admission_policy",
+  "minimum_total": 85,
+  "minimum_criterion_fraction": 0.6,
+  "max_initial_reviews_per_family": 1,
+  "max_revision_rounds_per_family": 3,
+  "criteria_maximum": {
+    "hierarchy_layout": 25, "typography": 20, "color_readability": 20,
+    "density_task_focus": 15, "restraint_coherence": 10, "craft_consistency": 10
+  },
+  "execution_budget": {
+    "status": "live_budget_not_authorized",
+    "live_model_jobs": 0,
+    "live_asset_jobs": 0,
+    "external_spend": 0,
+    "offline_direction_count": 3,
+    "offline_initial_capture_count": 6
+  },
+  "required_isolation": {
+    "inherited_task_context": false,
+    "repository_access": false,
+    "network_access": false,
+    "terminal_access": false,
+    "image_input_verified": true,
+    "route_source": "clef",
+    "input_allowlist": ["unchanged_standalone_prompt", "anonymized_screenshot_ids", "image_dimensions", "image_pixels"]
+  },
+  "release_from_visual_score": false
+}

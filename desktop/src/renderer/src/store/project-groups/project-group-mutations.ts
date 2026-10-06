@@ -203,7 +203,7 @@ export function createProjectGroupMutationActions(
         if (stillExists) {
           failedProjectRemovals.push({
             projectId,
-            reason: 'Project remained in Orca after removeProject completed.'
+            reason: 'Project remained in NASH after removeProject completed.'
           })
         } else {
           removedProjectIds.push(projectId)

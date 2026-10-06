@@ -1,7 +1,7 @@
 /**
  * Design D7.1 R1/R3/R4 and D7.2: a live terminal survives the orcad runtime swap in both
  * directions. The last Bun orcad (ORCA_BUN_ORCAD_SLOT) and this checkout's Node slot (out/orcad)
- * are installed side by side as `~/.orca-remote/orcad-<version>/`, launched and stopped with
+ * are installed side by side as `~/.nash-remote/orcad-<version>/`, launched and stopped with
  * the client's own deploy commands, and share one data root.
  */
 import { build } from 'esbuild'
@@ -150,7 +150,7 @@ function installSlot(caseRoot: string, runtime: Runtime, source: string): Slot {
   return { runtime, dir, version }
 }
 
-/** Both slots under one `.orca-remote/`, the Node one with its shared `runtimes/` entry. */
+/** Both slots under one `.nash-remote/`, the Node one with its shared `runtimes/` entry. */
 function installSlots(caseRoot: string): { slots: Record<Runtime, Slot>; nodeRuntime: string } {
   const slots = {
     Bun: installSlot(caseRoot, 'Bun', bunSlotSource!),

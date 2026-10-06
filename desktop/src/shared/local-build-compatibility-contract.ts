@@ -1,6 +1,8 @@
+import { APP_IDENTITY } from './app-identity-constants'
+
 export const LOCAL_BUILD_COMPATIBILITY_CONTRACT = {
   formatVersion: 1,
-  appId: 'com.stablyai.orca',
+  appId: APP_IDENTITY.appId,
   stateSchemaVersion: 1,
   readableStateSchemaVersions: [1],
   daemonProtocolVersion: 39,

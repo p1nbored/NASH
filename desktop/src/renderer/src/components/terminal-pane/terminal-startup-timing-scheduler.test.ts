@@ -91,7 +91,7 @@ it('does not report a dropped startup batch as parsed when the warning renders',
   }
   vi.advanceTimersByTime(50)
   expect(terminal.write.mock.calls.map(([data]) => data).join('')).toContain(
-    'Orca skipped hidden terminal output'
+    'NASH skipped hidden terminal output'
   )
   f.render()
   expect(summaries()).toHaveLength(0)

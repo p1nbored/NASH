@@ -1,8 +1,9 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 import { join } from 'node:path'
 
 export function writeRelayOmpStatusExtension(homeDir: string, source: string): string | null {
-  const directory = join(homeDir, '.orca-relay', 'omp-managed-status-extension')
+  const directory = join(homeDir, APP_RELAY_HOME_DIR_NAME, 'omp-managed-status-extension')
   try {
     mkdirSync(directory, { recursive: true })
     const path = join(directory, 'orca-agent-status.ts')

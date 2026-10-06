@@ -535,7 +535,7 @@ describe('a send with no live owner', () => {
     // Orca's own fault: reported to the log, and the chat says only that Orca failed.
     expect(await settled(id)).toMatchObject({
       dispatchState: 'rejected',
-      reason: "Orca ran into a problem, so this didn't go through. Try again.",
+      reason: "NASH ran into a problem, so this didn't go through. Try again.",
       rejection: { kind: 'hostFault' }
     })
     expect(hostErrors).toContainEqual(

@@ -1,0 +1,191 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "c95c2ff5-ee5b-457c-b756-c43de5e7ca57",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "scaffold_challenges": {
+      "name": "scaffold_challenges",
+      "columns": {
+        "challenge_hash": {
+          "name": "challenge_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "device_ref": {
+          "name": "device_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "scaffold_challenges_owner_expiry": {
+          "name": "scaffold_challenges_owner_expiry",
+          "columns": [
+            "owner_id",
+            "expires_at"
+          ],
+          "isUnique": false
+        },
+        "scaffold_challenges_expiry": {
+          "name": "scaffold_challenges_expiry",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "scaffold_challenges_expiry_order": {
+          "name": "scaffold_challenges_expiry_order",
+          "value": "\"scaffold_challenges\".\"expires_at\" > \"scaffold_challenges\".\"created_at\""
+        }
+      }
+    },
+    "scaffold_rate_windows": {
+      "name": "scaffold_rate_windows",
+      "columns": {
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "calls": {
+          "name": "calls",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "scaffold_rate_windows_expiry": {
+          "name": "scaffold_rate_windows_expiry",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "scaffold_rate_windows_calls": {
+          "name": "scaffold_rate_windows_calls",
+          "value": "\"scaffold_rate_windows\".\"calls\" BETWEEN 1 AND 30"
+        },
+        "scaffold_rate_windows_expiry_order": {
+          "name": "scaffold_rate_windows_expiry_order",
+          "value": "\"scaffold_rate_windows\".\"expires_at\" > \"scaffold_rate_windows\".\"window_start\""
+        }
+      }
+    },
+    "scaffold_workspaces": {
+      "name": "scaffold_workspaces",
+      "columns": {
+        "workspace_ref": {
+          "name": "workspace_ref",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "scaffold_workspaces_owner": {
+          "name": "scaffold_workspaces_owner",
+          "columns": [
+            "owner_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "scaffold_workspaces_label_length": {
+          "name": "scaffold_workspaces_label_length",
+          "value": "length(\"scaffold_workspaces\".\"label\") BETWEEN 1 AND 80"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

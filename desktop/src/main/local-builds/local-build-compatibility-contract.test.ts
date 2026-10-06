@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { SCHEMA_VERSION } from '../../shared/constants'
 import compatibilityContract from '../../shared/local-build-compatibility-contract.json'
 import { LOCAL_BUILD_COMPATIBILITY_CONTRACT } from '../../shared/local-build-compatibility-contract'
@@ -10,8 +11,9 @@ import {
 describe('packaged local build compatibility contract', () => {
   it('stays aligned with runtime state and daemon constants', () => {
     expect(LOCAL_BUILD_COMPATIBILITY_CONTRACT).toEqual(compatibilityContract)
+    expect(compatibilityContract.appId).toBe(APP_IDENTITY.appId)
     expect(compatibilityContract).toMatchObject({
-      appId: 'com.stablyai.orca',
+      appId: 'com.pinbored.nash',
       stateSchemaVersion: SCHEMA_VERSION,
       readableStateSchemaVersions: [SCHEMA_VERSION],
       daemonProtocolVersion: PROTOCOL_VERSION,

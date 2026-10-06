@@ -1,6 +1,7 @@
 import { afterAll, vi } from 'vitest'
 import type { Mock } from 'vitest'
 import { clearTrackedRealTimers, trackRealTimers } from './updater-test-timer-tracking'
+import { withFixtureUpdateFeed } from '../shared/app-update-feed.test-fixture'
 
 /** Loose spy signature for the electron/electron-updater calls the suites only assert on. */
 type UpdaterSpy = Mock<(...args: unknown[]) => unknown>
@@ -63,6 +64,8 @@ type UpdaterModuleFactories = {
   }
   localBuildSwitch: () => { chooseLocalBuild: UpdaterSpy }
   localBuildFeedServer: () => { startLocalBuildFeed: UpdaterSpy }
+  /** Gives the identity module a fixture release feed; the shipped identity has none, so updates are off. */
+  appIdentityWithFixtureFeed: typeof withFixtureUpdateFeed
 }
 
 export type UpdaterMocks = {
@@ -264,10 +267,11 @@ export function createUpdaterMocks(): UpdaterMocks {
           : result
       },
       getReleaseDownloadUrl: (tag: string) =>
-        `https://github.com/stablyai/orca/releases/download/${tag}`
+        `https://github.com/fixture-owner/fixture-app/releases/download/${tag}`
     }),
     localBuildSwitch: () => ({ chooseLocalBuild: chooseLocalBuildMock }),
-    localBuildFeedServer: () => ({ startLocalBuildFeed: startLocalBuildFeedMock })
+    localBuildFeedServer: () => ({ startLocalBuildFeed: startLocalBuildFeedMock }),
+    appIdentityWithFixtureFeed: withFixtureUpdateFeed
   }
 
   /** Shared `beforeEach` body: fresh module registry plus every mock back to its default. */

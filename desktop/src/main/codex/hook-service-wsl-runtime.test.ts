@@ -49,12 +49,12 @@ afterEach(() => {
 function createTestPlan(): CodexWslRuntimeHookInstallPlan {
   const root = mkdtempSync(join(tmpdir(), 'orca-codex-wsl-hooks-'))
   tempRoots.push(root)
-  const linuxHome = '/home/alice/.local/share/orca/codex-runtime-home/home'
+  const linuxHome = '/home/alice/.local/share/nash/codex-runtime-home/home'
   return {
     configPath: join(root, 'hooks.json'),
     tomlPath: join(root, 'config.toml'),
-    scriptPath: join(root, '.orca', 'agent-hooks', 'codex-hook.sh'),
-    commandScriptPath: `${linuxHome}/.orca/agent-hooks/codex-hook.sh`,
+    scriptPath: join(root, '.nash', 'agent-hooks', 'codex-hook.sh'),
+    commandScriptPath: `${linuxHome}/.nash/agent-hooks/codex-hook.sh`,
     trustConfigPath: `${linuxHome}/hooks.json`,
     wslDistro: 'Ubuntu',
     linuxRuntimeHome: linuxHome
@@ -122,7 +122,7 @@ describe('Codex WSL runtime hook install', () => {
       await new Promise<void>((resolve) => releases.push(resolve))
       return null
     })
-    const firstHome = '\\\\wsl$\\Ubuntu\\home\\Alice\\.local\\share\\orca\\codex-runtime-home\\home'
+    const firstHome = '\\\\wsl$\\Ubuntu\\home\\Alice\\.local\\share\\nash\\codex-runtime-home\\home'
     const alias = firstHome.replace('\\\\wsl$', '\\\\wsl.localhost')
     const independent = firstHome.replace('\\Alice\\', '\\Bob\\')
 
@@ -144,7 +144,7 @@ describe('Codex WSL runtime hook install', () => {
       started.push(target?.wslDistro ?? '')
       return null
     })
-    const home = 'D:\\wsl-home\\.local\\share\\orca\\codex-runtime-home\\home'
+    const home = 'D:\\wsl-home\\.local\\share\\nash\\codex-runtime-home\\home'
 
     await Promise.all([
       service.installForRuntimeHomeSerialized(home, { runtime: 'wsl', wslDistro: 'Ubuntu' }),
@@ -162,7 +162,7 @@ describe('Codex WSL runtime hook install', () => {
       return null
     })
     const upper =
-      '\\\\wsl.localhost\\Ubuntu\\home\\Alice\\.local\\share\\orca\\codex-runtime-home\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\Alice\\.local\\share\\nash\\codex-runtime-home\\home'
     const lower = upper.replace('\\Alice\\', '\\alice\\')
 
     await Promise.all([
@@ -175,24 +175,24 @@ describe('Codex WSL runtime hook install', () => {
 
   it('plans WSL hook files with Linux command and trust paths', () => {
     const runtimeHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
 
     expect(
       createCodexWslRuntimeHookInstallPlan(runtimeHome, undefined, (_distro, path) => path)
     ).toEqual({
       configPath: pathWin32.join(runtimeHome, 'hooks.json'),
       tomlPath: pathWin32.join(runtimeHome, 'config.toml'),
-      scriptPath: pathWin32.join(runtimeHome, '.orca', 'agent-hooks', 'codex-hook.sh'),
+      scriptPath: pathWin32.join(runtimeHome, '.nash', 'agent-hooks', 'codex-hook.sh'),
       commandScriptPath:
-        '/home/alice/.local/share/orca/codex-runtime-home/home/.orca/agent-hooks/codex-hook.sh',
-      trustConfigPath: '/home/alice/.local/share/orca/codex-runtime-home/home/hooks.json',
+        '/home/alice/.local/share/nash/codex-runtime-home/home/.nash/agent-hooks/codex-hook.sh',
+      trustConfigPath: '/home/alice/.local/share/nash/codex-runtime-home/home/hooks.json',
       wslDistro: 'Ubuntu',
-      linuxRuntimeHome: '/home/alice/.local/share/orca/codex-runtime-home/home'
+      linuxRuntimeHome: '/home/alice/.local/share/nash/codex-runtime-home/home'
     })
   })
 
   it('plans WSL hooks when the distro home is mounted on a Windows drive', async () => {
-    const runtimeHome = 'D:\\wsl-home\\.local\\share\\orca\\codex-runtime-home\\home'
+    const runtimeHome = 'D:\\wsl-home\\.local\\share\\nash\\codex-runtime-home\\home'
 
     expect(
       createCodexWslRuntimeHookInstallPlan(
@@ -203,31 +203,31 @@ describe('Codex WSL runtime hook install', () => {
     ).toEqual({
       configPath: pathWin32.join(runtimeHome, 'hooks.json'),
       tomlPath: pathWin32.join(runtimeHome, 'config.toml'),
-      scriptPath: pathWin32.join(runtimeHome, '.orca', 'agent-hooks', 'codex-hook.sh'),
+      scriptPath: pathWin32.join(runtimeHome, '.nash', 'agent-hooks', 'codex-hook.sh'),
       commandScriptPath:
-        '/mnt/d/wsl-home/.local/share/orca/codex-runtime-home/home/.orca/agent-hooks/codex-hook.sh',
-      trustConfigPath: '/mnt/d/wsl-home/.local/share/orca/codex-runtime-home/home/hooks.json',
+        '/mnt/d/wsl-home/.local/share/nash/codex-runtime-home/home/.nash/agent-hooks/codex-hook.sh',
+      trustConfigPath: '/mnt/d/wsl-home/.local/share/nash/codex-runtime-home/home/hooks.json',
       wslDistro: 'Ubuntu',
-      linuxRuntimeHome: '/mnt/d/wsl-home/.local/share/orca/codex-runtime-home/home'
+      linuxRuntimeHome: '/mnt/d/wsl-home/.local/share/nash/codex-runtime-home/home'
     })
   })
 
   it('uses WSL-canonical paths for hook commands and trust keys', async () => {
     const runtimeHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\alias\\.local\\share\\orca\\codex-runtime-home\\home'
-    const canonicalHome = '/home/alice/.local/share/orca/codex-runtime-home/home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\alias\\.local\\share\\nash\\codex-runtime-home\\home'
+    const canonicalHome = '/home/alice/.local/share/nash/codex-runtime-home/home'
 
     const plan = createCodexWslRuntimeHookInstallPlan(
       runtimeHome,
       { runtime: 'wsl', wslDistro: 'Ubuntu' },
       (distro, linuxPath) => {
         expect(distro).toBe('Ubuntu')
-        expect(linuxPath).toBe('/home/alias/.local/share/orca/codex-runtime-home/home')
+        expect(linuxPath).toBe('/home/alias/.local/share/nash/codex-runtime-home/home')
         return canonicalHome
       }
     )
 
-    expect(plan?.commandScriptPath).toBe(`${canonicalHome}/.orca/agent-hooks/codex-hook.sh`)
+    expect(plan?.commandScriptPath).toBe(`${canonicalHome}/.nash/agent-hooks/codex-hook.sh`)
     expect(plan?.trustConfigPath).toBe(`${canonicalHome}/hooks.json`)
     expect(plan?.configPath).toBe(pathWin32.join(runtimeHome, 'hooks.json'))
   })
@@ -239,7 +239,7 @@ describe('Codex WSL runtime hook install', () => {
 
     const oldPlan = {
       ...plan,
-      commandScriptPath: '/old/home/.orca/agent-hooks/codex-hook.sh',
+      commandScriptPath: '/old/home/.nash/agent-hooks/codex-hook.sh',
       trustConfigPath: '/old/home/hooks.json'
     }
     expect((await _internals.installManagedHooksIntoWslRuntime(oldPlan)).state).toBe('installed')
@@ -248,7 +248,7 @@ describe('Codex WSL runtime hook install', () => {
 
     const newPlan = {
       ...plan,
-      commandScriptPath: '/new/home/.orca/agent-hooks/codex-hook.sh',
+      commandScriptPath: '/new/home/.nash/agent-hooks/codex-hook.sh',
       trustConfigPath: '/new/home/hooks.json'
     }
     expect((await _internals.installManagedHooksIntoWslRuntime(newPlan)).state).toBe('installed')
@@ -489,7 +489,7 @@ describe('Codex WSL runtime hook install', () => {
                 {
                   type: 'command',
                   command:
-                    "if [ -x '/old/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/old/.orca/agent-hooks/codex-hook.sh'; fi"
+                    "if [ -x '/old/.nash/agent-hooks/codex-hook.sh' ]; then /bin/sh '/old/.nash/agent-hooks/codex-hook.sh'; fi"
                 }
               ]
             }
@@ -671,7 +671,7 @@ describe('Codex WSL runtime hook install app-server grant lane', () => {
 
     const oldPlan = {
       ...basePlan,
-      commandScriptPath: '/old/home/.orca/agent-hooks/codex-hook.sh',
+      commandScriptPath: '/old/home/.nash/agent-hooks/codex-hook.sh',
       trustConfigPath: '/old/home/hooks.json',
       linuxRuntimeHome: '/old/home'
     }
@@ -683,7 +683,7 @@ describe('Codex WSL runtime hook install app-server grant lane', () => {
 
     const newPlan = {
       ...basePlan,
-      commandScriptPath: '/new/home/.orca/agent-hooks/codex-hook.sh',
+      commandScriptPath: '/new/home/.nash/agent-hooks/codex-hook.sh',
       trustConfigPath: '/new/home/hooks.json',
       linuxRuntimeHome: '/new/home'
     }

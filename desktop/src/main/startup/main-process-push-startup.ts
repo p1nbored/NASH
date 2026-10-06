@@ -15,12 +15,13 @@ export function startDesktopPushService(runtimeRpc: OrcaRuntimeRpcServer): void 
     console.warn('[push] Background push startup skipped: runtime not started')
     return
   }
+  const gatewayUrl = getOrcaPushGatewayUrl()
+  if (!gatewayUrl) {
+    // Why: NASH builds have no push gateway (Orca cloud services off), so no notification leaves.
+    return
+  }
   try {
-    const pushService = DesktopPushService.create({
-      runtime,
-      runtimeRpc,
-      gatewayUrl: getOrcaPushGatewayUrl()
-    })
+    const pushService = DesktopPushService.create({ runtime, runtimeRpc, gatewayUrl })
     pushService?.start()
     state.desktopPushService = pushService
   } catch (error) {

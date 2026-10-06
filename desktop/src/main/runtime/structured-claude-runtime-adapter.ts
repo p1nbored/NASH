@@ -14,7 +14,6 @@ import {
   recordAgentSessionProviderHandle,
   reviseAgentSessionClaudeResumePoint
 } from './agent-session-provider-handle-transition'
-import type { ClaudeManagedAccountGateSettings } from '../native-chat/claude-structured-managed-account-support'
 import type { AgentSessionRecordStore } from './agent-session-record-store'
 import { ClaudeAtRestCommandCatalog } from '../claude/claude-at-rest-commands'
 
@@ -30,7 +29,6 @@ export type StructuredClaudeRuntimeAdapterDeps = {
   resolveClaudeAuthPolicy: () => Promise<ClaudeStructuredAuthPolicy> | ClaudeStructuredAuthPolicy
   /** The user's Agent Permissions setting for Claude; absent means prompting. */
   resolveClaudePermissionMode?: () => Promise<PermissionMode> | PermissionMode
-  readClaudeManagedAccountGate?: () => ClaudeManagedAccountGateSettings | null
   openClaudeConnection?: ClaudeStructuredSessionAdapterDeps['openConnection']
   readProcessStartTime?: ClaudeStructuredSessionAdapterDeps['readProcessStartTime']
   modelCatalog?: ClaudeStructuredSessionAdapterDeps['modelCatalog']
@@ -88,9 +86,6 @@ export function createStructuredClaudeRuntimeAdapter(
       resolveAuthPolicy: deps.resolveClaudeAuthPolicy,
       ...(deps.resolveClaudePermissionMode
         ? { resolvePermissionMode: deps.resolveClaudePermissionMode }
-        : {}),
-      ...(deps.readClaudeManagedAccountGate
-        ? { readManagedAccountGate: deps.readClaudeManagedAccountGate }
         : {})
     }),
     persistHandle: async ({ sessionId, providerSessionId, leafUuid, fence }) => {

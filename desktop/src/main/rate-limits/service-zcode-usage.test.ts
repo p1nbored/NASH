@@ -11,9 +11,11 @@ import {
   resetRateLimitProviderMocks
 } from './rate-limit-service-test-harness'
 
+// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
+vi.mock('./usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
+
 vi.mock('./claude-fetcher', () => ({
-  fetchClaudeRateLimits: vi.fn(),
-  fetchManagedAccountUsage: vi.fn()
+  fetchClaudeRateLimits: vi.fn()
 }))
 
 vi.mock('./codex-fetcher', () => ({

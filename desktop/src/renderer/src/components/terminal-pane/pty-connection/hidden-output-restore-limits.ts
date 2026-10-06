@@ -34,9 +34,9 @@ export const HIDDEN_OUTPUT_RESTORE_LOCAL_GATE_MAX_ATTEMPTS = 30
 // Why: this is only shown if hidden renderer output was skipped and main-owned
 // terminal state is unavailable, so the user has an explicit loss signal.
 export const HIDDEN_OUTPUT_RESTORE_UNAVAILABLE_WARNING =
-  '\r\n[Orca skipped hidden terminal output because main recovery was unavailable.]\r\n'
+  '\r\n[NASH skipped hidden terminal output because main recovery was unavailable.]\r\n'
 // Why distinct from the warning above: that one closes a bounded retry the host kept declining
 // (transient); this one reports a host that answered and can never produce the buffer for this
 // request, so a blank or stale pane is not mistaken for an empty terminal.
 export const PARK_REVEAL_NO_HOST_IMAGE_WARNING =
-  "\r\n[Orca could not restore this terminal's history from its host.]\r\n"
+  "\r\n[NASH could not restore this terminal's history from its host.]\r\n"

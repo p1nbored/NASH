@@ -59,7 +59,6 @@ describe('web preload API composition', () => {
       'grokAccounts',
       'cursorAccounts',
       'codexAccounts',
-      'claudeAccounts',
       'cli',
       'macosTccPrompts',
       'codexConfigSync',

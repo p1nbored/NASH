@@ -58,7 +58,7 @@ describe('presentRendererRecoveryPrompt', () => {
   it('interpolates the recovery count', async () => {
     const { run, shown } = harness({ recentRecoveryCount: 7 })
     await run()
-    expect(shown[0].detail).toContain('Orca tried to recover 7 times in a row')
+    expect(shown[0].detail).toContain('NASH tried to recover 7 times in a row')
     expect(shown[0].detail).not.toContain('{{')
   })
 

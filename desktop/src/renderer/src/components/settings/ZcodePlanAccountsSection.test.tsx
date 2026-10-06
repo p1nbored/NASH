@@ -86,7 +86,7 @@ describe('ZcodePlanAccountsSection', () => {
     render(<ZcodePlanAccountsSection />)
     expect(
       await screen.findByText(
-        'Change the plan site and API key in the desktop app on the computer running Orca.'
+        'Change the plan site and API key in the desktop app on the computer running NASH.'
       )
     ).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toBeDisabled()
@@ -110,7 +110,7 @@ describe('ZcodePlanAccountsSection', () => {
     render(<ZcodePlanAccountsSection />)
     expect(await screen.findByText('42%')).toBeInTheDocument()
     expect(
-      screen.getByText('Plan credential details are only readable on the computer running Orca.')
+      screen.getByText('Plan credential details are only readable on the computer running NASH.')
     ).toBeInTheDocument()
     expect(screen.queryByText('No GLM Coding Plan linked')).not.toBeInTheDocument()
     expect(screen.queryByText('Not saved')).not.toBeInTheDocument()

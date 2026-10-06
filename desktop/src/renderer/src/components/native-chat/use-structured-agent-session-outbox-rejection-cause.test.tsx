@@ -519,7 +519,7 @@ describe('a send refused on a journal a newer Orca wrote', () => {
       ok: false,
       refusal: {
         code: 'agent_session_journal_unreadable',
-        message: 'Chats were saved by a newer Orca. Update Orca to keep using them.',
+        message: 'Chats were saved by a newer NASH. Update NASH to keep using them.',
         details: { reason: 'journalWrittenByNewerOrca' }
       }
     })
@@ -536,7 +536,7 @@ describe('a send refused on a journal a newer Orca wrote', () => {
 
     await waitFor(() =>
       expect(shownFailure(result.current.outbox[0])).toBe(
-        'Chats were saved by a newer Orca. Your message was not sent. Update Orca to keep using them.'
+        'Chats were saved by a newer NASH. Your message was not sent. Update NASH to keep using them.'
       )
     )
   })

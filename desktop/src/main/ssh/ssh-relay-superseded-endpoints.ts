@@ -1,7 +1,7 @@
 /**
  * Relays this target left behind at a *different* version directory.
  *
- * Every relay build installs to `~/.orca-remote/relay-<fullVersion>/` and binds its socket
+ * Every relay build installs to `~/.nash-remote/relay-<fullVersion>/` and binds its socket
  * inside it, so the socket path moves on every app update even though the filename component
  * is stable. After an update the new client binds a path the previous relay's PTYs were never
  * associated with, and the previous relay is never contacted again (#13614, #13852). Nothing
@@ -74,7 +74,7 @@ export function supersededRelayEndpointListCommand(options: {
     `sock_name=${shellEscape(options.sockName)}`,
     `current=${shellEscape(options.currentRelayDir)}`,
     // Why the second base: a host whose `$HOME` pushes the endpoint past `sun_path` binds
-    // under `/tmp/.orca-relay-<uid>/relay-<versionHash>/` instead (relay-socket-path-limit.ts).
+    // under `/tmp/.nash-relay-<uid>/relay-<versionHash>/` instead (relay-socket-path-limit.ts).
     // Those orphans are the same population this sweep exists to make visible, and the
     // `$HOME` glob cannot see them. The uid is resolved on the host; the client never knows it.
     `short_current=${shellEscape(options.currentShortSocketDir ?? '')}`,
@@ -95,7 +95,7 @@ export function removeStaleRelayEndpointCommand(sockPath: string): string {
   if (!sockPath.startsWith(SHORT_RELAY_SOCKET_DIR_PREFIX)) {
     return remove
   }
-  // `gcOldRelayVersions` only walks `$HOME/.orca-remote`, so nothing else would ever
+  // `gcOldRelayVersions` only walks `$HOME/.nash-remote`, so nothing else would ever
   // reclaim a relocated version segment. `rmdir` fails while another target of the same
   // build still has a socket there, which is exactly the condition for keeping it.
   return `${remove}; rmdir ${shellEscape(sockPath.slice(0, sockPath.lastIndexOf('/')))} 2>/dev/null || true`

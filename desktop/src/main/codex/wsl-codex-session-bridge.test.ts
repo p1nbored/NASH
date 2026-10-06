@@ -41,7 +41,7 @@ describe('syncWslCodexSessionsIntoManagedHome', () => {
       distro: 'Ubuntu',
       systemCodexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.codex',
       managedCodexHomePath:
-        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
     })
 
     expect(summary).toEqual({ scannedFiles: 2, linkedFiles: 1 })
@@ -61,7 +61,7 @@ describe('syncWslCodexSessionsIntoManagedHome', () => {
     const shellCommand = spec.script
     expect(shellCommand).toContain("source_sessions_root='/home/alice/.codex/sessions'")
     expect(shellCommand).toContain(
-      "managed_sessions_root='/home/alice/.local/share/orca/codex-runtime-home/home/sessions'"
+      "managed_sessions_root='/home/alice/.local/share/nash/codex-runtime-home/home/sessions'"
     )
     expect(shellCommand).toContain(`find "$source_sessions_root" -type f -name '*.jsonl' -print0`)
     expect(shellCommand).toContain('ln -- "$link_source" "$target_file"')
@@ -91,7 +91,7 @@ describe('syncWslCodexSessionsIntoManagedHome', () => {
       distro: 'Ubuntu',
       systemCodexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.codex',
       managedCodexHomePath:
-        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
     })
 
     expect(summary).toEqual({ scannedFiles: 4, linkedFiles: 3 })
@@ -111,7 +111,7 @@ describe('syncWslCodexSessionsIntoManagedHome', () => {
         distro: 'Ubuntu',
         systemCodexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.codex',
         managedCodexHomePath:
-          '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+          '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
       })
     ).rejects.toThrow('WSL codex session bridge failed')
   })
@@ -122,7 +122,7 @@ describe('syncWslCodexSessionsIntoManagedHome', () => {
       distro: 'Ubuntu',
       systemCodexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.codex',
       managedCodexHomePath:
-        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
     }
 
     const firstTask = startWslCodexSessionBridgeInBackground(target)
@@ -141,7 +141,7 @@ describe('resolveWslCodexSessionBridgeLinuxPaths', () => {
         distro: 'Ubuntu',
         systemCodexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.codex',
         managedCodexHomePath:
-          '\\\\wsl.localhost\\Debian\\home\\alice\\.local\\share\\orca\\codex-runtime-home\\home'
+          '\\\\wsl.localhost\\Debian\\home\\alice\\.local\\share\\nash\\codex-runtime-home\\home'
       })
     ).toBeNull()
   })
@@ -151,11 +151,11 @@ describe('resolveWslCodexSessionBridgeLinuxPaths', () => {
       resolveWslCodexSessionBridgeLinuxPaths({
         distro: 'Ubuntu',
         systemCodexHomePath: '/home/alice/.codex',
-        managedCodexHomePath: '/home/alice/.local/share/orca/codex-runtime-home/home'
+        managedCodexHomePath: '/home/alice/.local/share/nash/codex-runtime-home/home'
       })
     ).toEqual({
       systemSessionsRoot: '/home/alice/.codex/sessions',
-      managedSessionsRoot: '/home/alice/.local/share/orca/codex-runtime-home/home/sessions'
+      managedSessionsRoot: '/home/alice/.local/share/nash/codex-runtime-home/home/sessions'
     })
   })
 })
@@ -164,7 +164,7 @@ describe('buildWslCodexSessionBridgeShellCommand', () => {
   it('only targets JSONL session files under sessions', () => {
     const shellCommand = buildWslCodexSessionBridgeShellCommand({
       systemSessionsRoot: "/home/alice/.codex/sessions with 'quote'",
-      managedSessionsRoot: '/home/alice/.local/share/orca/codex-runtime-home/home/sessions'
+      managedSessionsRoot: '/home/alice/.local/share/nash/codex-runtime-home/home/sessions'
     })
 
     expect(shellCommand).toContain(
@@ -177,7 +177,7 @@ describe('buildWslCodexSessionBridgeShellCommand', () => {
   it('keeps Linux-side shell variable expansion intact for the guest shell', () => {
     const shellCommand = buildWslCodexSessionBridgeShellCommand({
       systemSessionsRoot: '/home/alice/.codex/sessions',
-      managedSessionsRoot: '/home/alice/.local/share/orca/codex-runtime-home/home/sessions'
+      managedSessionsRoot: '/home/alice/.local/share/nash/codex-runtime-home/home/sessions'
     })
 
     expect(shellCommand).toContain('$source_sessions_root')

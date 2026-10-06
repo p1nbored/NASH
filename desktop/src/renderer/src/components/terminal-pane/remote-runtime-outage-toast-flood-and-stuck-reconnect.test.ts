@@ -39,7 +39,7 @@ const QUEUE_OVERLOAD_RAW = new RuntimeRpcCallQueueOverloadError('selector').mess
 
 // The exact user-reported toast text family (timeout + Tailscale funnel hint).
 const TIMEOUT_WITH_TAILSCALE_HINT = withRemoteRuntimeTailscaleHint(
-  'Timed out waiting for the remote Orca runtime to respond.',
+  'Timed out waiting for the remote NASH runtime to respond.',
   'https://orca-server.tail1234.ts.net'
 )
 

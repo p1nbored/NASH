@@ -32,4 +32,6 @@ export type FeedbackSubmitResult =
     }
   | ({ ok: false } & FeedbackRequestFailure & {
         diagnosticBundleFailure?: FeedbackRequestFailure
+        /** Set when a NASH build refused before any request (Orca cloud services off). */
+        code?: 'orca_cloud_services_off'
       })

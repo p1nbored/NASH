@@ -227,7 +227,7 @@ describe('the sweep and the lease (P2-20)', () => {
 
 describe('a start that never finishes (P2-15)', () => {
   it('is stopped by the sweep, and the delivery loop alone writes its one row and rejection', async () => {
-    const stopReason = 'Codex never finished starting, so Orca stopped it.'
+    const stopReason = 'Codex never finished starting, so NASH stopped it.'
     const order: string[] = []
     const started = Promise.withResolvers<void>()
     rig.adapter.closeSession.mockImplementation(async () => {

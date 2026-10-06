@@ -1,7 +1,7 @@
 /**
  * Keeps the remote relay's Unix socket path inside `sockaddr_un.sun_path`.
  *
- * The default endpoint is `$HOME/.orca-remote/relay-<fullVersion>/relay-<id>.sock`,
+ * The default endpoint is `$HOME/.nash-remote/relay-<fullVersion>/relay-<id>.sock`,
  * whose fixed suffix already costs ~66 bytes. A managed-hosting `$HOME` such as
  * `/var/www/<uuid>` pushes the whole path past the kernel cap and libuv reports only
  * `listen EINVAL`, so the relay never starts (#10726). When that happens the socket
@@ -10,6 +10,7 @@
  * Windows relays bind named pipes (`\\.\pipe\...`), which have no `sun_path` limit.
  */
 import { createHash } from 'node:crypto'
+import { APP_RELAY_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
 import { unixSocketPathByteLimit } from '../../shared/unix-socket-path-limit'
 
@@ -26,7 +27,7 @@ export function remoteSocketPathFitsLimit(host: RemoteHostPlatform, sockPath: st
 }
 
 /** Fixed-length, per-uid base. `/tmp` is the only POSIX directory whose length is not user-dependent. */
-export const SHORT_RELAY_SOCKET_DIR_PREFIX = '/tmp/.orca-relay-'
+export const SHORT_RELAY_SOCKET_DIR_PREFIX = `/tmp/${APP_RELAY_HOME_DIR_NAME}-`
 
 export function shortRelaySocketDirForUid(uid: string): string {
   return `${SHORT_RELAY_SOCKET_DIR_PREFIX}${uid}`
@@ -34,7 +35,7 @@ export function shortRelaySocketDirForUid(uid: string): string {
 
 /**
  * The version segment the relocated socket lives under, named to match the version
- * directories in `$HOME/.orca-remote` so one sweep pattern covers both bases.
+ * directories in `$HOME/.nash-remote` so one sweep pattern covers both bases.
  *
  * Why it has to exist: `relaySocketNameForInstanceId` hashes the *target*, not the
  * build, so the filename alone is version-independent. Under `$HOME` the enclosing

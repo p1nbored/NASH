@@ -86,7 +86,7 @@ export function TerminalWorkspaceDialogs({
               {windowCloseDialogKind === 'unverifiable'
                 ? translate(
                     'auto.components.Terminal.b7c1f0a934',
-                    'A remote host could not be reached, so Orca cannot tell whether work is still running there. Close the window anyway?'
+                    'A remote host could not be reached, so NASH cannot tell whether work is still running there. Close the window anyway?'
                   )
                 : translate(
                     'auto.components.Terminal.7958465754',

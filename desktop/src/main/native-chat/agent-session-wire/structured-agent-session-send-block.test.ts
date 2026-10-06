@@ -113,7 +113,7 @@ describe('a write whose conversation the host could not open', () => {
       refusal: {
         code: 'agent_session_journal_unreadable',
         details: { reason: 'journalUnavailable' },
-        message: "Orca couldn't open this chat's history right now. Try again."
+        message: "NASH couldn't open this chat's history right now. Try again."
       }
     })
   })

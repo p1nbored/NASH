@@ -104,7 +104,7 @@ describe('Windows managed hook post interpreter', () => {
       for (const entry of BATCH_SCRIPT_INSTALLERS) {
         expect((await entry.install()).state, `${entry.agent} install status`).toBe('installed')
       }
-      const hooksDir = join(home, '.orca', 'agent-hooks')
+      const hooksDir = join(home, '.nash', 'agent-hooks')
       return readdirSync(hooksDir)
         .filter((name) => name.endsWith('.cmd'))
         .map((name) => ({ name, body: readFileSync(join(hooksDir, name), 'utf8') }))

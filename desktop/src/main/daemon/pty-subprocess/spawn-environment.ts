@@ -1,4 +1,5 @@
 import { getLegacyOpenCodeEnvKeysToDelete } from '../../opencode/legacy-shared-config-dir'
+import { APP_IDENTITY } from '../../../shared/app-identity-constants'
 import { restoreManagedDataAccountEnvironment } from '../../../shared/managed-data-account-environment'
 import { restoreOrStripOverlayEnv } from '../../../shared/agent-overlay-env'
 import { delimiter } from 'node:path'
@@ -174,7 +175,7 @@ export function createDaemonPtyEnvironment(opts: PtySubprocessOptions): Record<s
     ...mergeGitConfigEnvProtocol(inheritedEnv, opts.env),
     TERM: 'xterm-256color',
     COLORTERM: 'truecolor',
-    TERM_PROGRAM: 'Orca',
+    TERM_PROGRAM: APP_IDENTITY.productName,
     TERM_PROGRAM_VERSION: process.env.ORCA_APP_VERSION ?? '0.0.0-dev',
     FORCE_HYPERLINK: '1',
     [ORCA_IMAGE_PROTOCOL_ENV]: ORCA_IMAGE_PROTOCOL_VALUE

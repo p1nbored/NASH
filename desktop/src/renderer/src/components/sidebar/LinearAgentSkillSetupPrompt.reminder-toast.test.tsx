@@ -204,7 +204,7 @@ describe('LinearAgentSkillSetupPrompt reminder toast', () => {
       expect.objectContaining({
         id: 'linear-agent-skill-setup-orca.linearTicketsSkill.setupDismissed.host',
         description:
-          'Install the Linear skill to enable your agents to read and edit Linear tasks through the Orca CLI.',
+          'Install the Linear skill to enable your agents to read and edit Linear tasks through the NASH CLI.',
         action: {
           label: 'Set up',
           onClick: expect.any(Function)
@@ -228,7 +228,7 @@ describe('LinearAgentSkillSetupPrompt reminder toast', () => {
       'Linear skill is missing',
       expect.objectContaining({
         description:
-          'Install the Linear skill to enable your agents to read and edit Linear tasks through the Orca CLI. Remote agent environments may need their own setup.'
+          'Install the Linear skill to enable your agents to read and edit Linear tasks through the NASH CLI. Remote agent environments may need their own setup.'
       })
     )
   })
@@ -241,7 +241,7 @@ describe('LinearAgentSkillSetupPrompt reminder toast', () => {
       'Linear skill is missing',
       expect.objectContaining({
         description:
-          'Install the Linear skill to enable your agents to read and edit Linear tasks through the Orca CLI. This setup runs in the selected WSL agent runtime.'
+          'Install the Linear skill to enable your agents to read and edit Linear tasks through the NASH CLI. This setup runs in the selected WSL agent runtime.'
       })
     )
   })

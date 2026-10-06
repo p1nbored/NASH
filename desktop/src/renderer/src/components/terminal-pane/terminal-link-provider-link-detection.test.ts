@@ -135,7 +135,7 @@ describe('createFilePathLinkProvider range bounds', () => {
     links[0]!.hover?.({} as MouseEvent, links[0]!.text)
 
     expect(linkTooltip.textContent).toBe(
-      '/repo/CLAUDE.md (Click for actions or ⌘+click to open in Orca)'
+      '/repo/CLAUDE.md (Click for actions or ⌘+click to open in NASH)'
     )
   })
 

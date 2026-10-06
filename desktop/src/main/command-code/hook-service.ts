@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -163,7 +164,7 @@ export class CommandCodeHookService {
   async installRemote(sftp: SFTPWrapper, remoteHome: string): Promise<AgentHookInstallStatus> {
     const home = remoteHome.replace(/\/$/, '')
     const remoteConfigPath = `${home}/.commandcode/settings.json`
-    const remoteScriptPath = `${home}/.orca/agent-hooks/command-code-hook.sh`
+    const remoteScriptPath = `${home}/${APP_AGENT_HOOKS_HOME_PATH}/command-code-hook.sh`
     try {
       const config = await readHooksJsonRemote(sftp, remoteConfigPath)
       if (!config) {

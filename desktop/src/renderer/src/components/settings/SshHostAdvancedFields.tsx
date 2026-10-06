@@ -216,7 +216,7 @@ function SshRemoteRuntimeField({
         <p className="text-muted-foreground">
           {translate(
             'auto.components.settings.SshTargetForm.remoteRuntimeHelp',
-            'Which Node.js runs Orca on this host. Orca-managed Node uploads its own and needs no npm; Host Node uses the Node.js already installed there.'
+            'Which Node.js runs NASH on this host. NASH-managed Node uploads its own and needs no npm; Host Node uses the Node.js already installed there.'
           )}
         </p>
       </div>
@@ -239,7 +239,7 @@ function SshRemoteRuntimeField({
           <SelectItem value="pinned-node">
             {translate(
               'auto.components.settings.SshTargetForm.remoteRuntimePinnedNode',
-              'Orca-managed Node'
+              'NASH-managed Node'
             )}
           </SelectItem>
           <SelectItem value="legacy">

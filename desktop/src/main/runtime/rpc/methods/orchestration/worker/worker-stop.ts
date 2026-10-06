@@ -11,6 +11,7 @@ import {
 } from '../../orchestration-structured-worker-lifecycle'
 import { isStructuredWorkerHandle } from '../../../../structured-worker-identity'
 import { WorkerDispatchParams } from '../../../../../../shared/rpc-contract/orchestration-worker-stop-params'
+import { stopAppExecutorAttempt } from '../../../../workflow-run/executor-stop-port'
 
 export const ORCHESTRATION_WORKER_STOP_METHODS = [
   defineMethod({
@@ -101,6 +102,11 @@ export const ORCHESTRATION_WORKER_STOP_METHODS = [
           }
         }
 
+        // An app Codex or agy attempt has no agent terminal and settles through B3, not Orca's stop.
+        const appStop = await stopAppExecutorAttempt(runtime, params.dispatch)
+        if (appStop) {
+          return appStop
+        }
         const begun = db.beginWorkerStop(params.dispatch, runtime.getRuntimeId())
         if (begun.disposition === 'already_settled') {
           return settledReceipt(params.dispatch, begun.worker.state)

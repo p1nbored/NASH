@@ -5,9 +5,9 @@ import { parseWslUncPath } from '../../shared/wsl-paths'
 
 const UBUNTU_HOME = '\\\\wsl.localhost\\Ubuntu\\home\\ada'
 const ROLLOUT_LINUX =
-  '/home/ada/.local/share/orca/codex-runtime-home/home/sessions/2026/07/24/rollout-wsl.jsonl'
+  '/home/ada/.local/share/nash/codex-runtime-home/home/sessions/2026/07/24/rollout-wsl.jsonl'
 const ROLLOUT_UNC =
-  '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home\\sessions\\2026\\07\\24\\rollout-wsl.jsonl'
+  '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home\\sessions\\2026\\07\\24\\rollout-wsl.jsonl'
 
 const mocks = vi.hoisted(() => ({
   filterPathsToRunningWslDistrosAsync: vi.fn(),

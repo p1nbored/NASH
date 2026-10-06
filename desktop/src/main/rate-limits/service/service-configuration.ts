@@ -15,7 +15,6 @@ import {
   type ZcodePlanRateLimitConfig,
   type GeminiCliOAuthEnabledResolver,
   type InactiveCodexAccountInfo,
-  type InactiveClaudeAccountInfo,
   type RateLimitState,
   normalizeCodexAccountSelectionTarget,
   normalizeClaudeAccountSelectionTarget,
@@ -71,11 +70,6 @@ export abstract class RateLimitServiceConfiguration extends RateLimitServiceAcco
     this.networkProxySettingsResolver = resolver
   }
 
-  setInactiveClaudeAccountsResolver(resolver: () => InactiveClaudeAccountInfo[]): void {
-    this.inactiveClaudeAccountsResolver = resolver
-    this.inactiveClaudeAccountsGeneration += 1
-  }
-
   setInactiveCodexAccountsResolver(resolver: () => InactiveCodexAccountInfo[]): void {
     this.inactiveCodexAccountsResolver = resolver
     this.inactiveCodexAccountsGeneration += 1
@@ -122,7 +116,6 @@ export abstract class RateLimitServiceConfiguration extends RateLimitServiceAcco
   stop(): void {
     this.abortActiveFetchCycle()
     this.clearQueuedFetches()
-    this.inactiveClaudeFetching.clear()
     this.inactiveCodexFetching.clear()
     this.resolveAndClearFetchIdleWaiters()
     this.stopTimer()
@@ -133,7 +126,6 @@ export abstract class RateLimitServiceConfiguration extends RateLimitServiceAcco
   }
 
   getState(): RateLimitState {
-    this.pruneInactiveClaudeState()
     this.pruneInactiveCodexState()
     return {
       ...this.state,
@@ -146,10 +138,8 @@ export abstract class RateLimitServiceConfiguration extends RateLimitServiceAcco
       cursorAuthConfigured: this.cursorAuthConfigured,
       claudeTarget: this.claudeFetchTarget,
       codexTarget: this.codexFetchTarget,
-      inactiveClaudeAccounts: this.buildInactiveArray(
-        this.inactiveClaudeCache,
-        this.inactiveClaudeFetching
-      ),
+      // Why always empty: Claude account switching is gone; the field stays for older clients.
+      inactiveClaudeAccounts: [],
       inactiveCodexAccounts: this.buildInactiveArray(
         this.inactiveCodexCache,
         this.inactiveCodexFetching

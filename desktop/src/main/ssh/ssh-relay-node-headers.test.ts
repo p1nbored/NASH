@@ -141,7 +141,7 @@ describe.skipIf(!POSIX)('exportLocalNodeHeadersPrefix', () => {
 describe('localNodeHeadersFromOutput', () => {
   it('reads the host answer, not the copy of the marker echo quoted in an exec-failure head', () => {
     // The real shape: execCommand quotes the whole command line, prefix included, before the output.
-    const command = `export PATH='/usr/local/bin':$PATH && cd '/root/.orca-remote/relay-x' && ${exportLocalNodeHeadersPrefix('/usr/local/bin/node')}npm install node-pty 2>&1`
+    const command = `export PATH='/usr/local/bin':$PATH && cd '/root/.nash-remote/relay-x' && ${exportLocalNodeHeadersPrefix('/usr/local/bin/node')}npm install node-pty 2>&1`
     const failed = (hostOutput: string): string =>
       `Command "${command}" failed (exit 1): ${hostOutput}`
     expect(

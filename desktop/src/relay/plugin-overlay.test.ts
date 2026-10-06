@@ -352,7 +352,7 @@ describe('PluginOverlayManager', () => {
     const content = 'agent.db relay credentials'
 
     expect(existsSync(sourcePath)).toBe(false)
-    expect(existsSync(join(homeDir, '.orca-relay', 'omp-overlays'))).toBe(false)
+    expect(existsSync(join(homeDir, '.nash-relay', 'omp-overlays'))).toBe(false)
     expect(existsSync(join(sourceDir, 'history.db'))).toBe(false)
     writeFileSync(sourcePath, content)
 
@@ -447,10 +447,10 @@ describe('PluginOverlayManager', () => {
       const bareOmp = manager.materializePi('tab-bare-omp:0', undefined, 'omp', {
         materializeDefaultHome: false
       })
-      // Why: bare OMP keeps status via ~/.orca-relay/… without SOURCE_AGENT_DIR or ~/.omp.
+      // Why: bare OMP keeps status via ~/.nash-relay/… without SOURCE_AGENT_DIR or ~/.omp.
       expect(bareOmp?.sourceAgentDir).toBeUndefined()
       expect(bareOmp?.statusExtensionPath).toEqual(
-        expect.stringContaining(join('.orca-relay', 'omp-managed-status-extension'))
+        expect.stringContaining(join('.nash-relay', 'omp-managed-status-extension'))
       )
       expect(existsSync(bareOmp!.statusExtensionPath!)).toBe(true)
       expect(readFileSync(bareOmp!.statusExtensionPath!, 'utf8')).toContain('// omp extension')

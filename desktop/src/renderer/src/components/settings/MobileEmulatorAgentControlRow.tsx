@@ -39,7 +39,7 @@ export function MobileEmulatorAgentControlRow(): React.JSX.Element {
           <p className="text-xs text-muted-foreground">
             {translate(
               'auto.components.settings.MobileEmulatorAgentControlRow.ff4b7e65d6',
-              'Let coding agents control the active mobile emulator with Orca CLI commands.'
+              'Let coding agents control the active mobile emulator with NASH CLI commands.'
             )}
           </p>
         </div>
@@ -51,16 +51,16 @@ export function MobileEmulatorAgentControlRow(): React.JSX.Element {
             variant="inline"
             title={translate(
               'auto.components.settings.MobileEmulatorAgentControlRow.67e19ee03c',
-              'Orca CLI skill'
+              'NASH CLI skill'
             )}
             description={translate(
               'auto.components.settings.MobileEmulatorAgentControlRow.d94ca6a623',
-              'Enables agents to use Orca CLI commands, including mobile emulator control.'
+              'Enables agents to use NASH CLI commands, including mobile emulator control.'
             )}
             command={cliSkillInstallCommand}
             installedCommand={cliSkillUpdateCommand}
-            terminalTitle="Orca CLI skill setup"
-            terminalAriaLabel="Orca CLI skill install terminal"
+            terminalTitle="NASH CLI skill setup"
+            terminalAriaLabel="NASH CLI skill install terminal"
             terminalWorktreeId="settings-mobile-emulator-orca-cli-skill-terminal"
             terminalShellOverride={activeSkillRuntime.terminalShellOverride}
             installed={setup.cliSkillInstalled}

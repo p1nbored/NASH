@@ -171,3 +171,8 @@ export const FEATURE_INTERACTION_IDS = FEATURE_INTERACTIONS.map((feature) => fea
   FeatureInteractionId,
   ...FeatureInteractionId[]
 ]
+
+// Why: kept so saved state and older clients still validate; nothing records them any more.
+export const RETIRED_FEATURE_INTERACTION_IDS: readonly FeatureInteractionId[] = [
+  'claude-account-switching'
+]

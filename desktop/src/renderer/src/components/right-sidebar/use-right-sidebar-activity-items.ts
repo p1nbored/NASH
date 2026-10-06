@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Plug, Files, GitBranch, ListChecks, Workflow } from 'lucide-react'
+import { Plug, Files, GitBranch, ListChecks, Workflow, PanelsTopLeft } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
@@ -110,6 +110,12 @@ export function useRightSidebarActivityItems({
         title: translate('auto.components.right.sidebar.index.441733b630', 'Ports'),
         shortcut: portsShortcut === 'Unassigned' ? '' : portsShortcut,
         sshOnly: true
+      },
+      {
+        id: 'workbench',
+        icon: PanelsTopLeft,
+        title: translate('workbench.sidebar.title', 'Workbench'),
+        shortcut: ''
       },
       // Why: plugin panels append after the built-in tabs so core navigation
       // keeps stable positions regardless of which plugins are installed.

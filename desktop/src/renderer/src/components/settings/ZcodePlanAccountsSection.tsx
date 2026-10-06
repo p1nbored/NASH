@@ -130,7 +130,7 @@ export function ZcodePlanAccountsSection(): React.JSX.Element {
             <p className="text-xs text-muted-foreground">
               {translate(
                 'auto.components.settings.ZcodePlanAccountsSection.detailsUnavailable',
-                'Plan credential details are only readable on the computer running Orca.'
+                'Plan credential details are only readable on the computer running NASH.'
               )}
             </p>
           ) : apiKeyConfigured ? (
@@ -160,7 +160,7 @@ export function ZcodePlanAccountsSection(): React.JSX.Element {
               <p className="text-xs text-muted-foreground">
                 {translate(
                   'auto.components.settings.ZcodePlanAccountsSection.usingCliHelp',
-                  'Orca reads the Coding Plan key from ~/.zcode/cli/config.json. Save an API key below to link the plan here instead.'
+                  'NASH reads the Coding Plan key from ~/.zcode/cli/config.json. Save an API key below to link the plan here instead.'
                 )}
               </p>
             </>
@@ -205,7 +205,7 @@ export function ZcodePlanAccountsSection(): React.JSX.Element {
         <p className="text-xs text-muted-foreground">
           {translate(
             'auto.components.settings.ZcodePlanAccountsSection.hostOnly',
-            'Change the plan site and API key in the desktop app on the computer running Orca.'
+            'Change the plan site and API key in the desktop app on the computer running NASH.'
           )}
         </p>
       ) : null}

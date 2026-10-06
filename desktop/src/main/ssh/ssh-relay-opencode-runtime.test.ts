@@ -40,8 +40,8 @@ import { decodeRemotePowerShellScript } from './ssh-remote-powershell'
 
 const host = getRemoteHostPlatform('linux-x64')
 const remoteHome = '/home/ada'
-const relayDir = `${remoteHome}/.orca-remote/relay-build`
-const binary = `${remoteHome}/.orca-remote/runtimes/node-${NODE_RUNTIME_ASSETS['linux-x64-glibc'].executableSha256}/bin/node`
+const relayDir = `${remoteHome}/.nash-remote/relay-build`
+const binary = `${remoteHome}/.nash-remote/runtimes/node-${NODE_RUNTIME_ASSETS['linux-x64-glibc'].executableSha256}/bin/node`
 const archiveName = 'node-v24.21.0-linux-x64.tar.gz'
 let cacheRoot: string
 let runtime: string
@@ -126,7 +126,7 @@ describe('SSH OpenCode runtime setup', () => {
   it('installs the pinned Node archive into the shared runtimes/ store after the read probe fails', async () => {
     mocks.upload.mockImplementation(async (_conn, localDir: string, remoteDir: string) => {
       expect(remoteDir).toMatch(
-        /\/\.orca-remote\/runtimes\/\.stage-node-[0-9a-f]{64}-[0-9a-f]{16}$/
+        /\/\.nash-remote\/runtimes\/\.stage-node-[0-9a-f]{64}-[0-9a-f]{16}$/
       )
       expect(await readdir(localDir)).toEqual([archiveName])
       expect(await readFile(join(localDir, archiveName), 'utf8')).toBe('verified runtime')
@@ -160,7 +160,7 @@ describe('SSH OpenCode runtime setup', () => {
     await ensureRemoteOpenCodeRuntime(connection(), host, remoteHome, options())
     const writeOptions = mocks.write.mock.calls[0][4]
     expect(writeOptions.sftpNamespace.homeRelativeNamespaceRoot).toMatch(
-      /^\.orca-remote\/\.upload-stages\/slot-0$/
+      /^\.nash-remote\/\.upload-stages\/slot-0$/
     )
     expect(writeOptions.sftpNamespace.homeRelativePath).toMatch(/\/opencode-sqlite-runtime\.json$/)
   })
@@ -418,9 +418,9 @@ describe('SSH OpenCode runtime setup', () => {
 describe('SSH OpenCode runtime setup on a Windows host', () => {
   const windows = getRemoteHostPlatform('win32-x64')
   const home = 'C:/Users/ada'
-  const windowsRelayDir = `${home}/.orca-remote/relay-build`
+  const windowsRelayDir = `${home}/.nash-remote/relay-build`
   const sha = NODE_RUNTIME_ASSETS['win32-x64'].executableSha256
-  const storeNode = `${home}/.orca-remote/runtimes/node-${sha}/node.exe`
+  const storeNode = `${home}/.nash-remote/runtimes/node-${sha}/node.exe`
 
   function answerWindows(storeReady: boolean): string[] {
     const scripts: string[] = []
@@ -480,7 +480,7 @@ describe('SSH OpenCode runtime setup on a Windows host', () => {
 
   it("reuses a verified store runtime and prefers the relay's own verified node.exe", async () => {
     const scripts = answerWindows(true)
-    const relayNode = `${home}/.orca-remote/runtimes/node-other/node.exe`
+    const relayNode = `${home}/.nash-remote/runtimes/node-other/node.exe`
     expect(
       await ensureRemoteOpenCodeRuntime(connection(true), windows, home, {
         nodePath: relayNode,

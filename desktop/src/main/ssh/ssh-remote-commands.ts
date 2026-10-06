@@ -150,7 +150,7 @@ export function listRelayBaseDirsCommand(host: RemoteHostPlatform, baseDir: stri
 }
 
 /**
- * List one model's version dirs (and its own tombstones) under `~/.orca-remote/`.
+ * List one model's version dirs (and its own tombstones) under `~/.nash-remote/`.
  *
  * The model scopes BOTH the `find`/`Get-ChildItem` glob and the validating regex. That
  * double filter is the on-the-wire half of the GC ownership rule: an orcad GC pass never

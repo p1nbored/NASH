@@ -267,7 +267,7 @@ export function getDefaultWslDistro(): string | null {
  * Get the home directory for a WSL distro, returned as a Windows UNC path.
  * Result is cached per distro for the process lifetime.
  *
- * Why: worktrees for WSL repos are created under ~/orca/workspaces inside
+ * Why: worktrees for WSL repos are created under ~/nash/workspaces inside
  * the WSL filesystem, mirroring the Windows workspace layout. We need the
  * WSL user's $HOME to compute that path.
  */

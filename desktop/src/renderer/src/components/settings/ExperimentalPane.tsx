@@ -172,7 +172,7 @@ export function ExperimentalPane({
               <p className="text-xs text-muted-foreground">
                 {translate(
                   'auto.components.settings.ExperimentalPane.agentHibernation.copy',
-                  'Stops idle background agent terminals after the configured idle window and resumes supported sessions when you open them again. Agent sleep preserves launch options for agents started by Orca. Manually started agents may resume with your current Orca defaults. Experimental while we tune the safety model.'
+                  'Stops idle background agent terminals after the configured idle window and resumes supported sessions when you open them again. Agent sleep preserves launch options for agents started by NASH. Manually started agents may resume with your current NASH defaults. Experimental while we tune the safety model.'
                 )}
               </p>
             </div>
@@ -199,7 +199,7 @@ export function ExperimentalPane({
                 )}
                 description={translate(
                   'auto.components.settings.ExperimentalPane.agentHibernation.idleMinutesDescription',
-                  'How many idle minutes a completed background agent must wait before Orca can sleep it.'
+                  'How many idle minutes a completed background agent must wait before NASH can sleep it.'
                 )}
                 value={agentHibernationIdleMinutes}
                 min={MIN_AGENT_HIBERNATION_IDLE_MS / MS_PER_MINUTE}

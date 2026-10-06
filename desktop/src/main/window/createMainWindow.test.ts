@@ -155,6 +155,8 @@ describe('createMainWindow', () => {
       })
     )
     const browserWindowOptions = browserWindowMock.mock.calls[0]?.[0]
+    // Why: the window carries the app's own product name (decision D-017), never Orca's.
+    expect(browserWindowOptions.title).toBe('NASH')
     // Why: macOS swallows the app-activating click unless the window accepts
     // first mouse, forcing a second click to focus the floating workspace.
     expect(browserWindowOptions.acceptFirstMouse).toBe(true)
@@ -443,7 +445,7 @@ describe('createMainWindow', () => {
       expect(browserWindowOptions.vibrancy).toBeUndefined()
       expect(browserWindowOptions.transparent).toBeUndefined()
       expect(browserWindowOptions.backgroundMaterial).toBe(expected.backgroundMaterial)
-      expect(browserWindowOptions.backgroundColor).toBe('#ffffff')
+      expect(browserWindowOptions.backgroundColor).toBe('#fbf5ed')
     }
   })
 

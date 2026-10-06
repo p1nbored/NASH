@@ -5,16 +5,18 @@ import type {
 } from '../../../shared/managed-account-types'
 import type { RateLimitState } from '../../../shared/rate-limit-types'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
+import { createEmptyClaudeAccountsState } from '../../../shared/claude-accounts-removed'
 import { callRuntimeRpc, getActiveRuntimeTarget, RuntimeRpcCallError } from './runtime-rpc-client'
 
-// Mirrors OrcaRuntime.getAccountsSnapshot() / the accounts.subscribe payload.
+// Mirrors OrcaRuntime.getAccountsSnapshot() / the accounts.subscribe payload. `claude` stays for
+// wire compatibility; Claude account switching is removed, so nothing here reads or acts on it.
 export type ProviderAccountsSnapshot = {
   claude: ClaudeRateLimitAccountsState
   codex: CodexRateLimitAccountsState
   rateLimits: RateLimitState | null
-  // Why: a partial local load substitutes an empty state for the failed
-  // provider; consumers must not treat that half as an authoritative roster.
-  failedProviders?: ('claude' | 'codex')[]
+  // Why: a failed local load substitutes an empty state for the provider;
+  // consumers must not treat that half as an authoritative roster.
+  failedProviders?: 'codex'[]
 }
 
 type ProviderAccountSelection = {
@@ -54,17 +56,13 @@ export type ProviderAccountsWatcher = {
   close: () => void
 }
 
-export function emptyClaudeAccountsState(): ClaudeRateLimitAccountsState {
-  return { accounts: [], activeAccountId: null, activeAccountIdsByRuntime: { host: null, wsl: {} } }
-}
-
 export function emptyCodexAccountsState(): CodexRateLimitAccountsState {
   return { accounts: [], activeAccountId: null, activeAccountIdsByRuntime: { host: null, wsl: {} } }
 }
 
-function providerAccountsLoadError(provider: 'Claude' | 'Codex', cause: unknown): Error {
-  const message = String((cause as Error)?.message ?? cause)
-  return new Error(`Could not load ${provider} accounts: ${message}`)
+function codexAccountsLoadError(cause: unknown): Error {
+  const message = cause instanceof Error ? cause.message : String(cause)
+  return new Error(`Could not load Codex accounts: ${message}`)
 }
 
 // Watches the provider-account snapshot for whichever runtime owns accounts.
@@ -84,50 +82,29 @@ export function watchProviderAccounts(
   const target = getActiveRuntimeTarget(settings)
   if (target.kind === 'local') {
     let closed = false
-    void Promise.allSettled([
-      window.api.claudeAccounts.list(),
-      window.api.codexAccounts.list()
-    ]).then(([claudeResult, codexResult]) => {
-      if (closed) {
-        return
-      }
-
-      const claudeError =
-        claudeResult.status === 'rejected'
-          ? providerAccountsLoadError('Claude', claudeResult.reason)
-          : null
-      const codexError =
-        codexResult.status === 'rejected'
-          ? providerAccountsLoadError('Codex', codexResult.reason)
-          : null
-      if (claudeError && codexError) {
-        const errors = [claudeError, codexError]
-        handlers.onError(new AggregateError(errors, errors.map((error) => error.message).join(' ')))
-        return
-      }
-
-      const failedProviders: ('claude' | 'codex')[] = []
-      if (claudeError) {
-        failedProviders.push('claude')
-      }
-      if (codexError) {
-        failedProviders.push('codex')
-      }
-      handlers.onSnapshot({
-        claude:
-          claudeResult.status === 'fulfilled' ? claudeResult.value : emptyClaudeAccountsState(),
-        codex: codexResult.status === 'fulfilled' ? codexResult.value : emptyCodexAccountsState(),
-        rateLimits: null,
-        ...(failedProviders.length > 0 ? { failedProviders } : {})
-      })
-      // Why: publish the healthy provider first so one-shot consumers keep it,
-      // but re-check closed since an onSnapshot handler may close the watcher.
-      for (const error of [claudeError, codexError]) {
-        if (error && !closed) {
-          handlers.onError(error)
+    // Why: Claude runs on the user's own login, so only Codex has a local roster to read.
+    void window.api.codexAccounts.list().then(
+      (codex) => {
+        if (!closed) {
+          handlers.onSnapshot({ claude: createEmptyClaudeAccountsState(), codex, rateLimits: null })
+        }
+      },
+      (reason: unknown) => {
+        if (closed) {
+          return
+        }
+        handlers.onSnapshot({
+          claude: createEmptyClaudeAccountsState(),
+          codex: emptyCodexAccountsState(),
+          rateLimits: null,
+          failedProviders: ['codex']
+        })
+        // Why: re-check closed since an onSnapshot handler may close the watcher.
+        if (!closed) {
+          handlers.onError(codexAccountsLoadError(reason))
         }
       }
-    })
+    )
     return {
       close: () => {
         closed = true
@@ -237,22 +214,6 @@ export function fetchProviderAccountsSnapshot(
   return request
 }
 
-export async function selectClaudeProviderAccount(
-  settings: Pick<GlobalSettings, 'activeRuntimeEnvironmentId'> | null | undefined,
-  selection: ProviderAccountSelection
-): Promise<ClaudeRateLimitAccountsState> {
-  const target = getActiveRuntimeTarget(settings)
-  if (target.kind === 'environment') {
-    return callRuntimeRpc<ClaudeRateLimitAccountsState>(
-      target,
-      'accounts.selectClaude',
-      { accountId: selection.accountId },
-      { timeoutMs: REMOTE_ACCOUNT_MUTATION_TIMEOUT_MS }
-    )
-  }
-  return window.api.claudeAccounts.select(selection)
-}
-
 export async function selectCodexProviderAccount(
   settings: Pick<GlobalSettings, 'activeRuntimeEnvironmentId'> | null | undefined,
   selection: ProviderAccountSelection
@@ -267,22 +228,6 @@ export async function selectCodexProviderAccount(
     )
   }
   return window.api.codexAccounts.select(selection)
-}
-
-export async function removeClaudeProviderAccount(
-  settings: Pick<GlobalSettings, 'activeRuntimeEnvironmentId'> | null | undefined,
-  accountId: string
-): Promise<ClaudeRateLimitAccountsState> {
-  const target = getActiveRuntimeTarget(settings)
-  if (target.kind === 'environment') {
-    return callRuntimeRpc<ClaudeRateLimitAccountsState>(
-      target,
-      'accounts.removeClaude',
-      { accountId },
-      { timeoutMs: REMOTE_ACCOUNT_MUTATION_TIMEOUT_MS }
-    )
-  }
-  return window.api.claudeAccounts.remove({ accountId })
 }
 
 export async function removeCodexProviderAccount(

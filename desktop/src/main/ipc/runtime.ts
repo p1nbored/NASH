@@ -14,6 +14,8 @@ import { DESKTOP_RENDERER_RUNTIME_CLIENT_CAPABILITIES } from './desktop-renderer
 import { RpcDispatcher } from '../runtime/rpc/dispatcher'
 import { ALL_RPC_METHODS } from '../runtime/rpc/methods'
 import { DesktopRuntimeSenderLifecycle } from './desktop-runtime-sender-lifecycle'
+import { getTrustedUIRendererWebContents } from './ui'
+import { issueWorkbenchDesktopCaller } from '../runtime/workbench-caller'
 
 function boundTerminalFitRestore(pending: Promise<boolean>): Promise<boolean> {
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -68,6 +70,10 @@ export function registerRuntimeHandlers(runtime: OrcaRuntimeService): void {
       if (event.senderFrame !== event.sender.mainFrame) {
         throw new Error('Runtime RPC call must originate from the current main frame')
       }
+      const workbenchRequest = args.method.startsWith('workbench.')
+      if (workbenchRequest && getTrustedUIRendererWebContents() !== event.sender) {
+        throw new Error('Workbench requests must originate from the trusted application renderer')
+      }
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the dispatcher's RpcSuccess/RpcFailure union is the same envelope RuntimeRpcResponse describes; only the `result` generic differs, and this call site declares it as unknown.
       return (await new RpcDispatcher({ runtime, methods: ALL_RPC_METHODS }).dispatch(
         {
@@ -78,6 +84,7 @@ export function registerRuntimeHandlers(runtime: OrcaRuntimeService): void {
         },
         {
           clientId: 'desktop-renderer',
+          workbenchCaller: workbenchRequest ? issueWorkbenchDesktopCaller() : undefined,
           clientKind: 'runtime',
           connectionId: desktopSenders.connectionIdFor(event.sender),
           clientCapabilities: DESKTOP_RENDERER_RUNTIME_CLIENT_CAPABILITIES

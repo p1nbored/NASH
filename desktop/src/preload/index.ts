@@ -37,7 +37,6 @@ import { agentAwakeApi } from './api/agent-awake-bridge'
 import { localhostWorktreeLabelsApi } from './api/localhost-worktree-labels-bridge'
 import { keybindingsApi } from './api/keybindings-bridge'
 import { codexAccountsApi } from './api/codex-accounts-bridge'
-import { claudeAccountsApi } from './api/claude-accounts-bridge'
 import { cliApi } from './api/cli-bridge'
 import { codexConfigSyncApi } from './api/codex-config-sync-bridge'
 import { preflightApi } from './api/preflight-bridge'
@@ -78,6 +77,7 @@ import { rateLimitsApi } from './api/rate-limits-bridge'
 import { opencodeGoCredentialsApi } from './api/opencode-go-credentials-bridge'
 import { minimaxCredentialsApi } from './api/minimax-credentials-bridge'
 import { zcodePlanCredentialsApi } from './api/zcode-plan-credentials-bridge'
+import { clefCredentialsApi } from './api/clef-credentials-bridge'
 import { grokAccountsApi } from './api/grok-accounts-bridge'
 import { cursorAccountsApi } from './api/cursor-accounts-bridge'
 import { sshApi } from './api/ssh-bridge'
@@ -138,7 +138,6 @@ const api = {
   localhostWorktreeLabels: localhostWorktreeLabelsApi,
   keybindings: keybindingsApi,
   codexAccounts: codexAccountsApi,
-  claudeAccounts: claudeAccountsApi,
   cli: cliApi,
   codexConfigSync: codexConfigSyncApi,
   preflight: preflightApi,
@@ -179,6 +178,7 @@ const api = {
   opencodeGoCredentials: opencodeGoCredentialsApi,
   minimaxCredentials: minimaxCredentialsApi,
   zcodePlanCredentials: zcodePlanCredentialsApi,
+  clefCredentials: clefCredentialsApi,
   grokAccounts: grokAccountsApi,
   cursorAccounts: cursorAccountsApi,
   ssh: sshApi,

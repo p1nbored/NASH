@@ -1,7 +1,8 @@
 import './mock-descendant-sweep'
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
+import type * as NodeOs from 'node:os'
 import { join } from 'node:path'
 import {
   resolveSetupAgentSequenceLaunchCommand,
@@ -29,6 +30,16 @@ const { mockPtySpawn, mockPtyInstance, mockCreateShellPromptReadinessProbe } = v
     resume: vi.fn()
   }
 }))
+
+// Why: relay history lives under the home (~/.nash-remote), which a test must never write.
+const testHome = vi.hoisted(() => ({ dir: '' }))
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof NodeOs>()
+  testHome.dir = `${actual.tmpdir()}/relay-spawn-env-home-${process.pid}-${Date.now()}`
+  const homedir = () => testHome.dir
+  return { ...actual, default: { ...actual, homedir }, homedir }
+})
+afterAll(() => rmSync(testHome.dir, { recursive: true, force: true }))
 
 vi.mock('node-pty', () => ({
   spawn: mockPtySpawn
@@ -274,7 +285,7 @@ describe('PtyHandler', () => {
     it.each([
       [
         'a relay-minted path',
-        `${process.env.HOME ?? ''}/.orca-remote/terminal-history/aabbccddeeff0011-zsh_history`,
+        `${process.env.HOME ?? ''}/.nash-remote/terminal-history/aabbccddeeff0011-zsh_history`,
         undefined
       ],
       [
@@ -312,7 +323,7 @@ describe('PtyHandler', () => {
     it.each([
       [
         'a relay-minted path',
-        `${process.env.HOME ?? ''}/.orca-remote/terminal-history/aabbccddeeff0011-zsh_history`
+        `${process.env.HOME ?? ''}/.nash-remote/terminal-history/aabbccddeeff0011-zsh_history`
       ],
       ['a desktop-minted path', '/fake/userData/terminal-history/aabbccddeeff0011/zsh_history'],
       ['a user value', '/home/me/.zsh_history']
@@ -401,7 +412,7 @@ describe('PtyHandler', () => {
     const wslWorktreeId = 'r::/remote/wsl-worktree'
     const wslHistoryFile = join(
       homedir(),
-      '.orca-remote',
+      '.nash-remote',
       'terminal-history',
       `${hashWorktreeId(wslWorktreeId)}-bash_history`
     )
@@ -804,7 +815,7 @@ describe('PtyHandler', () => {
     }
     expect(spawnEnv.name).toBe('xterm-256color')
     expect(spawnEnv.env.TERM).toBe('xterm-256color')
-    expect(spawnEnv.env.TERM_PROGRAM).toBe('Orca')
+    expect(spawnEnv.env.TERM_PROGRAM).toBe('NASH')
     expect(spawnEnv.env.ORCA_IMAGE_PROTOCOL).toBe('kitty')
   })
 
@@ -899,7 +910,7 @@ describe('PtyHandler', () => {
 
       const shellArgs = mockPtySpawn.mock.calls[0][1]
       const spawnOptions = mockPtySpawn.mock.calls[0][2] as { env: Record<string, string> }
-      const rcfile = join(homeDir, '.orca-relay', 'shell-ready', 'bash', 'rcfile')
+      const rcfile = join(homeDir, '.nash-relay', 'shell-ready', 'bash', 'rcfile')
 
       expect(shellArgs).toEqual(['--rcfile', rcfile])
       expect(spawnOptions.env.ORCA_OPENCODE_CONFIG_DIR).toBe('/remote/overlay/opencode')

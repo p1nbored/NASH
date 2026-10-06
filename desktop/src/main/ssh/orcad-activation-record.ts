@@ -7,7 +7,7 @@
  * record is the host-side half: it names an active version, a rollback target, and the
  * pre-activation state snapshot that makes going back to that target sound.
  *
- * It lives beside the version dirs (`~/.orca-remote/orcad-active.json`), not inside one,
+ * It lives beside the version dirs (`~/.nash-remote/orcad-active.json`), not inside one,
  * because it has to outlive whichever version GC removes.
  */
 import { remoteInstallDirName, ORCAD_INSTALL_MODEL } from './remote-install-model'
@@ -15,7 +15,7 @@ import { remoteInstallDirName, ORCAD_INSTALL_MODEL } from './remote-install-mode
 export const ORCAD_ACTIVATION_FILENAME = 'orcad-active.json'
 export const ORCAD_ACTIVATION_SCHEMA_VERSION = 1
 
-/** Where a pre-activation copy of the shared data root lives, relative to `.orca-remote/`. */
+/** Where a pre-activation copy of the shared data root lives, relative to `.nash-remote/`. */
 export const ORCAD_STATE_SNAPSHOT_DIR = 'orcad-state-snapshots'
 
 export type OrcadStateSnapshot = {

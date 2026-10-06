@@ -261,12 +261,12 @@ export default function Landing(): React.JSX.Element {
           >
             <img
               src={logo}
-              alt={translate('auto.components.Landing.520304a067', 'Orca logo')}
+              alt={translate('auto.components.Landing.520304a067', 'NASH logo')}
               className="size-12"
             />
           </div>
           <h1 className="text-4xl font-bold text-foreground tracking-tight">
-            {translate('auto.components.Landing.6ca6ff404e', 'ORCA')}
+            {translate('auto.components.Landing.6ca6ff404e', 'NASH')}
           </h1>
 
           {preflightIssues.length > 0 && <PreflightBanner issues={preflightIssues} repos={repos} />}

@@ -3,9 +3,16 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { findDynamicVcRuntimeImports, readPeImportedDllNames } from './windows-pe-imports.mjs'
+
+// Why the launcher is built under the command name: the PE OriginalFilename must match the file users invoke (D-017).
+const { cliCommandName } = createRequire(import.meta.url)(
+  '../../src/shared/app-identity-constants.json'
+)
+const LAUNCHER_FILE_NAME = `${cliCommandName}.exe`
 
 export function windowsCliLauncherFingerprint(inputPaths, version) {
   const hash = createHash('sha256').update(version)
@@ -37,7 +44,7 @@ export function windowsCliLauncherFileVersion(version) {
 }
 
 function defaultOutputPath(projectRoot) {
-  return join(projectRoot, 'native', 'windows-cli-launcher', '.build', 'orca.exe')
+  return join(projectRoot, 'native', 'windows-cli-launcher', '.build', LAUNCHER_FILE_NAME)
 }
 
 function readArg(name) {
@@ -48,7 +55,7 @@ function readArg(name) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (process.platform !== 'win32') {
     // Why: electron-builder treats a skipped native build like success and can
-    // continue toward a Windows package whose declared orca.exe does not exist.
+    // continue toward a Windows package whose declared nash.exe does not exist.
     throw new Error(
       'Windows CLI launcher compilation requires a Windows host; refusing to package without it.'
     )
@@ -119,14 +126,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(result.status ?? 1)
   }
 
-  const builtPath = join(targetDirectory, 'release', 'orca.exe')
+  const builtPath = join(targetDirectory, 'release', LAUNCHER_FILE_NAME)
   const vcRuntimeImports = findDynamicVcRuntimeImports(
     readPeImportedDllNames(readFileSync(builtPath))
   )
   if (vcRuntimeImports.length > 0) {
     // Why fatal: those DLLs ship with the Visual C++ Redistributable, so the CLI would fail to start on a clean Windows install.
     throw new Error(
-      `orca.exe imports ${vcRuntimeImports.join(', ')}; the C runtime must be linked statically (native/windows-cli-launcher/.cargo/config.toml).`
+      `${LAUNCHER_FILE_NAME} imports ${vcRuntimeImports.join(', ')}; the C runtime must be linked statically (native/windows-cli-launcher/.cargo/config.toml).`
     )
   }
   copyFileSync(builtPath, outputPath)

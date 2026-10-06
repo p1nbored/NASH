@@ -150,6 +150,22 @@ describe('logSingleInstanceLockFailure', () => {
     expect(write.mock.calls[0]?.[1]).toContain('Electron/macOS single-instance lock failure')
   })
 
+  it('names NASH, never Orca, in the lock diagnostics so a log cannot be mistaken for an Orca install', () => {
+    const devLine = singleInstanceLockFailureMessage({ isDevDesktop: true, userDataPath: '/p' })
+
+    expect(SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE).toContain('Another NASH instance')
+    expect(SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE).toContain('If no NASH process is running')
+    expect(SINGLE_INSTANCE_LOCK_BYPASS_MESSAGE).toContain('another NASH instance')
+    expect(devLine).toContain('Another NASH dev instance')
+    for (const line of [
+      SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE,
+      SINGLE_INSTANCE_LOCK_BYPASS_MESSAGE
+    ]) {
+      expect(line.replace(/ORCA_[A-Z_]+/g, '')).not.toMatch(/orca/i)
+    }
+    expect(devLine.replace(/ORCA_[A-Z_]+/g, '')).not.toMatch(/orca/i)
+  })
+
   it('tells a second dev launch which profile is taken and how to run another copy', () => {
     const write = vi.fn()
     const userDataPath = '/Users/dev/Library/Application Support/orca-dev'

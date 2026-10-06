@@ -1,4 +1,5 @@
 import type { SFTPWrapper } from 'ssh2'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import type { AgentHookInstallStatus } from '../../shared/agent-hook-types'
 import {
   createManagedCommandMatcher,
@@ -36,8 +37,8 @@ export async function installCodexHooksRemote(
   // into stale trust keys. Plain SSH keeps its guest-home script contract.
   const redirectedCodexHome = options?.codexHomeDir?.replace(/\/$/, '')
   const remoteScriptPath = redirectedCodexHome
-    ? `${redirectedCodexHome}/.orca/agent-hooks/codex-hook.sh`
-    : `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/codex-hook.sh`
+    ? `${redirectedCodexHome}/${APP_AGENT_HOOKS_HOME_PATH}/codex-hook.sh`
+    : `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/codex-hook.sh`
   try {
     const config = await readHooksJsonRemote(sftp, remoteConfigPath)
     if (!config) {

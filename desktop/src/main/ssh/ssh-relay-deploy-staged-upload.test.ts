@@ -12,7 +12,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn((os: string, arch: string) => {
     const normalizedOs = os.toLowerCase()
     const normalizedArch = arch.toLowerCase()
@@ -63,7 +63,7 @@ vi.mock('./ssh-relay-ripgrep-install', async (importOriginal) => ({
 
 vi.mock('./ssh-relay-versioned-install', () => ({
   readLocalFullVersion: vi.fn().mockReturnValue('0.1.0+abcdef012345'),
-  computeRemoteRelayDir: (home: string, v: string) => `${home}/.orca-remote/relay-${v}`,
+  computeRemoteRelayDir: (home: string, v: string) => `${home}/.nash-remote/relay-${v}`,
   isRelayAlreadyInstalled: vi.fn().mockResolvedValue(true),
   finalizeInstall: vi.fn().mockResolvedValue(undefined),
   abandonInstall: vi.fn().mockResolvedValue(undefined),
@@ -320,7 +320,7 @@ describe('deployAndLaunchRelay staged uploads', () => {
       (command) => /\.sftp-namespace-[0-9a-f]{32}/u.test(command) && command.includes('rm -rf')
     )
     expect(uploadStageRemovals).toHaveLength(1)
-    expect(uploadStageRemovals[0]).toContain('/.orca-remote/.upload-stages/claim-0')
+    expect(uploadStageRemovals[0]).toContain('/.nash-remote/.upload-stages/claim-0')
   })
 
   it.each(['lock acquisition', 'locked recheck'])(

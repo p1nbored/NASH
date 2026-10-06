@@ -6,7 +6,7 @@ import { runProcess } from '../../shared/child-process/run-process'
 import { getWindowsManagedLifecycleHook } from '../claude/hook-settings'
 
 const command = getWindowsManagedLifecycleHook(
-  'C:\\Users\\alice\\.orca\\agent-hooks\\claude-hook.cmd'
+  'C:\\Users\\alice\\.nash\\agent-hooks\\claude-hook.cmd'
 ).command
 const input = '{"message":"café 日本語 & %PATH%", "hook_event_name":"Stop"}'
 
@@ -18,7 +18,7 @@ describe.skipIf(process.platform === 'win32')('Windows command under available P
       `preserves invocation and reports a missing entry without exit 2: ${shell}`,
       async () => {
         const root = mkdtempSync(join(tmpdir(), 'claude-command-host-'))
-        const fixture = join(root, 'C:/Users/alice/.orca/agent-hooks/claude-hook.cmd')
+        const fixture = join(root, 'C:/Users/alice/.nash/agent-hooks/claude-hook.cmd')
         const run = () =>
           runProcess({
             program: '/usr/bin/env',

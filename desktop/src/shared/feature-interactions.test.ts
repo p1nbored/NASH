@@ -10,6 +10,7 @@ import {
   normalizeFeatureInteractions,
   type FeatureInteractionId
 } from './feature-interactions'
+import { RETIRED_FEATURE_INTERACTION_IDS } from './feature-interaction-catalog'
 import { escapeRegex } from './string-utils'
 
 type DefinedFeatureInteractionId = (typeof FEATURE_INTERACTIONS)[number]['id']
@@ -170,7 +171,7 @@ describe('feature interactions', () => {
 
   it('keeps every catalog id wired to a production writer', () => {
     const productionText = collectProductionSourceText()
-    const missingWriters = FEATURE_INTERACTIONS.map((feature) => feature.id).filter((id) => {
+    const hasWriter = (id: FeatureInteractionId): boolean => {
       const escaped = escapeRegex(id)
       const directRecord = new RegExp(
         `recordFeatureInteraction(?:\\?\\.)?\\(\\s*['"]${escaped}['"]`
@@ -178,13 +179,22 @@ describe('feature interactions', () => {
       const contextualTourRecord = new RegExp(`useContextualTour\\(\\s*['"]${escaped}['"]`)
       const runtimeMappingReturn = new RegExp(`return[^\\n]*['"]${escaped}['"]`)
       return (
-        !directRecord.test(productionText) &&
-        !contextualTourRecord.test(productionText) &&
-        !runtimeMappingReturn.test(productionText)
+        directRecord.test(productionText) ||
+        contextualTourRecord.test(productionText) ||
+        runtimeMappingReturn.test(productionText)
       )
-    })
+    }
+    const catalogIds: readonly FeatureInteractionId[] = FEATURE_INTERACTIONS.map(
+      (feature) => feature.id
+    )
+    const missingWriters = catalogIds.filter(
+      (id) => !RETIRED_FEATURE_INTERACTION_IDS.includes(id) && !hasWriter(id)
+    )
 
     expect(missingWriters).toEqual([])
+    // Retired ids stay in the catalog so saved state and older clients still validate.
+    expect(RETIRED_FEATURE_INTERACTION_IDS.filter((id) => !catalogIds.includes(id))).toEqual([])
+    expect(RETIRED_FEATURE_INTERACTION_IDS.filter(hasWriter)).toEqual([])
   }, 15_000)
 })
 

@@ -47,8 +47,8 @@ function hasManagedCommand(hook: TestHook, matcher: (command: string | undefined
 }
 
 describe('getWindowsManagedLifecycleHook', () => {
-  const SAFE_SCRIPT_PATH = 'C:\\Users\\alice\\.orca\\agent-hooks\\claude-hook.cmd'
-  const UNSAFE_SCRIPT_PATH = 'C:\\Users\\%name%\\a^b&c\\.orca\\agent-hooks\\claude-hook.cmd'
+  const SAFE_SCRIPT_PATH = 'C:\\Users\\alice\\.nash\\agent-hooks\\claude-hook.cmd'
+  const UNSAFE_SCRIPT_PATH = 'C:\\Users\\%name%\\a^b&c\\.nash\\agent-hooks\\claude-hook.cmd'
 
   it('registers the script itself, with no interpreter in front of it (#18875)', () => {
     // Why this is the whole point: the encoded launcher spent a PowerShell start-up per hook
@@ -57,7 +57,7 @@ describe('getWindowsManagedLifecycleHook', () => {
     const hook = getWindowsManagedLifecycleHook(SAFE_SCRIPT_PATH)
 
     expect(hook.args).toBeUndefined()
-    expect(hook.command).toBe('C:/Users/alice/.orca/agent-hooks/claude-hook.cmd')
+    expect(hook.command).toBe('C:/Users/alice/.nash/agent-hooks/claude-hook.cmd')
     expect(hook.command).not.toMatch(/powershell|-EncodedCommand|conhost/i)
     // Why: Git Bash/MSYS mangles backslash paths and rewrites slash-prefixed switches.
     expect(hook.command).not.toMatch(/\\/)
@@ -75,14 +75,14 @@ describe('getWindowsManagedLifecycleHook', () => {
     const encoded = hook.command.match(/-EncodedCommand (\S+)$/)?.[1]
     const decoded = Buffer.from(encoded ?? '', 'base64').toString('utf16le')
     expect(decoded).toContain('$env:USERPROFILE')
-    expect(decoded).toContain('.orca\\agent-hooks\\claude-hook.cmd')
+    expect(decoded).toContain('.nash\\agent-hooks\\claude-hook.cmd')
   })
 
   it('does not consult Git Bash availability', () => {
     gitBashAvailableMock.value = false
     try {
       expect(getWindowsManagedLifecycleHook(SAFE_SCRIPT_PATH).command).toBe(
-        'C:/Users/alice/.orca/agent-hooks/claude-hook.cmd'
+        'C:/Users/alice/.nash/agent-hooks/claude-hook.cmd'
       )
     } finally {
       gitBashAvailableMock.value = true
@@ -210,7 +210,7 @@ describe('ClaudeHookService.install', () => {
                 hooks: [
                   {
                     type: 'command',
-                    command: '/Users/old/.orca/agent-hooks/claude-hook.sh'
+                    command: '/Users/old/.nash/agent-hooks/claude-hook.sh'
                   }
                 ]
               }
@@ -253,7 +253,7 @@ describe('ClaudeHookService.install', () => {
       ).toBe(true)
       expect(
         legacyHooks.some((hook: TestHook) =>
-          hook.command.includes('/Users/old/.orca/agent-hooks/claude-hook.sh')
+          hook.command.includes('/Users/old/.nash/agent-hooks/claude-hook.sh')
         )
       ).toBe(false)
       expect(hasManagedCommand(legacy.hooks.StopFailure[0].hooks[0], isClaudeManagedCommand)).toBe(
@@ -262,7 +262,7 @@ describe('ClaudeHookService.install', () => {
       const managedScript = readFileSync(
         join(
           tmpHome,
-          '.orca',
+          '.nash',
           'agent-hooks',
           process.platform === 'win32' ? 'claude-hook-impl.cmd' : CLAUDE_SCRIPT_FILE_NAME
         ),
@@ -324,38 +324,27 @@ describe('ClaudeHookService.install', () => {
     }
   })
 
-  it('installs the managed statusLine command and forwards rate_limits posts', () => {
+  // Why (G8, user decision of 2026-10-06): Claude usage reaches NASH only through the relay in the
+  // primary sessions' own --settings file, so NASH writes no user-global statusLine.
+  it('writes no global statusLine and no statusline script when it installs the Claude hooks', () => {
     const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-statusline-'))
     vi.stubEnv('HOME', tmpHome)
     vi.stubEnv('USERPROFILE', tmpHome)
     try {
-      expect(new ClaudeHookService().install().state).toBe('installed')
+      expect(new ClaudeHookService().install(CURRENT_CLAUDE).state).toBe('installed')
+      new ClaudeHookService().install()
 
       const settings = JSON.parse(
         readFileSync(join(tmpHome, '.claude', 'settings.json'), 'utf-8')
-      ) as { statusLine?: { type: string; command: string } }
-      expect(settings.statusLine?.type).toBe('command')
-      expect(settings.statusLine?.command).toContain(
-        '"${HOME-}/.orca/agent-hooks/claude-statusline.cmd"'
+      ) as { statusLine?: unknown; hooks?: Record<string, unknown> }
+      expect(settings.statusLine).toBeUndefined()
+      expect(settings.hooks?.SessionStart).toBeDefined()
+      expect(existsSync(join(tmpHome, '.nash', 'agent-hooks', STATUSLINE_SCRIPT_FILE_NAME))).toBe(
+        false
       )
-      expect(settings.statusLine?.command).toContain(
-        '"${HOME-}/.orca/agent-hooks/claude-statusline.sh"'
+      expect(existsSync(join(tmpHome, '.nash', 'agent-hooks', 'claude-statusline.installed'))).toBe(
+        false
       )
-      expect(settings.statusLine?.command).not.toContain(tmpHome.replaceAll('\\', '/'))
-
-      const script = readFileSync(
-        join(tmpHome, '.orca', 'agent-hooks', STATUSLINE_SCRIPT_FILE_NAME),
-        'utf-8'
-      )
-      expect(script).toContain('/statusline/claude')
-      // Why: non-subscriber sessions never carry rate_limits; both branches must guard before spawning curl.
-      if (process.platform === 'win32') {
-        expect(script).toContain('findstr.exe" /c:\\"rate_limits\\"')
-        expect(script).toContain('--data-urlencode "payload@%ORCA_STATUSLINE_PAYLOAD_FILE%"')
-      } else {
-        expect(script).toContain('"rate_limits"')
-        expect(script).toContain('--data-urlencode "payload@-"')
-      }
     } finally {
       vi.unstubAllEnvs()
       rmSync(tmpHome, { recursive: true, force: true })
@@ -400,59 +389,42 @@ describe('ClaudeHookService.install', () => {
     }
   })
 
-  it('removes the managed statusLine on remove()', () => {
+  it('removes a managed statusLine an earlier build wrote, on install and on remove()', () => {
     const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-statusline-remove-'))
     vi.stubEnv('HOME', tmpHome)
     vi.stubEnv('USERPROFILE', tmpHome)
     try {
-      new ClaudeHookService().install()
+      const settingsPath = join(tmpHome, '.claude', 'settings.json')
+      const earlier = {
+        statusLine: {
+          type: 'command',
+          command: `"\${HOME-}/.nash/agent-hooks/${STATUSLINE_SCRIPT_FILE_NAME}"`
+        }
+      }
+      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      writeFileSync(settingsPath, JSON.stringify(earlier))
+      new ClaudeHookService().install(CURRENT_CLAUDE)
+      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeUndefined()
+
+      writeFileSync(settingsPath, JSON.stringify(earlier))
       new ClaudeHookService().remove()
-      const settings = JSON.parse(readFileSync(join(tmpHome, '.claude', 'settings.json'), 'utf-8'))
-      expect(settings.statusLine).toBeUndefined()
+      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeUndefined()
     } finally {
       vi.unstubAllEnvs()
       rmSync(tmpHome, { recursive: true, force: true })
     }
   })
 
-  it('does not re-install a managed statusLine the user deleted, until remove() resets the opt-out', () => {
+  it('adds no statusLine after remove() and a fresh install either', () => {
     const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-statusline-optout-'))
     vi.stubEnv('HOME', tmpHome)
     vi.stubEnv('USERPROFILE', tmpHome)
     try {
       const settingsPath = join(tmpHome, '.claude', 'settings.json')
       new ClaudeHookService().install()
-      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeTruthy()
-
-      // The user deletes the managed statusLine from settings.json (e.g. via /statusline or an editor).
-      const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'))
-      delete settings.statusLine
-      writeFileSync(settingsPath, JSON.stringify(settings))
-
-      // A later install (app restart) must respect the deletion — statusLine is opportunistic, not required.
-      new ClaudeHookService().install()
-      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeUndefined()
-
-      // An Orca-level remove() resets the opt-out memory, so a fresh install re-adds it.
       new ClaudeHookService().remove()
       new ClaudeHookService().install()
-      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeTruthy()
-    } finally {
-      vi.unstubAllEnvs()
-      rmSync(tmpHome, { recursive: true, force: true })
-    }
-  })
-
-  it('keeps refreshing a still-managed statusLine across installs', () => {
-    const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-statusline-refresh-'))
-    vi.stubEnv('HOME', tmpHome)
-    vi.stubEnv('USERPROFILE', tmpHome)
-    try {
-      const settingsPath = join(tmpHome, '.claude', 'settings.json')
-      new ClaudeHookService().install()
-      new ClaudeHookService().install()
-      const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'))
-      expect(settings.statusLine?.command).toContain('claude-statusline')
+      expect(JSON.parse(readFileSync(settingsPath, 'utf-8')).statusLine).toBeUndefined()
     } finally {
       vi.unstubAllEnvs()
       rmSync(tmpHome, { recursive: true, force: true })
@@ -472,7 +444,7 @@ describe('ClaudeHookService.install', () => {
           readFileSync(join(tmpHome, '.claude', 'settings.json'), 'utf-8')
         ) as { hooks: Record<string, { hooks: TestHook[] }[]> }
 
-        const scriptPath = join(tmpHome, '.orca', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
+        const scriptPath = join(tmpHome, '.nash', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
 
         for (const eventName of ['UserPromptSubmit', 'Stop', 'StopFailure']) {
           const hook = settings.hooks[eventName]?.[0]?.hooks?.[0]
@@ -483,7 +455,7 @@ describe('ClaudeHookService.install', () => {
           const encoded = hook?.command.match(/-EncodedCommand (\S+)$/)?.[1]
           const decoded = Buffer.from(encoded ?? '', 'base64').toString('utf16le')
           expect(decoded).toContain('$env:USERPROFILE')
-          expect(decoded).toContain(`.orca\\agent-hooks\\${CLAUDE_SCRIPT_FILE_NAME}`)
+          expect(decoded).toContain(`.nash\\agent-hooks\\${CLAUDE_SCRIPT_FILE_NAME}`)
         }
       } finally {
         vi.unstubAllEnvs()
@@ -498,7 +470,7 @@ describe('ClaudeHookService.install', () => {
       const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-direct-'))
       vi.stubEnv('HOME', tmpHome)
       vi.stubEnv('USERPROFILE', tmpHome)
-      const scriptPath = join(tmpHome, '.orca', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
+      const scriptPath = join(tmpHome, '.nash', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
       // Why: a runner whose tmpdir carries a space (a profile-scoped TEMP) belongs to the
       // fallback case above, not this one; skip rather than assert the wrong contract.
       if (!WINDOWS_CMD_SAFE_PATH.test(scriptPath)) {
@@ -535,7 +507,7 @@ describe('ClaudeHookService.install', () => {
       const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-migrate-'))
       vi.stubEnv('HOME', tmpHome)
       vi.stubEnv('USERPROFILE', tmpHome)
-      const scriptPath = join(tmpHome, '.orca', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
+      const scriptPath = join(tmpHome, '.nash', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
       if (!WINDOWS_CMD_SAFE_PATH.test(scriptPath)) {
         vi.unstubAllEnvs()
         rmSync(tmpHome, { recursive: true, force: true })
@@ -545,7 +517,7 @@ describe('ClaudeHookService.install', () => {
         const settingsPath = join(tmpHome, '.claude', 'settings.json')
         mkdirSync(join(tmpHome, '.claude'), { recursive: true })
         const stale = getWindowsManagedLifecycleHook(
-          'C:\\Users\\%name%\\.orca\\agent-hooks\\claude-hook.cmd'
+          'C:\\Users\\%name%\\.nash\\agent-hooks\\claude-hook.cmd'
         )
         writeFileSync(
           settingsPath,
@@ -586,7 +558,7 @@ describe('ClaudeHookService.install', () => {
       const tmpHome = mkdtempSync(join(tmpdir(), 'orca-claude-moved-'))
       vi.stubEnv('HOME', tmpHome)
       vi.stubEnv('USERPROFILE', tmpHome)
-      const scriptPath = join(tmpHome, '.orca', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
+      const scriptPath = join(tmpHome, '.nash', 'agent-hooks', CLAUDE_SCRIPT_FILE_NAME)
       if (!WINDOWS_CMD_SAFE_PATH.test(scriptPath)) {
         vi.unstubAllEnvs()
         rmSync(tmpHome, { recursive: true, force: true })
@@ -595,7 +567,7 @@ describe('ClaudeHookService.install', () => {
       try {
         const settingsPath = join(tmpHome, '.claude', 'settings.json')
         mkdirSync(join(tmpHome, '.claude'), { recursive: true })
-        const staleCommand = 'C:/Users/someone-else/.orca/agent-hooks/claude-hook.cmd || echo {}'
+        const staleCommand = 'C:/Users/someone-else/.nash/agent-hooks/claude-hook.cmd || echo {}'
         const stale = { type: 'command', command: staleCommand, timeout: 10 }
         writeFileSync(
           settingsPath,
@@ -632,7 +604,7 @@ describe('ClaudeHookService.install', () => {
       try {
         expect(new ClaudeHookService().install().state).toBe('installed')
         const script = readFileSync(
-          join(tmpHome, '.orca', 'agent-hooks', 'claude-hook-impl.cmd'),
+          join(tmpHome, '.nash', 'agent-hooks', 'claude-hook-impl.cmd'),
           'utf-8'
         )
         expect(script).toContain('%SystemRoot%\\System32\\curl.exe')
@@ -657,7 +629,7 @@ describe('backgrounded-session pane guard (#9236)', () => {
   it('declines to post from a daemon worker, before spawning curl', async () => {
     const { sftp, fs } = createFakeSftp()
     expect((await new ClaudeHookService().installRemote(sftp, '/home/dev')).state).toBe('installed')
-    const script = fs.files.get('/home/dev/.orca/agent-hooks/claude-hook.sh')!
+    const script = fs.files.get('/home/dev/.nash/agent-hooks/claude-hook.sh')!
 
     expect(script).toContain('if [ -n "$CLAUDE_JOB_DIR" ]; then')
     // Why: the guard is worthless if it runs after the post it is meant to prevent.
@@ -680,7 +652,7 @@ describe('backgrounded-session pane guard (#9236)', () => {
         const script = readFileSync(
           join(
             tmpHome,
-            '.orca',
+            '.nash',
             'agent-hooks',
             target === 'win32' ? 'claude-statusline.cmd' : 'claude-statusline.sh'
           ),
@@ -713,7 +685,7 @@ describe('backgrounded-session pane guard (#9236)', () => {
     try {
       expect(new ClaudeHookService().install().state).toBe('installed')
       const script = readFileSync(
-        join(tmpHome, '.orca', 'agent-hooks', 'claude-hook-impl.cmd'),
+        join(tmpHome, '.nash', 'agent-hooks', 'claude-hook-impl.cmd'),
         'utf-8'
       )
       const guard = script.split('\r\n').find((line) => line.includes('CLAUDE_JOB_DIR'))
@@ -757,11 +729,11 @@ describe('ClaudeHookService.installRemote', () => {
     ]) {
       expect(parsed.hooks[event]).toBeTruthy()
       const cmd = parsed.hooks[event][0].hooks[0].command as string
-      expect(cmd).toContain('"${HOME-}/.orca/agent-hooks/claude-hook.sh"')
-      expect(cmd).not.toContain('/home/dev/.orca/agent-hooks/claude-hook.sh')
+      expect(cmd).toContain('"${HOME-}/.nash/agent-hooks/claude-hook.sh"')
+      expect(cmd).not.toContain('/home/dev/.nash/agent-hooks/claude-hook.sh')
     }
     // Managed script body
-    const script = fs.files.get('/home/dev/.orca/agent-hooks/claude-hook.sh')
+    const script = fs.files.get('/home/dev/.nash/agent-hooks/claude-hook.sh')
     expect(script).toContain('#!/bin/sh')
     expect(script).toContain('DEVIN_PROJECT_DIR')
     expect(script).toContain('GROK_HOOK_EVENT')
@@ -777,11 +749,11 @@ describe('ClaudeHookService.installRemote', () => {
     expect(script).toContain('-H "X-Orca-Agent-Hook-Meta: ${orca_hook_metadata}"')
     expect(script).toContain('--data-binary @-')
     expect(script).toContain('--data-urlencode "payload@-"')
-    expect(fs.modes.get('/home/dev/.orca/agent-hooks/claude-hook.sh')).toBe(0o755)
+    expect(fs.modes.get('/home/dev/.nash/agent-hooks/claude-hook.sh')).toBe(0o755)
     // Why: no remote statusLine — this path serves SSH remotes and WSL guests, whose relay
     // listener doesn't route /statusline/claude and whose accounts aren't attributable locally.
     expect(parsed.statusLine).toBeUndefined()
-    expect(fs.files.get('/home/dev/.orca/agent-hooks/claude-statusline.sh')).toBeUndefined()
+    expect(fs.files.get('/home/dev/.nash/agent-hooks/claude-statusline.sh')).toBeUndefined()
   })
 
   it('writes only the events the remote Claude knows, adding newer ones once it upgrades', async () => {
@@ -829,7 +801,7 @@ describe('ClaudeHookService.installRemote', () => {
                 {
                   type: 'command',
                   command:
-                    'if [ -x /home/dev/.orca/agent-hooks/claude-hook.sh ]; then /bin/sh /home/dev/.orca/agent-hooks/claude-hook.sh; fi'
+                    'if [ -x /home/dev/.nash/agent-hooks/claude-hook.sh ]; then /bin/sh /home/dev/.nash/agent-hooks/claude-hook.sh; fi'
                 }
               ]
             }
@@ -876,18 +848,18 @@ describe('OpenClaudeHookService-compatible install', () => {
       for (const event of ['UserPromptSubmit', 'Stop', 'StopFailure']) {
         const command = parsed.hooks[event][0].hooks[0].command as string
         expect(isOpenClaudeManagedCommand(command)).toBe(true)
-        expect(command).toContain('"${HOME-}/.orca/agent-hooks/openclaude-hook.cmd"')
-        expect(command).toContain('"${HOME-}/.orca/agent-hooks/openclaude-hook.sh"')
+        expect(command).toContain('"${HOME-}/.nash/agent-hooks/openclaude-hook.cmd"')
+        expect(command).toContain('"${HOME-}/.nash/agent-hooks/openclaude-hook.sh"')
         expect(command).not.toContain(tmpHome.replaceAll('\\', '/'))
       }
       expect(
-        readFileSync(join(tmpHome, '.orca', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
+        readFileSync(join(tmpHome, '.nash', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
       ).toContain('/hook/claude')
       expect(
-        readFileSync(join(tmpHome, '.orca', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
+        readFileSync(join(tmpHome, '.nash', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
       ).not.toContain('DEVIN_PROJECT_DIR')
       expect(
-        readFileSync(join(tmpHome, '.orca', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
+        readFileSync(join(tmpHome, '.nash', 'agent-hooks', OPENCLAUDE_SCRIPT_FILE_NAME), 'utf-8')
       ).not.toContain('GROK_HOOK_EVENT')
       // Why: the statusline usage feed is Claude-only; OpenClaude installs must not set statusLine.
       expect(parsed.statusLine).toBeUndefined()
@@ -910,8 +882,8 @@ describe('OpenClaudeHookService-compatible install', () => {
     })
     const parsed = JSON.parse(fs.files.get('/home/dev/.openclaude/settings.json')!)
     const command = parsed.hooks.StopFailure[0].hooks[0].command as string
-    expect(command).toContain('"${HOME-}/.orca/agent-hooks/openclaude-hook.sh"')
-    expect(command).not.toContain('/home/dev/.orca/agent-hooks/openclaude-hook.sh')
-    expect(fs.files.get('/home/dev/.orca/agent-hooks/openclaude-hook.sh')).toContain('/hook/claude')
+    expect(command).toContain('"${HOME-}/.nash/agent-hooks/openclaude-hook.sh"')
+    expect(command).not.toContain('/home/dev/.nash/agent-hooks/openclaude-hook.sh')
+    expect(fs.files.get('/home/dev/.nash/agent-hooks/openclaude-hook.sh')).toContain('/hook/claude')
   })
 })

@@ -4,6 +4,12 @@ import { userInfo } from 'node:os'
 import { isAbsolute, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach } from 'vitest'
+import { APP_IDENTITY } from '../../src/shared/app-identity-constants'
+import {
+  APP_HOME_DIR_NAME,
+  APP_RELAY_HOME_DIR_NAME,
+  APP_REMOTE_DIR_NAME
+} from '../../src/shared/app-identity-paths'
 
 /**
  * Why: agent trust and hook writers resolve `~` at write time, so a unit test that reaches one
@@ -17,6 +23,11 @@ const AGENT_HOME_ENTRIES = [
   '.codex',
   '.claude',
   '.orca',
+  // Why: the app's own home folder holds its credentials and hook scripts (decision D-017).
+  APP_HOME_DIR_NAME,
+  // Why: relay tests resolve these under the home at write time; runs once left ~/.orca-relay and ~/.orca-remote.
+  APP_RELAY_HOME_DIR_NAME,
+  APP_REMOTE_DIR_NAME,
   '.cursor',
   '.copilot',
   '.gemini',
@@ -66,7 +77,10 @@ function protectedRoots(): string[] {
     ...AGENT_HOME_ENTRIES.map((entry) => join(home, entry)),
     join(home, 'Library', 'Application Support', 'orca'),
     join(home, '.config', 'orca'),
-    join(home, 'AppData', 'Roaming', 'orca')
+    join(home, 'AppData', 'Roaming', 'orca'),
+    join(home, 'Library', 'Application Support', APP_IDENTITY.userDataDirName),
+    join(home, '.config', APP_IDENTITY.userDataDirName),
+    join(home, 'AppData', 'Roaming', APP_IDENTITY.userDataDirName)
   ])
   for (const name of INHERITED_STATE_ENV) {
     const value = process.env[name]

@@ -84,7 +84,7 @@ describe('prepareLocalWorktreeRootForRepo', () => {
 
       expect(getWslHomeMock).not.toHaveBeenCalled()
       expect(mkdirMock).toHaveBeenCalledWith(
-        '\\\\wsl.localhost\\Ubuntu\\home\\jin\\orca\\workspaces',
+        '\\\\wsl.localhost\\Ubuntu\\home\\jin\\nash\\workspaces',
         { recursive: true }
       )
     } finally {

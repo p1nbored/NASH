@@ -38,7 +38,7 @@ export function hostRuntimeStoreInventoryCommand(
     : runtimeStoreInventoryCommand(host, remoteHome)
 }
 
-/** Same tags as `runtimeStoreInventoryCommand`; `root` is `~/.orca-remote`. */
+/** Same tags as `runtimeStoreInventoryCommand`; `root` is `~/.nash-remote`. */
 export function windowsRuntimeStoreInventoryCommand(root: string): string {
   const fail = `Write-Output ${powerShellLiteral(REFS_ERR)}; exit 0`
   return powerShellCommand(

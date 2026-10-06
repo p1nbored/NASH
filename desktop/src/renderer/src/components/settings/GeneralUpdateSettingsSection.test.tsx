@@ -6,6 +6,11 @@ import { GeneralUpdateSettingsSection } from './GeneralUpdateSettingsSection'
 
 vi.mock('./GeneralRemoteServerUpdates', () => ({ GeneralRemoteServerUpdates: () => null }))
 vi.mock('./ReleaseChannelSection', () => ({ ReleaseChannelSection: () => null }))
+// Why: the shipped identity has no release feed; these cases cover a build that has one.
+vi.mock('../../../../shared/app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../../../../shared/app-update-feed.test-fixture')
+  return withFixtureUpdateFeed(await importOriginal())
+})
 
 beforeEach(() => {
   useAppStore.setState({

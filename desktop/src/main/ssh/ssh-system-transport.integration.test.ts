@@ -139,7 +139,7 @@ function createRelayTree(root: string, remoteHome: string): void {
     writeFakeRelay(localDir)
   }
 
-  const remoteDir = join(remoteHome, '.orca-remote', `relay-${RELAY_VERSION}`)
+  const remoteDir = join(remoteHome, '.nash-remote', `relay-${RELAY_VERSION}`)
   mkdirSync(join(remoteDir, 'node_modules', 'node-pty', 'lib'), { recursive: true })
   mkdirSync(join(remoteDir, 'node_modules', '@parcel', 'watcher'), { recursive: true })
   writeFileSync(join(remoteDir, 'node_modules', 'node-pty', 'index.js'), '')

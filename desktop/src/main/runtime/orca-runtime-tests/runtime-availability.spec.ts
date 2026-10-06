@@ -317,9 +317,7 @@ describe('OrcaRuntimeService', () => {
       }))
     }
     runtime.setAccountServices({
-      claudeAccounts: {
-        listAccounts: vi.fn(() => ({ accounts: [], activeAccountId: null }))
-      },
+      claudeRuntimeAuth: { getRuntimeConfigDir: vi.fn() },
       codexAccounts,
       rateLimits
     } as never)
@@ -361,9 +359,7 @@ describe('OrcaRuntimeService', () => {
       marker: 'current-after-rejection'
     }
     runtime.setAccountServices({
-      claudeAccounts: {
-        listAccounts: vi.fn(() => ({ accounts: [], activeAccountId: null }))
-      },
+      claudeRuntimeAuth: { getRuntimeConfigDir: vi.fn() },
       codexAccounts: {
         consumeRateLimitResetCredit: vi.fn().mockResolvedValue({
           status: 'rejectedBeforeProvider',

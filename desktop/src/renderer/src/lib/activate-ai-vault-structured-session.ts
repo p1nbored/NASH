@@ -75,7 +75,7 @@ const defaultDeps: StructuredSessionActivationDeps = {
     toast.error(
       translate(
         'auto.lib.activateAiVaultStructuredSession.hostCannotOpen',
-        "This chat can't be reopened until Orca is updated."
+        "This chat can't be reopened until NASH is updated."
       )
     )
   }

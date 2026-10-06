@@ -44,9 +44,9 @@ describe('relay WSL shell history', () => {
       wsl: true
     })
 
-    expect(root).toBe('C:\\Users\\relay/.orca-remote/terminal-history')
+    expect(root).toBe('C:\\Users\\relay/.nash-remote/terminal-history')
     expect(env.HISTFILE).toBe(
-      `/mnt/c/Users/relay/.orca-remote/terminal-history/${hashWorktreeId(worktreeId)}-bash_history`
+      `/mnt/c/Users/relay/.nash-remote/terminal-history/${hashWorktreeId(worktreeId)}-bash_history`
     )
     expect(env.ORCA_HISTFILE).toBe(env.HISTFILE)
   })
@@ -58,7 +58,7 @@ describe('relay WSL shell history', () => {
     injectRelayHistoryEnv(env, worktreeId, '/bin/bash')
 
     expect(env.HISTFILE).toBe(
-      `C:\\Users\\relay/.orca-remote/terminal-history/${hashWorktreeId(worktreeId)}-bash_history`
+      `C:\\Users\\relay/.nash-remote/terminal-history/${hashWorktreeId(worktreeId)}-bash_history`
     )
   })
 

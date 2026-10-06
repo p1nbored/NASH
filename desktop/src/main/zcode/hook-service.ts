@@ -1,4 +1,5 @@
 import type { SFTPWrapper } from 'ssh2'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import type { AgentHookInstallStatus } from '../../shared/agent-hook-types'
 import {
   buildWindowsAgentHookCurlPostCommand,
@@ -142,7 +143,7 @@ export class ZCodeHookService {
     const remoteConfigPath = getZCodeRemoteConfigPath(remoteHome)
     // Why: remote-Windows is out of scope; process.platform describes the local box, not the host.
     const remoteScriptFileName = getZCodePosixManagedScriptFileName()
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/${remoteScriptFileName}`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/${remoteScriptFileName}`
     try {
       const body = await readTextFileRemote(sftp, remoteConfigPath)
       const config = body === null ? {} : parseZCodeConfigText(body, 'remote ZCode config.json')

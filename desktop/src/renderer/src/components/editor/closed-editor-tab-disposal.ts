@@ -115,6 +115,7 @@ export function disposeClosedEditorTabCaches(
       case 'conflict-review':
         break
       case 'check-details':
+      case 'task-window':
         break
     }
   }

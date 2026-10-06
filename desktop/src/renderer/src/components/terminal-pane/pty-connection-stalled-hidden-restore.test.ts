@@ -596,7 +596,7 @@ describe('connectPanePty', () => {
       expect(getMainBufferSnapshot).toHaveBeenCalledTimes(4)
       expect(pane.terminal.write).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Orca skipped hidden terminal output because main recovery was unavailable.'
+          'NASH skipped hidden terminal output because main recovery was unavailable.'
         ),
         expect.any(Function)
       )

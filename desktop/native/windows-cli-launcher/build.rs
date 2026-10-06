@@ -23,15 +23,15 @@ fn main() {
     let (major, minor, patch) = numeric_version_parts(&version);
 
     let mut resource = winresource::WindowsResource::new();
-    resource.set("ProductName", "Orca");
-    resource.set("FileDescription", "Orca CLI Launcher");
+    resource.set("ProductName", "NASH");
+    resource.set("FileDescription", "NASH CLI Launcher");
     resource.set("CompanyName", "Stably AI");
     resource.set(
         "LegalCopyright",
         "Copyright (C) Stably AI. All rights reserved.",
     );
-    resource.set("InternalName", "orca.exe");
-    resource.set("OriginalFilename", "orca.exe");
+    resource.set("InternalName", "nash.exe");
+    resource.set("OriginalFilename", "nash.exe");
     resource.set("FileVersion", &format!("{major}.{minor}.{patch}.0"));
     resource.set("ProductVersion", &version);
     resource.set_version_info(

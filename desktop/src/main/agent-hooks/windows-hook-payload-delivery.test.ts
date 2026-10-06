@@ -144,7 +144,7 @@ describe('Windows managed hook launcher', () => {
   // this keeps a ConPTY host from being reintroduced unnoticed by a POSIX-only CI leg.
   it('does not re-host the hook on a pseudoconsole', () => {
     const hook = getWindowsManagedLifecycleHook(
-      'C:\\Users\\alice\\.orca\\agent-hooks\\claude-hook.cmd'
+      'C:\\Users\\alice\\.nash\\agent-hooks\\claude-hook.cmd'
     )
     expect(hook.command).not.toMatch(/conhost/i)
     expect(hook.args).toBeUndefined()
@@ -179,7 +179,7 @@ describe.skipIf(process.platform !== 'win32')('Windows managed hook payload deli
     const registeredCommand = settings.hooks.PreToolUse[0].hooks[0].command
     // ...with one exception: a cmd-safe profile must reach the script with no interpreter in
     // front of it, or #18875's per-event PowerShell start-up has quietly come back.
-    if (WINDOWS_CMD_SAFE_PATH.test(join(home, '.orca', 'agent-hooks', 'claude-hook.cmd'))) {
+    if (WINDOWS_CMD_SAFE_PATH.test(join(home, '.nash', 'agent-hooks', 'claude-hook.cmd'))) {
       expect(registeredCommand).not.toMatch(/powershell|-EncodedCommand/i)
     }
 

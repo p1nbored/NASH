@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { APP_XDG_DATA_DIR_NAME } from '../../shared/app-identity-paths'
 import { lstatSync, readlinkSync, statSync } from 'node:fs'
 import { mkdir, mkdtemp, rename, rm, rmdir, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
@@ -20,7 +21,7 @@ import {
   resolveAppImageStableLauncherPath
 } from './appimage-stable-launcher'
 
-const CACHE_DIR_SEGMENTS = ['orca', 'appimage'] as const
+const CACHE_DIR_SEGMENTS = [APP_XDG_DATA_DIR_NAME, 'appimage'] as const
 const EXTRACT_OUTPUT_DIR = 'squashfs-root'
 const MAX_GENERATION_ATTEMPTS = 2
 const EXTRACTION_STAGING_PREFIX = '.extract-'

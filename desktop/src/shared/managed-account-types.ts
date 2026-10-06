@@ -69,21 +69,7 @@ export type CodexManagedAccountRuntimeSelection = {
   wsl: Record<string, string | null>
 }
 
-export type ClaudeManagedAccount = {
-  id: string
-  email: string
-  managedAuthPath: string
-  managedAuthRuntime?: 'host' | 'wsl'
-  wslDistro?: string | null
-  wslLinuxAuthPath?: string | null
-  authMethod: 'subscription-oauth' | 'unknown'
-  organizationUuid?: string | null
-  organizationName?: string | null
-  createdAt: number
-  updatedAt: number
-  lastAuthenticatedAt: number
-}
-
+/** Wire shape only: Claude account switching is gone, so hosts publish an empty Claude roster. */
 export type ClaudeManagedAccountSummary = {
   id: string
   email: string

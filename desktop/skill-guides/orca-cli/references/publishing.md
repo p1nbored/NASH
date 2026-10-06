@@ -13,9 +13,9 @@ ORCA artifacts delete <id> --json
 ```
 
 - `share`, `update`, and `unshare` accept `.html`, `.htm`, `.md`, and `.markdown` files.
-- `share` saves the returned edit token in the active Orca profile and never includes it
+- `share` saves the returned edit token in the active NASH profile and never includes it
   in CLI output. `update` and `unshare` look up that record by the resolved local file
-  path, so use the same path and Orca profile that originally shared the file.
+  path, so use the same path and NASH profile that originally shared the file.
 - `list` returns one page of artifacts owned by the signed-in account. If JSON output has
   `nextCursor`, pass it back with `--cursor <cursor>`. `delete <id>` deletes an account-owned
   artifact by the id returned from `list`; it does not need the original local file or its
@@ -27,13 +27,13 @@ ORCA artifacts delete <id> --json
 - For local or staging development, `--api-url <url>` overrides the artifact service;
   `ORCA_ARTIFACTS_API_URL` provides the same override for the session.
 - `ORCA_CLOUD_AUTH_TOKEN` is a development-only authentication override. Prefer the active
-  Orca profile's normal PropelAuth session and never expose the token in logs or agent output.
+  NASH profile's normal PropelAuth session and never expose the token in logs or agent output.
 
 ## Skill sharing
 
 Agents can publish one or more installed skills behind one unlisted link through the
-signed-in Orca account. The user must first grant the separate, default-off permission in
-Settings → Share Skills ("Allow agents and the Orca CLI to publish skill links"). There is
+signed-in Orca Cloud account. The user must first grant the separate, default-off permission in
+Settings → Share Skills ("Allow agents and the NASH CLI to publish skill links"). There is
 no CLI or RPC way to grant it. Manual publishing from the reviewed desktop flow remains
 available without this agent permission.
 
@@ -53,10 +53,10 @@ ORCA skills share --skill <selector> [--skill <selector> ...] --bundle-name <nam
   authority, not intent: publish only the skills the user named and never widen the set.
 - A denied command fails with `agent_skill_sharing_disabled`. Do not retry; ask the user to
   enable the switch in the desktop app if they want this action.
-- Orca stages one agent-published bundle at a time per host. If another publish is active,
+- NASH stages one agent-published bundle at a time per host. If another publish is active,
   wait for it to finish before retrying `agent_skill_sharing_busy`.
-- Run the command in an Orca terminal on the machine that stores the skills. Forwarded WSL,
-  SSH, and paired-runtime invocations fail before discovery so Orca cannot read from the
+- Run the command in a NASH terminal on the machine that stores the skills. Forwarded WSL,
+  SSH, and paired-runtime invocations fail before discovery so NASH cannot read from the
   wrong filesystem.
 - The JSON result contains the unlisted URL and public share/package/version IDs. It never
   includes cloud authentication tokens.

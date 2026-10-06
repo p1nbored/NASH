@@ -83,7 +83,7 @@ export const LINEAR_ISSUE_ATTRIBUTE_FILTER_RUNTIME_CAPABILITY =
   'linear.issue-attribute-filter.v1' as const
 export const JIRA_USER_FIELDS_RUNTIME_CAPABILITY = 'jira.user-fields.v1' as const
 export const JIRA_USER_FIELDS_UPDATE_REQUIRED_MESSAGE =
-  'Creating Jira issues with user fields requires a newer Orca server. Update the server and try again.'
+  'Creating Jira issues with user fields requires a newer NASH server. Update the server and try again.'
 // Why: signals the host exposes the Agent Session History scanner over RPC
 // (aiVault.listSessions). Registered unconditionally for every build, so it is a
 // STATIC capability advertised by getStatus() automatically — NOT a runtime
@@ -263,14 +263,14 @@ export const AGENT_SESSION_BACKGROUND_TASK_ROW_STOP_CAPABILITY =
 // Why: older runtimes strip mutation owner fields, so clients must fence writes before RPC.
 export const FILE_MUTATION_OWNERSHIP_RUNTIME_CAPABILITY = 'files.mutation-ownership.v1' as const
 export const FILE_MUTATION_OWNERSHIP_UPDATE_REQUIRED_MESSAGE =
-  'Remote file changes require a newer Orca server. Update the HUB and try again.'
+  'Remote file changes require a newer NASH server. Update the HUB and try again.'
 export const GITHUB_MARK_PR_READY_RUNTIME_CAPABILITY = 'github.markPRReadyForReview' as const
 export const GITHUB_MARK_PR_READY_UPDATE_REQUIRED_MESSAGE =
-  'Marking a pull request ready requires a newer Orca server. Update the server and try again.'
+  'Marking a pull request ready requires a newer NASH server. Update the server and try again.'
 export const GITLAB_READY_FOR_REVIEW_RUNTIME_CAPABILITY =
   'gitlab.updateMR.readyForReview.v1' as const
 export const GITLAB_READY_FOR_REVIEW_UPDATE_REQUIRED_MESSAGE =
-  'Marking a merge request ready requires a newer Orca server. Update the server and try again.'
+  'Marking a merge request ready requires a newer NASH server. Update the server and try again.'
 export const WORKTREE_VISIBILITY_DEFAULTS_RUNTIME_CAPABILITY =
   'worktree.visibility-defaults.v1' as const
 export const WORKTREE_VISIBILITY_SOURCE_DEFAULTS_RUNTIME_CAPABILITY =
@@ -284,11 +284,11 @@ export const WORKTREE_BACKGROUND_REMOVAL_RUNTIME_CAPABILITY =
 export const AUTOMATION_LIST_HOST_SCOPE_RUNTIME_CAPABILITY =
   'automation.list-host-scope.v1' as const
 export const AUTOMATION_LIST_HOST_SCOPE_UPDATE_REQUIRED_MESSAGE =
-  'Filtering automations by host requires a newer Orca server. Update the HUB and try again.'
+  'Filtering automations by host requires a newer NASH server. Update the HUB and try again.'
 // Why: without server-side owner preconditions a mutation could run against a host the user never saw, so unfenced rows stay view-only.
 export const AUTOMATION_OWNER_FENCING_RUNTIME_CAPABILITY = 'automation.owner-fencing.v1' as const
 export const AUTOMATION_OWNER_FENCING_UPDATE_REQUIRED_MESSAGE =
-  'Editing automations on this host requires a newer Orca server. Update the HUB and try again.'
+  'Editing automations on this host requires a newer NASH server. Update the HUB and try again.'
 export const AUTOMATION_CREATE_IDEMPOTENCY_RUNTIME_CAPABILITY =
   'automation.create-idempotency.v1' as const
 // Hosts without this capability have no notifications.registerPush RPC.

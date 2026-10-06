@@ -62,7 +62,7 @@ describe('CliInstaller', () => {
 
     const wrapperContent = await readFile(installPath, 'utf8')
     expect(wrapperContent).toContain('ORCA_LAUNCHER=')
-    expect(wrapperContent).toContain('orca.cmd')
+    expect(wrapperContent).toContain('nash.cmd')
     const launcherContent = await readFile(installed.launcherPath as string, 'utf8')
     expect(launcherContent).toContain(`set "ORCA_USER_DATA_PATH=${fixture.userDataPath}"`)
     expect(launcherContent).toContain('set "ORCA_APP_EXECUTABLE=%ELECTRON%"')
@@ -288,7 +288,7 @@ describe('CliInstaller', () => {
     const localAppDataPath = join(fixture.root, 'AppData', 'Local')
     const resourcesPath = join(fixture.root, 'D Custom Orca', 'resources')
     await mkdir(join(resourcesPath, 'bin'), { recursive: true })
-    await writeFile(join(resourcesPath, 'bin', 'orca.exe'), 'native launcher', 'utf8')
+    await writeFile(join(resourcesPath, 'bin', 'nash.exe'), 'native launcher', 'utf8')
 
     const installer = new CliInstaller({
       platform: 'win32',
@@ -303,13 +303,13 @@ describe('CliInstaller', () => {
     })
 
     const status = await installer.getStatus()
-    expect(status.commandPath).toBe(join(resourcesPath, 'bin', 'orca.exe'))
+    expect(status.commandPath).toBe(join(resourcesPath, 'bin', 'nash.exe'))
   })
 
   it('keeps a bundled Windows launcher installed when the user PATH read is unknown', async () => {
     const fixture = await makeFixture()
     const resourcesPath = join(fixture.root, 'resources')
-    const bundledLauncher = join(resourcesPath, 'bin', 'orca.exe')
+    const bundledLauncher = join(resourcesPath, 'bin', 'nash.exe')
     await mkdir(dirname(bundledLauncher), { recursive: true })
     await writeFile(bundledLauncher, 'native launcher', 'utf8')
 
@@ -337,7 +337,7 @@ describe('CliInstaller', () => {
     const fixture = await makeFixture()
     const localAppDataPath = join(fixture.root, 'AppData', 'Local')
     const resourcesPath = join(fixture.root, 'D Custom Orca', 'resources')
-    const bundledLauncher = join(resourcesPath, 'bin', 'orca.exe')
+    const bundledLauncher = join(resourcesPath, 'bin', 'nash.exe')
     const bundledContent = 'native launcher'
     await mkdir(dirname(bundledLauncher), { recursive: true })
     await writeFile(bundledLauncher, bundledContent, 'utf8')

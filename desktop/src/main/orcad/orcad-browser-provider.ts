@@ -1,4 +1,5 @@
 import { access, mkdir } from 'node:fs/promises'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { constants } from 'node:fs'
 import { homedir } from 'node:os'
 import { posix, win32 } from 'node:path'
@@ -63,18 +64,23 @@ export function installedElectronCandidates(
   environment: NodeJS.ProcessEnv
 ): string[] {
   const joinPath = platform === 'win32' ? win32.join : posix.join
+  // Why: only this app's own install is a valid sidecar; a real Orca install must never be launched (D-017).
+  const productName = APP_IDENTITY.productName
+  const windowsExecutable = `${APP_IDENTITY.windowsExecutableBaseName}.exe`
   if (platform === 'darwin') {
     return [
-      '/Applications/Orca.app/Contents/MacOS/Orca',
-      joinPath(homePath, 'Applications', 'Orca.app', 'Contents', 'MacOS', 'Orca')
+      `/Applications/${productName}.app/Contents/MacOS/${productName}`,
+      joinPath(homePath, 'Applications', `${productName}.app`, 'Contents', 'MacOS', productName)
     ]
   }
   if (platform === 'win32') {
     return [
       ...(environment.LOCALAPPDATA
-        ? [joinPath(environment.LOCALAPPDATA, 'Programs', 'Orca', 'Orca.exe')]
+        ? [joinPath(environment.LOCALAPPDATA, 'Programs', productName, windowsExecutable)]
         : []),
-      ...(environment.ProgramFiles ? [joinPath(environment.ProgramFiles, 'Orca', 'Orca.exe')] : [])
+      ...(environment.ProgramFiles
+        ? [joinPath(environment.ProgramFiles, productName, windowsExecutable)]
+        : [])
     ]
   }
   return [

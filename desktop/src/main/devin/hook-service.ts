@@ -1,4 +1,5 @@
 import type { SFTPWrapper } from 'ssh2'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
 import {
   buildWindowsAgentHookPostCommand,
@@ -174,7 +175,7 @@ export class DevinHookService {
     // Why: remote-Windows is out of scope for v1; process.platform here is the local box, not the remote, so assume POSIX.
     const remoteConfigPath = getDevinRemoteConfigPath(remoteHome)
     const remoteScriptFileName = getDevinPosixManagedScriptFileName()
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/${remoteScriptFileName}`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/${remoteScriptFileName}`
     // Why: SFTP I/O fails far more often than local fs; wrap the flow so failures surface as a structured error, not an unhandled rejection.
     try {
       // Why: Devin config.json is JSONC (comments), so JSON.parse rejects it; parse via jsonc-parser.

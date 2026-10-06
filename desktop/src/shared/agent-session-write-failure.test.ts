@@ -170,7 +170,7 @@ describe('a refusal a failed request carried in its error', () => {
       code: 'agent_session_journal_unreadable',
       details: { reason: 'journalCorrupt' }
     }
-    // Not "Orca couldn't confirm what happened": the host refused it before running it.
+    // Not "NASH couldn't confirm what happened": the host refused it before running it.
     expect(
       agentSessionThrownFailure(saved({ ...payload, data: { refusal: corrupt } }), 'runtime_error')
     ).toEqual({

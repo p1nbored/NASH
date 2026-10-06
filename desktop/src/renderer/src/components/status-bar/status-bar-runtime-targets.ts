@@ -22,20 +22,6 @@ export type CodexStatusSwitchGroup = {
   targets: CodexStatusSwitchTarget[]
 }
 
-export type ClaudeStatusSwitchTarget = {
-  id: string | null
-  label: string
-  active: boolean
-  runtimeTarget: CodexStatusRuntimeTarget
-}
-
-export type ClaudeStatusSwitchGroup = {
-  key: string
-  label: string
-  runtimeTarget: CodexStatusRuntimeTarget
-  targets: ClaudeStatusSwitchTarget[]
-}
-
 export type StatusSwitchGroupOptions = {
   fallbackWslDistro?: string | null
   includeFallbackWsl?: boolean

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   findInstallerAssetName,
   getReleaseNotesUrlForVersion,
@@ -22,6 +22,12 @@ import {
 } from './release-channel'
 import { compareAppVersions } from './app-version'
 
+// Why: the shipped identity has no release feed, so these tests run against a fixture feed.
+vi.mock('./app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('./app-update-feed.test-fixture.js')
+  return withFixtureUpdateFeed(await importOriginal())
+})
+
 describe('release channel', () => {
   it('classifies versions by channel', () => {
     expect(getVersionChannel('1.4.160')).toBe('stable')
@@ -37,13 +43,13 @@ describe('release channel', () => {
   // exposes only 10 entries, so 24 hourly tags a day would evict every stable/RC
   // entry and leave real users with nothing to update to.
   it('keeps dev builds out of the main release repo, and apart from each other', () => {
-    expect(getReleaseRepoForChannel('hourly')).toBe('stablyai/orca-hourly')
-    expect(getReleaseRepoForChannel('daily')).toBe('stablyai/orca-daily')
+    expect(getReleaseRepoForChannel('hourly')).toBe('fixture-owner/fixture-app-hourly')
+    expect(getReleaseRepoForChannel('daily')).toBe('fixture-owner/fixture-app-daily')
     // Why adhoc gets its own repo rather than sharing hourly's: an unlanded
     // branch build must never surface to someone who only meant to ride main.
-    expect(getReleaseRepoForChannel('adhoc')).toBe('stablyai/orca-adhoc')
-    expect(getReleaseRepoForChannel('stable')).toBe('stablyai/orca')
-    expect(getReleaseRepoForChannel('rc')).toBe('stablyai/orca')
+    expect(getReleaseRepoForChannel('adhoc')).toBe('fixture-owner/fixture-app-adhoc')
+    expect(getReleaseRepoForChannel('stable')).toBe('fixture-owner/fixture-app')
+    expect(getReleaseRepoForChannel('rc')).toBe('fixture-owner/fixture-app')
   })
 
   it('marks exactly the dev channels as having their own repo', () => {
@@ -58,21 +64,23 @@ describe('release channel', () => {
   // in the hourly repo.
   it('builds release-notes links against the repo that published the version', () => {
     expect(getReleaseNotesUrlForVersion('1.4.160-hourly.202607281400')).toBe(
-      'https://github.com/stablyai/orca-hourly/releases/tag/v1.4.160-hourly.202607281400'
+      'https://github.com/fixture-owner/fixture-app-hourly/releases/tag/v1.4.160-hourly.202607281400'
     )
     expect(getReleaseNotesUrlForVersion('1.4.160-daily.202607281300')).toBe(
-      'https://github.com/stablyai/orca-daily/releases/tag/v1.4.160-daily.202607281300'
+      'https://github.com/fixture-owner/fixture-app-daily/releases/tag/v1.4.160-daily.202607281300'
     )
     expect(getReleaseNotesUrlForVersion('1.4.160')).toBe(
-      'https://github.com/stablyai/orca/releases/tag/v1.4.160'
+      'https://github.com/fixture-owner/fixture-app/releases/tag/v1.4.160'
     )
     expect(getReleaseNotesUrlForVersion('v1.4.160-rc.3')).toBe(
-      'https://github.com/stablyai/orca/releases/tag/v1.4.160-rc.3'
+      'https://github.com/fixture-owner/fixture-app/releases/tag/v1.4.160-rc.3'
     )
     expect(getReleaseNotesUrlForVersion('1.4.160-adhoc.20260728140533')).toBe(
-      'https://github.com/stablyai/orca-adhoc/releases/tag/v1.4.160-adhoc.20260728140533'
+      'https://github.com/fixture-owner/fixture-app-adhoc/releases/tag/v1.4.160-adhoc.20260728140533'
     )
-    expect(getReleaseNotesUrlForVersion(null)).toBe('https://github.com/stablyai/orca/releases')
+    expect(getReleaseNotesUrlForVersion(null)).toBe(
+      'https://github.com/fixture-owner/fixture-app/releases'
+    )
   })
 
   it('round-trips an hourly version stamp as UTC', () => {
@@ -261,7 +269,7 @@ describe('release channel', () => {
       channel: 'hourly',
       name: null,
       publishedAt: null,
-      releaseUrl: `https://github.com/stablyai/orca-hourly/releases/tag/v${version}`,
+      releaseUrl: `https://github.com/fixture-owner/fixture-app-hourly/releases/tag/v${version}`,
       installerUrl: null
     })
     const sorted = sortReleaseBuildsNewestFirst([
@@ -307,7 +315,7 @@ describe('release channel', () => {
       channel: 'adhoc',
       name: null,
       publishedAt: null,
-      releaseUrl: `https://github.com/stablyai/orca-adhoc/releases/tag/v${version}`,
+      releaseUrl: `https://github.com/fixture-owner/fixture-app-adhoc/releases/tag/v${version}`,
       installerUrl: null
     })
     const sorted = sortReleaseBuildsNewestFirst([
@@ -329,7 +337,7 @@ describe('release channel', () => {
       channel: 'adhoc',
       name: null,
       publishedAt: null,
-      releaseUrl: `https://github.com/stablyai/orca-adhoc/releases/tag/v${version}`,
+      releaseUrl: `https://github.com/fixture-owner/fixture-app-adhoc/releases/tag/v${version}`,
       installerUrl: null
     })
     const sorted = sortReleaseBuildsNewestFirst([

@@ -189,7 +189,9 @@ describe('HeroFlow height', () => {
     expect(notice).toHaveTextContent('Use LAN')
     expect(screen.getByText('No pairing code available')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Generate code' })).not.toBeInTheDocument()
-    expect(screen.getByText('Orca Relay is in beta.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Orca Relay and mobile push notifications are not available in NASH builds.')
+    ).toBeInTheDocument()
   })
 
   it('explains an empty QR frame when no code has been generated yet', () => {

@@ -10,9 +10,10 @@
 const TAILSCALE_DOWNLOAD_URL = 'https://tailscale.com/download'
 
 // Why: only the "runtime is unreachable" family of failures has a Tailscale
-// remedy; auth/protocol errors pass through untouched.
+// remedy; auth/protocol errors pass through untouched. Both product words: a peer built before
+// the NASH rename (D-017) still says Orca.
 const REMOTE_RUNTIME_UNREACHABLE_RE =
-  /could not connect to the remote orca runtime|remote orca runtime closed the connection|timed out (?:waiting for|while connecting to) the remote orca runtime/i
+  /could not connect to the remote (?:nash|orca) runtime|remote (?:nash|orca) runtime closed the connection|timed out (?:waiting for|while connecting to) the remote (?:nash|orca) runtime/i
 
 const TAILSCALE_MAGIC_DNS_SUFFIX_RE = /(?:^|\.)ts\.net$/i
 // Why: gate the CGNAT check on a full IPv4 literal — the range regex alone also

@@ -79,7 +79,7 @@ function getHostSetupAvailability(host: ExecutionHostRegistryEntry): {
       isAvailable: false,
       detail: translate(
         'auto.components.settings.RepositoryPane.hostSetupBlockedVersion',
-        'Orca server version is incompatible'
+        'NASH server version is incompatible'
       )
     }
   }
@@ -102,7 +102,7 @@ function getHostSetupAvailability(host: ExecutionHostRegistryEntry): {
         isAvailable: false,
         detail: translate(
           'auto.components.settings.RepositoryPane.hostSetupMissingCapability',
-          'Update Orca on this host to set up projects'
+          'Update NASH on this host to set up projects'
         )
       }
     }

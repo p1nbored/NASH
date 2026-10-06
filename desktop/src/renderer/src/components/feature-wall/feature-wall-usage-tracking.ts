@@ -61,13 +61,11 @@ export function getFeatureWallUsageProviderConnection(args: {
 }
 
 export function hasFeatureWallUsageTracking(args: {
-  claudeManagedAccountCount: number
   codexManagedAccountCount: number
   claudeRateLimits: ProviderRateLimits | null
   codexRateLimits: ProviderRateLimits | null
 }): boolean {
   return (
-    args.claudeManagedAccountCount > 0 ||
     args.codexManagedAccountCount > 0 ||
     hasFeatureWallProviderUsageTracking(args.claudeRateLimits) ||
     hasFeatureWallProviderUsageTracking(args.codexRateLimits)

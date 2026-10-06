@@ -60,3 +60,41 @@ export function createRuntimeTransportMetadata(
     endpoint: join(userDataPath, `o-${pid}-${endpointSuffix}.sock`)
   }
 }
+
+const DOT_ENDPOINT_SUFFIX = '-dot'
+const SOCKET_FILE_EXTENSION = '.sock'
+
+/** A local pipe or socket; the dot interface never uses a network transport. */
+export type LocalRuntimeTransportMetadata = Extract<
+  RuntimeTransportMetadata,
+  { kind: 'unix' | 'named-pipe' }
+>
+
+/**
+ * Why: the dot endpoint is the main endpoint plus -dot, so the app identity prefix, the per-runtime
+ * suffix and the orphan-sweep pattern stay defined in one place and can never drift apart.
+ */
+export function deriveDotIngressTransport(
+  main: RuntimeTransportMetadata
+): LocalRuntimeTransportMetadata {
+  if (main.kind === 'named-pipe') {
+    return { kind: 'named-pipe', endpoint: `${main.endpoint}${DOT_ENDPOINT_SUFFIX}` }
+  }
+  if (main.kind === 'unix' && main.endpoint.endsWith(SOCKET_FILE_EXTENSION)) {
+    const stem = main.endpoint.slice(0, -SOCKET_FILE_EXTENSION.length)
+    return { kind: 'unix', endpoint: `${stem}${DOT_ENDPOINT_SUFFIX}${SOCKET_FILE_EXTENSION}` }
+  }
+  // Why: failing here beats ever sharing the main endpoint if its naming changes shape.
+  throw new Error('Cannot derive the dot ingress endpoint from the main runtime endpoint.')
+}
+
+export function createDotIngressTransportMetadata(
+  userDataPath: string,
+  pid: number,
+  platform: NodeJS.Platform,
+  runtimeId = 'runtime'
+): LocalRuntimeTransportMetadata {
+  return deriveDotIngressTransport(
+    createRuntimeTransportMetadata(userDataPath, pid, platform, runtimeId)
+  )
+}

@@ -1,39 +1,37 @@
 ---
 name: orchestration
 description: >-
-  Coordinate supervised Orca workers: threaded messages, blocking ask/reply,
+  Coordinate supervised NASH workers: threaded messages, blocking ask/reply,
   task dispatch, worker_done/escalation waits, task DAGs, decision gates,
-  coordinator loops, and decomposing work across agents. Use `orca-cli` for full
+  supervised waves, and decomposing work across agents. Use `orca-cli` for full
   ownership handoffs — "hand off", "handoff", "handover", "give this to another
   agent", "another worktree" — unless asked to supervise, monitor, or coordinate
   a DAG, and for terminal control, lightweight terminal prompts, shell commands,
-  Orca worktree management, and reading or waiting on terminals.
+  NASH worktree management, and reading or waiting on terminals.
 ---
 
-# Orca orchestration
+# NASH orchestration
 
-Orchestration is Orca's structured coordination layer. It records who owns work,
+Orchestration is NASH's structured coordination layer. It records who owns work,
 which attempt is authoritative, and when supervised work has settled.
 
 ## Outcome
 
-**Result:** every in-scope Task has one explicit outcome and every settled worker
-terminal has a next owner or cleanup decision. **Next consumer:** the user who
-requested supervision. **Done:** all expected Dispatches have settled, every
-delivered message was processed before acknowledgment, each settled worker was
-reused, explicitly retained, or released, and the turn ends only when the report
-to that user names, per Task, its outcome, the evidence behind it, and any
-unresolved blocker.
+**Result:** every in-scope Task has one explicit outcome and every settled worker terminal has a
+next owner or cleanup decision. **Next consumer:** the user who requested supervision. **Done:**
+all expected Dispatches have settled, every delivered message was processed before acknowledgment,
+each settled worker was reused, explicitly retained, or released, and the turn ends only when the
+report to that user names, per Task, its outcome, the evidence behind it, and any unresolved blocker.
 
-**Safe failure:** preserve work and authority and report the state as unknown or
-`unverifiable`. Only positive proof of exit authorizes stop, abandon, or retry,
-and only an accepted settlement authorizes release. Every other observation,
-absence included, is a checkpoint.
+**Safe failure:** preserve work and authority and report the state as unknown or `unverifiable`.
+Only positive proof of exit authorizes stop, abandon, or retry, and only an accepted settlement
+authorizes release. Every other observation, absence included, is a checkpoint.
 
 ## Classify the role
 
 | Current context                                                                                                                                | Role                    | Route                                                                          |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| Your launch prompt names `task-propose`, `task-start`, `task-show`, `task-report`, and `run-complete`                                          | App-run primary session | You are the only planner: follow that prompt; never run the loop below         |
 | The user explicitly asks to supervise, monitor, wait for results, track completion, coordinate a DAG, use a decision gate, or manage ask/reply | Coordinator             | Use the supervised loop below                                                  |
 | The current prompt contains a live injected preamble with Task and Dispatch IDs                                                                | Dispatched worker       | Follow the preamble and the worker obligations below                           |
 | The user asks to hand off ownership or start another agent/worktree without supervision                                                        | Handoff owner           | Use `orca-cli`; create no Run, Task, or Dispatch and do not monitor completion |
@@ -41,17 +39,21 @@ absence included, is a checkpoint.
 | No live preamble and no explicit supervision                                                                                                   | Ordinary terminal agent | Do not emit lifecycle messages; use `orca-cli` for terminal/worktree work      |
 
 Model or effort selection does not make a handoff supervised. Never substitute a
-non-Orca subagent tool when Orca orchestration provenance was requested.
+non-NASH subagent tool when NASH orchestration provenance was requested.
 
 ## Authority and safety floor
 
 - A Run is a durable namespace and coordinator inbox; it does not schedule or
   place workers. A Task is work. A Dispatch is one authoritative Task attempt.
+- In a NASH app run, Runs, Tasks, and attempts are the runtime's single authority and validators
+  decide completion. `run-create`, `run-use`, `worker-start`, `dispatch`, and `task-update` to
+  `dispatched` or `completed` are refused in an app run; attempts start only with `task-start`.
+  A writing Codex or agy task starts in its own worktree from your worktree's last commit: commit
+  what it needs first, and merge its branch yourself in your terminal once validation passes.
 - Lifecycle authority comes from the active Dispatch, not a terminal title,
   copied ID, old database row, provider transcript, or visible pane.
-- Workers use the exact executable, handle, Task ID, and Dispatch ID in the live
-  preamble, plus any other flag it carries. Never reconstruct, translate, or
-  broaden those arguments.
+- Workers use the exact executable, handle, Task ID, and Dispatch ID in the live preamble, plus
+  any other flag it carries. Never reconstruct, translate, or broaden those arguments.
 - After remote start, address the worker by Dispatch ID. The execution host owns
   process, filesystem, transcript, stop, and cleanup facts. Preserve the verdicts
   `live` / `unverifiable` / `exited`; contact loss is not process death.
@@ -105,9 +107,8 @@ ORCA orchestration worker-start --spec "<worker B task>" --worktree current --ag
 ORCA orchestration check --wait --types "worker_done,escalation,question" --timeout-ms 900000 --json
 ```
 
-If `worker-start` exits non-zero, do not relaunch. Read the receipt's
-`failedStage` and `residualResources`, then load
-`references/recovery-and-cleanup.md`.
+If `worker-start` exits non-zero, do not relaunch. Read the receipt's `failedStage` and
+`residualResources`, then load `references/recovery-and-cleanup.md`.
 
 Use `task-create` plus `worker-start --task <task_id>` for planned fan-out with
 dependencies or a retry of a known Task. Use dependencies only for real ordering
@@ -115,7 +116,7 @@ and prefer parallel waves over chains deeper than three or four steps; nested
 workers obey the depth limit, and a new Run does not reset the caller's depth.
 
 A consuming `check` names its caller with `--terminal <handle>`, never `--from`;
-omit it inside the coordinator's own Orca terminal. It returns the bound Run's
+omit it inside the coordinator's own NASH terminal. It returns the bound Run's
 oldest FIFO Delivery and replays that batch until acknowledged. Process every
 message: reply to questions, validate each `worker_done` against the expected
 active Dispatch, and decide each settled terminal's next owner before the ack:
@@ -177,17 +178,16 @@ and do not end the coordinator turn until it returns none.
 
 ## Conditional references
 
-This compact guide is sufficient for the normal local loop. At an action gate
-below, run `ORCA skills get orchestration --reference references/<file>.md` and
-read only that document; `--references` lists the names. If the CLI rejects
-`--reference`, run `ORCA skills get orchestration --full` once instead: it
-returns this exact kernel and every reference, so read only the named one. If an
-older CLI rejects `--full`, keep this kernel's safety floor, use that command's
-`--help`, and never guess newer flags.
+This compact guide is sufficient for the normal local loop. At an action gate below, run
+`ORCA skills get orchestration --reference references/<file>.md` and read only that document;
+`--references` lists the names. If the CLI rejects `--reference`, run
+`ORCA skills get orchestration --full` once instead: it returns this exact kernel and every
+reference, so read only the named one. If an older CLI rejects `--full`, keep this kernel's
+safety floor, use that command's `--help`, and never guess newer flags.
 
 | Action gate                                                                                                   | Bundled reference                         |
 | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Expanded DAG waves, launch model/effort, same-terminal reuse, or review ownership                             | `references/coordinator-loop.md`          |
+| Expanded DAG waves, launch model/effort, same-terminal reuse, or review ownership                             | `references/supervised-waves.md`          |
 | You are a dispatched worker and the live preamble does not answer your question, or `check` returned an error | `references/worker-contract.md`           |
 | New worktree, exact workspace, SSH, WSL, or connected-server placement                                        | `references/placement-and-remote.md`      |
 | Inbox replay, follow-up messages, group addresses, or decision gates                                          | `references/messaging-and-gates.md`       |

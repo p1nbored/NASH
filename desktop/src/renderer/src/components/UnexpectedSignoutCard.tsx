@@ -212,7 +212,7 @@ export function UnexpectedSignoutCard(): React.JSX.Element | null {
                 )}
                 description={translate(
                   'auto.components.UnexpectedSignoutCard.2c9a5b6e8d',
-                  'Publish HTML and Markdown files and manage every shared link from Orca.'
+                  'Publish HTML and Markdown files and manage every shared link from NASH.'
                 )}
               />
               <FeatureRow
@@ -245,7 +245,10 @@ export function UnexpectedSignoutCard(): React.JSX.Element | null {
               disabled={!canConnect}
               onClick={() => void connect()}
             >
-              {translate('auto.components.UnexpectedSignoutCard.c5b3e8a17d', 'Sign in to Orca')}
+              {translate(
+                'auto.components.UnexpectedSignoutCard.c5b3e8a17d',
+                'Sign in to Orca Cloud'
+              )}
             </Button>
           </div>
         </div>

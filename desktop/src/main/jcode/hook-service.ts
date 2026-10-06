@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { dirname } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -201,7 +202,7 @@ export class JcodeHookService {
     // Why: remote-Windows is out of scope for v1 (same as Devin); assume POSIX.
     const remoteConfigPath = getJcodeRemoteConfigPath(remoteHome)
     const remoteScriptFileName = getJcodePosixManagedScriptFileName()
-    const remoteScriptPath = `${remoteHome.replace(/\/+$/, '')}/.orca/agent-hooks/${remoteScriptFileName}`
+    const remoteScriptPath = `${remoteHome.replace(/\/+$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/${remoteScriptFileName}`
     try {
       const body = await readTextFileRemote(sftp, remoteConfigPath)
       const content = body === null ? '' : body

@@ -21,6 +21,12 @@ import {
 import { detectExplicitIdleStatusFromTitle } from '../terminal-wait-detection'
 import { showsIdleTitleAnchor } from './agent-state-title-anchors'
 
+// Why: the shipped identity has no release feed, so these tests run against a fixture feed.
+vi.mock('../../../shared/app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../../../shared/app-update-feed.test-fixture')
+  return withFixtureUpdateFeed(await importOriginal())
+})
+
 const NEWER = 9999
 const NEWEST = 10000
 
@@ -128,7 +134,7 @@ describe('agent state rules channel and URL', () => {
 
   it('fetches the fixed release-download URL for the engine and channel', () => {
     expect(agentStateRulesDownloadUrl('next')).toBe(
-      'https://github.com/stablyai/orca/releases/download/agent-state-rules-engine-1-next/agent-state-rules.json'
+      'https://github.com/fixture-owner/fixture-app/releases/download/agent-state-rules-engine-1-next/agent-state-rules.json'
     )
   })
 })

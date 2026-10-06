@@ -358,6 +358,18 @@ describe('terminal-history', () => {
           '',
           'home',
           'me',
+          '.nash-remote',
+          'terminal-history',
+          `${OTHER_WORKTREE_HASH}-zsh_history`
+        ].join(sep)
+      ],
+      // D-017: a pane started from a real Orca relay pane must not append to that Orca's history.
+      [
+        'real Orca relay',
+        [
+          '',
+          'home',
+          'me',
           '.orca-remote',
           'terminal-history',
           `${OTHER_WORKTREE_HASH}-zsh_history`

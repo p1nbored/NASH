@@ -74,7 +74,7 @@ export function buildWorkflowSettingsSections(
       title: translate('sessionHistory.settings.title', 'Agent Session Search'),
       description: translate(
         'sessionHistory.settings.description',
-        'Search everything your agents have said and done, on this computer and on any paired Orca server.'
+        'Search everything your agents have said and done, on this computer and on any paired NASH server.'
       ),
       icon: History,
       searchEntries: [
@@ -166,7 +166,7 @@ export function buildWorkflowSettingsSections(
             ),
             description: translate(
               'auto.hooks.useSettingsNavigationMetadata.3d65d3f1b9',
-              'Configure mobile emulator support for Orca and coding agents.'
+              'Configure mobile emulator support for NASH and coding agents.'
             ),
             icon: TabletSmartphone,
             searchEntries: getMobileEmulatorSearchEntries(),

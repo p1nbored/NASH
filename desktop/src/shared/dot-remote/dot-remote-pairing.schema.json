@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "challenge.request": {
+      "type": "object",
+      "properties": {
+        "appVersion": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+-]{1,32}$"
+        }
+      },
+      "required": [
+        "appVersion"
+      ],
+      "additionalProperties": false
+    },
+    "challenge.response": {
+      "type": "object",
+      "properties": {
+        "challengeId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "userCode": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "deviceCode": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "pollIntervalSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        }
+      },
+      "required": [
+        "challengeId",
+        "userCode",
+        "deviceCode",
+        "expiresAt",
+        "pollIntervalSeconds"
+      ],
+      "additionalProperties": false
+    },
+    "approval.request": {
+      "type": "object",
+      "properties": {
+        "userCode": {
+          "$ref": "#/$defs/__schema1"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "deny"
+          ]
+        }
+      },
+      "required": [
+        "userCode",
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "approval.response": {
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "approved",
+            "denied"
+          ]
+        }
+      },
+      "required": [
+        "outcome"
+      ],
+      "additionalProperties": false
+    },
+    "session.issue.request": {
+      "type": "object",
+      "properties": {
+        "challengeId": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "deviceCode": {
+          "$ref": "#/$defs/__schema2"
+        }
+      },
+      "required": [
+        "challengeId",
+        "deviceCode"
+      ],
+      "additionalProperties": false
+    },
+    "session.issue.response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "pending"
+            },
+            "pollIntervalSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            }
+          },
+          "required": [
+            "state",
+            "pollIntervalSeconds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "issued"
+            },
+            "session": {
+              "$ref": "#/$defs/__schema4"
+            },
+            "deviceCredential": {
+              "$ref": "#/$defs/__schema7"
+            }
+          },
+          "required": [
+            "state",
+            "session",
+            "deviceCredential"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "session.renew.request": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": [
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "session.renew.response": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "$ref": "#/$defs/__schema4"
+        }
+      },
+      "required": [
+        "session"
+      ],
+      "additionalProperties": false
+    },
+    "session.refresh.request": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": [
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "session.refresh.response": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "deviceCredential": {
+          "$ref": "#/$defs/__schema7"
+        }
+      },
+      "required": [
+        "session",
+        "deviceCredential"
+      ],
+      "additionalProperties": false
+    },
+    "revoke.request": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": [
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "revoke.response": {
+      "type": "object",
+      "properties": {
+        "revokedGeneration": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": [
+        "revokedGeneration"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "deviceId": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "dotIdentity": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "lifetimeEndsAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "revokedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/__schema3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ownerId",
+        "deviceId",
+        "dotIdentity",
+        "generation",
+        "createdAt",
+        "lifetimeEndsAt",
+        "revokedAt"
+      ],
+      "additionalProperties": false
+    },
+    "credential.record": {
+      "type": "object",
+      "properties": {
+        "credentialId": {
+          "type": "string",
+          "pattern": "^ndc_[0-9a-f]{24}$"
+        },
+        "salt": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22,86}$"
+        },
+        "secretHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "deviceId": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "dotIdentity": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "issuedAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "lifetimeEndsAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "supersededAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/__schema3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "credentialId",
+        "salt",
+        "secretHash",
+        "ownerId",
+        "deviceId",
+        "dotIdentity",
+        "generation",
+        "issuedAt",
+        "lifetimeEndsAt",
+        "supersededAt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "challenge.request",
+    "challenge.response",
+    "approval.request",
+    "approval.response",
+    "session.issue.request",
+    "session.issue.response",
+    "session.renew.request",
+    "session.renew.response",
+    "session.refresh.request",
+    "session.refresh.response",
+    "revoke.request",
+    "revoke.response",
+    "binding",
+    "credential.record"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema1": {
+      "type": "string",
+      "pattern": "^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$"
+    },
+    "__schema2": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43,86}$"
+    },
+    "__schema3": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "__schema4": {
+      "type": "object",
+      "properties": {
+        "sessionToken": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{43,128}$"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "renewAfter": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "deviceId": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "generation": {
+          "$ref": "#/$defs/__schema6"
+        }
+      },
+      "required": [
+        "sessionToken",
+        "expiresAt",
+        "renewAfter",
+        "deviceId",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "__schema5": {
+      "type": "string",
+      "pattern": "^dev_[0-9a-f]{24}$"
+    },
+    "__schema6": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "__schema7": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "type": "string",
+          "pattern": "^ndc_[0-9a-f]{24}\\.[A-Za-z0-9_-]{43,86}$"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema3"
+        }
+      },
+      "required": [
+        "credential",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "__schema8": {
+      "type": "string",
+      "pattern": "^[\\x21-\\x7E]{1,256}$"
+    },
+    "__schema9": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "const": "sites_mcp_identity"
+        },
+        "subject": {
+          "$ref": "#/$defs/__schema8"
+        }
+      },
+      "required": [
+        "source",
+        "subject"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

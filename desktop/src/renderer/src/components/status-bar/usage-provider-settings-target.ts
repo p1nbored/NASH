@@ -5,7 +5,8 @@ export function getUsageProviderAccountsSectionId(
 ): string | null {
   switch (provider) {
     case 'claude':
-      return 'accounts-claude'
+      // Why: Claude runs on the user's own login (no account switching); its usage reading lives here.
+      return 'accounts-cli-usage'
     case 'codex':
       return 'accounts-codex'
     case 'gemini':

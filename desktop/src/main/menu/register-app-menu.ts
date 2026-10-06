@@ -128,12 +128,12 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
   }
 
   const featureTourItem: Electron.MenuItemConstructorOptions = {
-    label: translateMain('menu.exploreOrca', 'Explore Orca'),
+    label: translateMain('menu.exploreOrca', 'Explore NASH'),
     click: (_menuItem, window) => onOpenFeatureTour(window)
   }
 
   const setupGuideItem: Electron.MenuItemConstructorOptions = {
-    label: translateMain('menu.gettingStarted', 'Getting Started with Orca'),
+    label: translateMain('menu.gettingStarted', 'Getting Started with NASH'),
     click: (_menuItem, window) => onOpenSetupGuide(window)
   }
 

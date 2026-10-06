@@ -1,5 +1,6 @@
 import { defineMethod } from '../../../core'
 import { ResetParams } from '../schemas'
+import { assertNoOpenAppRunBeforeReset } from '../../../../workflow-run/app-run-policy'
 
 export const ORCHESTRATION_RESET_METHODS = [
   defineMethod({
@@ -7,6 +8,7 @@ export const ORCHESTRATION_RESET_METHODS = [
     params: ResetParams,
     handler: (params, { runtime }) => {
       const db = runtime.getOrchestrationDb()
+      assertNoOpenAppRunBeforeReset(db)
       if (params.all) {
         runtime.stopOrchestrationFederationRelay()
         db.resetAll()

@@ -11,18 +11,18 @@ function getRemoveProjectDescription(scope: SettingsProjectRemovalScope): string
   if (scope === 'checkout') {
     return translate(
       'auto.components.settings.RepositoryPane.removeProjectCheckout',
-      'Remove this checkout from Orca. Other checkouts of this project stay.'
+      'Remove this checkout from NASH. Other checkouts of this project stay.'
     )
   }
   if (scope === 'split-project') {
     return translate(
       'auto.components.settings.RepositoryPane.removeProjectKeepCheckouts',
-      'Remove this project from Orca. Checkouts that have their own settings stay.'
+      'Remove this project from NASH. Checkouts that have their own settings stay.'
     )
   }
   return translate(
     'auto.components.settings.RepositoryPane.removeProjectAllHosts',
-    'Remove this project from Orca on all configured hosts.'
+    'Remove this project from NASH on all configured hosts.'
   )
 }
 

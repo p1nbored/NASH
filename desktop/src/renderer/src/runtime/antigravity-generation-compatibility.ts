@@ -48,5 +48,5 @@ export async function antigravityGenerationCompatibilityError(
   ) {
     return null
   }
-  return 'This remote Orca server does not support Antigravity’s configured model. Update the remote server or select an explicit Antigravity model.'
+  return 'This remote NASH server does not support Antigravity’s configured model. Update the remote server or select an explicit Antigravity model.'
 }

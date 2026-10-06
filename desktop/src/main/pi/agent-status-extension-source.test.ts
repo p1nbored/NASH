@@ -415,7 +415,7 @@ describe('getPiAgentStatusExtensionSource', () => {
   })
 
   it('uses current Windows coordinates when a same-token guest endpoint is stale', async () => {
-    const endpointPath = '/home/u/.orca-wsl/agent-hooks/instance-test/endpoint.env'
+    const endpointPath = '/home/u/.nash-wsl/agent-hooks/instance-test/endpoint.env'
     const harness = createHarness({
       kind: 'prime-agent',
       env: { WSL_DISTRO_NAME: 'Ubuntu', ORCA_AGENT_HOOK_ENDPOINT: endpointPath },

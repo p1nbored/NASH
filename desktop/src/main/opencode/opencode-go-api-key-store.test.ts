@@ -46,7 +46,7 @@ describe('OpenCode Go main-owned API key file', () => {
     expect(store.hasOpenCodeGoApiKey()).toBe(false)
     store.saveOpenCodeGoApiKey(' fake-key ')
     expect(store.hasOpenCodeGoApiKey()).toBe(true)
-    const path = join(home.directory, '.orca', 'opencode-go-api-key.enc')
+    const path = join(home.directory, '.nash', 'opencode-go-api-key.enc')
     expect(readFileSync(path, 'utf8')).toBe(
       `orca-opencode-go-api-key:v1:encrypted:${Buffer.from('encrypted:fake-key').toString('base64')}`
     )
@@ -74,7 +74,7 @@ describe('OpenCode Go main-owned API key file', () => {
     const store = await import('./opencode-go-api-key-store')
     expect(() => store.saveOpenCodeGoApiKey(' ')).toThrow('required')
     store.saveOpenCodeGoApiKey('fake-key')
-    writeFileSync(join(home.directory, '.orca', 'opencode-go-api-key.enc'), 'fake-invalid-envelope')
+    writeFileSync(join(home.directory, '.nash', 'opencode-go-api-key.enc'), 'fake-invalid-envelope')
     vi.resetModules()
     const restarted = await import('./opencode-go-api-key-store')
     expect(() => restarted.readOpenCodeGoApiKey()).toThrow(

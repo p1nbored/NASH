@@ -340,26 +340,28 @@ describe('configureDevUserDataPath', () => {
     expect(app.setPath).toHaveBeenCalledWith('userData', '/tmp/orca-dev-repro')
   })
 
-  it('moves dev runs onto an orca-dev userData path', async () => {
+  it('moves dev runs onto a nash-dev userData path', async () => {
     const { app } = await import('electron')
     const { configureDevUserDataPath } = await import('./configure-process')
 
     delete process.env.ORCA_DEV_USER_DATA_PATH
     configureDevUserDataPath(true)
 
-    // Why: production code uses path.join(app.getPath('appData'), 'orca-dev')
+    // Why: production code uses path.join(app.getPath('appData'), 'nash-dev')
     // which produces platform-specific separators.
-    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'orca-dev'))
+    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'nash-dev'))
+    expect(app.setPath).not.toHaveBeenCalledWith('userData', join('/tmp/app-data', 'orca-dev'))
   })
 
-  it('leaves packaged runs on the default userData path', async () => {
+  it('pins packaged runs onto the nash userData path instead of Electron name derivation', async () => {
     const { app } = await import('electron')
     const { configureDevUserDataPath } = await import('./configure-process')
 
     vi.mocked(app.setPath).mockClear()
     configureDevUserDataPath(false)
 
-    expect(app.setPath).not.toHaveBeenCalled()
+    expect(app.setPath).toHaveBeenCalledTimes(1)
+    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'nash'))
   })
 })
 

@@ -72,8 +72,8 @@ describe('dedupeCodexRolloutFileAliases', () => {
   it('prefers the managed runtime home over other non-default homes', () => {
     const managed = {
       agent: 'codex',
-      path: `\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home\\sessions\\2026\\07\\01\\rollout-2026-07-01T10-00-00-019f0000-1111-7222-8333-444444444444.jsonl`,
-      codexHome: '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home',
+      path: `\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home\\sessions\\2026\\07\\01\\rollout-2026-07-01T10-00-00-019f0000-1111-7222-8333-444444444444.jsonl`,
+      codexHome: '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home',
       hardlinkIdentity: '1:42'
     }
     const wslReal = {
@@ -391,8 +391,8 @@ describe('dedupeScannedSessions', () => {
     const wslManaged = codexSession({
       sessionId: 'wsl-pair',
       filePath:
-        '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home\\sessions\\rollout-a.jsonl',
-      codexHome: '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home\\sessions\\rollout-a.jsonl',
+      codexHome: '\\\\wsl$\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home'
     })
     const wslReal = codexSession({
       sessionId: 'wsl-pair',
@@ -411,9 +411,9 @@ describe('dedupeScannedSessions', () => {
     })
     const wsl = codexSession({
       sessionId: 'shared-id',
-      filePath: `\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home\\sessions\\${rolloutName}`,
+      filePath: `\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home\\sessions\\${rolloutName}`,
       codexHome:
-        '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\orca\\codex-runtime-home\\home'
+        '\\\\wsl.localhost\\Ubuntu\\home\\ada\\.local\\share\\nash\\codex-runtime-home\\home'
     })
 
     expect(dedupeScannedSessions([host, wsl])).toEqual([host, wsl])

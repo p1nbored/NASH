@@ -1,4 +1,7 @@
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import {
   RELAY_SENTINEL,
   FrameDecoder,
@@ -12,6 +15,8 @@ import {
 
 export type RelayProcess = {
   proc: ChildProcess
+  /** The temp home the child runs in unless the caller gave its own; removed when the child exits. */
+  home: string
   responses: (JsonRpcResponse | JsonRpcNotification)[]
   sentinelReceived: Promise<void>
   send: (method: string, params?: Record<string, unknown>) => number
@@ -22,14 +27,36 @@ export type RelayProcess = {
   waitForExit: (timeoutMs?: number) => Promise<number | null>
 }
 
+// Why: the relay writes overlays under its home (~/.nash-relay), and the vitest real-home guard
+// cannot see a child process; a caller that set its own HOME keeps it.
+function childEnvironment(env: NodeJS.ProcessEnv, home: string): NodeJS.ProcessEnv {
+  const realHomes = new Set([process.env.HOME, process.env.USERPROFILE].filter(Boolean))
+  const own = (value: string | undefined): value is string =>
+    value !== undefined && !realHomes.has(value)
+  return {
+    ...env,
+    HOME: own(env.HOME) ? env.HOME : home,
+    USERPROFILE: own(env.USERPROFILE) ? env.USERPROFILE : home
+  }
+}
+
 export function spawnRelay(
   entryPath: string,
   args: string[] = [],
   options: Pick<SpawnOptions, 'cwd' | 'env'> = {}
 ): RelayProcess {
+  const home = mkdtempSync(join(tmpdir(), 'relay-child-home-'))
   const proc = spawn('node', [entryPath, ...args], {
     stdio: ['pipe', 'pipe', 'pipe'],
-    ...options
+    ...options,
+    env: childEnvironment(options.env ?? process.env, home)
+  })
+  proc.once('exit', () => {
+    try {
+      rmSync(home, { recursive: true, force: true })
+    } catch {
+      // A detached relay the child started may still hold the folder; it stays in the OS temp dir.
+    }
   })
 
   const responses: (JsonRpcResponse | JsonRpcNotification)[] = []
@@ -163,6 +190,7 @@ export function spawnRelay(
 
   return {
     proc,
+    home,
     responses,
     sentinelReceived,
     send,

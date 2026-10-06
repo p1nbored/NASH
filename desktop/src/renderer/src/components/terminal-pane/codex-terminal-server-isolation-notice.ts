@@ -63,7 +63,7 @@ function showCodexTerminalServerIsolationNotice(): void {
   toast.info(
     translate(
       'terminal.codexTerminalServerIsolationNotice.title',
-      'Orca now runs Codex without its shared server'
+      'NASH now runs Codex without its shared server'
     ),
     {
       // Why a stable id: a late sync that resets the flag can't stack a second toast.

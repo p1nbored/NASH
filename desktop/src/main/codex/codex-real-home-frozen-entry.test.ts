@@ -88,7 +88,7 @@ function fileIdentity(path: string): { raw: string; ino: number; mtimeMs: number
 function olderBuildCommand(): string {
   const script = join(
     homes.tmpHome,
-    '.orca',
+    '.nash',
     'agent-hooks',
     process.platform === 'win32' ? 'codex-hook.cmd' : 'codex-hook.sh'
   )
@@ -229,7 +229,7 @@ describe('the frozen real-home Codex entry', () => {
     async (policy) => {
       resolveCodexCommandMock.mockReturnValue(process.execPath)
       const counts = installCodexLikeGrant()
-      const newer = `: orca-agent-hook-form=2; /bin/sh "\${HOME-}/.orca/agent-hooks/${
+      const newer = `: orca-agent-hook-form=2; /bin/sh "\${HOME-}/.nash/agent-hooks/${
         process.platform === 'win32' ? 'codex-hook.cmd' : 'codex-hook.sh'
       }"`
       writeHooks(everyEvent(newer))

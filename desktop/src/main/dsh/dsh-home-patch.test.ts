@@ -6,7 +6,7 @@ import {
   removeManagedDshPatch
 } from './dsh-home-patch'
 
-const HOOKS_PATH = '/home/dev/.orca/agent-hooks/dsh-hooks.json'
+const HOOKS_PATH = '/home/dev/.nash/agent-hooks/dsh-hooks.json'
 
 /** applyManagedDshPatch returns null only for files it refuses to edit; these cases expect an edit. */
 function applyOrFail(text: string, hooksPath = HOOKS_PATH): string {
@@ -90,7 +90,7 @@ describe('applyManagedDshPatch', () => {
   )
 
   it('quotes a path containing a single quote', () => {
-    const awkward = "/home/o'brien/.orca/agent-hooks/dsh-hooks.json"
+    const awkward = "/home/o'brien/.nash/agent-hooks/dsh-hooks.json"
     expect(readManagedDshHooksConfigPath(applyOrFail('', awkward))).toBe(awkward)
   })
 })

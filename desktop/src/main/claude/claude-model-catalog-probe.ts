@@ -6,19 +6,20 @@ import {
   resolveClaudeStructuredInvocation,
   type ClaudeStructuredLaunchResolverDeps
 } from './claude-structured-launch-resolution'
-import type {
-  AgentModelCatalogProbe,
-  AgentModelCatalogSuccess
-} from '../native-chat/agent-model-catalog/agent-model-catalog-store'
+import type { AgentModelCatalogSuccess } from '../native-chat/agent-model-catalog/agent-model-catalog-store'
 
 export type ClaudeModelCatalogProbeDeps = Pick<
   ClaudeStructuredLaunchResolverDeps,
   'resolveCommand' | 'resolveEnv' | 'resolveInheritedEnv' | 'resolveAuthPolicy'
 > & {
-  authSwitchSettleTimeoutMs?: number
   /** Test seams; production runs the one-shot listing child. */
   discover?: typeof discoverModelsLocal
   spawnAgent?: typeof spawnSourceControlAgent
+}
+
+export type ClaudeModelCatalogSuccess = AgentModelCatalogSuccess & {
+  /** Listed model id -> the full model id it resolves to; only models the CLI named one for. */
+  readonly resolvedModelByModel: ReadonlyMap<string, string>
 }
 
 /**
@@ -29,8 +30,8 @@ export type ClaudeModelCatalogProbeDeps = Pick<
  */
 export function createClaudeModelCatalogProbe(
   deps: ClaudeModelCatalogProbeDeps
-): AgentModelCatalogProbe {
-  return async (accountHomePath: string): Promise<AgentModelCatalogSuccess> => {
+): (accountHomePath: string) => Promise<ClaudeModelCatalogSuccess> {
+  return async (accountHomePath: string): Promise<ClaudeModelCatalogSuccess> => {
     // Same pin rule as the session spawn: naming the CLI's default dir would move
     // it off the default Keychain item and list under another identity.
     const { command, env } = await resolveClaudeStructuredInvocation(deps, (base) => ({
@@ -70,6 +71,12 @@ export function createClaudeModelCatalogProbe(
           : {})
       })),
       fastModeTierByModel: new Map(),
+      // A pinned full id (claude-opus-5-5) matches a listed alias only through this.
+      resolvedModelByModel: new Map(
+        result.models.flatMap((model): [string, string][] =>
+          model.resolvedModel ? [[model.id, model.resolvedModel]] : []
+        )
+      ),
       origin: 'probe'
     }
   }

@@ -30,7 +30,7 @@ describe('web runtime environment identity', () => {
 
     await expect(
       globals.window.api.runtimeEnvironments.resolve({ selector: 'web-server-a' })
-    ).rejects.toThrow('Unknown Orca runtime environment: web-server-a')
+    ).rejects.toThrow('Unknown NASH runtime environment: web-server-a')
   })
 
   it('keeps pairing state separate from generic Active Server settings writes', async () => {
@@ -118,7 +118,7 @@ describe('web runtime environment identity', () => {
       globals.window.api.settings.setActiveRuntimeEnvironmentPreference({
         environmentId: 'unknown-server'
       })
-    ).rejects.toThrow('Unknown Orca runtime environment: unknown-server')
+    ).rejects.toThrow('Unknown NASH runtime environment: unknown-server')
     expect(JSON.parse(globals.storage.getItem('orca.web.settings.v1') ?? '{}')).toMatchObject({
       activeRuntimeEnvironmentId: paired.environment.id
     })
@@ -153,7 +153,7 @@ describe('web runtime environment identity', () => {
 
     await expect(
       globals.window.api.runtimeEnvironments.resolve({ selector: 'web-server-old' })
-    ).rejects.toThrow('Unknown Orca runtime environment: web-server-old')
+    ).rejects.toThrow('Unknown NASH runtime environment: web-server-old')
   })
 
   it('ignores malformed persisted paired device identity', async () => {
@@ -416,7 +416,7 @@ describe('web runtime environment identity', () => {
     ).resolves.toMatchObject({
       ok: false,
       kind: 'environment-save-failed',
-      message: 'Orca verified the host but could not save it. Check browser storage and try again.'
+      message: 'NASH verified the host but could not save it. Check browser storage and try again.'
     })
     await expect(globals.window.api.runtimeEnvironments.list()).resolves.toMatchObject([
       { id: 'web-server-a' }

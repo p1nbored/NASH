@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { normalizeRightSidebarRoute } from './right-sidebar-route'
 
 describe('normalizeRightSidebarRoute', () => {
+  it('preserves Workbench across hydration without inheriting an Explorer search route', () => {
+    expect(
+      normalizeRightSidebarRoute('workbench', 'search', {
+        installedPluginTabKeys: new Set()
+      })
+    ).toEqual({
+      rightSidebarTab: 'workbench',
+      rightSidebarExplorerView: 'files'
+    })
+  })
+
   it('preserves the folder-only PR Checks route', () => {
     expect(normalizeRightSidebarRoute('pr-checks')).toEqual({
       rightSidebarTab: 'pr-checks',

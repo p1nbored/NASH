@@ -1,4 +1,5 @@
 import { safeStorage } from 'electron'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -9,6 +10,7 @@ import {
 } from '../../shared/secure-file'
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
 import { ApiKeyFileUnreadableError } from './api-key-file-unreadable-error'
+import { ApiKeySealingUnavailableError } from './api-key-sealing-unavailable-error'
 
 type EncryptedApiKeyFileStore = {
   protection: () => SecretAtRestProtection | null
@@ -22,12 +24,15 @@ export function createEncryptedApiKeyFileStore({
   fileName,
   envelopePrefix,
   providerLabel,
-  logScope
+  logScope,
+  requireSealing = false
 }: {
   fileName: string
   envelopePrefix: string
   providerLabel: string
   logScope: string
+  /** Opt-in fail-closed mode: never write or read a plaintext envelope. Off keeps the legacy fallback. */
+  requireSealing?: boolean
 }): EncryptedApiKeyFileStore {
   let cachedApiKey: string | null = null
   let warnedStatusHardenFailure = false
@@ -38,7 +43,7 @@ export function createEncryptedApiKeyFileStore({
   }
 
   function getOrcaDir(): string {
-    return join(homedir(), '.orca')
+    return join(homedir(), APP_HOME_DIR_NAME)
   }
 
   function getApiKeyPath(): string {
@@ -71,6 +76,9 @@ export function createEncryptedApiKeyFileStore({
 
   function readEnvelope(envelope: ApiKeyEnvelope): string {
     if (envelope.kind === 'plaintext') {
+      if (requireSealing) {
+        throw new Error(`${providerLabel} API key is stored without sealing and was refused`)
+      }
       return envelope.payload.toString('utf8')
     }
     if (!safeStorage.isEncryptionAvailable()) {
@@ -123,6 +131,11 @@ export function createEncryptedApiKeyFileStore({
       )
       cachedApiKey = trimmed
       return
+    }
+    if (requireSealing) {
+      throw new ApiKeySealingUnavailableError(
+        `${providerLabel} API key was not stored because sealing is unavailable`
+      )
     }
     console.warn(
       `[${logScope}] safeStorage encryption unavailable — storing ${providerLabel} API key in plaintext`

@@ -8,6 +8,13 @@ import type { Store } from '../persistence'
 import { SshRelaySession } from './ssh-relay-session'
 import type { SshConnection } from './ssh-connection'
 import { createMockDeps, mockDeploySuccess } from './ssh-relay-session-test-fixtures'
+import type * as ScopeModule from '../agent-hooks/nash-managed-hook-scope'
+
+// Why: these cover Orca's per-agent mechanics; NASH's Claude-only scope has its own tests.
+vi.mock('../agent-hooks/nash-managed-hook-scope', async (importOriginal) => ({
+  ...(await importOriginal<typeof ScopeModule>()),
+  isNashManagedHookAgent: () => true
+}))
 
 const { muxRequestMock, openConsumerSessionMock } = vi.hoisted(() => ({
   muxRequestMock: vi.fn(),

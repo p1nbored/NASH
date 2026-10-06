@@ -1,4 +1,5 @@
 import type { TmuxManagedPty } from '../shared/tmux-agent-hook-owner'
+import { APP_IDENTITY } from '../shared/app-identity-constants'
 /* oxlint-disable max-lines */
 import { resolveSynchronizedOutputSafeSplit } from '../shared/terminal-synchronized-output-scan'
 import { restoreManagedDataAccountEnvironment } from '../shared/managed-data-account-environment'
@@ -867,7 +868,7 @@ export class PtyHandler {
         ...inheritedEnv,
         TERM: 'xterm-256color',
         COLORTERM: 'truecolor',
-        TERM_PROGRAM: 'Orca',
+        TERM_PROGRAM: APP_IDENTITY.productName,
         TERM_PROGRAM_VERSION:
           rendererEnv?.ORCA_APP_VERSION || process.env.ORCA_APP_VERSION || '0.0.0-dev',
         FORCE_HYPERLINK: '1'

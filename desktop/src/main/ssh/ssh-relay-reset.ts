@@ -1,4 +1,5 @@
 import type { SshConnection } from './ssh-connection'
+import { APP_REMOTE_DIR_NAME } from '../../shared/app-identity-paths'
 import { shellEscape } from './ssh-connection-utils'
 import { execCommand } from './ssh-relay-deploy-helpers'
 import { relaySocketNameForInstanceId } from './ssh-relay-instance-id'
@@ -12,7 +13,7 @@ export async function forceStopRelayForTarget(
   const escapedSockName = shellEscape(sockName)
   const script = [
     `sock_name=${escapedSockName}`,
-    'base="${HOME}/.orca-remote"',
+    `base="\${HOME}/${APP_REMOTE_DIR_NAME}"`,
     // Why: a long $HOME moves the socket to the sun_path-safe short base (#10726); reset must reach it there too.
     `short_base="${SHORT_RELAY_SOCKET_DIR_PREFIX}$(id -u 2>/dev/null)"`,
     'if [ -d "$base" ] || [ -d "$short_base" ]; then',

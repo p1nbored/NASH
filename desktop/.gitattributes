@@ -88,3 +88,6 @@
 /mobile/web-entry/**/*.otf -text
 /mobile/web-entry/**/*.woff -text
 /mobile/web-entry/**/*.woff2 -text
+# Byte-exact golden contract files (freeze tests compare bytes); keep LF on every checkout.
+/src/shared/dot-ingress/*.schema.json text eol=lf
+/src/shared/dot-remote/*.json text eol=lf

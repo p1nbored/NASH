@@ -8,6 +8,12 @@ vi.mock('electron', () => ({
   net: { fetch: netFetchMock }
 }))
 
+// Why: the shipped identity has no release feed, so these tests run against a fixture feed.
+vi.mock('../shared/app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../shared/app-update-feed.test-fixture')
+  return withFixtureUpdateFeed(await importOriginal())
+})
+
 import { fetchNudge, versionMatchesRange, shouldApplyNudge } from './updater-nudge'
 
 describe('updater-nudge', () => {
@@ -24,6 +30,11 @@ describe('updater-nudge', () => {
 
       const result = await fetchNudge()
       expect(result).toEqual({ id: 'campaign-1', minVersion: '1.1.0', maxVersion: '1.1.19' })
+      // Why: the campaign file comes from the configured feed's what's-new service, never a built-in host.
+      expect(netFetchMock).toHaveBeenCalledWith(
+        'https://updates.fixture.invalid/whats-new/nudge.json',
+        expect.anything()
+      )
     })
 
     it('returns a valid config with only maxVersion', async () => {

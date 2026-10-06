@@ -259,9 +259,9 @@ describe('createPtySubprocess', () => {
         cwd: 'C:\\Users\\jin\\repo',
         env: {
           CODEX_HOME:
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home',
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home',
           ORCA_CODEX_HOME:
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
         }
       })
     } finally {
@@ -299,9 +299,9 @@ describe('createPtySubprocess', () => {
         shellOverride: 'wsl.exe',
         env: {
           CODEX_HOME:
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home',
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home',
           ORCA_CODEX_HOME:
-            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\orca\\codex-accounts\\a\\home'
+            '\\\\wsl.localhost\\Ubuntu\\home\\jin\\.local\\share\\nash\\codex-accounts\\a\\home'
         }
       })
     } finally {
@@ -322,8 +322,8 @@ describe('createPtySubprocess', () => {
       ['-d', 'Ubuntu', '--exec', 'sh', '-c', expect.stringContaining(`cd '${expectedLinuxCwd}'`)],
       expect.objectContaining({
         env: expect.objectContaining({
-          CODEX_HOME: '/home/jin/.local/share/orca/codex-accounts/a/home',
-          ORCA_CODEX_HOME: '/home/jin/.local/share/orca/codex-accounts/a/home',
+          CODEX_HOME: '/home/jin/.local/share/nash/codex-accounts/a/home',
+          ORCA_CODEX_HOME: '/home/jin/.local/share/nash/codex-accounts/a/home',
           WSLENV: expect.stringContaining('CODEX_HOME')
         })
       })

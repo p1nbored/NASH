@@ -10,6 +10,7 @@ import {
 } from 'node:fs'
 import { join, win32 as winPath } from 'node:path'
 import { getAppEnvironment } from '../../shared/app-environment'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import {
   buildDaemonHostManifest,
   daemonHostExeName,
@@ -47,7 +48,7 @@ const HOST_SUBDIR = 'daemon-host'
 const MARKER_NAME = '.materialized.json'
 
 // LOCAL appData (not roaming) so OneDrive/roaming never syncs this ~260MB runtime. Shared with NSIS uninstall (config/nsis/orca-installer-hooks.nsh) — keep in sync.
-const LOCAL_HOST_ROOT_NAME = 'Orca'
+const LOCAL_HOST_ROOT_NAME = APP_IDENTITY.localAppDataRootName
 
 type MaterializeMarker = {
   version: string

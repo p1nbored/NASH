@@ -39,12 +39,8 @@ vi.mock('./claude-pty', () => ({
 }))
 
 vi.mock('../claude-accounts/keychain', () => ({
-  deleteActiveClaudeKeychainCredentialsStrict: vi.fn(),
   readActiveClaudeKeychainCredentials: vi.fn(),
-  readActiveClaudeKeychainCredentialsStrict: vi.fn(),
-  readManagedClaudeKeychainCredentials: vi.fn(),
-  writeActiveClaudeKeychainCredentials: vi.fn(),
-  writeManagedClaudeKeychainCredentials: vi.fn()
+  readActiveClaudeKeychainCredentialsStrict: vi.fn()
 }))
 
 describe('fetchClaudeRateLimits', () => {

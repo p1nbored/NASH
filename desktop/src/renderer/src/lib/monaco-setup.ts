@@ -20,6 +20,7 @@ import { installMonacoDiffEditorDisposalGuard } from './monaco-diff-editor-dispo
 import { installMonacoPeekReferencesPreviewOptions } from './monaco-peek-preview-options'
 import { installMonacoContextMenuPaste } from '@/components/editor/install-monaco-context-menu-paste'
 import { runMonacoSetupSteps } from './monaco-setup-steps'
+import { defineAutopilotMonacoThemes } from './monaco-theme'
 
 globalThis.MonacoEnvironment = {
   getWorker(_workerId, label) {
@@ -79,6 +80,7 @@ monacoTS.javascriptDefaults.setCompilerOptions({
 })
 
 runMonacoSetupSteps([
+  ['autopilot editor themes', () => defineAutopilotMonacoThemes(monaco)],
   ['Vue language registration', () => registerVueLanguage(monaco)],
   ['Svelte language registration', () => registerSvelteLanguage(monaco)],
   ['Astro language registration', () => registerAstroLanguage(monaco)],

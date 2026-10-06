@@ -154,7 +154,7 @@ function notifyDeliveryUnconfirmed(agentLabel: string, prompt: string): void {
   toast.warning(
     translate(
       'components.agentSessionContinuation.deliveryUnconfirmed',
-      'Orca could not confirm {{agent}} received the session context. Check the new session, and paste it yourself if its input is empty.',
+      'NASH could not confirm {{agent}} received the session context. Check the new session, and paste it yourself if its input is empty.',
       { agent: agentLabel }
     ),
     copyPromptToastAction(prompt)

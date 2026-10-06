@@ -319,7 +319,7 @@ export function ShortcutsPane(): React.JSX.Element {
                 {keybindingSnapshot?.path ??
                   translate(
                     'auto.components.settings.ShortcutsPane.d8c988dab4',
-                    '~/.orca/keybindings.json'
+                    '~/.nash/keybindings.json'
                   )}
               </span>{' '}
               {translate('auto.components.settings.ShortcutsPane.4b7ae34062', 'directly.')}

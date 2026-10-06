@@ -1,4 +1,5 @@
 import { net } from 'electron'
+import { getAppUpdateFeed } from '../shared/app-update-feed'
 import { compareVersions, isValidVersion } from './updater-fallback'
 
 export type NudgeConfig = {
@@ -8,8 +9,13 @@ export type NudgeConfig = {
 }
 
 export async function fetchNudge(): Promise<NudgeConfig | null> {
+  // Why: the campaign file belongs to the configured what's-new service; with none, nothing is fetched (decision D-017).
+  const nudgeJsonUrl = getAppUpdateFeed()?.whatsNew?.nudgeJsonUrl
+  if (!nudgeJsonUrl) {
+    return null
+  }
   try {
-    const res = await net.fetch('https://onorca.dev/whats-new/nudge.json', {
+    const res = await net.fetch(nudgeJsonUrl, {
       signal: AbortSignal.timeout(5000)
     })
     if (!res.ok) {

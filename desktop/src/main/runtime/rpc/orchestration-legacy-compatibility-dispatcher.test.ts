@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type Database from '../../sqlite/sync-database'
-import { applyEscalationToDispatch } from '../orchestration/coordinator-escalation-triage'
 import {
   cleanupLegacyCompatibilityDispatcherHarnesses,
   COORDINATOR_HANDLE,
@@ -86,9 +85,9 @@ describe('legacy compatibility through RpcDispatcher', () => {
         taskId: harness.taskId,
         dispatchId: harness.dispatchId
       })
-      applyEscalationToDispatch(harness.db, harness.db.getMessageById(message.id)!, () => {})
-      expect(harness.db.getTask(harness.taskId)?.status).toBe('ready')
-      expect(harness.db.getDispatchContextById(harness.dispatchId)?.status).toBe('failed')
+      // Why unchanged: the escalation only waits in the mailbox; no coordinator acts on it (D-016).
+      expect(harness.db.getTask(harness.taskId)?.status).toBe('dispatched')
+      expect(harness.db.getDispatchContextById(harness.dispatchId)?.status).toBe('dispatched')
       expect(counts(harness.db)).toEqual({
         ...before,
         messages: before.messages + 1,

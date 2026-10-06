@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
-import { getClaudeAccountSyncKey, getCodexAccountSyncKey } from './provider-account-sync-key'
+import { getCodexAccountSyncKey } from './provider-account-sync-key'
 
 function makeSettings(overrides: Partial<GlobalSettings> = {}): GlobalSettings {
   return {
     activeRuntimeEnvironmentId: null,
-    activeClaudeManagedAccountId: null,
-    activeClaudeManagedAccountIdsByRuntime: null,
-    claudeManagedAccounts: [{ id: 'a1', updatedAt: 5 }],
     activeCodexManagedAccountId: null,
     activeCodexManagedAccountIdsByRuntime: null,
     codexManagedAccounts: [{ id: 'c1', updatedAt: 7 }],
@@ -15,10 +12,9 @@ function makeSettings(overrides: Partial<GlobalSettings> = {}): GlobalSettings {
   } as unknown as GlobalSettings
 }
 
-describe.each([
-  ['claude', getClaudeAccountSyncKey],
-  ['codex', getCodexAccountSyncKey]
-])('%s account sync key', (_provider, getSyncKey) => {
+describe('codex account sync key', () => {
+  const getSyncKey = getCodexAccountSyncKey
+
   it('returns the same string for the same settings identity', () => {
     const settings = makeSettings()
     expect(getSyncKey(settings)).toBe(getSyncKey(settings))
@@ -33,7 +29,6 @@ describe.each([
     const first = getSyncKey(makeSettings())
     const second = getSyncKey(
       makeSettings({
-        claudeManagedAccounts: [{ id: 'a1', updatedAt: 6 }],
         codexManagedAccounts: [{ id: 'c1', updatedAt: 8 }]
       } as unknown as Partial<GlobalSettings>)
     )

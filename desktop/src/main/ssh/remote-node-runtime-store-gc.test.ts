@@ -125,9 +125,9 @@ describe('parseRuntimeStoreInventory', () => {
     const parsed = parseRuntimeStoreInventory(
       [
         'PROCESS_CHECK ps',
-        `HOLD /h/.orca-remote/runtimes/node-${sha('a')}/bin/node server.js`,
-        `HOLD /h/.orca-remote/runtimes/.gc-tombstone-node-${sha('b')}.1.2/bin/node`,
-        'HOLD grep -F -- /h/.orca-remote/runtimes/',
+        `HOLD /h/.nash-remote/runtimes/node-${sha('a')}/bin/node server.js`,
+        `HOLD /h/.nash-remote/runtimes/.gc-tombstone-node-${sha('b')}.1.2/bin/node`,
+        'HOLD grep -F -- /h/.nash-remote/runtimes/',
         '__ORCA_RUNTIME_STORE__OK'
       ].join('\n')
     )
@@ -144,7 +144,7 @@ posixOnly('gcRemoteNodeRuntimeStore (real shell)', () => {
 
   beforeEach(() => {
     home = mkdtempSync(join(tmpdir(), 'runtime-store-'))
-    root = join(home, '.orca-remote')
+    root = join(home, '.nash-remote')
     mkdirSync(join(root, 'runtimes'), { recursive: true })
     mockExec.mockReset()
     mockExec.mockImplementation(async (_conn, command) =>

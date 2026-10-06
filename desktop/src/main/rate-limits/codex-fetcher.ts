@@ -90,7 +90,10 @@ function consumeCodexResetCredit(url: string, init: RequestInit): Promise<Respon
   return fetch(url, init)
 }
 
-async function fetchViaRpc(options?: CodexRateLimitFetchOptions): Promise<ProviderRateLimits> {
+/** One `codex app-server` started to answer `account/rateLimits/read`; no file or HTTP read. */
+export async function readCodexRateLimitsFromAppServer(
+  options?: CodexRateLimitFetchOptions
+): Promise<ProviderRateLimits> {
   if (options?.signal?.aborted) {
     return abortedCodexRateLimitResult()
   }
@@ -206,7 +209,7 @@ export async function fetchCodexRateLimits(
   try {
     const rpcResult = await withCodexHomeProcessLock(
       resolveCodexHomeProcessLockKey(options?.codexHomePath),
-      () => fetchViaRpc(options)
+      () => readCodexRateLimitsFromAppServer(options)
     )
     if (options?.signal?.aborted) {
       return abortedCodexRateLimitResult()

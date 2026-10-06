@@ -31,6 +31,8 @@ export type CommitMessageModel = {
   label: string
   /** Discovery-provided detail, e.g. what a CLI alias resolves to on this host. */
   description?: string
+  /** Full model id a listed alias resolves to on this host; only Claude's listing names one. */
+  resolvedModel?: string
   /** Omit when the model does not expose an effort selector — the UI then hides the dropdown. */
   thinkingLevels?: ThinkingLevel[]
   /** Required when thinkingLevels is present. */
@@ -73,6 +75,7 @@ export type CommitMessageModelCapability = {
   id: string
   label: string
   description?: string
+  resolvedModel?: string
   thinkingLevels?: ThinkingLevel[]
   defaultThinkingLevel?: string
   supportsFastMode?: boolean

@@ -22,7 +22,7 @@ vi.mock('fs', () => ({
 
 vi.mock('./relay-protocol', () => ({
   RELAY_VERSION: '0.1.0',
-  RELAY_REMOTE_DIR: '.orca-remote',
+  RELAY_REMOTE_DIR: '.nash-remote',
   parseUnameToRelayPlatform: vi.fn().mockReturnValue('linux-x64'),
   RELAY_SENTINEL: 'ORCA-RELAY v0.1.0 READY\n',
   RELAY_SENTINEL_TIMEOUT_MS: 10_000
@@ -109,8 +109,8 @@ describe('cross-version isolation', () => {
     const mockExec = vi.mocked(execCommand)
 
     // Simulated remote where:
-    //   v1 dir = ~/.orca-remote/relay-0.1.0+111111111111/  (live daemon, listening)
-    //   v2 dir = ~/.orca-remote/relay-0.1.0+222222222222/  (does not yet exist)
+    //   v1 dir = ~/.nash-remote/relay-0.1.0+111111111111/  (live daemon, listening)
+    //   v2 dir = ~/.nash-remote/relay-0.1.0+222222222222/  (does not yet exist)
     // The v2 client has fullVersion='0.1.0+222222222222' (from the fs mock above).
     //
     mockExec.mockImplementation((_conn, command) => {

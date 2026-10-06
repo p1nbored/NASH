@@ -76,6 +76,11 @@ const {
   }
 })
 
+// Why: the shipped identity has no release feed, so these tests run against a fixture feed.
+vi.mock('../shared/app-identity-constants', async (importOriginal) => {
+  const { withFixtureUpdateFeed } = await import('../shared/app-update-feed.test-fixture')
+  return withFixtureUpdateFeed(await importOriginal())
+})
 vi.mock('electron', () => ({
   app: appMock,
   BrowserWindow: browserWindowMock,

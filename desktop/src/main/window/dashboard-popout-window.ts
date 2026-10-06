@@ -1,4 +1,5 @@
 import { app, BrowserWindow, nativeTheme, type WebContents } from 'electron'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { join } from 'node:path'
 import { is } from '@electron-toolkit/utils'
 import type { Store } from '../persistence'
@@ -157,10 +158,11 @@ export function createOrFocusDashboardPopout(
     ...(savedBounds ? { x: savedBounds.x, y: savedBounds.y } : {}),
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
-    title: 'Orca Agent Dashboard',
+    title: `${APP_IDENTITY.productName} Agent Dashboard`,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0a0a0a' : '#ffffff',
+    // Why: matches the frozen main.css --background tokens so first paint has no flash.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1712' : '#fbf5ed',
     // Why: the pop-out uses a standard native frame so it is movable, closable,
     // and minimizable on every platform without reimplementing the main
     // window's custom titlebar/drag-region/window-control chrome. The main

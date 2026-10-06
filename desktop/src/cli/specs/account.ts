@@ -2,24 +2,25 @@ import { GLOBAL_FLAGS, type CommandSpec } from '../args'
 
 // Why: the desktop "Add account" button is disabled when the UI drives a remote
 // runtime (a headless server). These commands run the interactive agent login
-// (`claude login` / `codex login`) in the caller's own terminal on the host and
-// register the captured account with the local runtime, giving headless hosts a
-// way to manage Claude and Codex accounts.
+// (`codex login`) in the caller's own terminal on the host and register the
+// captured account with the local runtime, giving headless hosts a way to manage
+// Codex accounts. Claude Code runs on the user's own login and has no accounts here.
 export const ACCOUNT_COMMAND_SPECS: CommandSpec[] = [
   {
     path: ['account', 'add'],
     summary: 'Add a managed agent account by signing in on this Orca host',
     usage:
-      'orca account add [--agent claude|codex|opencode|devin] [--label <name>] [--integration <id>] [--json]',
+      'orca account add [--agent codex|opencode|devin] [--label <name>] [--integration <id>] [--json]',
     allowedFlags: [...GLOBAL_FLAGS, 'agent', 'label', 'integration'],
     notes: [
-      'Runs the agent login (`claude login` / `codex login`) in this terminal, then registers the account with the local Orca runtime.',
+      'Runs the agent login (`codex login`) in this terminal, then registers the account with the local Orca runtime.',
+      'Claude Code has no managed accounts: it runs on your own login. Sign in with `claude /login` in your own terminal.',
       'Codex uses device authorization so the browser can complete sign-in from a different machine.',
       'OpenCode 2 uses `opencode auth login --standalone` in private XDG directories. Devin uses `devin auth login --force-manual-token-flow`.',
       'Use --integration <id> to skip the OpenCode integration picker; --label names the saved OpenCode or Devin profile.',
       'OpenCode and Devin profiles apply to new explicit host agent launches. Direct SSH relay and Windows-hosted WSL selection are not supported; run the command on a headless Orca runtime on that host.',
       'Sign in with the account you want to add (e.g. use a private/incognito browser window for a second account).',
-      '--agent defaults to claude. Requires the Orca runtime to be running on this machine.'
+      '--agent defaults to codex. Requires the Orca runtime to be running on this machine.'
     ],
     examples: ['orca account add', 'orca account add --agent codex']
   },

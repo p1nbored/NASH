@@ -505,7 +505,7 @@ describe('useStructuredAgentSessionOutbox', () => {
     )
     expect(sent).toContain('second')
     expect(result.current.error).toBe(
-      "Orca couldn't confirm your message reached the agent. Check the chat, then send it again if needed."
+      "NASH couldn't confirm your message reached the agent. Check the chat, then send it again if needed."
     )
   })
 

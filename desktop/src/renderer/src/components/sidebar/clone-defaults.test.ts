@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { getDefaultWorkspaceDir } from '../../../../shared/constants'
 import { getCloneDestinationAutoFill, getDefaultCloneParent } from './clone-defaults'
 
 describe('getDefaultCloneParent', () => {
+  it('places clones beside the NASH default ~/nash/workspaces folder (D-017)', () => {
+    expect(getDefaultCloneParent(getDefaultWorkspaceDir('/Users/alice'))).toBe('/Users/alice/nash')
+    expect(getDefaultCloneParent(getDefaultWorkspaceDir('C:\\Users\\alice'))).toBe(
+      'C:\\Users\\alice\\nash'
+    )
+  })
+
   it('strips a POSIX workspaces suffix', () => {
     expect(getDefaultCloneParent('/Users/mvanhorn/orca/workspaces')).toBe('/Users/mvanhorn/orca')
   })

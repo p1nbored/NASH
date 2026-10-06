@@ -24,7 +24,7 @@ export class WebRuntimeConnectionWaiters {
       return Promise.reject(createWebRuntimeUnauthorizedError())
     }
     if (this.options.isIntentionallyClosed()) {
-      return Promise.reject(new Error('Remote Orca runtime connection closed.'))
+      return Promise.reject(new Error('Remote NASH runtime connection closed.'))
     }
     return new Promise((resolve, reject) => {
       const cleanup = (): void => {
@@ -44,7 +44,7 @@ export class WebRuntimeConnectionWaiters {
         reject(
           new Error(
             withRemoteRuntimeTailscaleHint(
-              'Timed out while connecting to the remote Orca runtime.',
+              'Timed out while connecting to the remote NASH runtime.',
               this.options.endpoint
             )
           )
@@ -75,7 +75,7 @@ export class WebRuntimeConnectionWaiters {
     this.rejectAll(
       new Error(
         withRemoteRuntimeTailscaleHint(
-          'Could not connect to the remote Orca runtime.',
+          'Could not connect to the remote NASH runtime.',
           this.options.endpoint
         )
       )

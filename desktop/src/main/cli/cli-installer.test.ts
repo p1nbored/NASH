@@ -72,7 +72,7 @@ describe('CliInstaller', () => {
 
       const initial = await installer.getStatus()
       expect(initial.state).toBe('not_installed')
-      expect(initial.launcherPath).toContain(join('userData', 'cli', 'bin', 'orca'))
+      expect(initial.launcherPath).toContain(join('userData', 'cli', 'bin', 'nash'))
 
       const installed = await installer.install()
       expect(installed.state).toBe('installed')
@@ -121,9 +121,9 @@ describe('CliInstaller', () => {
   )
 
   // Why: dev installs are useful for validation, but they must not replace the
-  // packaged `orca` / `orca-ide` commands developers rely on day to day.
+  // packaged `nash` / `orca-ide` commands developers rely on day to day.
   it.skipIf(process.platform === 'win32')(
-    'uses a separate orca-dev command for default development installs',
+    'uses a separate nash-dev command for default development installs',
     async () => {
       const fixture = await makeFixture()
       const homePath = join(fixture.root, 'home')
@@ -140,13 +140,16 @@ describe('CliInstaller', () => {
 
       const installed = await installer.install()
       expect(installed.state).toBe('installed')
-      expect(installed.commandName).toBe('orca-dev')
-      expect(installed.commandPath).toBe(join(commandDir, 'orca-dev'))
-      expect(installed.launcherPath).toBe(join(fixture.userDataPath, 'cli', 'bin', 'orca-dev'))
+      expect(installed.commandName).toBe('nash-dev')
+      expect(installed.commandPath).toBe(join(commandDir, 'nash-dev'))
+      expect(installed.launcherPath).toBe(join(fixture.userDataPath, 'cli', 'bin', 'nash-dev'))
       await expect(readlink(installed.commandPath as string)).resolves.toBe(installed.launcherPath)
-      await expect(
-        readFile(join(fixture.userDataPath, 'cli', 'bin', 'orca'), 'utf8')
-      ).resolves.toBe(await readFile(installed.launcherPath as string, 'utf8'))
+      // Why: in-session aliases keep the names agents already call inside NASH dev terminals.
+      for (const aliasName of ['orca', 'orca-dev']) {
+        await expect(
+          readFile(join(fixture.userDataPath, 'cli', 'bin', aliasName), 'utf8')
+        ).resolves.toBe(await readFile(installed.launcherPath as string, 'utf8'))
+      }
     }
   )
 
@@ -301,10 +304,10 @@ describe('CliInstaller', () => {
     }
   )
 
-  // Why: Linux renamed the public command to avoid shadowing GNOME Orca, so
-  // upgrading must clean up only the old symlink owned by prior Orca installs.
+  // Why: a bare `orca` in ~/.local/bin belongs to a real Orca install or to GNOME Orca, so
+  // NASH never reclaims it (decision D-017).
   it.skipIf(process.platform === 'win32')(
-    'removes the old managed linux orca symlink when installing orca-ide',
+    'leaves a bare linux orca symlink untouched when installing orca-ide',
     async () => {
       const fixture = await makeFixture()
       const homePath = join(fixture.root, 'home')
@@ -331,12 +334,12 @@ describe('CliInstaller', () => {
 
       const installed = await installer.install()
       expect(installed.commandPath).toBe(join(commandDir, 'orca-ide'))
-      await expect(lstat(legacyCommandPath)).rejects.toMatchObject({ code: 'ENOENT' })
+      await expect(readlink(legacyCommandPath)).resolves.toBe(oldLauncherPath)
     }
   )
 
   it.skipIf(process.platform === 'win32')(
-    'removes a legacy linux orca symlink when registering from an AppImage',
+    'leaves a bare linux orca symlink untouched when registering from an AppImage',
     async () => {
       const fixture = await makeFixture()
       const homePath = join(fixture.root, 'home')
@@ -350,7 +353,8 @@ describe('CliInstaller', () => {
         mode: 0o755
       })
       const extractedRoot = resolveAppImageExtractedRoot({ appImagePath, cacheRootPath })!
-      await symlink(join(dirname(extractedRoot.payloadLauncherPath), 'orca'), legacyCommandPath)
+      const legacyTarget = join(dirname(extractedRoot.payloadLauncherPath), 'orca')
+      await symlink(legacyTarget, legacyCommandPath)
 
       const installer = new CliInstaller({
         platform: 'linux',
@@ -366,12 +370,12 @@ describe('CliInstaller', () => {
 
       const installed = await installer.install()
       expect(installed.commandPath).toBe(join(commandDir, 'orca-ide'))
-      await expect(lstat(legacyCommandPath)).rejects.toMatchObject({ code: 'ENOENT' })
+      await expect(readlink(legacyCommandPath)).resolves.toBe(legacyTarget)
     }
   )
 
   it.skipIf(process.platform === 'win32')(
-    'removes a legacy AppImage wrapper only when it names the current AppImage',
+    'leaves a bare orca AppImage wrapper untouched, whichever AppImage it names',
     async () => {
       const fixture = await makeFixture()
       const homePath = join(fixture.root, 'home')
@@ -407,7 +411,9 @@ describe('CliInstaller', () => {
       })
 
       await installer.install()
-      await expect(lstat(legacyCommandPath)).rejects.toMatchObject({ code: 'ENOENT' })
+      await expect(readFile(legacyCommandPath, 'utf8')).resolves.toBe(
+        buildLegacyAppImageCliWrapper(appImagePath)
+      )
 
       await writeFile(legacyCommandPath, buildLegacyAppImageCliWrapper(foreignAppImagePath), {
         encoding: 'utf8',

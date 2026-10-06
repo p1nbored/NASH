@@ -15,11 +15,14 @@ import { Badge } from '../ui/badge'
 export function AntigravityAccountsSection({
   owner,
   target,
-  label
+  label,
+  usageShown = true
 }: {
   owner: RuntimeClientTarget
   target: AntigravityAccountTarget
   label: string
+  /** False when the host keeps the usage meters off (NASH): no usage action is offered. */
+  usageShown?: boolean
 }): React.JSX.Element {
   const [state, setState] = useState<AntigravityAccountState | null>(null)
   const [usageSnapshot, setUsageSnapshot] = useState<{
@@ -202,14 +205,16 @@ export function AntigravityAccountsSection({
             <Button variant="outline" size="sm" disabled={busy} onClick={() => void run('List')}>
               {translate('accounts.antigravity.refresh', 'Refresh accounts')}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy || !state.currentAccount || target.runtime === 'wsl'}
-              onClick={() => void run('Usage')}
-            >
-              {translate('accounts.antigravity.usage', 'Refresh usage')}
-            </Button>
+            {usageShown && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy || !state.currentAccount || target.runtime === 'wsl'}
+                onClick={() => void run('Usage')}
+              >
+                {translate('accounts.antigravity.usage', 'Refresh usage')}
+              </Button>
+            )}
             {busy && (
               <Loader2
                 className="size-4 animate-spin"

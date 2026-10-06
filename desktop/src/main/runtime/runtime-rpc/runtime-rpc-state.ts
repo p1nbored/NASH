@@ -12,6 +12,7 @@ import type { MobileSocketWiring } from '../rpc/mobile-socket-wiring'
 import { RelayRevokeOutbox } from '../relay/relay-revoke-outbox'
 import { PushUnregisterOutbox } from '../push/push-unregister-outbox'
 import { RuntimeBinaryMessageRouter } from '../runtime-binary-message-router'
+import type { DotIngressListener } from '../dot-ingress/dot-ingress-listener'
 import type { RuntimeMetadataOwnershipWatch } from '../runtime-metadata-ownership-watch'
 import { RUNTIME_METADATA_OWNERSHIP_POLL_MS } from '../runtime-metadata-ownership-watch'
 import {
@@ -65,6 +66,8 @@ export class RuntimeRpcState {
   protected activeTransports: RpcTransport[] = []
   protected transports: RuntimeTransportMetadata[] = []
   protected metadataOwnershipWatch: RuntimeMetadataOwnershipWatch | null = null
+  // Why: the opt-in dot endpoint has its own token and method registry and exists only while its persisted switch is on.
+  protected dotIngressListener: DotIngressListener | null = null
   protected mobileSocketWiring: MobileSocketWiring | null = null
   // Why: detaches the current WebSocketTransport from the session wiring so a pairing rebind can swap
   // transports under the SAME wiring (see ensureMobileSocketWiring) instead of orphaning relay sockets.

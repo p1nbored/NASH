@@ -222,7 +222,8 @@ describe('preview terminal settings lifetime', () => {
   })
 
   it('reconnects when the effective OS theme changes', async () => {
-    await updateSettings({ theme: 'system' })
+    // Why: defaults share one dark terminal across app themes; opt into a distinct light terminal.
+    await updateSettings({ theme: 'system', terminalUseSeparateLightTheme: true })
     const view = render(<AgentTerminalPreview ptyId="pty-1" />)
     await act(async () => {})
     harness.systemPrefersDark = true

@@ -1,4 +1,5 @@
 import { materializeOmpFreshConfig } from '../shared/omp-fresh-config'
+import { APP_RELAY_HOME_DIR_NAME } from '../shared/app-identity-paths'
 // Why: relay-side equivalent of Orca's local agent integration installers.
 // OpenCode still needs a config overlay, while Pi/OMP now get Orca-managed
 // extension files installed into the remote agent homes. Host paths from the
@@ -14,7 +15,7 @@ import { materializeOmpFreshConfig } from '../shared/omp-fresh-config'
 // We deliberately do not reuse OpenCodeHookService / PiTitlebarExtensionService
 // directly: those modules import `electron` and ride on Orca's userData
 // path. The relay's electron-free constraint forces a thin parallel
-// implementation rooted at $HOME/.orca-relay/ for OpenCode and at the remote
+// implementation rooted at $HOME/.nash-relay/ for OpenCode and at the remote
 // Pi/OMP homes for those agents.
 import { createHash } from 'node:crypto'
 import {
@@ -42,7 +43,7 @@ import {
   writeOpenCodeTuiPlugin
 } from '../shared/opencode-tui-plugin-install'
 type LegacyOverlayAgentKind = Exclude<PiAgentKind, 'prime-agent'>
-const RELAY_HOOKS_DIR = '.orca-relay'
+const RELAY_HOOKS_DIR = APP_RELAY_HOME_DIR_NAME
 const OPENCODE_OVERLAY_SUBDIR = 'opencode-overlays'
 const OPENCODE2_OVERLAY_SUBDIR = 'opencode2-overlays'
 const PI_OVERLAY_SUBDIR_BY_KIND: Record<LegacyOverlayAgentKind, string> = {

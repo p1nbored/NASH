@@ -200,7 +200,7 @@ it.each(['unknown', 'ready'] as const)(
         message:
           transport === 'ready'
             ? 'Status request timed out.'
-            : 'Timed out waiting for the remote Orca runtime.'
+            : 'Timed out waiting for the remote NASH runtime.'
       }
     })
   }

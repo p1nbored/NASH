@@ -99,9 +99,11 @@ export class OrchestrationMutationExecutor {
           )}`
         : basePayloadHash
     const identity = { callerFingerprint, requestId, method: request.method, payloadHash }
+    // Why taskStart: D-016's task-start inserts its pending receipt inside createStartingWorkerDispatch.
     const atomicWorkerAcceptance =
       request.method === 'orchestration.workerStart' ||
-      request.method === 'orchestration.federationAttachStart'
+      request.method === 'orchestration.federationAttachStart' ||
+      request.method === 'orchestration.taskStart'
     // Worker starts perform asynchronous topology validation before their durable
     // acceptance claim. Join an identical in-process attempt before that boundary.
     if (atomicWorkerAcceptance) {

@@ -1,4 +1,5 @@
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 import type { SFTPWrapper } from 'ssh2'
 import type { AgentHookInstallState, AgentHookInstallStatus } from '../../shared/agent-hook-types'
@@ -206,7 +207,7 @@ export class GeminiHookService {
   // POSIX-only remote install mirroring ClaudeHookService.installRemote; the managed script/JSON shape must match local install() or remote panes report a different status.
   async installRemote(sftp: SFTPWrapper, remoteHome: string): Promise<AgentHookInstallStatus> {
     const remoteConfigPath = `${remoteHome.replace(/\/$/, '')}/.gemini/settings.json`
-    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/.orca/agent-hooks/gemini-hook.sh`
+    const remoteScriptPath = `${remoteHome.replace(/\/$/, '')}/${APP_AGENT_HOOKS_HOME_PATH}/gemini-hook.sh`
     try {
       const config = await readHooksJsonRemote(sftp, remoteConfigPath)
       if (!config) {

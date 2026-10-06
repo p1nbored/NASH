@@ -60,7 +60,7 @@ describe.skipIf(process.platform === 'win32')('local Cursor hooks through login 
       throw new Error('Cursor preToolUse hook was not installed')
     }
     command = registered
-    scriptPath = join(home, '.orca', 'agent-hooks', 'cursor-hook.sh')
+    scriptPath = join(home, '.nash', 'agent-hooks', 'cursor-hook.sh')
   })
 
   afterEach(() => {

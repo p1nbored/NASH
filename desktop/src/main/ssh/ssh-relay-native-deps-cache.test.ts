@@ -32,7 +32,7 @@ const WINDOWS = getRemoteHostPlatform('win32-x64')
 const HOME = '/home/u'
 const DEPS = { 'node-pty': '1.1.0', '@parcel/watcher': '2.5.6' } as const
 const KEY = computeRelayNativeDepsCacheKey({ platform: 'linux-x64', deps: DEPS })
-const RELAY_DIR = `${HOME}/.orca-remote/relay-0.1.0+aaa`
+const RELAY_DIR = `${HOME}/.nash-remote/relay-0.1.0+aaa`
 
 const conn = {} as SshConnection
 const mockExec = vi.mocked(execCommand)

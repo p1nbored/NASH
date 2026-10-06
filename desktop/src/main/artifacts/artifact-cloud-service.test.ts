@@ -99,6 +99,8 @@ beforeEach(() => {
   // Keep fixed response expirations independent of the runner's wall clock.
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime('2026-08-07T00:00:00.000Z')
+  // Only an environment origin enables sharing in NASH builds; a request's apiUrl alone does not.
+  vi.stubEnv('ORCA_ARTIFACTS_API_URL', apiUrl)
 })
 
 afterEach(async () => {
@@ -573,6 +575,35 @@ describe('ArtifactCloudService publish capability gate', () => {
       ARTIFACT_SHARING_DISABLED_MESSAGE
     )
     expect(fetchMock).toHaveBeenCalledOnce()
+  })
+})
+
+describe('ArtifactCloudService in NASH builds (Orca cloud services off)', () => {
+  beforeEach(() => vi.stubEnv('ORCA_ARTIFACTS_API_URL', ''))
+
+  it('answers unconfigured without an origin override and makes no request', async () => {
+    const { service } = await setup()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const unavailable = {
+      status: 'unconfigured',
+      message: 'Orca artifact and skill sharing is not available in NASH builds.'
+    }
+
+    await expect(service.list({})).resolves.toEqual(unavailable)
+    await expect(service.delete('artifact-a', {})).resolves.toEqual(unavailable)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('stays unconfigured for an origin named only in the request, as --api-url or RPC params send it', async () => {
+    const { service } = await setup()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      service.list({ apiUrl: 'https://share.onorca.dev', authToken: 'token-a' })
+    ).resolves.toMatchObject({ status: 'unconfigured' })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
 

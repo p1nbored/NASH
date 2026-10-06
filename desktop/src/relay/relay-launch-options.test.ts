@@ -53,9 +53,9 @@ describe('relay launch options', () => {
         'relay.js',
         '--detached',
         '--ripgrep-path',
-        '/home/me/.orca-remote/ripgrep/c0ffee0123456789-linux-x64/rg'
+        '/home/me/.nash-remote/ripgrep/c0ffee0123456789-linux-x64/rg'
       ]).ripgrepPath
-    ).toBe('/home/me/.orca-remote/ripgrep/c0ffee0123456789-linux-x64/rg')
+    ).toBe('/home/me/.nash-remote/ripgrep/c0ffee0123456789-linux-x64/rg')
     expect(parseRelayLaunchOptions(['node', 'relay.js', '--detached']).ripgrepPath).toBe(undefined)
   })
 

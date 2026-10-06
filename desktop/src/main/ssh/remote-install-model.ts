@@ -1,5 +1,5 @@
 /**
- * The things Orca installs into `~/.orca-remote/`, and the rules that keep them from
+ * The things Orca installs into `~/.nash-remote/`, and the rules that keep them from
  * touching each other.
  *
  * Design D10 (to be tracked in docs/reference/remote-server-install-model.md): the relay and
@@ -107,7 +107,7 @@ export function remoteInstallListingRegexSource(model: RemoteInstallModel): stri
 }
 
 /**
- * Which owner a directory found in `~/.orca-remote/` belongs to, or null for anything no
+ * Which owner a directory found in `~/.nash-remote/` belongs to, or null for anything no
  * owner created.
  *
  * Design D10: **the model that created a directory owns it, and nothing else may delete it**
@@ -140,7 +140,7 @@ export type RemoteInstallDirOwner = RemoteInstallModelId | 'runtimes'
 
 export type RemoteInstallInventory = Record<RemoteInstallDirOwner | 'unknown', string[]>
 
-/** Group a raw `~/.orca-remote/` listing by owning model, for diagnostics and the client's choice. */
+/** Group a raw `~/.nash-remote/` listing by owning model, for diagnostics and the client's choice. */
 export function inventoryRemoteInstallDirs(dirNames: readonly string[]): RemoteInstallInventory {
   const inventory: RemoteInstallInventory = { relay: [], orcad: [], runtimes: [], unknown: [] }
   for (const name of dirNames) {

@@ -1,12 +1,9 @@
-import type { ProviderRateLimits } from '../../../../shared/rate-limit-types'
+import type { ProviderRateLimits, RateLimitState } from '../../../../shared/rate-limit-types'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 
 export type UsageProviderSettings = Pick<
   GlobalSettings,
-  | 'codexManagedAccounts'
-  | 'claudeManagedAccounts'
-  | 'opencodeSessionCookie'
-  | 'geminiCliOAuthEnabled'
+  'codexManagedAccounts' | 'opencodeSessionCookie' | 'geminiCliOAuthEnabled'
 > & {
   // Why: Antigravity has no separate persisted usage credential in Orca. The
   // checked status-bar item is the durable user signal; StatusBar only sets
@@ -80,7 +77,6 @@ export function hasUsageProviderSettings(
 ): boolean {
   return Boolean(
     (settings?.codexManagedAccounts?.length ?? 0) > 0 ||
-    (settings?.claudeManagedAccounts?.length ?? 0) > 0 ||
     settings?.geminiCliOAuthEnabled === true ||
     Boolean(settings?.opencodeSessionCookie?.trim()) ||
     settings?.opencodeGoApiKeyConfigured === true ||
@@ -101,7 +97,8 @@ export function hasUsageProviderSettingsForProvider(
     return false
   }
   if (providerId === 'claude') {
-    return (settings.claudeManagedAccounts?.length ?? 0) > 0
+    // Why: Claude has no managed accounts; its first durable signal is a usage reading.
+    return false
   }
   if (providerId === 'codex') {
     return (settings.codexManagedAccounts?.length ?? 0) > 0
@@ -164,6 +161,51 @@ export function getVisibleUsageProvider(
     return null
   }
   return provider ?? createPendingProviderSnapshot(providerId)
+}
+
+type UsageDurabilityFlags = Pick<
+  RateLimitState,
+  | 'usageMetersDisabled'
+  | 'cliUsageReadings'
+  | 'minimaxCookieConfigured'
+  | 'minimaxApiKeyConfigured'
+  | 'opencodeGoApiKeyConfigured'
+  | 'grokAuthConfigured'
+  | 'cursorAuthConfigured'
+  | 'zcodePlanApiKeyConfigured'
+>
+
+/**
+ * The settings that earn usage bars, with the host's non-GlobalSettings durability flags merged in.
+ * On CLI readings (NASH) only Codex and agy earn a waiting bar; Claude's appears with its first
+ * status-line reading. Null when the host keeps every meter off: no bar, skeleton or setup prompt.
+ */
+export function usageProviderSettingsFor(sources: {
+  settings: Partial<UsageProviderSettings> | null | undefined
+  rateLimits: UsageDurabilityFlags
+  antigravityUsageConfigured: boolean
+}): Partial<UsageProviderSettings> | null {
+  const { rateLimits } = sources
+  if (rateLimits.cliUsageReadings === true) {
+    const codexManagedAccounts = sources.settings?.codexManagedAccounts
+    return {
+      ...(codexManagedAccounts ? { codexManagedAccounts } : {}),
+      antigravityUsageConfigured: sources.antigravityUsageConfigured
+    }
+  }
+  if (rateLimits.usageMetersDisabled === true) {
+    return null
+  }
+  return {
+    ...sources.settings,
+    antigravityUsageConfigured: sources.antigravityUsageConfigured,
+    minimaxCookieConfigured: rateLimits.minimaxCookieConfigured,
+    minimaxApiKeyConfigured: rateLimits.minimaxApiKeyConfigured,
+    opencodeGoApiKeyConfigured: rateLimits.opencodeGoApiKeyConfigured,
+    grokAuthConfigured: rateLimits.grokAuthConfigured,
+    cursorAuthConfigured: rateLimits.cursorAuthConfigured,
+    zcodePlanApiKeyConfigured: rateLimits.zcodePlanApiKeyConfigured
+  }
 }
 
 export function isUsageEmptyState(

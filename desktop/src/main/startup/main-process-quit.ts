@@ -32,6 +32,7 @@ import { shouldQuitWhenAllWindowsClosed } from './window-all-closed-quit-policy'
 import { mainProcessState as state } from './main-process-state'
 import { isDevParentShutdownRequested } from './configure-process'
 import { getCanonicalUserDataPath } from '../persistence'
+import { beginAutopilotRuntimeShutdown } from './main-process-autopilot-runtime'
 
 // Why: will-quit fires twice — first pass preventDefaults and runs teardown; second pass exits.
 let daemonDisconnectDone = false
@@ -127,6 +128,8 @@ function installWillQuitHandler(): void {
     // Why: an agent still working at quit gets no terminating hook, so stats.flushAsync() closes those sessions out synchronously (only the write is deferred) — otherwise their duration is lost.
     state.starNag?.stop()
     state.automations?.stop()
+    // Why first and joined below: autopilot fences new work at once, and its runs settle before the app exits.
+    const autopilotRuntimeShutdown = beginAutopilotRuntimeShutdown()
     // Why: plugin hosts are forked children; dispose sends shutdown and
     // escalates to SIGKILL so they cannot outlive the app. The promise joins
     // the teardown barrier below — quitting before it resolves would let
@@ -268,6 +271,7 @@ function installWillQuitHandler(): void {
       { name: 'ref-maintenance', promise: refMaintenanceShutdown },
       { name: 'codex-backfill-recovery', promise: codexBackfillRecoveryShutdown },
       { name: 'structured-agent-session', promise: structuredAgentSessionShutdown },
+      { name: 'autopilot-runtime', promise: autopilotRuntimeShutdown },
       { name: 'usage-cache', promise: usageCacheFlush },
       { name: 'stats', promise: statsFlush },
       { name: 'state', promise: storeFlush }

@@ -122,7 +122,7 @@ it('renders a computer as icon, name, version, one status line and a switch', ()
     />
   )
   expect(screen.getByText('build-box')).toBeInTheDocument()
-  expect(screen.getByText('Orca v1.4.202')).toBeInTheDocument()
+  expect(screen.getByText('NASH v1.4.202')).toBeInTheDocument()
   expect(screen.getByRole('status')).toHaveTextContent('12 sessions · 1.4K messages searchable')
   expect(screen.getByText('2 sessions could not be read and will be retried.')).toBeInTheDocument()
   expect(serverSwitch()).toHaveAttribute('aria-checked', 'true')
@@ -140,7 +140,7 @@ it('reports a reachable server by its live index status and version', async () =
   await act(async () => {})
   expect(mocks.status).toHaveBeenCalledWith('runtime:env-1')
   expect(screen.getByRole('status')).toHaveTextContent('4,880 sessions · 1.4M messages searchable')
-  expect(screen.getByText('Orca v1.4.202')).toBeInTheDocument()
+  expect(screen.getByText('NASH v1.4.202')).toBeInTheDocument()
   expect(serverSwitch()).toHaveAttribute('aria-checked', 'true')
 })
 
@@ -247,7 +247,7 @@ it('turns a host-too-old rejection into the update-server state', async () => {
   await act(async () => {
     fireEvent.click(serverSwitch())
   })
-  expect(screen.getByRole('status')).toHaveTextContent('Needs a newer version of Orca.')
+  expect(screen.getByRole('status')).toHaveTextContent('Needs a newer version of NASH.')
   expect(serverSwitch()).toBeDisabled()
   expect(onError).not.toHaveBeenCalledWith(expect.stringContaining('Could not change'))
   await act(async () => {

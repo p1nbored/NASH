@@ -25,7 +25,7 @@ function fixture(): string {
 
 const NODE_SHA = 'e4b5a3af0e05c75de2eae013904145f40fe7fc2a6e6f17510128bf45cca4e79b'
 
-/** A slot beside the shared `runtimes/` dir, as installed under `~/.orca-remote`. */
+/** A slot beside the shared `runtimes/` dir, as installed under `~/.nash-remote`. */
 function nodeSlot(options: { marker?: string; runtime?: boolean } = {}): string {
   const root = fixture()
   const slot = join(root, 'orcad-0.1.0-abcdef')

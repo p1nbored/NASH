@@ -2,6 +2,7 @@
 // hooks from ~/.jcode/config.toml (or $JCODE_HOME/config.toml); Orca writes its
 // managed observer hooks there so sessions launched outside Orca still report.
 import { homedir } from 'node:os'
+import { APP_AGENT_HOOKS_HOME_PATH, APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { join } from 'node:path'
 
 const JCODE_SCRIPT_BASE = 'jcode-hook'
@@ -49,14 +50,14 @@ export function getJcodeManagedScriptPath(): string {
 }
 
 export function getSharedJcodeScriptPath(scriptFileName: string): string {
-  return join(homedir(), '.orca', 'agent-hooks', scriptFileName)
+  return join(homedir(), APP_HOME_DIR_NAME, 'agent-hooks', scriptFileName)
 }
 
 // Why quoted: jcode executes hook commands directly (no shell), but it tokenizes the
 // configured string shell-style first — parse_hook_command in jcode-terminal-launch
 // splits on unquoted whitespace AND consumes every unquoted backslash as an escape, so
-// a bare `C:\Users\me\.orca\agent-hooks\jcode-hook.cmd` reaches exec as
-// `C:Usersme.orcaagent-hooksjcode-hook.cmd` and no Windows hook ever fires. Single
+// a bare `C:\Users\me\.nash\agent-hooks\jcode-hook.cmd` reaches exec as
+// `C:Usersme.nashagent-hooksjcode-hook.cmd` and no Windows hook ever fires. Single
 // quotes pass the path through verbatim (backslashes are literal inside them); a path
 // that itself contains one falls back to double quotes, where \ and " are the escapes.
 export function getJcodeManagedCommand(scriptPath: string): string {
@@ -73,6 +74,7 @@ export function getJcodeRemoteManagedCommand(scriptPath: string): string {
 // carries backslashes and a `/`-only needle never matches its own managed entry.
 export function isJcodeManagedCommand(command: string | null | undefined): boolean {
   return (
-    typeof command === 'string' && command.replaceAll('\\', '/').includes('agent-hooks/jcode-hook')
+    typeof command === 'string' &&
+    command.replaceAll('\\', '/').includes(`${APP_AGENT_HOOKS_HOME_PATH}/jcode-hook`)
   )
 }

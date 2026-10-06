@@ -335,7 +335,7 @@ describe('per-account resume repin', () => {
 
   it('does not consult the host selection while resuming a WSL account session', async () => {
     const wslHome =
-      '\\\\wsl.localhost\\Ubuntu\\home\\me\\.local\\share\\orca\\codex-accounts\\account-1\\home'
+      '\\\\wsl.localhost\\Ubuntu\\home\\me\\.local\\share\\nash\\codex-accounts\\account-1\\home'
     const result = await prepareLegacySharedCodexSessionResume(
       {
         agent: 'codex',

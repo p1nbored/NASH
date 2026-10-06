@@ -1,5 +1,5 @@
 /**
- * One read-only pass over `~/.orca-remote/` answering what the runtime store GC needs: store
+ * One read-only pass over `~/.nash-remote/` answering what the runtime store GC needs: store
  * entries, which runtimes are referenced, verified order, and which a running process holds.
  */
 import {
@@ -39,7 +39,7 @@ export type RuntimeStoreInventory = {
   held: Set<string>
   /** False when neither `ps` nor `/proc` answered; nothing may then be called idle. */
   processCheckRan: boolean
-  /** Other `~/.orca-remote/` directory names, for legacy diagnostics. */
+  /** Other `~/.nash-remote/` directory names, for legacy diagnostics. */
   dirNames: string[]
 }
 

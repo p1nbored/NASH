@@ -15,7 +15,7 @@ export function docPreviewFailureDetail(reason: DocPreviewFileFailureReason | nu
   // — only a subresource can be refused for its format, and that failure is a notice, not a panel.
   return translate(
     'auto.components.editor.HtmlDocPreview.documentUnreadablePanel',
-    'Orca could not read this file from the workspace.'
+    'NASH could not read this file from the workspace.'
   )
 }
 
@@ -52,7 +52,7 @@ export function docPreviewAssetNotice(failures: DocPreviewFileFailure[]): string
   }
   return translate(
     'auto.components.editor.HtmlDocPreview.assetUnreadableNotice',
-    'Orca could not read {{path}} from the workspace.',
+    'NASH could not read {{path}} from the workspace.',
     { path: first.relativePath }
   )
 }

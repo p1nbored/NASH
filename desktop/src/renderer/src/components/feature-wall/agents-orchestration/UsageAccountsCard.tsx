@@ -4,14 +4,11 @@ import { Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
-import { ClaudeIcon, OpenAIIcon } from '@/components/status-bar/icons'
+import { OpenAIIcon } from '@/components/status-bar/icons'
 import { cn } from '@/lib/utils'
 import { readIpcErrorMessage } from '@/lib/ipc-error'
 import { useMountedRef } from '@/hooks/useMountedRef'
-import type {
-  ClaudeRateLimitAccountsState,
-  CodexRateLimitAccountsState
-} from '../../../../../shared/managed-account-types'
+import type { CodexRateLimitAccountsState } from '../../../../../shared/managed-account-types'
 import { getFeatureWallUsageProviderConnection } from '../feature-wall-usage-tracking'
 import { translate } from '@/i18n/i18n'
 
@@ -98,27 +95,14 @@ export function UsageAccountsCard(props: {
   const fetchRateLimits = useAppStore((s) => s.fetchRateLimits)
   const mountedRef = useMountedRef()
 
-  const [claudeAccounts, setClaudeAccounts] = useState<ClaudeRateLimitAccountsState>()
   const [codexAccounts, setCodexAccounts] = useState<CodexRateLimitAccountsState>()
-  const [claudeAction, setClaudeAction] = useState<ConnectAction>('idle')
   const [codexAction, setCodexAction] = useState<ConnectAction>('idle')
 
-  // Why: load both account lists once on mount. AccountsPane re-fetches on
-  // every settings open; here the feature wall is short-lived so a single
-  // fetch is enough — sign-in flows refresh state inline below.
+  // Why: the feature wall is short-lived, so one Codex list fetch is enough; Claude has
+  // no account list because it runs on the user's own login.
   useEffect(() => {
     let stale = false
     void fetchRateLimits()
-    void (async () => {
-      try {
-        const next = await window.api.claudeAccounts.list()
-        if (!stale) {
-          setClaudeAccounts(next)
-        }
-      } catch {
-        // Leave the account state unknown.
-      }
-    })()
     void (async () => {
       try {
         const next = await window.api.codexAccounts.list()
@@ -134,55 +118,10 @@ export function UsageAccountsCard(props: {
     }
   }, [fetchRateLimits])
 
-  const claudeConnection = getFeatureWallUsageProviderConnection({
-    managedAccountCount: claudeAccounts?.accounts.length,
-    provider: rateLimits.claude
-  })
   const codexConnection = getFeatureWallUsageProviderConnection({
     managedAccountCount: codexAccounts?.accounts.length,
     provider: rateLimits.codex
   })
-
-  const handleClaudeSignIn = async (): Promise<void> => {
-    if (claudeAction !== 'idle') {
-      return
-    }
-    setClaudeAction('adding')
-    try {
-      const next = await window.api.claudeAccounts.add()
-      if (mountedRef.current) {
-        setClaudeAccounts(next)
-      }
-      await fetchSettings()
-      if (mountedRef.current) {
-        await onAccountStateChange?.()
-        if (mountedRef.current) {
-          toast.success(
-            translate(
-              'auto.components.feature.wall.agents.orchestration.UsageAccountsCard.9ddeb558f9',
-              'Claude account added.'
-            )
-          )
-        }
-      }
-    } catch (error) {
-      if (mountedRef.current) {
-        toast.error(
-          translate(
-            'auto.components.feature.wall.agents.orchestration.UsageAccountsCard.4e71d72912',
-            'Claude sign-in failed.'
-          ),
-          {
-            description: readIpcErrorMessage(error)
-          }
-        )
-      }
-    } finally {
-      if (mountedRef.current) {
-        setClaudeAction('idle')
-      }
-    }
-  }
 
   const handleCodexSignIn = async (): Promise<void> => {
     if (codexAction !== 'idle') {
@@ -227,18 +166,6 @@ export function UsageAccountsCard(props: {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <ProviderRow
-        icon={<ClaudeIcon size={16} />}
-        name="Claude"
-        description={translate(
-          'auto.components.feature.wall.agents.orchestration.UsageAccountsCard.d90d2e1f6d',
-          'Track session and weekly usage.'
-        )}
-        connected={claudeConnection.connected}
-        connectionLabel={claudeConnection.label}
-        isAdding={claudeAction === 'adding'}
-        onSignIn={() => void handleClaudeSignIn()}
-      />
       <ProviderRow
         icon={<OpenAIIcon size={16} />}
         name="Codex"

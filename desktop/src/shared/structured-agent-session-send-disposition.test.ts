@@ -128,7 +128,7 @@ describe('what a rejection shows the user', () => {
     // `provider_write_failed: broken pipe` names nothing a person can act on.
     expect(shown).not.toContain('provider_write_failed')
     expect(shown).not.toContain('broken pipe')
-    expect(shown).toBe("Orca couldn't reach the agent. Your message was not sent.")
+    expect(shown).toBe("NASH couldn't reach the agent. Your message was not sent.")
   })
 
   it('shows a content rejection in the provider own words', () => {
@@ -196,10 +196,10 @@ describe('what a rejection shows the user', () => {
 describe('what a rejection with a typed fact shows the user', () => {
   it('says Orca could not hand the message over, whatever the reason holds', () => {
     expect(notice('provider_write_failed', { kind: 'writeFailed' })).toBe(
-      "Orca couldn't reach the agent. Your message was not sent."
+      "NASH couldn't reach the agent. Your message was not sent."
     )
     expect(notice('Something unrelated.', { kind: 'writeFailed' })).toBe(
-      "Orca couldn't reach the agent. Your message was not sent."
+      "NASH couldn't reach the agent. Your message was not sent."
     )
   })
 
@@ -212,8 +212,8 @@ describe('what a rejection with a typed fact shows the user', () => {
   // The surface names the agent; the host's own sentence is never compared or shown.
   it('words the fact itself, never the sentence the host wrote beside it', () => {
     expect(
-      notice('Claude never finished starting, so Orca stopped it.', { kind: 'hostStopped' })
-    ).toBe('The agent never finished starting, so Orca stopped it.')
+      notice('Claude never finished starting, so NASH stopped it.', { kind: 'hostStopped' })
+    ).toBe('The agent never finished starting, so NASH stopped it.')
   })
 
   // The message keeps no fact it cannot place, so the host's sentence stands, as on an older host.

@@ -129,7 +129,7 @@ describe('WslSkillInstallFilesystem', () => {
   it('authorizes a historical provider root before update or removal', async () => {
     const filesystem = new WslSkillInstallFilesystem('Ubuntu-24.04', [WSL_ROOT])
     const historicalRoot =
-      '\\\\wsl.localhost\\Ubuntu-24.04\\home\\jin\\.local\\share\\orca\\claude-accounts\\old\\auth\\skills'
+      '\\\\wsl.localhost\\Ubuntu-24.04\\home\\jin\\.local\\share\\nash\\claude-accounts\\old\\auth\\skills'
     filesystem.authorizeRoots([historicalRoot])
 
     await filesystem.remove(`${historicalRoot}\\private-skill`)
@@ -137,7 +137,7 @@ describe('WslSkillInstallFilesystem', () => {
     expect(runWslProcessMock).toHaveBeenCalledOnce()
     expect(runWslProcessMock.mock.calls[0]?.[0].args).toEqual(
       expect.arrayContaining([
-        '/home/jin/.local/share/orca/claude-accounts/old/auth/skills/private-skill'
+        '/home/jin/.local/share/nash/claude-accounts/old/auth/skills/private-skill'
       ])
     )
   })

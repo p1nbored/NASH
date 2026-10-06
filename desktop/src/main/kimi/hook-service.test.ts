@@ -53,7 +53,7 @@ afterEach(() => {
 })
 
 const configPath = (): string => join(home, '.kimi-code', 'config.toml')
-const scriptPath = (): string => join(home, '.orca', 'agent-hooks', 'kimi-hook.sh')
+const scriptPath = (): string => join(home, '.nash', 'agent-hooks', 'kimi-hook.sh')
 const supportsPosixFileModes = process.platform !== 'win32'
 
 describe('KimiHookService', () => {

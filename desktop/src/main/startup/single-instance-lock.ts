@@ -1,13 +1,12 @@
 import type { App } from 'electron'
+import { APP_IDENTITY } from '../../shared/app-identity-constants'
 import { argvRequestsServeMode } from './serve-mode-argv'
 import { writeStartupDiagnosticLine, type StartupDiagnosticSink } from './startup-diagnostics'
 
-export const SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE =
-  '[single-instance] Another Orca instance is already running for this userData profile; exiting this launch after requesting the existing window. If no Orca process is running, this may be an Electron/macOS single-instance lock failure.'
+export const SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE = `[single-instance] Another ${APP_IDENTITY.productName} instance is already running for this userData profile; exiting this launch after requesting the existing window. If no ${APP_IDENTITY.productName} process is running, this may be an Electron/macOS single-instance lock failure.`
 export const SINGLE_INSTANCE_LOCK_BYPASS_ENV = 'ORCA_BYPASS_SINGLE_INSTANCE_LOCK'
 export const SINGLE_INSTANCE_LOCK_E2E_ENFORCE_ENV = 'ORCA_E2E_ENFORCE_SINGLE_INSTANCE_LOCK'
-export const SINGLE_INSTANCE_LOCK_BYPASS_MESSAGE =
-  '[single-instance] ORCA_BYPASS_SINGLE_INSTANCE_LOCK=1 is set; bypassing the packaged macOS single-instance lock for diagnostics. Do not use this with another Orca instance running for the same profile.'
+export const SINGLE_INSTANCE_LOCK_BYPASS_MESSAGE = `[single-instance] ORCA_BYPASS_SINGLE_INSTANCE_LOCK=1 is set; bypassing the packaged macOS single-instance lock for diagnostics. Do not use this with another ${APP_IDENTITY.productName} instance running for the same profile.`
 // Why: stable "another process owns this profile" contract that systemd RestartPreventExitStatus= keys off; changing it silently un-fixes #11935.
 export const SINGLE_INSTANCE_ALREADY_RUNNING_EXIT_CODE = 3
 
@@ -34,8 +33,9 @@ export function shouldActivateDesktopForSecondInstance(argv: readonly string[] =
  *
  * Electron derives the lock identity from the current `userData` path, so
  * callers MUST invoke this AFTER `configureDevUserDataPath(is.dev)` — that
- * way dev (`orca-dev` userData) and packaged (`orca` userData) runs lock in
- * separate namespaces instead of serialising against each other.
+ * way dev (`nash-dev` userData) and packaged (`nash` userData) runs lock in
+ * separate namespaces instead of serialising against each other, and neither
+ * shares a lock with a real Orca install (`orca` userData).
  */
 export function acquireSingleInstanceLock(
   app: App,
@@ -87,7 +87,7 @@ export function singleInstanceLockFailureMessage(options: {
   if (!options.isDevDesktop) {
     return SINGLE_INSTANCE_LOCK_FAILURE_MESSAGE
   }
-  return `[single-instance] Another Orca dev instance is already running on the profile at ${options.userDataPath}; exiting this launch after passing it this launch's request. To run another dev copy at the same time, give it its own profile: ORCA_DEV_USER_DATA_PATH=<another directory> pnpm dev`
+  return `[single-instance] Another ${APP_IDENTITY.productName} dev instance is already running on the profile at ${options.userDataPath}; exiting this launch after passing it this launch's request. To run another dev copy at the same time, give it its own profile: ORCA_DEV_USER_DATA_PATH=<another directory> pnpm dev`
 }
 
 export function logSingleInstanceLockFailure(

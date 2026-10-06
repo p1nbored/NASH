@@ -47,12 +47,9 @@ export type RuntimeServiceCommandSurface = {
   getAccountsSnapshot: RuntimeAccountController['getSnapshot']
   refreshAccountsForMobile: RuntimeAccountController['refreshForMobile']
   refreshAccountsForMobileSubscriber: RuntimeAccountController['refreshForMobileSubscriber']
-  selectClaudeAccount: RuntimeAccountController['selectClaude']
   selectCodexAccount: RuntimeAccountController['selectCodex']
   selectCodexAccountForTarget: RuntimeAccountController['selectCodexForTarget']
   consumeCodexRateLimitResetCredit: RuntimeAccountController['consumeCodexResetCredit']
-  removeClaudeAccount: RuntimeAccountController['removeClaude']
-  addClaudeAccountFromConfigDir: RuntimeAccountController['addClaudeFromConfigDir']
   removeCodexAccount: RuntimeAccountController['removeCodex']
   addCodexAccountFromHome: RuntimeAccountController['addCodexFromHome']
   addDataAccountFromHome: RuntimeAccountController['addDataFromHome']
@@ -144,12 +141,9 @@ export function installRuntimeServiceCommandSurface(
     getAccountsSnapshot: accounts.getSnapshot.bind(accounts),
     refreshAccountsForMobile: accounts.refreshForMobile.bind(accounts),
     refreshAccountsForMobileSubscriber: accounts.refreshForMobileSubscriber.bind(accounts),
-    selectClaudeAccount: accounts.selectClaude.bind(accounts),
     selectCodexAccount: accounts.selectCodex.bind(accounts),
     selectCodexAccountForTarget: accounts.selectCodexForTarget.bind(accounts),
     consumeCodexRateLimitResetCredit: accounts.consumeCodexResetCredit.bind(accounts),
-    removeClaudeAccount: accounts.removeClaude.bind(accounts),
-    addClaudeAccountFromConfigDir: accounts.addClaudeFromConfigDir.bind(accounts),
     removeCodexAccount: accounts.removeCodex.bind(accounts),
     addCodexAccountFromHome: accounts.addCodexFromHome.bind(accounts),
     addDataAccountFromHome: accounts.addDataFromHome.bind(accounts),

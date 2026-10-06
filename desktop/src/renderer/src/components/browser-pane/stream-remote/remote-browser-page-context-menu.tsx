@@ -188,7 +188,7 @@ export function RemoteBrowserPageContextMenu({
             >
               {translate(
                 'auto.components.browser.pane.BrowserPane.b5b87d6cbb',
-                'Open Link In Orca Browser'
+                'Open Link In NASH Browser'
               )}
             </button>
             <button

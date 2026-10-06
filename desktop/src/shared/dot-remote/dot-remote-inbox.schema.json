@@ -1,0 +1,537 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "inbox.item": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "lease.request": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/__schema7"
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "generation",
+        "maxItems"
+      ],
+      "additionalProperties": false
+    },
+    "lease.response": {
+      "type": "object",
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/__schema7"
+        },
+        "serverTime": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "items": {
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "generation",
+        "serverTime",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "lease.renew.request": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "leaseNonce": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "generation": {
+          "$ref": "#/$defs/__schema7"
+        }
+      },
+      "required": [
+        "itemId",
+        "leaseNonce",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "lease.renew.response": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "leaseNonce": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "leaseExpiresAt": {
+          "$ref": "#/$defs/__schema4"
+        }
+      },
+      "required": [
+        "itemId",
+        "leaseNonce",
+        "leaseExpiresAt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "inbox.item",
+    "lease.request",
+    "lease.response",
+    "lease.renew.request",
+    "lease.renew.response"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/__schema1"
+        },
+        {
+          "$ref": "#/$defs/__schema9"
+        },
+        {
+          "$ref": "#/$defs/__schema12"
+        },
+        {
+          "$ref": "#/$defs/__schema13"
+        },
+        {
+          "$ref": "#/$defs/__schema14"
+        }
+      ]
+    },
+    "__schema1": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "lease": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "kind": {
+          "type": "string",
+          "const": "submit"
+        },
+        "dependsOnItemId": {
+          "type": "null"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "$ref": "#/$defs/__schema8"
+            },
+            "workspaceRef": {
+              "type": "string",
+              "pattern": "^dws_[0-9a-f]{24}$"
+            },
+            "objective": {
+              "type": "string",
+              "maxLength": 12000
+            },
+            "requestedAccess": {
+              "default": "read_only",
+              "type": "string",
+              "enum": [
+                "read_only",
+                "workspace_write"
+              ]
+            },
+            "deliverableLanguage": {
+              "type": "string",
+              "maxLength": 35
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "reply": {
+              "type": "object",
+              "properties": {
+                "correlationId": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._:/=+-]{1,128}$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "client": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{1,64}$"
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._+-]{1,32}$"
+                }
+              },
+              "required": [
+                "name",
+                "version"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "contractVersion",
+            "workspaceRef",
+            "objective",
+            "requestedAccess",
+            "idempotencyKey"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "itemId",
+        "payloadSha256",
+        "createdAt",
+        "expiresAt",
+        "lease",
+        "kind",
+        "dependsOnItemId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "__schema2": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema3": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "__schema4": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "__schema5": {
+      "type": "object",
+      "properties": {
+        "leaseNonce": {
+          "$ref": "#/$defs/__schema6"
+        },
+        "generation": {
+          "$ref": "#/$defs/__schema7"
+        },
+        "leaseExpiresAt": {
+          "$ref": "#/$defs/__schema4"
+        }
+      },
+      "required": [
+        "leaseNonce",
+        "generation",
+        "leaseExpiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "__schema6": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22,86}$"
+    },
+    "__schema7": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "__schema8": {
+      "type": "number",
+      "const": 3
+    },
+    "__schema9": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "lease": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "kind": {
+          "type": "string",
+          "const": "cancel"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "$ref": "#/$defs/__schema8"
+            },
+            "dotRequestId": {
+              "$ref": "#/$defs/__schema11"
+            }
+          },
+          "required": [
+            "contractVersion",
+            "dotRequestId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "itemId",
+        "payloadSha256",
+        "createdAt",
+        "expiresAt",
+        "lease",
+        "kind",
+        "dependsOnItemId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "__schema10": {
+      "description": "The submit item this item follows",
+      "$ref": "#/$defs/__schema2"
+    },
+    "__schema11": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "__schema12": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "lease": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "kind": {
+          "type": "string",
+          "const": "permission_answer"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "$ref": "#/$defs/__schema8"
+            },
+            "decisionId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "decision": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny"
+              ]
+            }
+          },
+          "required": [
+            "contractVersion",
+            "decisionId",
+            "decision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "itemId",
+        "payloadSha256",
+        "createdAt",
+        "expiresAt",
+        "lease",
+        "kind",
+        "dependsOnItemId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "__schema13": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "lease": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "kind": {
+          "type": "string",
+          "const": "message"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "$ref": "#/$defs/__schema8"
+            },
+            "dotRequestId": {
+              "$ref": "#/$defs/__schema11"
+            },
+            "messageId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8000
+            }
+          },
+          "required": [
+            "contractVersion",
+            "dotRequestId",
+            "messageId",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "itemId",
+        "payloadSha256",
+        "createdAt",
+        "expiresAt",
+        "lease",
+        "kind",
+        "dependsOnItemId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "__schema14": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/__schema2"
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/__schema3"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/__schema4"
+        },
+        "lease": {
+          "$ref": "#/$defs/__schema5"
+        },
+        "kind": {
+          "type": "string",
+          "const": "validation_decision"
+        },
+        "dependsOnItemId": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "contractVersion": {
+              "type": "number",
+              "const": 3
+            },
+            "decisionId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "validationId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+            },
+            "decision": {
+              "type": "string",
+              "enum": [
+                "waive",
+                "reject"
+              ]
+            }
+          },
+          "required": [
+            "contractVersion",
+            "decisionId",
+            "validationId",
+            "decision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "itemId",
+        "payloadSha256",
+        "createdAt",
+        "expiresAt",
+        "lease",
+        "kind",
+        "dependsOnItemId",
+        "payload"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

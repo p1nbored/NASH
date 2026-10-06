@@ -1,17 +1,5 @@
+import { canonicalJson } from './canonical-json'
 import { sha256 } from './sha256'
-
-function canonicalize(value: unknown): string {
-  if (value === null || typeof value !== 'object') {
-    return JSON.stringify(value ?? null)
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalize).join(',')}]`
-  }
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, entry]) => entry !== undefined)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalize(entry)}`).join(',')}}`
-}
 
 export function structuredAgentSessionPayloadFingerprint(input: {
   method: string
@@ -20,7 +8,7 @@ export function structuredAgentSessionPayloadFingerprint(input: {
 }): string {
   const bytes = sha256(
     new TextEncoder().encode(
-      canonicalize({ method: input.method, sessionId: input.sessionId, fields: input.fields })
+      canonicalJson({ method: input.method, sessionId: input.sessionId, fields: input.fields })
     )
   )
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')

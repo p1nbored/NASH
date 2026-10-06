@@ -8,7 +8,7 @@
  * daemon trees by naming each one after a hash of its contents, so two builds
  * never write the same directory.
  *
- * The relay is the one writer left on a fixed path — `~/.orca-relay/shell-ready`
+ * The relay is the one writer left on a fixed path — `~/.nash-relay/shell-ready`
  * — so this is where the scenario is still reachable, and it is now much smaller:
  * Orca writes one file, and that file hands ZDOTDIR back before anything else
  * runs. Both halves are pinned here:

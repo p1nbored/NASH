@@ -1,4 +1,5 @@
 import type { GlobalSettings } from './global-settings-types'
+import { APP_DEFAULT_WORKSPACES_DIR_SEGMENTS } from './app-identity-paths'
 import type { RepoHookSettings } from './orca-yaml-hook-types'
 import type { PersistedState } from './persisted-state-types'
 import type { PersistedUIState } from './persisted-ui-state-types'
@@ -35,7 +36,7 @@ export {
 } from './worktree/card-properties'
 
 export const SCHEMA_VERSION = 1
-export const DEFAULT_APP_FONT_FAMILY = 'Geist'
+export const DEFAULT_APP_FONT_FAMILY = 'system-ui'
 export const DEFAULT_SHOW_SLEEPING_WORKSPACES = true
 export const DEFAULT_HIDE_SLEEPING_WORKSPACES = false
 export const DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE: AgentActivityDisplayMode = 'compact'
@@ -104,7 +105,7 @@ export const DEFAULT_REPO_BADGE_COLOR = REPO_COLORS[0]
 export function getDefaultWorkspaceDir(homeDir: string): string {
   const separator = homeDir.includes('\\') ? '\\' : '/'
   const trimmedHomeDir = homeDir.replace(/[\\/]+$/, '')
-  return [trimmedHomeDir, 'orca', 'workspaces'].join(separator)
+  return [trimmedHomeDir, ...APP_DEFAULT_WORKSPACES_DIR_SEGMENTS].join(separator)
 }
 
 export function getDefaultSettings(homedir: string): GlobalSettings {

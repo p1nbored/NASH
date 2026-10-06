@@ -44,7 +44,7 @@ describe('orchestration skill routing', () => {
       '"another worktree"',
       'lightweight terminal prompts',
       'shell commands',
-      'Orca worktree management',
+      'NASH worktree management',
       'reading or waiting on terminals'
     ]) {
       expect(description).toContain(trigger)
@@ -94,7 +94,32 @@ describe('orchestration kernel', () => {
     expect(kernel).toContain('Compatibility operator')
     expect(kernel).toContain('Ordinary terminal agent')
     expect(kernel).toContain('Model or effort selection does not make a handoff supervised')
-    expect(squash(kernel)).toContain('Never substitute a non-Orca subagent tool')
+    expect(squash(kernel)).toContain('Never substitute a non-NASH subagent tool')
+  })
+
+  // Why: D-016 makes an app run's Claude Code primary session the only planner and the runtime's
+  // Runs, Tasks, and attempts the single authority, so no supervised loop may compete with it.
+  it('routes the primary session of a NASH app run to its own commands, not the loop', () => {
+    const kernel = readKernel()
+    const flat = squash(kernel)
+
+    expect(kernel).toContain('App-run primary session')
+    expect(kernel.indexOf('App-run primary session')).toBeLessThan(kernel.indexOf('Coordinator  '))
+    for (const command of [
+      'task-propose',
+      'task-start',
+      'task-show',
+      'task-report',
+      'run-complete'
+    ]) {
+      expect(kernel).toContain(`\`${command}\``)
+    }
+    expect(flat).toContain('only planner')
+    expect(flat).toContain('validators decide completion')
+    const refusal = flat.split('. ').find((sentence) => sentence.includes('refused in an app run'))
+    for (const refused of ['`run-create`', '`run-use`', '`worker-start`', '`dispatch`']) {
+      expect(refusal).toContain(refused)
+    }
   })
 
   it('makes Dispatch identity, remote uncertainty, folders, and mixed versions a safety floor', () => {
@@ -282,8 +307,9 @@ describe('owned orchestration references', () => {
   })
 
   it('owns expanded waves, launch preferences, reuse, and review boundaries', () => {
-    const reference = readReference('coordinator-loop.md')
+    const reference = readReference('supervised-waves.md')
 
+    expect(reference.split(/\r?\n/u)[0]).toBe('# Supervised waves')
     expect(reference).toContain('task-list --ready --brief --json')
     expect(reference).toContain('`--effort` requires `--model`')
     expect(reference).toContain('neither option combines with `--terminal`')
@@ -340,7 +366,7 @@ describe('owned orchestration references', () => {
 
     expect(reference).toContain('--worktree current --agent codex')
     expect(squash(reference)).toContain(
-      'A worktree selector needs the full `<repo-id>::<path>` value Orca returned, passed as `id:<newFullWorktreeId>`; a bare repo id is not a worktree id'
+      'A worktree selector needs the full `<repo-id>::<path>` value NASH returned, passed as `id:<newFullWorktreeId>`; a bare repo id is not a worktree id'
     )
     expect(reference).toContain('--worktree new-child')
     expect(reference).toContain('--worktree new-top-level')
@@ -485,10 +511,12 @@ describe('orchestration install stub', () => {
     expect(stub).toContain('discovery stub')
     expect(stub).toContain('ORCA skills get orchestration')
     expect(stub).toContain('ORCA_CLI_COMMAND')
-    expect(stub).toContain('orca-dev')
+    expect(stub).toContain('use `nash-dev`')
+    expect(stub).toContain('Otherwise, use `nash`.')
     expect(stub).toContain('orca-ide')
     expect(stub).toContain('GNOME Orca screen reader')
     expect(stub).not.toMatch(/^orca /mu)
+    expect(squash(stub)).not.toMatch(/coordinator loops?/iu)
   })
 
   it('performs no orchestration mutation before loading the guide', () => {

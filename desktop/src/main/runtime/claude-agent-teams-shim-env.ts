@@ -1,4 +1,5 @@
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { APP_HOME_DIR_NAME } from '../../shared/app-identity-paths'
 import { accessSync, constants, existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join } from 'node:path'
@@ -9,6 +10,8 @@ import {
   type ClaudeAgentTeamsMode
 } from '../../shared/claude-agent-teams-tmux-compat'
 import { getOrcaCliCommandNameForPlatform } from '../../shared/orca-cli-command-name'
+import { getBundledLauncherPath } from '../cli/bundled-cli-launcher-path'
+import { DEV_COMMAND_NAME } from '../cli/cli-install-constants'
 import { resolvePathEnvKey } from '../pty/windows-path-segment-merge'
 
 export type ClaudeAgentTeamsLaunchPlan = {
@@ -73,34 +76,22 @@ export function resolveClaudeAgentTeamsShimBin(
       return qualified
     }
   }
-  const bundled = bundledLauncherPath()
+  const bundled = process.resourcesPath
+    ? getBundledLauncherPath(process.platform, process.resourcesPath)
+    : null
   if (bundled && isExecutableFile(bundled)) {
     return bundled
   }
   return (
-    findExecutableOnPath(process.platform === 'win32' ? 'orca-dev.cmd' : 'orca-dev', pathValue) ??
-    findExecutableOnPath(getOrcaCliCommandNameForPlatform(process.platform), pathValue)
+    findExecutableOnPath(
+      process.platform === 'win32' ? `${DEV_COMMAND_NAME}.cmd` : DEV_COMMAND_NAME,
+      pathValue
+    ) ?? findExecutableOnPath(getOrcaCliCommandNameForPlatform(process.platform), pathValue)
   )
 }
 
 function defaultShimRoot(): string {
-  return join(homedir(), '.orca', 'claude-agent-teams-bin')
-}
-
-function bundledLauncherPath(): string | null {
-  if (!process.resourcesPath) {
-    return null
-  }
-  if (process.platform === 'darwin') {
-    return join(process.resourcesPath, 'bin', 'orca')
-  }
-  if (process.platform === 'linux') {
-    return join(process.resourcesPath, 'bin', 'orca-ide')
-  }
-  if (process.platform === 'win32') {
-    return join(process.resourcesPath, 'bin', 'orca.exe')
-  }
-  return null
+  return join(homedir(), APP_HOME_DIR_NAME, 'claude-agent-teams-bin')
 }
 
 function findExecutableOnPath(command: string, pathValue: string | undefined): string | null {

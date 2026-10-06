@@ -1,4 +1,5 @@
 import { powerShellCommand, powerShellLiteral, powerShellNativeArg } from './ssh-remote-powershell'
+import { APP_REMOTE_DIR_NAME } from '../../shared/app-identity-paths'
 import {
   RELAY_UPLOAD_IDENTITY_FILE_NAME,
   RELAY_UPLOAD_OWNER_FILE_NAME,
@@ -42,7 +43,7 @@ export function reserveWindowsRelayUploadStageCommand(
       'exit 0',
       '} catch { continue }',
       '}',
-      `throw ${powerShellLiteral(`Orca relay upload staging quota is full; reconnect after 40 minutes or inspect .orca-remote/${RELAY_UPLOAD_STAGE_POOL_NAME}`)}`
+      `throw ${powerShellLiteral(`Orca relay upload staging quota is full; reconnect after 40 minutes or inspect ${APP_REMOTE_DIR_NAME}/${RELAY_UPLOAD_STAGE_POOL_NAME}`)}`
     ].join('\n')
   )
 }

@@ -1,4 +1,5 @@
 import { normalizeRuntimePathForComparison, relativePathInsideRoot } from '../cross-platform-path'
+import { APP_DEFAULT_WORKSPACES_DIR_SEGMENTS } from '../app-identity-paths'
 import { parseWslUncPath } from '../wsl-paths'
 import {
   isRuntimePathAbsoluteForRepo,
@@ -100,7 +101,7 @@ function buildWslWorkspaceLayouts(
   if (!linuxHome) {
     return []
   }
-  const root = `//wsl.localhost/${parsed.distro}${linuxHome}/orca/workspaces`
+  const root = `//wsl.localhost/${parsed.distro}${linuxHome}/${APP_DEFAULT_WORKSPACES_DIR_SEGMENTS.join('/')}`
   const historicalModes = (settings.workspaceDirHistory ?? []).map(
     (layout) => layout.nestWorkspaces
   )

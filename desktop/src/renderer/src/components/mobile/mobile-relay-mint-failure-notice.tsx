@@ -51,7 +51,7 @@ export function MobileRelayMintFailureNotice({
       : reconnectRequired
         ? translate(
             'auto.components.mobile.MobileRelayMintFailureNotice.reconnectTitle',
-            'Your Orca account session expired.'
+            'Your Orca cloud account session expired.'
           )
         : translate(
             'auto.components.mobile.MobileRelayMintFailureNotice.title',

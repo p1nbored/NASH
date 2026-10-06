@@ -55,7 +55,7 @@ describe('Windows CLI launcher', () => {
           return path
         }
       )
-      const outputPath = join(root, 'orca.exe')
+      const outputPath = join(root, 'nash.exe')
       const fingerprint = windowsCliLauncherFingerprint(inputs, '1.4.214')
       expect(shouldReuseCompiledWindowsCliLauncher(outputPath, fingerprint)).toBe(false)
       writeFileSync(outputPath, 'binary')
@@ -105,7 +105,7 @@ describe('Windows CLI launcher', () => {
     () => {
       const root = mkdtempSync(join(tmpdir(), 'orca launcher metadata '))
       try {
-        const launcherPath = join(root, 'orca.exe')
+        const launcherPath = join(root, 'nash.exe')
         const build = spawnSync(
           process.execPath,
           ['config/scripts/build-windows-cli-launcher.mjs', '--output', launcherPath],
@@ -126,8 +126,9 @@ describe('Windows CLI launcher', () => {
         const info = JSON.parse(inspect.stdout)
         const { version } = JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8'))
         expect(info.CompanyName).toBe('Stably AI')
-        expect(info.ProductName).toBe('Orca')
-        expect(info.FileDescription).toBe('Orca CLI Launcher')
+        expect(info.ProductName).toBe('NASH')
+        expect(info.FileDescription).toBe('NASH CLI Launcher')
+        expect(info.OriginalFilename).toBe('nash.exe')
         expect(info.FileVersion).toBe(`${version.split(/[+-]/)[0]}.0`)
         expect(info.ProductVersion).toBe(version)
         const binary = readFileSync(launcherPath)
@@ -150,7 +151,7 @@ describe('Windows CLI launcher', () => {
     try {
       const result = spawnSync(
         process.execPath,
-        ['config/scripts/build-windows-cli-launcher.mjs', '--output', join(outputRoot, 'orca.exe')],
+        ['config/scripts/build-windows-cli-launcher.mjs', '--output', join(outputRoot, 'nash.exe')],
         { cwd: projectRoot, encoding: 'utf8' }
       )
 
@@ -190,11 +191,11 @@ describe('Windows CLI launcher', () => {
     const appRoot = mkdtempSync(join(tmpdir(), 'orca cli launcher '))
     try {
       const resourcesPath = join(appRoot, 'resources')
-      const launcherPath = join(resourcesPath, 'bin', 'orca.exe')
+      const launcherPath = join(resourcesPath, 'bin', 'nash.exe')
       const cliPath = join(resourcesPath, 'app.asar.unpacked', 'out', 'cli', 'index.js')
       mkdirSync(join(resourcesPath, 'bin'), { recursive: true })
       mkdirSync(dirname(cliPath), { recursive: true })
-      copyFileSync(process.execPath, join(appRoot, 'Orca.exe'))
+      copyFileSync(process.execPath, join(appRoot, 'NASH.exe'))
       writeFileSync(
         cliPath,
         `process.stdout.write(JSON.stringify({
@@ -249,7 +250,7 @@ describe('Windows CLI launcher', () => {
     const appRoot = mkdtempSync(join(tmpdir(), 'orca duplicate path launcher '))
     try {
       const resourcesPath = join(appRoot, 'resources')
-      const launcherPath = join(resourcesPath, 'bin', 'orca.exe')
+      const launcherPath = join(resourcesPath, 'bin', 'nash.exe')
       const cliPath = join(resourcesPath, 'app.asar.unpacked', 'out', 'cli', 'index.js')
       const outputPath = join(appRoot, 'child-result.json')
       const harnessSourcePath = join(
@@ -262,7 +263,7 @@ describe('Windows CLI launcher', () => {
       const harnessPath = join(appRoot, 'DuplicatePathLauncher.exe')
       mkdirSync(dirname(launcherPath), { recursive: true })
       mkdirSync(dirname(cliPath), { recursive: true })
-      copyFileSync(process.execPath, join(appRoot, 'Orca.exe'))
+      copyFileSync(process.execPath, join(appRoot, 'NASH.exe'))
       writeFileSync(
         cliPath,
         `require('node:fs').writeFileSync(process.env.ORCA_TEST_OUTPUT, JSON.stringify({

@@ -28,9 +28,9 @@ vi.mock('./ssh-relay-install-transfers', () => ({ uploadRelayDirectory: vi.fn() 
 const host = getRemoteHostPlatform('win32-x64')
 const target = 'win32-x64'
 const asset = NODE_RUNTIME_ASSETS[target]
-const relayDir = 'C:/Users/u/.orca-remote/relay-0.1.0+abcdef012345'
+const relayDir = 'C:/Users/u/.nash-remote/relay-0.1.0+abcdef012345'
 const runtimeDir = remoteNodeRuntimeDir(host, relayDir, target)
-const stageDir = `C:/Users/u/.orca-remote/runtimes/.stage-node-${asset.executableSha256}-0011`
+const stageDir = `C:/Users/u/.nash-remote/runtimes/.stage-node-${asset.executableSha256}-0011`
 const conn = {} as SshConnection
 
 function promoteScript(): string {
@@ -45,10 +45,10 @@ beforeEach(() => {
 })
 
 describe('Windows runtime store layout', () => {
-  it('sits under %USERPROFILE%\\.orca-remote\\runtimes beside the relay dirs', () => {
-    expect(runtimeDir).toBe(`C:/Users/u/.orca-remote/runtimes/node-${asset.executableSha256}`)
+  it('sits under %USERPROFILE%\\.nash-remote\\runtimes beside the relay dirs', () => {
+    expect(runtimeDir).toBe(`C:/Users/u/.nash-remote/runtimes/node-${asset.executableSha256}`)
     expect(path.win32.normalize(runtimeDir)).toBe(
-      `C:\\Users\\u\\.orca-remote\\runtimes\\node-${asset.executableSha256}`
+      `C:\\Users\\u\\.nash-remote\\runtimes\\node-${asset.executableSha256}`
     )
   })
 })
@@ -73,9 +73,9 @@ describe('Windows runtime store commands', () => {
       .toMatchInlineSnapshot(`
         "$ProgressPreference = 'SilentlyContinue'
         function Get-OrcaSha256([string]$p) { if (Test-Path -LiteralPath $p -PathType Leaf) { (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() } else { "" } }
-        $runtimeDir = 'C:/Users/u/.orca-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32'
-        $exe = 'C:/Users/u/.orca-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32/node.exe'
-        $verified = 'C:/Users/u/.orca-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32/.verified'
+        $runtimeDir = 'C:/Users/u/.nash-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32'
+        $exe = 'C:/Users/u/.nash-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32/node.exe'
+        $verified = 'C:/Users/u/.nash-remote/runtimes/node-ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32/.verified'
         if ((Get-OrcaSha256 $exe) -eq 'ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32') {
         if (Test-Path -LiteralPath $verified -PathType Leaf) { Write-Output 'ORCA_NODE_RUNTIME_READY'; exit 0 }
         try { $adoptOut = ((& $exe --version 2>&1) | ForEach-Object { "$_" }) -join ''; if (($LASTEXITCODE -eq 0) -and ($adoptOut.Trim() -eq 'v24.21.0')) { [IO.File]::WriteAllText($verified, ''); Write-Output 'ORCA_NODE_RUNTIME_READY'; exit 0 } } catch { }
@@ -218,7 +218,7 @@ describe('ensureRemoteOrcadNodeRuntime on Windows', () => {
     }
     const stage = /New-Item -ItemType Directory -Force -Path '([^']+)'/.exec(scripts[0])?.[1]
     expect(stage).toMatch(
-      /^C:\/Users\/u\/\.orca-remote\/runtimes\/\.stage-node-[0-9a-f]{64}-[0-9a-f]{16}$/
+      /^C:\/Users\/u\/\.nash-remote\/runtimes\/\.stage-node-[0-9a-f]{64}-[0-9a-f]{16}$/
     )
     expect(vi.mocked(uploadRelayDirectory).mock.calls[0][2]).toBe(stage)
     const locked = scripts.findIndex((s) => s.includes('CreateNew'))

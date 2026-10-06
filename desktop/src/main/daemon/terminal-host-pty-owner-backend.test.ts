@@ -71,7 +71,7 @@ describe('TerminalHost PTY owner backend', () => {
 
   // Orca's default theme: nothing reported colours for this session.
   const query = '\x1b]10;?\x07'
-  const reply = '\x1b]10;rgb:ffff/ffff/ffff\x1b\\'
+  const reply = '\x1b]10;rgb:e9e9/e4e4/dcdc\x1b\\'
   // ConPTY echoes a reply with its ESC bytes stripped; wsl.exe's echo shape is unverified.
   const conptyEcho = reply.replaceAll('\x1b', '')
 

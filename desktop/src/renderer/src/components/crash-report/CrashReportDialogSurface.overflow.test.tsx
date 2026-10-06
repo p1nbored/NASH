@@ -67,7 +67,9 @@ describe('CrashReportDialogSurface overflow containment', () => {
         onReportChange={() => {}}
       />
     )
-    await waitFor(() => expect(viewer).toHaveBeenCalledOnce())
+    // NASH builds send no crash reports, so the dialog never looks up a GitHub identity.
+    await waitFor(() => expect(container.querySelector('pre')).not.toBeNull())
+    expect(viewer).not.toHaveBeenCalled()
 
     const dialog = container.querySelector('[role="dialog"]')
     const output = dialog?.querySelector('pre')

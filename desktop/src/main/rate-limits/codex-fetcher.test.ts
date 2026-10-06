@@ -643,7 +643,7 @@ describe('fetchCodexRateLimits', () => {
 
     try {
       const resultPromise = fetchCodexRateLimits({
-        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\account\\home'
+        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\account\\home'
       })
       await vi.advanceTimersByTimeAsync(1)
       await vi.advanceTimersByTimeAsync(1)
@@ -661,7 +661,7 @@ describe('fetchCodexRateLimits', () => {
       expect(shellCommand).toContain('mkdir -p "$orca_rate_limit_cwd"')
       expect(shellCommand).toContain('cd "$orca_rate_limit_cwd"')
       expect(shellCommand).toContain(
-        "export CODEX_HOME='\\''/home/alice/.local/share/orca/account/home'\\''"
+        "export CODEX_HOME='\\''/home/alice/.local/share/nash/account/home'\\''"
       )
       expect(shellCommand).toContain(
         "exec codex '\\''-c'\\'' '\\''approval_policy=never'\\'' '\\''-c'\\'' '\\''features.plugins=false'\\'' '\\''-s'\\'' '\\''read-only'\\'' '\\''-a'\\'' '\\''never'\\'' '\\''app-server'\\'' <&3 >&4 3<&- 4>&-"
@@ -758,7 +758,7 @@ describe('fetchCodexRateLimits', () => {
 
     try {
       const resultPromise = fetchCodexRateLimits({
-        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\account\\home'
+        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\account\\home'
       })
       await vi.advanceTimersByTimeAsync(0)
       rpcChild.emit('close')

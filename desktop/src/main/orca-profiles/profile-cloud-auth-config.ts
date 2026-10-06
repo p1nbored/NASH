@@ -3,6 +3,7 @@ import {
   cleanCloudServiceUrl as cleanUrl,
   cleanCloudServiceOrigin as cleanOrigin
 } from '../../shared/cloud-service-url'
+import { ORCA_CLOUD_SERVICES_ENABLED } from '../../shared/orca-cloud-services'
 import { resolvePushGatewayOrigin } from '../runtime/push/push-gateway-origin'
 
 export type OrcaCloudAuthConfig = {
@@ -49,18 +50,22 @@ export function getOrcaCloudAuthConfig(
   const cleanEndpointUrl = (value: string | undefined): string | null =>
     cleanUrl(value, allowLoopbackHttp)
   const configuredApiBaseUrl = env.ORCA_CLOUD_API_URL?.trim()
-  // Why: packaged releases cannot depend on launch-time environment injection;
-  // these first-party endpoints and the public OAuth client ID are not secrets.
+  // Why: packaged releases cannot depend on launch-time environment injection, but NASH builds
+  // have no packaged Orca default at all (Orca cloud services off); only an override signs in.
+  const packagedDefaults = packaged && ORCA_CLOUD_SERVICES_ENABLED
   const apiBaseUrl = configuredApiBaseUrl
     ? cleanEndpointUrl(configuredApiBaseUrl)
-    : packaged
+    : packagedDefaults
       ? PRODUCTION_API_BASE_URL
       : null
-  const clientId = env.ORCA_CLOUD_CLIENT_ID?.trim() || (packaged ? PRODUCTION_CLIENT_ID : undefined)
+  const clientId =
+    env.ORCA_CLOUD_CLIENT_ID?.trim() || (packagedDefaults ? PRODUCTION_CLIENT_ID : undefined)
   if (!apiBaseUrl || !clientId) {
     return {
       configured: false,
-      setupMessage: 'Orca Cloud sign-in is not configured for this build.'
+      setupMessage: ORCA_CLOUD_SERVICES_ENABLED
+        ? 'Orca Cloud sign-in is not configured for this build.'
+        : 'Orca Cloud sign-in is not available in NASH builds.'
     }
   }
 
@@ -101,14 +106,30 @@ export function getOrcaCloudAuthConfig(
 }
 
 /**
- * Where the host registers phones for background push. Deliberately outside
- * OrcaCloudAuthConfig: the push gateway authenticates with the host keypair, so an
- * accountless host reaches it on exactly the same path as a signed-in one.
+ * The cloud config the desktop relay may dial with, or null for no relay. NASH builds also need an
+ * explicit ORCA_RELAY_URL, so a sign-in override never falls back to relay.onorca.dev.
+ */
+export function getDesktopRelayAuthConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  packaged: boolean = isPackagedOrcaBuild()
+): OrcaCloudAuthConfig | null {
+  const state = getOrcaCloudAuthConfig(env, packaged)
+  if (!state.configured) {
+    return null
+  }
+  const explicitRelay = cleanOrigin(env.ORCA_RELAY_URL, !packaged) !== null
+  return ORCA_CLOUD_SERVICES_ENABLED || explicitRelay ? state.config : null
+}
+
+/**
+ * Where the host registers phones for background push, or null when there is no gateway (NASH
+ * builds without ORCA_PUSH_GATEWAY_URL). Deliberately outside OrcaCloudAuthConfig: the gateway
+ * authenticates with the host keypair, so an accountless host reaches it on the same path.
  */
 export function getOrcaPushGatewayUrl(
   env: NodeJS.ProcessEnv = process.env,
   packaged: boolean = isPackagedOrcaBuild()
-): string {
+): string | null {
   return resolvePushGatewayOrigin(env, packaged)
 }
 

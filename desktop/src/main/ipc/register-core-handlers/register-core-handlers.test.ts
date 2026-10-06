@@ -34,7 +34,6 @@ const {
   registerOrcaProfileHandlersMock,
   registerCodexAccountHandlersMock,
   registerAgentHookHandlersMock,
-  registerClaudeAccountHandlersMock,
   registerOpenCodeGoCredentialsHandlersMock,
   registerMiniMaxCredentialsHandlersMock,
   registerZcodePlanCredentialsHandlersMock,
@@ -103,7 +102,6 @@ const {
   registerOrcaProfileHandlersMock: vi.fn(),
   registerCodexAccountHandlersMock: vi.fn(),
   registerAgentHookHandlersMock: vi.fn(),
-  registerClaudeAccountHandlersMock: vi.fn(),
   registerOpenCodeGoCredentialsHandlersMock: vi.fn(),
   registerMiniMaxCredentialsHandlersMock: vi.fn(),
   registerZcodePlanCredentialsHandlersMock: vi.fn(),
@@ -332,10 +330,6 @@ vi.mock('../agent-hooks', () => ({
   registerAgentHookHandlers: registerAgentHookHandlersMock
 }))
 
-vi.mock('../claude-accounts', () => ({
-  registerClaudeAccountHandlers: registerClaudeAccountHandlersMock
-}))
-
 vi.mock('../opencode-go-credentials', () => ({
   registerOpenCodeGoCredentialsHandlers: registerOpenCodeGoCredentialsHandlersMock
 }))
@@ -406,9 +400,28 @@ vi.mock('../native-chat', () => ({
   registerNativeChatHandlers: registerNativeChatHandlersMock
 }))
 
+const { clefStoreMarker, installClefCredentialStoreMock, registerClefCredentialsHandlersMock } =
+  vi.hoisted(() => {
+    const marker = { marker: 'clefStore' }
+    return {
+      clefStoreMarker: marker,
+      installClefCredentialStoreMock: vi.fn(() => marker),
+      registerClefCredentialsHandlersMock: vi.fn()
+    }
+  })
+
+vi.mock('../../startup/clef-credential-store-install', () => ({
+  installClefCredentialStore: installClefCredentialStoreMock
+}))
+
+vi.mock('../clef-credentials', () => ({
+  registerClefCredentialsHandlers: registerClefCredentialsHandlersMock
+}))
+
 import { agentSessionRefusalError } from '../../../shared/agent-session-wire-refusals'
 import { recordStructuredAgentSessionHostInstallRefusal } from '../../runtime/structured-agent-session-host-refusal'
 import { registerCoreHandlers } from './register-core-handlers'
+import { liftClefAuthLatchForCurrentCredentials } from '../../clef/clef-call-circuit-owner'
 
 let registeredAiVaultOptions: {
   ensureStructuredSessionOwnership: () => Promise<void>
@@ -451,7 +464,6 @@ describe('registerCoreHandlers', () => {
     registerOrcaProfileHandlersMock.mockReset()
     registerCodexAccountHandlersMock.mockReset()
     registerAgentHookHandlersMock.mockReset()
-    registerClaudeAccountHandlersMock.mockReset()
     registerOpenCodeGoCredentialsHandlersMock.mockReset()
     registerMiniMaxCredentialsHandlersMock.mockReset()
     registerZcodePlanCredentialsHandlersMock.mockReset()
@@ -481,6 +493,8 @@ describe('registerCoreHandlers', () => {
     registerNativeChatHandlersMock.mockReset()
     registerEmulatorFrameStreamHandlersMock.mockReset()
     registerEmulatorVideoStreamHandlersMock.mockReset()
+    installClefCredentialStoreMock.mockClear()
+    registerClefCredentialsHandlersMock.mockReset()
   })
 
   it('passes the store through to handler registrars that need it', async () => {
@@ -496,7 +510,6 @@ describe('registerCoreHandlers', () => {
     const openCodeUsage = { marker: 'openCodeUsage' }
     const museUsage = { marker: 'museUsage' }
     const codexAccounts = { marker: 'codexAccounts', runtimeHomeService: { marker: 'runtimeHome' } }
-    const claudeAccounts = { marker: 'claudeAccounts' }
     const rateLimits = { marker: 'rateLimits' }
     const agentAwakeService = { marker: 'agentAwakeService' }
     const onBeforeRelaunch = vi.fn()
@@ -512,7 +525,6 @@ describe('registerCoreHandlers', () => {
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: registration only forwards this marker to the mocked usage registrar.
       museUsage as never,
       codexAccounts as never,
-      claudeAccounts as never,
       rateLimits as never,
       null,
       undefined,
@@ -552,7 +564,6 @@ describe('registerCoreHandlers', () => {
       codexAccounts.runtimeHomeService
     )
     expect(registerPetHandlersMock).toHaveBeenCalled()
-    expect(registerClaudeAccountHandlersMock).toHaveBeenCalledWith(claudeAccounts)
     expect(registerOpenCodeGoCredentialsHandlersMock).toHaveBeenCalledWith(rateLimits)
     expect(registerMiniMaxCredentialsHandlersMock).toHaveBeenCalledWith(rateLimits)
     expect(registerZcodePlanCredentialsHandlersMock).toHaveBeenCalledWith(rateLimits)
@@ -613,6 +624,11 @@ describe('registerCoreHandlers', () => {
     expect(registerBrowserHandlersMock).toHaveBeenCalled()
     expect(registerFilesystemWatcherHandlersMock).toHaveBeenCalled()
     expect(registerSpeechHandlersMock).toHaveBeenCalledWith(store)
+    expect(installClefCredentialStoreMock).toHaveBeenCalledTimes(1)
+    expect(registerClefCredentialsHandlersMock).toHaveBeenCalledTimes(1)
+    expect(registerClefCredentialsHandlersMock).toHaveBeenCalledWith(clefStoreMarker, {
+      onCredentialsChanged: liftClefAuthLatchForCurrentCredentials
+    })
 
     await expect(
       aiVaultOptions.scanRuntimeAiVaultSessions(
@@ -705,7 +721,6 @@ describe('registerCoreHandlers', () => {
     const openCodeUsage2 = { marker: 'openCodeUsage2' }
     const museUsage2 = { marker: 'museUsage2' }
     const codexAccounts2 = { marker: 'codexAccounts2' }
-    const claudeAccounts2 = { marker: 'claudeAccounts2' }
     const rateLimits2 = { marker: 'rateLimits2' }
 
     registerCoreHandlers(
@@ -718,7 +733,6 @@ describe('registerCoreHandlers', () => {
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: registration only forwards this marker to the mocked usage registrar.
       museUsage2 as never,
       codexAccounts2 as never,
-      claudeAccounts2 as never,
       rateLimits2 as never,
       42
     )
@@ -734,5 +748,8 @@ describe('registerCoreHandlers', () => {
     // Why: ipcMain.handle throws on duplicate channel registration, so the
     // memory handler must not be wired up a second time on reactivation.
     expect(registerMemoryHandlersMock).not.toHaveBeenCalled()
+    // Why: one sealed store and one set of clef:credentials channels per process.
+    expect(installClefCredentialStoreMock).not.toHaveBeenCalled()
+    expect(registerClefCredentialsHandlersMock).not.toHaveBeenCalled()
   })
 })
