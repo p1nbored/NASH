@@ -153,7 +153,15 @@ export function collectAddedLineRanges(root, requestedBase) {
     resolvePullRequestDiffBase(root, null) ??
     runGit(root, ['merge-base', resolveBase(root, requestedBase), 'HEAD']).trim()
   const changedFiles = splitNullDelimited(
-    runGit(root, ['diff', '--name-only', '-z', '--diff-filter=ACMRTUB', comparisonBase, '--'])
+    runGit(root, [
+      'diff',
+      '--relative',
+      '--name-only',
+      '-z',
+      '--diff-filter=ACMRTUB',
+      comparisonBase,
+      '--'
+    ])
   )
   const untrackedFiles = splitNullDelimited(
     runGit(root, ['ls-files', '--others', '--exclude-standard', '-z'])
@@ -168,7 +176,15 @@ export function collectAddedLineRanges(root, requestedBase) {
     ) {
       continue
     }
-    const diff = runGit(root, ['diff', '--unified=0', '--no-color', comparisonBase, '--', file])
+    const diff = runGit(root, [
+      'diff',
+      '--relative',
+      '--unified=0',
+      '--no-color',
+      comparisonBase,
+      '--',
+      file
+    ])
     const ranges = parseAddedLineRanges(diff)
     if (ranges.length > 0) {
       rangesByFile.set(file, ranges)
@@ -234,12 +250,13 @@ export function collectBaseLineBlocks(root, comparisonBase, files = null) {
   // (it filters to ACMRTUB), so read every path the diff touches, deletions included.
   const paths =
     files ??
-    splitNullDelimited(runGit(root, ['diff', '--name-only', '-z', comparisonBase, '--'])).filter(
-      (file) => SOURCE_FILE_PATTERN.test(file)
-    )
+    splitNullDelimited(
+      runGit(root, ['diff', '--relative', '--name-only', '-z', comparisonBase, '--'])
+    ).filter((file) => SOURCE_FILE_PATTERN.test(file))
+  const prefix = runGit(root, ['rev-parse', '--show-prefix']).trim()
   const blocks = []
   for (const file of paths) {
-    const result = spawnSync('git', ['show', `${comparisonBase}:${file}`], {
+    const result = spawnSync('git', ['show', `${comparisonBase}:${prefix}${file}`], {
       cwd: root,
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024
