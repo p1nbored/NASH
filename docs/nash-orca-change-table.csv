@@ -3,6 +3,7 @@
 DESIGN.md,A,NASH 独立仓库文件,文档与计划,文档/审计,121,0,已提交,文档与计划；DESIGN.md
 README.md,A,NASH 独立仓库文件,文档与计划,文档/审计,44,0,已提交,文档与计划；README.md
 desktop/.gitattributes,M,相对 Orca 修改,其他仓库资源,配置/数据,3,0,已提交,其他仓库资源；.gitattributes
+desktop/.gitignore,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置,3,0,已提交,本地构建产物忽略规则；.gitignore
 desktop/.oxfmtrc.json,M,相对 Orca 修改,其他仓库资源,配置/数据,2,1,已提交,其他仓库资源；.oxfmtrc.json
 desktop/config/build-plugins/markdown-parser-exports.ts,M,相对 Orca 修改,共享契约与基础能力,实现/配置,2,1,已提交,共享契约与基础能力；config/build-plugins/markdown-parser-exports.ts
 desktop/config/dev-app-update.yml,D,相对 Orca 删除,启动 / 构建 / 发布 / 更新,配置/数据,0,4,已提交,启动 / 构建 / 发布 / 更新；config/dev-app-update.yml
@@ -11,7 +12,7 @@ desktop/config/docker/daemon-shutdown-descendants/run-case.sh,M,相对 Orca 修�
 desktop/config/docker/headless-pairing/run-appimage-case.sh,M,相对 Orca 修改,共享契约与基础能力,实现/配置,0,0,已提交,共享契约与基础能力；config/docker/headless-pairing/run-appimage-case.sh
 desktop/config/docker/headless-serve-shutdown/run-appimage-desktop-startup-case.sh,M,相对 Orca 修改,共享契约与基础能力,实现/配置,0,0,已提交,共享契约与基础能力；config/docker/headless-serve-shutdown/run-appimage-desktop-startup-case.sh
 desktop/config/docker/headless-serve-shutdown/run-signal-case.sh,M,相对 Orca 修改,共享契约与基础能力,实现/配置,0,0,已提交,共享契约与基础能力；config/docker/headless-serve-shutdown/run-signal-case.sh
-desktop/config/electron-builder.config.cjs,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,实现/脚本,41,28,已提交,启动 / 构建 / 发布 / 更新；config/electron-builder.config.cjs
+desktop/config/electron-builder.config.cjs,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,实现/脚本,42,29,已提交,启动 / 构建 / 发布 / 更新；config/electron-builder.config.cjs
 desktop/config/localization-coverage-allowlist.json,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置/数据,28,0,已提交,启动 / 构建 / 发布 / 更新；config/localization-coverage-allowlist.json
 desktop/config/nsis/orca-installer-hooks.nsh,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置/数据,14,12,已提交,启动 / 构建 / 发布 / 更新；config/nsis/orca-installer-hooks.nsh
 desktop/config/packaged-runtime-node-modules.cjs,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,实现/脚本,4,2,已提交,启动 / 构建 / 发布 / 更新；config/packaged-runtime-node-modules.cjs
@@ -107,7 +108,7 @@ desktop/native/windows-credentials/index.d.ts,A,相对 Orca 新增,终端 / WSL 
 desktop/native/windows-credentials/index.js,A,相对 Orca 新增,终端 / WSL / Windows 运行时,实现/脚本,35,0,已提交,终端 / WSL / Windows 运行时；native/windows-credentials/index.js
 desktop/native/windows-credentials/package.json,A,相对 Orca 新增,终端 / WSL / Windows 运行时,配置/数据,21,0,已提交,终端 / WSL / Windows 运行时；native/windows-credentials/package.json
 desktop/native/windows-credentials/src/addon.cc,A,相对 Orca 新增,终端 / WSL / Windows 运行时,配置/数据,171,0,已提交,终端 / WSL / Windows 运行时；native/windows-credentials/src/addon.cc
-desktop/package.json,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置/数据,5,4,已提交,启动 / 构建 / 发布 / 更新；package.json
+desktop/package.json,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置/数据,6,5,已提交,启动 / 构建 / 发布 / 更新；package.json
 desktop/pnpm-lock.yaml,M,相对 Orca 修改,启动 / 构建 / 发布 / 更新,配置/数据,9,0,已提交,启动 / 构建 / 发布 / 更新；pnpm-lock.yaml
 desktop/pnpm-workspace.yaml,M,相对 Orca 修改,其他仓库资源,配置/数据,3,0,已提交,其他仓库资源；pnpm-workspace.yaml
 desktop/resources/app-icons/orca-blue.png,D,相对 Orca 删除,图标与品牌资源,资源,-,-,已提交,图标与品牌资源；resources/app-icons/orca-blue.png
