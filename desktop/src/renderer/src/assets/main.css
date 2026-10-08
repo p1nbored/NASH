@@ -108,6 +108,18 @@
   --color-status-warning: var(--status-warning);
   --color-status-warning-background: var(--status-warning-background);
   --color-status-warning-border: var(--status-warning-border);
+  --color-status-error: var(--status-error);
+  --color-status-error-background: var(--status-error-background);
+  --color-status-error-border: var(--status-error-border);
+  /* Interaction states. Why: hover is the accent role and selected text is ink; mapping them to
+     the source tokens keeps scoped overrides (left-sidebar appearance) flowing through. */
+  --color-hover: var(--accent);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--foreground);
+  --color-control: var(--control-border);
+  --color-disabled-foreground: var(--disabled-foreground);
+  --color-floating-border: var(--floating-border);
+  --color-scrim: var(--scrim);
   --color-workspace-status-done: var(--workspace-status-done);
   --color-workspace-status-review: var(--workspace-status-review);
   --color-workspace-status-progress: var(--workspace-status-progress);
@@ -122,26 +134,61 @@
   --color-git-graph-lane-4: var(--git-graph-lane-4);
   --color-git-graph-lane-5: var(--git-graph-lane-5);
   --color-annotation-highlight: var(--annotation-highlight);
-  --shadow-floating: 0 10px 24px rgb(0 0 0 / 0.18);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-floating: var(--floating-shadow);
+  /* Radii derive from --radius (6px): sm 4 chips and checkboxes, md 6 controls and menu items,
+     lg 8 cards, popovers and panels, xl 10 dialogs. Larger radii stop at xl. */
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --radius-3xl: calc(var(--radius) + 4px);
+  --radius-4xl: calc(var(--radius) + 4px);
+}
+
+/* Type scale and spacing roles. `static` keeps every value available to hand-written CSS
+   (var(--text-meta), var(--spacing-row)) even where no utility uses it yet. */
+@theme static {
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1rem;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1rem;
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.25rem;
+  --text-body-lg: 0.875rem;
+  --text-body-lg--line-height: 1.25rem;
+  --text-heading: 0.9375rem;
+  --text-heading--line-height: 1.375rem;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.75rem;
+  --text-display: 1.625rem;
+  --text-display--line-height: 2.125rem;
+  --spacing-row: 0.5rem;
+  --spacing-group: 1rem;
+  --spacing-section: 1.5rem;
 }
 
 /* ── Light Mode ──────────────────────────────────────── */
 
 :root {
-  --app-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-sans: var(--app-font-family);
-  /* Selective editorial titles only (page, dialog, section headings); never body or controls. */
-  --app-display-font-family: Georgia, 'Iowan Old Style', Charter, Cambria, serif;
+  /* Why: the `appFontFamily` setting rewrites this inline (lib/app-font-family.ts), so it holds
+     only the Latin UI chain; the CJK and generic fallbacks below survive a custom font. */
+  --app-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI';
+  /* Han characters share code points across languages; the first CJK family decides the glyph
+     form, so the :lang() rules below put the document language's own family first. */
+  --app-cjk-font-family:
+    'Microsoft YaHei UI', 'PingFang SC', 'Hiragino Sans', 'Yu Gothic UI', 'Malgun Gothic',
+    'Apple SD Gothic Neo', 'Noto Sans CJK SC', 'Source Han Sans SC';
+  --app-cjk-serif-font-family: 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC';
+  --font-sans: var(--app-font-family), var(--app-cjk-font-family), sans-serif;
+  /* Selective editorial titles only (page, dialog, section headings); never body or controls.
+     Windows ships no modern CJK serif, so CJK titles fall back to the CJK sans, not SimSun. */
+  --app-display-font-family:
+    Georgia, 'Iowan Old Style', Charter, Cambria, var(--app-cjk-serif-font-family),
+    var(--app-cjk-font-family), serif;
   --font-mono:
-    'SF Mono', SFMono-Regular, ui-monospace, 'Cascadia Code', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+    'SF Mono', SFMono-Regular, ui-monospace, 'Cascadia Mono', 'Cascadia Code', Menlo, Consolas,
+    'Liberation Mono', var(--app-cjk-font-family), monospace;
   --radius: 0.375rem;
   --orca-security-background: #fbf5ed;
   --orca-security-foreground: #272117;
@@ -188,14 +235,29 @@
   --agent-question: #c16302;
   /* Legible weight for text/glyphs on a tinted --agent-question surface. */
   --agent-question-text: #964c04;
-  --status-success: #317a45;
+  /* Status text clears 4.5:1 on every surface and on its own 10% tint there. */
+  --status-success: #2b6b3d;
   --status-success-background: color-mix(in srgb, var(--status-success) 10%, transparent);
   --status-success-border: color-mix(in srgb, var(--status-success) 25%, transparent);
   /* Needs-attention state that is not an error: a resume that did not carry on, an update that
      failed. Yellow, so it stays apart from destructive red and from the orange working state. */
-  --status-warning: #936605;
+  --status-warning: #7e5804;
   --status-warning-background: color-mix(in srgb, var(--status-warning) 10%, transparent);
   --status-warning-border: color-mix(in srgb, var(--status-warning) 25%, transparent);
+  /* Failed or blocked: the destructive crimson, a step darker so it reads on its own tint. */
+  --status-error: #b70549;
+  --status-error-background: color-mix(in srgb, var(--status-error) 10%, transparent);
+  --status-error-border: color-mix(in srgb, var(--status-error) 25%, transparent);
+  /* Selected rows and segments; hover is the accent role. A selection also needs a non-colour
+     cue (weight, check, or an inset control-border ring). */
+  --selected: #e3ddd4;
+  /* Edges that identify an interactive control (fields, checkboxes, switch tracks): 3:1 or more
+     on every surface. --border stays the decorative hairline. */
+  --control-border: #8a8174;
+  --disabled-foreground: #8a8174;
+  --floating-border: #d6cec3;
+  --floating-shadow: 0 12px 32px rgb(39 33 23 / 0.16);
+  --scrim: rgb(26 23 18 / 0.5);
   /* Workspace PR-state tones: same hue in both themes so a status keeps its
      identity when the theme flips. */
   --workspace-status-done: #c7a594;
@@ -313,6 +375,15 @@
   --status-warning: #e8bd6d;
   --status-warning-background: color-mix(in srgb, var(--status-warning) 10%, transparent);
   --status-warning-border: color-mix(in srgb, var(--status-warning) 25%, transparent);
+  --status-error: #fb7292;
+  --status-error-background: color-mix(in srgb, var(--status-error) 10%, transparent);
+  --status-error-border: color-mix(in srgb, var(--status-error) 25%, transparent);
+  --selected: #3a352d;
+  --control-border: #7a7469;
+  --disabled-foreground: #7a7469;
+  --floating-border: #48433b;
+  --floating-shadow: 0 16px 40px rgb(0 0 0 / 0.5);
+  --scrim: rgb(0 0 0 / 0.6);
   --workspace-status-done: #c7a594;
   --workspace-status-review: #16a34a;
   --workspace-status-progress: #d4a300;
@@ -378,6 +449,41 @@
   /* Brighter than terminal defaults so the always-visible line clears 3:1 on `--card`. */
   --tab-group-split-divider: #6c6862;
   --tab-group-split-divider-strong: #aaa499;
+}
+
+/* ── CJK font order per document language ────────────── */
+/* <html lang> follows the UI language (i18n/document-language.ts). Each list keeps the other
+   CJK families behind its own so mixed-language text still finds a glyph. */
+
+:root:lang(zh) {
+  --app-cjk-font-family:
+    'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC',
+    'Source Han Sans SC', 'Yu Gothic UI', 'Malgun Gothic';
+  --app-cjk-serif-font-family: 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC';
+}
+
+:root:lang(zh-Hant),
+:root:lang(zh-TW),
+:root:lang(zh-HK) {
+  --app-cjk-font-family:
+    'Microsoft JhengHei UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans CJK TC',
+    'Source Han Sans TC', 'Microsoft YaHei UI', 'Yu Gothic UI', 'Malgun Gothic';
+  --app-cjk-serif-font-family: 'Songti TC', 'Noto Serif CJK TC', 'Source Han Serif TC';
+}
+
+:root:lang(ja) {
+  --app-cjk-font-family:
+    'Yu Gothic UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, 'Noto Sans CJK JP',
+    'Source Han Sans JP', 'Microsoft YaHei UI', 'Malgun Gothic';
+  --app-cjk-serif-font-family:
+    'Yu Mincho', 'Hiragino Mincho ProN', 'Noto Serif CJK JP', 'Source Han Serif JP';
+}
+
+:root:lang(ko) {
+  --app-cjk-font-family:
+    'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans CJK KR', 'Source Han Sans KR',
+    'Microsoft YaHei UI', 'Yu Gothic UI';
+  --app-cjk-serif-font-family: AppleMyungjo, 'Noto Serif CJK KR', 'Source Han Serif KR';
 }
 
 .plugin-security-chrome {
@@ -469,7 +575,7 @@ body:has(> [data-slot='dialog-overlay'], > [data-slot='sheet-overlay']) {
      background to the same color; keep the X readable on both Orca themes. */
   color: var(--popover-foreground);
   background: var(--popover);
-  border-color: rgb(0 0 0 / 0.14);
+  border-color: var(--floating-border);
 }
 
 [data-sonner-toaster][data-sonner-theme='dark']
@@ -477,11 +583,6 @@ body:has(> [data-slot='dialog-overlay'], > [data-slot='sheet-overlay']) {
   [data-close-button] {
   color: var(--popover-foreground);
   background: var(--popover);
-  border-color: rgb(255 255 255 / 0.14);
-}
-
-.dark [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] {
-  border-color: rgb(255 255 255 / 0.14);
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:hover {
@@ -495,7 +596,8 @@ body:has(> [data-slot='dialog-overlay'], > [data-slot='sheet-overlay']) {
   *,
   *::before,
   *::after {
-    @apply border-border outline-ring/50;
+    /* Why solid: a half-transparent default outline measured about 2:1; focus floors are 3:1. */
+    @apply border-border outline-ring;
   }
 
   body {
@@ -505,14 +607,7 @@ body:has(> [data-slot='dialog-overlay'], > [data-slot='sheet-overlay']) {
     overflow: hidden;
     /* Why: mobile browser chrome changes the visible viewport while open. */
     height: 100dvh;
-    font-family: var(
-      --app-font-family,
-      'Geist',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      sans-serif
-    );
+    font-family: var(--font-sans);
     letter-spacing: 0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -898,21 +993,11 @@ html.native-shell .app-layout {
   height: calc(var(--browser-page-viewport-height) / var(--ui-zoom-factor, 1));
 }
 
-/* Why: small identity anchor on desktop custom titlebars where native window
-   chrome is hidden. Sized to sit comfortably in the 36px titlebar with a
-   little horizontal breathing room. The SVG fill is white; light mode inverts
-   it to black so it reads on the light titlebar background. */
 .titlebar-logo {
-  height: 16px;
+  height: 20px;
+  width: 20px;
   flex-shrink: 0;
   margin: 0 4px 0 10px;
-  opacity: 0.75;
-}
-
-/* Why: .dark is toggled on <html> (the :root), so :not(.dark) on a descendant
-   always matches. Scope to :root:not(.dark) to correctly target light mode only. */
-:root:not(.dark) .titlebar-logo {
-  filter: invert(1);
 }
 
 /* Why: desktop custom title bar buttons replace hidden native OS chrome.
@@ -1144,15 +1229,9 @@ html.native-shell .app-layout {
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--text-meta);
   line-height: 1.2;
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    SF Mono,
-    Menlo,
-    Consolas,
-    monospace;
+  font-family: var(--font-mono);
   white-space: nowrap;
   text-align: left;
 }

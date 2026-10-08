@@ -37,6 +37,30 @@ describe('Button', () => {
     expect(classes).not.toContain('disabled:opacity-50')
   })
 
+  it('pairs the destructive fill with its token foreground in both themes', () => {
+    const classes = classesOf(<Button variant="destructive">Delete</Button>)
+    expect(classes).toEqual(
+      expect.arrayContaining(['bg-destructive', 'text-destructive-foreground'])
+    )
+    expect(classes).not.toContain('text-white')
+    expect(classes.some((name) => name.startsWith('dark:bg-destructive'))).toBe(false)
+  })
+
+  it.each(['ghost', 'outline'] as const)(
+    'hovers the %s variant with the hover token',
+    (variant) => {
+      const classes = classesOf(<Button variant={variant}>Open</Button>)
+      expect(classes).toContain('hover:bg-hover')
+      expect(classes).not.toContain('hover:bg-accent')
+    }
+  )
+
+  it('keeps the outline variant on the hairline border callers rely on', () => {
+    expect(classesOf(<Button variant="outline">Refresh</Button>)).toEqual(
+      expect.arrayContaining(['border', 'border-border'])
+    )
+  })
+
   it('keeps the half-opacity disabled treatment for non-primary variants', () => {
     expect(
       classesOf(

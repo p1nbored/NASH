@@ -7,6 +7,7 @@ import i18next, {
 import { initReactI18next } from 'react-i18next'
 
 import enRuntimeRequired from './en-runtime-required.json'
+import { applyDocumentLanguage, toDocumentLanguageTag } from './document-language'
 import { isPseudoLocalizationLocale, pseudoLocalizeString } from './pseudo-localization'
 import { DEFAULT_LOCALE, resolveUiLocale } from './supported-languages'
 import type { SupportedUiLocale } from '../../../shared/ui-locale'
@@ -139,3 +140,15 @@ export function setRendererPluginLanguagePacks(
     registeredPluginLanguages.add(pack.resourceLanguage)
   }
 }
+
+function syncDocumentLanguage(language: string | undefined): void {
+  const active = language || DEFAULT_LOCALE
+  const pack = pluginLanguagePacks.find((entry) => entry.resourceLanguage === active)
+  applyDocumentLanguage(toDocumentLanguageTag(active, pack?.locale))
+}
+
+// Why: <html lang> selects CJK glyph forms and the per-language font order in main.css; every
+// renderer entry (main, pop-out, web) imports this module, so one listener covers them all.
+// Registered after `pluginLanguagePacks` exists so an early event cannot read it uninitialised.
+i18n.on('languageChanged', syncDocumentLanguage)
+syncDocumentLanguage(i18n.language)

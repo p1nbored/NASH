@@ -1,27 +1,30 @@
-# Orca UI Style Guide
+# NASH UI Style Guide
 
-This is the **UI/visual design** doc for Orca — color tokens, typography, component selection, and UX rules. It is _not_ an architecture doc; for system-level design see code and inline comments. Token values live in `src/renderer/src/assets/main.css` (canonical); this file documents the _roles and rules_ for using them.
+This is the **UI/visual design** doc for NASH (built on Orca) — color tokens, typography, component selection, and UX rules. It is _not_ an architecture doc; for system-level design see code and inline comments. Token values live in `src/renderer/src/assets/main.css` (canonical); the root `DESIGN.md` records the D12 Paper direction and every token value; this file documents the _roles and rules_ for using them.
 
 ## Overview
 
-Orca is an Electron desktop app for orchestrating coding agents across git worktrees. The visual identity is **monochrome and quiet** — neutral grays carry the chrome, color is reserved for state (selection ring, destructive, git decorations). The product spends most of its time hosting other people's tools (Monaco, xterm, Markdown previews), so Orca's own UI should recede and frame.
+NASH is an Electron desktop app for orchestrating coding agents across git worktrees. The visual identity is **D12 Paper**: warm paper neutrals and ink carry the chrome, a restrained clay marks the single primary action, and color otherwise means state (focus, selection, status, destructive, git decorations). The product spends most of its time hosting other tools (Monaco, xterm, Markdown previews), so its own UI should recede and frame.
 
 When in doubt:
 
 - Reach for **muted/accent/border** before reaching for color.
-- Reach for **CSS variables** before hardcoding hex.
-- Match the nearest **shadcn primitive** before writing custom CSS.
+- Reach for a **token utility** (`text-meta`, `gap-group`, `bg-hover`, `border-control`) before an arbitrary value (`text-[12px]`, `bg-[#…]`).
+- Match the nearest **shadcn primitive and its variants** before writing custom classes.
 
 ## Source of truth
 
-| Concern                                       | Canonical location                                    |
-| --------------------------------------------- | ----------------------------------------------------- |
-| Color tokens                                  | `src/renderer/src/assets/main.css` (`:root`, `.dark`) |
-| Tailwind theme bindings                       | Same file, `@theme inline { … }` block                |
-| Component primitives                          | `src/renderer/src/components/ui/` (shadcn-style)      |
-| App typography / scrollbars / titlebar chrome | Same `main.css`                                       |
+| Concern                                       | Canonical location                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| Color tokens                                  | `src/renderer/src/assets/main.css` (`:root`, `.dark`)                  |
+| Tailwind theme bindings                       | Same file: `@theme inline { … }` (colors, radii, shadow)               |
+| Type scale and spacing roles                  | Same file: `@theme static { … }`                                       |
+| Font stacks and per-language CJK order        | Same file: `:root` and the `:root:lang(…)` rules                       |
+| Component primitives                          | `src/renderer/src/components/ui/` (shadcn-style)                       |
+| Token values and rationale                    | Root `DESIGN.md`                                                       |
+| App typography / scrollbars / titlebar chrome | Same `main.css`                                                        |
 
-Never hardcode a hex value in component code if a variable already covers it. If a new token is needed, add it to `main.css` (both `:root` and `.dark`), expose it in the `@theme inline` block, then use it.
+Never hardcode a hex value in component code if a variable already covers it. If a new token is needed, add it to `main.css` (both `:root` and `.dark`), expose it in the `@theme inline` block, add it to the token tests, then use it.
 
 ## Color roles
 
@@ -36,10 +39,24 @@ Tokens come in pairs: a **surface** and a **foreground** that meets contrast on 
 | `secondary` / `secondary-foreground`     | Lower-emphasis actions next to a primary                    | The affirmative action                              |
 | `muted` / `muted-foreground`             | De-emphasized text, captions, placeholders, disabled chrome | Body copy; primary actions                          |
 | `accent` / `accent-foreground`           | Hover/active backgrounds for ghost buttons and list rows    | Solid filled buttons (use `secondary` instead)      |
-| `destructive` / `destructive-foreground` | Delete, discard, irreversible-action buttons; error states  | Cancel buttons (Cancel is not destructive)          |
-| `border`                                 | All hairlines: dividers, input outlines, card edges         | Heavy emphasis; that's `ring`                       |
-| `input`                                  | Form field background only                                  | Anywhere outside form fields                        |
-| `ring`                                   | Focus-visible outlines, active selection halos              | Persistent decoration                               |
+| `destructive` / `destructive-foreground` | Delete, discard, irreversible-action buttons                | Cancel buttons (Cancel is not destructive)          |
+| `border`                                 | Decorative hairlines: dividers, card edges                  | The only edge of an interactive control             |
+| `input`                                  | Dark-mode field fill (`bg-input/30`), quiet inset outlines  | Anywhere outside form fields                        |
+| `ring`                                   | Focus-visible outlines (solid ink)                          | Persistent decoration; selection                    |
+
+### State roles
+
+| Utility                                   | Use it for                                                                 | Don't use it for                          |
+| ----------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------- |
+| `bg-hover`                                | Hover on rows, ghost and outline controls (the accent role)                | Persistent selection                      |
+| `bg-selected` / `text-selected-foreground` | The selected row, segment, menu or command item                            | Hover; decoration                         |
+| `border-control` / `bg-control`           | Edges that identify a control: fields, checkboxes, switch tracks; strong dividers | Decorative dividers (use `border`)   |
+| `text-disabled-foreground`                | Text in disabled fields and controls at full opacity                       | Placeholder or secondary text             |
+| `text-status-{success,warning,error}`, `bg-status-*-background`, `border-status-*-border` | Status text, chips and callouts, always with a label | Git status; decorative color |
+| `border-floating-border`, `shadow-floating`, `bg-popover` | Every floating layer (menus, popovers, dialogs, sheets, toasts) | Inline panels (use `card`)       |
+| `bg-scrim`                                | Backdrop behind dialogs, sheets and the command palette                    | Anything else                             |
+
+Values and contrast rules are in the root `DESIGN.md`; `assets/autopilot-theme-tokens.test.ts` enforces them.
 | `sidebar` (+ variants)                   | The worktree sidebar and its children                       | Other panels                                        |
 | `editor-surface`                         | Background of Monaco / markdown editor panes                | App chrome                                          |
 
@@ -66,10 +83,11 @@ Use these _only_ for git status. Don't reuse them for unrelated state colors —
 A common point of drift. Use these conventions for any list-style row (worktrees, command palette items, settings nav):
 
 - **Idle:** transparent background.
-- **Hover:** `bg-accent` (in the worktree sidebar, `bg-sidebar-accent`).
-- **Keyboard-selected (cmdk highlight):** do **not** rely on flat `bg-accent` alone on light popover/dialog surfaces — `--accent` (#f5f5f5) is nearly identical to `--background` (#fff), so the cursor vanishes. Use the jump-palette recipe in `main.css` (`.jump-palette-item[data-selected='true']`): `color-mix` foreground into background (~12%) plus an inset ring. Expose the mix as `--jump-palette-selection-surface` when nested cutouts (status pips) must match. The `data-selected` attribute is set by `cmdk` automatically.
-- **Persistent "current" / "active" row** (e.g. the worktree the user is viewing): also `bg-accent`, _plus_ a `data-current="true"` attribute so CSS or future styling can distinguish it from the cmdk highlight.
-- **Don't:** hardcode `bg-[#ededed]` / `bg-[#333333]` or invent a "selected" color. Mix from existing tokens (`foreground`/`background`/`accent`) so light/dark stay aligned.
+- **Hover:** `bg-hover` (in the worktree sidebar, `bg-sidebar-accent`).
+- **Keyboard-selected (cmdk, menu and select highlight):** `bg-selected text-selected-foreground`. The `CommandItem`, `SelectItem`, `DropdownMenuItem` and `ContextMenuItem` primitives already apply it. The jump palette keeps its own recipe in `main.css` (`.jump-palette-item[data-selected='true']`): `color-mix` foreground into background plus an inset ring, exposed as `--jump-palette-selection-surface` for nested cutouts (status pips).
+- **Persistent "current" / "active" row** (e.g. the worktree the user is viewing): `bg-selected` _plus_ a second cue (weight, check icon, or `inset-ring-1 inset-ring-control`) and a `data-current="true"` attribute so CSS can distinguish it from the cmdk highlight.
+- **Don't:** hardcode `bg-[#ededed]` / `bg-[#333333]` or invent another "selected" color.
+- **Inside scoped overrides** (custom left-sidebar appearance): `bg-hover` and `text-selected-foreground` follow the scoped `--accent`/`--foreground`; prefer the `sidebar-*` family there.
 
 ### Color mixing
 
@@ -83,28 +101,42 @@ This keeps light/dark parity automatic.
 
 ## Typography
 
-- **Family:** `Geist` is loaded as a single variable woff2 (weight range 100–900). Always reach for `Geist` for sans, never `Inter` or system sans.
-- **Mono:** `var(--font-mono)` — used for paths, terminal-adjacent UI, code, and anywhere monospace conveys "this is literal."
+- **Families:** `font-sans` is the system UI font (`system-ui`, or the user's `appFontFamily`), followed by the CJK family for the document language and `sans-serif`. `font-display` (Georgia plus CJK serif fallbacks) is for page, dialog and sheet titles and section headings only. `font-mono` is for paths, IDs, code and anything literal. Geist stays bundled only as an explicit `appFontFamily` choice.
+- **Languages:** `<html lang>` follows the UI language (`i18n/document-language.ts`), and `main.css` reorders the CJK families per language so Chinese, Japanese and Korean text get their own glyph forms. Don't set `font-family` per component for CJK text.
 - **Body letter-spacing:** `0.01em` (set globally on `body`). Don't override per component.
-- **Sizes:** Tailwind's default scale. Common sizes in this repo:
-  - 11px (uppercase meta, sidebar headers, captions) — pair with `font-weight: 600` and `text-transform: uppercase` and `letter-spacing: 0.05em` for category labels.
-  - 12px (sub-text, paths, secondary content)
-  - 13px (sidebar items, dense list rows)
-  - 14px (default body, button text in `default` size)
+- **Sizes:** use the type scale utilities, not `text-[Npx]`:
+
+| Utility        | Size / line | Use                                                        |
+| -------------- | ----------- | ---------------------------------------------------------- |
+| `text-caption` | 11 / 16     | Timestamps, counts, uppercase category labels (with `font-semibold uppercase tracking-wider`) |
+| `text-meta`    | 12 / 16     | Sub-text, paths, helper text, trailing metadata, menu items |
+| `text-body`    | 13 / 20     | Sidebar items, dense list rows, default UI text            |
+| `text-body-lg` | 14 / 20     | Setting labels, button text in the `default` size          |
+| `text-heading` | 15 / 22     | Section and group headings                                 |
+| `text-title`   | 20 / 28     | Page and dialog titles, with `font-display`                |
+| `text-display` | 26 / 34     | Rare editorial headers, with `font-display`                |
+
+`text-xs` (= meta), `text-sm` (= body-lg) and `text-xl` (= title) remain valid and are what the primitives use internally.
+
+- **`cn()` and the type scale:** `cn()` merges through tailwind-merge. Until `lib/utils.ts` registers the token names with `extendTailwindMerge`, tailwind-merge files `text-meta` under text color and drops it when a text color follows in the same `cn()` call, and it cannot resolve `p-row` against `p-2`. Until then, put token sizes in a static `className` string or after no text color, or use `text-xs`/`text-sm`.
+
+## Spacing
+
+Use the numeric scale (4px steps) inside components, and the spacing roles between them: `row` 8px (inside a row or control group), `group` 16px (between related rows, card padding), `section` 24px (between page sections) — for example `gap-row`, `space-y-group`, `mt-section`.
 
 ## Radius
 
-`--radius: 0.625rem` (10px) is the base; the rest are computed (`--radius-sm` = 0.6×, `--radius-md` = 0.8×, `--radius-lg` = 1×, `--radius-xl` = 1.4×, etc.). Buttons and inputs use `rounded-md`; the `Card` primitive uses `rounded-xl`; badges use `rounded-full`. Match the existing primitive's radius rather than introducing a new one.
+`--radius: 0.375rem` (6px) is the base. `rounded-sm` 4px (badges, chips, checkboxes), `rounded-md` 6px (buttons, inputs, selects, menu items), `rounded-lg` 8px (cards, popovers, menus, panels, toasts), `rounded-xl` 10px (dialogs, command palette). `rounded-2xl` and above are capped at 10px. `rounded-full` is for tracks, thumbs and the `counter` badge only. Match the primitive's radius rather than introducing a new one; never use `rounded-[Npx]`.
 
 ## Elevation & shadows
 
-Orca uses shadows sparingly. Three levels in practice:
+Shadows are rare. Three levels:
 
-1. **Inset hairline** — `border` + `border` token. The default. Almost everything sits at this level.
-2. **Subtle lift** — `shadow-xs` + a single-token border. Outline buttons, embedded cards.
-3. **Floating** — `shadow-floating` (`0 10px 24px rgba(0, 0, 0, 0.18)`). Popovers, popups that escape the editor surface. Reserved.
+1. **Hairline** — `border` + `border` token. The default. Almost everything sits at this level, including cards.
+2. **Subtle lift** — `shadow-xs` + a single-token border. Rare embedded lifts.
+3. **Floating** — `shadow-floating` (themed by `--floating-shadow`) with `border-floating-border` on an opaque `bg-popover`. Menus, popovers, dialogs, sheets, toasts.
 
-Don't add a fourth level. If something needs more emphasis than "floating," you're probably reaching for the focus `ring` instead.
+Don't add a fourth level, and don't use translucent glass (`bg-white/80`, `backdrop-blur-xl`) for surfaces. If something needs more emphasis than "floating," you're probably reaching for the focus `ring` instead.
 
 ## Components
 
@@ -128,6 +160,14 @@ Variants in priority order:
 | `destructive` | Delete, discard, irreversible. Never for Cancel.                   |
 
 Sizes: `default` (36px), `sm` (32px), `xs` (24px), `lg` (40px), plus `icon`, `icon-xs`, `icon-sm`, `icon-lg`. Match the size to the surrounding row height — don't drop a `default` button into a 28px toolbar.
+
+### Fields, badges, cards and dividers
+
+- **`Input`:** `size` `default` (36px), `sm` (32px, `text-xs`), `xs` (28px, `text-xs`). Use the size instead of `className="h-8 text-xs"`. Fields, `Textarea` and `SelectTrigger` draw their edge with `border-control` (3:1 or more), focus with `border-ring` plus a 1px `ring-ring`, and disable with `bg-muted` and `text-disabled-foreground` at full opacity.
+- **`Badge`:** 4px chips. `success`, `warning` and `error` are the status chips (tint, edge and text from the status family; always with a label); `counter` is the only pill, for counts. `default`, `secondary`, `outline`, `ghost`, `link`, `destructive`, `dot` and `hostContext` keep working.
+- **`Card`:** flat paper, `rounded-lg`, hairline `border-border`, 16px padding, no shadow. Avoid nesting cards; prefer an unframed section or a divider.
+- **`Separator`:** the default is the decorative hairline; `variant="strong"` (`bg-control`) marks a structural split that must read at 3:1.
+- **`Checkbox` / `Switch`:** checked state is ink, not clay; the unchecked switch track is `bg-control`.
 
 ### Other primitives in this repo
 
@@ -215,9 +255,9 @@ See `Landing.tsx` for the canonical pattern. Don't roll a one-off `<kbd>` — kb
 The pattern in `src/renderer/src/components/settings/SettingsFormControls.tsx` is the house style for any label + control + helper text. Match it for new forms:
 
 - **Outer stack:** `space-y-3` for full-section forms (`ThemePicker`); `space-y-2` for compact single-control fields (`ColorField`, `NumberField`). Pick by density, not preference.
-- **Label group:** `space-y-1` containing `<Label>` and a description in `text-xs text-muted-foreground`.
-- **Control:** the shadcn primitive (`<Input>`, `<Select>`, etc.). Errors surface via `aria-invalid`; the input primitive already maps that to a destructive ring — don't paint your own.
-- **Trailing metadata:** `text-[11px] text-muted-foreground` below the control (e.g., "Current: 14px · Default: 13px"), not next to the label.
+- **Label group:** `space-y-1` containing `<Label>` and a description in `text-meta text-muted-foreground` (`text-xs` inside `cn()` until it knows the type scale).
+- **Control:** the shadcn primitive (`<Input>`, `<Select>`, etc.). Errors surface via `aria-invalid`; the input primitive already maps that to a destructive border — don't paint your own. Persistent error text below a field uses `text-status-error`.
+- **Trailing metadata:** `text-caption text-muted-foreground` below the control (e.g., "Current: 14px · Default: 13px"), not next to the label.
 
 ### Scrollbars
 

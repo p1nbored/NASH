@@ -173,7 +173,7 @@ export default function RepoMultiCombobox({
               onMouseDown={(event) => event.preventDefault()}
               onMouseEnter={() => setCommandValue('')}
               className={cn(
-                'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                'flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-hover hover:text-foreground',
                 allSelected && 'opacity-80'
               )}
             >
@@ -221,7 +221,7 @@ export default function RepoMultiCombobox({
                         className="max-w-full"
                       />
                     </span>
-                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{detail}</p>
+                    <p className="mt-0.5 truncate text-caption text-muted-foreground">{detail}</p>
                   </div>
                 </CommandItem>
               )

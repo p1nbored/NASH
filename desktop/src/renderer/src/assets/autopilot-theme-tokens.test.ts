@@ -66,8 +66,43 @@ function hue(hex: string): number {
   return (raw * 60 + 360) % 360
 }
 
+function mixHex(foreground: string, background: string, weight: number): string {
+  const [fg, bg] = [channels(foreground), channels(background)]
+  return `#${fg
+    .map((value, index) =>
+      Math.round((value * weight + bg[index] * (1 - weight)) * 255)
+        .toString(16)
+        .padStart(2, '0')
+    )
+    .join('')}`
+}
+
+/** Follows `var(--x)` aliases so state tokens defined as aliases still get a measured hex. */
+function resolveHex(tokens: Record<string, string>, name: string): string {
+  const value = tokens[name]
+  const alias = /^var\((--[\w-]+)\)$/.exec(value ?? '')?.[1]
+  if (alias) {
+    return resolveHex(tokens, alias)
+  }
+  expect(value, `${name} must resolve to a hex colour`).toMatch(/^#[0-9a-f]{6}$/i)
+  return value
+}
+
+/** A `color-mix(in srgb, var(--x) N%, transparent)` tint as it renders over `surface`. */
+function tintOver(tokens: Record<string, string>, name: string, surface: string): string {
+  const match = /^color-mix\(in srgb, var\((--[\w-]+)\) (\d+)%, transparent\)$/.exec(
+    tokens[name] ?? ''
+  )
+  expect(match, `${name} must be a transparent tint of a token`).not.toBeNull()
+  const [, source, percent] = match ?? []
+  return mixHex(resolveHex(tokens, source), resolveHex(tokens, surface), Number(percent) / 100)
+}
+
 const themes = { light: block(':root'), dark: block('\\.dark') } as const
 const SECURITY_PARITY_EXCEPTIONS = new Set(['primary', 'primary-foreground'])
+const CONTROL_SURFACES = ['--background', '--card', '--popover', '--muted', '--worktree-sidebar']
+// Hover is the accent role; Tailwind maps bg-hover straight to --accent.
+const STATUS_SURFACES = [...CONTROL_SURFACES, '--accent']
 
 // Why: the frozen D12 Paper direction (decision D-009) is the product identity;
 // these checks keep later token edits from silently losing contrast or warmth.
@@ -98,6 +133,77 @@ describe('autopilot frozen theme tokens', () => {
           expect(contrast(tokens[foreground], tokens[background])).toBeGreaterThanOrEqual(minimum)
         })
       }
+
+      // Why: state colours are new semantic roles; each must stay readable wherever it lands.
+      describe('state colours', () => {
+        const hex = (name: string): string => resolveHex(tokens, name)
+
+        it('keeps ink and muted text readable on hover and selected rows', () => {
+          for (const surface of ['--accent', '--selected']) {
+            expect(contrast(hex('--foreground'), hex(surface))).toBeGreaterThanOrEqual(7)
+            expect(contrast(hex('--muted-foreground'), hex(surface))).toBeGreaterThanOrEqual(4.5)
+            expect(contrast(hex('--ring'), hex(surface))).toBeGreaterThanOrEqual(3)
+          }
+        })
+
+        it('makes a selected row a step stronger than a hovered one', () => {
+          const [hover, selected] = [hex('--accent'), hex('--selected')].map((value) =>
+            contrast(value, hex('--popover'))
+          )
+          expect(selected).toBeGreaterThan(hover)
+        })
+
+        it.each(CONTROL_SURFACES)('draws control borders at 3:1 or more on %s', (surface) => {
+          expect(contrast(hex('--control-border'), hex(surface))).toBeGreaterThanOrEqual(3)
+        })
+
+        it('keeps the control border at 3:1 against a dark-mode field fill', () => {
+          // Inputs paint `dark:bg-input/30` inside the border.
+          const fill = mixHex(hex('--input'), hex('--background'), 0.3)
+          expect(contrast(hex('--control-border'), fill)).toBeGreaterThanOrEqual(3)
+        })
+
+        it.each(CONTROL_SURFACES)(
+          'keeps disabled text legible yet quieter than muted text on %s',
+          (surface) => {
+            const disabled = contrast(hex('--disabled-foreground'), hex(surface))
+            expect(disabled).toBeGreaterThanOrEqual(3)
+            expect(disabled).toBeLessThan(contrast(hex('--muted-foreground'), hex(surface)))
+          }
+        )
+
+        for (const status of ['success', 'warning', 'error']) {
+          it.each(STATUS_SURFACES)(
+            `keeps status-${status} text at 4.5:1 on %s and on its own tint there`,
+            (surface) => {
+              const text = hex(`--status-${status}`)
+              expect(contrast(text, hex(surface))).toBeGreaterThanOrEqual(4.5)
+              const tint = tintOver(tokens, `--status-${status}-background`, surface)
+              expect(contrast(text, tint)).toBeGreaterThanOrEqual(4.5)
+              expect(contrast(hex('--foreground'), tint)).toBeGreaterThanOrEqual(7)
+            }
+          )
+
+          it(`defines the status-${status} border as a tint of its text colour`, () => {
+            expect(tokens[`--status-${status}-border`]).toBe(
+              `color-mix(in srgb, var(--status-${status}) 25%, transparent)`
+            )
+          })
+        }
+
+        it('keeps the error text in the crimson family, apart from clay', () => {
+          expect(oklabDistance(hex('--status-error'), hex('--primary'))).toBeGreaterThanOrEqual(
+            0.08
+          )
+          expect(oklabDistance(hex('--status-error'), hex('--destructive'))).toBeLessThan(0.08)
+        })
+
+        it('separates floating surfaces from the canvas with a visible edge', () => {
+          expect(contrast(hex('--floating-border'), hex('--background'))).toBeGreaterThan(
+            contrast(hex('--border'), hex('--background'))
+          )
+        })
+      })
 
       it('uses warm paper neutrals and a clay primary rather than pure greys', () => {
         expect(hue(tokens['--background'])).toBeGreaterThan(20)
@@ -142,5 +248,114 @@ describe('autopilot frozen theme tokens', () => {
   it('defines a display serif token and exposes it to Tailwind', () => {
     expect(themes.light['--app-display-font-family']).toMatch(/Georgia/)
     expect(themeBlock).toMatch(/--font-display:\s*var\(--app-display-font-family\)/)
+  })
+
+  it('maps every state colour into Tailwind', () => {
+    for (const role of [
+      'selected',
+      'disabled-foreground',
+      'status-error',
+      'status-error-background',
+      'status-error-border',
+      'floating-border',
+      'scrim'
+    ]) {
+      expect(themeBlock, role).toMatch(new RegExp(`--color-${role}:\\s*var\\(--${role}\\);`))
+    }
+    // Why: aliases resolve per element, so scoped overrides of --accent/--foreground carry through.
+    expect(themeBlock).toMatch(/--color-hover:\s*var\(--accent\);/)
+    expect(themeBlock).toMatch(/--color-selected-foreground:\s*var\(--foreground\);/)
+    expect(themeBlock).toMatch(/--color-control:\s*var\(--control-border\);/)
+    expect(themeBlock).toMatch(/--shadow-floating:\s*var\(--floating-shadow\);/)
+  })
+
+  it('defines every state colour in both themes', () => {
+    for (const tokens of Object.values(themes)) {
+      for (const name of [
+        '--selected',
+        '--control-border',
+        '--disabled-foreground',
+        '--status-error',
+        '--status-error-background',
+        '--status-error-border',
+        '--floating-border',
+        '--floating-shadow',
+        '--scrim'
+      ]) {
+        expect(tokens[name], name).toBeDefined()
+      }
+    }
+  })
+})
+
+describe('font stacks', () => {
+  const root = themes.light
+  const flat = (value: string | undefined): string => (value ?? '').replace(/\s+/g, ' ').trim()
+
+  function rule(selector: string): Record<string, string> {
+    const escaped = selector.replace(/[()]/g, '\\$&')
+    const body = new RegExp(`\\n${escaped}\\s*{([\\s\\S]*?)\\n}`).exec(mainCss)?.[1] ?? ''
+    return Object.fromEntries(
+      [...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, flat(value)])
+    )
+  }
+
+  it('keeps the user-overridable UI family Latin-only and appends CJK and generic fallbacks', () => {
+    expect(flat(root['--app-font-family'])).toBe(
+      "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI'"
+    )
+    expect(flat(root['--font-sans'])).toBe(
+      'var(--app-font-family), var(--app-cjk-font-family), sans-serif'
+    )
+  })
+
+  it('lists Simplified Chinese, Japanese and Korean system families in the default CJK stack', () => {
+    const stack = flat(root['--app-cjk-font-family'])
+    for (const family of [
+      'Microsoft YaHei UI',
+      'PingFang SC',
+      'Hiragino Sans',
+      'Yu Gothic UI',
+      'Malgun Gothic',
+      'Noto Sans CJK SC'
+    ]) {
+      expect(stack).toContain(`'${family}'`)
+    }
+  })
+
+  it.each([
+    [':root:lang(zh)', 'Microsoft YaHei UI'],
+    [':root:lang(zh-Hant),\n:root:lang(zh-TW),\n:root:lang(zh-HK)', 'Microsoft JhengHei UI'],
+    [':root:lang(ja)', 'Yu Gothic UI'],
+    [':root:lang(ko)', 'Malgun Gothic']
+  ])('%s puts its own CJK family first', (selector, family) => {
+    const tokens = rule(selector)
+    expect(tokens['--app-cjk-font-family'], selector).toMatch(new RegExp(`^'${family}'`))
+    expect(tokens['--app-cjk-serif-font-family'], selector).toBeDefined()
+  })
+
+  it('places the Traditional Chinese rule after the generic Chinese rule so it wins', () => {
+    expect(mainCss.indexOf(':root:lang(zh-Hant)')).toBeGreaterThan(
+      mainCss.indexOf(':root:lang(zh) {')
+    )
+  })
+
+  it('gives the display serif and the monospace stacks CJK fallbacks', () => {
+    const display = flat(root['--app-display-font-family'])
+    expect(display).toMatch(/^Georgia,/)
+    expect(display).toMatch(
+      /var\(--app-cjk-serif-font-family\), var\(--app-cjk-font-family\), serif$/
+    )
+    expect(flat(root['--font-mono'])).toMatch(/var\(--app-cjk-font-family\), monospace$/)
+  })
+
+  it('lists Cascadia Mono before Cascadia Code, as DESIGN.md specifies', () => {
+    const mono = root['--font-mono']
+    expect(mono.indexOf("'Cascadia Mono'")).toBeGreaterThan(-1)
+    expect(mono.indexOf("'Cascadia Mono'")).toBeLessThan(mono.indexOf("'Cascadia Code'"))
+  })
+
+  it('renders the body with the composed sans stack', () => {
+    expect(mainCss).toMatch(/\n {2}body {[^}]*font-family: var\(--font-sans\);/)
   })
 })

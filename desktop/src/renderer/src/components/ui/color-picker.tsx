@@ -79,7 +79,7 @@ export function ColorPicker({
         >
           <span
             aria-hidden="true"
-            className="size-4 rounded-[4px] border border-border/70"
+            className="size-4 rounded-sm border border-border/70"
             style={{ backgroundColor: currentColor }}
           />
           {triggerLabel ? <span className="text-xs">{triggerLabel}</span> : null}

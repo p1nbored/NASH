@@ -8,6 +8,14 @@ import {
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import { useAppStore } from '@/store'
 
+const TOAST_STYLE: React.CSSProperties & Record<`--${string}`, string> = {
+  '--normal-bg': 'var(--popover)',
+  '--normal-text': 'var(--popover-foreground)',
+  '--normal-border': 'var(--floating-border)',
+  '--border-radius': 'calc(var(--radius) + 2px)',
+  '--width': 'min(26rem, calc(100vw - 2rem))'
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
   const theme = useAppStore((s) => s.settings?.theme) || 'system'
 
@@ -30,15 +38,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         error: <OctagonXIcon className="size-4" />,
         loading: <Loader2Icon className="size-4 animate-spin" />
       }}
-      style={
-        {
-          '--normal-bg': 'var(--popover)',
-          '--normal-text': 'var(--popover-foreground)',
-          '--normal-border': 'var(--border)',
-          '--border-radius': 'var(--radius)',
-          '--width': 'min(26rem, calc(100vw - 2rem))'
-        } as React.CSSProperties
-      }
+      style={TOAST_STYLE}
       {...props}
     />
   )

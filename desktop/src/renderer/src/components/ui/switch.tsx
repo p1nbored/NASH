@@ -4,7 +4,8 @@ import { Switch as SwitchPrimitive } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const trackClassName =
-  'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-transparent p-0.5 transition-colors data-[state=checked]:bg-foreground data-[state=unchecked]:bg-muted-foreground/30'
+  // Why: the unchecked track uses the control border token so the thumb position reads at 3:1.
+  'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-transparent p-0.5 transition-colors data-[state=checked]:bg-foreground data-[state=unchecked]:bg-control'
 const thumbClassName =
   'pointer-events-none block size-3.5 translate-x-0 rounded-full bg-background shadow-sm transition-transform data-[state=checked]:translate-x-4'
 const compactTrackClassName = 'h-3.5 w-6 border-0 p-0.5'

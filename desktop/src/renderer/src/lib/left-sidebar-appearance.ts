@@ -85,6 +85,11 @@ function buildSurfaceVariables(args: {
     vars['--muted-foreground'] = `color-mix(in srgb, ${foreground} 62%, ${background})`
     // Match the global --border (7%) so sidebar-scoped dividers aren't brighter (#5906).
     vars['--border'] = `color-mix(in srgb, ${foreground} 7%, ${background})`
+    // Why: the state tokens are fixed paper hex values globally; on a tinted or terminal
+    // sidebar they must follow its colours, with controls kept near 3:1 against the surface.
+    vars['--selected'] = `color-mix(in srgb, ${foreground} 14%, ${background})`
+    vars['--control-border'] = `color-mix(in srgb, ${foreground} 52%, ${background})`
+    vars['--disabled-foreground'] = `color-mix(in srgb, ${foreground} 52%, ${background})`
   }
   return vars
 }

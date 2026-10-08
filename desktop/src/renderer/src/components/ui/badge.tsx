@@ -5,23 +5,27 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3',
+  // Why (D12): badges are 4px chips; only `counter` is a pill. Status chips pair colour with a label.
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-sm border border-transparent px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
         secondary: 'bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
-        dot: 'bg-background text-foreground border-border shadow-xs dark:bg-secondary dark:border-white/20',
-        destructive:
-          'bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90',
-        outline:
-          'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        ghost: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        dot: 'border-border bg-background text-foreground dark:border-input dark:bg-secondary',
+        destructive: 'bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90',
+        outline: 'border-border text-foreground [a&]:hover:bg-hover',
+        ghost: '[a&]:hover:bg-hover',
         link: 'text-primary underline-offset-4 [a&]:hover:underline',
+        success: 'border-status-success-border bg-status-success-background text-status-success',
+        warning: 'border-status-warning-border bg-status-warning-background text-status-warning',
+        error: 'border-status-error-border bg-status-error-background text-status-error',
+        /** Counts only (unread, queued). */
+        counter: 'min-w-5 rounded-full border-border bg-muted text-muted-foreground tabular-nums',
         /** The chip naming the machine a workspace runs on — quieter and squarer than `secondary`,
          *  so it reads as context beside a workspace name rather than as a status of its own. */
         hostContext:
-          'h-4 rounded border-border bg-accent px-1.5 text-[10px] leading-none text-muted-foreground dark:border-border/50 dark:bg-accent/80'
+          'h-4 border-border bg-accent px-1.5 text-[10px] leading-none text-muted-foreground dark:border-border/50 dark:bg-accent/80'
       }
     },
     defaultVariants: {
