@@ -2,7 +2,6 @@ import { app, BrowserWindow } from 'electron'
 import { performance } from 'node:perf_hooks'
 import { PluginService } from '../plugins/plugin-service'
 import { PluginKillListService } from '../plugins/plugin-kill-list-service'
-import { PluginMarketplaceService } from '../plugins/plugin-marketplace-service'
 import { PluginMarketplaceInstaller } from '../plugins/plugin-marketplace-installer'
 import { PluginBundledBootstrapCoordinator } from '../plugins/plugin-bundled-bootstrap-coordinator'
 import { getPluginsDataDir } from '../plugins/plugin-discovery'
@@ -14,7 +13,10 @@ import {
   normalizePluginConsents,
   normalizePluginIdList
 } from '../../shared/plugins/plugin-consent-state'
-import { ORCA_CLOUD_SERVICES_ENABLED } from '../../shared/orca-cloud-services'
+import {
+  isOrcaPluginCatalogEnabled,
+  OrcaPluginCatalogMarketplaceService
+} from './orca-plugin-catalog-adapter'
 import { projectPluginAgentStatusChangedPayload } from '../plugins/plugin-agent-status-event'
 import { setMainPluginLanguagePacks, setMainUiLanguage } from '../i18n/main-i18n'
 import { rebuildAppMenu } from '../menu/register-app-menu'
@@ -35,13 +37,15 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
     pluginsDataDir: getPluginsDataDir(app.getPath('userData'))
   })
   await state.pluginKillListService.initialize()
-  state.pluginMarketplaceService = new PluginMarketplaceService({
+  // Why: Orca's catalog is a user opt-in in NASH (D-028, D-039); off, nothing reaches Orca.
+  const isCatalogEnabled = (): boolean => isOrcaPluginCatalogEnabled(state.store?.getSettings())
+  state.pluginMarketplaceService = new OrcaPluginCatalogMarketplaceService({
     pluginsDataDir: getPluginsDataDir(app.getPath('userData')),
-    getKillListEntry: (pluginKey) => state.pluginKillListService?.find(pluginKey) ?? null
+    getKillListEntry: (pluginKey) => state.pluginKillListService?.find(pluginKey) ?? null,
+    isCatalogEnabled
   })
   const requestOfficialMarketplaceSeed = (): void => {
-    // Why: NASH clones no stablyai/orca-plugins repository (Orca cloud services off).
-    if (!ORCA_CLOUD_SERVICES_ENABLED || store.getSettings().pluginSystemEnabled !== true) {
+    if (!isCatalogEnabled() || store.getSettings().pluginSystemEnabled !== true) {
       return
     }
     void state.pluginMarketplaceService
@@ -51,8 +55,12 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
       )
   }
   const requestKillListRefresh = (): void => {
-    // Why: NASH fetches no onorca.dev safety list and keeps the cached copy (cloud services off).
-    if (!ORCA_CLOUD_SERVICES_ENABLED || !app.isPackaged) {
+    // Why: with the catalog off NASH keeps the cached safety list and fetches nothing.
+    if (
+      !isCatalogEnabled() ||
+      !app.isPackaged ||
+      store.getSettings().pluginSystemEnabled !== true
+    ) {
       return
     }
     void state.pluginKillListService
@@ -113,8 +121,10 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
     if (updates.pluginSystemEnabled === true) {
       requestBundledPluginBootstrap()
       requestOfficialMarketplaceSeed()
-    }
-    if (updates.pluginSystemEnabled === true) {
+      requestKillListRefresh()
+    } else if (updates.useOrcaPluginCatalog === true) {
+      // Why: opting in at runtime does what a plugin-system start does for the catalog.
+      requestOfficialMarketplaceSeed()
       requestKillListRefresh()
     }
   })
@@ -138,9 +148,7 @@ export async function initializeMainProcessPlugins(runtime: OrcaRuntimeService):
       })
     })
     .catch((error) => console.warn('[plugins] failed to initialize plugin service:', error))
-  if (store.getSettings().pluginSystemEnabled === true) {
-    requestKillListRefresh()
-  }
+  requestKillListRefresh()
   state.pluginService.onChanged((event) => {
     if (
       event.contentPacksChanged &&

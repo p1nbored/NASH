@@ -358,6 +358,9 @@ export type GlobalSettings = {
   pluginConsents: Record<string, string>
   /** Local directories loaded as dev-mode plugins (manifest hot-reload). */
   devPluginPaths: string[]
+  /** NASH opt-in (D-039): seed Orca's official plugin marketplace and refresh its plugin
+   *  safety list through Orca's services. Off by default (D-028). */
+  useOrcaPluginCatalog: boolean
   /** One-shot guard: start Claude Agent Teams hidden for existing profiles without overriding later opt-ins. */
   claudeAgentTeamsDefaultDisabledMigrated?: boolean
   /** Why: worktree deletion is destructive (rm -rf of the working dir), so confirm by default. */

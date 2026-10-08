@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { is } from '@electron-toolkit/utils'
 import { StarNagService } from '../star-nag/service'
+import { ORCA_STAR_PROMPT_ENABLED } from '../../shared/nash-build-flags'
 import { AgentBrowserBridge } from '../browser/agent-browser-bridge'
 import { EmulatorBridge } from '../emulator/emulator-bridge'
 import { RpcDispatcher } from '../runtime/rpc/dispatcher'
@@ -53,7 +54,11 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   })
   await initializeMainProcessPlugins(runtime)
   state.starNag = new StarNagService(store, state.stats!)
-  state.starNag.start()
+  // Why: Orca's star prompt checks stablyai/orca through `gh`; NASH hides it (D-038), so the
+  // service never starts, while its handlers stay registered for renderer calls that remain.
+  if (ORCA_STAR_PROMPT_ENABLED) {
+    state.starNag.start()
+  }
   state.starNag.registerIpcHandlers()
   state.agentBrowserBridge = new AgentBrowserBridge(browserManager, {
     onTabsChanged: (worktreeId) => runtime.notifyMobileSessionTabsChanged(worktreeId)

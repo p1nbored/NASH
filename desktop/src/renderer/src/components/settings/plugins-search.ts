@@ -15,6 +15,20 @@ export const getPluginsPaneSearchEntries = createLocalizedCatalog((): SettingsSe
       translate('auto.components.settings.plugins.search.logs', 'plugin logs'),
       translate('auto.components.settings.plugins.search.development', 'development plugins')
     ]
+  },
+  {
+    title: translate(
+      'auto.components.settings.plugins.search.orcaCatalogTitle',
+      "Use Orca's plugin catalog"
+    ),
+    description: translate(
+      'auto.components.settings.plugins.search.orcaCatalogDescription',
+      "Downloads Orca's official plugin list and plugin safety list from Orca's servers."
+    ),
+    keywords: [
+      translate('auto.components.settings.plugins.search.orcaMarketplace', 'Orca marketplace'),
+      translate('auto.components.settings.plugins.search.safetyList', 'plugin safety list')
+    ]
   }
 ])
 

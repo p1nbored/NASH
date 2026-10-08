@@ -200,6 +200,7 @@ export function buildDefaultSettings(args: {
     disabledPlugins: [],
     pluginConsents: {},
     devPluginPaths: [],
+    useOrcaPluginCatalog: false,
     claudeAgentTeamsDefaultDisabledMigrated: true,
     skipDeleteWorktreeConfirm: false,
     skipCloseTerminalWithRunningProcessConfirm: false,

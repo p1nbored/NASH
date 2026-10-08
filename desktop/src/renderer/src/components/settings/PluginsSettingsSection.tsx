@@ -328,6 +328,8 @@ export function PluginsSettingsSection({
         logsByPlugin={pluginLogs.logsByPlugin}
         devPaths={settings.devPluginPaths}
         devPathsBusy={devPathsBusy}
+        orcaCatalogEnabled={settings.useOrcaPluginCatalog === true}
+        onSetOrcaCatalog={(enabled) => updateSettings({ useOrcaPluginCatalog: enabled })}
         onToggleFeature={() => void toggleFeature()}
         onRefresh={refresh}
         onReview={setConsentPluginId}

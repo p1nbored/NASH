@@ -249,6 +249,24 @@ describe('PluginsSettingsSection lifecycle', () => {
     expect(window.api.plugins.refresh).toHaveBeenCalledOnce()
   })
 
+  it('saves the Orca plugin catalog switch as its own setting (D-039)', async () => {
+    const updateSettings = vi.fn().mockResolvedValue(undefined)
+    const { container } = await renderSection(
+      { ...getDefaultSettings('/tmp'), pluginSystemEnabled: false },
+      updateSettings
+    )
+    const catalogSwitch = container.querySelector('[aria-labelledby="orca-plugin-catalog-label"]')
+    if (!catalogSwitch) {
+      throw new Error('missing Orca plugin catalog switch')
+    }
+    expect(catalogSwitch.getAttribute('aria-checked')).toBe('false')
+
+    await act(async () => click(catalogSwitch))
+
+    expect(updateSettings).toHaveBeenCalledOnce()
+    expect(updateSettings).toHaveBeenCalledWith({ useOrcaPluginCatalog: true })
+  })
+
   it('routes enablement and confirmed removal through plugin IPC', async () => {
     const { container } = await renderSection()
     const pluginSwitch = container.querySelector('[aria-label="Disable Notes"]')
