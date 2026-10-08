@@ -683,7 +683,7 @@ module.exports = {
     ],
     // Keep local artifacts aligned with the release pipeline.
     target: ['AppImage', 'deb', 'rpm'],
-    maintainer: 'stablyai',
+    maintainer: 'pinbored',
     category: 'Utility'
   },
   appImage: {

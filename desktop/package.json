@@ -3,7 +3,7 @@
   "version": "1.4.214",
   "description": "Next-gen IDE for parallel agentic development",
   "homepage": "https://github.com/p1nbored/NASH",
-  "author": "stablyai",
+  "author": "pinbored",
   "bin": {
     "nash": "./out/cli/index.js",
     "nash-dev": "./config/scripts/orca-dev.mjs"

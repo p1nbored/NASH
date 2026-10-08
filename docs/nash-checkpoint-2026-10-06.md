@@ -43,7 +43,7 @@
 
 The Windows x64 NSIS installer is built and the actual packaged NASH executable passed isolated hidden-window startup. Native terminal ownership, packaged daemon, CLI and plugin-resource checks passed. The installer is unsigned; updates are manual while the independent update feed is unconfigured. No macOS/Linux installer or cross-platform orcad template is included in this release.
 
-Artifact: `nash-windows-setup.exe` (259,326,669 bytes). SHA-256: `b1fc1cc24ae7fbed8b2eadbcd0c51416949a2c461f4961492f6aa3cdf10b2cbb`. [Release entry](https://github.com/p1nbored/NASH/releases/tag/v1.4.214).
+Artifact: `nash-windows-setup.exe` (259,326,614 bytes). Author / Windows company metadata: `pinbored`. SHA-256: `3ecd575ff47bf25ccb5596a8e07ccffafc4fdde483960d481032e9db408ab1c2`. [Release entry](https://github.com/p1nbored/NASH/releases/tag/v1.4.214).
 
 ### 当前验证与差异文件表
 
