@@ -495,6 +495,26 @@
               }
             }
           },
+          "feature": {
+            "wall": {
+              "setup": {
+                "checklist": {
+                  "localized": {
+                    "copy": {
+                      "2cf795433b": "Start work in multiple repos",
+                      "42525ba8a4": "Bring your key repos into NASH so you can start agent work without hunting for folders.",
+                      "43781563c3": "Browse your web app without leaving NASH. Grab any element and send its exact source and styles to an agent with one click.",
+                      "46db810da8": "Choose your default agent",
+                      "908898c3ee": "Use NASH's browser",
+                      "agentSkillsDescription": "Install the skills agents use to drive NASH's browser, control your computer, and coordinate multi-step work.",
+                      "agentSkillsName": "Give agents NASH skills",
+                      "b8e5bae17f": "Start new work faster with your preferred agent already selected."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "review": {
             "animated": {
               "visual": {
@@ -668,6 +688,7 @@
           "d2dba86837": "Allow NASH in macOS"
         },
         "OnboardingFlow": {
+          "322fc50a18": "NASH works with every CLI agent. Choose the one you'll reach for most. Switch any time.",
           "35bbaf5ae0": "notifications",
           "984338477a": "theme",
           "a5e5da02f7": "integrations",
@@ -1453,6 +1474,7 @@
           "960e901ae4": "nash serve --pairing-address <host>",
           "9bc9b83474": "Pairing code",
           "9f7665a01b": "Removing the active server first switches NASH back to Local desktop. Existing host sessions are left alone.",
+          "advertiseThisAppHelp": "Create access links for browsers, mobile clients, or another NASH client to connect back to this running app.",
           "b2fda48c39": "Removing the active server disconnects this browser from that host. Existing host sessions are left alone.",
           "c3d772c514": "nash://pair?code=...",
           "e038625857": "Dev box",
@@ -1472,8 +1494,10 @@
           "2309068a6f": "destructive",
           "23931df7e8": "Remote Hosts",
           "23c6874fdf": "AI Capabilities",
+          "8acf3f22e0": "NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage.",
           "8bd117d669": "Interface",
           "9abb9be3bc": "Set Up",
+          "b5ee17826b": "Pair remote NASH runtimes for persistent sessions, richer remote state, and web or mobile handoff.",
           "dd72ed437a": "Choose which task providers appear in the Tasks page and sidebar.",
           "e1578cd4bc": "Workflows",
           "mobile_group": "Mobile"
@@ -1643,6 +1667,12 @@
             "ff8de8a2ad": "display"
           }
         },
+        "appearance": {
+          "search": {
+            "468448bba4": "watercolor",
+            "f586abfa35": "blue"
+          }
+        },
         "artifacts": {
           "account": "Orca cloud account",
           "connected": "Connected",
@@ -1761,6 +1791,11 @@
             "search": {
               "b730ff7049": "experimental"
             }
+          }
+        },
+        "plugins": {
+          "search": {
+            "orcaMarketplace": "orca marketplace"
           }
         },
         "providerAccountScope": {
@@ -1936,7 +1971,12 @@
           "9c95e1ce91": "Agents"
         },
         "SidebarSettingsHelpMenu": {
-          "d396773ef0": "checking"
+          "5687ab246a": "GitHub",
+          "5f83d86d92": "Changelog",
+          "c4f8e1b72a": "X",
+          "cdc87f897e": "Docs",
+          "d396773ef0": "checking",
+          "eb9884e55b": "Discord"
         },
         "SidebarToolbar": {
           "19e32d0e5f": "Open folder picker to add a project",
@@ -2263,6 +2303,11 @@
           "e0b988599d": "Total",
           "f6a2c8d019": "Model",
           "faf3444859": "Input"
+        },
+        "stats": {
+          "search": {
+            "26bb901fcd": "NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage."
+          }
         },
         "usage": {
           "overview": {
@@ -2646,7 +2691,9 @@
         "f6300deb8b": "New Browser Tab"
       },
       "useSettingsNavigationMetadata": {
-        "5235c215ca": "Choose which task providers appear in the Tasks page and sidebar."
+        "5235c215ca": "Choose which task providers appear in the Tasks page and sidebar.",
+        "b1c2f8b0ac": "Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.",
+        "b351014180": "NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage."
       }
     },
     "lib": {

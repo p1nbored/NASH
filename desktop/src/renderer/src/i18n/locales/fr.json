@@ -196,6 +196,11 @@
         "restartRequired": "Redémarrage requis",
         "unavailable": "L'identité du navigateur n'est pas disponible."
       }
+    },
+    "agents": {
+      "codexTerminalServerIsolation": {
+        "description": "Assure le bon fonctionnement des états et de la fermeture des onglets dans NASH. Désactivez cette option pour utiliser le serveur partagé de Codex et sa vue d'ensemble des agents. S'applique aux nouveaux terminaux."
+      }
     }
   },
   "menu": {
@@ -1075,7 +1080,9 @@
         "ef223fbb6b": "Un appareil a tenté de se connecter mais n'est pas jumelé",
         "11992d0337": "S'il s'agissait de votre téléphone ou d'un autre client NASH, réappairez-le depuis Paramètres → Mobile.",
         "6573cfe955": "Ouvrir les paramètres mobiles",
-        "unresolvedTerminalWorktreeOwner": "La création de terminal est indisponible car le propriétaire du worktree n'a pas pu être déterminé"
+        "unresolvedTerminalWorktreeOwner": "La création de terminal est indisponible car le propriétaire du worktree n'a pas pu être déterminé",
+        "unpairedDeviceServersDescription": "S'il s'agissait d'un autre client NASH, partagez à nouveau ce serveur avec lui dans Paramètres → Serveurs NASH distants.",
+        "openServerSettings": "Ouvrir les paramètres du serveur"
       },
       "useSettingsNavigationMetadata": {
         "4a728cd56b": "Nouvelles fonctionnalités encore en cours de construction. Essayez-les.",
@@ -1159,7 +1166,15 @@
         "automationsDescription": "Planifiez le travail des agents et choisissez si Automatisations apparaît dans la barre latérale.",
         "shareSkillsTitle": "Partage de skills",
         "shareSkillsDescription": "Partagez vos skills avec un lien non répertorié. Toute personne qui l'a peut les installer.",
-        "floatingWorkspaceWebDescription": "Onglets globaux de terminal et de markdown."
+        "floatingWorkspaceWebDescription": "Onglets globaux de terminal et de markdown.",
+        "taskRoutingTitle": "Routage des tâches",
+        "taskRoutingDescription": "Choisissez l'agent, le modèle et l'effort utilisés pour chaque type de tâche.",
+        "dotTitle": "Dot",
+        "dotDescription": "Autorisez ChatGPT dot à envoyer des tâches à NASH.",
+        "statsDescription": "Activité de NASH et consommation de tokens par agent.",
+        "serversDescription": "Associez NASH sur d'autres machines pour y maintenir les sessions en cours.",
+        "accountsDescription": "Facultatif. Basculez entre les comptes enregistrés pour Codex, Antigravity et d'autres outils CLI, et consultez leur consommation.",
+        "serversWebDescription": "Connectez ce navigateur à un serveur NASH enregistré."
       },
       "useAppMenuPaste": {
         "pasteTooLarge": "Le collage est trop volumineux."
@@ -4092,6 +4107,12 @@
             "resumingAriaOne": "Reprise d’1 conversation. Cliquez pour voir les détails.",
             "resumingAria": "Reprise de {{value0}} conversations. Cliquez pour voir les détails.",
             "resumingTooltip": "Restauration des conversations interrompues et demande de poursuite…"
+          },
+          "usageReadingSource": {
+            "claudeStatusLine": "Ligne d'état de Claude Code",
+            "codexAppServer": "codex app-server",
+            "agyUsage": "agy /usage",
+            "from": "Source : {{source}}"
           }
         }
       },
@@ -4339,7 +4360,8 @@
             "d6e9f0a1b2": "crédits",
             "a3b6c7d8e9": "utilisation grok",
             "9f2a3b4c5d": "xai",
-            "museKeyword": "muse"
+            "museKeyword": "muse",
+            "nashActivityDescription": "Activité de NASH et consommation de tokens par agent."
           }
         },
         "usage": {
@@ -5433,7 +5455,10 @@
           "fee535205b": "Tâches",
           "d599269755": "Masquer de la barre latérale",
           "artifacts": "Artefacts",
-          "skills": "Skills"
+          "skills": "Skills",
+          "rsiLab": "Labo RSI",
+          "rsiImprovements": "Améliorations",
+          "rsiNotConnected": "Non connecté"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "Effacer",
@@ -5463,7 +5488,9 @@
           "d396773ef0": "vérification",
           "f8a2c91d4e": "Jalons",
           "b7e4d2a19c": "Prise en main",
-          "c4f8e1b72a": "X"
+          "c4f8e1b72a": "X",
+          "reportIssue": "Signaler un problème",
+          "source": "Code source"
         },
         "SidebarToolbar": {
           "87d0064026": "Tableau des espaces de travail déplacé dans la barre inférieure",
@@ -7345,7 +7372,8 @@
           "3394d1f663": "vérification",
           "d69a09b672": "Les mises à jour sont vérifiées automatiquement au lancement.",
           "7173352632": "idle",
-          "e3b9d21c07": "est disponible. Mettez à jour NASH via votre gestionnaire de packages système – NASH ne peut pas installer cette version lui-même."
+          "e3b9d21c07": "est disponible. Mettez à jour NASH via votre gestionnaire de packages système – NASH ne peut pas installer cette version lui-même.",
+          "updateFeedUnavailable": "Les mises à jour ne sont pas disponibles dans cette version."
         },
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "Choisissez les applications proposées dans le menu « Ouvrir dans » d'un espace de travail.",
@@ -8250,7 +8278,8 @@
           "serverWorkspaceWindowClosed": "Fenêtre de l'espace de travail fermée",
           "serverRuntimeUnavailable": "NASH indisponible",
           "serverRuntimeUnavailableDescription": "Le transport SSH est connecté, mais le runtime NASH n'a pas répondu. L'hôte est peut-être toujours en cours d'exécution.",
-          "serverReconnecting": "Reconnexion"
+          "serverReconnecting": "Reconnexion",
+          "advertiseThisAppHelpDesktop": "Créez des liens d'accès pour qu'un navigateur ou un autre client NASH puisse se connecter à cette application."
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "Copier {{value0}}"
@@ -8616,7 +8645,9 @@
           "addTitle": "Ajouter un hôte SSH",
           "editDescription": "Mettez à jour les détails de connexion de cette machine. Les modifications s'appliquent à la prochaine connexion.",
           "addDescription": "Ajoutez une machine permanente sur laquelle vous pouvez vous connecter en SSH.",
-          "editingPrefix": "Modification"
+          "editingPrefix": "Modification",
+          "remoteRuntimeHelp": "Choisissez le Node.js qui exécute NASH sur cet hôte. L'option gérée par NASH transfère sa propre version et ne nécessite pas npm ; l'option de l'hôte utilise le Node.js déjà installé.",
+          "remoteRuntimePinnedNode": "Node géré par NASH"
         },
         "TasksPane": {
           "f71d8a9dd3": "Fournisseurs de tâches",
@@ -8797,7 +8828,9 @@
             "fastDescription": "Multiplicateur supplémentaire lors du défilement avec une touche modificateur.",
             "tui": "TUI",
             "tuiDescription": "Rapports de molette discrets pour les applications de terminal plein écran."
-          }
+          },
+          "defaultShellDescription": "Choisissez ce que NASH ouvre dans les nouveaux volets de terminal locaux.",
+          "customShellHelp": "Saisissez le nom d'un shell disponible dans PATH ou le chemin d'un exécutable. NASH le démarre comme shell de connexion."
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "Prévisualiser le thème {{value0}}",
@@ -9974,7 +10007,29 @@
             "7166b9090c": "Authentification GitHub via la CLI gh.",
             "f16e41cc72": "Intégration GitHub",
             "760e2446e0": "Authentification Bitbucket Cloud avec un jeton API enregistré ou des variables d'environnement.",
-            "af5ae87847": "jeton d'accès"
+            "af5ae87847": "jeton d'accès",
+            "clefRoutingDescription": "Enregistrez le jeton d'API Clef et l'identifiant de compte utilisés pour router les demandes du Workbench.",
+            "clef": "clef",
+            "routing": "routage",
+            "cloudflare": "cloudflare",
+            "workbench": "workbench",
+            "accountId": "identifiant de compte",
+            "routingTableKeyword": "table de routage",
+            "model": "modèle",
+            "reasoning": "raisonnement",
+            "proposal": "proposition",
+            "executor": "exécuteur",
+            "dotIngress": "Tâches de dot",
+            "dotIngressDescription": "Activez ou désactivez l'interface locale de dot, choisissez les espaces de travail accessibles et leur niveau d'accès maximal, et définissez les limites d'envoi.",
+            "dot": "dot",
+            "workspaceWrite": "écriture dans l'espace de travail",
+            "readOnly": "lecture seule",
+            "rateLimit": "limite de fréquence",
+            "submissionLimit": "limite d'envoi",
+            "remoteAccess": "accès distant",
+            "gptSites": "GPT Sites",
+            "pairing": "appairage",
+            "accessToken": "jeton d'accès"
           }
         },
         "jira": {
@@ -11393,7 +11448,8 @@
           "manageConnectionLink": "Intégrations"
         },
         "MobileRelayBetaNotice": {
-          "notice": "Orca Relay est en bêta."
+          "notice": "Orca Relay est en bêta.",
+          "nashUnavailable": "Orca Relay et les notifications push mobiles ne sont pas disponibles dans les versions de NASH."
         },
         "EditorFontFamilySetting": {
           "title": "Police de l'éditeur",
@@ -11663,7 +11719,9 @@
           "experimental": "Expérimental",
           "description": "Installez et gérez les plugins NASH. Les plugins s'exécutent sur cet ordinateur, même pour les espaces de travail SSH.",
           "logsFailed": "Impossible de charger les logs du plugin.",
-          "rollbackFailed": "Impossible de restaurer ce plugin. Une version immuable précédente n'est peut-être pas disponible."
+          "rollbackFailed": "Impossible de restaurer ce plugin. Une version immuable précédente n'est peut-être pas disponible.",
+          "orcaCatalogLabel": "Utiliser le catalogue de plugins d'Orca",
+          "orcaCatalogDescription": "Télécharge la liste officielle des plugins d'Orca et leur liste de sécurité depuis les serveurs d'Orca."
         },
         "PluginSettingsRow": {
           "blocked": "Bloquée",
@@ -11722,7 +11780,11 @@
             "install": "installer le plugin",
             "permissions": "permissions du plugin",
             "logs": "logs du plugin",
-            "development": "plugins de développement"
+            "development": "plugins de développement",
+            "orcaCatalogTitle": "Utiliser le catalogue de plugins d'Orca",
+            "orcaCatalogDescription": "Télécharge la liste officielle des plugins d'Orca et leur liste de sécurité depuis les serveurs d'Orca.",
+            "orcaMarketplace": "marketplace orca",
+            "safetyList": "liste de sécurité des plugins"
           }
         },
         "LinearAgentSkillGuide": {
@@ -11944,7 +12006,8 @@
           "keywordSignIn": "se connecter",
           "keywordSignOut": "se déconnecter",
           "keywordRelay": "relais",
-          "keywordCloud": "nuage"
+          "keywordCloud": "nuage",
+          "nashUnavailable": "La connexion à Orca Cloud n'est pas disponible dans les versions de NASH."
         },
         "automations": {
           "showButton": "Afficher le bouton Automatisations",
@@ -12150,6 +12213,613 @@
           "usageDescription": "Cursor facture deux enveloppes qui se réinitialisent avec votre cycle de facturation, plus des dépenses à la demande une fois épuisées.",
           "usageLabel": "Utilisation",
           "usageTitle": "Utilisation mensuelle du forfait"
+        },
+        "UnsealedCredentialNotice": {
+          "body": "{{credential}} est enregistré sans chiffrement : ce système ne dispose d'aucun trousseau système utilisable par NASH. Toute personne pouvant lire votre disque ou une sauvegarde peut lire cet identifiant. Installez et déverrouillez gnome-keyring ou kwallet, puis enregistrez-le à nouveau pour le protéger."
+        },
+        "ZcodePlanAccountsSection": {
+          "usingCliHelp": "NASH lit la clé Coding Plan dans ~/.zcode/cli/config.json. Vous pouvez plutôt enregistrer une clé d'API ci-dessous pour associer l'offre ici.",
+          "hostOnly": "Modifiez le site de l'offre et la clé d'API dans l'application de bureau sur l'ordinateur qui exécute NASH.",
+          "detailsUnavailable": "Les détails des identifiants de l'offre ne sont consultables que sur l'ordinateur qui exécute NASH."
+        },
+        "clef": {
+          "clear": {
+            "action": "Effacer les identifiants",
+            "title": "Effacer les identifiants Clef ?",
+            "cancel": "Annuler",
+            "descriptionPlain": "Le jeton d'API et l'identifiant de compte enregistrés seront supprimés de cet ordinateur. Clef ne pourra plus classer les tâches tant que vous n'en aurez pas enregistré de nouveaux."
+          },
+          "form": {
+            "show": "Afficher",
+            "label": "Identifiants Clef",
+            "tokenLabel": "Jeton d'API",
+            "showToken": "Afficher le jeton d'API",
+            "accountLabel": "Identifiant de compte",
+            "showAccount": "Afficher l'identifiant de compte",
+            "save": "Enregistrer les identifiants",
+            "tokenDescriptionPlain": "Depuis votre tableau de bord Cloudflare, avec un accès à Workers AI.",
+            "accountDescriptionPlain": "Votre identifiant de compte Cloudflare de 32 caractères.",
+            "cancel": "Annuler"
+          },
+          "credentials": {
+            "tokenMissing": "Saisissez le jeton d'API.",
+            "tokenTooShort": "Le jeton d'API est trop court ; rien n'a été enregistré. Collez le jeton complet.",
+            "tokenTooLong": "Le jeton d'API est trop long ; rien n'a été enregistré. Collez uniquement le jeton.",
+            "tokenInvalidCharacters": "Le jeton d'API ne peut contenir que des caractères ASCII visibles, sans espaces ; rien n'a été enregistré.",
+            "accountIdMissing": "Saisissez l'identifiant de compte.",
+            "accountIdInvalid": "L'identifiant de compte doit comporter 32 caractères hexadécimaux minuscules ; rien n'a été enregistré.",
+            "writeFailed": "Impossible d'écrire les identifiants sur le disque ; rien n'a été enregistré.",
+            "clearFailed": "Certains identifiants enregistrés n'ont pas pu être supprimés. Réessayez de les effacer.",
+            "saveCallFailed": "Les identifiants n'ont pas pu être enregistrés, car NASH n'a pas reçu de réponse. Saisissez-les à nouveau pour réessayer.",
+            "clearCallFailed": "NASH n'a pas pu confirmer l'effacement des identifiants. Vérifiez l'état ci-dessus et réessayez.",
+            "missingFields": "Saisissez le jeton d'API et l'identifiant de compte.",
+            "cleared": "Le jeton d'API et l'identifiant de compte ont été supprimés de cet ordinateur.",
+            "sealingUnavailablePlain": "Cet ordinateur ne peut pas stocker le jeton de façon sécurisée ; il n'a donc pas été enregistré.",
+            "savedPlain": "Enregistré. Le jeton ne sera plus jamais affiché."
+          },
+          "status": {
+            "unavailable": "État indisponible",
+            "saved": "Identifiants enregistrés",
+            "incomplete": "Incomplet",
+            "accountMissing": "Jeton d'API enregistré ; identifiant de compte manquant",
+            "tokenMissing": "Identifiant de compte enregistré ; jeton d'API manquant",
+            "readFailed": "Impossible de déterminer si des identifiants Clef sont enregistrés.",
+            "notProtected": "Non protégé",
+            "notSetUp": "Non configuré",
+            "notProtectedDetail": "Les identifiants enregistrés ne sont pas protégés ; NASH ne les utilise donc pas. Effacez-les puis enregistrez-les à nouveau."
+          },
+          "card": {
+            "title": "Clef",
+            "descriptionPlain": "Clef classe chaque tâche par type pour l'envoyer à l'agent choisi pour ce type."
+          },
+          "verification": {
+            "blockPaused": "La vérification est suspendue : {{reason}}.",
+            "verify": "Vérifier",
+            "verifying": "Vérification…",
+            "status": {
+              "notConfigured": "Non configuré",
+              "notConfiguredDetail": "Enregistrez d'abord le jeton d'API et l'identifiant de compte.",
+              "contractUnverified": "En attente de vérification",
+              "ready": "Prêt",
+              "readyDetail": "Clef peut classer les tâches.",
+              "unreachable": "Injoignable",
+              "unreachableDetail": "Les derniers appels n'ont pas pu joindre Clef.",
+              "circuitOpen": "Suspendu après des échecs",
+              "circuitOpenDetail": "Les appels sont suspendus après des échecs répétés et reprendront automatiquement.",
+              "quotaLatched": "Quota épuisé",
+              "quotaLatchedDetail": "Clef a signalé que son quota est épuisé ; les appels reprendront après 00:00 UTC.",
+              "authFailed": "Identifiants refusés",
+              "authFailedDetail": "Clef a refusé les identifiants enregistrés. Enregistrez-en de nouveaux ci-dessus.",
+              "sealingUnavailablePlain": "Impossible de stocker les identifiants",
+              "sealingUnavailableDetailPlain": "Cet ordinateur ne peut pas stocker les identifiants de façon sécurisée ; Clef ne peut donc pas être utilisé.",
+              "contractUnverifiedDetailPlain": "Cliquez sur Vérifier pour contrôler que Clef répond au format attendu.",
+              "identityUnpinnedPlain": "Modèle non confirmé",
+              "identityUnpinnedDetailPlain": "Vérifiez à nouveau, puis utilisez un résultat qui indique le modèle ayant répondu."
+            },
+            "problems": {
+              "httpStatus": "Clef n'a pas répondu avec le code HTTP 200.",
+              "envelopeUnrecognized": "L'enveloppe de réponse a une structure inconnue.",
+              "envelopeNotSuccessful": "L'enveloppe de réponse signale un échec.",
+              "responseModelUnobserved": "La réponse n'indique pas le modèle ayant répondu.",
+              "responseModelDisallowed": "La réponse indique un modèle non autorisé.",
+              "answerKeysMismatch": "Les réponses ne correspondent pas aux questions posées.",
+              "optionIdsNotEchoed": "Les réponses ne reprennent pas exactement les identifiants des options.",
+              "probabilityOutOfRange": "Une probabilité est en dehors de l'intervalle de 0 à 1.",
+              "probabilitySum": "La somme des probabilités d'une question n'est pas égale à 1.",
+              "usageMissing": "La réponse n'indique pas la consommation de tokens.",
+              "resultIncomplete": "Le résultat n'est pas assez complet pour être utilisé."
+            },
+            "blockers": {
+              "classifierUnavailable": "Clef n'a pas pu être utilisé",
+              "invalidOutput": "La réponse de Clef n'était pas valide",
+              "missingInputs": "La tâche nécessite des précisions",
+              "ambiguous": "La réponse était ambiguë",
+              "launchBlocked": "L'exécution n'a pas pu démarrer",
+              "notConfigured": "les identifiants ne sont pas configurés",
+              "identityUnpinned": "le modèle de réponse n'est pas fixé",
+              "transientExhausted": "les échecs temporaires ont épuisé les nouvelles tentatives",
+              "quotaExhausted": "le quota de Clef est épuisé",
+              "budgetExhausted": "aucune tentative supplémentaire n'était autorisée",
+              "authOrAccount": "les identifiants ou le compte ont été refusés",
+              "modelUnavailable": "le modèle de Clef est indisponible",
+              "requestRejected": "Clef a refusé la demande",
+              "dataBoundary": "les règles d'accès aux données n'autorisent pas ce contenu",
+              "possibleTruncation": "la réponse a peut-être été tronquée",
+              "identityMismatch": "un autre modèle que celui fixé a répondu",
+              "interrupted": "l'appel a été interrompu",
+              "estimateExceeded": "la taille de la demande dépassait les limites autorisées",
+              "contractUnverified": "le format de réponse n'est pas vérifié",
+              "schemaViolation": "la réponse ne respectait pas le schéma attendu",
+              "lowMargin": "la réponse en tête ne se démarquait pas assez",
+              "needsClarification": "la tâche ne précise pas le type de travail demandé",
+              "choiceOutside": "la réponse a choisi une option qui n'était pas proposée",
+              "inconsistentTypeProfile": "le type de tâche et le profil ne correspondent pas",
+              "requiredProfile": "le profil requis est indisponible",
+              "nonEnglish": "l'objectif n'est pas en anglais",
+              "inProgress": "un classement est déjà en cours",
+              "emptySet": "aucune option n'était admissible",
+              "inconsistentDelegation": "une délégation a été demandée pour un travail conservé par le coordinateur",
+              "coordinatorRoute": "le routage du coordinateur est indisponible",
+              "launchRefused": "le lancement a été refusé",
+              "launchUnverifiable": "le lancement n'a pas pu être vérifié",
+              "noEligibleAgent": "Aucun agent ne pouvait prendre la tâche"
+            },
+            "errors": {
+              "credentialsMissing": "Enregistrez le jeton d'API Clef et l'identifiant de compte avant la vérification.",
+              "authFailed": "Clef a refusé les identifiants enregistrés. Enregistrez-en de nouveaux avant la vérification.",
+              "quotaLatched": "Clef a signalé que son quota est épuisé. La vérification est suspendue jusqu'à 00:00 UTC.",
+              "circuitOpen": "Les appels à Clef sont suspendus après des échecs répétés. Réessayez dans quelques minutes.",
+              "inProgress": "Une vérification est déjà en cours.",
+              "requestInvalid": "La demande de vérification n'a pas pu être préparée ; rien n'a été envoyé.",
+              "clefUnavailable": "La vérification de Clef est indisponible pour le moment.",
+              "routingNotConfigured": "La vérification de Clef est indisponible dans cette session.",
+              "forbidden": "Seule l'application de bureau sur cet ordinateur peut vérifier Clef.",
+              "notConnected": "La vérification de Clef n'est pas raccordée dans cette version.",
+              "callFailed": "La demande de vérification n'a pas abouti. Vérifiez l'état et réessayez.",
+              "invalidResponse": "L'application a renvoyé un résultat de vérification que cet écran ne peut pas lire.",
+              "credentialsUnprotected": "Les identifiants enregistrés ne sont pas protégés et ne sont donc pas utilisés. Effacez-les puis enregistrez-les à nouveau.",
+              "resultUnconfirmed": "Ce résultat n'est plus le plus récent. Relancez la vérification avant de l'utiliser.",
+              "resultNotUsable": "Ce résultat ne peut pas être utilisé.",
+              "resultWriteFailed": "Le résultat n'a pas pu être enregistré. Réessayez."
+            },
+            "pending": {
+              "title": "En attente de votre confirmation",
+              "thresholds": "Seuils de confiance : une tâche est considérée comme déléguée à partir de {{yes}} et comme conservée à {{no}} ou moins ; son type doit devancer le deuxième choix de {{margin}}.",
+              "wording": "Libellés des réponses : les {{options}} options de type de tâche et les {{answers}} réponses de délégation.",
+              "effectPlain": "Ce sont les valeurs par défaut. Toute modification nécessite une nouvelle vérification de Clef."
+            },
+            "report": {
+              "failedReason": "{{reason}} : {{detail}}.",
+              "titlePlain": "Résultat de la vérification",
+              "passed": "Clef a répondu au format attendu.",
+              "notUsable": "Ce résultat ne peut pas être utilisé :",
+              "useResult": "Utiliser ce résultat",
+              "failedTitlePlain": "Échec de la vérification"
+            },
+            "blockStatusPlain": "L'état de Clef n'a pas pu être lu.",
+            "blockCredentialsPlain": "Enregistrez d'abord le jeton d'API et l'identifiant de compte.",
+            "otherBundlePlain": "Les questions de Clef ont changé depuis la dernière vérification. Vérifiez à nouveau.",
+            "lastVerified": "Dernière vérification : {{time}}.",
+            "titlePlain": "Vérification",
+            "pinnedPlain": "Résultat enregistré. État de Clef : {{status}}."
+          },
+          "saved": {
+            "label": "Identifiants",
+            "description": "Enregistrés sur cet ordinateur. Ils ne seront plus jamais affichés.",
+            "replace": "Remplacer"
+          }
+        },
+        "routingTable": {
+          "card": {
+            "refresh": "Actualiser",
+            "unavailable": "Indisponible",
+            "blocked": "Bloqué",
+            "blockedTitle": "Le routage est bloqué",
+            "pendingNotice": "Modifications suggérées à examiner : {{count}}",
+            "review": "Examiner",
+            "title": "Agents pour chaque tâche"
+          },
+          "active": {
+            "versionActive": "Version {{version}} active",
+            "created": "créée {{time}}"
+          },
+          "availability": {
+            "available": "Disponible",
+            "unavailable": "Indisponible",
+            "notChecked": "Non contrôlé",
+            "unverified": "Non vérifié",
+            "awaiting": "Cela repose sur une valeur par défaut en attente de votre confirmation.",
+            "reasons": {
+              "cliMissing": "L'outil CLI n'est pas installé.",
+              "cliDisabled": "L'outil CLI est désactivé dans les paramètres.",
+              "cliNotLaunchable": "L'outil CLI est installé, mais ne peut pas démarrer.",
+              "modelNotListed": "Ce modèle n'est pas proposé à votre compte.",
+              "modelExcluded": "Ce nom de modèle n'est pas autorisé ici : il s'agit d'un alias ou d'un modèle exclu.",
+              "reasoningUnsupported": "Le modèle ne prend pas en charge ce niveau de raisonnement.",
+              "notEntitled": "Votre offre n'inclut pas ce modèle.",
+              "workspaceNotGit": "Codex a besoin d'un dossier d'espace de travail pour s'exécuter ; le terminal flottant n'en a pas.",
+              "cliUnobserved": "Les outils CLI installés n'ont pas pu être détectés.",
+              "modelListUnavailable": "La liste des modèles n'a pas pu être lue.",
+              "reasoningUnverified": "Le niveau de raisonnement n'a pas pu être confirmé pour ce modèle.",
+              "authUnobserved": "La connexion au compte n'a pas pu être confirmée.",
+              "authFailedPlain": "Échec de la connexion au compte. Reconnectez-vous à l'outil CLI, puis vérifiez la disponibilité.",
+              "quotaExhaustedPlain": "La limite d'utilisation est atteinte. Le blocage sera levé lorsqu'un nouveau relevé confirmera sa réinitialisation ; vous pouvez aussi vérifier la disponibilité après la réinitialisation.",
+              "recordDamagedPlain": "Le dernier contrôle de disponibilité n'a pas pu être lu. Vérifiez à nouveau la disponibilité.",
+              "notCheckedPlain": "Aucun contrôle récent."
+            },
+            "summaryPlain": "Contrôle effectué : {{available}} disponibles, {{unavailable}} indisponibles, {{unverified}} non vérifiés.",
+            "checksUnavailablePlain": "Les contrôles de disponibilité sont indisponibles pour le moment. Redémarrez l'application.",
+            "checkingPlain": "Vérification…",
+            "checkPlain": "Vérifier la disponibilité"
+          },
+          "proposals": {
+            "evidence": "Sources : {{sources}}",
+            "becomes": "devient",
+            "none": "aucun",
+            "noReviewers": "aucun réviseur",
+            "coordinator": "Coordinateur",
+            "staleTitle": "Prévue pour une ancienne version",
+            "accept": "Accepter",
+            "edit": "Modifier et accepter",
+            "reject": "Rejeter",
+            "noRowPlain": "non défini",
+            "notesOnlyPlain": "Même choix ; seules ses notes changent.",
+            "metaPlain": "{{time}} · basée sur la version {{version}}",
+            "staleBodyPlain": "La version {{active}} est maintenant utilisée ; cette modification ne peut plus être acceptée. Rejetez-la ou refaites la modification dans la liste ci-dessus.",
+            "historyPlain": "Décisions prises ({{count}})",
+            "pendingTitlePlain": "Modifications suggérées",
+            "noneWaitingPlain": "Aucune en attente. Rien ne change tant que vous n'acceptez pas une suggestion."
+          },
+          "versions": {
+            "title": "Historique des versions",
+            "version": "Version {{version}}",
+            "active": "(active)",
+            "revertTo": "Revenir à la version {{version}}",
+            "revert": "Rétablir",
+            "confirmTitle": "Revenir à la version {{version}} ?",
+            "confirmBody": "Le contenu de la version {{version}} devient une nouvelle version active. La version {{active}} reste dans l'historique pour que vous puissiez y revenir.",
+            "cancel": "Annuler"
+          },
+          "editor": {
+            "coordinator": "Coordinateur",
+            "coordinatorModel": "Modèle du coordinateur",
+            "taskType": "Type de tâche",
+            "model": "Modèle",
+            "requirement": "Exigence",
+            "required": "Obligatoire",
+            "whenSupported": "Si pris en charge",
+            "modelFor": "Modèle pour {{task}}",
+            "cancel": "Annuler",
+            "acceptModified": "Accepter les modifications",
+            "geminiExcluded": "Les modèles Gemini 4 sont exclus du routage.",
+            "aliasUnpinned": "Saisissez un identifiant de modèle exact, et non un alias tel que opus ou latest.",
+            "slugRejected": "Cet identifiant de modèle est retiré ou refusé. Saisissez un autre identifiant de modèle exact.",
+            "modelInvalid": "Saisissez un identifiant de modèle exact, par exemple claude-sonnet-5-5.",
+            "onlyPrimaryInherits": "Seuls la session principale Claude et les workflows Claude peuvent hériter des paramètres du coordinateur.",
+            "primaryInherits": "La session principale Claude utilise toujours les paramètres du coordinateur : choisissez Hériter pour le modèle et le raisonnement.",
+            "coordinatorStays": "Le raisonnement du coordinateur reste toujours dans la session principale Claude.",
+            "ifSupportedConcrete": "« Si pris en charge » nécessite un niveau de raisonnement précis, et non Hériter.",
+            "rowInvalid": "Cette ligne n'est pas valide. Vérifiez sa cible, son modèle et son niveau de raisonnement.",
+            "nothingChanged": "La table active resterait inchangée. Modifiez d'abord au moins une règle de routage.",
+            "modifyTitlePlain": "Modifier avant d'accepter",
+            "modifyBodyPlain": "Vos modifications remplacent la suggestion. Elles prennent effet lorsque vous les acceptez.",
+            "agentFor": "Agent pour {{task}}",
+            "effortFor": "Effort pour {{task}}",
+            "effortRequirementFor": "Exigence d'effort pour {{task}}",
+            "agent": "Agent",
+            "effort": "Effort"
+          },
+          "import": {
+            "title": "Importer un ensemble de modifications",
+            "jsonLabel": "Ensemble de modifications (JSON)",
+            "reasonLabel": "Motif de la modification",
+            "cancel": "Annuler",
+            "reasonMissing": "Saisissez un bref motif en anglais pour cette modification.",
+            "bodyPlain": "L'ensemble sera ajouté aux modifications suggérées, où vous pourrez l'examiner et l'accepter.",
+            "submitPlain": "Importer",
+            "noActivePlain": "Le routage des tâches est indisponible ; aucune importation n'est possible.",
+            "notJsonPlain": "Ce JSON n'est pas valide. Collez l'ensemble complet de modifications.",
+            "invalidPlain": "Cet ensemble de modifications contient une valeur inutilisable. Vérifiez chaque agent, modèle et effort."
+          },
+          "notices": {
+            "activated": "La version {{version}} est maintenant active.",
+            "reverted": "La version {{version}} est maintenant active, avec le contenu de la version {{from}}.",
+            "rejectedPlain": "Modification suggérée rejetée.",
+            "importedPlain": "Ajouté aux modifications suggérées. Acceptez-le à cet endroit pour l'utiliser.",
+            "saved": "Enregistré."
+          },
+          "refusals": {
+            "duplicateActivePlain": "Ces choix sont déjà utilisés ; rien n'a été enregistré.",
+            "duplicatePendingPlain": "La même modification figure déjà dans les modifications suggérées. Examinez-la à cet endroit.",
+            "integrityFailedPlain": "Le routage des tâches enregistré n'a pas pu être lu ; aucune tâche n'est donc routée. Aucune valeur par défaut n'est utilisée à sa place.",
+            "taxonomyMismatchPlain": "Le routage enregistré correspond à une autre liste de tâches et ne peut pas être utilisé. Importez un routage pour les tâches actuelles dans les options avancées.",
+            "notInstalledPlain": "Le routage des tâches n'est pas encore configuré. Redémarrez l'application pour installer les valeurs par défaut.",
+            "invalidTablePlain": "Cette modification rendrait le routage des tâches invalide ; elle n'a pas été enregistrée.",
+            "versionConflictPlain": "Le routage des tâches a changé pendant l'enregistrement. Réessayez.",
+            "forbiddenCallerPlain": "Le routage des tâches ne peut être modifié que dans cette application.",
+            "proposalUnknownPlain": "Cette modification suggérée n'existe plus.",
+            "proposalInvalidPlain": "Cette modification suggérée ne peut pas être lue ; elle ne peut donc pas être acceptée.",
+            "alreadyDecidedPlain": "Une décision a déjà été prise pour cette modification suggérée.",
+            "proposalSupersededPlain": "Cette suggestion concernait d'anciens choix ; elle a été écartée et rien n'a changé.",
+            "noChangePlain": "Tous les choix resteraient identiques ; rien n'a changé.",
+            "forbiddenProposerPlain": "Ce type de modification ne peut pas être soumis ici.",
+            "invalidProposalPlain": "Cette modification n'est pas valide ; elle n'a pas été enregistrée.",
+            "baseNotActivePlain": "Le routage des tâches a changé depuis la préparation de cette modification. Réessayez.",
+            "tooManyPendingPlain": "Trop de modifications suggérées sont en attente. Acceptez-en ou rejetez-en d'abord dans les options avancées.",
+            "versionUnknownPlain": "Cette ancienne version n'existe plus.",
+            "unknownPlain": "Le routage des tâches a refusé cette modification.",
+            "invalidResponsePlain": "La réponse de l'application n'a pas pu être lue ici.",
+            "notConnectedPlain": "Le routage des tâches est indisponible dans cette version.",
+            "unavailablePlain": "Le routage des tâches est indisponible pour le moment. Redémarrez l'application.",
+            "untrustedCallerPlain": "Le routage des tâches ne peut être consulté ou modifié que dans l'application de bureau sur cet ordinateur.",
+            "callFailedPlain": "La demande n'a pas abouti. Réessayez."
+          },
+          "labels": {
+            "coordinatorReasoning": "Raisonnement du coordinateur",
+            "complexPlanningReasoning": "Planification et raisonnement complexes",
+            "softwareEngineering": "Génie logiciel",
+            "scientificExperimentValidation": "Validation d'expériences scientifiques",
+            "complexPdfEvidenceAnalysis": "Analyse complexe de PDF et d'éléments probants",
+            "generalResearchAnalysis": "Recherche et analyse générales",
+            "routineAnalysisBatch": "Lot d'analyses courantes",
+            "highQualityWriting": "Rédaction de haute qualité",
+            "fastWritingOrAlternativeDraft": "Rédaction rapide ou variante de brouillon",
+            "configuredProjectWorkflow": "Workflow de projet configuré",
+            "claudePrimary": "Session principale Claude",
+            "claudeSubagent": "Sous-agent Claude",
+            "claudeWorkflow": "Workflow Claude",
+            "codexCli": "Codex CLI",
+            "agyCli": "agy CLI",
+            "claudeHeadless": "Revue Claude sans interface",
+            "none": "Aucun",
+            "minimal": "Minimal",
+            "low": "Faible",
+            "medium": "Moyen",
+            "high": "Élevé",
+            "xhigh": "Très élevé",
+            "max": "Max",
+            "ultra": "Ultra",
+            "inherit": "Hériter",
+            "whenSupported": "(si pris en charge)",
+            "bundledUpdate": "Mise à jour de l'application",
+            "benchmarkReview": "Revue des benchmarks",
+            "agent": "Agent",
+            "userImport": "Votre modification",
+            "accepted": "Acceptée",
+            "acceptedModified": "Acceptée avec modifications",
+            "rejected": "Rejetée",
+            "superseded": "Remplacée",
+            "sourceBundled": "Valeur par défaut de l'application",
+            "sourceUser": "Votre table",
+            "sameAsCoordinator": "Comme le coordinateur"
+          },
+          "inline": {
+            "edit": "Modifier",
+            "reviewersTitle": "Réviseurs",
+            "reviewersHelp": "Examinent le travail terminé qui ne dispose pas de contrôle automatique.",
+            "noReviewers": "Aucun réviseur : le travail sans contrôle automatique ne peut pas être examiné.",
+            "reviewer": "Réviseur {{number}}",
+            "editFor": "Modifier {{task}}",
+            "coordinator": "Coordinateur",
+            "listLabel": "Agent pour chaque tâche",
+            "save": "Enregistrer",
+            "cancel": "Annuler",
+            "agentFor": "Agent pour {{task}}",
+            "modelFor": "Modèle pour {{task}}",
+            "effortFor": "Effort pour {{task}}",
+            "onlyIfSupported": "Uniquement si le modèle le prend en charge",
+            "coordinatorEffort": "Effort du coordinateur"
+          },
+          "advanced": {
+            "unreadable": "Modifications suggérées illisibles : {{count}}",
+            "importLabel": "Importer un ensemble de modifications",
+            "importDescription": "Collez le routage au format JSON. Il reste dans les modifications suggérées jusqu'à votre acceptation.",
+            "import": "Importer…"
+          }
+        },
+        "dotIngress": {
+          "failures": {
+            "listenFailedPlain": "NASH n'a pas pu se préparer à recevoir les tâches de dot. Désactivez puis réactivez l'option, ou redémarrez l'application.",
+            "metadataInvalidPlain": "NASH n'a pas pu préparer la connexion pour dot ; elle reste donc fermée.",
+            "metadataWriteFailedPlain": "NASH n'a pas pu enregistrer les détails de connexion pour dot ; la connexion reste donc fermée.",
+            "metadataNotSecuredPlain": "NASH n'a pas pu protéger les détails de connexion pour dot ; il les a supprimés et la connexion reste fermée."
+          },
+          "refusals": {
+            "notConnected": "Les paramètres de dot ne sont pas encore raccordés dans cette version ; ils ne peuvent être ni affichés ni modifiés.",
+            "forbidden": "Seule l'application de bureau sur cet ordinateur peut consulter ou modifier les paramètres de dot.",
+            "unsupportedHost": "Seuls les espaces de travail locaux sur cet ordinateur peuvent être activés pour dot. Les espaces SSH, WSL et distants ne sont pas pris en charge.",
+            "workspaceUnavailable": "L'application n'a pas pu confirmer que cet espace de travail est local ; rien n'a été modifié.",
+            "workspaceUnknown": "Cet espace de travail ne figure plus dans la liste de dot. La liste a été actualisée.",
+            "recoveryRequired": "Les paramètres enregistrés de dot doivent être récupérés ; rien n'a été modifié.",
+            "busy": "Le stockage des paramètres était occupé ; rien n'a été modifié. Réessayez.",
+            "invalidValue": "L'application a refusé cette valeur car elle est invalide ; rien n'a été modifié.",
+            "callFailed": "La demande de paramètres de dot n'a pas abouti. L'état actuel est affiché.",
+            "invalidResponse": "L'application a renvoyé des paramètres de dot que cet écran ne peut pas lire.",
+            "interfaceUnavailablePlain": "L'option a été enregistrée, mais les tâches de dot sont indisponibles dans cette session. Redémarrez l'application et vérifiez à nouveau."
+          },
+          "interface": {
+            "switch": "Accepter les tâches de dot",
+            "switchDescription": "Désactiver cette option bloque les nouvelles tâches de dot. Les exécutions déjà démarrées se poursuivent.",
+            "refresh": "Actualiser",
+            "notReady": "Pas prêt",
+            "ready": "Prêt",
+            "off": "Désactivé",
+            "readyDetail": "Prêt sur cet ordinateur. NASH ne peut pas déterminer si dot est connecté.",
+            "notReadyDetail": "Activé, mais pas prêt dans cette session. Désactivez puis réactivez l'option, ou redémarrez l'application."
+          },
+          "unavailable": "Indisponible",
+          "access": {
+            "title": "Autoriser l'écriture dans l'espace de travail {{label}} ?",
+            "reversible": "Revenir en lecture seule bloque les nouvelles tâches d'écriture ; les exécutions déjà démarrées conservent leur accès.",
+            "cancel": "Annuler",
+            "confirm": "Autoriser l'écriture dans l'espace de travail",
+            "descriptionBothPaths": "Une tâche de dot demandant un accès en écriture, ici ou via votre GPT Site, démarrera avec l'autorisation de modifier les fichiers de cet espace de travail, sans vous le demander. dot pourra aussi approuver les demandes d'exécution de commandes, comme Bash et PowerShell, pour ces tâches."
+          },
+          "workspaces": {
+            "readOnly": "Lecture seule",
+            "workspaceWrite": "Écriture dans l'espace de travail",
+            "accessLabel": "Accès maximal pour {{label}}",
+            "off": "Désactivé",
+            "enableLabel": "Activer {{label}} pour dot",
+            "noneEnabled": "Aucun activé",
+            "enabledCount": "{{count}} activés",
+            "noCandidates": "Aucun autre espace de travail local à ajouter",
+            "choose": "Choisir un espace de travail à ajouter",
+            "add": "Activer pour dot",
+            "empty": "Aucun espace de travail n'est activé pour dot ; dot ne peut donc démarrer aucune tâche.",
+            "name": "Espaces de travail de dot",
+            "pickerLabel": "Espace de travail à activer pour dot",
+            "title": "Espaces de travail",
+            "descriptionPlain": "dot voit chaque espace de travail sous le nom affiché ici, et non sous le nom de son dossier.",
+            "readOnlyNotePlain": "Les espaces de travail sont initialement en lecture seule. L'autorisation d'écriture nécessite votre confirmation."
+          },
+          "limits": {
+            "perMinute": "Tâches par minute",
+            "perMinuteDescription": "Comptées sur toute période de 60 secondes. De 1 à {{max}}.",
+            "perDay": "Tâches par jour UTC",
+            "perDayDescription": "Comptées par jour calendaire en UTC. De 1 à {{max}}.",
+            "name": "Limites d'envoi",
+            "title": "Limites",
+            "descriptionPlain": "Une tâche dépassant une limite est refusée et rien ne démarre. Toute tâche envoyée est comptée, même si elle échoue."
+          },
+          "section": {
+            "title": "Tâches de dot",
+            "descriptionPlain": "Une tâche de dot démarre sans vous le demander. Elle ne peut utiliser que les espaces de travail activés ci-dessous, dans les limites définies."
+          }
+        },
+        "dotRemote": {
+          "refresh": "Actualiser",
+          "switch": {
+            "label": "Autoriser l'accès distant",
+            "description": "La désactivation arrête la consultation du Site et l'envoi de mises à jour. Les exécutions déjà démarrées se poursuivent."
+          },
+          "pill": {
+            "unavailable": "Indisponible",
+            "off": "Désactivé",
+            "unpaired": "Non appairé",
+            "pairing": "Appairage en cours",
+            "connected": "Connecté",
+            "offline": "Hors ligne",
+            "reconnect": "Reconnexion nécessaire",
+            "pairAgain": "Appairer à nouveau",
+            "syncFailing": "Échec de synchronisation"
+          },
+          "detail": {
+            "off": "Désactivé. L'application ne consulte pas le Site et ne lui envoie rien.",
+            "unpaired": "Activé, mais cet ordinateur n'est pas encore appairé au Site.",
+            "pairing": "En attente de l'approbation du code d'appairage par le propriétaire du Site.",
+            "connected": "Connecté à la boîte de réception du Site. L'application ne peut pas déterminer si dot est connecté au Site.",
+            "offline": "Hors ligne. L'application ne dispose actuellement d'aucune connexion fonctionnelle au Site et continue de réessayer.",
+            "reconnect": "Arrêté. L'application ne consulte pas le Site tant qu'un jeton d'accès actuel n'est pas enregistré.",
+            "pairAgain": "Arrêté. L'application ne consulte pas le Site tant que cet ordinateur n'est pas appairé à nouveau."
+          },
+          "status": {
+            "neverSynced": "Aucune synchronisation avec le Site pour le moment.",
+            "lastSync": "Dernière synchronisation : {{time}}",
+            "pendingEvents": "Mises à jour en attente d'envoi : {{pending}}",
+            "localNotReady": "Les tâches de dot sont désactivées ou ne sont pas prêtes sur cet ordinateur ; les tâches du Site restent en attente jusqu'à ce qu'elles soient disponibles.",
+            "syncFailingPlain": "{{failures}} tentatives de synchronisation consécutives ont échoué sur cet ordinateur, la première à {{time}}. L'application continue de réessayer."
+          },
+          "reconnect": {
+            "tokenMissing": "Aucun jeton d'accès utilisable au Site n'est enregistré. Collez à nouveau le jeton.",
+            "tokenRejected": "Le Site a refusé le jeton d'accès ; il a peut-être été remplacé. Collez le jeton actuel depuis les paramètres du Site.",
+            "sessionRejected": "Le Site a refusé la session de cet ordinateur. Appairez-le à nouveau pour reprendre.",
+            "sessionExpired": "La session avec le Site a expiré avant son renouvellement. Appairez à nouveau pour reprendre.",
+            "sessionEnded": "La session avec le Site s'est terminée et n'a pas pu être reprise. Appairez à nouveau pour reprendre.",
+            "pairingRevoked": "L'appairage a été révoqué. Appairez à nouveau pour reprendre.",
+            "pairingExpired": "L'appairage a atteint sa durée de validité sur le Site. Appairez à nouveau pour reprendre.",
+            "credentialReused": "Le Site a détecté la réutilisation d'un identifiant remplacé de cet ordinateur et a révoqué l'appairage pour le protéger. Appairez à nouveau pour reprendre.",
+            "credentialInvalid": "Le Site n'a pas accepté l'identifiant de cet ordinateur. Appairez à nouveau pour reprendre.",
+            "credentialUnsaved": "L'application n'a pas pu stocker l'identifiant de cet ordinateur de façon sécurisée ; l'appairage n'a donc pas été conservé. Appairez à nouveau pour reprendre."
+          },
+          "token": {
+            "saved": "Jeton enregistré",
+            "notUsable": "Jeton inutilisable",
+            "plaintextRefusedPlain": "Un jeton enregistré n'était pas protégé ; l'application ne l'utilisera pas. Collez à nouveau le jeton.",
+            "sealingUnavailablePlain": "Cet ordinateur ne peut pas stocker le jeton de façon sécurisée ; l'accès distant ne peut donc pas se connecter."
+          },
+          "connection": {
+            "title": "Connexion",
+            "originPlaceholder": "https://example.com",
+            "tokenLabel": "Jeton d'accès au Site",
+            "tokenReplace": "Collez un nouveau jeton pour remplacer celui enregistré",
+            "save": "Enregistrer la connexion",
+            "saved": "Connexion enregistrée.",
+            "addressLabel": "Adresse du Site",
+            "addressHelp": "La modifier met fin à l'appairage actuel.",
+            "tokenHelpPlain": "Depuis les paramètres de votre Site, dans l'accès aux services. Il ne sera plus jamais affiché."
+          },
+          "pairing": {
+            "approved": "Appairage approuvé. Cet ordinateur consulte maintenant la boîte de réception du Site.",
+            "denied": "L'appairage a été refusé sur le Site. Relancez l'appairage s'il s'agissait d'une erreur.",
+            "expired": "Le code a expiré avant son approbation. Relancez l'appairage pour obtenir un nouveau code.",
+            "failed": "L'appairage n'a pas pu aboutir, car le Site n'accepte plus ce code. Relancez l'appairage.",
+            "pairedUntil": "Appairé jusqu'au {{until}}. Approuvé le {{time}}.",
+            "pairedAt": "Appairé le {{time}}.",
+            "needsSwitch": "Activez l'accès distant pour effectuer l'appairage.",
+            "pairAgain": "Appairer à nouveau",
+            "startAgain": "Relancer l'appairage",
+            "start": "Démarrer l'appairage",
+            "codeLabel": "Code d'appairage",
+            "instructions": "Ouvrez la page d'appairage de votre Site en étant connecté en tant que propriétaire, vérifiez qu'elle affiche ce code, puis approuvez-le.",
+            "openPage": "Ouvrir la page d'appairage",
+            "expiresIn": "Expire dans {{time}}",
+            "codeExpired": "Le code a expiré. Vérification auprès du Site.",
+            "title": "Appairage",
+            "needsConnectionPlain": "Enregistrez l'adresse du Site et le jeton d'accès pour effectuer l'appairage."
+          },
+          "revoke": {
+            "action": "Révoquer l'appairage",
+            "title": "Révoquer l'appairage de cet ordinateur ?",
+            "description": "La révocation bloque les futurs travaux à distance : l'application cesse de consulter le Site et n'en accepte plus de nouvelles tâches jusqu'à un nouvel appairage. Les exécutions déjà démarrées ne sont pas annulées.",
+            "cancel": "Annuler",
+            "siteNotTold": "Révoqué sur cet ordinateur. Le Site n'a pas pu être informé et peut donc encore afficher cet appairage."
+          },
+          "refusals": {
+            "originNotUrl": "Saisissez une adresse web complète, par exemple https://example.com.",
+            "tokenEmpty": "Collez le jeton d'accès au Site.",
+            "tokenMissing": "Le jeton d'accès au Site était vide. Collez-le à nouveau.",
+            "tokenTooShort": "Le jeton d'accès au Site est trop court. Copiez le jeton complet et collez-le à nouveau.",
+            "tokenTooLong": "Le jeton d'accès au Site est trop long.",
+            "tokenCharacters": "Le jeton d'accès au Site contient des espaces ou des caractères non autorisés. Collez-le à nouveau.",
+            "tokenInvalid": "Le jeton d'accès au Site n'a pas le format attendu. Collez-le à nouveau.",
+            "unavailable": "L'accès distant ne fonctionne pas dans cette session. Redémarrez l'application et vérifiez à nouveau.",
+            "disabled": "Activez d'abord l'accès distant.",
+            "writeFailed": "Le jeton n'a pas pu être stocké ; rien n'a été enregistré.",
+            "reconnectNeeded": "Le Site a refusé l'accès de cet ordinateur. Collez un nouveau jeton d'accès au Site, puis relancez l'appairage.",
+            "pairingRefused": "Le Site a refusé de démarrer l'appairage. Réessayez dans quelques minutes.",
+            "notConnected": "L'accès distant n'est pas encore raccordé dans cette version ; il ne peut être ni affiché ni modifié.",
+            "forbidden": "Seule l'application de bureau sur cet ordinateur peut consulter ou modifier l'accès distant.",
+            "invalidValue": "L'application a refusé cette valeur ; rien n'a été modifié.",
+            "callFailed": "La demande d'accès distant n'a pas abouti. L'état actuel est affiché.",
+            "invalidResponse": "L'application a renvoyé un état d'accès distant que cet écran ne peut pas lire.",
+            "originEmptyPlain": "Saisissez l'adresse du Site, par exemple https://example.com.",
+            "originTooLongPlain": "L'adresse du Site est trop longue.",
+            "originSpacesPlain": "L'adresse du Site ne peut pas contenir d'espaces.",
+            "originNotHttpsPlain": "L'adresse du Site doit commencer par https://.",
+            "originSignInPlain": "Retirez les identifiants de connexion de l'adresse du Site ; le jeton d'accès dispose de son propre champ.",
+            "originPathPlain": "Saisissez uniquement l'adresse du Site, sans rien après le nom d'hôte, par exemple https://example.com.",
+            "notConfiguredPlain": "Enregistrez d'abord l'adresse du Site et son jeton d'accès.",
+            "originInvalidPlain": "L'application a refusé l'adresse du Site. Utilisez une adresse https telle que https://example.com, sans rien après le nom d'hôte.",
+            "sealingUnavailablePlain": "Cet ordinateur ne peut pas stocker le jeton de façon sécurisée ; rien n'a été enregistré.",
+            "siteUnreachablePlain": "Le Site n'a pas pu être joint. Vérifiez l'adresse et votre connexion, puis réessayez."
+          },
+          "title": "Accès distant",
+          "descriptionWorkspaceMax": "dot accède à cette application via une boîte de réception sur votre GPT Site. Cet ordinateur la consulte en HTTPS sans ouvrir de port entrant. Les tâches du Site obtiennent au maximum l'accès autorisé pour chaque espace de travail."
+        },
+        "usageMetersOff": {
+          "title": "La consommation n'est pas affichée dans NASH",
+          "bodyPlain": "Seuls Claude Code, Codex et agy indiquent leur consommation, via leurs propres outils CLI. Les autres fournisseurs ne sont pas consultés."
+        },
+        "cliUsageReadings": {
+          "title": "Consommation fournie par les outils CLI",
+          "body": "NASH lit la consommation uniquement depuis chaque outil CLI : la ligne d'état de Claude Code, codex app-server et agy /usage. Il ne lit aucune donnée de connexion et ne demande la consommation à aucun fournisseur.",
+          "noReading": "Aucun relevé pour le moment",
+          "refresh": "Actualiser la consommation",
+          "claudeHintPlain": "S'affiche pendant l'exécution d'une session Claude démarrée dans NASH.",
+          "codexHintPlain": "Utilisez Actualiser la consommation pour obtenir un relevé.",
+          "agyHintPlain": "Utilisez Actualiser la consommation lorsque l'indicateur agy est activé dans la barre d'état.",
+          "bodyPlain": "Chaque relevé provient de l'outil CLI lui-même, jamais d'une connexion au compte."
+        },
+        "dot": {
+          "search": {
+            "remoteDescription": "Permettez à dot d'accéder à cette application via votre GPT Site : activation, adresse du Site et jeton d'accès, appairage et révocation."
+          }
+        },
+        "advancedDisclosure": {
+          "label": "Options avancées"
+        },
+        "copyDetails": {
+          "copied": "Détails copiés.",
+          "failed": "Les détails n'ont pas pu être copiés.",
+          "action": "Copier les détails"
+        },
+        "taskRouting": {
+          "search": {
+            "agentsDescription": "Choisissez l'agent, le modèle et l'effort pour chaque type de tâche, et acceptez ou rejetez les modifications suggérées.",
+            "effort": "effort",
+            "agent": "agent"
+          }
         }
       },
       "right": {
@@ -13803,7 +14473,8 @@
           "984338477a": "thème",
           "c47e1bd149": "agent",
           "windowsTerminalTitle": "Définir les valeurs par défaut du terminal Windows",
-          "windowsTerminalSubtitle": "Choisissez le shell PAR DÉFAUT des nouveaux volets et le comportement du clic droit dans le terminal."
+          "windowsTerminalSubtitle": "Choisissez le shell PAR DÉFAUT des nouveaux volets et le comportement du clic droit dans le terminal.",
+          "agentSubtitleNash": "Choisissez l'agent des terminaux que vous ouvrez vous-même. NASH exécute ses tâches via Claude Code. Vous pouvez changer à tout moment."
         },
         "OnboardingFooter": {
           "ba58547306": "Retour",
@@ -14531,7 +15202,15 @@
                       "42525ba8a4": "Importez vos dépôts de clés dans NASH afin de pouvoir démarrer le travail d'agent sans rechercher de dossiers.",
                       "workOnTwoTasks": "Travaillez sur deux tâches à la fois",
                       "agentSkillsName": "Donnez aux agents les skills NASH",
-                      "agentSkillsDescription": "Installez les skills que les agents utilisent pour piloter le navigateur de NASH, contrôler votre ordinateur et coordonner des tâches en plusieurs étapes."
+                      "agentSkillsDescription": "Installez les skills que les agents utilisent pour piloter le navigateur de NASH, contrôler votre ordinateur et coordonner des tâches en plusieurs étapes.",
+                      "claudeCodeName": "Configurer Claude Code",
+                      "claudeCodeDescription": "NASH exécute chaque tâche via une session Claude Code. Installez Claude Code et connectez-vous une première fois depuis un terminal.",
+                      "clefName": "Connecter Clef",
+                      "clefDescription": "Clef classe chaque tâche par type pour que NASH puisse choisir son agent et son modèle. Ajoutez vos identifiants Clef, puis vérifiez-les.",
+                      "dotName": "Connecter dot",
+                      "dotDescription": "Envoyez des tâches à NASH depuis ChatGPT dot. Activez l'interface locale ou appairez votre GPT Site.",
+                      "workbenchRunName": "Démarrer votre première exécution",
+                      "workbenchRunDescription": "Demandez quelque chose à NASH depuis le Workbench, puis suivez-y l'exécution, ses tâches et les éventuelles demandes."
                     }
                   }
                 }
@@ -14676,6 +15355,14 @@
             "0d6efe9cf4": "Recommandé sur macOS quand les projets ou les worktrees se trouvent dans des dossiers protégés.",
             "dac08ec03e": "Ouverture...",
             "6e3d62b816": "Ouvrir l'accès complet au disque"
+          },
+          "FeatureWallSetupNashActions": {
+            "claudeCodeFound": "Claude Code est installé sur cet ordinateur.",
+            "claudeCodeMissing": "Claude Code est introuvable. Installez-le, exécutez claude une première fois dans un terminal pour vous connecter, puis vérifiez à nouveau.",
+            "checkAgain": "Vérifier à nouveau",
+            "openTaskRouting": "Ouvrir le routage des tâches",
+            "openDotSettings": "Ouvrir les paramètres de Dot",
+            "openWorkbench": "Ouvrir le Workbench"
           }
         },
         "tips": {
@@ -15644,7 +16331,10 @@
             "b2e36f53a1": "Échec de l'envoi du rapport de plantage. Le ticket de diagnostic {{value0}} a été téléversé, mais pas associé.",
             "ead6fc0510": "Aucun rapport de plantage automatique n'a été capturé. Vous pouvez toujours envoyer des détails et inclure les journaux de diagnostic récents lorsqu'ils sont disponibles.",
             "b082f27490": "Joindre les journaux de diagnostic récents",
-            "e59f0b9427": "Envoie avec le rapport un lot de journaux anonymisés et de taille limitée."
+            "e59f0b9427": "Envoie avec le rapport un lot de journaux anonymisés et de taille limitée.",
+            "nashNotSent": "NASH n'envoie pas de rapports de plantage. Copiez les détails pour les conserver.",
+            "nashNoReport": "Aucun rapport automatique de plantage n'a été capturé.",
+            "nashClose": "Fermer"
           },
           "submit": {
             "notice": {
@@ -18506,7 +19196,8 @@
     "launchFailedMessage": "NASH n'a pas pu démarrer le processus qui affiche sa fenêtre.",
     "launchFailedDetail": "NASH a réessayé {{recoveryCount}} fois sans succès.",
     "processLimitDetail": "Le système a refusé de créer un nouveau processus, car votre compte utilisateur a atteint sa limite de processus. Cela vient souvent de terminaux, de serveurs de développement ou d'agents emballés. Fermez-en quelques-uns, puis cliquez sur Réessayer.",
-    "launchFailedGenericDetail": "Le système a refusé de le démarrer. Libérez de la mémoire ou fermez d'autres applications, puis cliquez sur Réessayer. Si le problème persiste, réinstallez NASH."
+    "launchFailedGenericDetail": "Le système a refusé de le démarrer. Libérez de la mémoire ou fermez d'autres applications, puis cliquez sur Réessayer. Si le problème persiste, réinstallez NASH.",
+    "lowCommitAdvice": "Libérez de la mémoire en fermant des applications ou des espaces de travail NASH inutilisés, ou augmentez la taille du fichier d'échange Windows, puis cliquez sur Recharger."
   },
   "sessionSearch": {
     "panel": {
@@ -18535,7 +19226,8 @@
       "sessionsOther": "{{count}} séances",
       "sessionsOfLoaded": "{{value0}} sur {{value1}} séances",
       "showMoreSessions": "Afficher plus de séances",
-      "loadingMoreSessions": "Chargement de plus de sessions…"
+      "loadingMoreSessions": "Chargement de plus de sessions…",
+      "unsupportedAgent": "Cet ordinateur ne prend pas en charge la recherche dans l'historique de l'agent sélectionné. Mettez NASH à jour sur cet ordinateur ou sélectionnez un autre agent."
     }
   },
   "sessionHistory": {
@@ -18665,6 +19357,411 @@
       "removeTitle": "Supprimer le compte géré ?",
       "removeDescription": "Arrêtez d’abord les agents utilisant ce profil. Sa suppression efface les identifiants et conversations enregistrés. Votre connexion système reste inchangée.",
       "cancel": "Annuler"
+    }
+  },
+  "terminal": {
+    "sessionSaveFailure": {
+      "unknown": "NASH n'a pas pu enregistrer l'état du terminal. Réessayez. Si le problème persiste, partagez les journaux NASH avec l'assistance pour nous aider à en déterminer la cause."
+    },
+    "codexTerminalServerIsolationNotice": {
+      "title": "NASH exécute désormais Codex sans son serveur partagé"
+    },
+    "codexSharedServerBanner": {
+      "openedBeforeUpdateBody": "Ce terminal a été ouvert avant que NASH n'attribue un serveur distinct à chaque instance de Codex.",
+      "dialogDescription": "Les sessions Codex démarrées directement dans un terminal partagent un serveur en arrière-plan. NASH sépare les sessions Codex qu'il démarre. Lorsque des sessions partagent un serveur, en fermer une peut arrêter les autres, et l'état des agents peut être incorrect.",
+      "step1Note": "Cela modifie vos paramètres Codex et s'applique donc aussi en dehors de NASH.",
+      "turnOffFailed": "NASH n'a pas pu désactiver cette option.",
+      "stopFailed": "NASH n'a pas pu arrêter le serveur.",
+      "confirmStopDescription": "Cela ferme toutes les sessions Codex ouvertes qui le partagent, y compris celles en dehors de NASH."
+    }
+  },
+  "workbench": {
+    "tasks": {
+      "elapsed": {
+        "hours": "{{hours}} h {{minutes}} min",
+        "minutes": "{{minutes}} min {{seconds}} s",
+        "seconds": "{{seconds}} s"
+      },
+      "empty": "Aucune tâche pour le moment.",
+      "executor": {
+        "claudePrimary": "Session principale Claude",
+        "claudeSubagent": "Sous-agent Claude",
+        "claudeWorkflow": "Workflow Claude",
+        "other": "Autre exécuteur"
+      },
+      "openWindow": "Ouvrir la fenêtre de tâche",
+      "openWindowLabel": "Ouvrir la fenêtre de la tâche {{title}}",
+      "readFailed": "Les tâches n'ont pas pu être lues : {{message}}",
+      "showTerminalLabel": "Afficher le terminal de {{title}}",
+      "state": {
+        "blocked": "Bloquée",
+        "completed": "Terminée",
+        "failed": "Échouée",
+        "notStarted": "Non démarrée",
+        "running": "En cours",
+        "startUnknown": "Démarrage non confirmé",
+        "starting": "Démarrage en cours",
+        "stopUnknown": "Arrêt non confirmé",
+        "stopped": "Arrêtée",
+        "unknown": "État inconnu"
+      },
+      "title": "Tâches"
+    },
+    "taskWindow": {
+      "attempt": "Tentative",
+      "attemptOption": "Tentative {{number}} · {{state}}",
+      "attemptsStale": "La liste des tentatives n'a pas pu être actualisée : {{message}}",
+      "branch": "Branche",
+      "command": {
+        "completed": "Terminée",
+        "failed": "Échouée",
+        "hideOutput": "Masquer la sortie",
+        "hideOutputLabel": "Masquer la sortie de {{command}}",
+        "running": "En cours",
+        "showOutput": "Afficher la sortie",
+        "showOutputLabel": "Afficher la sortie de {{command}}"
+      },
+      "effort": "Effort",
+      "effortDefault": "Par défaut",
+      "elapsed": "Temps écoulé",
+      "empty": "La transcription est vide.",
+      "end": "Terminée",
+      "exitCode": "code de sortie {{code}}",
+      "fileChange": "Fichiers modifiés · {{status}}",
+      "jumpToLatest": "Aller au plus récent",
+      "malformed": "Ligne illisible",
+      "missing": "Aucune transcription n'a été enregistrée pour cette tentative.",
+      "model": "Modèle",
+      "noAttempt": "Cette tâche n'a pas encore de tentative.",
+      "notRecorded": "Non enregistré",
+      "note": {
+        "dropped": "{{dropped}} enregistrements ont été perdus, car la sortie arrivait plus vite qu'elle ne pouvait être enregistrée.",
+        "truncated": "La transcription a atteint sa taille limite. La suite de la sortie n'a pas été enregistrée.",
+        "unknown": "La transcription contient une note que cette version ne peut pas afficher."
+      },
+      "openWorktree": "Ouvrir le worktree",
+      "readFailed": "La transcription n'a pas pu être lue.",
+      "reading": "Lecture de la transcription…",
+      "sandbox": {
+        "readOnly": "Lecture seule",
+        "unknown": "Non enregistré",
+        "write": "Écrit dans son propre worktree",
+        "writeInFolder": "Écrit dans le dossier de l'espace de travail"
+      },
+      "sandboxLabel": "Bac à sable",
+      "showEarlier": "Afficher les enregistrements précédents ({{hidden}} masqués)",
+      "start": "Démarrage : {{executor}}",
+      "started": "Démarrée",
+      "transcript": "Transcription",
+      "truncatedNotice": "Cette transcription a atteint sa taille limite ; elle s'arrête donc avant la fin de la tentative.",
+      "turn": {
+        "completed": "Tour terminé",
+        "failed": "Échec du tour",
+        "started": "Tour démarré",
+        "usage": "{{input}} tokens en entrée · {{cached}} en cache · {{output}} en sortie"
+      },
+      "unavailable": "Les détails de la fenêtre de tâche sont indisponibles.",
+      "untitledTask": "Tâche sans titre",
+      "waiting": "En attente de la première sortie…",
+      "tool": {
+        "webSearch": "Recherche web",
+        "mcpToolCall": "Appel d'outil MCP",
+        "reasoning": "Raisonnement",
+        "todoList": "Plan mis à jour",
+        "other": "Étape d'outil"
+      },
+      "filesChanged": "Fichiers modifiés",
+      "unknownRecordShort": "Un enregistrement que cette version ne peut pas afficher."
+    },
+    "sidebar": {
+      "title": "Workbench"
+    },
+    "workspace": {
+      "title": "Espace de travail sélectionné",
+      "empty": "Sélectionnez un espace de travail dans la liste.",
+      "detailsUnavailable": "Les détails de l'espace de travail sont indisponibles."
+    },
+    "permissions": {
+      "title": "Demandes d'autorisation",
+      "waiting": "{{waiting}} en attente",
+      "errorTitle": "Demandes d'autorisation indisponibles",
+      "stale": "Les demandes affichées peuvent ne plus être à jour.",
+      "empty": "Aucune demande d'autorisation en attente.",
+      "asked": "Demandée",
+      "answerBy": "Répondre avant",
+      "allow": "Autoriser",
+      "allowLabel": "Autoriser {{tool}}",
+      "deny": "Refuser",
+      "denyLabel": "Refuser {{tool}}",
+      "answerError": "Réponse non enregistrée",
+      "desktopOnlyHelp": "Non envoyée à dot. Répondez ici ou dans le terminal.",
+      "terminalOnly": "Répondez dans le terminal.",
+      "mismatch": "Le relais d'autorisations a renvoyé une autre demande.",
+      "decider": {
+        "dot": "par dot",
+        "desktop": "dans l'application",
+        "terminal": "dans le terminal"
+      },
+      "status": {
+        "waiting": "En attente d'une réponse",
+        "terminalOnly": "Répondre dans le terminal",
+        "allowed": "Autorisée",
+        "denied": "Refusée",
+        "expired": "Expirée",
+        "answeredInTerminal": "Réponse donnée dans le terminal"
+      },
+      "settled": {
+        "allowed": "autorisée {{decider}}",
+        "denied": "refusée {{decider}}",
+        "expired": "la demande a expiré",
+        "terminal": "réponse donnée dans le terminal"
+      },
+      "answer": {
+        "allowed": "Autorisée dans l'application.",
+        "denied": "Refusée dans l'application.",
+        "alreadyDecided": "Réponse déjà donnée : {{settled}}.",
+        "alreadyAnswered": "Réponse déjà donnée.",
+        "closed": "L'application ne peut plus répondre à cette demande.",
+        "notFound": "Cette demande n'est plus disponible."
+      },
+      "askedBy": "Demandée par",
+      "fromSubagent": "D'un sous-agent"
+    },
+    "runs": {
+      "title": "Exécutions",
+      "empty": "Aucune exécution dans cet espace de travail pour le moment.",
+      "hasMore": "Seules les exécutions les plus récentes sont affichées.",
+      "stale": "Les exécutions affichées peuvent ne plus être à jour.",
+      "remoteUnavailable": "Les exécutions sont indisponibles pour les espaces de travail distants.",
+      "scopeUnavailable": "Sélectionnez un espace de travail local connu pour voir ses exécutions.",
+      "mismatch": "Le stockage des exécutions a renvoyé une autre exécution.",
+      "scopeMismatch": "Le stockage des exécutions a renvoyé un autre périmètre d'espace de travail.",
+      "objectiveUnavailable": "L'objectif n'est plus conservé.",
+      "effort": "Effort {{effort}}",
+      "ended": "Terminée",
+      "showTerminal": "Afficher le terminal",
+      "terminalNotOpen": "L'onglet de terminal n'est pas ouvert dans cette fenêtre.",
+      "stop": "Arrêter l'exécution",
+      "actionError": "Exécution non arrêtée",
+      "stopRefused": {
+        "starting": "La session démarre encore. Arrêtez à nouveau l'exécution une fois qu'elle sera en cours.",
+        "identityUnverified": "Le terminal n'a pas pu être associé à la session de cette exécution ; rien n'a été arrêté. Fermez l'onglet de terminal de la session et réessayez.",
+        "invalidReason": "La demande d'arrêt a été refusée car elle est invalide. Rien n'a été modifié."
+      },
+      "status": {
+        "launching": "Lancement en cours",
+        "active": "Active",
+        "completing": "Finalisation en cours",
+        "completed": "Terminée",
+        "failed": "Échouée",
+        "canceled": "Annulée",
+        "unverifiable": "Impossible à vérifier"
+      },
+      "session": {
+        "none": "Non démarrée",
+        "starting": "Démarrage en cours",
+        "running": "En cours",
+        "stopping": "Arrêt en cours",
+        "stopped": "Arrêtée",
+        "exited": "Terminée"
+      },
+      "live": {
+        "working": "Claude travaille",
+        "dialogOpen": "Une boîte de dialogue d'autorisation ou de question est ouverte",
+        "idle": "En attente de saisie",
+        "unknown": "Activité inconnue",
+        "agentAbsent": "Claude Code ne s'exécute pas dans le terminal",
+        "handleUnresolved": "Le terminal est introuvable",
+        "incarnationMismatch": "Le processus du terminal a changé ; son activité ne peut donc pas être vérifiée",
+        "statusUnreadable": "L'état du terminal ne peut pas être lu",
+        "unread": "L'activité n'a pas pu être lue"
+      },
+      "end": {
+        "userCanceled": "Arrêtée dans l'application",
+        "dotCanceled": "Annulée par dot",
+        "primaryExited": "La session Claude Code s'est terminée",
+        "launchRefused": "Le lancement a été refusé",
+        "launchFailed": "Le lancement a échoué avant tout démarrage",
+        "launchUnknown": "Le lancement n'a pas pu être confirmé",
+        "reconciled": "État établi d'après les enregistrements après le redémarrage de l'application",
+        "stopUnconfirmed": "L'arrêt n'a pas pu être confirmé"
+      },
+      "origin": {
+        "dot": "Démarrée par dot",
+        "desktop": "Démarrée ici",
+        "unknown": "Origine inconnue"
+      },
+      "access": {
+        "readOnly": "Lecture seule",
+        "workspaceWrite": "Peut écrire dans l'espace de travail"
+      },
+      "message": {
+        "label": "Message à la session",
+        "send": "Envoyer le message",
+        "failedTitle": "Message non confirmé",
+        "refusedTitle": "Message non envoyé",
+        "delivered": "Transmis à la session.",
+        "duplicate": "Ce message a déjà été envoyé ; il n'a pas été envoyé à nouveau.",
+        "notSentPrefix": "Non envoyé.",
+        "noReason": "Aucun motif n'a été indiqué.",
+        "queued": {
+          "agentBusy": "En file d'attente. Claude travaille ; le message attend donc dans la session.",
+          "dialogOpen": "Retenu. Une boîte de dialogue d'autorisation ou de question est ouverte ; le message sera envoyé après sa fermeture.",
+          "behindHeld": "Retenu. Un message précédent n'a pas encore été envoyé ; celui-ci sera envoyé à sa suite."
+        },
+        "refused": {
+          "invalidRequest": "La demande d'envoi du message n'était pas valide.",
+          "requestIdReused": "Cet identifiant de message a déjà été utilisé pour un autre texte.",
+          "textEmpty": "Le message est vide.",
+          "textTooLong": "Le message dépasse 65 536 caractères.",
+          "controlCharacters": "Le message contient des caractères de contrôle qui ne peuvent pas être saisis dans un terminal.",
+          "secretShaped": "Le message semble contenir un secret, comme une clé ou un jeton.",
+          "tooManyQuotedSpans": "Le message contient trop de passages entre guillemets.",
+          "notEnglish": "Rédigez le message en anglais ; placez les noms ou les textes dans une autre langue entre guillemets.",
+          "runNotFound": "L'exécution est introuvable.",
+          "runNotActive": "L'exécution n'est pas active.",
+          "notOwned": "Cette exécution n'accepte pas les messages envoyés d'ici.",
+          "primaryNotLive": "La session Claude Code n'est pas en cours d'exécution.",
+          "holdCapacity": "Trop de messages sont déjà en attente pour cette exécution.",
+          "holdExpired": "Le message a attendu trop longtemps la fermeture de la boîte de dialogue et a été abandonné.",
+          "terminalUnavailable": "Le terminal n'a pas pu être joint.",
+          "deliveryIncomplete": "Le texte se trouve peut-être dans le champ de saisie de la session sans avoir été envoyé. Vérifiez le terminal ; le texte n'a pas été ressaisi.",
+          "deliveryUnconfirmed": "La transmission n'a pas pu être confirmée après le redémarrage de l'application."
+        },
+        "refusedGeneric": "La session n'a pas accepté le message.",
+        "queuedGeneric": "En file d'attente. Le message sera envoyé lorsque la session pourra le recevoir.",
+        "retryHintShort": "Le renvoyer ne le transmettra pas deux fois.",
+        "helpShort": "Saisi dans la session Claude Code ; retenu tant qu'une boîte de dialogue est ouverte."
+      },
+      "state": {
+        "working": "Au travail",
+        "dialogOpen": "Réponse nécessaire",
+        "agentAbsent": "À l'arrêt"
+      },
+      "sessionNote": "Session : {{state}}",
+      "unavailableTitle": "Exécutions indisponibles"
+    },
+    "validation": {
+      "title": "Validation des tâches",
+      "check": "Vérifier maintenant",
+      "nothingWaiting": "Aucun résultat de tâche n'était en attente de validation.",
+      "checked": "Résultats vérifiés : {{total}}",
+      "passed": "Réussis",
+      "failedCount": "Échoués",
+      "inconclusive": "En attente de décision",
+      "skipped": "Ignorés",
+      "errorTitle": "Validation non vérifiée",
+      "passRunning": "Une validation est déjà en cours. Vérifiez à nouveau une fois qu'elle sera terminée.",
+      "unavailable": "La validation des tâches est indisponible dans cette session.",
+      "helpShort": "Chaque résultat est vérifié lorsque sa tâche le signale. Vérifier maintenant contrôle aussi les résultats encore en attente."
+    },
+    "decisions": {
+      "title": "En attente de votre décision",
+      "waiting": "{{waiting}} en attente",
+      "empty": "Aucun résultat de tâche n'attend votre décision.",
+      "hasMore": "Seuls les résultats les plus anciens sont affichés.",
+      "errorTitle": "Décisions indisponibles",
+      "stale": "Les résultats affichés peuvent ne plus être à jour.",
+      "mismatch": "L'application a renvoyé un autre résultat.",
+      "conflict": "Une décision a déjà été prise pour ce résultat.",
+      "notFound": "Ce résultat n'est plus en attente de décision.",
+      "decideErrorTitle": "Décision non enregistrée",
+      "executor": "Exécuteur",
+      "since": "En attente de décision depuis",
+      "branch": "Branche",
+      "workspace": "Espace de travail",
+      "waive": "Accepter en l'état",
+      "reject": "Rejeter",
+      "cancel": "Annuler",
+      "placement": {
+        "ownWorktree": "Son propre worktree",
+        "folder": "Le dossier de l'espace de travail",
+        "runWorkspace": "L'espace de travail de l'exécution, en lecture seule",
+        "inSession": "La session principale Claude",
+        "unrecorded": "Non enregistré"
+      },
+      "confirm": {
+        "waiveProcessMayRun": "Accepter ce résultat comme terminé ? La tâche se termine, mais un processus de cette tentative peut encore être en cours. La session principale Claude reçoit l'instruction d'attendre son arrêt avant de fusionner ou de conserver ses modifications.",
+        "waiveWorktree": "Accepter ce résultat comme terminé ? La tâche se termine et la session principale Claude reçoit l'instruction de fusionner la branche {{branch}}.",
+        "waiveFolder": "Accepter ce résultat comme terminé ? La tâche se termine ; ses modifications sont déjà dans le dossier de l'espace de travail.",
+        "waive": "Accepter ce résultat comme terminé ? La tâche se termine.",
+        "rejectWorktree": "Rejeter ce résultat ? La tâche échoue et sa branche est conservée pour examen.",
+        "rejectFolder": "Rejeter ce résultat ? La tâche échoue ; ses modifications restent dans le dossier de l'espace de travail jusqu'à ce que vous décidiez quoi conserver.",
+        "reject": "Rejeter ce résultat ? La tâche échoue."
+      },
+      "outcome": {
+        "waivedNotified": "Accepté en l'état. La tâche est terminée et une notification a été enregistrée pour la session principale Claude.",
+        "waived": "Accepté en l'état. La tâche est terminée.",
+        "rejectedNotified": "Rejeté. La tâche est marquée comme échouée et une notification a été enregistrée pour la session principale Claude.",
+        "rejected": "Rejeté. La tâche est marquée comme échouée."
+      },
+      "waiveTitleLabel": "Accepter {{title}} en l'état",
+      "rejectTitleLabel": "Rejeter {{title}}",
+      "helpShort": "La validation n'a pas permis de trancher pour ces résultats. Accepter en l'état marque le résultat comme terminé ; Rejeter fait échouer sa tâche."
+    },
+    "requests": {
+      "scopeMismatch": "Le stockage des demandes a renvoyé un autre périmètre d'espace de travail.",
+      "pageMismatch": "Le stockage des demandes a renvoyé une limite de page invalide.",
+      "objectiveMismatch": "Le stockage des demandes a renvoyé un autre objectif.",
+      "cancelMismatch": "Le stockage des demandes a renvoyé un autre accusé d'annulation.",
+      "refreshMismatch": "Le stockage des demandes a renvoyé une autre demande.",
+      "run": "Exécution",
+      "cancel": "Annuler la demande",
+      "title": "Demandes locales",
+      "stale": "Les demandes affichées peuvent ne plus être à jour.",
+      "objective": "Objectif",
+      "refresh": "Actualiser",
+      "loadOlder": "Charger les plus anciennes",
+      "olderPage": "Une page plus ancienne est affichée. Actualiser permet de revenir aux dernières demandes.",
+      "remoteUnavailable": "La réception des demandes est indisponible pour les espaces de travail distants.",
+      "scopeUnavailable": "Sélectionnez un espace de travail local connu pour enregistrer ou lister les demandes.",
+      "launch": {
+        "refused": "L'exécution n'a pas pu démarrer.",
+        "unverifiable": "Une exécution a été créée, mais son démarrage n'a pas pu être confirmé.",
+        "noModel": "Aucun modèle n'est disponible pour démarrer cette exécution. Vérifiez le routage des tâches dans les paramètres.",
+        "generic": "Cette demande n'a pas pu démarrer une exécution."
+      },
+      "status": {
+        "launchBlocked": "Lancement bloqué",
+        "starting": "Démarrage en cours",
+        "runStarted": "Exécution démarrée",
+        "canceled": "Annulée"
+      },
+      "intakeHelp": "Démarre une exécution avec une session Claude Code dans cet espace de travail.",
+      "startRun": "Démarrer l'exécution",
+      "updateFailedTitle": "Les demandes n'ont pas pu être actualisées",
+      "registered": "Demande enregistrée.",
+      "noneYet": "Aucune demande pour le moment."
+    },
+    "error": {
+      "notAllowed": "Cette fenêtre n'est pas autorisée à effectuer cette action.",
+      "workspaceUnavailable": "Cet espace de travail est indisponible ici.",
+      "runGone": "Cette exécution n'existe plus.",
+      "sessionNotRunning": "La session Claude Code n'est pas en cours d'exécution.",
+      "attemptGone": "Cette tentative n'existe plus.",
+      "invalidInput": "L'application a refusé cette entrée car elle est invalide.",
+      "recoveryRequired": "Les enregistrements stockés n'ont pas pu être lus. Redémarrez l'application et réessayez.",
+      "runEnded": "Cette exécution est déjà terminée.",
+      "stopRefused": "L'exécution n'a pas pu être arrêtée maintenant. Rien n'a été modifié.",
+      "stopUnconfirmed": "L'arrêt n'a pas pu être confirmé ; l'exécution reste donc ouverte. Fermez son onglet de terminal et réessayez.",
+      "runControlUnavailable": "Le contrôle des exécutions est indisponible pour le moment.",
+      "permissionsUnavailable": "Les demandes d'autorisation sont indisponibles pour le moment.",
+      "checkFailed": "La vérification n'a pas pu se terminer. Réessayez.",
+      "transcriptRefused": "Le fichier de transcription n'a pas pu être vérifié ; il n'a donc pas été lu.",
+      "requestGone": "Cette demande n'existe plus.",
+      "requestHandedOff": "Cette demande a démarré son exécution. Arrêtez l'exécution pour l'annuler.",
+      "requestChanged": "Cette demande a changé entre-temps. Réessayez.",
+      "requestReused": "Cette demande a déjà été envoyée avec un autre texte.",
+      "capacity": "Trop de demandes sont en attente. Réessayez plus tard.",
+      "busy": "L'application est occupée. Réessayez.",
+      "unsupported": "Cette version de l'application ne prend pas en charge cette action.",
+      "generic": "Une erreur est survenue.",
+      "unexpectedResponse": "L'application a renvoyé une réponse inattendue."
+    },
+    "details": {
+      "copied": "Copié",
+      "copyFailed": "Échec de la copie",
+      "copy": "Copier les détails"
     }
   }
 }

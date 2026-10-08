@@ -97,6 +97,11 @@
         "restartRequired": "需要重新启动",
         "unavailable": "浏览器身份不可用。"
       }
+    },
+    "agents": {
+      "codexTerminalServerIsolation": {
+        "description": "确保 NASH 的状态显示和标签页关闭功能正常。关闭后将使用 Codex 的共享服务器及其智能体概览。仅对新终端生效。"
+      }
     }
   },
   "menu": {
@@ -977,7 +982,9 @@
         "ef223fbb6b": "有设备尝试连接但未配对",
         "11992d0337": "如果这是您的手机或其他 NASH 客户端，请从设置 → 移动端重新配对。",
         "6573cfe955": "打开移动端设置",
-        "unresolvedTerminalWorktreeOwner": "由于无法解析工作树所有者，终端创建不可用"
+        "unresolvedTerminalWorktreeOwner": "由于无法解析工作树所有者，终端创建不可用",
+        "unpairedDeviceServersDescription": "如果这是另一个 NASH 客户端，请在“设置 → 远程 NASH 服务器”中重新与其共享此服务器。",
+        "openServerSettings": "打开服务器设置"
       },
       "useSettingsNavigationMetadata": {
         "4a728cd56b": "仍在完善中的新功能。尝试一下。",
@@ -1061,7 +1068,15 @@
         "automationsDescription": "安排代理工作并选择自动化是否显示在侧栏中。",
         "shareSkillsTitle": "分享技能",
         "shareSkillsDescription": "通过未列出的链接分享您的技能。任何拥有它的人都可以安装它们。",
-        "floatingWorkspaceWebDescription": "全局终端和 Markdown 选项卡。"
+        "floatingWorkspaceWebDescription": "全局终端和 Markdown 选项卡。",
+        "taskRoutingTitle": "任务路由",
+        "taskRoutingDescription": "选择各类任务使用的智能体、模型和推理强度。",
+        "dotTitle": "Dot",
+        "dotDescription": "允许 ChatGPT dot 向 NASH 发送任务。",
+        "statsDescription": "按智能体查看 NASH 活动和 Token 用量。",
+        "serversDescription": "与其他电脑上的 NASH 配对，让会话在那些电脑上持续运行。",
+        "accountsDescription": "可选。在 Codex、Antigravity 及其他 CLI 的已保存账户之间切换，并查看用量。",
+        "serversWebDescription": "将此浏览器连接到已保存的 NASH 服务器。"
       },
       "useAppMenuPaste": {
         "pasteTooLarge": "粘贴内容过大。"
@@ -3990,6 +4005,12 @@
             "resumingAriaOne": "正在恢复 1 个聊天。点击查看详情。",
             "resumingAria": "正在恢复 {{value0}} 个聊天。点击查看详情。",
             "resumingTooltip": "正在恢复中断的聊天并请它们继续…"
+          },
+          "usageReadingSource": {
+            "claudeStatusLine": "Claude Code 状态行",
+            "codexAppServer": "codex app-server",
+            "agyUsage": "agy /usage",
+            "from": "来自 {{source}}"
           }
         }
       },
@@ -4237,7 +4258,8 @@
             "d6e9f0a1b2": "额度",
             "a3b6c7d8e9": "grok 使用量",
             "9f2a3b4c5d": "xai",
-            "museKeyword": "muse"
+            "museKeyword": "muse",
+            "nashActivityDescription": "按智能体查看 NASH 活动和 Token 用量。"
           }
         },
         "usage": {
@@ -5297,7 +5319,10 @@
           "fee535205b": "任务",
           "d599269755": "从侧边栏隐藏",
           "artifacts": "工件",
-          "skills": "技能"
+          "skills": "技能",
+          "rsiLab": "RSI 实验室",
+          "rsiImprovements": "改进",
+          "rsiNotConnected": "未连接"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "清除",
@@ -5327,7 +5352,9 @@
           "d396773ef0": "检查中",
           "f8a2c91d4e": "里程碑",
           "b7e4d2a19c": "入门引导",
-          "c4f8e1b72a": "X"
+          "c4f8e1b72a": "X",
+          "reportIssue": "报告问题",
+          "source": "源代码"
         },
         "SidebarToolbar": {
           "19e32d0e5f": "打开文件夹选择器以添加项目",
@@ -7228,7 +7255,8 @@
           "3394d1f663": "检查中",
           "d69a09b672": "启动时会自动检查更新。",
           "7173352632": "空闲",
-          "e3b9d21c07": "可用。通过系统包管理器更新 NASH — NASH 无法自行安装此版本。"
+          "e3b9d21c07": "可用。通过系统包管理器更新 NASH — NASH 无法自行安装此版本。",
+          "updateFeedUnavailable": "此版本不提供更新。"
         },
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "从工作区的“打开方式”菜单中选择可用的应用程序。",
@@ -8095,7 +8123,8 @@
           "serverWorkspaceWindowClosed": "工作区窗口已关闭",
           "serverRuntimeUnavailable": "NASH 不可用",
           "serverRuntimeUnavailableDescription": "SSH 传输已连接，但 NASH 运行时未应答。主机可能仍在运行。",
-          "serverReconnecting": "重新连接"
+          "serverReconnecting": "重新连接",
+          "advertiseThisAppHelpDesktop": "创建访问链接，让浏览器或其他 NASH 客户端连接到此应用。"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "复制 {{value0}}"
@@ -8461,7 +8490,9 @@
           "addTitle": "添加 SSH 主机",
           "editDescription": "更新此机器的连接详情。更改将在下次连接时生效。",
           "addDescription": "添加一台可通过 SSH 登录的持久机器。",
-          "editingPrefix": "正在编辑"
+          "editingPrefix": "正在编辑",
+          "remoteRuntimeHelp": "选择此主机上用于运行 NASH 的 Node.js。“NASH 管理的 Node”会上传自带的 Node.js，无需 npm；“主机 Node”使用主机上已安装的 Node.js。",
+          "remoteRuntimePinnedNode": "NASH 管理的 Node"
         },
         "TasksPane": {
           "f71d8a9dd3": "任务提供者",
@@ -8638,7 +8669,9 @@
             "fastDescription": "按住修饰键滚动时的额外倍数。",
             "tui": "TUI",
             "tuiDescription": "面向全屏终端应用的离散滚轮报告。"
-          }
+          },
+          "defaultShellDescription": "选择 NASH 新建本地终端窗格时打开的 Shell。",
+          "customShellHelp": "输入 PATH 中的 Shell 名称或可执行文件路径。NASH 会将其作为登录 Shell 启动。"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "预览 {{value0}} 主题",
@@ -9827,7 +9860,29 @@
             "7166b9090c": "通过 gh CLI 进行 GitHub 身份验证。",
             "f16e41cc72": "GitHub 集成",
             "760e2446e0": "使用保存的 API 令牌或环境变量进行 Bitbucket Cloud 身份验证。",
-            "af5ae87847": "访问令牌"
+            "af5ae87847": "访问令牌",
+            "clefRoutingDescription": "保存用于路由工作台请求的 Clef API 令牌和账户 ID。",
+            "clef": "clef",
+            "routing": "路由",
+            "cloudflare": "cloudflare",
+            "workbench": "工作台",
+            "accountId": "账户 ID",
+            "routingTableKeyword": "路由表",
+            "model": "模型",
+            "reasoning": "推理",
+            "proposal": "提案",
+            "executor": "执行器",
+            "dotIngress": "来自 dot 的任务",
+            "dotIngressDescription": "开启或关闭本地 dot 接口，选择 dot 可用的工作区及其最高权限，并设置提交限制。",
+            "dot": "dot",
+            "workspaceWrite": "工作区写入",
+            "readOnly": "只读",
+            "rateLimit": "速率限制",
+            "submissionLimit": "提交限制",
+            "remoteAccess": "远程访问",
+            "gptSites": "GPT Sites",
+            "pairing": "配对",
+            "accessToken": "访问令牌"
           }
         },
         "jira": {
@@ -11325,7 +11380,8 @@
           "manageConnectionLink": "集成"
         },
         "MobileRelayBetaNotice": {
-          "notice": "Orca Relay 目前处于测试阶段。"
+          "notice": "Orca Relay 目前处于测试阶段。",
+          "nashUnavailable": "NASH 版本不提供 Orca Relay 和移动端推送通知。"
         },
         "EditorFontFamilySetting": {
           "title": "编辑器字体",
@@ -11581,7 +11637,9 @@
           "experimental": "实验性",
           "description": "安装和管理 NASH 插件。插件在此计算机上运行，即使是 SSH 工作区也是如此。",
           "logsFailed": "无法加载插件日志。",
-          "rollbackFailed": "无法回滚此插件。之前的不可变版本可能不可用。"
+          "rollbackFailed": "无法回滚此插件。之前的不可变版本可能不可用。",
+          "orcaCatalogLabel": "使用 Orca 插件目录",
+          "orcaCatalogDescription": "从 Orca 服务器下载官方插件列表和插件安全列表。"
         },
         "PluginSettingsRow": {
           "blocked": "已阻止",
@@ -11640,7 +11698,11 @@
             "install": "安装插件",
             "permissions": "插件权限",
             "logs": "插件日志",
-            "development": "开发插件"
+            "development": "开发插件",
+            "orcaCatalogTitle": "使用 Orca 插件目录",
+            "orcaCatalogDescription": "从 Orca 服务器下载官方插件列表和插件安全列表。",
+            "orcaMarketplace": "Orca 插件市场",
+            "safetyList": "插件安全列表"
           }
         },
         "LinearAgentSkillGuide": {
@@ -11891,7 +11953,8 @@
           "keywordSignIn": "登入",
           "keywordSignOut": "登出",
           "keywordRelay": "中继",
-          "keywordCloud": "云"
+          "keywordCloud": "云",
+          "nashUnavailable": "NASH 版本不支持 Orca Cloud 登录。"
         },
         "automations": {
           "showButton": "显示自动化按钮",
@@ -12099,7 +12162,610 @@
           "usageTitle": "套餐用量",
           "usageDescription": "已关联 Coding Plan 的实时配额窗口，随状态栏用量周期刷新。",
           "planLevel": "套餐：{{value0}}",
-          "hostOnly": "请在运行 NASH 的电脑上的桌面应用中更改套餐站点和 API 密钥。"
+          "hostOnly": "请在运行 NASH 的电脑上的桌面应用中更改套餐站点和 API 密钥。",
+          "detailsUnavailable": "只能在运行 NASH 的电脑上读取套餐凭据详情。"
+        },
+        "UnsealedCredentialNotice": {
+          "body": "{{credential}} 未加密存储，因为此系统没有 NASH 可用的系统密钥环。任何能读取磁盘或其备份的人都能读取此凭据。请安装并解锁 gnome-keyring 或 kwallet，然后重新保存以加密保护。"
+        },
+        "clef": {
+          "clear": {
+            "action": "清除凭据",
+            "title": "清除 Clef 凭据？",
+            "cancel": "取消",
+            "descriptionPlain": "这将从此电脑移除已保存的 API 令牌和账户 ID。保存新凭据之前，Clef 无法对任务进行分类。"
+          },
+          "form": {
+            "show": "显示",
+            "label": "Clef 凭据",
+            "tokenLabel": "API 令牌",
+            "showToken": "显示 API 令牌",
+            "accountLabel": "账户 ID",
+            "showAccount": "显示账户 ID",
+            "save": "保存凭据",
+            "tokenDescriptionPlain": "从 Cloudflare 控制台获取，需具有 Workers AI 访问权限。",
+            "accountDescriptionPlain": "你的 Cloudflare 账户 ID，共 32 个字符。",
+            "cancel": "取消"
+          },
+          "credentials": {
+            "tokenMissing": "请输入 API 令牌。",
+            "tokenTooShort": "API 令牌过短，未保存任何内容。请粘贴完整令牌。",
+            "tokenTooLong": "API 令牌过长，未保存任何内容。请仅粘贴令牌。",
+            "tokenInvalidCharacters": "API 令牌只能包含可见的 ASCII 字符，且不能有空格。未保存任何内容。",
+            "accountIdMissing": "请输入账户 ID。",
+            "accountIdInvalid": "账户 ID 必须是 32 位小写十六进制字符。未保存任何内容。",
+            "writeFailed": "无法将凭据写入磁盘，未保存任何内容。",
+            "clearFailed": "部分已存储凭据无法移除。请再次尝试清除。",
+            "saveCallFailed": "NASH 未收到响应，无法保存凭据。请重新输入后重试。",
+            "clearCallFailed": "NASH 无法确认凭据是否已清除。请检查上方状态后重试。",
+            "missingFields": "请输入 API 令牌和账户 ID。",
+            "cleared": "API 令牌和账户 ID 已从此电脑移除。",
+            "sealingUnavailablePlain": "此电脑无法安全存储令牌，因此未保存。",
+            "savedPlain": "已保存。此令牌不会再次显示。"
+          },
+          "status": {
+            "unavailable": "状态不可用",
+            "saved": "凭据已保存",
+            "incomplete": "不完整",
+            "accountMissing": "API 令牌已保存；缺少账户 ID",
+            "tokenMissing": "账户 ID 已保存；缺少 API 令牌",
+            "readFailed": "无法读取 Clef 凭据的存储状态。",
+            "notProtected": "未受保护",
+            "notSetUp": "未设置",
+            "notProtectedDetail": "已保存的凭据未受保护，NASH 不会使用它们。请清除后重新保存。"
+          },
+          "card": {
+            "title": "Clef",
+            "descriptionPlain": "Clef 按类型对任务分类，将其交给该类型所选的智能体。"
+          },
+          "verification": {
+            "blockPaused": "验证已暂停：{{reason}}。",
+            "verify": "验证",
+            "verifying": "正在验证…",
+            "status": {
+              "notConfigured": "未配置",
+              "notConfiguredDetail": "请先保存 API 令牌和账户 ID。",
+              "contractUnverified": "等待验证",
+              "ready": "就绪",
+              "readyDetail": "Clef 可以对任务进行分类。",
+              "unreachable": "无法连接",
+              "unreachableDetail": "最近的调用无法连接到 Clef。",
+              "circuitOpen": "因多次失败已暂停",
+              "circuitOpenDetail": "调用因连续失败而暂停，稍后会自动恢复。",
+              "quotaLatched": "额度已用尽",
+              "quotaLatchedDetail": "Clef 报告额度已用尽；调用将在 UTC 00:00 后恢复。",
+              "authFailed": "凭据被拒绝",
+              "authFailedDetail": "Clef 拒绝了已保存的凭据。请在上方保存新凭据。",
+              "sealingUnavailablePlain": "无法存储凭据",
+              "sealingUnavailableDetailPlain": "此电脑无法安全存储凭据，因此无法使用 Clef。",
+              "contractUnverifiedDetailPlain": "运行验证，检查 Clef 是否以预期格式响应。",
+              "identityUnpinnedPlain": "模型未确认",
+              "identityUnpinnedDetailPlain": "请重新验证，然后使用包含响应模型名称的结果。"
+            },
+            "problems": {
+              "httpStatus": "Clef 返回的 HTTP 状态码不是 200。",
+              "envelopeUnrecognized": "响应封装的结构未知。",
+              "envelopeNotSuccessful": "响应封装报告失败。",
+              "responseModelUnobserved": "响应未注明回答所用的模型。",
+              "responseModelDisallowed": "响应注明的模型不在允许范围内。",
+              "answerKeysMismatch": "回答与所提问题不匹配。",
+              "optionIdsNotEchoed": "回答未原样返回选项 ID。",
+              "probabilityOutOfRange": "某个概率值不在 0 到 1 之间。",
+              "probabilitySum": "某个问题各选项的概率之和不为 1。",
+              "usageMissing": "响应未报告 Token 用量。",
+              "resultIncomplete": "结果不够完整，无法使用。"
+            },
+            "blockers": {
+              "classifierUnavailable": "无法使用 Clef",
+              "invalidOutput": "Clef 的回答无效",
+              "missingInputs": "任务需要进一步说明",
+              "ambiguous": "回答存在歧义",
+              "launchBlocked": "无法启动运行",
+              "notConfigured": "未配置凭据",
+              "identityUnpinned": "尚未固定响应模型",
+              "transientExhausted": "临时故障已耗尽重试次数",
+              "quotaExhausted": "Clef 额度已用尽",
+              "budgetExhausted": "不允许继续尝试",
+              "authOrAccount": "凭据或账户被拒绝",
+              "modelUnavailable": "Clef 模型不可用",
+              "requestRejected": "Clef 拒绝了请求",
+              "dataBoundary": "数据边界不允许此内容",
+              "possibleTruncation": "回答可能被截断",
+              "identityMismatch": "响应模型与固定模型不同",
+              "interrupted": "调用已中断",
+              "estimateExceeded": "请求大小超出允许范围",
+              "contractUnverified": "回答格式尚未验证",
+              "schemaViolation": "回答不符合响应结构要求",
+              "lowMargin": "领先答案与次选答案的差距不足",
+              "needsClarification": "任务未说明工作类型",
+              "choiceOutside": "回答选择了未提供的选项",
+              "inconsistentTypeProfile": "任务类型与配置不匹配",
+              "requiredProfile": "所需配置不可用",
+              "nonEnglish": "目标未使用英语描述",
+              "inProgress": "已有分类正在进行",
+              "emptySet": "没有符合条件的选项",
+              "inconsistentDelegation": "请求委派的工作应由协调器保留",
+              "coordinatorRoute": "协调器路由不可用",
+              "launchRefused": "启动被拒绝",
+              "launchUnverifiable": "无法验证启动情况",
+              "noEligibleAgent": "没有智能体可接受此任务"
+            },
+            "errors": {
+              "credentialsMissing": "验证前请先保存 Clef API 令牌和账户 ID。",
+              "authFailed": "Clef 拒绝了已保存的凭据。请保存新凭据后再验证。",
+              "quotaLatched": "Clef 报告额度已用尽。验证已暂停，将于 UTC 00:00 后恢复。",
+              "circuitOpen": "Clef 调用因连续失败而暂停。请几分钟后重试。",
+              "inProgress": "已有验证正在进行。",
+              "requestInvalid": "无法准备验证请求，未发送任何内容。",
+              "clefUnavailable": "Clef 验证当前不可用。",
+              "routingNotConfigured": "此会话无法使用 Clef 验证。",
+              "forbidden": "只有此电脑上的桌面应用可以验证 Clef。",
+              "notConnected": "此版本尚未接入 Clef 验证。",
+              "callFailed": "验证请求未完成。请检查状态后重试。",
+              "invalidResponse": "应用返回的验证结果无法在此页面读取。",
+              "credentialsUnprotected": "已保存的凭据未受保护，因此不会使用。请清除后重新保存。",
+              "resultUnconfirmed": "该结果已不是最新结果。使用前请重新验证。",
+              "resultNotUsable": "无法使用该结果。",
+              "resultWriteFailed": "无法保存结果。请重试。"
+            },
+            "pending": {
+              "title": "等待你确认",
+              "thresholds": "置信度阈值：达到 {{yes}} 或以上时委派任务，低于或等于 {{no}} 时保留任务；任务类型的领先选项须比次选项高出 {{margin}}。",
+              "wording": "回答措辞：{{options}} 个任务类型选项和 {{answers}} 个委派回答。",
+              "effectPlain": "这些是默认值。修改任意一项后，都需要重新验证 Clef。"
+            },
+            "report": {
+              "failedReason": "{{reason}}：{{detail}}。",
+              "titlePlain": "验证结果",
+              "passed": "Clef 已按预期格式响应。",
+              "notUsable": "无法使用此结果：",
+              "useResult": "使用此结果",
+              "failedTitlePlain": "验证失败"
+            },
+            "blockStatusPlain": "无法读取 Clef 状态。",
+            "blockCredentialsPlain": "请先保存 API 令牌和账户 ID。",
+            "otherBundlePlain": "Clef 的问题自上次验证后已变更。请重新验证。",
+            "lastVerified": "上次验证于 {{time}}。",
+            "titlePlain": "验证",
+            "pinnedPlain": "结果已保存。Clef 状态：{{status}}。"
+          },
+          "saved": {
+            "label": "凭据",
+            "description": "已保存在此电脑上，不会再次显示。",
+            "replace": "替换"
+          }
+        },
+        "routingTable": {
+          "card": {
+            "refresh": "刷新",
+            "unavailable": "不可用",
+            "blocked": "受阻",
+            "blockedTitle": "路由受阻",
+            "pendingNotice": "待审阅的建议更改：{{count}}",
+            "review": "审阅",
+            "title": "各类任务使用的智能体"
+          },
+          "active": {
+            "versionActive": "版本 {{version}} 已启用",
+            "created": "创建于 {{time}}"
+          },
+          "availability": {
+            "available": "可用",
+            "unavailable": "不可用",
+            "notChecked": "未检查",
+            "unverified": "未验证",
+            "awaiting": "此选项依赖一项尚待你确认的默认设置。",
+            "reasons": {
+              "cliMissing": "未安装此 CLI。",
+              "cliDisabled": "此 CLI 已在设置中关闭。",
+              "cliNotLaunchable": "此 CLI 已安装，但无法启动。",
+              "modelNotListed": "你的账户无法使用此模型。",
+              "modelExcluded": "此处不允许使用该模型名称，它可能是别名或被排除的模型。",
+              "reasoningUnsupported": "此模型不支持该推理级别。",
+              "notEntitled": "你的套餐不包含此模型。",
+              "workspaceNotGit": "Codex 需要在工作区文件夹中运行；浮动终端没有工作区文件夹。",
+              "cliUnobserved": "无法检测已安装的 CLI。",
+              "modelListUnavailable": "无法读取模型列表。",
+              "reasoningUnverified": "无法确认此模型是否支持该推理级别。",
+              "authUnobserved": "无法确认登录状态。",
+              "authFailedPlain": "登录失败。请重新登录此 CLI，再检查可用性。",
+              "quotaExhaustedPlain": "已达到使用限额。当新的用量数据表明限额已重置时会解除限制；你也可以在重置后检查可用性。",
+              "recordDamagedPlain": "无法读取上次可用性检查结果。请重新检查可用性。",
+              "notCheckedPlain": "最近未检查。"
+            },
+            "summaryPlain": "检查结果：{{available}} 个可用，{{unavailable}} 个不可用，{{unverified}} 个未验证。",
+            "checksUnavailablePlain": "当前无法检查可用性。请重启应用。",
+            "checkingPlain": "正在检查…",
+            "checkPlain": "检查可用性"
+          },
+          "proposals": {
+            "evidence": "来源：{{sources}}",
+            "becomes": "更改为",
+            "none": "无",
+            "noReviewers": "无审查者",
+            "coordinator": "协调器",
+            "staleTitle": "基于旧版本提出",
+            "accept": "接受",
+            "edit": "编辑并接受",
+            "reject": "拒绝",
+            "noRowPlain": "未设置",
+            "notesOnlyPlain": "选择不变，仅修改备注。",
+            "metaPlain": "{{time}} · 基于版本 {{version}}",
+            "staleBodyPlain": "当前使用的是版本 {{active}}，此建议已无法接受。请拒绝此建议，或在上方列表中重新修改。",
+            "historyPlain": "已决定（{{count}}）",
+            "pendingTitlePlain": "建议更改",
+            "noneWaitingPlain": "没有待处理建议。在你接受建议前，不会有任何更改。"
+          },
+          "versions": {
+            "title": "版本历史",
+            "version": "版本 {{version}}",
+            "active": "（当前）",
+            "revertTo": "还原到版本 {{version}}",
+            "revert": "还原",
+            "confirmTitle": "还原到版本 {{version}}？",
+            "confirmBody": "版本 {{version}} 的内容将成为新的当前版本。版本 {{active}} 会保留在历史记录中，你可以随时切换回来。",
+            "cancel": "取消"
+          },
+          "editor": {
+            "coordinator": "协调器",
+            "coordinatorModel": "协调器模型",
+            "taskType": "任务类型",
+            "model": "模型",
+            "requirement": "要求",
+            "required": "必须满足",
+            "whenSupported": "支持时使用",
+            "modelFor": "{{task}} 使用的模型",
+            "cancel": "取消",
+            "acceptModified": "接受修改后的建议",
+            "geminiExcluded": "Gemini 4 模型已从路由中排除。",
+            "aliasUnpinned": "请输入确切的模型 ID，不要使用 opus 或 latest 等别名。",
+            "slugRejected": "此模型 ID 已停用或被拒绝。请输入其他确切的模型 ID。",
+            "modelInvalid": "请输入确切的模型 ID，例如 claude-sonnet-5-5。",
+            "onlyPrimaryInherits": "只有 Claude 主会话和 Claude 工作流可以继承协调器设置。",
+            "primaryInherits": "Claude 主会话始终使用协调器设置：请将模型和推理设置为“继承”。",
+            "coordinatorStays": "协调器推理始终在 Claude 主会话中进行。",
+            "ifSupportedConcrete": "“支持时使用”需要明确的推理级别，不能设为“继承”。",
+            "rowInvalid": "此行无效。请检查目标、模型和推理级别。",
+            "nothingChanged": "当前路由表没有变化。请先编辑至少一条路由。",
+            "modifyTitlePlain": "接受前编辑",
+            "modifyBodyPlain": "你的编辑将替换建议的更改。接受后立即生效。",
+            "agentFor": "{{task}} 使用的智能体",
+            "effortFor": "{{task}} 的推理强度",
+            "effortRequirementFor": "{{task}} 的推理强度要求",
+            "agent": "智能体",
+            "effort": "推理强度"
+          },
+          "import": {
+            "title": "导入更改集",
+            "jsonLabel": "更改集（JSON）",
+            "reasonLabel": "更改原因",
+            "cancel": "取消",
+            "reasonMissing": "请用英语简要说明更改原因。",
+            "bodyPlain": "将添加到“建议更改”中，供你审阅和接受。",
+            "submitPlain": "导入",
+            "noActivePlain": "任务路由不可用，无法导入。",
+            "notJsonPlain": "这不是有效的 JSON。请粘贴完整的更改集。",
+            "invalidPlain": "此更改集包含无法使用的值。请检查每个智能体、模型和推理强度。"
+          },
+          "notices": {
+            "activated": "版本 {{version}} 现已启用。",
+            "reverted": "版本 {{version}} 现已启用，内容来自版本 {{from}}。",
+            "rejectedPlain": "已拒绝建议更改。",
+            "importedPlain": "已添加到“建议更改”。在那里接受后即可使用。",
+            "saved": "已保存。"
+          },
+          "refusals": {
+            "duplicateActivePlain": "当前已使用这些选项，未保存任何内容。",
+            "duplicatePendingPlain": "“建议更改”中已有相同更改等待处理。请在那里审阅。",
+            "integrityFailedPlain": "无法读取已保存的任务路由，因此不会路由任何任务，也不会改用默认设置。",
+            "taxonomyMismatchPlain": "已保存的任务路由适用于另一份任务列表，无法使用。请在“高级”中导入适用于当前任务的路由。",
+            "notInstalledPlain": "尚未设置任务路由。请重启应用以安装默认设置。",
+            "invalidTablePlain": "此更改会导致任务路由无效，因此未保存。",
+            "versionConflictPlain": "保存期间任务路由已发生变化。请重试。",
+            "forbiddenCallerPlain": "只能在此应用中更改任务路由。",
+            "proposalUnknownPlain": "此建议更改已不存在。",
+            "proposalInvalidPlain": "无法读取此建议更改，因此无法接受。",
+            "alreadyDecidedPlain": "此建议更改已有决定。",
+            "proposalSupersededPlain": "此建议更改基于旧选项，已搁置，未作任何更改。",
+            "noChangePlain": "所有选项都与原来相同，未作任何更改。",
+            "forbiddenProposerPlain": "无法在此处提交此类更改。",
+            "invalidProposalPlain": "此更改无效，因此未保存。",
+            "baseNotActivePlain": "准备此更改后，任务路由已发生变化。请重试。",
+            "tooManyPendingPlain": "等待处理的建议更改过多。请先在“高级”中接受或拒绝一部分。",
+            "versionUnknownPlain": "该历史版本已不存在。",
+            "unknownPlain": "任务路由拒绝了此更改。",
+            "invalidResponsePlain": "无法在此处读取应用的响应。",
+            "notConnectedPlain": "此版本无法使用任务路由。",
+            "unavailablePlain": "任务路由当前不可用。请重启应用。",
+            "untrustedCallerPlain": "只能在此电脑的桌面应用中读取或更改任务路由。",
+            "callFailedPlain": "请求未完成。请重试。"
+          },
+          "labels": {
+            "coordinatorReasoning": "协调器推理",
+            "complexPlanningReasoning": "复杂规划与推理",
+            "softwareEngineering": "软件工程",
+            "scientificExperimentValidation": "科学实验验证",
+            "complexPdfEvidenceAnalysis": "复杂 PDF 与证据分析",
+            "generalResearchAnalysis": "一般研究与分析",
+            "routineAnalysisBatch": "批量常规分析",
+            "highQualityWriting": "高质量写作",
+            "fastWritingOrAlternativeDraft": "快速写作或备选草稿",
+            "configuredProjectWorkflow": "已配置的项目工作流",
+            "claudePrimary": "Claude 主会话",
+            "claudeSubagent": "Claude 子智能体",
+            "claudeWorkflow": "Claude 工作流",
+            "codexCli": "Codex CLI",
+            "agyCli": "agy CLI",
+            "claudeHeadless": "Claude 无界面审查",
+            "none": "无",
+            "minimal": "最低",
+            "low": "低",
+            "medium": "中",
+            "high": "高",
+            "xhigh": "特高",
+            "max": "最大",
+            "ultra": "极高",
+            "inherit": "继承",
+            "whenSupported": "（支持时使用）",
+            "bundledUpdate": "应用更新",
+            "benchmarkReview": "基准评测审查",
+            "agent": "智能体",
+            "userImport": "你的更改",
+            "accepted": "已接受",
+            "acceptedModified": "已接受并修改",
+            "rejected": "已拒绝",
+            "superseded": "已被取代",
+            "sourceBundled": "应用默认设置",
+            "sourceUser": "你的路由表",
+            "sameAsCoordinator": "与协调器相同"
+          },
+          "inline": {
+            "edit": "编辑",
+            "reviewersTitle": "审查者",
+            "reviewersHelp": "审查已完成且没有自动检查的工作。",
+            "noReviewers": "未设置审查者，无法审查没有自动检查的工作。",
+            "reviewer": "审查者 {{number}}",
+            "editFor": "编辑{{task}}",
+            "coordinator": "协调器",
+            "listLabel": "各类任务使用的智能体",
+            "save": "保存",
+            "cancel": "取消",
+            "agentFor": "{{task}} 使用的智能体",
+            "modelFor": "{{task}} 使用的模型",
+            "effortFor": "{{task}} 的推理强度",
+            "onlyIfSupported": "仅在模型支持时使用",
+            "coordinatorEffort": "协调器推理强度"
+          },
+          "advanced": {
+            "unreadable": "无法读取的建议更改：{{count}}",
+            "importLabel": "导入更改集",
+            "importDescription": "以 JSON 格式粘贴路由。它将在“建议更改”中等待你接受。",
+            "import": "导入…"
+          }
+        },
+        "dotIngress": {
+          "failures": {
+            "listenFailedPlain": "NASH 未能准备好接收 dot 任务。请关闭后重新开启，或重启应用。",
+            "metadataInvalidPlain": "NASH 无法准备 dot 连接，因此连接保持关闭。",
+            "metadataWriteFailedPlain": "NASH 无法保存 dot 连接详情，因此连接保持关闭。",
+            "metadataNotSecuredPlain": "NASH 无法保护 dot 连接详情，已将其移除，连接保持关闭。"
+          },
+          "refusals": {
+            "notConnected": "此版本尚未接入 dot 设置，无法显示或更改。",
+            "forbidden": "只有此电脑上的桌面应用可以读取或更改 dot 设置。",
+            "unsupportedHost": "dot 仅支持此电脑上的本地工作区，不支持 SSH、WSL 或远程工作区。",
+            "workspaceUnavailable": "应用无法确认此工作区为本地工作区，未作任何更改。",
+            "workspaceUnknown": "此工作区已不在 dot 列表中。列表已刷新。",
+            "recoveryRequired": "已存储的 dot 设置需要恢复，未作任何更改。",
+            "busy": "设置存储繁忙，未作任何更改。请重试。",
+            "invalidValue": "应用认定此值无效，未作任何更改。",
+            "callFailed": "dot 设置请求未完成。当前显示的是现有状态。",
+            "invalidResponse": "应用返回的 dot 设置无法在此页面读取。",
+            "interfaceUnavailablePlain": "开关设置已保存，但此会话无法接收 dot 任务。请重启应用后再次检查。"
+          },
+          "interface": {
+            "switch": "接受 dot 任务",
+            "switchDescription": "关闭后将停止接收新的 dot 任务，已启动的运行会继续。",
+            "refresh": "刷新",
+            "notReady": "未就绪",
+            "ready": "就绪",
+            "off": "关闭",
+            "readyDetail": "此电脑已就绪。NASH 无法判断 dot 是否已连接。",
+            "notReadyDetail": "已开启，但此会话尚未就绪。请关闭后重新开启，或重启应用。"
+          },
+          "unavailable": "不可用",
+          "access": {
+            "title": "允许写入工作区 {{label}}？",
+            "reversible": "切回只读会阻止新的写入任务；已启动的运行仍保留原有权限。",
+            "cancel": "取消",
+            "confirm": "允许工作区写入",
+            "descriptionBothPaths": "dot 通过本地接口或你的 GPT Site 提交的写入任务，会直接获得此工作区的文件编辑权限，不会再向你确认。dot 还可以批准这些任务中的 Bash、PowerShell 等命令权限请求。"
+          },
+          "workspaces": {
+            "readOnly": "只读",
+            "workspaceWrite": "工作区写入",
+            "accessLabel": "{{label}} 的最高权限",
+            "off": "关闭",
+            "enableLabel": "允许 dot 使用 {{label}}",
+            "noneEnabled": "尚未启用",
+            "enabledCount": "已启用 {{count}} 个",
+            "noCandidates": "没有其他可添加的本地工作区",
+            "choose": "选择要添加的工作区",
+            "add": "允许 dot 使用",
+            "empty": "尚未为 dot 启用任何工作区，因此 dot 无法启动任务。",
+            "name": "dot 可用的工作区",
+            "pickerLabel": "选择允许 dot 使用的工作区",
+            "title": "工作区",
+            "descriptionPlain": "dot 通过此处显示的名称识别工作区，不会看到其文件夹路径。",
+            "readOnlyNotePlain": "工作区默认只读。允许写入时会请你确认。"
+          },
+          "limits": {
+            "perMinute": "每分钟任务数",
+            "perMinuteDescription": "按任意连续 60 秒计算，范围为 1 到 {{max}}。",
+            "perDay": "每个 UTC 日的任务数",
+            "perDayDescription": "按 UTC 自然日计算，范围为 1 到 {{max}}。",
+            "name": "提交限制",
+            "title": "限制",
+            "descriptionPlain": "超出限制的任务会被拒绝，不会启动。每次提交都会计数，包括失败的任务。"
+          },
+          "section": {
+            "title": "来自 dot 的任务",
+            "descriptionPlain": "dot 任务会直接启动，不会再向你确认。它只能在你的限制范围内使用下方已启用的工作区。"
+          }
+        },
+        "dotRemote": {
+          "refresh": "刷新",
+          "switch": {
+            "label": "允许远程访问",
+            "description": "关闭后将停止检查 Site 和发送更新。已启动的运行会继续。"
+          },
+          "pill": {
+            "unavailable": "不可用",
+            "off": "关闭",
+            "unpaired": "未配对",
+            "pairing": "正在配对",
+            "connected": "已连接",
+            "offline": "离线",
+            "reconnect": "需要重新连接",
+            "pairAgain": "重新配对",
+            "syncFailing": "同步失败"
+          },
+          "detail": {
+            "off": "已关闭。应用不会检查 Site，也不会向其发送内容。",
+            "unpaired": "已开启，但此电脑尚未与 Site 配对。",
+            "pairing": "正在等待 Site 所有者批准配对码。",
+            "connected": "已连接到 Site 信箱。应用无法判断 dot 是否已连接到 Site。",
+            "offline": "离线。应用目前无法连接到 Site，正在持续重试。",
+            "reconnect": "已停止。保存有效的访问令牌后，应用才会继续检查 Site。",
+            "pairAgain": "已停止。此电脑重新配对后，应用才会继续检查 Site。"
+          },
+          "status": {
+            "neverSynced": "尚未与 Site 同步。",
+            "lastSync": "上次同步：{{time}}",
+            "pendingEvents": "待发送的更新：{{pending}}",
+            "localNotReady": "此电脑上的 dot 任务接收已关闭或尚未就绪，来自 Site 的任务将等待其就绪。",
+            "syncFailingPlain": "此电脑已连续 {{failures}} 次同步失败，首次失败于 {{time}}。应用将持续重试。"
+          },
+          "reconnect": {
+            "tokenMissing": "未存储可用的 Site 访问令牌。请重新粘贴令牌。",
+            "tokenRejected": "Site 拒绝了访问令牌，它可能已被替换。请从 Site 设置中粘贴当前令牌。",
+            "sessionRejected": "Site 拒绝了此电脑的会话。请重新配对以恢复。",
+            "sessionExpired": "与 Site 的会话在续期前已过期。请重新配对以恢复。",
+            "sessionEnded": "与 Site 的会话已结束，无法恢复。请重新配对。",
+            "pairingRevoked": "配对已撤销。请重新配对以恢复。",
+            "pairingExpired": "此配对在 Site 上已到期。请重新配对以恢复。",
+            "credentialReused": "Site 检测到此电脑已被替换的旧凭据再次被使用，为安全起见已撤销配对。请重新配对以恢复。",
+            "credentialInvalid": "Site 未接受此电脑的凭据。请重新配对以恢复。",
+            "credentialUnsaved": "应用无法安全存储此电脑的凭据，因此未保留配对。请重新配对以恢复。"
+          },
+          "token": {
+            "saved": "令牌已保存",
+            "notUsable": "令牌不可用",
+            "plaintextRefusedPlain": "已存储的令牌未受保护，应用不会使用它。请重新粘贴令牌。",
+            "sealingUnavailablePlain": "此电脑无法安全存储令牌，因此无法建立远程连接。"
+          },
+          "connection": {
+            "title": "连接",
+            "originPlaceholder": "https://example.com",
+            "tokenLabel": "Site 访问令牌",
+            "tokenReplace": "粘贴新令牌以替换已保存的令牌",
+            "save": "保存连接",
+            "saved": "连接已保存。",
+            "addressLabel": "Site 地址",
+            "addressHelp": "更改地址会结束当前配对。",
+            "tokenHelpPlain": "从 Site 设置中的服务访问部分获取。此令牌不会再次显示。"
+          },
+          "pairing": {
+            "approved": "配对已批准。此电脑现已开始检查 Site 信箱。",
+            "denied": "配对已在 Site 上被拒绝。如果这是误操作，请重新开始配对。",
+            "expired": "配对码在获批前已过期。请重新开始配对以获取新码。",
+            "failed": "Site 已不再接受此配对码，无法完成配对。请重新开始配对。",
+            "pairedUntil": "配对有效期至 {{until}}，批准于 {{time}}。",
+            "pairedAt": "配对于 {{time}}。",
+            "needsSwitch": "请开启远程访问以进行配对。",
+            "pairAgain": "重新配对",
+            "startAgain": "重新开始配对",
+            "start": "开始配对",
+            "codeLabel": "配对码",
+            "instructions": "以所有者身份登录 Site 后打开配对页面，确认页面显示此配对码，然后批准配对。",
+            "openPage": "打开配对页面",
+            "expiresIn": "{{time}} 后过期",
+            "codeExpired": "配对码已过期。正在向 Site 确认。",
+            "title": "配对",
+            "needsConnectionPlain": "请保存 Site 地址和访问令牌以进行配对。"
+          },
+          "revoke": {
+            "action": "撤销配对",
+            "title": "撤销此电脑的配对？",
+            "description": "撤销后，应用将停止检查 Site，并且在重新配对前不再接受其新任务。已经启动的运行不会被取消。",
+            "cancel": "取消",
+            "siteNotTold": "已在此电脑上撤销。未能通知 Site，因此它可能仍显示此配对。"
+          },
+          "refusals": {
+            "originNotUrl": "请输入完整网址，例如 https://example.com。",
+            "tokenEmpty": "请粘贴 Site 访问令牌。",
+            "tokenMissing": "Site 访问令牌为空。请重新粘贴。",
+            "tokenTooShort": "Site 访问令牌过短。请复制完整令牌后重新粘贴。",
+            "tokenTooLong": "Site 访问令牌过长。",
+            "tokenCharacters": "Site 访问令牌包含空格或不允许的字符。请重新粘贴。",
+            "tokenInvalid": "Site 访问令牌格式不符合要求。请重新粘贴。",
+            "unavailable": "此会话中远程访问未运行。请重启应用后再次检查。",
+            "disabled": "请先开启远程访问。",
+            "writeFailed": "无法存储令牌，未保存任何内容。",
+            "reconnectNeeded": "Site 拒绝了此电脑的访问。请粘贴新的 Site 访问令牌，然后重新开始配对。",
+            "pairingRefused": "Site 拒绝开始配对。请几分钟后重试。",
+            "notConnected": "此版本尚未接入远程访问，无法显示或更改。",
+            "forbidden": "只有此电脑上的桌面应用可以读取或更改远程访问设置。",
+            "invalidValue": "应用拒绝了此值，未作任何更改。",
+            "callFailed": "远程访问请求未完成。当前显示的是现有状态。",
+            "invalidResponse": "应用返回的远程访问状态无法在此页面读取。",
+            "originEmptyPlain": "请输入 Site 地址，例如 https://example.com。",
+            "originTooLongPlain": "Site 地址过长。",
+            "originSpacesPlain": "Site 地址不能包含空格。",
+            "originNotHttpsPlain": "Site 地址必须以 https:// 开头。",
+            "originSignInPlain": "请移除 Site 地址中的登录信息；访问令牌应填入专用字段。",
+            "originPathPlain": "请仅输入 Site 地址，主机名后不要附加其他内容，例如 https://example.com。",
+            "notConfiguredPlain": "请先保存 Site 地址及其访问令牌。",
+            "originInvalidPlain": "应用拒绝了此 Site 地址。请使用 https://example.com 这样的 HTTPS 地址，主机名后不要附加其他内容。",
+            "sealingUnavailablePlain": "此电脑无法安全存储令牌，未保存任何内容。",
+            "siteUnreachablePlain": "无法连接到 Site。请检查地址和网络连接后重试。"
+          },
+          "title": "远程访问",
+          "descriptionWorkspaceMax": "dot 通过你的 GPT Site 上的信箱访问此应用。此电脑通过 HTTPS 检查信箱，无需开放入站端口。来自 Site 的任务最多只能获得你为各工作区允许的权限。"
+        },
+        "usageMetersOff": {
+          "title": "NASH 不显示此用量",
+          "bodyPlain": "仅 Claude Code、Codex 和 agy 会通过各自的 CLI 报告用量。不会读取其他提供商的用量。"
+        },
+        "cliUsageReadings": {
+          "title": "CLI 报告的用量",
+          "body": "NASH 仅从各 CLI 读取用量：Claude Code 状态行、codex app-server 和 agy /usage。不会读取登录凭据，也不会向服务商查询用量。",
+          "noReading": "尚无用量数据",
+          "refresh": "刷新用量",
+          "claudeHintPlain": "在 NASH 中启动的 Claude 会话运行时显示。",
+          "codexHintPlain": "点击“刷新用量”读取。",
+          "agyHintPlain": "在状态栏开启 agy 用量显示后，点击“刷新用量”。",
+          "bodyPlain": "所有用量数据均来自 CLI 本身，不会通过登录凭据获取。"
+        },
+        "dot": {
+          "search": {
+            "remoteDescription": "让 dot 通过你的 GPT Site 访问此应用：开关、Site 地址和访问令牌、配对及撤销。"
+          }
+        },
+        "advancedDisclosure": {
+          "label": "高级"
+        },
+        "copyDetails": {
+          "copied": "详情已复制。",
+          "failed": "无法复制详情。",
+          "action": "复制详情"
+        },
+        "taskRouting": {
+          "search": {
+            "agentsDescription": "选择各类任务使用的智能体、模型和推理强度，并接受或拒绝建议更改。",
+            "effort": "推理强度",
+            "agent": "智能体"
+          }
         }
       },
       "right": {
@@ -13753,7 +14419,8 @@
           "984338477a": "主题",
           "c47e1bd149": "智能体",
           "windowsTerminalTitle": "设置 Windows 终端默认值",
-          "windowsTerminalSubtitle": "为新面板选择默认 Shell，以及终端中右键单击的行为。"
+          "windowsTerminalSubtitle": "为新面板选择默认 Shell，以及终端中右键单击的行为。",
+          "agentSubtitleNash": "选择你手动打开终端时使用的智能体。NASH 通过 Claude Code 执行任务。你可以随时切换。"
         },
         "OnboardingFooter": {
           "ba58547306": "返回",
@@ -14481,7 +15148,15 @@
                       "42525ba8a4": "将您的关键存储库带入 NASH，这样您就可以开始代理工作，而无需寻找文件夹。",
                       "workOnTwoTasks": "同时处理两项任务",
                       "agentSkillsName": "为智能体提供 NASH 技能",
-                      "agentSkillsDescription": "安装智能体用于操作 NASH 浏览器、控制你的电脑以及协调多步骤工作的技能。"
+                      "agentSkillsDescription": "安装智能体用于操作 NASH 浏览器、控制你的电脑以及协调多步骤工作的技能。",
+                      "claudeCodeName": "设置 Claude Code",
+                      "claudeCodeDescription": "NASH 通过 Claude Code 会话执行每个任务。请安装 Claude Code，并在终端中登录一次。",
+                      "clefName": "连接 Clef",
+                      "clefDescription": "Clef 按类型对任务分类，以便 NASH 选择智能体和模型。请添加 Clef 凭据并进行验证。",
+                      "dotName": "连接 dot",
+                      "dotDescription": "从 ChatGPT dot 向 NASH 发送任务。请开启本地接口或与你的 GPT Site 配对。",
+                      "workbenchRunName": "开始首次运行",
+                      "workbenchRunDescription": "在工作台向 NASH 提出请求，然后在那里跟进运行、任务和待处理提示。"
                     }
                   }
                 }
@@ -14626,6 +15301,14 @@
             "0d6efe9cf4": "当项目或工作树位于受保护文件夹时，建议在 macOS 上开启。",
             "dac08ec03e": "正在打开...",
             "6e3d62b816": "打开完全磁盘访问权限"
+          },
+          "FeatureWallSetupNashActions": {
+            "claudeCodeFound": "此电脑已安装 Claude Code。",
+            "claudeCodeMissing": "未找到 Claude Code。请安装后在终端运行一次 claude 并登录，然后重新检查。",
+            "checkAgain": "重新检查",
+            "openTaskRouting": "打开任务路由",
+            "openDotSettings": "打开 Dot 设置",
+            "openWorkbench": "打开工作台"
           }
         },
         "tips": {
@@ -15594,7 +16277,10 @@
             "b2e36f53a1": "发送崩溃报告失败。诊断票据 {{value0}} 已上传，但未关联。",
             "ead6fc0510": "没有捕获到自动崩溃报告。你仍然可以发送详情，并在可用时包含最近的诊断日志。",
             "b082f27490": "附加最近的诊断日志",
-            "e59f0b9427": "随报告发送经过删减且有大小限制的日志包。"
+            "e59f0b9427": "随报告发送经过删减且有大小限制的日志包。",
+            "nashNotSent": "NASH 不会发送崩溃报告。你可以复制详情以保留记录。",
+            "nashNoReport": "未捕获自动崩溃报告。",
+            "nashClose": "关闭"
           },
           "submit": {
             "notice": {
@@ -18559,7 +19245,8 @@
     "launchFailedMessage": "NASH 无法启动绘制其窗口的进程。",
     "launchFailedDetail": "NASH 重试了 {{recoveryCount}} 次，但未成功。",
     "processLimitDetail": "由于你的用户帐户已达到进程数上限，系统拒绝创建新进程。这通常由失控的终端、开发服务器或代理导致。请关闭其中一些，然后点击“重试”。",
-    "launchFailedGenericDetail": "系统拒绝启动它。请释放内存或关闭其他应用，然后点击“重试”。如果问题持续出现，请重新安装 NASH。"
+    "launchFailedGenericDetail": "系统拒绝启动它。请释放内存或关闭其他应用，然后点击“重试”。如果问题持续出现，请重新安装 NASH。",
+    "lowCommitAdvice": "请关闭不用的应用或 NASH 工作区以释放内存，或增大 Windows 分页文件，然后点击“重新加载”。"
   },
   "sessionSearch": {
     "panel": {
@@ -18588,7 +19275,8 @@
       "sessionsOther": "{{count}} 会话",
       "sessionsOfLoaded": "{{value0}} 次（共 {{value1}} 次）",
       "showMoreSessions": "显示更多会话",
-      "loadingMoreSessions": "正在加载更多会话..."
+      "loadingMoreSessions": "正在加载更多会话...",
+      "unsupportedAgent": "此电脑不支持所选智能体的历史搜索。请更新该电脑上的 NASH，或选择其他智能体。"
     }
   },
   "sessionHistory": {
@@ -18718,6 +19406,411 @@
       "removeTitle": "移除托管账户？",
       "removeDescription": "请先停止使用此配置的代理。移除将删除其保存的凭据和对话数据。系统登录不受影响。",
       "cancel": "取消"
+    }
+  },
+  "terminal": {
+    "sessionSaveFailure": {
+      "unknown": "NASH 无法保存终端状态。请重试。如果问题持续，请向支持人员提供 NASH 日志以便查明原因。"
+    },
+    "codexTerminalServerIsolationNotice": {
+      "title": "NASH 现已不再通过共享服务器运行 Codex"
+    },
+    "codexSharedServerBanner": {
+      "openedBeforeUpdateBody": "此终端在 NASH 开始为每个 Codex 提供独立服务器之前就已打开。",
+      "dialogDescription": "直接在终端中启动的 Codex 会话会共用一个后台服务器。NASH 会隔离由它启动的 Codex 会话。会话共用服务器时，关闭一个会话可能导致其他会话结束，智能体状态也可能不准确。",
+      "step1Note": "这会更改你的 Codex 设置，也会影响 NASH 之外的使用。",
+      "turnOffFailed": "NASH 无法关闭此设置。",
+      "stopFailed": "NASH 无法停止服务器。",
+      "confirmStopDescription": "这会关闭所有共用此服务器的 Codex 会话，包括 NASH 之外的会话。"
+    }
+  },
+  "workbench": {
+    "tasks": {
+      "elapsed": {
+        "hours": "{{hours}} 小时 {{minutes}} 分钟",
+        "minutes": "{{minutes}} 分钟 {{seconds}} 秒",
+        "seconds": "{{seconds}} 秒"
+      },
+      "empty": "暂无任务。",
+      "executor": {
+        "claudePrimary": "Claude 主会话",
+        "claudeSubagent": "Claude 子智能体",
+        "claudeWorkflow": "Claude 工作流",
+        "other": "其他执行器"
+      },
+      "openWindow": "打开任务窗口",
+      "openWindowLabel": "打开“{{title}}”的任务窗口",
+      "readFailed": "无法读取任务：{{message}}",
+      "showTerminalLabel": "显示“{{title}}”的终端",
+      "state": {
+        "blocked": "受阻",
+        "completed": "已完成",
+        "failed": "失败",
+        "notStarted": "未开始",
+        "running": "运行中",
+        "startUnknown": "启动未确认",
+        "starting": "正在启动",
+        "stopUnknown": "停止未确认",
+        "stopped": "已停止",
+        "unknown": "状态未知"
+      },
+      "title": "任务"
+    },
+    "taskWindow": {
+      "attempt": "尝试",
+      "attemptOption": "第 {{number}} 次尝试 · {{state}}",
+      "attemptsStale": "无法刷新尝试列表：{{message}}",
+      "branch": "分支",
+      "command": {
+        "completed": "已完成",
+        "failed": "失败",
+        "hideOutput": "隐藏输出",
+        "hideOutputLabel": "隐藏 {{command}} 的输出",
+        "running": "运行中",
+        "showOutput": "显示输出",
+        "showOutputLabel": "显示 {{command}} 的输出"
+      },
+      "effort": "推理强度",
+      "effortDefault": "默认",
+      "elapsed": "已用时",
+      "empty": "记录为空。",
+      "end": "已结束",
+      "exitCode": "退出码 {{code}}",
+      "fileChange": "文件更改 · {{status}}",
+      "jumpToLatest": "跳到最新",
+      "malformed": "无法读取的行",
+      "missing": "此次尝试没有保存记录。",
+      "model": "模型",
+      "noAttempt": "此任务尚未尝试执行。",
+      "notRecorded": "未记录",
+      "note": {
+        "dropped": "输出速度超过保存速度，丢失了 {{dropped}} 条记录。",
+        "truncated": "记录已达到大小限制，后续输出未被保存。",
+        "unknown": "记录中有一条当前版本无法显示的备注。"
+      },
+      "openWorktree": "打开工作树",
+      "readFailed": "无法读取记录。",
+      "reading": "正在读取记录…",
+      "sandbox": {
+        "readOnly": "只读",
+        "unknown": "未记录",
+        "write": "可写入独立工作树",
+        "writeInFolder": "可写入工作区文件夹"
+      },
+      "sandboxLabel": "沙箱",
+      "showEarlier": "显示更早的记录（已隐藏 {{hidden}} 条）",
+      "start": "已启动 {{executor}}",
+      "started": "已开始",
+      "transcript": "记录",
+      "truncatedNotice": "此记录已达到大小限制，在尝试结束前就已停止记录。",
+      "turn": {
+        "completed": "本轮已完成",
+        "failed": "本轮失败",
+        "started": "本轮已开始",
+        "usage": "输入 {{input}} · 缓存 {{cached}} · 输出 {{output}} Token"
+      },
+      "unavailable": "任务窗口详情不可用。",
+      "untitledTask": "无标题任务",
+      "waiting": "等待首次输出…",
+      "tool": {
+        "webSearch": "网络搜索",
+        "mcpToolCall": "MCP 工具调用",
+        "reasoning": "推理",
+        "todoList": "计划已更新",
+        "other": "工具步骤"
+      },
+      "filesChanged": "文件更改",
+      "unknownRecordShort": "一条当前版本无法显示的记录。"
+    },
+    "sidebar": {
+      "title": "工作台"
+    },
+    "workspace": {
+      "title": "所选工作区",
+      "empty": "请从工作区列表中选择一个工作区。",
+      "detailsUnavailable": "工作区详情不可用。"
+    },
+    "permissions": {
+      "title": "权限请求",
+      "waiting": "{{waiting}} 项待处理",
+      "errorTitle": "权限请求不可用",
+      "stale": "显示的权限请求可能已过期。",
+      "empty": "没有待处理的权限请求。",
+      "asked": "请求时间",
+      "answerBy": "答复截止时间",
+      "allow": "允许",
+      "allowLabel": "允许 {{tool}}",
+      "deny": "拒绝",
+      "denyLabel": "拒绝 {{tool}}",
+      "answerError": "答复未记录",
+      "desktopOnlyHelp": "未发送给 dot。请在此处或终端中答复。",
+      "terminalOnly": "请在终端中答复。",
+      "mismatch": "权限中继返回了不同的请求。",
+      "decider": {
+        "dot": "由 dot",
+        "desktop": "在应用中",
+        "terminal": "在终端中"
+      },
+      "status": {
+        "waiting": "等待答复",
+        "terminalOnly": "请在终端中答复",
+        "allowed": "已允许",
+        "denied": "已拒绝",
+        "expired": "已过期",
+        "answeredInTerminal": "已在终端中答复"
+      },
+      "settled": {
+        "allowed": "{{decider}}允许",
+        "denied": "{{decider}}拒绝",
+        "expired": "请求已过期",
+        "terminal": "已在终端中答复"
+      },
+      "answer": {
+        "allowed": "已在应用中允许。",
+        "denied": "已在应用中拒绝。",
+        "alreadyDecided": "已有答复：{{settled}}。",
+        "alreadyAnswered": "已有答复。",
+        "closed": "应用已无法答复此请求。",
+        "notFound": "此请求已不可用。"
+      },
+      "askedBy": "请求者",
+      "fromSubagent": "来自子智能体"
+    },
+    "runs": {
+      "title": "运行",
+      "empty": "此工作区暂无运行。",
+      "hasMore": "仅显示最近的运行。",
+      "stale": "显示的运行可能不是最新状态。",
+      "remoteUnavailable": "远程工作区无法使用运行功能。",
+      "scopeUnavailable": "请选择已识别的本地工作区以查看其运行。",
+      "mismatch": "运行存储返回了不同的运行。",
+      "scopeMismatch": "运行存储返回了不同的工作区范围。",
+      "objectiveUnavailable": "目标已不再保存。",
+      "effort": "{{effort}}推理强度",
+      "ended": "已结束",
+      "showTerminal": "显示终端",
+      "terminalNotOpen": "此窗口中未打开该终端标签页。",
+      "stop": "停止运行",
+      "actionError": "运行未停止",
+      "stopRefused": {
+        "starting": "会话仍在启动中。请在开始运行后再次停止。",
+        "identityUnverified": "无法将终端与此次运行的会话匹配，未停止任何内容。请关闭该会话的终端标签页后重试。",
+        "invalidReason": "停止请求被判定为无效而遭拒，未作任何更改。"
+      },
+      "status": {
+        "launching": "正在启动",
+        "active": "进行中",
+        "completing": "正在完成",
+        "completed": "已完成",
+        "failed": "失败",
+        "canceled": "已取消",
+        "unverifiable": "无法验证"
+      },
+      "session": {
+        "none": "未开始",
+        "starting": "正在启动",
+        "running": "运行中",
+        "stopping": "正在停止",
+        "stopped": "已停止",
+        "exited": "已退出"
+      },
+      "live": {
+        "working": "Claude 正在工作",
+        "dialogOpen": "权限或问题对话框已打开",
+        "idle": "等待输入",
+        "unknown": "活动状态未知",
+        "agentAbsent": "Claude Code 未在终端中运行",
+        "handleUnresolved": "无法找到终端",
+        "incarnationMismatch": "终端进程已更改，无法验证其活动状态",
+        "statusUnreadable": "无法读取终端状态",
+        "unread": "无法读取活动状态"
+      },
+      "end": {
+        "userCanceled": "已在应用中停止",
+        "dotCanceled": "已由 dot 取消",
+        "primaryExited": "Claude Code 会话已退出",
+        "launchRefused": "启动被拒绝",
+        "launchFailed": "尚未开始就已启动失败",
+        "launchUnknown": "无法确认是否启动",
+        "reconciled": "应用重启后已根据记录确定最终状态",
+        "stopUnconfirmed": "无法确认是否停止"
+      },
+      "origin": {
+        "dot": "由 dot 启动",
+        "desktop": "在此处启动",
+        "unknown": "来源未知"
+      },
+      "access": {
+        "readOnly": "只读",
+        "workspaceWrite": "允许写入工作区"
+      },
+      "message": {
+        "label": "发送给会话的消息",
+        "send": "发送消息",
+        "failedTitle": "消息未确认",
+        "refusedTitle": "消息未发送",
+        "delivered": "已送达会话。",
+        "duplicate": "此消息之前已发送，未重复发送。",
+        "notSentPrefix": "未发送。",
+        "noReason": "未提供原因。",
+        "queued": {
+          "agentBusy": "已排队。Claude 正在工作，消息将在会话中等待处理。",
+          "dialogOpen": "已暂存。权限或问题对话框处于打开状态，关闭后将发送消息。",
+          "behindHeld": "已暂存。前一条消息尚未发送，此消息将在其后发送。"
+        },
+        "refused": {
+          "invalidRequest": "消息请求无效。",
+          "requestIdReused": "此消息 ID 已用于其他文本。",
+          "textEmpty": "消息为空。",
+          "textTooLong": "消息超过 65,536 个字符。",
+          "controlCharacters": "消息包含无法输入终端的控制字符。",
+          "secretShaped": "消息似乎包含密钥或令牌等机密信息。",
+          "tooManyQuotedSpans": "消息中的引用片段过多。",
+          "notEnglish": "请用英语撰写消息；其他语言的名称或文本请放在引号内。",
+          "runNotFound": "未找到此运行。",
+          "runNotActive": "此运行未处于活动状态。",
+          "notOwned": "此运行不接受从这里发送的消息。",
+          "primaryNotLive": "Claude Code 会话未在运行。",
+          "holdCapacity": "此运行已有过多消息等待处理。",
+          "holdExpired": "消息等待对话框关闭的时间过长，已丢弃。",
+          "terminalUnavailable": "无法连接到终端。",
+          "deliveryIncomplete": "文本可能已在会话输入框中，但尚未发送。请检查终端；应用未重复输入。",
+          "deliveryUnconfirmed": "应用重启后无法确认是否送达。"
+        },
+        "refusedGeneric": "会话未接受此消息。",
+        "queuedGeneric": "已排队。会话可接收时将发送。",
+        "retryHintShort": "重新发送不会造成重复投递。",
+        "helpShort": "消息会输入 Claude Code 会话；对话框打开时将暂存。"
+      },
+      "state": {
+        "working": "工作中",
+        "dialogOpen": "需要答复",
+        "agentAbsent": "未运行"
+      },
+      "sessionNote": "会话：{{state}}",
+      "unavailableTitle": "运行不可用"
+    },
+    "validation": {
+      "title": "任务验证",
+      "check": "立即检查",
+      "nothingWaiting": "没有等待验证的任务结果。",
+      "checked": "已检查结果：{{total}}",
+      "passed": "通过",
+      "failedCount": "失败",
+      "inconclusive": "待决定",
+      "skipped": "已跳过",
+      "errorTitle": "未执行验证检查",
+      "passRunning": "已有一轮验证正在进行。请在完成后再次检查。",
+      "unavailable": "此会话无法使用任务验证。",
+      "helpShort": "每项结果会在任务报告后检查。“立即检查”还会检查仍在等待的结果。"
+    },
+    "decisions": {
+      "title": "等待你的决定",
+      "waiting": "{{waiting}} 项待处理",
+      "empty": "没有等待你决定的任务结果。",
+      "hasMore": "仅显示最早的结果。",
+      "errorTitle": "决定列表不可用",
+      "stale": "显示的结果可能不是最新状态。",
+      "mismatch": "应用返回了不同的结果。",
+      "conflict": "此结果已有决定。",
+      "notFound": "此结果已不再等待决定。",
+      "decideErrorTitle": "决定未记录",
+      "executor": "执行器",
+      "since": "开始等待时间",
+      "branch": "分支",
+      "workspace": "工作区",
+      "waive": "放行",
+      "reject": "拒绝",
+      "cancel": "取消",
+      "placement": {
+        "ownWorktree": "独立工作树",
+        "folder": "工作区文件夹",
+        "runWorkspace": "运行所在工作区，只读",
+        "inSession": "Claude 主会话",
+        "unrecorded": "未记录"
+      },
+      "confirm": {
+        "waiveProcessMayRun": "接受此结果并视为完成？任务将完成，但此次尝试的某个进程可能仍在运行。Claude 主会话将收到通知，等待进程结束后再合并或保留其更改。",
+        "waiveWorktree": "接受此结果并视为完成？任务将完成，并通知 Claude 主会话合并分支 {{branch}}。",
+        "waiveFolder": "接受此结果并视为完成？任务将完成，其更改已在工作区文件夹中。",
+        "waive": "接受此结果并视为完成？任务将完成。",
+        "rejectWorktree": "拒绝此结果？任务将失败，其分支会保留以供检查。",
+        "rejectFolder": "拒绝此结果？任务将失败，其更改会留在工作区文件夹中，直到你决定保留哪些内容。",
+        "reject": "拒绝此结果？任务将失败。"
+      },
+      "outcome": {
+        "waivedNotified": "已放行。任务已完成，并已为 Claude 主会话登记通知。",
+        "waived": "已放行。任务已完成。",
+        "rejectedNotified": "已拒绝。任务已标记为失败，并已为 Claude 主会话登记通知。",
+        "rejected": "已拒绝。任务已标记为失败。"
+      },
+      "waiveTitleLabel": "放行“{{title}}”",
+      "rejectTitleLabel": "拒绝“{{title}}”",
+      "helpShort": "验证无法判定这些结果。“放行”将接受结果并完成任务；“拒绝”将使任务失败。"
+    },
+    "requests": {
+      "scopeMismatch": "请求存储返回了不同的工作区范围。",
+      "pageMismatch": "请求存储返回了无效的分页边界。",
+      "objectiveMismatch": "请求存储返回了不同的目标。",
+      "cancelMismatch": "请求存储返回了不同的取消回执。",
+      "refreshMismatch": "请求存储返回了不同的请求。",
+      "run": "运行",
+      "cancel": "取消请求",
+      "title": "本地请求",
+      "stale": "显示的请求可能不是最新状态。",
+      "objective": "目标",
+      "refresh": "刷新",
+      "loadOlder": "加载更早的请求",
+      "olderPage": "正在显示较早的页面。刷新可返回最新请求。",
+      "remoteUnavailable": "远程工作区无法接收请求。",
+      "scopeUnavailable": "请选择已识别的本地工作区以登记或查看请求。",
+      "launch": {
+        "refused": "无法启动运行。",
+        "unverifiable": "已创建运行，但无法确认是否启动。",
+        "noModel": "没有可用于启动此次运行的模型。请检查设置中的“任务路由”。",
+        "generic": "此请求无法启动运行。"
+      },
+      "status": {
+        "launchBlocked": "启动受阻",
+        "starting": "正在启动",
+        "runStarted": "运行已启动",
+        "canceled": "已取消"
+      },
+      "intakeHelp": "在此工作区中通过 Claude Code 会话启动运行。",
+      "startRun": "开始运行",
+      "updateFailedTitle": "无法更新请求",
+      "registered": "请求已登记。",
+      "noneYet": "暂无请求。"
+    },
+    "error": {
+      "notAllowed": "此窗口无权执行该操作。",
+      "workspaceUnavailable": "此工作区在这里不可用。",
+      "runGone": "此运行已不存在。",
+      "sessionNotRunning": "Claude Code 会话未在运行。",
+      "attemptGone": "此次尝试已不存在。",
+      "invalidInput": "应用认定此请求无效并已拒绝。",
+      "recoveryRequired": "无法读取已存储的记录。请重启应用后重试。",
+      "runEnded": "此运行已结束。",
+      "stopRefused": "当前无法停止此运行，未作任何更改。",
+      "stopUnconfirmed": "无法确认是否停止，因此运行仍保持开启。请关闭其终端标签页后重试。",
+      "runControlUnavailable": "运行控制当前不可用。",
+      "permissionsUnavailable": "权限请求当前不可用。",
+      "checkFailed": "检查未能完成。请重试。",
+      "transcriptRefused": "无法验证记录文件，因此未读取。",
+      "requestGone": "此请求已不存在。",
+      "requestHandedOff": "此请求已开始运行。请停止运行以取消它。",
+      "requestChanged": "此请求在此期间已更改。请重试。",
+      "requestReused": "此请求之前已使用不同文本发送。",
+      "capacity": "等待中的请求过多。请稍后重试。",
+      "busy": "应用繁忙。请重试。",
+      "unsupported": "此应用版本不支持该操作。",
+      "generic": "出现了问题。",
+      "unexpectedResponse": "应用返回了意外响应。"
+    },
+    "details": {
+      "copied": "已复制",
+      "copyFailed": "无法复制",
+      "copy": "复制详情"
     }
   }
 }

@@ -1122,7 +1122,9 @@
         "ef223fbb6b": "A device tried to connect but is not paired",
         "11992d0337": "If this was your phone or another NASH client, re-pair it from Settings → Mobile.",
         "6573cfe955": "Open Mobile Settings",
-        "unresolvedTerminalWorktreeOwner": "Terminal creation is unavailable because the worktree owner could not be resolved"
+        "unresolvedTerminalWorktreeOwner": "Terminal creation is unavailable because the worktree owner could not be resolved",
+        "unpairedDeviceServersDescription": "If this was another NASH client, share this server with it again from Settings → Remote NASH Servers.",
+        "openServerSettings": "Open Server Settings"
       },
       "useSettingsNavigationMetadata": {
         "4a728cd56b": "New features that are still taking shape. Give them a try.",
@@ -1206,7 +1208,15 @@
         "automationsDescription": "Schedule agent work and choose whether Automations appears in the sidebar.",
         "shareSkillsTitle": "Share Skills",
         "shareSkillsDescription": "Share your skills with an unlisted link. Anyone who has it can install them.",
-        "floatingWorkspaceWebDescription": "Global terminal and markdown tabs."
+        "floatingWorkspaceWebDescription": "Global terminal and markdown tabs.",
+        "taskRoutingTitle": "Task routing",
+        "taskRoutingDescription": "Choose which agent, model and effort handle each kind of task.",
+        "dotTitle": "Dot",
+        "dotDescription": "Let ChatGPT dot send tasks to NASH.",
+        "statsDescription": "NASH activity and token usage by agent.",
+        "serversDescription": "Pair NASH on other machines to keep sessions running there.",
+        "accountsDescription": "Optional. Switch between saved accounts for Codex, Antigravity and other CLIs, and check their usage.",
+        "serversWebDescription": "Connect this browser to a saved NASH server."
       },
       "useAppMenuPaste": {
         "pasteTooLarge": "Paste is too large."
@@ -4432,7 +4442,8 @@
             "d6e9f0a1b2": "credits",
             "a3b6c7d8e9": "grok usage",
             "9f2a3b4c5d": "xai",
-            "museKeyword": "muse"
+            "museKeyword": "muse",
+            "nashActivityDescription": "NASH activity and token usage by agent."
           }
         },
         "usage": {
@@ -5526,7 +5537,10 @@
           "fee535205b": "Tasks",
           "d599269755": "Hide from sidebar",
           "artifacts": "Artifacts",
-          "skills": "Skills"
+          "skills": "Skills",
+          "rsiLab": "RSI Lab",
+          "rsiImprovements": "Improvements",
+          "rsiNotConnected": "Not connected"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "Clear",
@@ -5556,7 +5570,9 @@
           "d396773ef0": "checking",
           "f8a2c91d4e": "Milestones",
           "b7e4d2a19c": "Onboarding",
-          "c4f8e1b72a": "X"
+          "c4f8e1b72a": "X",
+          "reportIssue": "Report an issue",
+          "source": "Source"
         },
         "SidebarToolbar": {
           "87d0064026": "Workspace board moved to the bottom bar",
@@ -7647,9 +7663,7 @@
           "3ba07f933b": "Connect issue trackers NASH can use to browse tasks and start workspaces with linked context.",
           "70e885705b": "Task providers",
           "1683acbac4": "Connect the source hosts NASH can use for pull requests, merge requests, checks, and review status.",
-          "298c65ecac": "Review providers",
-          "taskRouting": "Task routing",
-          "taskRoutingDescription": "Clef classifies each task the primary session plans; the Routing Table maps each task type to an executor, model and reasoning level."
+          "298c65ecac": "Review providers"
         },
         "KagiSessionLinkForm": {
           "92f0b4e472": "Clear",
@@ -8351,7 +8365,8 @@
           "troubleshootStepRegenerate": "Generate a new access link and use only the newest link here.",
           "troubleshootTunnel": "Using an SSH local forward? Return to Connect to a host, paste the loopback link, then enable “I am using an SSH tunnel” under Advanced.",
           "cloudVmWorkflow": "Cloud VM",
-          "cloudVmWorkflowHelp": "Manage recipe-created cloud machines"
+          "cloudVmWorkflowHelp": "Manage recipe-created cloud machines",
+          "advertiseThisAppHelpDesktop": "Create access links so a browser or another NASH client can connect to this app."
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "Copy {{value0}}"
@@ -10106,15 +10121,12 @@
             "f16e41cc72": "GitHub Integration",
             "760e2446e0": "Bitbucket Cloud authentication with a saved API token or environment variables.",
             "af5ae87847": "access token",
-            "clefRouting": "Clef routing",
             "clefRoutingDescription": "Save the Clef API token and account ID used to route Workbench requests.",
             "clef": "clef",
             "routing": "routing",
             "cloudflare": "cloudflare",
             "workbench": "workbench",
             "accountId": "account id",
-            "routingTable": "Routing Table",
-            "routingTableDescription": "Review the executor, model and reasoning level for each task type, and accept or reject proposed changes.",
             "routingTableKeyword": "routing table",
             "model": "model",
             "reasoning": "reasoning",
@@ -10127,7 +10139,6 @@
             "readOnly": "read only",
             "rateLimit": "rate limit",
             "submissionLimit": "submission limit",
-            "dotRemoteDescription": "Let dot reach this app through a mailbox on your GPT Site: the switch, the Site origin and access token, pairing and revocation.",
             "remoteAccess": "remote access",
             "gptSites": "GPT Sites",
             "pairing": "pairing",
@@ -11823,7 +11834,9 @@
           "experimental": "Experimental",
           "description": "Install and manage NASH plugins. Plugins run on this computer, even for SSH workspaces.",
           "logsFailed": "Could not load plugin logs.",
-          "rollbackFailed": "Could not roll back this plugin. A previous immutable version may not be available."
+          "rollbackFailed": "Could not roll back this plugin. A previous immutable version may not be available.",
+          "orcaCatalogLabel": "Use Orca's plugin catalog",
+          "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers."
         },
         "PluginSettingsRow": {
           "blocked": "Blocked",
@@ -11882,7 +11895,11 @@
             "install": "install plugin",
             "permissions": "plugin permissions",
             "logs": "plugin logs",
-            "development": "development plugins"
+            "development": "development plugins",
+            "orcaCatalogTitle": "Use Orca's plugin catalog",
+            "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers.",
+            "orcaMarketplace": "Orca marketplace",
+            "safetyList": "plugin safety list"
           }
         },
         "LinearAgentSkillGuide": {
@@ -12357,19 +12374,20 @@
           "clear": {
             "action": "Clear credentials",
             "title": "Clear Clef credentials?",
-            "description": "This removes the saved API token and account ID from this computer. Workbench requests cannot be routed with Clef until you save new credentials.",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "descriptionPlain": "This removes the saved API token and account ID from this computer. Clef cannot sort tasks until you save new ones."
           },
           "form": {
             "show": "Show",
             "label": "Clef credentials",
             "tokenLabel": "API token",
             "showToken": "Show API token",
-            "tokenDescription": "A Cloudflare API token with Workers AI access.",
             "accountLabel": "Account ID",
             "showAccount": "Show account ID",
-            "accountDescription": "The 32-character Cloudflare account ID, in lowercase.",
-            "save": "Save credentials"
+            "save": "Save credentials",
+            "tokenDescriptionPlain": "From your Cloudflare dashboard, with access to Workers AI.",
+            "accountDescriptionPlain": "Your 32-character Cloudflare account ID.",
+            "cancel": "Cancel"
           },
           "credentials": {
             "tokenMissing": "Enter the API token.",
@@ -12378,70 +12396,38 @@
             "tokenInvalidCharacters": "The API token can contain only visible ASCII characters with no spaces, so nothing was saved.",
             "accountIdMissing": "Enter the account ID.",
             "accountIdInvalid": "The account ID must be 32 lowercase hexadecimal characters, so nothing was saved.",
-            "sealingUnavailable": "Sealing is unavailable on this system, so the token was not saved.",
             "writeFailed": "The credentials could not be written to disk, so nothing was saved.",
             "clearFailed": "Some stored credentials could not be removed. Try clearing them again.",
             "saveCallFailed": "The credentials could not be saved because NASH did not get an answer. Enter them again to retry.",
             "clearCallFailed": "NASH could not confirm that the credentials were cleared. Check the status above and try again.",
             "missingFields": "Enter both the API token and the account ID.",
-            "saved": "Saved and sealed. The token will never be shown again.",
-            "cleared": "The API token and account ID were removed from this computer."
+            "cleared": "The API token and account ID were removed from this computer.",
+            "sealingUnavailablePlain": "This computer cannot store the token safely, so it was not saved.",
+            "savedPlain": "Saved. The token will never be shown again."
           },
           "status": {
             "unavailable": "Status unavailable",
-            "notSealedPill": "Not sealed",
-            "sealingUnavailablePill": "Sealing unavailable",
             "saved": "Credentials saved",
             "incomplete": "Incomplete",
-            "notConfigured": "Not configured",
-            "bothSaved": "API token and account ID saved",
             "accountMissing": "API token saved; account ID missing",
             "tokenMissing": "Account ID saved; API token missing",
-            "noneSaved": "No API token or account ID saved",
-            "sealed": "Sealed with the OS credential store",
-            "notSealed": "Not sealed: NASH will not use the stored values. Clear them and save again.",
-            "sealingUnavailable": "Sealing unavailable on this system: credentials cannot be saved or read.",
-            "absent": "Nothing stored",
-            "listLabel": "Credential status",
-            "readFailed": "Could not read whether Clef credentials are stored."
-          },
-          "notes": {
-            "storageWindows": "The token is sealed with Windows data protection on this computer and is never shown again.",
-            "storageMac": "The token is sealed with the macOS Keychain on this computer and is never shown again.",
-            "storageOther": "The token is sealed with the system keyring on this computer and is never shown again.",
-            "rotate": "If this token was pasted into a chat earlier, treat it as exposed: rotate it in the Cloudflare dashboard first, then enter the new token here."
+            "readFailed": "Could not read whether Clef credentials are stored.",
+            "notProtected": "Not protected",
+            "notSetUp": "Not set up",
+            "notProtectedDetail": "The saved credentials are not protected, so NASH does not use them. Clear them and save again."
           },
           "card": {
-            "name": "Clef routing",
-            "description": "Credentials for the Clef classifier on Cloudflare. Clef classifies each task by type and whether to delegate it; the Routing Table picks the model."
+            "title": "Clef",
+            "descriptionPlain": "Clef sorts each task by kind, so it goes to the agent chosen for that kind."
           },
           "verification": {
-            "title": "Verification and response profile",
-            "intro": "Verify sends one synthetic task to check Clef's answer format. Pinning its report lets Clef classify tasks; the Routing Table then picks the executor.",
-            "factsLabel": "Verification status",
-            "profileTerm": "Response profile:",
-            "profileAbsent": "Not verified",
-            "profileUnpinned": "Verified; response model not pinned",
-            "profilePinned": "Pinned · verified {{time}}",
-            "statusTerm": "Clef status:",
-            "bundleTerm": "Question bundle:",
-            "bundle": "Question set {{set}}, taxonomy {{taxonomy}}",
-            "otherBundle": "Profile verified against a different bundle ({{profile}}); this build sends {{bundle}}. Run Verify to pin a profile for this bundle.",
-            "blockStatus": "The verification status could not be read.",
-            "blockCredentials": "Verify needs saved, sealed credentials.",
             "blockPaused": "Verify is paused: {{reason}}.",
             "verify": "Verify",
             "verifying": "Verifying…",
-            "pinned": "Profile pinned. Clef status: {{status}}. Profile {{hash}}.",
             "status": {
               "notConfigured": "Not configured",
               "notConfiguredDetail": "Save the API token and account ID first.",
-              "sealingUnavailable": "Sealing unavailable",
-              "sealingUnavailableDetail": "This system cannot seal credentials, so Clef cannot be used.",
               "contractUnverified": "Waiting for verification",
-              "contractUnverifiedDetail": "Run Verify to check Clef's answer format for the current question bundle.",
-              "identityUnpinned": "Response model not pinned",
-              "identityUnpinnedDetail": "The answer format is verified, but no response model is pinned. Verify again and pin a report that names the model.",
               "ready": "Ready",
               "readyDetail": "Clef can classify tasks.",
               "unreachable": "Unreachable",
@@ -12451,7 +12437,12 @@
               "quotaLatched": "Quota used up",
               "quotaLatchedDetail": "Clef reported that its quota is used up; calls resume after 00:00 UTC.",
               "authFailed": "Credentials rejected",
-              "authFailedDetail": "Clef rejected the saved credentials. Save new ones above."
+              "authFailedDetail": "Clef rejected the saved credentials. Save new ones above.",
+              "sealingUnavailablePlain": "Cannot store credentials",
+              "sealingUnavailableDetailPlain": "This computer cannot store credentials safely, so Clef cannot be used.",
+              "contractUnverifiedDetailPlain": "Run Verify to check that Clef answers in the expected format.",
+              "identityUnpinnedPlain": "Model not confirmed",
+              "identityUnpinnedDetailPlain": "Verify again, then use a result that names the model that answered."
             },
             "problems": {
               "httpStatus": "Clef did not answer with HTTP 200.",
@@ -12464,14 +12455,13 @@
               "probabilityOutOfRange": "A probability is outside 0 to 1.",
               "probabilitySum": "The probabilities of a question do not add up to 1.",
               "usageMissing": "The response does not report token usage.",
-              "pinInvalid": "The report does not make a valid profile."
+              "resultIncomplete": "The result is not complete enough to use."
             },
             "blockers": {
               "classifierUnavailable": "Clef could not be used",
               "invalidOutput": "Clef's answer was not valid",
               "missingInputs": "The task needs clarification",
               "ambiguous": "The answer was ambiguous",
-              "noEligibleProfile": "No eligible profile",
               "launchBlocked": "The run could not start",
               "notConfigured": "the credentials are not configured",
               "identityUnpinned": "the response model is not pinned",
@@ -12499,92 +12489,67 @@
               "inconsistentDelegation": "delegation was asked for work the coordinator keeps",
               "coordinatorRoute": "the coordinator route is unavailable",
               "launchRefused": "the launch was refused",
-              "launchUnverifiable": "the launch could not be verified"
+              "launchUnverifiable": "the launch could not be verified",
+              "noEligibleAgent": "No agent could take the task"
             },
             "errors": {
               "credentialsMissing": "Save the Clef API token and account ID before verifying.",
-              "credentialsUnsealed": "The saved credentials are not sealed by the system, so they are not used. Clear them and save again.",
               "authFailed": "Clef rejected the saved credentials. Save new credentials before verifying.",
               "quotaLatched": "Clef reported that its quota is used up. Verify is paused until 00:00 UTC.",
               "circuitOpen": "Clef calls are paused after repeated failures. Try again in a few minutes.",
               "inProgress": "A verification is already running.",
               "requestInvalid": "The verification request could not be prepared, so nothing was sent.",
-              "reportUnconfirmed": "That report is no longer the latest one. Run Verify again before pinning.",
-              "reportNotPinnable": "That report cannot be pinned.",
-              "profileWriteFailed": "The profile could not be saved. Pin again.",
               "clefUnavailable": "Clef verification is not available right now.",
               "routingNotConfigured": "Clef verification is not available in this session.",
               "forbidden": "Only the desktop app on this computer can verify Clef.",
               "notConnected": "Clef verification is not connected in this build.",
               "callFailed": "The verification request did not complete. Check the status and try again.",
-              "invalidResponse": "The app returned a verification answer this screen cannot read."
+              "invalidResponse": "The app returned a verification answer this screen cannot read.",
+              "credentialsUnprotected": "The saved credentials are not protected, so they are not used. Clear them and save again.",
+              "resultUnconfirmed": "That result is no longer the latest one. Run Verify again before using it.",
+              "resultNotUsable": "That result cannot be used.",
+              "resultWriteFailed": "The result could not be saved. Try again."
             },
             "pending": {
               "title": "Awaiting your confirmation",
               "thresholds": "Confidence thresholds: a task counts as delegated at {{yes}} or more and as kept at {{no}} or less; its task type must lead the runner-up by {{margin}}.",
               "wording": "Answer wording: the {{options}} task-type options and the {{answers}} delegation answers.",
-              "effect": "These are defaults. Changing any of them changes the question bundle, so a pinned profile stops applying and Verify runs again."
+              "effectPlain": "These are defaults. Changing one means verifying Clef again."
             },
             "report": {
-              "title": "Verification report",
-              "response": "Response",
-              "http": "HTTP {{status}} · {{bytes}} bytes",
-              "model": "Model",
-              "modelUnnamed": "not named in the response",
-              "answers": "Answers",
-              "answersMatch": "match the {{count}} questions",
-              "answersMissing": "missing: {{ids}}",
-              "optionIds": "Option IDs",
-              "echoExact": "repeated exactly",
-              "echoAltered": "altered",
-              "echoMissing": "missing",
-              "sums": "Probability sums",
-              "sumsUnknown": "not measured",
-              "sumsDeviation": "off by at most {{deviation}}",
-              "tokens": "Tokens",
-              "tokenCounts": "{{input}} in (estimated {{estimate}}) · {{output}} out",
-              "report": "Report",
-              "format": "Report format {{version}}",
-              "pinnable": "This report can be pinned as the response profile.",
-              "pin": "Pin profile",
-              "notPinnable": "This report cannot be pinned:",
-              "failedTitle": "Verification call failed",
               "failedReason": "{{reason}}: {{detail}}.",
-              "noHttp": "No HTTP answer",
-              "httpOnly": "HTTP {{status}}",
-              "attempts": "attempts: {{count}}"
-            }
+              "titlePlain": "Verify result",
+              "passed": "Clef answered in the expected format.",
+              "notUsable": "This result cannot be used:",
+              "useResult": "Use this result",
+              "failedTitlePlain": "Verification failed"
+            },
+            "blockStatusPlain": "The Clef status could not be read.",
+            "blockCredentialsPlain": "Save the API token and account ID first.",
+            "otherBundlePlain": "Clef's questions changed since the last verification. Verify again.",
+            "lastVerified": "Last verified {{time}}.",
+            "titlePlain": "Verification",
+            "pinnedPlain": "Result saved. Clef status: {{status}}."
+          },
+          "saved": {
+            "label": "Credentials",
+            "description": "Saved on this computer. They are never shown again.",
+            "replace": "Replace"
           }
         },
         "routingTable": {
           "card": {
-            "name": "Routing Table",
-            "description": "Chooses the executor, model and reasoning level for each task type Clef reports. Changes take effect only when you accept them.",
             "refresh": "Refresh",
             "unavailable": "Unavailable",
             "blocked": "Blocked",
-            "toReview": "{{count}} to review",
-            "active": "Version {{version}} active",
             "blockedTitle": "Routing is blocked",
-            "editRoutes": "Edit routes",
-            "import": "Import",
-            "unreadable": "Unreadable proposal files: {{count}}. They are not shown and cannot be decided here."
+            "pendingNotice": "Suggested changes to review: {{count}}",
+            "review": "Review",
+            "title": "Agents for each task"
           },
           "active": {
             "versionActive": "Version {{version}} active",
-            "created": "created {{time}}",
-            "coordinator": "Coordinator (primary session):",
-            "routesLabel": "Routes in version {{version}}",
-            "taskType": "Task type",
-            "executor": "Executor",
-            "model": "Model",
-            "reasoning": "Reasoning",
-            "inheritsCoordinator": "Inherits coordinator",
-            "whenSupported": "(when supported)",
-            "reviewersTitle": "Validation reviewers",
-            "reviewersHelp": "When a task has no automatic check, the first reviewer whose model differs from the one that did the work reviews it.",
-            "noReviewers": "No reviewers: such tasks cannot be validated by review.",
-            "status": "Status"
+            "created": "created {{time}}"
           },
           "availability": {
             "available": "Available",
@@ -12592,12 +12557,6 @@
             "notChecked": "Not checked",
             "unverified": "Not verified",
             "awaiting": "This rests on a default awaiting your confirmation.",
-            "summary": "Routes checked: {{available}} available, {{unavailable}} unavailable, {{unverified}} not verified.",
-            "checksUnavailable": "Route checks are not available in this session. Restart the app to install them.",
-            "checking": "Checking routes…",
-            "check": "Check routes",
-            "hint": "Availability shows readings from the last 10 minutes. Check routes asks each CLI again.",
-            "cliUsageHint": "NASH reads usage only from the CLIs: Claude Code's status line, codex app-server and agy /usage. A route is blocked when a fresh reading shows a used-up limit, or after its CLI reports a sign-in or usage-limit failure.",
             "reasons": {
               "cliMissing": "The CLI is not installed.",
               "cliDisabled": "The CLI is turned off in Settings.",
@@ -12605,37 +12564,39 @@
               "modelNotListed": "This model is not offered to your account.",
               "modelExcluded": "This model name is not allowed here (an alias or an excluded model).",
               "reasoningUnsupported": "The model does not support this reasoning level.",
-              "authFailed": "Sign-in failed. Sign in to the CLI again, then use Check routes.",
               "notEntitled": "Your plan does not include this model.",
-              "quotaExhausted": "The usage limit is reached. The block lifts when a new usage reading shows the limit reset, or use Check routes after it resets.",
               "workspaceNotGit": "Codex needs a workspace folder to run in; the floating terminal has none.",
-              "recordDamaged": "The saved availability record was damaged. Use Check routes to read every route again.",
-              "notChecked": "Not checked recently. Use Check routes.",
               "cliUnobserved": "The installed CLIs could not be detected.",
               "modelListUnavailable": "The model list could not be read.",
               "reasoningUnverified": "The reasoning level could not be confirmed for this model.",
-              "authUnobserved": "The sign-in could not be confirmed."
-            }
+              "authUnobserved": "The sign-in could not be confirmed.",
+              "authFailedPlain": "Sign-in failed. Sign in to the CLI again, then check availability.",
+              "quotaExhaustedPlain": "The usage limit is reached. This lifts when a new usage reading shows the limit reset, or check availability after it resets.",
+              "recordDamagedPlain": "The last availability check could not be read. Check availability again.",
+              "notCheckedPlain": "Not checked recently."
+            },
+            "summaryPlain": "Checked: {{available}} available, {{unavailable}} unavailable, {{unverified}} not verified.",
+            "checksUnavailablePlain": "Availability checks are not available right now. Restart the app.",
+            "checkingPlain": "Checking…",
+            "checkPlain": "Check availability"
           },
           "proposals": {
-            "pendingTitle": "Proposals to review",
-            "noneWaiting": "Nothing is waiting. App updates and agents propose changes here; nothing changes until you accept one.",
-            "title": "{{proposer}} proposal {{id}}",
-            "meta": "{{time}} · based on version {{version}}",
             "evidence": "Sources: {{sources}}",
             "becomes": "becomes",
             "none": "none",
             "noReviewers": "no reviewers",
-            "noRow": "no active row",
-            "notesOnly": "Same route; only its notes or sources change.",
             "coordinator": "Coordinator",
-            "reviewers": "Validation reviewers",
             "staleTitle": "Made for an older version",
-            "staleBody": "Version {{active}} is active now, so accepting would only record this as superseded. Reject it, or make the change again with Edit routes.",
             "accept": "Accept",
             "edit": "Edit and accept",
             "reject": "Reject",
-            "history": "Decided proposals ({{count}})"
+            "noRowPlain": "not set",
+            "notesOnlyPlain": "Same choice; only its notes change.",
+            "metaPlain": "{{time}} · based on version {{version}}",
+            "staleBodyPlain": "Version {{active}} is in use now, so this can no longer be accepted. Reject it, or make the change again in the list above.",
+            "historyPlain": "Decided ({{count}})",
+            "pendingTitlePlain": "Suggested changes",
+            "noneWaitingPlain": "None waiting. Nothing changes until you accept a suggestion."
           },
           "versions": {
             "title": "Version history",
@@ -12648,29 +12609,16 @@
             "cancel": "Cancel"
           },
           "editor": {
-            "proposeTitle": "Edit routes",
-            "proposeBody": "Your edits are saved as a proposal. Nothing changes until you accept it.",
-            "modifyTitle": "Edit proposal {{id}} before accepting",
-            "modifyBody": "Your edits replace the proposed changes. Accepting activates the result as a new version.",
             "coordinator": "Coordinator",
             "coordinatorModel": "Coordinator model",
-            "coordinatorLevel": "Coordinator reasoning",
             "taskType": "Task type",
-            "executor": "Executor",
             "model": "Model",
-            "reasoning": "Reasoning",
             "requirement": "Requirement",
             "required": "Required",
             "whenSupported": "When supported",
-            "targetFor": "Executor for {{task}}",
             "modelFor": "Model for {{task}}",
-            "levelFor": "Reasoning for {{task}}",
-            "requirementFor": "Reasoning requirement for {{task}}",
-            "reasonLabel": "Reason for the change",
-            "reasonMissing": "Enter a short English reason for the change.",
             "cancel": "Cancel",
             "acceptModified": "Accept with changes",
-            "saveProposal": "Save as proposal",
             "geminiExcluded": "Gemini 4 models are excluded from routing.",
             "aliasUnpinned": "Enter an exact model ID, not an alias such as opus or latest.",
             "slugRejected": "This model ID is retired or rejected. Enter another exact model ID.",
@@ -12680,59 +12628,59 @@
             "coordinatorStays": "Coordinator reasoning always stays in the Claude primary session.",
             "ifSupportedConcrete": "\"When supported\" needs a concrete reasoning level, not Inherit.",
             "rowInvalid": "This row is not valid. Check its target, model and reasoning level.",
-            "nothingChanged": "This leaves the active table unchanged. Edit at least one route first."
+            "nothingChanged": "This leaves the active table unchanged. Edit at least one route first.",
+            "modifyTitlePlain": "Edit before accepting",
+            "modifyBodyPlain": "Your edits replace the suggested change. Accepting puts them into use.",
+            "agentFor": "Agent for {{task}}",
+            "effortFor": "Effort for {{task}}",
+            "effortRequirementFor": "Effort requirement for {{task}}",
+            "agent": "Agent",
+            "effort": "Effort"
           },
           "import": {
             "title": "Import a change set",
-            "body": "Paste JSON with \"changes\" (whole rows) and, if needed, \"coordinator\" or \"validation\". It is stored as your proposal on the active version; accepting it is a separate step.",
             "jsonLabel": "Change set (JSON)",
             "reasonLabel": "Reason for the change",
             "cancel": "Cancel",
-            "submit": "Import as proposal",
-            "noActive": "There is no active version to base the change on, so nothing can be imported.",
-            "notJson": "The change set is not valid JSON object text.",
             "reasonMissing": "Enter a short English reason for the change.",
-            "invalidAt": "The change set is not valid at \"{{path}}\". Check target, model and reasoning values."
+            "bodyPlain": "It is added to Suggested changes, where you can review and accept it.",
+            "submitPlain": "Import",
+            "noActivePlain": "Task routing is not available, so nothing can be imported.",
+            "notJsonPlain": "This is not valid JSON. Paste the whole change set.",
+            "invalidPlain": "This change set has a value that cannot be used. Check each agent, model and effort."
           },
           "notices": {
             "activated": "Version {{version}} is now active.",
-            "rejected": "Proposal rejected.",
-            "imported": "Saved as a pending proposal. Review it below and accept it to activate it.",
-            "reverted": "Version {{version}} is now active, with the content of version {{from}}."
+            "reverted": "Version {{version}} is now active, with the content of version {{from}}.",
+            "rejectedPlain": "Suggested change rejected.",
+            "importedPlain": "Added to Suggested changes. Accept it there to use it.",
+            "saved": "Saved."
           },
           "refusals": {
-            "integrityFailed": "The stored Routing Table is damaged: {{part}}. Nothing routes until it is repaired; no default table is used instead.",
-            "indexMissing": "the version index is missing",
-            "indexUnreadable": "the version index cannot be read",
-            "indexInvalid": "the version index is not valid",
-            "versionMissing": "the active version file is missing",
-            "versionUnreadable": "the active version file cannot be read",
-            "versionInvalid": "the active version file is not valid",
-            "versionHashMismatch": "the active version file does not match its recorded hash",
-            "integrityUnknown": "a stored file failed its check",
-            "taxonomyMismatch": "The active table was written for a different list of task types, so it cannot be used. Import a table for the current task types.",
-            "notInstalled": "No Routing Table is installed yet. The app installs its default table when it starts.",
-            "invalidTable": "The resulting table would not be valid, so it was not activated.",
-            "versionConflict": "The table changed while this was being saved. Refresh and try again.",
-            "forbiddenCaller": "Only you, from this desktop app, can change the Routing Table.",
-            "proposalUnknown": "This proposal no longer exists. Refresh the list.",
-            "proposalInvalid": "This proposal file is not valid, so it cannot be accepted.",
-            "alreadyDecided": "This proposal was already decided.",
-            "proposalSuperseded": "This proposal was based on an older version, so it was recorded as superseded and the active table did not change.",
-            "noChange": "This would leave the active table as it is, so no new version was created.",
-            "forbiddenProposer": "This kind of proposal cannot be submitted from the desktop.",
-            "invalidProposal": "The change set is not valid, so it was not stored.",
-            "baseNotActive": "The change set is based on a version that is no longer active. Refresh and base it on the active version.",
-            "tooManyPending": "Too many proposals are waiting. Accept or reject some of them first.",
-            "duplicateActive": "The active table already has exactly this content, so nothing was stored.",
-            "duplicatePending": "The same change is already waiting as proposal {{proposalId}}. Review that one instead.",
-            "versionUnknown": "That version does not exist. Refresh the list.",
-            "unknown": "The Routing Table refused this ({{reason}}).",
-            "invalidResponse": "The app returned a Routing Table answer this screen cannot read.",
-            "notConnected": "The Routing Table is not connected in this build yet, so it cannot be shown or changed.",
-            "unavailable": "The Routing Table is not available in this session. Restart the app to install it.",
-            "untrustedCaller": "Only the desktop app on this computer can read or change the Routing Table.",
-            "callFailed": "The Routing Table request did not complete. Refresh to see the current state."
+            "duplicateActivePlain": "These choices are already in use, so nothing was saved.",
+            "duplicatePendingPlain": "The same change is already waiting under Suggested changes. Review it there.",
+            "integrityFailedPlain": "The saved task routing could not be read, so no task is routed. No default is used instead.",
+            "taxonomyMismatchPlain": "The saved task routing was made for a different list of tasks, so it cannot be used. Import routing for the current tasks under Advanced.",
+            "notInstalledPlain": "Task routing is not set up yet. Restart the app to install the defaults.",
+            "invalidTablePlain": "This change would leave task routing invalid, so it was not saved.",
+            "versionConflictPlain": "Task routing changed while this was being saved. Try again.",
+            "forbiddenCallerPlain": "Task routing can only be changed in this app.",
+            "proposalUnknownPlain": "This suggested change no longer exists.",
+            "proposalInvalidPlain": "This suggested change cannot be read, so it cannot be accepted.",
+            "alreadyDecidedPlain": "This suggested change was already decided.",
+            "proposalSupersededPlain": "This suggested change was made for older choices, so it was set aside and nothing changed.",
+            "noChangePlain": "This leaves every choice as it is, so nothing changed.",
+            "forbiddenProposerPlain": "This kind of change cannot be submitted here.",
+            "invalidProposalPlain": "This change is not valid, so it was not saved.",
+            "baseNotActivePlain": "Task routing changed after this was prepared. Try again.",
+            "tooManyPendingPlain": "Too many suggested changes are waiting. Accept or reject some under Advanced first.",
+            "versionUnknownPlain": "That earlier version no longer exists.",
+            "unknownPlain": "Task routing refused this change.",
+            "invalidResponsePlain": "The answer from the app could not be read here.",
+            "notConnectedPlain": "Task routing is not available in this build.",
+            "unavailablePlain": "Task routing is not available right now. Restart the app.",
+            "untrustedCallerPlain": "Task routing can only be read or changed in the desktop app on this computer.",
+            "callFailedPlain": "The request did not complete. Try again."
           },
           "labels": {
             "coordinatorReasoning": "Coordinator reasoning",
@@ -12760,7 +12708,6 @@
             "max": "Max",
             "ultra": "Ultra",
             "inherit": "Inherit",
-            "inheritsCoordinator": "Inherits coordinator",
             "whenSupported": "(when supported)",
             "bundledUpdate": "App update",
             "benchmarkReview": "Benchmark review",
@@ -12771,20 +12718,43 @@
             "rejected": "Rejected",
             "superseded": "Superseded",
             "sourceBundled": "App default",
-            "sourceUser": "Your table"
+            "sourceUser": "Your table",
+            "sameAsCoordinator": "Same as coordinator"
+          },
+          "inline": {
+            "edit": "Edit",
+            "reviewersTitle": "Reviewers",
+            "reviewersHelp": "Review finished work that has no automatic check.",
+            "noReviewers": "No reviewers, so work without an automatic check cannot be reviewed.",
+            "reviewer": "Reviewer {{number}}",
+            "editFor": "Edit {{task}}",
+            "coordinator": "Coordinator",
+            "listLabel": "Agent for each task",
+            "save": "Save",
+            "cancel": "Cancel",
+            "agentFor": "Agent for {{task}}",
+            "modelFor": "Model for {{task}}",
+            "effortFor": "Effort for {{task}}",
+            "onlyIfSupported": "Only if the model supports it",
+            "coordinatorEffort": "Coordinator effort"
+          },
+          "advanced": {
+            "unreadable": "Suggested changes that could not be read: {{count}}",
+            "importLabel": "Import a change set",
+            "importDescription": "Paste routing as JSON. It waits under Suggested changes until you accept it.",
+            "import": "Import…"
           }
         },
         "dotIngress": {
           "failures": {
-            "listenFailed": "The app could not open the local endpoint for dot. Turn the switch off and on to try again, or restart the app.",
-            "metadataInvalid": "The app could not prepare the connection details for dot, so it closed the endpoint.",
-            "metadataWriteFailed": "The app could not save the connection details file for dot, so it closed the endpoint.",
-            "metadataNotSecured": "The app could not restrict access to the connection details file, so it removed the file and closed the endpoint."
+            "listenFailedPlain": "NASH could not get ready for tasks from dot. Turn the switch off and on, or restart the app.",
+            "metadataInvalidPlain": "NASH could not prepare the connection for dot, so it stays closed.",
+            "metadataWriteFailedPlain": "NASH could not save the connection details for dot, so it stays closed.",
+            "metadataNotSecuredPlain": "NASH could not protect the connection details for dot, so it removed them and stays closed."
           },
           "refusals": {
             "notConnected": "The dot settings are not connected in this build yet, so they cannot be shown or changed.",
             "forbidden": "Only the desktop app on this computer can read or change the dot settings.",
-            "interfaceUnavailable": "The switch was saved, but the dot interface is not available in this session, so the endpoint did not change. Restart the app and check again.",
             "unsupportedHost": "Only local workspaces on this computer can be enabled for dot. SSH, WSL and remote workspaces are not supported.",
             "workspaceUnavailable": "The app could not confirm this workspace as a local workspace, so nothing was changed.",
             "workspaceUnknown": "This workspace is no longer in the list for dot. The list was refreshed.",
@@ -12792,27 +12762,26 @@
             "busy": "The settings store was busy, so nothing was changed. Try again.",
             "invalidValue": "The app refused this value as invalid, so nothing was changed.",
             "callFailed": "The dot settings request did not complete. The current state is shown.",
-            "invalidResponse": "The app returned dot settings this screen cannot read."
+            "invalidResponse": "The app returned dot settings this screen cannot read.",
+            "interfaceUnavailablePlain": "The switch was saved, but tasks from dot are not available in this session. Restart the app and check again."
           },
           "interface": {
-            "notListening": "Not listening",
-            "listening": "Listening",
-            "listeningDetail": "Listening. The endpoint is open; the app cannot tell whether dot is connected.",
-            "notOpenDetail": "Not listening. The switch is on, but the endpoint is not open in this session.",
-            "offDetail": "Not listening. The switch is off.",
-            "name": "Local dot interface",
-            "description": "Lets dot on this computer send tasks to the app through a local endpoint.",
             "switch": "Accept tasks from dot",
             "switchDescription": "Turning it off stops new tasks from dot. Runs that already started keep running.",
-            "refresh": "Refresh"
+            "refresh": "Refresh",
+            "notReady": "Not ready",
+            "ready": "Ready",
+            "off": "Off",
+            "readyDetail": "Ready on this computer. NASH cannot tell whether dot is connected.",
+            "notReadyDetail": "On, but not ready in this session. Turn it off and on, or restart the app."
           },
           "unavailable": "Unavailable",
           "access": {
             "title": "Allow workspace write for {{label}}?",
-            "description": "A task from dot that asks for write access will start with file edits allowed in this workspace, without asking you. dot can also approve command prompts, such as Bash and PowerShell, for those tasks.",
             "reversible": "Switching back to read only stops new write tasks; runs that already started keep their access.",
             "cancel": "Cancel",
-            "confirm": "Allow workspace write"
+            "confirm": "Allow workspace write",
+            "descriptionBothPaths": "A task from dot that asks for write access, here or through your GPT Site, will start with file edits allowed in this workspace, without asking you. dot can also approve command prompts, such as Bash and PowerShell, for those tasks."
           },
           "workspaces": {
             "readOnly": "Read only",
@@ -12827,28 +12796,26 @@
             "add": "Enable for dot",
             "empty": "No workspace is enabled for dot, so dot cannot start any task.",
             "name": "Workspaces for dot",
-            "description": "dot can start tasks only in the workspaces enabled here. It sees the name shown here, not the folder location.",
-            "readOnlyNote": "New and re-enabled workspaces start at read only. Raising one to workspace write asks you to confirm.",
-            "pickerLabel": "Workspace to enable for dot"
+            "pickerLabel": "Workspace to enable for dot",
+            "title": "Workspaces",
+            "descriptionPlain": "dot sees each workspace by the name shown here, not by its folder.",
+            "readOnlyNotePlain": "Workspaces start read only. Allowing write asks you to confirm."
           },
           "limits": {
-            "defaults": "Defaults",
-            "custom": "Custom",
             "perMinute": "Tasks per minute",
             "perMinuteDescription": "Counted over any 60 seconds. From 1 to {{max}}.",
             "perDay": "Tasks per UTC day",
             "perDayDescription": "Counted per calendar day in UTC. From 1 to {{max}}.",
             "name": "Submission limits",
-            "description": "Every task dot sends counts, including ones that later fail or are canceled. A task over a limit is refused and nothing starts."
+            "title": "Limits",
+            "descriptionPlain": "A task over a limit is refused and nothing starts. Every task sent counts, even one that fails."
           },
           "section": {
             "title": "Tasks from dot",
-            "description": "A task sent from dot starts without asking you first. It is limited by the interface switch, the enabled workspaces and the submission limits below."
+            "descriptionPlain": "A task from dot starts without asking you. It can use only the workspaces enabled below, within your limits."
           }
         },
         "dotRemote": {
-          "name": "Remote access (GPT Sites)",
-          "description": "dot reaches this app through a mailbox on your GPT Site. This computer checks the mailbox over HTTPS and opens no inbound port. Tasks from the Site run read only.",
           "refresh": "Refresh",
           "switch": {
             "label": "Allow remote access",
@@ -12877,9 +12844,9 @@
           "status": {
             "neverSynced": "No sync with the Site yet.",
             "lastSync": "Last sync: {{time}}",
-            "endpointClosed": "The local dot interface is not listening, so tasks from the Site wait there until it is.",
             "pendingEvents": "Updates waiting to be sent: {{pending}}",
-            "syncFailing": "{{failures}} sync attempts in a row failed on this computer, the first at {{time}}. The app keeps trying. Code: {{code}}"
+            "localNotReady": "Tasks from dot are off or not ready on this computer, so tasks from the Site wait until they are.",
+            "syncFailingPlain": "{{failures}} sync attempts in a row failed on this computer, the first at {{time}}. The app keeps trying."
           },
           "reconnect": {
             "tokenMissing": "No usable Site access token is stored. Paste the token again.",
@@ -12895,21 +12862,20 @@
           },
           "token": {
             "saved": "Token saved",
-            "plaintextRefused": "A stored token was not sealed, so the app will not use it. Paste the token again.",
-            "sealingUnavailable": "This computer cannot seal the token, so it cannot be stored and remote access cannot connect.",
-            "notUsable": "Token not usable"
+            "notUsable": "Token not usable",
+            "plaintextRefusedPlain": "A stored token was not protected, so the app will not use it. Paste the token again.",
+            "sealingUnavailablePlain": "This computer cannot store the token safely, so remote access cannot connect."
           },
           "connection": {
             "title": "Connection",
-            "description": "Saving needs both values. Changing the origin ends the current pairing.",
-            "originLabel": "Site origin",
             "originPlaceholder": "https://example.com",
-            "originHelp": "The https address of your GPT Site, with nothing after the host name.",
             "tokenLabel": "Site access token",
             "tokenReplace": "Paste a new token to replace the saved one",
-            "tokenHelp": "Copy it from your Site's settings, under service access. The app seals it on this computer and never shows it again.",
             "save": "Save connection",
-            "saved": "Connection saved."
+            "saved": "Connection saved.",
+            "addressLabel": "Site address",
+            "addressHelp": "Changing it ends the current pairing.",
+            "tokenHelpPlain": "From your Site's settings, under service access. It is never shown again."
           },
           "pairing": {
             "approved": "Pairing approved. This computer now checks the Site mailbox.",
@@ -12919,7 +12885,6 @@
             "pairedUntil": "Paired until {{until}}. Approved on {{time}}.",
             "pairedAt": "Paired on {{time}}.",
             "needsSwitch": "Turn on remote access to pair.",
-            "needsConnection": "Save the Site origin and access token to pair.",
             "pairAgain": "Pair again",
             "startAgain": "Start pairing again",
             "start": "Start pairing",
@@ -12929,7 +12894,7 @@
             "expiresIn": "Expires in {{time}}",
             "codeExpired": "The code has expired. Checking with the Site.",
             "title": "Pairing",
-            "description": "The Site's owner approves this computer on the Site; until the pairing ends, the Site holds tasks from dot until this computer collects them."
+            "needsConnectionPlain": "Save the Site address and access token to pair."
           },
           "revoke": {
             "action": "Revoke pairing",
@@ -12939,13 +12904,7 @@
             "siteNotTold": "Revoked on this computer. The Site could not be told, so it may still list this pairing."
           },
           "refusals": {
-            "originEmpty": "Enter the Site origin, such as https://example.com.",
-            "originTooLong": "The Site origin is too long.",
-            "originSpaces": "The Site origin cannot contain spaces.",
             "originNotUrl": "Enter a full web address, such as https://example.com.",
-            "originNotHttps": "The Site origin must start with https://.",
-            "originSignIn": "Remove the sign-in details from the Site origin; the access token goes in its own field.",
-            "originPath": "Enter only the origin, with nothing after the host name, such as https://example.com.",
             "tokenEmpty": "Paste the Site access token.",
             "tokenMissing": "The Site access token was empty. Paste it again.",
             "tokenTooShort": "The Site access token is too short. Copy the whole token and paste it again.",
@@ -12954,33 +12913,61 @@
             "tokenInvalid": "The Site access token is not in the expected form. Paste it again.",
             "unavailable": "Remote access is not running in this session. Restart the app and check again.",
             "disabled": "Turn on remote access first.",
-            "notConfigured": "Save the Site origin and its access token first.",
-            "originInvalid": "The app refused the Site origin. Use an https origin such as https://example.com, with nothing after the host name.",
-            "sealingUnavailable": "This computer cannot seal the token, so nothing was stored.",
             "writeFailed": "The token could not be stored, so nothing was stored.",
-            "siteUnreachable": "The Site could not be reached. Check the origin and your connection, then try again.",
             "reconnectNeeded": "The Site refused this computer's access. Paste a new Site access token, then start pairing again.",
             "pairingRefused": "The Site refused to start pairing. Try again in a few minutes.",
             "notConnected": "Remote access is not connected in this build yet, so it cannot be shown or changed.",
             "forbidden": "Only the desktop app on this computer can read or change remote access.",
             "invalidValue": "The app refused this value, so nothing was changed.",
             "callFailed": "The remote access request did not complete. The current state is shown.",
-            "invalidResponse": "The app returned a remote access state this screen cannot read."
-          }
+            "invalidResponse": "The app returned a remote access state this screen cannot read.",
+            "originEmptyPlain": "Enter the Site address, such as https://example.com.",
+            "originTooLongPlain": "The Site address is too long.",
+            "originSpacesPlain": "The Site address cannot contain spaces.",
+            "originNotHttpsPlain": "The Site address must start with https://.",
+            "originSignInPlain": "Remove the sign-in details from the Site address; the access token goes in its own field.",
+            "originPathPlain": "Enter only the Site address, with nothing after the host name, such as https://example.com.",
+            "notConfiguredPlain": "Save the Site address and its access token first.",
+            "originInvalidPlain": "The app refused the Site address. Use an https address such as https://example.com, with nothing after the host name.",
+            "sealingUnavailablePlain": "This computer cannot store the token safely, so nothing was stored.",
+            "siteUnreachablePlain": "The Site could not be reached. Check the address and your connection, then try again."
+          },
+          "title": "Remote access",
+          "descriptionWorkspaceMax": "dot reaches this app through a mailbox on your GPT Site. This computer checks the mailbox over HTTPS and opens no inbound port. Tasks from the Site get at most the access you allow for each workspace."
         },
         "usageMetersOff": {
           "title": "Usage is not shown in NASH",
-          "body": "NASH does not read sign-ins or ask vendors for usage, so Gemini CLI, OpenCode Go, MiniMax, Grok, Cursor and GLM Coding Plan usage is not shown. Claude, Codex and agy report their own usage through their CLIs."
+          "bodyPlain": "Only Claude Code, Codex and agy report usage, from their own CLIs. Other providers are not read."
         },
         "cliUsageReadings": {
           "title": "Usage from the CLIs",
           "body": "NASH reads usage only from each CLI: Claude Code's status line, codex app-server and agy /usage. It reads no sign-in and asks no vendor for usage.",
           "noReading": "No reading yet",
-          "claudeHint": "Claude Code reports usage through its status line while a Claude session started in NASH runs.",
-          "codexHint": "Refresh usage asks codex app-server.",
-          "agyHint": "Refresh usage runs agy /usage while the agy meter is on in the status bar.",
           "refresh": "Refresh usage",
-          "refreshing": "Refreshing usage"
+          "claudeHintPlain": "Appears while a Claude session started in NASH runs.",
+          "codexHintPlain": "Use Refresh usage to read it.",
+          "agyHintPlain": "Use Refresh usage while the agy meter is on in the status bar.",
+          "bodyPlain": "Each reading comes from the CLI itself, never from a sign-in."
+        },
+        "dot": {
+          "search": {
+            "remoteDescription": "Let dot reach this app through your GPT Site: the switch, the Site address and access token, pairing and revocation."
+          }
+        },
+        "advancedDisclosure": {
+          "label": "Advanced"
+        },
+        "copyDetails": {
+          "copied": "Details copied.",
+          "failed": "The details could not be copied.",
+          "action": "Copy details"
+        },
+        "taskRouting": {
+          "search": {
+            "agentsDescription": "Choose the agent, model and effort for each kind of task, and accept or reject suggested changes.",
+            "effort": "effort",
+            "agent": "agent"
+          }
         }
       },
       "right": {
@@ -14634,7 +14621,8 @@
           "984338477a": "theme",
           "c47e1bd149": "agent",
           "windowsTerminalTitle": "Set Windows terminal defaults",
-          "windowsTerminalSubtitle": "Choose the DEFAULT Shell for new panes and how right-click behaves in the terminal."
+          "windowsTerminalSubtitle": "Choose the DEFAULT Shell for new panes and how right-click behaves in the terminal.",
+          "agentSubtitleNash": "Choose the agent for terminals you open yourself. NASH runs its tasks through Claude Code. Switch any time."
         },
         "OnboardingFooter": {
           "ba58547306": "Back",
@@ -15355,7 +15343,15 @@
                       "2cf795433b": "Start work in multiple repos",
                       "42525ba8a4": "Bring your key repos into NASH so you can start agent work without hunting for folders.",
                       "agentSkillsName": "Give agents NASH skills",
-                      "agentSkillsDescription": "Install the skills agents use to drive NASH's browser, control your computer, and coordinate multi-step work."
+                      "agentSkillsDescription": "Install the skills agents use to drive NASH's browser, control your computer, and coordinate multi-step work.",
+                      "claudeCodeName": "Set up Claude Code",
+                      "claudeCodeDescription": "NASH runs every task through a Claude Code session. Install Claude Code and sign in once from a terminal.",
+                      "clefName": "Connect Clef",
+                      "clefDescription": "Clef sorts each task by kind so NASH can pick its agent and model. Add your Clef details, then verify them.",
+                      "dotName": "Connect dot",
+                      "dotDescription": "Send tasks to NASH from ChatGPT dot. Turn on the local interface or pair your GPT Site.",
+                      "workbenchRunName": "Start your first run",
+                      "workbenchRunDescription": "Ask NASH for something from the Workbench, then follow the run, its tasks and any prompts there."
                     }
                   }
                 }
@@ -15507,6 +15503,14 @@
             "0d6efe9cf4": "Recommended on macOS when projects or worktrees live in protected folders.",
             "dac08ec03e": "Opening...",
             "6e3d62b816": "Open Full Disk Access"
+          },
+          "FeatureWallSetupNashActions": {
+            "claudeCodeFound": "Claude Code is installed on this computer.",
+            "claudeCodeMissing": "Claude Code was not found. Install it, run claude once in a terminal to sign in, then check again.",
+            "checkAgain": "Check again",
+            "openTaskRouting": "Open Task routing",
+            "openDotSettings": "Open Dot settings",
+            "openWorkbench": "Open the Workbench"
           }
         },
         "tips": {
@@ -19540,9 +19544,6 @@
         "claudeWorkflow": "Claude workflow",
         "other": "Other executor"
       },
-      "failed": "The task list could not be read.",
-      "inSession": "Runs in the main session.",
-      "invalidResponse": "The task list returned an invalid response.",
       "openWindow": "Open task window",
       "openWindowLabel": "Open task window for {{title}}",
       "readFailed": "Tasks could not be read: {{message}}",
@@ -19565,7 +19566,6 @@
       "attempt": "Attempt",
       "attemptOption": "Attempt {{number}} · {{state}}",
       "attemptsStale": "The attempt list could not be refreshed: {{message}}",
-      "baseCommit": "Base commit",
       "branch": "Branch",
       "command": {
         "completed": "Completed",
@@ -19583,7 +19583,6 @@
       "end": "Ended",
       "exitCode": "exit code {{code}}",
       "fileChange": "Files changed · {{status}}",
-      "invalidResponse": "The transcript read returned an invalid response.",
       "jumpToLatest": "Jump to latest",
       "malformed": "Unreadable line",
       "missing": "No transcript was recorded for this attempt.",
@@ -19592,8 +19591,8 @@
       "notRecorded": "Not recorded",
       "note": {
         "dropped": "{{dropped}} records were dropped while output arrived faster than it could be saved.",
-        "other": "Note: {{code}}",
-        "truncated": "The transcript reached its size limit. Later output was not recorded."
+        "truncated": "The transcript reached its size limit. Later output was not recorded.",
+        "unknown": "The transcript recorded a note this version cannot show."
       },
       "openWorktree": "Open worktree",
       "readFailed": "The transcript could not be read.",
@@ -19617,24 +19616,25 @@
         "usage": "{{input}} input · {{cached}} cached · {{output}} output tokens"
       },
       "unavailable": "The task window details are unavailable.",
-      "unknownRecord": "Unrecognized record: {{kind}}",
       "untitledTask": "Untitled task",
-      "waiting": "Waiting for the first output…"
+      "waiting": "Waiting for the first output…",
+      "tool": {
+        "webSearch": "Web search",
+        "mcpToolCall": "MCP tool call",
+        "reasoning": "Reasoning",
+        "todoList": "Plan updated",
+        "other": "Tool step"
+      },
+      "filesChanged": "Files changed",
+      "unknownRecordShort": "A record this version cannot show."
     },
     "sidebar": {
       "title": "Workbench"
     },
-    "status": {
-      "notConnected": "Not connected"
-    },
     "workspace": {
-      "notResolved": "Not resolved",
       "title": "Selected workspace",
-      "unavailable": "Workspace details are unavailable in the current catalog.",
-      "identity": "Workspace ID",
-      "path": "Path",
-      "host": "Execution host",
-      "empty": "Select a workspace from the workspace list."
+      "empty": "Select a workspace from the workspace list.",
+      "detailsUnavailable": "Workspace details are unavailable."
     },
     "permissions": {
       "title": "Permission prompts",
@@ -19642,9 +19642,6 @@
       "errorTitle": "Permission prompts unavailable",
       "stale": "Displayed prompts may be out of date.",
       "empty": "No permission prompts are waiting.",
-      "run": "Run",
-      "objective": "Objective",
-      "subagent": "Subagent",
       "asked": "Asked",
       "answerBy": "Answer by",
       "allow": "Allow",
@@ -19652,11 +19649,8 @@
       "deny": "Deny",
       "denyLabel": "Deny {{tool}}",
       "answerError": "Answer not recorded",
-      "desktopOnly": "Desktop only",
       "desktopOnlyHelp": "Not sent to dot. Answer it here or in the terminal.",
       "terminalOnly": "Answer it in the terminal.",
-      "invalidResponse": "The permission relay returned an invalid response.",
-      "failed": "The permission relay call failed.",
       "mismatch": "The permission relay returned a different prompt.",
       "decider": {
         "dot": "by dot",
@@ -19684,32 +19678,25 @@
         "alreadyAnswered": "Already answered.",
         "closed": "The app can no longer answer this prompt.",
         "notFound": "This prompt is no longer available."
-      }
+      },
+      "askedBy": "Asked by",
+      "fromSubagent": "From a subagent"
     },
     "runs": {
       "title": "Runs",
       "empty": "No runs in this workspace yet.",
       "hasMore": "Showing the most recent runs only.",
-      "errorTitle": "Run store error",
       "stale": "Displayed runs may be out of date.",
       "remoteUnavailable": "Runs are unavailable for remote workspaces.",
       "scopeUnavailable": "Select a known local workspace to see its runs.",
-      "invalidResponse": "The run store returned an invalid response.",
-      "failed": "The run operation failed.",
       "mismatch": "The run store returned a different run.",
       "scopeMismatch": "The run store returned a different workspace scope.",
       "objectiveUnavailable": "The objective is no longer stored.",
-      "id": "Run ID",
-      "sessionLabel": "Session",
-      "model": "Model",
       "effort": "{{effort}} effort",
-      "accessLabel": "Access",
       "ended": "Ended",
       "showTerminal": "Show terminal",
-      "showTerminalLabel": "Show terminal for {{runId}}",
       "terminalNotOpen": "The terminal tab is not open in this window.",
       "stop": "Stop run",
-      "stopLabel": "Stop run {{runId}}",
       "actionError": "Run not stopped",
       "stopRefused": {
         "starting": "The session is still starting. Stop the run again once it is running.",
@@ -19731,8 +19718,7 @@
         "running": "Running",
         "stopping": "Stopping",
         "stopped": "Stopped",
-        "exited": "Exited",
-        "unverifiable": "Cannot be verified"
+        "exited": "Exited"
       },
       "live": {
         "working": "Claude is working",
@@ -19766,17 +19752,13 @@
       },
       "message": {
         "label": "Message to the session",
-        "help": "English only. Typed into the Claude Code session; held while a dialog is open.",
         "send": "Send message",
         "failedTitle": "Message not confirmed",
-        "retryHint": "Sending again reuses the same message ID, so it is not delivered twice.",
         "refusedTitle": "Message not sent",
         "delivered": "Delivered to the session.",
         "duplicate": "This message was sent before, so it was not sent again.",
-        "queuedPrefix": "Queued.",
         "notSentPrefix": "Not sent.",
         "noReason": "No reason was given.",
-        "unknownReason": "Reason: {{reason}}.",
         "queued": {
           "agentBusy": "Queued. Claude is working, so the message waits in the session.",
           "dialogOpen": "Held. A permission or question dialog is open; the message is sent after it closes.",
@@ -19800,13 +19782,23 @@
           "terminalUnavailable": "The terminal could not be reached.",
           "deliveryIncomplete": "The text may be in the session input without being sent. Check the terminal; it was not retyped.",
           "deliveryUnconfirmed": "Delivery could not be confirmed after the app restarted."
-        }
-      }
+        },
+        "refusedGeneric": "The session did not accept the message.",
+        "queuedGeneric": "Queued. It is sent when the session can take it.",
+        "retryHintShort": "Sending it again will not deliver it twice.",
+        "helpShort": "Typed into the Claude Code session; held while a dialog is open."
+      },
+      "state": {
+        "working": "Working",
+        "dialogOpen": "Needs an answer",
+        "agentAbsent": "Not running"
+      },
+      "sessionNote": "Session: {{state}}",
+      "unavailableTitle": "Runs unavailable"
     },
     "validation": {
       "title": "Task validation",
       "check": "Check now",
-      "help": "Results are checked as each task reports. Check now also checks results still waiting, such as those an earlier session left. A model review runs only for a task whose TaskSpec asks for one.",
       "nothingWaiting": "No task results were waiting for validation.",
       "checked": "Results checked: {{total}}",
       "passed": "Passed",
@@ -19814,38 +19806,28 @@
       "inconclusive": "Left for a decision",
       "skipped": "Skipped",
       "errorTitle": "Validation not checked",
-      "invalidResponse": "Validation returned an invalid response.",
-      "failed": "The validation check failed.",
       "passRunning": "A validation pass is already running. Check again when it finishes.",
-      "unavailable": "Task validation is not available in this session."
+      "unavailable": "Task validation is not available in this session.",
+      "helpShort": "Each result is checked when its task reports. Check now also checks results still waiting."
     },
     "decisions": {
       "title": "Waiting for your decision",
       "waiting": "{{waiting}} waiting",
-      "help": "Validation could not decide these task results. Waive accepts a result as done; Reject fails its task. The main Claude session cannot decide them.",
       "empty": "No task results are waiting for your decision.",
       "hasMore": "Showing the oldest results only.",
       "errorTitle": "Decisions unavailable",
       "stale": "Displayed results may be out of date.",
-      "invalidResponse": "The decision list returned an invalid response.",
-      "failed": "The decision call failed.",
       "mismatch": "The app returned a different result.",
       "conflict": "This result was already decided.",
       "notFound": "This result is no longer waiting for a decision.",
       "decideErrorTitle": "Decision not recorded",
-      "run": "Run",
       "executor": "Executor",
       "since": "Undecided since",
       "branch": "Branch",
-      "worktree": "Worktree",
-      "baseCommit": "Base commit",
       "workspace": "Workspace",
-      "reason": "Why undecided",
       "waive": "Waive",
       "reject": "Reject",
       "cancel": "Cancel",
-      "waiveLabel": "Waive {{taskId}}",
-      "rejectLabel": "Reject {{taskId}}",
       "placement": {
         "ownWorktree": "Its own worktree",
         "folder": "The workspace folder",
@@ -19867,61 +19849,74 @@
         "waived": "Waived. The task is completed.",
         "rejectedNotified": "Rejected. The task is marked failed, and a notice was filed for the main Claude session.",
         "rejected": "Rejected. The task is marked failed."
-      }
-    },
-    "rsi": {
-      "title": "RSI Lab",
-      "blocker": "Baseline, candidate, sandbox evaluation and promotion evidence are not connected."
-    },
-    "improvements": {
-      "title": "Improvements",
-      "blocker": "The improvement inbox and proposal review are not connected."
+      },
+      "waiveTitleLabel": "Waive {{title}}",
+      "rejectTitleLabel": "Reject {{title}}",
+      "helpShort": "Validation could not decide these results. Waive accepts one as done; Reject fails its task."
     },
     "requests": {
-      "invalidResponse": "The request store returned an invalid response.",
-      "failed": "The request-store operation failed.",
       "scopeMismatch": "The request store returned a different workspace scope.",
       "pageMismatch": "The request store returned an invalid page boundary.",
       "objectiveMismatch": "The request store returned a different objective.",
       "cancelMismatch": "The request store returned a different cancellation receipt.",
       "refreshMismatch": "The request store returned a different request.",
-      "id": "Request ID",
       "run": "Run",
-      "noRun": "No run",
-      "revision": "Revision",
-      "created": "Created",
-      "cancelLabel": "Cancel request {{requestId}}",
       "cancel": "Cancel request",
       "title": "Local requests",
-      "runNote": "Each registered request starts a run with one Claude Code session in this workspace.",
-      "available": "Request intake available",
-      "unverified": "Request intake not verified",
       "stale": "Displayed requests may be out of date.",
       "objective": "Objective",
-      "objectiveHelp": "Write the objective in English. Your original text is stored without rewriting.",
-      "register": "Register request",
       "refresh": "Refresh",
       "loadOlder": "Load older",
       "olderPage": "Showing an older page. Refresh returns to the latest requests.",
-      "receipt": "Registration receipt: {{requestId}}",
-      "empty": "No registered requests on this page.",
       "remoteUnavailable": "Request intake is unavailable for remote workspaces.",
       "scopeUnavailable": "Select a known local workspace to register or list requests.",
-      "errorTitle": "Request store error",
-      "launchBlocker": "Launch blocker",
       "launch": {
-        "routeUnavailable": "The Routing Table has no available coordinator route.",
         "refused": "The run could not be started.",
-        "unverifiable": "A run was created, but its start could not be confirmed."
+        "unverifiable": "A run was created, but its start could not be confirmed.",
+        "noModel": "No model is available to start this run. Check Task routing in Settings.",
+        "generic": "This request could not start a run."
       },
-      "sequence": "Sequence",
-      "sequenceValue": "#{{sequence}}",
       "status": {
         "launchBlocked": "Launch blocked",
         "starting": "Starting",
         "runStarted": "Run started",
         "canceled": "Canceled"
-      }
+      },
+      "intakeHelp": "Starts a run with a Claude Code session in this workspace.",
+      "startRun": "Start run",
+      "updateFailedTitle": "Requests could not be updated",
+      "registered": "Request registered.",
+      "noneYet": "No requests yet."
+    },
+    "error": {
+      "notAllowed": "This window is not allowed to do that.",
+      "workspaceUnavailable": "This workspace is not available here.",
+      "runGone": "This run no longer exists.",
+      "sessionNotRunning": "The Claude Code session is not running.",
+      "attemptGone": "This attempt no longer exists.",
+      "invalidInput": "The app refused this as invalid.",
+      "recoveryRequired": "The stored records could not be read. Restart the app and try again.",
+      "runEnded": "This run has already ended.",
+      "stopRefused": "The run could not be stopped now. Nothing was changed.",
+      "stopUnconfirmed": "The stop could not be confirmed, so the run is still open. Close its terminal tab and try again.",
+      "runControlUnavailable": "Run control is not available right now.",
+      "permissionsUnavailable": "Permission prompts are not available right now.",
+      "checkFailed": "The check could not finish. Try again.",
+      "transcriptRefused": "The transcript file could not be verified, so it was not read.",
+      "requestGone": "This request no longer exists.",
+      "requestHandedOff": "This request has started its run. Stop the run to cancel it.",
+      "requestChanged": "This request changed in the meantime. Try again.",
+      "requestReused": "This request was already sent with different text.",
+      "capacity": "Too many requests are waiting. Try again later.",
+      "busy": "The app is busy. Try again.",
+      "unsupported": "This version of the app does not support this action.",
+      "generic": "Something went wrong.",
+      "unexpectedResponse": "The app returned an unexpected response."
+    },
+    "details": {
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy",
+      "copy": "Copy details"
     }
   }
 }

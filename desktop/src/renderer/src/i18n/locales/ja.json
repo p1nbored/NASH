@@ -97,6 +97,11 @@
         "restartRequired": "再起動が必要です",
         "unavailable": "ブラウザ ID が利用できません。"
       }
+    },
+    "agents": {
+      "codexTerminalServerIsolation": {
+        "description": "NASH のステータス表示とタブを閉じる操作を正しく動作させます。オフにすると、Codex の共有サーバーとその Agent 概要を使用します。新しく開くターミナルに適用されます。"
+      }
     }
   },
   "menu": {
@@ -977,7 +982,9 @@
         "ef223fbb6b": "接続を試みたデバイスがペアリングされていません",
         "11992d0337": "お使いのスマートフォンや別の NASH クライアントの場合は、[設定] → [モバイル] から再度ペアリングしてください。",
         "6573cfe955": "モバイル設定を開く",
-        "unresolvedTerminalWorktreeOwner": "ワークツリーの所有者を特定できないため、ターミナルを作成できません"
+        "unresolvedTerminalWorktreeOwner": "ワークツリーの所有者を特定できないため、ターミナルを作成できません",
+        "unpairedDeviceServersDescription": "別の NASH クライアントだった場合は、[設定] → [リモート NASH サーバー] から、このサーバーを再度共有してください。",
+        "openServerSettings": "サーバー設定を開く"
       },
       "useSettingsNavigationMetadata": {
         "4a728cd56b": "まだ形になりつつある新機能。試してみてください。",
@@ -1061,7 +1068,15 @@
         "automationsDescription": "Agent の作業をスケジュールし、自動化をサイドバーに表示するかどうかを選択します。",
         "shareSkillsTitle": "スキルを共有する",
         "shareSkillsDescription": "非公開リンクを使用してスキルを共有してください。持っている人なら誰でもインストールできます。",
-        "floatingWorkspaceWebDescription": "グローバルターミナルと markdown タブ。"
+        "floatingWorkspaceWebDescription": "グローバルターミナルと markdown タブ。",
+        "taskRoutingTitle": "タスクルーティング",
+        "taskRoutingDescription": "タスクの種類ごとに、担当する Agent、モデル、推論レベルを選択します。",
+        "dotTitle": "Dot",
+        "dotDescription": "ChatGPT dot から NASH にタスクを送信できるようにします。",
+        "statsDescription": "NASH のアクティビティと Agent 別のトークン使用量。",
+        "serversDescription": "他のマシン上の NASH とペアリングして、そこでセッションを実行し続けます。",
+        "accountsDescription": "任意。Codex、Antigravity などの CLI で保存済みアカウントを切り替え、使用量を確認します。",
+        "serversWebDescription": "このブラウザを保存済みの NASH サーバーに接続します。"
       },
       "useAppMenuPaste": {
         "pasteTooLarge": "貼り付け内容が大きすぎます。"
@@ -3990,6 +4005,12 @@
             "resumingAriaOne": "1 件のチャットを再開中。詳細はクリックしてください。",
             "resumingAria": "{{value0}} 件のチャットを再開中。詳細はクリックしてください。",
             "resumingTooltip": "中断されたチャットを復元し、続行を依頼しています…"
+          },
+          "usageReadingSource": {
+            "claudeStatusLine": "Claude Code のステータスライン",
+            "codexAppServer": "codex app-server",
+            "agyUsage": "agy /usage",
+            "from": "取得元: {{source}}"
           }
         }
       },
@@ -4237,7 +4258,8 @@
             "d6e9f0a1b2": "クレジット",
             "a3b6c7d8e9": "grok の使用状況",
             "9f2a3b4c5d": "xai",
-            "museKeyword": "muse"
+            "museKeyword": "muse",
+            "nashActivityDescription": "NASH のアクティビティと Agent 別のトークン使用量。"
           }
         },
         "usage": {
@@ -5297,7 +5319,10 @@
           "fee535205b": "タスク",
           "d599269755": "サイドバーから非表示",
           "artifacts": "アーティファクト",
-          "skills": "スキル"
+          "skills": "スキル",
+          "rsiLab": "RSI ラボ",
+          "rsiImprovements": "改善",
+          "rsiNotConnected": "未接続"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "クリア",
@@ -5327,7 +5352,9 @@
           "d396773ef0": "チェック中",
           "f8a2c91d4e": "マイルストーン",
           "b7e4d2a19c": "オンボーディング",
-          "c4f8e1b72a": "X"
+          "c4f8e1b72a": "X",
+          "reportIssue": "問題を報告",
+          "source": "ソースコード"
         },
         "SidebarToolbar": {
           "19e32d0e5f": "フォルダーピッカーを開いてプロジェクトを追加します",
@@ -7228,7 +7255,8 @@
           "3394d1f663": "チェック中",
           "d69a09b672": "アップデートは起動時に自動的にチェックされます。",
           "7173352632": "idle",
-          "e3b9d21c07": "利用可能です。システムパッケージマネージャーを通じて NASH を更新します。NASH はこのリリース自体をインストールできません。"
+          "e3b9d21c07": "利用可能です。システムパッケージマネージャーを通じて NASH を更新します。NASH はこのリリース自体をインストールできません。",
+          "updateFeedUnavailable": "このビルドではアップデートを利用できません。"
         },
         "GeneralWorkspaceSettingsSection": {
           "3d538a98f7": "ワークスペースの「開く」メニューから利用可能なアプリを選択します。",
@@ -8132,7 +8160,8 @@
           "serverWorkspaceWindowClosed": "ワークスペースウィンドウを閉じた",
           "serverRuntimeUnavailable": "NASH は利用できません",
           "serverRuntimeUnavailableDescription": "SSH トランスポートは接続されていますが、NASH ランタイムが応答しませんでした。ホストがまだ実行中の可能性があります。",
-          "serverReconnecting": "再接続中"
+          "serverReconnecting": "再接続中",
+          "advertiseThisAppHelpDesktop": "アクセスリンクを作成して、ブラウザや別の NASH クライアントがこのアプリに接続できるようにします。"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "{{value0}}をコピー"
@@ -8498,7 +8527,9 @@
           "addTitle": "SSH ホストを追加",
           "editDescription": "このマシンの接続詳細を更新します。変更は次回の接続時に適用されます。",
           "addDescription": "SSH でログインできる永続的なマシンを追加します。",
-          "editingPrefix": "編集中"
+          "editingPrefix": "編集中",
+          "remoteRuntimeHelp": "このホストで NASH を実行する Node.js を選択します。NASH 管理の Node は独自の Node をアップロードするため npm は不要です。ホストの Node は、ホストにインストール済みの Node.js を使用します。",
+          "remoteRuntimePinnedNode": "NASH 管理の Node"
         },
         "TasksPane": {
           "f71d8a9dd3": "タスクプロバイダー",
@@ -8675,7 +8706,9 @@
             "fastDescription": "修飾キーを押しながらスクロールするときの追加倍率。",
             "tui": "TUI",
             "tuiDescription": "全画面ターミナルアプリ向けの離散的なホイール通知。"
-          }
+          },
+          "defaultShellDescription": "NASH が新規ローカルターミナルペインで開くシェルを選択します。",
+          "customShellHelp": "PATH 上のシェル名または実行ファイルのパスを入力します。NASH はログインシェルとして起動します。"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "{{value0}} テーマのプレビュー",
@@ -9852,7 +9885,29 @@
             "7166b9090c": "gh CLI を介した GitHub 認証。",
             "f16e41cc72": "GitHub 連携",
             "760e2446e0": "保存された API トークンまたは環境変数を使用した Bitbucket クラウド認証。",
-            "af5ae87847": "アクセストークン"
+            "af5ae87847": "アクセストークン",
+            "clefRoutingDescription": "ワークベンチのリクエストのルーティングに使用する Clef の API トークンとアカウント ID を保存します。",
+            "clef": "clef",
+            "routing": "ルーティング",
+            "cloudflare": "cloudflare",
+            "workbench": "ワークベンチ",
+            "accountId": "アカウント ID",
+            "routingTableKeyword": "ルーティングテーブル",
+            "model": "モデル",
+            "reasoning": "推論",
+            "proposal": "提案",
+            "executor": "実行者",
+            "dotIngress": "dot からのタスク",
+            "dotIngressDescription": "ローカルの dot インターフェースのオン/オフを切り替え、dot が使用できるワークスペースとその最大アクセス権を選択し、送信制限を設定します。",
+            "dot": "dot",
+            "workspaceWrite": "ワークスペース書き込み",
+            "readOnly": "読み取り専用",
+            "rateLimit": "レート制限",
+            "submissionLimit": "送信制限",
+            "remoteAccess": "リモートアクセス",
+            "gptSites": "GPT Sites",
+            "pairing": "ペアリング",
+            "accessToken": "アクセストークン"
           }
         },
         "jira": {
@@ -11313,7 +11368,8 @@
           "manageConnectionLink": "連携"
         },
         "MobileRelayBetaNotice": {
-          "notice": "Orca Relay はベータ版です。"
+          "notice": "Orca Relay はベータ版です。",
+          "nashUnavailable": "NASH ビルドでは Orca Relay とモバイルのプッシュ通知は利用できません。"
         },
         "EditorFontFamilySetting": {
           "title": "エディターフォント",
@@ -11569,7 +11625,9 @@
           "experimental": "実験的機能",
           "description": "NASH プラグインをインストールおよび管理。SSH ワークスペースでもこのコンピュータでプラグインが実行されます。",
           "logsFailed": "プラグインログをロードできませんでした。",
-          "rollbackFailed": "このプラグインをロールバックできませんでした。以前の不変バージョンが利用できない可能性があります。"
+          "rollbackFailed": "このプラグインをロールバックできませんでした。以前の不変バージョンが利用できない可能性があります。",
+          "orcaCatalogLabel": "Orca のプラグインカタログを使用",
+          "orcaCatalogDescription": "Orca の公式プラグイン一覧とプラグイン安全リストを Orca のサーバーからダウンロードします。"
         },
         "PluginSettingsRow": {
           "blocked": "ブロック中",
@@ -11628,7 +11686,11 @@
             "install": "プラグインをインストール",
             "permissions": "プラグイン権限",
             "logs": "プラグインログ",
-            "development": "開発プラグイン"
+            "development": "開発プラグイン",
+            "orcaCatalogTitle": "Orca のプラグインカタログを使用",
+            "orcaCatalogDescription": "Orca の公式プラグイン一覧とプラグイン安全リストを Orca のサーバーからダウンロードします。",
+            "orcaMarketplace": "Orca マーケットプレイス",
+            "safetyList": "プラグイン安全リスト"
           }
         },
         "LinearAgentSkillGuide": {
@@ -11879,7 +11941,8 @@
           "keywordSignIn": "サインイン",
           "keywordSignOut": "サインアウト",
           "keywordRelay": "リレー",
-          "keywordCloud": "雲"
+          "keywordCloud": "雲",
+          "nashUnavailable": "NASH ビルドでは Orca Cloud へのサインインは利用できません。"
         },
         "automations": {
           "showButton": "オートメーションボタンを表示",
@@ -12048,6 +12111,613 @@
           "usageDescription": "Cursor は請求サイクルとともにリセットされる 2 つのプールの利用に課金し、使い切るとオンデマンドの追加料金が発生します。",
           "usageLabel": "使用量",
           "usageTitle": "月間プラン使用状況"
+        },
+        "UnsealedCredentialNotice": {
+          "body": "{{credential}} は暗号化されずに保存されています。このシステムには NASH が使用できる OS キーリングがありません。ディスクまたはそのバックアップを読み取れる人は誰でも、この認証情報を読み取れます。gnome-keyring または kwallet をインストールしてロックを解除し、もう一度保存して保護してください。"
+        },
+        "ZcodePlanAccountsSection": {
+          "usingCliHelp": "NASH は ~/.zcode/cli/config.json から Coding Plan のキーを読み取ります。代わりにここでプランをリンクするには、下に API キーを保存してください。",
+          "hostOnly": "プランのサイトと API キーは、NASH を実行しているコンピュータのデスクトップアプリで変更してください。",
+          "detailsUnavailable": "プランの認証情報の詳細は、NASH を実行しているコンピュータでのみ読み取れます。"
+        },
+        "clef": {
+          "clear": {
+            "action": "認証情報をクリア",
+            "title": "Clef の認証情報をクリアしますか？",
+            "cancel": "キャンセル",
+            "descriptionPlain": "保存済みの API トークンとアカウント ID をこのコンピュータから削除します。新しく保存するまで、Clef はタスクを分類できません。"
+          },
+          "form": {
+            "show": "表示",
+            "label": "Clef の認証情報",
+            "tokenLabel": "API トークン",
+            "showToken": "API トークンを表示",
+            "accountLabel": "アカウント ID",
+            "showAccount": "アカウント ID を表示",
+            "save": "認証情報を保存",
+            "tokenDescriptionPlain": "Cloudflare ダッシュボードで作成した、Workers AI へのアクセス権を持つトークン。",
+            "accountDescriptionPlain": "32 文字の Cloudflare アカウント ID。",
+            "cancel": "キャンセル"
+          },
+          "credentials": {
+            "tokenMissing": "API トークンを入力してください。",
+            "tokenTooShort": "API トークンが短すぎるため、何も保存されませんでした。トークン全体を貼り付けてください。",
+            "tokenTooLong": "API トークンが長すぎるため、何も保存されませんでした。トークンのみを貼り付けてください。",
+            "tokenInvalidCharacters": "API トークンには、スペースを含まない表示可能な ASCII 文字のみ使用できます。何も保存されませんでした。",
+            "accountIdMissing": "アカウント ID を入力してください。",
+            "accountIdInvalid": "アカウント ID は 32 文字の小文字の 16 進数である必要があります。何も保存されませんでした。",
+            "writeFailed": "認証情報をディスクに書き込めなかったため、何も保存されませんでした。",
+            "clearFailed": "保存済みの認証情報の一部を削除できませんでした。もう一度クリアしてください。",
+            "saveCallFailed": "NASH から応答がなかったため、認証情報を保存できませんでした。もう一度入力して再試行してください。",
+            "clearCallFailed": "NASH は認証情報がクリアされたことを確認できませんでした。上のステータスを確認して、もう一度お試しください。",
+            "missingFields": "API トークンとアカウント ID の両方を入力してください。",
+            "cleared": "API トークンとアカウント ID をこのコンピュータから削除しました。",
+            "sealingUnavailablePlain": "このコンピュータではトークンを安全に保存できないため、保存されませんでした。",
+            "savedPlain": "保存しました。トークンが再び表示されることはありません。"
+          },
+          "status": {
+            "unavailable": "ステータスを取得できません",
+            "saved": "認証情報は保存済み",
+            "incomplete": "未完了",
+            "accountMissing": "API トークンは保存済み、アカウント ID は未設定",
+            "tokenMissing": "アカウント ID は保存済み、API トークンは未設定",
+            "readFailed": "Clef の認証情報が保存されているかどうかを読み取れませんでした。",
+            "notProtected": "保護されていません",
+            "notSetUp": "未設定",
+            "notProtectedDetail": "保存済みの認証情報が保護されていないため、NASH は使用しません。クリアしてから、もう一度保存してください。"
+          },
+          "card": {
+            "title": "Clef",
+            "descriptionPlain": "Clef は各タスクを種類別に分類し、その種類に選ばれた Agent に割り当てます。"
+          },
+          "verification": {
+            "blockPaused": "検証は一時停止中です: {{reason}}。",
+            "verify": "検証",
+            "verifying": "検証中…",
+            "status": {
+              "notConfigured": "未設定",
+              "notConfiguredDetail": "先に API トークンとアカウント ID を保存してください。",
+              "contractUnverified": "検証待ち",
+              "ready": "準備完了",
+              "readyDetail": "Clef はタスクを分類できます。",
+              "unreachable": "到達不能",
+              "unreachableDetail": "直近の呼び出しが Clef に到達できませんでした。",
+              "circuitOpen": "失敗が続いたため一時停止中",
+              "circuitOpenDetail": "失敗が繰り返されたため呼び出しを一時停止しています。自動的に再開されます。",
+              "quotaLatched": "クォータを使い切りました",
+              "quotaLatchedDetail": "Clef からクォータを使い切ったと報告されました。呼び出しは 00:00 UTC 以降に再開されます。",
+              "authFailed": "認証情報が拒否されました",
+              "authFailedDetail": "Clef が保存済みの認証情報を拒否しました。上で新たな認証情報を保存してください。",
+              "sealingUnavailablePlain": "認証情報を保存できません",
+              "sealingUnavailableDetailPlain": "このコンピュータでは認証情報を安全に保存できないため、Clef を使用できません。",
+              "contractUnverifiedDetailPlain": "[検証] を実行して、Clef が想定どおりの形式で応答するか確認してください。",
+              "identityUnpinnedPlain": "モデル未確認",
+              "identityUnpinnedDetailPlain": "もう一度検証し、応答したモデル名が示された結果を使用してください。"
+            },
+            "problems": {
+              "httpStatus": "Clef が HTTP 200 で応答しませんでした。",
+              "envelopeUnrecognized": "レスポンスのエンベロープの形式が不明です。",
+              "envelopeNotSuccessful": "レスポンスのエンベロープが失敗を報告しています。",
+              "responseModelUnobserved": "レスポンスに、応答したモデル名が含まれていません。",
+              "responseModelDisallowed": "レスポンスに、許可されていないモデル名が含まれています。",
+              "answerKeysMismatch": "回答が、尋ねた質問と一致しません。",
+              "optionIdsNotEchoed": "回答が選択肢 ID を正確に繰り返していません。",
+              "probabilityOutOfRange": "確率が 0 から 1 の範囲外です。",
+              "probabilitySum": "質問の確率の合計が 1 になりません。",
+              "usageMissing": "レスポンスにトークン使用量が含まれていません。",
+              "resultIncomplete": "結果が不完全なため使用できません。"
+            },
+            "blockers": {
+              "classifierUnavailable": "Clef を使用できませんでした",
+              "invalidOutput": "Clef の回答が無効でした",
+              "missingInputs": "タスクの内容を明確にする必要があります",
+              "ambiguous": "回答があいまいでした",
+              "launchBlocked": "実行を開始できませんでした",
+              "notConfigured": "認証情報が設定されていません",
+              "identityUnpinned": "レスポンスのモデルが固定されていません",
+              "transientExhausted": "一時的な失敗により再試行回数を使い切りました",
+              "quotaExhausted": "Clef のクォータを使い切りました",
+              "budgetExhausted": "これ以上の試行は許可されませんでした",
+              "authOrAccount": "認証情報またはアカウントが拒否されました",
+              "modelUnavailable": "Clef のモデルを利用できません",
+              "requestRejected": "Clef がリクエストを拒否しました",
+              "dataBoundary": "データ境界により、この内容は許可されていません",
+              "possibleTruncation": "回答が途中で切れている可能性があります",
+              "identityMismatch": "固定されたモデルとは別のモデルが応答しました",
+              "interrupted": "呼び出しが中断されました",
+              "estimateExceeded": "リクエストのサイズが許容範囲外でした",
+              "contractUnverified": "回答の形式が検証されていません",
+              "schemaViolation": "回答がレスポンススキーマと一致しませんでした",
+              "lowMargin": "最上位の回答の差が十分ではありませんでした",
+              "needsClarification": "タスクにどの種類の作業かが示されていません",
+              "choiceOutside": "提示されていない選択肢が回答で選ばれました",
+              "inconsistentTypeProfile": "タスクの種類とプロファイルが一致しません",
+              "requiredProfile": "必要なプロファイルを利用できません",
+              "nonEnglish": "目的が英語で書かれていません",
+              "inProgress": "分類がすでに進行中です",
+              "emptySet": "対象となる選択肢がありませんでした",
+              "inconsistentDelegation": "コーディネーターが担当する作業に委任が求められました",
+              "coordinatorRoute": "コーディネーターのルートを利用できません",
+              "launchRefused": "起動が拒否されました",
+              "launchUnverifiable": "起動を確認できませんでした",
+              "noEligibleAgent": "タスクを担当できる Agent がありませんでした"
+            },
+            "errors": {
+              "credentialsMissing": "検証する前に、Clef の API トークンとアカウント ID を保存してください。",
+              "authFailed": "Clef が保存済みの認証情報を拒否しました。検証する前に新たな認証情報を保存してください。",
+              "quotaLatched": "Clef からクォータを使い切ったと報告されました。検証は 00:00 UTC まで一時停止されます。",
+              "circuitOpen": "失敗が繰り返されたため、Clef の呼び出しを一時停止しています。数分後にもう一度お試しください。",
+              "inProgress": "検証はすでに実行中です。",
+              "requestInvalid": "検証リクエストを準備できなかったため、何も送信されませんでした。",
+              "clefUnavailable": "現在、Clef の検証は利用できません。",
+              "routingNotConfigured": "このセッションでは Clef の検証は利用できません。",
+              "forbidden": "Clef を検証できるのは、このコンピュータのデスクトップアプリのみです。",
+              "notConnected": "このビルドでは Clef の検証が接続されていません。",
+              "callFailed": "検証リクエストが完了しませんでした。ステータスを確認して、もう一度お試しください。",
+              "invalidResponse": "アプリから、この画面では読み取れない検証結果が返されました。",
+              "credentialsUnprotected": "保存済みの認証情報が保護されていないため、使用されません。クリアしてから、もう一度保存してください。",
+              "resultUnconfirmed": "その結果は最新ではなくなりました。使用する前に、もう一度 [検証] を実行してください。",
+              "resultNotUsable": "その結果は使用できません。",
+              "resultWriteFailed": "結果を保存できませんでした。もう一度お試しください。"
+            },
+            "pending": {
+              "title": "確認待ち",
+              "thresholds": "信頼度のしきい値: タスクは {{yes}} 以上で委任、{{no}} 以下で保持と判定されます。タスクの種類は、次点を {{margin}} 上回る必要があります。",
+              "wording": "回答の文言: {{options}} 個のタスク種類の選択肢と {{answers}} 個の委任の回答。",
+              "effectPlain": "これらはデフォルト値です。変更すると、Clef をもう一度検証する必要があります。"
+            },
+            "report": {
+              "failedReason": "{{reason}}: {{detail}}。",
+              "titlePlain": "検証結果",
+              "passed": "Clef は想定どおりの形式で応答しました。",
+              "notUsable": "この結果は使用できません:",
+              "useResult": "この結果を使用",
+              "failedTitlePlain": "検証に失敗しました"
+            },
+            "blockStatusPlain": "Clef のステータスを読み取れませんでした。",
+            "blockCredentialsPlain": "先に API トークンとアカウント ID を保存してください。",
+            "otherBundlePlain": "前回の検証以降に Clef の質問が変更されました。もう一度検証してください。",
+            "lastVerified": "最終検証: {{time}}。",
+            "titlePlain": "検証",
+            "pinnedPlain": "結果を保存しました。Clef のステータス: {{status}}。"
+          },
+          "saved": {
+            "label": "認証情報",
+            "description": "このコンピュータに保存されています。再び表示されることはありません。",
+            "replace": "置換"
+          }
+        },
+        "routingTable": {
+          "card": {
+            "refresh": "更新",
+            "unavailable": "利用不可",
+            "blocked": "ブロック中",
+            "blockedTitle": "ルーティングがブロックされています",
+            "pendingNotice": "確認待ちの変更の提案: {{count}}",
+            "review": "確認",
+            "title": "タスクごとの Agent"
+          },
+          "active": {
+            "versionActive": "バージョン {{version}} が有効",
+            "created": "作成: {{time}}"
+          },
+          "availability": {
+            "available": "利用可能",
+            "unavailable": "利用不可",
+            "notChecked": "未確認",
+            "unverified": "未検証",
+            "awaiting": "これは確認待ちのデフォルト値に基づいています。",
+            "reasons": {
+              "cliMissing": "CLI がインストールされていません。",
+              "cliDisabled": "CLI は設定でオフになっています。",
+              "cliNotLaunchable": "CLI はインストールされていますが、起動できません。",
+              "modelNotListed": "このモデルはお使いのアカウントでは提供されていません。",
+              "modelExcluded": "このモデル名はここでは使用できません（エイリアスまたは除外されたモデル）。",
+              "reasoningUnsupported": "このモデルはこの推論レベルに対応していません。",
+              "notEntitled": "お使いのプランにはこのモデルが含まれていません。",
+              "workspaceNotGit": "Codex の実行にはワークスペースフォルダーが必要ですが、フローティングターミナルにはありません。",
+              "cliUnobserved": "インストール済みの CLI を検出できませんでした。",
+              "modelListUnavailable": "モデル一覧を読み取れませんでした。",
+              "reasoningUnverified": "このモデルの推論レベルを確認できませんでした。",
+              "authUnobserved": "サインインを確認できませんでした。",
+              "authFailedPlain": "サインインに失敗しました。CLI にもう一度サインインしてから、利用可否を確認してください。",
+              "quotaExhaustedPlain": "使用量の上限に達しました。使用量の新たな読み取りで上限のリセットが確認されると解除されます。リセット後に利用可否を確認することもできます。",
+              "recordDamagedPlain": "前回の利用可否の確認結果を読み取れませんでした。もう一度利用可否を確認してください。",
+              "notCheckedPlain": "最近確認されていません。"
+            },
+            "summaryPlain": "確認結果: 利用可能 {{available}}、利用不可 {{unavailable}}、未検証 {{unverified}}。",
+            "checksUnavailablePlain": "現在、利用可否の確認は利用できません。アプリを再起動してください。",
+            "checkingPlain": "確認中…",
+            "checkPlain": "利用可否を確認"
+          },
+          "proposals": {
+            "evidence": "根拠: {{sources}}",
+            "becomes": "から次に変更:",
+            "none": "なし",
+            "noReviewers": "レビュアーなし",
+            "coordinator": "コーディネーター",
+            "staleTitle": "古いバージョン向けの提案",
+            "accept": "承認",
+            "edit": "編集して承認",
+            "reject": "却下",
+            "noRowPlain": "未設定",
+            "notesOnlyPlain": "選択は同じで、メモのみ変更されます。",
+            "metaPlain": "{{time}} · バージョン {{version}} に基づく",
+            "staleBodyPlain": "現在はバージョン {{active}} が使用されているため、この提案は承認できなくなりました。却下するか、上の一覧でもう一度変更してください。",
+            "historyPlain": "決定済み（{{count}}）",
+            "pendingTitlePlain": "変更の提案",
+            "noneWaitingPlain": "確認待ちの提案はありません。提案を承認するまで何も変更されません。"
+          },
+          "versions": {
+            "title": "バージョン履歴",
+            "version": "バージョン {{version}}",
+            "active": "（有効）",
+            "revertTo": "バージョン {{version}} に戻す",
+            "revert": "元に戻す",
+            "confirmTitle": "バージョン {{version}} に戻しますか？",
+            "confirmBody": "バージョン {{version}} の内容が、新たな有効バージョンになります。バージョン {{active}} は履歴に残るため、後で戻すことができます。",
+            "cancel": "キャンセル"
+          },
+          "editor": {
+            "coordinator": "コーディネーター",
+            "coordinatorModel": "コーディネーターのモデル",
+            "taskType": "タスクの種類",
+            "model": "モデル",
+            "requirement": "要件",
+            "required": "必須",
+            "whenSupported": "対応している場合",
+            "modelFor": "{{task}} のモデル",
+            "cancel": "キャンセル",
+            "acceptModified": "変更して承認",
+            "geminiExcluded": "Gemini 4 モデルはルーティングから除外されています。",
+            "aliasUnpinned": "opus や latest などのエイリアスではなく、正確なモデル ID を入力してください。",
+            "slugRejected": "このモデル ID は廃止済みか、拒否されています。別の正確なモデル ID を入力してください。",
+            "modelInvalid": "claude-sonnet-5-5 のような正確なモデル ID を入力してください。",
+            "onlyPrimaryInherits": "コーディネーターの設定を継承できるのは、Claude メインセッションと Claude ワークフローのみです。",
+            "primaryInherits": "Claude メインセッションは常にコーディネーターの設定を使用します。モデルと推論を [継承] に設定してください。",
+            "coordinatorStays": "コーディネーターの推論は常に Claude メインセッションで行われます。",
+            "ifSupportedConcrete": "「対応している場合」には、[継承] ではなく具体的な推論レベルが必要です。",
+            "rowInvalid": "この行は無効です。対象、モデル、推論レベルを確認してください。",
+            "nothingChanged": "このままでは有効なテーブルは変更されません。先に少なくとも 1 つのルートを編集してください。",
+            "modifyTitlePlain": "承認前に編集",
+            "modifyBodyPlain": "編集内容が提案された変更を置き換えます。承認すると、編集内容が使用されます。",
+            "agentFor": "{{task}} の Agent",
+            "effortFor": "{{task}} の推論レベル",
+            "effortRequirementFor": "{{task}} の推論レベルの要件",
+            "agent": "Agent",
+            "effort": "推論レベル"
+          },
+          "import": {
+            "title": "変更セットをインポート",
+            "jsonLabel": "変更セット（JSON）",
+            "reasonLabel": "変更の理由",
+            "cancel": "キャンセル",
+            "reasonMissing": "変更の理由を英語で短く入力してください。",
+            "bodyPlain": "[変更の提案] に追加され、そこで確認して承認できます。",
+            "submitPlain": "インポート",
+            "noActivePlain": "タスクルーティングを利用できないため、何もインポートできません。",
+            "notJsonPlain": "有効な JSON ではありません。変更セット全体を貼り付けてください。",
+            "invalidPlain": "この変更セットには使用できない値があります。各 Agent、モデル、推論レベルを確認してください。"
+          },
+          "notices": {
+            "activated": "バージョン {{version}} が有効になりました。",
+            "reverted": "バージョン {{from}} の内容で、バージョン {{version}} が有効になりました。",
+            "rejectedPlain": "変更の提案を却下しました。",
+            "importedPlain": "[変更の提案] に追加しました。使用するには、そこで承認してください。",
+            "saved": "保存しました。"
+          },
+          "refusals": {
+            "duplicateActivePlain": "これらの選択はすでに使用中のため、何も保存されませんでした。",
+            "duplicatePendingPlain": "同じ変更がすでに [変更の提案] で確認待ちです。そこで確認してください。",
+            "integrityFailedPlain": "保存済みのタスクルーティングを読み取れなかったため、タスクはルーティングされません。代わりにデフォルトが使用されることもありません。",
+            "taxonomyMismatchPlain": "保存済みのタスクルーティングは別のタスク一覧用に作成されているため、使用できません。[詳細設定] で現在のタスク用のルーティングをインポートしてください。",
+            "notInstalledPlain": "タスクルーティングはまだ設定されていません。アプリを再起動して、デフォルトをインストールしてください。",
+            "invalidTablePlain": "この変更によりタスクルーティングが無効になるため、保存されませんでした。",
+            "versionConflictPlain": "保存中にタスクルーティングが変更されました。もう一度お試しください。",
+            "forbiddenCallerPlain": "タスクルーティングは、このアプリでのみ変更できます。",
+            "proposalUnknownPlain": "この変更の提案はもう存在しません。",
+            "proposalInvalidPlain": "この変更の提案を読み取れないため、承認できません。",
+            "alreadyDecidedPlain": "この変更の提案はすでに決定済みです。",
+            "proposalSupersededPlain": "この変更の提案は以前の選択に対して作成されたため、保留され、何も変更されませんでした。",
+            "noChangePlain": "すべての選択がそのままのため、何も変更されませんでした。",
+            "forbiddenProposerPlain": "この種類の変更はここでは送信できません。",
+            "invalidProposalPlain": "この変更は無効なため、保存されませんでした。",
+            "baseNotActivePlain": "準備後にタスクルーティングが変更されました。もう一度お試しください。",
+            "tooManyPendingPlain": "確認待ちの変更の提案が多すぎます。先に [詳細設定] でいくつかを承認または却下してください。",
+            "versionUnknownPlain": "その以前のバージョンはもう存在しません。",
+            "unknownPlain": "タスクルーティングがこの変更を拒否しました。",
+            "invalidResponsePlain": "アプリからの応答をここでは読み取れませんでした。",
+            "notConnectedPlain": "このビルドではタスクルーティングを利用できません。",
+            "unavailablePlain": "現在、タスクルーティングは利用できません。アプリを再起動してください。",
+            "untrustedCallerPlain": "タスクルーティングの読み取りと変更は、このコンピュータのデスクトップアプリでのみ行えます。",
+            "callFailedPlain": "リクエストが完了しませんでした。もう一度お試しください。"
+          },
+          "labels": {
+            "coordinatorReasoning": "コーディネーターの推論",
+            "complexPlanningReasoning": "複雑な計画と推論",
+            "softwareEngineering": "ソフトウェアエンジニアリング",
+            "scientificExperimentValidation": "科学実験の検証",
+            "complexPdfEvidenceAnalysis": "複雑な PDF と証拠の分析",
+            "generalResearchAnalysis": "汎用的な調査と分析",
+            "routineAnalysisBatch": "定型分析のバッチ",
+            "highQualityWriting": "高品質な文章作成",
+            "fastWritingOrAlternativeDraft": "高速な文章作成または代替案の下書き",
+            "configuredProjectWorkflow": "設定済みのプロジェクトワークフロー",
+            "claudePrimary": "Claude メインセッション",
+            "claudeSubagent": "Claude サブ Agent",
+            "claudeWorkflow": "Claude ワークフロー",
+            "codexCli": "Codex CLI",
+            "agyCli": "agy CLI",
+            "claudeHeadless": "Claude ヘッドレスレビュー",
+            "none": "なし",
+            "minimal": "最小",
+            "low": "低",
+            "medium": "中",
+            "high": "高",
+            "xhigh": "最高",
+            "max": "最大",
+            "ultra": "ウルトラ",
+            "inherit": "継承",
+            "whenSupported": "（対応している場合）",
+            "bundledUpdate": "アプリのアップデート",
+            "benchmarkReview": "ベンチマークレビュー",
+            "agent": "Agent",
+            "userImport": "ユーザーによる変更",
+            "accepted": "承認済み",
+            "acceptedModified": "変更して承認済み",
+            "rejected": "却下済み",
+            "superseded": "置き換え済み",
+            "sourceBundled": "アプリのデフォルト",
+            "sourceUser": "ユーザーのテーブル",
+            "sameAsCoordinator": "コーディネーターと同じ"
+          },
+          "inline": {
+            "edit": "編集",
+            "reviewersTitle": "レビュアー",
+            "reviewersHelp": "自動チェックのない完了済みの作業をレビューします。",
+            "noReviewers": "レビュアーがいないため、自動チェックのない作業はレビューできません。",
+            "reviewer": "レビュアー {{number}}",
+            "editFor": "{{task}} を編集",
+            "coordinator": "コーディネーター",
+            "listLabel": "タスクごとの Agent",
+            "save": "保存",
+            "cancel": "キャンセル",
+            "agentFor": "{{task}} の Agent",
+            "modelFor": "{{task}} のモデル",
+            "effortFor": "{{task}} の推論レベル",
+            "onlyIfSupported": "モデルが対応している場合のみ",
+            "coordinatorEffort": "コーディネーターの推論レベル"
+          },
+          "advanced": {
+            "unreadable": "読み取れなかった変更の提案: {{count}}",
+            "importLabel": "変更セットをインポート",
+            "importDescription": "ルーティングを JSON として貼り付けます。承認するまで [変更の提案] で保留されます。",
+            "import": "インポート…"
+          }
+        },
+        "dotIngress": {
+          "failures": {
+            "listenFailedPlain": "NASH は dot からのタスクを受け付ける準備ができませんでした。スイッチをオフにしてからオンにするか、アプリを再起動してください。",
+            "metadataInvalidPlain": "NASH は dot 用の接続を準備できなかったため、接続は閉じたままです。",
+            "metadataWriteFailedPlain": "NASH は dot 用の接続情報を保存できなかったため、接続は閉じたままです。",
+            "metadataNotSecuredPlain": "NASH は dot 用の接続情報を保護できなかったため、接続情報を削除し、接続は閉じたままです。"
+          },
+          "refusals": {
+            "notConnected": "このビルドでは dot の設定がまだ接続されていないため、表示も変更もできません。",
+            "forbidden": "dot の設定を読み取りまたは変更できるのは、このコンピュータのデスクトップアプリのみです。",
+            "unsupportedHost": "dot に対して有効にできるのは、このコンピュータ上のローカルワークスペースのみです。SSH、WSL、リモートのワークスペースには対応していません。",
+            "workspaceUnavailable": "アプリがこのワークスペースをローカルワークスペースとして確認できなかったため、何も変更されませんでした。",
+            "workspaceUnknown": "このワークスペースは dot 用の一覧にもうありません。一覧を更新しました。",
+            "recoveryRequired": "保存されている dot の設定は復旧が必要なため、何も変更されませんでした。",
+            "busy": "設定ストアがビジー状態だったため、何も変更されませんでした。もう一度お試しください。",
+            "invalidValue": "アプリがこの値を無効として拒否したため、何も変更されませんでした。",
+            "callFailed": "dot の設定リクエストが完了しませんでした。現在の状態を表示しています。",
+            "invalidResponse": "アプリから、この画面では読み取れない dot の設定が返されました。",
+            "interfaceUnavailablePlain": "スイッチは保存されましたが、このセッションでは dot からのタスクを利用できません。アプリを再起動して、もう一度確認してください。"
+          },
+          "interface": {
+            "switch": "dot からのタスクを受け付ける",
+            "switchDescription": "オフにすると、dot からの新規タスクを停止します。すでに開始された実行は継続します。",
+            "refresh": "更新",
+            "notReady": "準備未完了",
+            "ready": "準備完了",
+            "off": "オフ",
+            "readyDetail": "このコンピュータで準備が完了しています。dot が接続されているかどうかは NASH では判別できません。",
+            "notReadyDetail": "オンですが、このセッションでは準備ができていません。オフにしてからオンにするか、アプリを再起動してください。"
+          },
+          "unavailable": "利用不可",
+          "access": {
+            "title": "{{label}} でワークスペースへの書き込みを許可しますか？",
+            "reversible": "読み取り専用に戻すと、新規の書き込みタスクは停止します。すでに開始された実行のアクセス権はそのまま維持されます。",
+            "cancel": "キャンセル",
+            "confirm": "ワークスペースへの書き込みを許可",
+            "descriptionBothPaths": "ここから、または GPT Site 経由で書き込みアクセスを要求した dot からのタスクは、確認なしで、このワークスペースでのファイル編集が許可された状態で開始されます。また、dot はそれらのタスクについて、Bash や PowerShell などのコマンドの確認を承認することもできます。"
+          },
+          "workspaces": {
+            "readOnly": "読み取り専用",
+            "workspaceWrite": "ワークスペース書き込み",
+            "accessLabel": "{{label}} の最大アクセス権",
+            "off": "オフ",
+            "enableLabel": "dot に対して {{label}} を有効化",
+            "noneEnabled": "有効なワークスペースなし",
+            "enabledCount": "{{count}} 件有効",
+            "noCandidates": "追加できる他のローカルワークスペースはありません",
+            "choose": "追加するワークスペースを選択",
+            "add": "dot に対して有効化",
+            "empty": "dot に対して有効なワークスペースがないため、dot はタスクを開始できません。",
+            "name": "dot 用のワークスペース",
+            "pickerLabel": "dot に対して有効にするワークスペース",
+            "title": "ワークスペース",
+            "descriptionPlain": "dot には、各ワークスペースがフォルダーではなく、ここに表示されている名前で示されます。",
+            "readOnlyNotePlain": "ワークスペースは読み取り専用で開始されます。書き込みを許可する際は確認を求められます。"
+          },
+          "limits": {
+            "perMinute": "1 分あたりのタスク数",
+            "perMinuteDescription": "任意の 60 秒間でカウントします。1～{{max}} の範囲で指定します。",
+            "perDay": "UTC の 1 日あたりのタスク数",
+            "perDayDescription": "UTC の暦日ごとにカウントします。1～{{max}} の範囲で指定します。",
+            "name": "送信制限",
+            "title": "制限",
+            "descriptionPlain": "制限を超えたタスクは拒否され、何も開始されません。送信されたタスクは、失敗したものも含めてすべてカウントされます。"
+          },
+          "section": {
+            "title": "dot からのタスク",
+            "descriptionPlain": "dot からのタスクは確認なしで開始されます。使用できるのは、下で有効にしたワークスペースのみで、設定した制限の範囲内に限られます。"
+          }
+        },
+        "dotRemote": {
+          "refresh": "更新",
+          "switch": {
+            "label": "リモートアクセスを許可",
+            "description": "オフにすると、サイトの確認と更新情報の送信を停止します。すでに開始された実行は継続します。"
+          },
+          "pill": {
+            "unavailable": "利用不可",
+            "off": "オフ",
+            "unpaired": "未ペアリング",
+            "pairing": "ペアリング中",
+            "connected": "接続済み",
+            "offline": "オフライン",
+            "reconnect": "再接続が必要",
+            "pairAgain": "再ペアリング",
+            "syncFailing": "同期に失敗中"
+          },
+          "detail": {
+            "off": "オフです。アプリはサイトを確認せず、何も送信しません。",
+            "unpaired": "オンですが、このコンピュータはまだサイトとペアリングされていません。",
+            "pairing": "サイトのオーナーがペアリングコードを承認するのを待っています。",
+            "connected": "サイトのメールボックスに接続済みです。dot がサイトに接続されているかどうかは、アプリでは判別できません。",
+            "offline": "オフラインです。現在、アプリはサイトに接続できていませんが、接続を試行し続けます。",
+            "reconnect": "停止しました。現在のアクセストークンが保存されるまで、アプリはサイトを確認しません。",
+            "pairAgain": "停止しました。このコンピュータが再度ペアリングされるまで、アプリはサイトを確認しません。"
+          },
+          "status": {
+            "neverSynced": "サイトとはまだ同期していません。",
+            "lastSync": "最終同期: {{time}}",
+            "pendingEvents": "送信待ちの更新: {{pending}}",
+            "localNotReady": "このコンピュータでは dot からのタスクがオフか準備ができていないため、サイトからのタスクは準備が整うまで待機します。",
+            "syncFailingPlain": "このコンピュータで同期が {{failures}} 回連続して失敗しました（最初の失敗: {{time}}）。アプリは試行を続けます。"
+          },
+          "reconnect": {
+            "tokenMissing": "使用できるサイトのアクセストークンが保存されていません。トークンをもう一度貼り付けてください。",
+            "tokenRejected": "サイトがアクセストークンを拒否しました。トークンが置き換えられた可能性があります。サイトの設定から現在のトークンを貼り付けてください。",
+            "sessionRejected": "サイトがこのコンピュータのセッションを拒否しました。再開するには、再度ペアリングしてください。",
+            "sessionExpired": "サイトとのセッションが更新される前に期限切れになりました。再開するには、再度ペアリングしてください。",
+            "sessionEnded": "サイトとのセッションが終了し、再開できませんでした。再開するには、再度ペアリングしてください。",
+            "pairingRevoked": "ペアリングが取り消されました。再開するには、再度ペアリングしてください。",
+            "pairingExpired": "サイト上でペアリングの有効期間が終了しました。再開するには、再度ペアリングしてください。",
+            "credentialReused": "置き換え済みのこのコンピュータの認証情報が再使用されたことをサイトが検出し、保護のためペアリングを取り消しました。再開するには、再度ペアリングしてください。",
+            "credentialInvalid": "サイトがこのコンピュータの認証情報を受け付けませんでした。再開するには、再度ペアリングしてください。",
+            "credentialUnsaved": "アプリがこのコンピュータの認証情報を安全に保存できなかったため、ペアリングは保持されませんでした。再開するには、再度ペアリングしてください。"
+          },
+          "token": {
+            "saved": "トークンは保存済み",
+            "notUsable": "トークンを使用できません",
+            "plaintextRefusedPlain": "保存されたトークンが保護されていなかったため、アプリは使用しません。トークンをもう一度貼り付けてください。",
+            "sealingUnavailablePlain": "このコンピュータではトークンを安全に保存できないため、リモートアクセスで接続できません。"
+          },
+          "connection": {
+            "title": "接続",
+            "originPlaceholder": "https://example.com",
+            "tokenLabel": "サイトのアクセストークン",
+            "tokenReplace": "保存済みのトークンを置き換えるには、新たなトークンを貼り付けてください",
+            "save": "接続を保存",
+            "saved": "接続を保存しました。",
+            "addressLabel": "サイトのアドレス",
+            "addressHelp": "変更すると、現在のペアリングは終了します。",
+            "tokenHelpPlain": "サイトの設定の「サービスアクセス」で取得します。再び表示されることはありません。"
+          },
+          "pairing": {
+            "approved": "ペアリングが承認されました。このコンピュータはサイトのメールボックスの確認を開始します。",
+            "denied": "サイト上でペアリングが拒否されました。誤りだった場合は、もう一度ペアリングを開始してください。",
+            "expired": "承認される前にコードの有効期限が切れました。もう一度ペアリングを開始して、新たなコードを取得してください。",
+            "failed": "サイトがこのコードを受け付けなくなったため、ペアリングを完了できませんでした。もう一度ペアリングを開始してください。",
+            "pairedUntil": "{{until}} までペアリング済み。{{time}} に承認されました。",
+            "pairedAt": "{{time}} にペアリングしました。",
+            "needsSwitch": "ペアリングするには、リモートアクセスをオンにしてください。",
+            "pairAgain": "再ペアリング",
+            "startAgain": "ペアリングをやり直す",
+            "start": "ペアリングを開始",
+            "codeLabel": "ペアリングコード",
+            "instructions": "サイトのオーナーとしてサインインした状態でサイトのペアリングページを開き、このコードが表示されていることを確認してから承認してください。",
+            "openPage": "ペアリングページを開く",
+            "expiresIn": "有効期限まで {{time}}",
+            "codeExpired": "コードの有効期限が切れました。サイトに確認しています。",
+            "title": "ペアリング",
+            "needsConnectionPlain": "ペアリングするには、サイトのアドレスとアクセストークンを保存してください。"
+          },
+          "revoke": {
+            "action": "ペアリングを取り消す",
+            "title": "このコンピュータのペアリングを取り消しますか？",
+            "description": "取り消すと、以降のリモート作業は停止します。再度ペアリングするまで、アプリはサイトの確認を停止し、サイトから新規タスクを受け付けません。すでに開始された実行はキャンセルされません。",
+            "cancel": "キャンセル",
+            "siteNotTold": "このコンピュータ上で取り消しました。サイトに通知できなかったため、サイトにはこのペアリングがまだ表示されている可能性があります。"
+          },
+          "refusals": {
+            "originNotUrl": "https://example.com のような完全な Web アドレスを入力してください。",
+            "tokenEmpty": "サイトのアクセストークンを貼り付けてください。",
+            "tokenMissing": "サイトのアクセストークンが空でした。もう一度貼り付けてください。",
+            "tokenTooShort": "サイトのアクセストークンが短すぎます。トークン全体をコピーして、もう一度貼り付けてください。",
+            "tokenTooLong": "サイトのアクセストークンが長すぎます。",
+            "tokenCharacters": "サイトのアクセストークンに、スペースまたはトークンに使用できない文字が含まれています。もう一度貼り付けてください。",
+            "tokenInvalid": "サイトのアクセストークンが想定どおりの形式ではありません。もう一度貼り付けてください。",
+            "unavailable": "このセッションではリモートアクセスが実行されていません。アプリを再起動して、もう一度確認してください。",
+            "disabled": "先にリモートアクセスをオンにしてください。",
+            "writeFailed": "トークンを保存できなかったため、何も保存されませんでした。",
+            "reconnectNeeded": "サイトがこのコンピュータのアクセスを拒否しました。サイトの新たなアクセストークンを貼り付けてから、もう一度ペアリングを開始してください。",
+            "pairingRefused": "サイトがペアリングの開始を拒否しました。数分後にもう一度お試しください。",
+            "notConnected": "このビルドではリモートアクセスがまだ接続されていないため、表示も変更もできません。",
+            "forbidden": "リモートアクセスを読み取りまたは変更できるのは、このコンピュータのデスクトップアプリのみです。",
+            "invalidValue": "アプリがこの値を拒否したため、何も変更されませんでした。",
+            "callFailed": "リモートアクセスのリクエストが完了しませんでした。現在の状態を表示しています。",
+            "invalidResponse": "アプリから、この画面では読み取れないリモートアクセスの状態が返されました。",
+            "originEmptyPlain": "https://example.com のようなサイトのアドレスを入力してください。",
+            "originTooLongPlain": "サイトのアドレスが長すぎます。",
+            "originSpacesPlain": "サイトのアドレスにスペースを含めることはできません。",
+            "originNotHttpsPlain": "サイトのアドレスは https:// で始まる必要があります。",
+            "originSignInPlain": "サイトのアドレスからサインイン情報を削除してください。アクセストークンは専用のフィールドに入力します。",
+            "originPathPlain": "https://example.com のように、ホスト名の後ろに何も付けずにサイトのアドレスのみを入力してください。",
+            "notConfiguredPlain": "先にサイトのアドレスとそのアクセストークンを保存してください。",
+            "originInvalidPlain": "アプリがサイトのアドレスを拒否しました。https://example.com のように、ホスト名の後ろに何も付けない https のアドレスを使用してください。",
+            "sealingUnavailablePlain": "このコンピュータではトークンを安全に保存できないため、何も保存されませんでした。",
+            "siteUnreachablePlain": "サイトに到達できませんでした。アドレスと接続を確認して、もう一度お試しください。"
+          },
+          "title": "リモートアクセス",
+          "descriptionWorkspaceMax": "dot は GPT Site 上のメールボックスを介してこのアプリにアクセスします。このコンピュータは HTTPS でメールボックスを確認し、受信ポートは開きません。サイトからのタスクには、各ワークスペースで許可したアクセス権までしか与えられません。"
+        },
+        "usageMetersOff": {
+          "title": "NASH では使用量は表示されません",
+          "bodyPlain": "使用量を報告するのは Claude Code、Codex、agy のみで、それぞれの CLI から取得します。他のプロバイダーの使用量は読み取りません。"
+        },
+        "cliUsageReadings": {
+          "title": "CLI からの使用量",
+          "body": "NASH は各 CLI からのみ使用量を読み取ります（Claude Code のステータスライン、codex app-server、agy /usage）。サインイン情報は読み取らず、ベンダーに使用量を問い合わせることもありません。",
+          "noReading": "まだ読み取りがありません",
+          "refresh": "使用量を更新",
+          "claudeHintPlain": "NASH で開始した Claude セッションの実行中に表示されます。",
+          "codexHintPlain": "読み取るには [使用量を更新] を使用してください。",
+          "agyHintPlain": "ステータスバーで agy メーターがオンのときに [使用量を更新] を使用してください。",
+          "bodyPlain": "各読み取り値は CLI 自体から取得され、サインイン情報から取得されることはありません。"
+        },
+        "dot": {
+          "search": {
+            "remoteDescription": "GPT Site 経由で dot がこのアプリにアクセスできるようにします。スイッチ、サイトのアドレスとアクセストークン、ペアリングと取り消しを設定します。"
+          }
+        },
+        "advancedDisclosure": {
+          "label": "詳細設定"
+        },
+        "copyDetails": {
+          "copied": "詳細をコピーしました。",
+          "failed": "詳細をコピーできませんでした。",
+          "action": "詳細をコピー"
+        },
+        "taskRouting": {
+          "search": {
+            "agentsDescription": "タスクの種類ごとに Agent、モデル、推論レベルを選択し、変更の提案を承認または却下します。",
+            "effort": "推論レベル",
+            "agent": "Agent"
+          }
         }
       },
       "right": {
@@ -13701,7 +14371,8 @@
           "984338477a": "テーマ",
           "c47e1bd149": "Agent",
           "windowsTerminalTitle": "Windows ターミナルの既定値を設定",
-          "windowsTerminalSubtitle": "新規ペインで使う既定のシェルと、ターミナルでの右クリックの動作を選びます。"
+          "windowsTerminalSubtitle": "新規ペインで使う既定のシェルと、ターミナルでの右クリックの動作を選びます。",
+          "agentSubtitleNash": "自分で開くターミナルの Agent を選択します。NASH は Claude Code を通じてタスクを実行します。いつでも切り替えられます。"
         },
         "OnboardingFooter": {
           "ba58547306": "戻る",
@@ -14429,7 +15100,15 @@
                       "42525ba8a4": "キーリポジトリを NASH に取り込むと、フォルダーを探さずに Agent の作業を開始できます。",
                       "workOnTwoTasks": "2つのタスクを同時に進める",
                       "agentSkillsName": "Agent に NASH スキルを追加",
-                      "agentSkillsDescription": "Agent が NASH のブラウザを操作し、コンピューターを制御し、複数ステップの作業を調整するためのスキルをインストールします。"
+                      "agentSkillsDescription": "Agent が NASH のブラウザを操作し、コンピューターを制御し、複数ステップの作業を調整するためのスキルをインストールします。",
+                      "claudeCodeName": "Claude Code をセットアップ",
+                      "claudeCodeDescription": "NASH はすべてのタスクを Claude Code セッションで実行します。Claude Code をインストールし、ターミナルから一度サインインしてください。",
+                      "clefName": "Clef に接続",
+                      "clefDescription": "Clef は各タスクを種類別に分類し、NASH が Agent とモデルを選べるようにします。Clef の情報を追加してから検証してください。",
+                      "dotName": "dot に接続",
+                      "dotDescription": "ChatGPT dot から NASH にタスクを送信します。ローカルインターフェースをオンにするか、GPT Site とペアリングしてください。",
+                      "workbenchRunName": "最初の実行を開始",
+                      "workbenchRunDescription": "ワークベンチから NASH に依頼し、実行とそのタスク、確認のプロンプトをそこで追跡します。"
                     }
                   }
                 }
@@ -14574,6 +15253,14 @@
             "0d6efe9cf4": "プロジェクトやワークツリーが保護されたフォルダーにある場合、macOS で推奨されます。",
             "dac08ec03e": "開いています…",
             "6e3d62b816": "フルディスクアクセスを開く"
+          },
+          "FeatureWallSetupNashActions": {
+            "claudeCodeFound": "Claude Code はこのコンピュータにインストールされています。",
+            "claudeCodeMissing": "Claude Code が見つかりませんでした。インストールし、ターミナルで claude を一度実行してサインインしてから、もう一度確認してください。",
+            "checkAgain": "再確認",
+            "openTaskRouting": "タスクルーティングを開く",
+            "openDotSettings": "Dot の設定を開く",
+            "openWorkbench": "ワークベンチを開く"
           }
         },
         "tips": {
@@ -15542,7 +16229,10 @@
             "b2e36f53a1": "クラッシュレポートを送信できませんでした。診断チケット {{value0}} はアップロードされましたが、関連付けられていません。",
             "ead6fc0510": "自動のクラッシュレポートは取得されませんでした。詳細を送信し、利用できる場合は最近の診断ログを添付できます。",
             "b082f27490": "最近の診断ログを添付",
-            "e59f0b9427": "上限を設けて秘匿処理したログをまとめ、レポートと一緒に送信します。"
+            "e59f0b9427": "上限を設けて秘匿処理したログをまとめ、レポートと一緒に送信します。",
+            "nashNotSent": "NASH はクラッシュレポートを送信しません。保存しておくには詳細をコピーしてください。",
+            "nashNoReport": "自動クラッシュレポートは取得されませんでした。",
+            "nashClose": "閉じる"
           },
           "submit": {
             "notice": {
@@ -18507,7 +19197,8 @@
     "launchFailedMessage": "NASH はウィンドウを描画するプロセスを起動できませんでした。",
     "launchFailedDetail": "NASH は {{recoveryCount}} 回再試行しましたが、成功しませんでした。",
     "processLimitDetail": "ユーザーアカウントのプロセス数が上限に達したため、システムが新しいプロセスの作成を拒否しました。暴走したターミナル、開発サーバー、Agent が原因であることがよくあります。いくつか終了してから「再試行」をクリックしてください。",
-    "launchFailedGenericDetail": "システムが起動を拒否しました。メモリを空けるか他のアプリを終了してから「再試行」をクリックしてください。繰り返し発生する場合は NASH を再インストールしてください。"
+    "launchFailedGenericDetail": "システムが起動を拒否しました。メモリを空けるか他のアプリを終了してから「再試行」をクリックしてください。繰り返し発生する場合は NASH を再インストールしてください。",
+    "lowCommitAdvice": "使用していないアプリや NASH のワークスペースを閉じてメモリを解放するか、Windows のページファイルのサイズを増やしてから、「リロード」をクリックしてください。"
   },
   "sessionSearch": {
     "panel": {
@@ -18536,7 +19227,8 @@
       "sessionsOther": "{{count}} セッション",
       "sessionsOfLoaded": "{{value0}}/{{value1}} セッション",
       "showMoreSessions": "さらにセッションを表示",
-      "loadingMoreSessions": "さらにセッションを読み込んでいます…"
+      "loadingMoreSessions": "さらにセッションを読み込んでいます…",
+      "unsupportedAgent": "このコンピュータは、選択した Agent の履歴検索に対応していません。そのコンピュータの NASH をアップデートするか、別の Agent を選択してください。"
     }
   },
   "sessionHistory": {
@@ -18666,6 +19358,411 @@
       "removeTitle": "管理アカウントを削除しますか？",
       "removeDescription": "まずこのプロファイルを使う Agent を停止してください。削除すると保存済みの認証情報と会話データが消去されます。システムのログインには影響しません。",
       "cancel": "キャンセル"
+    }
+  },
+  "terminal": {
+    "sessionSaveFailure": {
+      "unknown": "NASH はターミナルの状態を保存できませんでした。もう一度お試しください。問題が続く場合は、原因を特定できるよう NASH のログをサポートに共有してください。"
+    },
+    "codexTerminalServerIsolationNotice": {
+      "title": "NASH は Codex を共有サーバーなしで実行するようになりました"
+    },
+    "codexSharedServerBanner": {
+      "openedBeforeUpdateBody": "このターミナルは、NASH が各 Codex に専用のサーバーを割り当てるようになる前に開かれました。",
+      "dialogDescription": "ターミナルで直接開始した Codex セッションは、1 つのバックグラウンドサーバーを共有します。NASH は自身が開始する Codex セッションを分離しています。セッションがサーバーを共有していると、1 つを閉じたときに他のセッションも終了することがあり、Agent のステータスが正しく表示されない場合があります。",
+      "step1Note": "これにより Codex の設定が変更されるため、NASH の外部にも適用されます。",
+      "turnOffFailed": "NASH はこれをオフにできませんでした。",
+      "stopFailed": "NASH はサーバーを停止できませんでした。",
+      "confirmStopDescription": "サーバーを共有している開いている Codex セッションは、NASH の外部のものも含めてすべて閉じられます。"
+    }
+  },
+  "workbench": {
+    "tasks": {
+      "elapsed": {
+        "hours": "{{hours}}時間{{minutes}}分",
+        "minutes": "{{minutes}}分{{seconds}}秒",
+        "seconds": "{{seconds}}秒"
+      },
+      "empty": "まだタスクはありません。",
+      "executor": {
+        "claudePrimary": "Claude メインセッション",
+        "claudeSubagent": "Claude サブ Agent",
+        "claudeWorkflow": "Claude ワークフロー",
+        "other": "その他の実行者"
+      },
+      "openWindow": "タスクウィンドウを開く",
+      "openWindowLabel": "{{title}} のタスクウィンドウを開く",
+      "readFailed": "タスクを読み取れませんでした: {{message}}",
+      "showTerminalLabel": "{{title}} のターミナルを表示",
+      "state": {
+        "blocked": "ブロック中",
+        "completed": "完了",
+        "failed": "失敗",
+        "notStarted": "未開始",
+        "running": "実行中",
+        "startUnknown": "開始未確認",
+        "starting": "開始中",
+        "stopUnknown": "停止未確認",
+        "stopped": "停止済み",
+        "unknown": "状態不明"
+      },
+      "title": "タスク"
+    },
+    "taskWindow": {
+      "attempt": "試行",
+      "attemptOption": "試行 {{number}} · {{state}}",
+      "attemptsStale": "試行の一覧を更新できませんでした: {{message}}",
+      "branch": "ブランチ",
+      "command": {
+        "completed": "完了",
+        "failed": "失敗",
+        "hideOutput": "出力を非表示",
+        "hideOutputLabel": "{{command}} の出力を非表示",
+        "running": "実行中",
+        "showOutput": "出力を表示",
+        "showOutputLabel": "{{command}} の出力を表示"
+      },
+      "effort": "推論レベル",
+      "effortDefault": "デフォルト",
+      "elapsed": "経過時間",
+      "empty": "トランスクリプトは空です。",
+      "end": "終了",
+      "exitCode": "終了コード {{code}}",
+      "fileChange": "変更されたファイル · {{status}}",
+      "jumpToLatest": "最新にジャンプ",
+      "malformed": "読み取れない行",
+      "missing": "この試行のトランスクリプトは記録されていません。",
+      "model": "モデル",
+      "noAttempt": "このタスクにはまだ試行がありません。",
+      "notRecorded": "記録なし",
+      "note": {
+        "dropped": "出力の到着が保存より速かったため、{{dropped}} 件の記録が破棄されました。",
+        "truncated": "トランスクリプトがサイズ上限に達しました。以降の出力は記録されていません。",
+        "unknown": "トランスクリプトに、このバージョンでは表示できないメモが記録されています。"
+      },
+      "openWorktree": "ワークツリーを開く",
+      "readFailed": "トランスクリプトを読み取れませんでした。",
+      "reading": "トランスクリプトを読み取っています…",
+      "sandbox": {
+        "readOnly": "読み取り専用",
+        "unknown": "記録なし",
+        "write": "専用のワークツリーに書き込み",
+        "writeInFolder": "ワークスペースフォルダーに書き込み"
+      },
+      "sandboxLabel": "サンドボックス",
+      "showEarlier": "以前の記録を表示（{{hidden}} 件非表示）",
+      "start": "{{executor}} を開始しました",
+      "started": "開始済み",
+      "transcript": "トランスクリプト",
+      "truncatedNotice": "このトランスクリプトはサイズ上限に達したため、試行が終了する前に途切れています。",
+      "turn": {
+        "completed": "ターン完了",
+        "failed": "ターン失敗",
+        "started": "ターン開始",
+        "usage": "入力 {{input}} · キャッシュ {{cached}} · 出力 {{output}} トークン"
+      },
+      "unavailable": "タスクウィンドウの詳細を利用できません。",
+      "untitledTask": "無題のタスク",
+      "waiting": "最初の出力を待っています…",
+      "tool": {
+        "webSearch": "Web 検索",
+        "mcpToolCall": "MCP ツール呼び出し",
+        "reasoning": "推論",
+        "todoList": "計画を更新",
+        "other": "ツールステップ"
+      },
+      "filesChanged": "変更されたファイル",
+      "unknownRecordShort": "このバージョンでは表示できない記録です。"
+    },
+    "sidebar": {
+      "title": "ワークベンチ"
+    },
+    "workspace": {
+      "title": "選択中のワークスペース",
+      "empty": "ワークスペース一覧からワークスペースを選択してください。",
+      "detailsUnavailable": "ワークスペースの詳細を利用できません。"
+    },
+    "permissions": {
+      "title": "権限の確認",
+      "waiting": "{{waiting}} 件待機中",
+      "errorTitle": "権限の確認を利用できません",
+      "stale": "表示されている確認は最新ではない可能性があります。",
+      "empty": "待機中の権限の確認はありません。",
+      "asked": "要求日時",
+      "answerBy": "回答期限",
+      "allow": "許可",
+      "allowLabel": "{{tool}} を許可",
+      "deny": "拒否",
+      "denyLabel": "{{tool}} を拒否",
+      "answerError": "回答は記録されていません",
+      "desktopOnlyHelp": "dot には送信されません。ここかターミナルで回答してください。",
+      "terminalOnly": "ターミナルで回答してください。",
+      "mismatch": "権限リレーから別の確認が返されました。",
+      "decider": {
+        "dot": "dot により",
+        "desktop": "アプリで",
+        "terminal": "ターミナルで"
+      },
+      "status": {
+        "waiting": "回答待ち",
+        "terminalOnly": "ターミナルで回答",
+        "allowed": "許可済み",
+        "denied": "拒否済み",
+        "expired": "期限切れ",
+        "answeredInTerminal": "ターミナルで回答済み"
+      },
+      "settled": {
+        "allowed": "{{decider}}許可されました",
+        "denied": "{{decider}}拒否されました",
+        "expired": "確認の期限が切れました",
+        "terminal": "ターミナルで回答されました"
+      },
+      "answer": {
+        "allowed": "アプリで許可しました。",
+        "denied": "アプリで拒否しました。",
+        "alreadyDecided": "すでに回答済みです: {{settled}}。",
+        "alreadyAnswered": "すでに回答済みです。",
+        "closed": "アプリからはこの確認に回答できなくなりました。",
+        "notFound": "この確認はもう利用できません。"
+      },
+      "askedBy": "要求元",
+      "fromSubagent": "サブ Agent から"
+    },
+    "runs": {
+      "title": "実行",
+      "empty": "このワークスペースにはまだ実行がありません。",
+      "hasMore": "最新の実行のみを表示しています。",
+      "stale": "表示されている実行は最新ではない可能性があります。",
+      "remoteUnavailable": "リモートワークスペースでは実行を利用できません。",
+      "scopeUnavailable": "実行を表示するには、既知のローカルワークスペースを選択してください。",
+      "mismatch": "実行ストアから別の実行が返されました。",
+      "scopeMismatch": "実行ストアから別のワークスペーススコープが返されました。",
+      "objectiveUnavailable": "目的はもう保存されていません。",
+      "effort": "推論レベル: {{effort}}",
+      "ended": "終了",
+      "showTerminal": "ターミナルを表示",
+      "terminalNotOpen": "このウィンドウではターミナルタブが開いていません。",
+      "stop": "実行を停止",
+      "actionError": "実行は停止されていません",
+      "stopRefused": {
+        "starting": "セッションはまだ開始中です。実行中になってから、もう一度実行を停止してください。",
+        "identityUnverified": "ターミナルをこの実行のセッションと照合できなかったため、何も停止されませんでした。セッションのターミナルタブを閉じて、もう一度お試しください。",
+        "invalidReason": "停止リクエストは無効として拒否されました。何も変更されていません。"
+      },
+      "status": {
+        "launching": "起動中",
+        "active": "アクティブ",
+        "completing": "完了処理中",
+        "completed": "完了",
+        "failed": "失敗",
+        "canceled": "キャンセル済み",
+        "unverifiable": "確認できません"
+      },
+      "session": {
+        "none": "未開始",
+        "starting": "開始中",
+        "running": "実行中",
+        "stopping": "停止中",
+        "stopped": "停止済み",
+        "exited": "終了済み"
+      },
+      "live": {
+        "working": "Claude が作業中",
+        "dialogOpen": "権限または質問のダイアログが開いています",
+        "idle": "入力待ち",
+        "unknown": "アクティビティ不明",
+        "agentAbsent": "ターミナルで Claude Code が実行されていません",
+        "handleUnresolved": "ターミナルが見つかりません",
+        "incarnationMismatch": "ターミナルのプロセスが変わったため、アクティビティを確認できません",
+        "statusUnreadable": "ターミナルのステータスを読み取れません",
+        "unread": "アクティビティを読み取れませんでした"
+      },
+      "end": {
+        "userCanceled": "アプリで停止しました",
+        "dotCanceled": "dot によってキャンセルされました",
+        "primaryExited": "Claude Code セッションが終了しました",
+        "launchRefused": "起動が拒否されました",
+        "launchFailed": "何も開始される前に起動に失敗しました",
+        "launchUnknown": "起動を確認できませんでした",
+        "reconciled": "アプリの再起動後に記録から確定しました",
+        "stopUnconfirmed": "停止を確認できませんでした"
+      },
+      "origin": {
+        "dot": "dot が開始",
+        "desktop": "ここで開始",
+        "unknown": "開始元不明"
+      },
+      "access": {
+        "readOnly": "読み取り専用",
+        "workspaceWrite": "ワークスペースへの書き込み可"
+      },
+      "message": {
+        "label": "セッションへのメッセージ",
+        "send": "メッセージを送信",
+        "failedTitle": "メッセージは未確認です",
+        "refusedTitle": "メッセージは送信されませんでした",
+        "delivered": "セッションに配信しました。",
+        "duplicate": "このメッセージは以前に送信済みのため、再送信されませんでした。",
+        "notSentPrefix": "送信されませんでした。",
+        "noReason": "理由は示されませんでした。",
+        "queued": {
+          "agentBusy": "キューに追加しました。Claude が作業中のため、メッセージはセッション内で待機します。",
+          "dialogOpen": "保留中です。権限または質問のダイアログが開いているため、閉じた後にメッセージが送信されます。",
+          "behindHeld": "保留中です。前のメッセージがまだ送信されていないため、その後に送信されます。"
+        },
+        "refused": {
+          "invalidRequest": "メッセージのリクエストが無効でした。",
+          "requestIdReused": "このメッセージ ID は、別のテキストですでに使用されています。",
+          "textEmpty": "メッセージが空です。",
+          "textTooLong": "メッセージが 65,536 文字を超えています。",
+          "controlCharacters": "メッセージに、ターミナルに入力できない制御文字が含まれています。",
+          "secretShaped": "メッセージにキーやトークンなどのシークレットが含まれているようです。",
+          "tooManyQuotedSpans": "メッセージ内の引用符で囲まれた部分が多すぎます。",
+          "notEnglish": "メッセージは英語で書いてください。他の言語の名前やテキストは引用符で囲んでください。",
+          "runNotFound": "実行が見つかりませんでした。",
+          "runNotActive": "実行はアクティブではありません。",
+          "notOwned": "この実行は、ここからのメッセージを受け付けません。",
+          "primaryNotLive": "Claude Code セッションが実行されていません。",
+          "holdCapacity": "この実行で待機中のメッセージが多すぎます。",
+          "holdExpired": "ダイアログが閉じるまでの待機時間が長すぎたため、メッセージは破棄されました。",
+          "terminalUnavailable": "ターミナルに到達できませんでした。",
+          "deliveryIncomplete": "テキストが送信されずにセッションの入力欄に残っている可能性があります。ターミナルを確認してください。再入力はしていません。",
+          "deliveryUnconfirmed": "アプリの再起動後、配信を確認できませんでした。"
+        },
+        "refusedGeneric": "セッションがメッセージを受け付けませんでした。",
+        "queuedGeneric": "キューに追加しました。セッションが受け付け可能になると送信されます。",
+        "retryHintShort": "再送信しても二重に配信されることはありません。",
+        "helpShort": "Claude Code セッションに入力されます。ダイアログが開いている間は保留されます。"
+      },
+      "state": {
+        "working": "作業中",
+        "dialogOpen": "回答が必要",
+        "agentAbsent": "実行されていません"
+      },
+      "sessionNote": "セッション: {{state}}",
+      "unavailableTitle": "実行を利用できません"
+    },
+    "validation": {
+      "title": "タスクの検証",
+      "check": "今すぐチェック",
+      "nothingWaiting": "検証待ちのタスク結果はありませんでした。",
+      "checked": "チェックした結果: {{total}}",
+      "passed": "通過",
+      "failedCount": "失敗",
+      "inconclusive": "判断待ち",
+      "skipped": "スキップ済み",
+      "errorTitle": "検証はチェックされていません",
+      "passRunning": "検証パスはすでに実行中です。完了してから、もう一度チェックしてください。",
+      "unavailable": "このセッションではタスクの検証を利用できません。",
+      "helpShort": "各結果は、タスクが報告した時点でチェックされます。[今すぐチェック] では、まだ待機中の結果もチェックします。"
+    },
+    "decisions": {
+      "title": "判断待ち",
+      "waiting": "{{waiting}} 件待機中",
+      "empty": "判断待ちのタスク結果はありません。",
+      "hasMore": "最も古い結果のみを表示しています。",
+      "errorTitle": "判断を利用できません",
+      "stale": "表示されている結果は最新ではない可能性があります。",
+      "mismatch": "アプリから別の結果が返されました。",
+      "conflict": "この結果はすでに判断済みです。",
+      "notFound": "この結果はもう判断待ちではありません。",
+      "decideErrorTitle": "判断は記録されていません",
+      "executor": "実行者",
+      "since": "判断待ち開始",
+      "branch": "ブランチ",
+      "workspace": "ワークスペース",
+      "waive": "免除",
+      "reject": "却下",
+      "cancel": "キャンセル",
+      "placement": {
+        "ownWorktree": "専用のワークツリー",
+        "folder": "ワークスペースフォルダー",
+        "runWorkspace": "実行のワークスペース（読み取り専用）",
+        "inSession": "Claude メインセッション",
+        "unrecorded": "記録なし"
+      },
+      "confirm": {
+        "waiveProcessMayRun": "この結果を完了として受け入れますか？タスクは完了しますが、この試行のプロセスがまだ実行中の可能性があります。Claude メインセッションには、そのプロセスが終了するまで変更のマージや保持を待つよう伝えられます。",
+        "waiveWorktree": "この結果を完了として受け入れますか？タスクは完了し、Claude メインセッションにブランチ {{branch}} をマージするよう伝えられます。",
+        "waiveFolder": "この結果を完了として受け入れますか？タスクは完了します。変更はすでにワークスペースフォルダーに反映されています。",
+        "waive": "この結果を完了として受け入れますか？タスクは完了します。",
+        "rejectWorktree": "この結果を却下しますか？タスクは失敗となり、ブランチは確認用に残されます。",
+        "rejectFolder": "この結果を却下しますか？タスクは失敗となります。変更は、何を残すか決めるまでワークスペースフォルダーに残ります。",
+        "reject": "この結果を却下しますか？タスクは失敗となります。"
+      },
+      "outcome": {
+        "waivedNotified": "免除しました。タスクは完了し、Claude メインセッションに通知を送りました。",
+        "waived": "免除しました。タスクは完了しました。",
+        "rejectedNotified": "却下しました。タスクは失敗としてマークされ、Claude メインセッションに通知を送りました。",
+        "rejected": "却下しました。タスクは失敗としてマークされました。"
+      },
+      "waiveTitleLabel": "{{title}} を免除",
+      "rejectTitleLabel": "{{title}} を却下",
+      "helpShort": "検証ではこれらの結果を判断できませんでした。[免除] は結果を完了として受け入れ、[却下] はタスクを失敗にします。"
+    },
+    "requests": {
+      "scopeMismatch": "リクエストストアから別のワークスペーススコープが返されました。",
+      "pageMismatch": "リクエストストアから無効なページ境界が返されました。",
+      "objectiveMismatch": "リクエストストアから別の目的が返されました。",
+      "cancelMismatch": "リクエストストアから別のキャンセル受領が返されました。",
+      "refreshMismatch": "リクエストストアから別のリクエストが返されました。",
+      "run": "実行",
+      "cancel": "リクエストをキャンセル",
+      "title": "ローカルリクエスト",
+      "stale": "表示されているリクエストは最新ではない可能性があります。",
+      "objective": "目的",
+      "refresh": "更新",
+      "loadOlder": "さらに古いものを読み込む",
+      "olderPage": "古いページを表示しています。[更新] で最新のリクエストに戻ります。",
+      "remoteUnavailable": "リモートワークスペースではリクエストの受け付けを利用できません。",
+      "scopeUnavailable": "リクエストを登録または一覧表示するには、既知のローカルワークスペースを選択してください。",
+      "launch": {
+        "refused": "実行を開始できませんでした。",
+        "unverifiable": "実行は作成されましたが、開始を確認できませんでした。",
+        "noModel": "この実行を開始できるモデルがありません。[設定] の [タスクルーティング] を確認してください。",
+        "generic": "このリクエストで実行を開始できませんでした。"
+      },
+      "status": {
+        "launchBlocked": "起動がブロックされました",
+        "starting": "開始中",
+        "runStarted": "実行開始済み",
+        "canceled": "キャンセル済み"
+      },
+      "intakeHelp": "このワークスペースで Claude Code セッションを使った実行を開始します。",
+      "startRun": "実行を開始",
+      "updateFailedTitle": "リクエストを更新できませんでした",
+      "registered": "リクエストを登録しました。",
+      "noneYet": "まだリクエストはありません。"
+    },
+    "error": {
+      "notAllowed": "このウィンドウではその操作は許可されていません。",
+      "workspaceUnavailable": "このワークスペースはここでは利用できません。",
+      "runGone": "この実行はもう存在しません。",
+      "sessionNotRunning": "Claude Code セッションが実行されていません。",
+      "attemptGone": "この試行はもう存在しません。",
+      "invalidInput": "アプリがこれを無効として拒否しました。",
+      "recoveryRequired": "保存されている記録を読み取れませんでした。アプリを再起動して、もう一度お試しください。",
+      "runEnded": "この実行はすでに終了しています。",
+      "stopRefused": "現在は実行を停止できませんでした。何も変更されていません。",
+      "stopUnconfirmed": "停止を確認できなかったため、実行はまだ開いたままです。ターミナルタブを閉じて、もう一度お試しください。",
+      "runControlUnavailable": "現在、実行の制御は利用できません。",
+      "permissionsUnavailable": "現在、権限の確認は利用できません。",
+      "checkFailed": "チェックを完了できませんでした。もう一度お試しください。",
+      "transcriptRefused": "トランスクリプトファイルを検証できなかったため、読み取りませんでした。",
+      "requestGone": "このリクエストはもう存在しません。",
+      "requestHandedOff": "このリクエストはすでに実行を開始しています。キャンセルするには実行を停止してください。",
+      "requestChanged": "このリクエストはその間に変更されました。もう一度お試しください。",
+      "requestReused": "このリクエストは、別のテキストですでに送信されています。",
+      "capacity": "待機中のリクエストが多すぎます。しばらくしてからもう一度お試しください。",
+      "busy": "アプリがビジー状態です。もう一度お試しください。",
+      "unsupported": "このバージョンのアプリはこの操作に対応していません。",
+      "generic": "問題が発生しました。",
+      "unexpectedResponse": "アプリから予期しない応答が返されました。"
+    },
+    "details": {
+      "copied": "コピーしました",
+      "copyFailed": "コピーできませんでした",
+      "copy": "詳細をコピー"
     }
   }
 }

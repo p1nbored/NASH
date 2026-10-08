@@ -6,7 +6,10 @@ export type CatalogLocale = 'en' | 'es' | 'fr' | 'ja' | 'ko' | 'zh'
 const ORCA_CLOUD =
   "Orca's cloud account service (onorca.dev), off in NASH builds (orca-cloud-services)"
 const UPSTREAM = 'the open-source Orca project NASH is built on (github.com/stablyai/orca)'
-const SAFETY_LIST = "Orca's plugin safety list on onorca.dev, not fetched in NASH builds"
+const SAFETY_LIST =
+  "Orca's plugin safety list on onorca.dev, fetched only when the user opts in (D-039)"
+const ORCA_PLUGIN_CATALOG =
+  "Orca's official plugin marketplace and plugin safety list, used only when the user opts in (D-039)"
 
 /** Catalog keys whose text may name Orca in any locale, with the reason. */
 export const KEPT_ORCA_CATALOG_KEYS: Readonly<Record<string, string>> = {
@@ -47,7 +50,12 @@ export const KEPT_ORCA_CATALOG_KEYS: Readonly<Record<string, string>> = {
     'upstream feedback goes to the Orca team (onorca.dev/v1/feedback); NASH sends none',
   'auto.components.settings.PluginMarketplaceListingRow.blocked': SAFETY_LIST,
   'auto.components.settings.PluginMarketplacePreviewDialog.blocked': SAFETY_LIST,
-  'auto.components.settings.PluginSettingsRow.killListMessage': SAFETY_LIST
+  'auto.components.settings.PluginSettingsRow.killListMessage': SAFETY_LIST,
+  'auto.components.settings.PluginsSettingsSection.orcaCatalogLabel': ORCA_PLUGIN_CATALOG,
+  'auto.components.settings.PluginsSettingsSection.orcaCatalogDescription': ORCA_PLUGIN_CATALOG,
+  'auto.components.settings.plugins.search.orcaCatalogTitle': ORCA_PLUGIN_CATALOG,
+  'auto.components.settings.plugins.search.orcaCatalogDescription': ORCA_PLUGIN_CATALOG,
+  'auto.components.settings.plugins.search.orcaMarketplace': ORCA_PLUGIN_CATALOG
 }
 
 // Why per locale: translators render the service names differently; each pattern names an Orca service or file.
