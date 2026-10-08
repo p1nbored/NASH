@@ -21,6 +21,28 @@ test('MCP exposes all generated tools without the private routing block', async 
   assert.ok(tools.every((tool) => !Object.hasOwn(tool, 'nash')));
   assert.equal(jsonRecord(jsonRecord(tools[2]).inputSchema).properties !== undefined, true);
 });
+test('initialization describes the real NASH mailbox, not a local scaffold', async () => {
+  const body = jsonRecord(await (await handleScaffoldMcp(request('initialize', {
+    protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fake-agent', version: '1' },
+  }), deps)).json());
+  const result = jsonRecord(body.result);
+  assert.deepEqual(result.serverInfo, { name: 'nash', version: 'contract-4' });
+  const instructions = String(result.instructions);
+  for (const phrase of ["NASH's mailbox", 'nash_status', 'nash_list_workspaces', 'maxAccess', 'workspace_write', '30 minutes']) {
+    assert.ok(instructions.includes(phrase), phrase);
+  }
+  assert.doesNotMatch(instructions, /scaffold|conformance|No real NASH|may only read/i);
+});
+test('the submit tool lets dot ask for workspace write and the workspace list carries each maximum', () => {
+  const tools = publicTools();
+  const submit = tools.find((tool) => tool.name === 'nash_submit_task');
+  const access = jsonRecord(jsonRecord(jsonRecord(submit?.inputSchema).properties).requestedAccess);
+  assert.deepEqual(access.enum, ['read_only', 'workspace_write']);
+  assert.equal(access.default, 'read_only');
+  assert.match(String(submit?.description), /maxAccess/);
+  const list = tools.find((tool) => tool.name === 'nash_list_workspaces');
+  assert.match(JSON.stringify(list?.outputSchema), /"maxAccess"/);
+});
 test('generated tool refusals use MCP isError and structuredContent instead of an RPC error', async () => {
   const response = await handleScaffoldMcp(request('tools/call', { name: 'nash_submit_task', arguments: {} }), deps);
   const body = jsonRecord(await response.json());

@@ -5,7 +5,10 @@ import {
   DOT_INGRESS_CONTRACT_V3_GOLDEN_FILE,
   DOT_INGRESS_CONTRACT_V3_GOLDEN_SHA256
 } from './dot-remote-contract-pins'
-import { DOT_REMOTE_DEFAULTS_AWAITING_CONFIRMATION } from './dot-remote-defaults'
+import {
+  DOT_REMOTE_DECIDED_POLICY,
+  DOT_REMOTE_DEFAULTS_AWAITING_CONFIRMATION
+} from './dot-remote-defaults'
 import {
   DOT_REMOTE_ERROR_MESSAGES,
   DOT_REMOTE_ERROR_RETRYABLE,
@@ -74,8 +77,13 @@ export function buildDotMcpToolManifest() {
       file: DOT_INGRESS_CONTRACT_V3_GOLDEN_FILE,
       sha256: DOT_INGRESS_CONTRACT_V3_GOLDEN_SHA256
     },
-    injected: { contractVersion: limits.DOT_REMOTE_CONTRACT_VERSION },
-    policy: { defaults: DOT_REMOTE_DEFAULTS_AWAITING_CONFIRMATION, limits: protocolLimits() },
+    // Why two versions: the remote contract moved to v4, while payloads still follow dot ingress v3.
+    injected: { contractVersion: limits.DOT_REMOTE_PAYLOAD_CONTRACT_VERSION },
+    policy: {
+      defaults: DOT_REMOTE_DEFAULTS_AWAITING_CONFIRMATION,
+      decided: DOT_REMOTE_DECIDED_POLICY,
+      limits: protocolLimits()
+    },
     rules: DOT_REMOTE_RULES,
     tools: DOT_REMOTE_TOOLS.map(toolEntry),
     errors: DOT_REMOTE_TOOL_ERROR_CODES.map((code) => ({

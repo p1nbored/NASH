@@ -28,7 +28,7 @@ import {
   requestId,
   statusEvent,
   submitArgs,
-  WORKSPACE,
+  PUBLISHED_WORKSPACES,
   type DotRemoteVector,
   type DotRemoteVectorStep
 } from './dot-remote-vector-kit.test-fixture'
@@ -44,10 +44,6 @@ function vector(
 
 const NONE = { items: 0, nonces: 0 }
 const ONE = { items: 1, nonces: 1 }
-const WORKSPACES = [
-  { workspaceRef: WORKSPACE, displayName: 'Docs site' },
-  { workspaceRef: 'dws_89abcdef0123456789abcdef', displayName: 'Release notes' }
-]
 const STATUS = (online: boolean) => ({
   status: {
     paired: true,
@@ -107,16 +103,21 @@ export const DOT_REMOTE_READ_TOOL_VECTORS: DotRemoteVector[] = [
   ),
   vector(
     'nash_list_workspaces',
-    'dot reads the workspace list NASH last published: opaque refs and display names.',
+    'dot reads the workspace list NASH last published: opaque refs, display names and the access maximum of each workspace.',
     NONE,
     [
       nash(
         0,
         'workspaces.put',
-        { generation: 1, publishedAt: at(0), workspaces: WORKSPACES },
+        { generation: 1, publishedAt: at(0), workspaces: PUBLISHED_WORKSPACES },
         ok({ storedAt: at(0) })
       ),
-      dot(5, 'nash_list_workspaces', {}, ok({ workspaces: WORKSPACES, publishedAt: at(0) }))
+      dot(
+        5,
+        'nash_list_workspaces',
+        {},
+        ok({ workspaces: PUBLISHED_WORKSPACES, publishedAt: at(0) })
+      )
     ]
   ),
   vector(

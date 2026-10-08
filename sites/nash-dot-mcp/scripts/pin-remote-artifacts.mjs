@@ -24,7 +24,8 @@ const vectors = documents['dot-remote-conformance-vectors.json'];
 const { manifestSha256, ...unhashed } = manifest;
 if (hash(canonical(unhashed)) !== manifestSha256 || vectors.manifestSha256 !== manifestSha256) throw new Error('Manifest/vector canonical hash mismatch');
 if (manifest.contractGolden.sha256 !== hash(goldenBytes)) throw new Error('v3 golden pin mismatch');
-if (manifest.tools.length !== 12 || vectors.vectors.length !== 37 || documents['dot-remote-endpoints.json'].endpoints.length !== 13) throw new Error('Unexpected R2 artifact counts');
+if (manifest.contractVersion !== 4 || vectors.contractVersion !== 4 || manifest.injected.contractVersion !== 3) throw new Error('Expected remote contract v4 with v3 payloads');
+if (manifest.tools.length !== 12 || vectors.vectors.length !== 38 || documents['dot-remote-endpoints.json'].endpoints.length !== 13) throw new Error('Unexpected R2 artifact counts');
 const output = { pins, manifest, endpointTable: documents['dot-remote-endpoints.json'], vectors, golden,
   schemas: Object.fromEntries(files.filter((file) => file.endsWith('.schema.json')).map((file) => [file, documents[file]])) };
 const contents = `${JSON.stringify(output, null, 2)}\n`;
@@ -34,5 +35,5 @@ if (process.argv.includes('--check')) {
   process.stdout.write('Pinned R2 artifacts match source hashes.\n');
 } else {
   writeFileSync(target, contents);
-  process.stdout.write(`Pinned R2 manifest ${manifestSha256}; 12 tools, 13 routes and 37 vectors.\n`);
+  process.stdout.write(`Pinned R2 manifest ${manifestSha256}; contract v4, 12 tools, 13 routes and 38 vectors.\n`);
 }

@@ -8,7 +8,8 @@ import type { DotRemoteItemOutcome, DotRemoteJournalEntry } from './dot-remote-i
 
 // What NASH decides about a leased item before anything reaches its dot endpoint: the item is
 // validated again against R2's schema, fenced by generation, answered from the journal when it was
-// already decided, refused once expired, and capped at the remote access cap (R2's default read_only).
+// already decided, refused once expired, and held to the remote access cap (workspace_write since
+// D-034). The workspace's own maximum is enforced by the dot endpoint itself (admitDotIntake).
 
 export type DotRemoteItemCheck =
   | { kind: 'dispatch'; item: DotRemoteInboxItem }

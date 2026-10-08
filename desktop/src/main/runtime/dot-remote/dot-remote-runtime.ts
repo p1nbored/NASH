@@ -53,10 +53,15 @@ export function createDotRemoteRuntime(input: DotRemoteRuntimeInput): DotRemoteR
       db: () => owner,
       listForDot: createDotRemoteRelayPrompts(runtime, input.log)
     }),
-    listWorkspaces: () =>
-      getDotIngressSettingsStore(owner)
-        .listWorkspaces({ enabledOnly: true })
-        .map((entry) => ({ workspaceRef: entry.workspaceRef, displayName: entry.label })),
+    listWorkspaces: () => {
+      const settings = getDotIngressSettingsStore(owner)
+      // Why the maximum too: dot asks for the access it may have (D-034); NASH still enforces it.
+      return settings.listWorkspaces({ enabledOnly: true }).map((entry) => ({
+        workspaceRef: entry.workspaceRef,
+        displayName: entry.label,
+        maxAccess: settings.getWorkspaceMaxAccess(entry.workspaceRef)
+      }))
+    },
     appVersion: input.appVersion,
     now: input.now ?? Date.now,
     timers: input.timers ?? REAL_DOT_REMOTE_TIMERS,

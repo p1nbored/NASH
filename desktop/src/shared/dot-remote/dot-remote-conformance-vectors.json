@@ -1,7 +1,7 @@
 {
   "vectorsVersion": 1,
-  "contractVersion": 3,
-  "manifestSha256": "94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19",
+  "contractVersion": 4,
+  "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400",
   "conventions": {
     "clock": "Each step has an at time; the Site under test uses it as the current time for that step.",
     "callers": "A dot step names the platform user id the identity header carries. A nash step names the device and generation its session resolves to; a serviceOnly step sends only OAI-Sites-Authorization; a refresh step names in deviceCredential the value it sends in the Nash-Device-Credential header. Session tokens and device credentials appear only in pairing vectors, as obviously fake generated values.",
@@ -21,6 +21,18 @@
       },
       "canonicalJson": "{\"contractVersion\":3,\"idempotencyKey\":\"20000000-0000-4000-8000-000000000001\",\"objective\":\"List the open issues in the \\\"docs\\\" folder and summarize each in one sentence.\",\"requestedAccess\":\"read_only\",\"workspaceRef\":\"dws_0123456789abcdef01234567\"}",
       "sha256": "864331adbf44a29f5d979d60a2ddbc384cb5fdfd9fc8961128439fd8b347741e"
+    },
+    {
+      "name": "submit asking for workspace write",
+      "payload": {
+        "contractVersion": 3,
+        "workspaceRef": "dws_0123456789abcdef01234567",
+        "objective": "List the open issues in the \"docs\" folder and summarize each in one sentence.",
+        "requestedAccess": "workspace_write",
+        "idempotencyKey": "20000000-0000-4000-8000-000000000001"
+      },
+      "canonicalJson": "{\"contractVersion\":3,\"idempotencyKey\":\"20000000-0000-4000-8000-000000000001\",\"objective\":\"List the open issues in the \\\"docs\\\" folder and summarize each in one sentence.\",\"requestedAccess\":\"workspace_write\",\"workspaceRef\":\"dws_0123456789abcdef01234567\"}",
+      "sha256": "8b7b264c41f6e31bc0b97597ec0461a29c1318f0d3a102ebfcac3892ead5cce7"
     },
     {
       "name": "cancel",
@@ -95,7 +107,7 @@
           "body": {
             "generation": 1,
             "appVersion": "1.4.0",
-            "contractVersion": 3,
+            "contractVersion": 4,
             "sentAt": "2026-10-05T12:00:00.000Z"
           },
           "expect": {
@@ -119,9 +131,9 @@
                 "online": true,
                 "lastSeenAt": "2026-10-05T12:00:00.000Z",
                 "appVersion": "1.4.0",
-                "contractVersion": 3,
+                "contractVersion": 4,
                 "onlineWindowSeconds": 90,
-                "manifestSha256": "94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19"
+                "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
               }
             }
           }
@@ -141,9 +153,9 @@
                 "online": false,
                 "lastSeenAt": "2026-10-05T12:00:00.000Z",
                 "appVersion": "1.4.0",
-                "contractVersion": 3,
+                "contractVersion": 4,
                 "onlineWindowSeconds": 90,
-                "manifestSha256": "94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19"
+                "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
               }
             }
           }
@@ -154,7 +166,7 @@
       "id": "accepted.nash_list_workspaces",
       "category": "accepted",
       "covers": "nash_list_workspaces",
-      "description": "dot reads the workspace list NASH last published: opaque refs and display names.",
+      "description": "dot reads the workspace list NASH last published: opaque refs, display names and the access maximum of each workspace.",
       "binding": {
         "ownerId": "owner-fixture-0001",
         "deviceId": "dev_0123456789abcdef01234567",
@@ -183,11 +195,13 @@
             "workspaces": [
               {
                 "workspaceRef": "dws_0123456789abcdef01234567",
-                "displayName": "Docs site"
+                "displayName": "Docs site",
+                "maxAccess": "workspace_write"
               },
               {
                 "workspaceRef": "dws_89abcdef0123456789abcdef",
-                "displayName": "Release notes"
+                "displayName": "Release notes",
+                "maxAccess": "read_only"
               }
             ]
           },
@@ -210,11 +224,13 @@
               "workspaces": [
                 {
                   "workspaceRef": "dws_0123456789abcdef01234567",
-                  "displayName": "Docs site"
+                  "displayName": "Docs site",
+                  "maxAccess": "workspace_write"
                 },
                 {
                   "workspaceRef": "dws_89abcdef0123456789abcdef",
-                  "displayName": "Release notes"
+                  "displayName": "Release notes",
+                  "maxAccess": "read_only"
                 }
               ],
               "publishedAt": "2026-10-05T12:00:00.000Z"
@@ -4389,10 +4405,274 @@
       ]
     },
     {
-      "id": "error.remote_access_cap",
+      "id": "error.access_above_workspace_maximum",
       "category": "error",
-      "covers": "remote access cap and injected contract version",
-      "description": "A remote submission may not ask for workspace_write, and a tool input never carries contractVersion; both fail the input schema with payload_invalid and store nothing.",
+      "covers": "workspace write up to each workspace maximum",
+      "description": "NASH publishes the maximum of each workspace. dot asks for workspace_write in both; the Site queues both unchanged. NASH accepts the task in the workspace whose maximum is workspace_write and refuses the other with dot_access_above_maximum, which the Site records as the refusal of NASH.",
+      "binding": {
+        "ownerId": "owner-fixture-0001",
+        "deviceId": "dev_0123456789abcdef01234567",
+        "dotIdentity": {
+          "source": "sites_mcp_identity",
+          "subject": "owner-fixture-0001"
+        },
+        "generation": 1
+      },
+      "generated": {
+        "itemIds": [
+          "10000000-0000-4000-8000-000000000001",
+          "10000000-0000-4000-8000-000000000002"
+        ],
+        "leaseNonces": [
+          "FIXTURElease0nonce000000000001",
+          "FIXTURElease0nonce000000000002"
+        ]
+      },
+      "steps": [
+        {
+          "actor": "nash",
+          "at": "2026-10-05T12:00:00.000Z",
+          "caller": {
+            "deviceId": "dev_0123456789abcdef01234567",
+            "generation": 1
+          },
+          "endpoint": "workspaces.put",
+          "body": {
+            "generation": 1,
+            "publishedAt": "2026-10-05T12:00:00.000Z",
+            "workspaces": [
+              {
+                "workspaceRef": "dws_0123456789abcdef01234567",
+                "displayName": "Docs site",
+                "maxAccess": "workspace_write"
+              },
+              {
+                "workspaceRef": "dws_89abcdef0123456789abcdef",
+                "displayName": "Release notes",
+                "maxAccess": "read_only"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "storedAt": "2026-10-05T12:00:00.000Z"
+            }
+          }
+        },
+        {
+          "actor": "dot",
+          "at": "2026-10-05T12:00:01.000Z",
+          "caller": {
+            "ownerId": "owner-fixture-0001"
+          },
+          "tool": "nash_submit_task",
+          "arguments": {
+            "workspaceRef": "dws_0123456789abcdef01234567",
+            "objective": "List the open issues in the \"docs\" folder and summarize each in one sentence.",
+            "idempotencyKey": "20000000-0000-4000-8000-000000000001",
+            "requestedAccess": "workspace_write"
+          },
+          "expect": {
+            "result": {
+              "receipt": {
+                "itemId": "10000000-0000-4000-8000-000000000001",
+                "kind": "submit",
+                "state": "queued",
+                "payloadSha256": "8b7b264c41f6e31bc0b97597ec0461a29c1318f0d3a102ebfcac3892ead5cce7",
+                "dependsOnItemId": null,
+                "dotRequestId": null,
+                "createdAt": "2026-10-05T12:00:01.000Z",
+                "expiresAt": "2026-10-05T12:30:01.000Z",
+                "updatedAt": "2026-10-05T12:00:01.000Z"
+              }
+            }
+          }
+        },
+        {
+          "actor": "dot",
+          "at": "2026-10-05T12:00:02.000Z",
+          "caller": {
+            "ownerId": "owner-fixture-0001"
+          },
+          "tool": "nash_submit_task",
+          "arguments": {
+            "workspaceRef": "dws_89abcdef0123456789abcdef",
+            "objective": "Check which pages in the \"guide\" folder have broken links.",
+            "idempotencyKey": "20000000-0000-4000-8000-000000000002",
+            "requestedAccess": "workspace_write"
+          },
+          "expect": {
+            "result": {
+              "receipt": {
+                "itemId": "10000000-0000-4000-8000-000000000002",
+                "kind": "submit",
+                "state": "queued",
+                "payloadSha256": "e109519e0f33ed408a70f11a2e65486e661883fc8b15ed61061e8a0d07f7fb57",
+                "dependsOnItemId": null,
+                "dotRequestId": null,
+                "createdAt": "2026-10-05T12:00:02.000Z",
+                "expiresAt": "2026-10-05T12:30:02.000Z",
+                "updatedAt": "2026-10-05T12:00:02.000Z"
+              }
+            }
+          }
+        },
+        {
+          "actor": "nash",
+          "at": "2026-10-05T12:00:03.000Z",
+          "caller": {
+            "deviceId": "dev_0123456789abcdef01234567",
+            "generation": 1
+          },
+          "endpoint": "inbox.lease",
+          "body": {
+            "generation": 1,
+            "maxItems": 10
+          },
+          "expect": {
+            "result": {
+              "generation": 1,
+              "serverTime": "2026-10-05T12:00:03.000Z",
+              "items": [
+                {
+                  "itemId": "10000000-0000-4000-8000-000000000001",
+                  "kind": "submit",
+                  "payload": {
+                    "contractVersion": 3,
+                    "workspaceRef": "dws_0123456789abcdef01234567",
+                    "objective": "List the open issues in the \"docs\" folder and summarize each in one sentence.",
+                    "requestedAccess": "workspace_write",
+                    "idempotencyKey": "20000000-0000-4000-8000-000000000001"
+                  },
+                  "payloadSha256": "8b7b264c41f6e31bc0b97597ec0461a29c1318f0d3a102ebfcac3892ead5cce7",
+                  "dependsOnItemId": null,
+                  "createdAt": "2026-10-05T12:00:01.000Z",
+                  "expiresAt": "2026-10-05T12:30:01.000Z",
+                  "lease": {
+                    "leaseNonce": "FIXTURElease0nonce000000000001",
+                    "generation": 1,
+                    "leaseExpiresAt": "2026-10-05T12:01:03.000Z"
+                  }
+                },
+                {
+                  "itemId": "10000000-0000-4000-8000-000000000002",
+                  "kind": "submit",
+                  "payload": {
+                    "contractVersion": 3,
+                    "workspaceRef": "dws_89abcdef0123456789abcdef",
+                    "objective": "Check which pages in the \"guide\" folder have broken links.",
+                    "requestedAccess": "workspace_write",
+                    "idempotencyKey": "20000000-0000-4000-8000-000000000002"
+                  },
+                  "payloadSha256": "e109519e0f33ed408a70f11a2e65486e661883fc8b15ed61061e8a0d07f7fb57",
+                  "dependsOnItemId": null,
+                  "createdAt": "2026-10-05T12:00:02.000Z",
+                  "expiresAt": "2026-10-05T12:30:02.000Z",
+                  "lease": {
+                    "leaseNonce": "FIXTURElease0nonce000000000002",
+                    "generation": 1,
+                    "leaseExpiresAt": "2026-10-05T12:01:03.000Z"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "actor": "nash",
+          "at": "2026-10-05T12:00:04.000Z",
+          "caller": {
+            "deviceId": "dev_0123456789abcdef01234567",
+            "generation": 1
+          },
+          "endpoint": "inbox.ack",
+          "itemId": "10000000-0000-4000-8000-000000000001",
+          "body": {
+            "itemId": "10000000-0000-4000-8000-000000000001",
+            "leaseNonce": "FIXTURElease0nonce000000000001",
+            "generation": 1,
+            "payloadSha256": "8b7b264c41f6e31bc0b97597ec0461a29c1318f0d3a102ebfcac3892ead5cce7",
+            "ackedAt": "2026-10-05T12:00:04.000Z",
+            "outcome": "accepted",
+            "dotRequestId": "30000000-0000-4000-8000-000000000001"
+          },
+          "expect": {
+            "result": {
+              "itemId": "10000000-0000-4000-8000-000000000001",
+              "recorded": "applied",
+              "receiptState": "accepted"
+            }
+          }
+        },
+        {
+          "actor": "nash",
+          "at": "2026-10-05T12:00:05.000Z",
+          "caller": {
+            "deviceId": "dev_0123456789abcdef01234567",
+            "generation": 1
+          },
+          "endpoint": "inbox.ack",
+          "itemId": "10000000-0000-4000-8000-000000000002",
+          "body": {
+            "itemId": "10000000-0000-4000-8000-000000000002",
+            "leaseNonce": "FIXTURElease0nonce000000000002",
+            "generation": 1,
+            "payloadSha256": "e109519e0f33ed408a70f11a2e65486e661883fc8b15ed61061e8a0d07f7fb57",
+            "ackedAt": "2026-10-05T12:00:05.000Z",
+            "outcome": "refused",
+            "dotRequestId": null,
+            "refusal": {
+              "by": "nash",
+              "code": "dot_access_above_maximum",
+              "message": "The requested access is above the maximum the user set for this workspace. Ask for less access, or ask the user to raise the maximum in the app."
+            }
+          },
+          "expect": {
+            "result": {
+              "itemId": "10000000-0000-4000-8000-000000000002",
+              "recorded": "applied",
+              "receiptState": "refused"
+            }
+          }
+        },
+        {
+          "actor": "dot",
+          "at": "2026-10-05T12:00:06.000Z",
+          "caller": {
+            "ownerId": "owner-fixture-0001"
+          },
+          "tool": "nash_get_receipt",
+          "arguments": {
+            "itemId": "10000000-0000-4000-8000-000000000002"
+          },
+          "expect": {
+            "result": {
+              "receipt": {
+                "itemId": "10000000-0000-4000-8000-000000000002",
+                "kind": "submit",
+                "state": "refused",
+                "payloadSha256": "e109519e0f33ed408a70f11a2e65486e661883fc8b15ed61061e8a0d07f7fb57",
+                "dependsOnItemId": null,
+                "dotRequestId": null,
+                "createdAt": "2026-10-05T12:00:02.000Z",
+                "expiresAt": "2026-10-05T12:30:02.000Z",
+                "updatedAt": "2026-10-05T12:00:05.000Z",
+                "refusal": {
+                  "by": "nash",
+                  "code": "dot_access_above_maximum",
+                  "message": "The requested access is above the maximum the user set for this workspace. Ask for less access, or ask the user to raise the maximum in the app."
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "error.tool_input_outside_contract",
+      "category": "error",
+      "covers": "injected contract version and unknown access level",
+      "description": "A tool input never carries contractVersion, which the MCP layer injects, and requestedAccess is only read_only or workspace_write; either input fails its schema with payload_invalid and stores nothing.",
       "binding": {
         "ownerId": "owner-fixture-0001",
         "deviceId": "dev_0123456789abcdef01234567",
@@ -4418,7 +4698,7 @@
             "workspaceRef": "dws_0123456789abcdef01234567",
             "objective": "List the open issues in the \"docs\" folder and summarize each in one sentence.",
             "idempotencyKey": "20000000-0000-4000-8000-000000000001",
-            "requestedAccess": "workspace_write"
+            "contractVersion": 3
           },
           "expect": {
             "error": {
@@ -4439,7 +4719,7 @@
             "workspaceRef": "dws_0123456789abcdef01234567",
             "objective": "List the open issues in the \"docs\" folder and summarize each in one sentence.",
             "idempotencyKey": "20000000-0000-4000-8000-000000000001",
-            "contractVersion": 2
+            "requestedAccess": "full_access"
           },
           "expect": {
             "error": {

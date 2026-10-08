@@ -30,7 +30,7 @@ test('canonical payload hashing matches every R2 hash golden', () => {
   }
 });
 
-assert.equal(bundle.vectors.length, 37, 'the hosted implementation must replay all R2 vectors');
+assert.equal(bundle.vectors.length, 38, 'the hosted implementation must replay all R2 vectors');
 for (const vector of bundle.vectors) {
   if (vector.generated.pairing) {
     test(`R2 conformance: ${vector.id}`, async (t) => {

@@ -3,7 +3,14 @@ import { DOT_REMOTE_CONTRACT_VERSION } from './dot-remote-limits'
 import { buildDotMcpToolManifest } from './dot-remote-manifest'
 import { dotRemoteCanonicalPayload, dotRemotePayloadSha256 } from './dot-remote-payload'
 import { SUBMIT_1 } from './dot-remote-vector-flows.test-fixture'
-import { decisionId, messageId, payloadOf, requestId } from './dot-remote-vector-kit.test-fixture'
+import {
+  decisionId,
+  messageId,
+  payloadOf,
+  requestId,
+  submitArgs
+} from './dot-remote-vector-kit.test-fixture'
+import { DOT_REMOTE_ACCESS_VECTORS } from './dot-remote-vectors-access.test-fixture'
 import { DOT_REMOTE_ERROR_VECTORS } from './dot-remote-vectors-errors.test-fixture'
 import { DOT_REMOTE_PAIRING_VECTORS } from './dot-remote-vectors-pairing.test-fixture'
 import { DOT_REMOTE_RACE_VECTORS } from './dot-remote-vectors-races.test-fixture'
@@ -33,7 +40,8 @@ export const DOT_REMOTE_REQUIRED_CASES = [
   'error.revoked_generation',
   'error.allow_on_read_only_run',
   'error.allow_refused_by_nash',
-  'error.remote_access_cap',
+  'error.access_above_workspace_maximum',
+  'error.tool_input_outside_contract',
   'pairing.refresh_ok',
   'pairing.refresh_rotation',
   'pairing.refresh_reuse_detected',
@@ -70,6 +78,10 @@ export function buildDotRemoteConformanceVectors() {
     conventions: CONVENTIONS,
     payloadHashExamples: [
       hashExample('submit with the default access applied', SUBMIT_1),
+      hashExample(
+        'submit asking for workspace write',
+        payloadOf('submit', submitArgs(1, { requestedAccess: 'workspace_write' }))
+      ),
       hashExample('cancel', payloadOf('cancel', { dotRequestId: requestId(1) })),
       hashExample(
         'permission answer',
@@ -90,6 +102,7 @@ export function buildDotRemoteConformanceVectors() {
       ...DOT_REMOTE_WRITE_TOOL_VECTORS,
       ...DOT_REMOTE_RACE_VECTORS,
       ...DOT_REMOTE_ERROR_VECTORS,
+      ...DOT_REMOTE_ACCESS_VECTORS,
       ...DOT_REMOTE_RG7_VECTORS,
       ...DOT_REMOTE_VALIDATION_VECTORS,
       ...DOT_REMOTE_PAIRING_VECTORS

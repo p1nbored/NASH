@@ -58,12 +58,14 @@ test('owner approval requires identity and Origin while service requests require
   assert.equal((await handleRemoteEndpoint(request('/pairing/approve', { userCode: 'BCDF-GHJK', decision: 'approve' }, { origin: 'http://127.0.0.1:5178' }), { ...deps(), ownerId: null })).status, 401);
   assert.equal((await handleRemoteEndpoint(request('/nash/v1/pairing/challenges', { appVersion: '1.4.0' }, { 'OAI-Sites-Authorization': 'Bearer not-admitted' }), deps())).status, 401);
 });
-test('heartbeat accepts contract v3 and rejects the obsolete v2 payload before workflow storage', async () => {
+test('heartbeat accepts contract v4 and rejects older payloads before workflow storage', async () => {
   const dependencies = deps();
   const heartbeat = { generation: 1, appVersion: '1.4.0', contractVersion: 2, sentAt: '2026-10-05T12:00:00.000Z' };
-  const obsolete = await handleRemoteEndpoint(request('/nash/v1/heartbeat', heartbeat), dependencies);
-  assert.equal(obsolete.status, 400); assert.equal(dependencies.calls, 0);
-  const current = await handleRemoteEndpoint(request('/nash/v1/heartbeat', { ...heartbeat, contractVersion: 3 }), dependencies);
+  for (const contractVersion of [2, 3]) {
+    const obsolete = await handleRemoteEndpoint(request('/nash/v1/heartbeat', { ...heartbeat, contractVersion }), dependencies);
+    assert.equal(obsolete.status, 400); assert.equal(dependencies.calls, 0);
+  }
+  const current = await handleRemoteEndpoint(request('/nash/v1/heartbeat', { ...heartbeat, contractVersion: 4 }), dependencies);
   assert.equal(current.status, 404); assert.equal(dependencies.calls, 1);
 });
 

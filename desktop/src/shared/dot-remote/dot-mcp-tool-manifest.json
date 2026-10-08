@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "name": "nash-dot-remote",
-  "contractVersion": 3,
+  "contractVersion": 4,
   "contractGolden": {
     "file": "src/shared/dot-ingress/dot-ingress-contract-v3.schema.json",
     "sha256": "531a90a8fcaefff5cf6ee09fca71dc55bc9dc5f45e8d26bc53d75ac173510132"
@@ -13,11 +13,13 @@
     "defaults": {
       "status": "awaiting_user_confirmation",
       "deliverableContentsSent": false,
-      "submitAccessCap": "read_only",
       "submitTtlMinutes": 30,
       "retentionDays": 7,
       "permissionAnswersAllowed": true,
       "deviceCredentialLifetimeDays": 30
+    },
+    "decided": {
+      "submitAccessCap": "workspace_write"
     },
     "limits": {
       "leaseSeconds": 60,
@@ -39,7 +41,7 @@
   },
   "rules": {
     "authority": "NASH is the single authority. The Site stores inbox items and a read-only copy of what NASH reported; it never decides a request status itself.",
-    "contractVersion": "The MCP layer adds contractVersion 3 to every write payload and validates it against the v3 params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion 3; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online.",
+    "contractVersion": "This is remote contract version 4. The MCP layer adds contractVersion 3 (injected.contractVersion, the dot ingress contract of the payloads) to every write payload and validates it against the v3 params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion 4; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online. A workspace list stored under an earlier version has no maxAccess and is not shown; nash_list_workspaces stays empty until NASH of this version publishes again.",
     "payloadHash": "payloadSha256 is the lowercase hex SHA-256 of the UTF-8 bytes of the canonical JSON of the stored payload. The stored payload is the v3 params object after the MCP layer adds contractVersion 3 and applies the schema defaults, such as requestedAccess read_only. Canonical JSON sorts object keys by UTF-16 code unit at every depth, omits members whose value is undefined, keeps array order, writes no whitespace, and writes strings and numbers exactly as JSON.stringify does, so non-ASCII characters stay unescaped.",
     "deduplication": "Before it enqueues anything, the Site checks in one transaction that the key named by the tool dedupKey is unique for the owner, device and tool. The same key with the same payloadSha256 returns the original receipt in its current state; the same key with another payloadSha256 is refused with idempotency_conflict. For nash_cancel_request the key is submitItemId, and a repeat returns the current cancel answer. A refused tool call stores nothing. The Site never derives idempotencyKey or messageId from its own itemId.",
     "delivery": "Delivery is at least once. The Site leases items oldest first, only to the paired device, each lease with a new leaseNonce, the pairing generation and leaseExpiresAt 60 seconds after the lease. An item whose lease expires without an ack returns to queued. An item with dependsOnItemId is leased only after that submit was acknowledged as accepted or duplicate.",
@@ -47,7 +49,7 @@
     "expiry": "Every read and every lease treats a queued item whose expiresAt has passed as expired, with updatedAt equal to expiresAt, and an expired item is never delivered. A claimed item keeps its state until NASH acknowledges it; if its lease ends without an ack after expiresAt, it becomes expired at leaseExpiresAt. expiresAt is createdAt plus submitTtlMinutes; for a permission answer it is no later than the deadlineAt of its prompt. NASH acknowledges an item whose expiresAt has passed as expired without acting on it. A validation decision has no deadline, so its expiresAt is createdAt plus submitTtlMinutes as well; after it expired, dot decides again with a new decisionId.",
     "queuedCancel": "nash_cancel_request on a queued submit marks it canceled_before_claim in the same transaction, and nothing reaches NASH. On a claimed or accepted submit it creates one cancel item that depends on the submit; while the submit is claimed the cancel has no payload and no dotRequestId, and it is leased once the submit is accepted, with the dotRequestId from that ack. If the submit is refused or expires, the cancel is refused with cancel_target_not_admitted.",
     "events": "Events of one dotRequestId apply in increasing sourceRevision, in batch order. The Site checks the eventId first: an event whose eventId was already stored with the same content is a duplicate; with other content it is a conflict. Otherwise, an event whose sourceRevision is not above the highest applied revision of its request is stale and ignored, so a closed prompt never reopens. An event for a request without an accepted submit of this binding is unknown_request. Each result names the appliedRevision per request, from which NASH resends after a restore.",
-    "remoteAccess": "Remote submissions are capped at the submitAccessCap; the tool input schema allows no higher access, and NASH applies the same cap again before forwarding an item.",
+    "remoteAccess": "A remote submission may ask for any access up to policy.decided.submitAccessCap, workspace_write; requestedAccess defaults to read_only. The real limit is the maximum the user set for each workspace in NASH, published as maxAccess in the workspace list. The Site never compares requestedAccess with maxAccess: it queues the submit, and NASH refuses one above the maximum with dot_access_above_maximum. The run keeps the access NASH admitted, which also decides dotMayAllow on its permission prompts (RG7).",
     "permissionAnswers": "An answer is accepted only for a prompt the Site holds as open and before its deadline. allow is refused with decision_allow_not_permitted when the reported view has dotMayAllow false (RG7); deny is always possible. NASH checks again and may refuse with dot_decision_deny_only.",
     "validationDecisions": "Validation decisions are a narrow exception to the coarse run view: dot sees exactly the fields of validation_decision_pending, which the desktop masked before sending. The Site stores and returns them unchanged and never scans, masks or rewrites them. A decision is open while the newest event for its validationId is validation_decision_pending, its request is an accepted submit of this binding, and that event is less than retentionDays old. A validation_decision_settled event closes it for good; a stale, duplicate or late pending event never reopens it. The Site holds at most validationDecisionsOpenMax open decisions per binding: beyond that, only the oldest by createdAt and then validationId count as open, and the others wait until older ones close. NASH itself reports at most that many open decisions at a time, the oldest first. nash_list_validation_decisions returns open decisions only, oldest first by createdAt and then validationId, at most limit per page, with nextCursor for the rest. nash_get_request keeps the newest event per validationId, so a settled decision stays visible there until retention purges it; a request stored before contract version 3 has an empty validationDecisions list. nash_decide_validation checks deduplication on decisionId first, so a retry with the same payload returns the original receipt even after the decision closed, and the same decisionId with another payload is idempotency_conflict. A new decisionId for a decision that is not open is refused with validation_decision_not_open and stores nothing. Otherwise the Site queues one validation_decision item that depends on the accepted submit of the request named by the pending event. NASH acknowledges decided, already_decided and closed as accepted, a repeat of a decisionId it already answered as duplicate, and an unknown validation or one of a run dot did not start as refused with dot_validation_not_found. The settled event then reports waived or rejected for whichever decision won, from dot or from the app, or closed with no decision time. A pending event for a request this binding never accepted, for example after its records aged out or after NASH was paired again as a new device, is unknown_request; that decision can be made only in the app.",
     "identity": "Owner, device, dot identity and generation are derived on the server: the owner from the platform identity header, the device and generation from the pairing record, the dot identity from the verified identity on MCP calls. A tool call by any other owner, and an endpoint call by a session of any other device, is refused with unauthorized; a device credential resolves to its own binding only; no body field, client label or known id is authority.",
@@ -146,7 +148,7 @@
             "anyOf": [
               {
                 "type": "number",
-                "const": 3
+                "const": 4
               },
               {
                 "type": "null"
@@ -179,7 +181,7 @@
     {
       "name": "nash_list_workspaces",
       "title": "List NASH workspaces",
-      "description": "List the workspaces the user enabled for dot, as opaque workspaceRef values with the user's display names. Use a workspaceRef from this list in nash_submit_task. The list never contains paths.",
+      "description": "List the workspaces the user enabled for dot, as opaque workspaceRef values with the user's display names and maxAccess, the most access a task there may ask for (read_only or workspace_write), as the user set it in NASH. Use a workspaceRef from this list in nash_submit_task. The list never contains paths.",
       "inputSchema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -228,11 +230,19 @@
                 "minLength": 1,
                 "maxLength": 120,
                 "pattern": "^[^\\p{Cc}\\p{Zl}\\p{Zp}\\\\/]+$"
+              },
+              "maxAccess": {
+                "type": "string",
+                "enum": [
+                  "read_only",
+                  "workspace_write"
+                ]
               }
             },
             "required": [
               "workspaceRef",
-              "displayName"
+              "displayName",
+              "maxAccess"
             ],
             "additionalProperties": false
           }
@@ -254,7 +264,7 @@
     {
       "name": "nash_submit_task",
       "title": "Submit a task to NASH",
-      "description": "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Remote tasks may only read (requestedAccess read_only). Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId.",
+      "description": "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId.",
       "inputSchema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -271,7 +281,8 @@
             "default": "read_only",
             "type": "string",
             "enum": [
-              "read_only"
+              "read_only",
+              "workspace_write"
             ]
           },
           "deliverableLanguage": {
@@ -9432,5 +9443,5 @@
       "retryable": "no"
     }
   ],
-  "manifestSha256": "94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19"
+  "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
 }

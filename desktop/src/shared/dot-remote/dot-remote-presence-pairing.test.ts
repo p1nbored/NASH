@@ -153,18 +153,33 @@ describe('pairing (RG4)', () => {
 })
 
 describe('heartbeat and workspace list', () => {
-  it('reports NASH online with its app and contract version', () => {
-    const heartbeat = { generation: 1, appVersion: '1.4.0', contractVersion: 3, sentAt: T0 }
+  it('reports NASH online with its app and contract version, and refuses any other version', () => {
+    const heartbeat = { generation: 1, appVersion: '1.4.0', contractVersion: 4, sentAt: T0 }
     expect(DotRemoteHeartbeatRequestSchema.safeParse(heartbeat).success).toBe(true)
-    expect(
-      DotRemoteHeartbeatRequestSchema.safeParse({ ...heartbeat, contractVersion: 1 }).success
-    ).toBe(false)
+    for (const contractVersion of [1, 2, 3, 5]) {
+      expect(
+        DotRemoteHeartbeatRequestSchema.safeParse({ ...heartbeat, contractVersion }).success,
+        String(contractVersion)
+      ).toBe(false)
+    }
   })
 
-  it('publishes opaque dws_ refs with display names, never paths', () => {
+  it('publishes opaque dws_ refs with display names and access maximums, never paths', () => {
     const list = (workspaces: unknown[]) => ({ generation: 1, publishedAt: T0, workspaces })
-    const docs = { workspaceRef: 'dws_0123456789abcdef01234567', displayName: 'Docs site' }
+    const docs = {
+      workspaceRef: 'dws_0123456789abcdef01234567',
+      displayName: 'Docs site',
+      maxAccess: 'read_only'
+    }
     expect(DotRemoteWorkspaceListRequestSchema.safeParse(list([docs])).success).toBe(true)
+    const writable = { ...docs, maxAccess: 'workspace_write' }
+    expect(DotRemoteWorkspaceListRequestSchema.safeParse(list([writable])).success).toBe(true)
+    const { maxAccess: _omitted, ...withoutMaximum } = docs
+    expect(DotRemoteWorkspaceListRequestSchema.safeParse(list([withoutMaximum])).success).toBe(
+      false
+    )
+    const fullAccess = { ...docs, maxAccess: 'full_access' }
+    expect(DotRemoteWorkspaceListRequestSchema.safeParse(list([fullAccess])).success).toBe(false)
     const pathName = { ...docs, displayName: 'C:\\work\\docs' }
     expect(DotRemoteWorkspaceListRequestSchema.safeParse(list([pathName])).success).toBe(false)
     const pathRef = { ...docs, workspaceRef: 'C:/work/docs' }
@@ -180,7 +195,7 @@ describe('heartbeat and workspace list', () => {
       online: true,
       lastSeenAt: T0,
       appVersion: '1.4.0',
-      contractVersion: 3,
+      contractVersion: 4,
       onlineWindowSeconds: 90,
       manifestSha256: 'a'.repeat(64)
     }

@@ -26,12 +26,12 @@ export const DOT_REMOTE_TOOL_TEXT = {
   nash_list_workspaces: {
     title: 'List NASH workspaces',
     description:
-      "List the workspaces the user enabled for dot, as opaque workspaceRef values with the user's display names. Use a workspaceRef from this list in nash_submit_task. The list never contains paths."
+      "List the workspaces the user enabled for dot, as opaque workspaceRef values with the user's display names and maxAccess, the most access a task there may ask for (read_only or workspace_write), as the user set it in NASH. Use a workspaceRef from this list in nash_submit_task. The list never contains paths."
   },
   nash_submit_task: {
     title: 'Submit a task to NASH',
     description:
-      "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Remote tasks may only read (requestedAccess read_only). Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId."
+      "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId."
   },
   nash_get_receipt: {
     title: 'Get a receipt',

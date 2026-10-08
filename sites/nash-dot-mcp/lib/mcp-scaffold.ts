@@ -1,6 +1,6 @@
 import contract from '../generated/dot-hello-schema.json' with { type: 'json' };
 import { boundedJsonBody } from './bounded-json-body.ts';
-import type { RemoteResponse } from './remote-contracts.ts';
+import { manifest, type RemoteResponse } from './remote-contracts.ts';
 
 export type McpScaffoldDependencies = {
   ownerUserId: string | null;
@@ -11,6 +11,13 @@ export type McpScaffoldDependencies = {
 
 const PROTOCOLS = ['2025-06-18', '2025-03-26'];
 const BODY_LIMIT = 65_536;
+// What dot reads on connect when the generated mailbox tools are wired; it must match what they do.
+const MAILBOX_SERVER = { name: 'nash', version: `contract-${manifest.contractVersion}` };
+const MAILBOX_INSTRUCTIONS = "NASH runs tasks on the user's own PC. This server is NASH's mailbox: a "
+  + `task you submit waits here until NASH takes it, and expires if NASH does not take it within ${manifest.policy.defaults.submitTtlMinutes} minutes. `
+  + 'Every status and result is what NASH last reported. Call nash_status first; NASH must be paired and online. '
+  + 'nash_list_workspaces shows maxAccess for each workspace: ask for workspace_write only when the task must change '
+  + 'files and maxAccess allows it, otherwise read_only.';
 type RpcId = string | number | null;
 type JsonSchema = {
   type?: string;
@@ -101,8 +108,8 @@ export async function handleScaffoldMcp(request: Request, dependencies: McpScaff
     return result(id, {
       protocolVersion: PROTOCOLS.includes(params.protocolVersion) ? params.protocolVersion : PROTOCOLS[0],
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: 'nash-local-scaffold', version: '0.1.0' },
-      instructions: dependencies.invokeTool ? 'Local R2 conformance mailbox only. No real NASH device or task execution is connected.'
+      serverInfo: dependencies.invokeTool ? MAILBOX_SERVER : { name: 'nash-local-scaffold', version: '0.1.0' },
+      instructions: dependencies.invokeTool ? MAILBOX_INSTRUCTIONS
         : 'Local scaffold only. No NASH pairing, mailbox, or task execution is available.',
     });
   }

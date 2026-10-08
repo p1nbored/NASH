@@ -311,7 +311,7 @@ test('retention purges old receipts and event identities in bounded batches', ()
 test('workspace snapshots reject duplicate refs and ack route ids must match body ids', () => {
   const f = fixture();
   const timestamp = new Date(f.time()).toISOString();
-  const workspace = { workspaceRef, displayName: 'Docs' };
+  const workspace = { workspaceRef, displayName: 'Docs', maxAccess: 'read_only' };
   assert.equal(f.endpoint('workspaces.put', { generation: 1, publishedAt: timestamp,
     workspaces: [workspace, workspace] }).error?.code, 'payload_invalid');
   f.submit(1);
@@ -501,11 +501,11 @@ test('validation view refinements reject mismatched requests and inconsistent wi
   assert.equal(f.state().requests[id(3, 1)].appliedRevision, 0);
 });
 
-test('v2 request snapshots gain an empty validation fold and old heartbeats never appear online', () => {
+test('older request snapshots gain an empty validation fold and old heartbeats never appear online', () => {
   const f = fixture(); admitted(f);
   const old = f.state();
   delete (old.requests[id(3, 1)] as unknown as Record<string, unknown>).validationDecisions;
-  old.heartbeat = { lastSeenAt: new Date(f.time()).toISOString(), appVersion: 'v2-fixture', contractVersion: 2 } as unknown as RemoteMailboxState['heartbeat'];
+  old.heartbeat = { lastSeenAt: new Date(f.time()).toISOString(), appVersion: 'v3-fixture', contractVersion: 3 };
   f.restore(old);
   assert.deepEqual(result<ValidationPage>(f.tool('nash_list_validation_decisions')), { validations: [], nextCursor: null });
   assert.deepEqual(result<{ request: { validationDecisions: unknown[] } }>(f.tool('nash_get_request', { dotRequestId: id(3, 1) })).request.validationDecisions, []);
@@ -513,13 +513,53 @@ test('v2 request snapshots gain an empty validation fold and old heartbeats neve
   assert.equal(status.online, false);
   assert.equal(status.contractVersion, null);
   assert.match(status.manifestSha256, /^[a-f0-9]{64}$/);
-  assert.equal(f.endpoint('heartbeat.post', { generation: 1, appVersion: 'v2-fixture', contractVersion: 2,
-    sentAt: new Date(f.time()).toISOString() }).error?.code, 'payload_invalid');
-  assert.ok(f.endpoint('heartbeat.post', { generation: 1, appVersion: 'v3-fixture', contractVersion: 3,
+  for (const contractVersion of [2, 3]) {
+    assert.equal(f.endpoint('heartbeat.post', { generation: 1, appVersion: 'old-fixture', contractVersion,
+      sentAt: new Date(f.time()).toISOString() }).error?.code, 'payload_invalid');
+  }
+  assert.ok(f.endpoint('heartbeat.post', { generation: 1, appVersion: 'v4-fixture', contractVersion: 4,
     sentAt: new Date(f.time()).toISOString() }).result);
   const current = result<{ status: { online: boolean; contractVersion: number } }>(f.tool('nash_status')).status;
   assert.equal(current.online, true);
-  assert.equal(current.contractVersion, 3);
+  assert.equal(current.contractVersion, 4);
+});
+
+test('a workspace list stored before v4 is dropped until NASH publishes one with each maximum', () => {
+  const f = fixture();
+  const publishedAt = new Date(f.time()).toISOString();
+  const old = f.state();
+  old.workspaces = [{ workspaceRef, displayName: 'Docs' }] as unknown as RemoteMailboxState['workspaces'];
+  old.publishedAt = publishedAt;
+  f.restore(old);
+  assert.deepEqual(result(f.tool('nash_list_workspaces')), { workspaces: [], publishedAt: null });
+  assert.equal(f.endpoint('workspaces.put', { generation: 1, publishedAt,
+    workspaces: [{ workspaceRef, displayName: 'Docs' }] }).error?.code, 'payload_invalid');
+  const workspaces = [{ workspaceRef, displayName: 'Docs', maxAccess: 'workspace_write' },
+    { workspaceRef: 'dws_89abcdef0123456789abcdef', displayName: 'Notes', maxAccess: 'read_only' }];
+  assert.ok(f.endpoint('workspaces.put', { generation: 1, publishedAt, workspaces }).result);
+  f.restore();
+  assert.deepEqual(result(f.tool('nash_list_workspaces')), { workspaces, publishedAt });
+});
+
+test('dot may ask for workspace write; the Site queues it unchanged and records the refusal of NASH', () => {
+  const f = fixture();
+  const write = f.submit(1, { requestedAccess: 'workspace_write' });
+  const above = f.submit(2, { requestedAccess: 'workspace_write' });
+  assert.equal(f.tool('nash_submit_task', { workspaceRef, objective: 'Review the docs.',
+    idempotencyKey: id(2, 3), requestedAccess: 'full_access' }).error?.code, 'payload_invalid');
+  const [first, second] = f.lease();
+  assert.equal(first.payload.requestedAccess, 'workspace_write');
+  assert.equal(first.payload.contractVersion, 3);
+  assert.ok(f.ack(first).result);
+  const refusal = { by: 'nash', code: 'dot_access_above_maximum',
+    message: 'The requested access is above the maximum the user set for this workspace. Ask for less access, or ask the user to raise the maximum in the app.' };
+  assert.ok(f.ack(second, { outcome: 'refused', dotRequestId: null, refusal }).result);
+  const request = result<{ request: { requestedAccess: string } }>(f.tool('nash_get_request', { dotRequestId: id(3, 1) })).request;
+  assert.equal(request.requestedAccess, 'workspace_write');
+  assert.equal(result<{ receipt: Receipt }>(f.tool('nash_get_receipt', { itemId: write.itemId })).receipt.state, 'accepted');
+  const refused = result<{ receipt: Receipt }>(f.tool('nash_get_receipt', { itemId: above.itemId })).receipt;
+  assert.equal(refused.state, 'refused');
+  assert.deepEqual(refused.refusal, refusal);
 });
 
 test('unpaired validation reads are empty and validation writes refuse before storing', () => {

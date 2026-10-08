@@ -137,17 +137,25 @@ describe('dot MCP tool manifest', () => {
     })
   })
 
-  it('never asks dot for contractVersion because the MCP layer injects 3', () => {
+  it('is remote contract v4 and never asks dot for contractVersion, because the MCP layer injects 3', () => {
+    expect(manifest.contractVersion).toBe(4)
     expect(manifest.injected).toEqual({ contractVersion: 3 })
-    expect(manifest.contractVersion).toBe(3)
     for (const entry of manifest.tools) {
       expect(propertyNames(entry.inputSchema), entry.name).not.toContain('contractVersion')
     }
   })
 
-  it('limits remote submissions to the access cap', () => {
+  it('lets remote submissions ask for workspace write, read only by default (D-034)', () => {
     const access = tool('nash_submit_task').inputSchema.properties?.requestedAccess
-    expect(access).toMatchObject({ enum: ['read_only'], default: 'read_only' })
+    expect(access).toMatchObject({ enum: ['read_only', 'workspace_write'], default: 'read_only' })
+    expect(manifest.policy.decided).toEqual({ submitAccessCap: 'workspace_write' })
+    expect(tool('nash_submit_task').description).toContain('maxAccess')
+    expect(tool('nash_submit_task').description).not.toContain('may only read')
+  })
+
+  it('tells dot the access maximum of each workspace', () => {
+    expect(propertyNames(tool('nash_list_workspaces').outputSchema)).toContain('maxAccess')
+    expect(tool('nash_list_workspaces').description).toContain('maxAccess')
   })
 
   it('pins the v3 contract golden it was generated from', () => {
@@ -165,7 +173,7 @@ describe('dot MCP tool manifest', () => {
 
   it('carries the defaults that await the user and the hosted rules', () => {
     expect(manifest.policy.defaults.status).toBe('awaiting_user_confirmation')
-    expect(manifest.policy.defaults.submitAccessCap).toBe('read_only')
+    expect(manifest.policy.defaults).not.toHaveProperty('submitAccessCap')
     for (const [name, rule] of Object.entries(manifest.rules)) {
       expect(isEnglishText(rule), name).toBe(true)
     }

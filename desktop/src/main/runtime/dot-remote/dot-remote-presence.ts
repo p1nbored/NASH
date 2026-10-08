@@ -1,4 +1,5 @@
 import { canonicalJson } from '../../../shared/canonical-json'
+import type { DotRequestAccess } from '../../../shared/dot-ingress/dot-ingress-limits'
 import {
   DOT_REMOTE_CONTRACT_VERSION,
   DOT_REMOTE_HEARTBEAT_SECONDS
@@ -13,9 +14,14 @@ import {
 } from './dot-remote-site-client'
 
 // What NASH says about itself: a heartbeat every 30 s, and the workspaces dot may target as opaque
-// dws_ refs with their display names, published again whenever the list changes. Never a path.
+// dws_ refs with their display names and access maximums, published again whenever the list or a
+// maximum changes. Never a path.
 
-export type DotRemoteWorkspaceEntry = { workspaceRef: string; displayName: string }
+export type DotRemoteWorkspaceEntry = {
+  workspaceRef: string
+  displayName: string
+  maxAccess: DotRequestAccess
+}
 
 const APP_VERSION = /^[A-Za-z0-9._+-]{1,32}$/
 
@@ -43,7 +49,7 @@ export function createDotRemotePresence(deps: {
           valid.findIndex((other) => other.workspaceRef === entry.workspaceRef) === index
       )
       .slice(0, WORKBENCH_LIST_MAX_LIMIT)
-      .map(({ workspaceRef, displayName }) => ({ workspaceRef, displayName }))
+      .map(({ workspaceRef, displayName, maxAccess }) => ({ workspaceRef, displayName, maxAccess }))
   }
 
   async function beat(site: DotRemoteSiteClient, binding: DotRemoteBinding, signal?: AbortSignal) {

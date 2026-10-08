@@ -2,7 +2,7 @@
 
 ## Private Sites deployment
 
-Published origin: `https://nash-dot-mcp.taojuguo.chatgpt.site`. This checkout targets an owner-private test Site, with 12 MCP tools, 13 routes and 37 generated v3 conformance vectors. A publication does not establish a NASH App or MCP client connection.
+Published origin: `https://nash-dot-mcp.taojuguo.chatgpt.site`. This checkout targets an owner-private test Site, with 12 MCP tools, 13 routes and 38 generated conformance vectors of remote contract v4. A publication does not establish a NASH App or MCP client connection.
 
 Sites dispatch owns authentication and consumes service access before forwarding to the Worker. Data-bearing MCP calls and browser approval/revocation require the verified ChatGPT user. Device operations additionally enforce `Nash-Session` or the rotating `Nash-Device-Credential`; neither substitutes for platform service access. The fixed registered origin and production runtime enable hosted routes. Keep this Site owner-private; changing its audience requires another server admission design. Never embed a platform service token in this source or the browser.
 
@@ -12,9 +12,15 @@ Storage remains a bounded 1 MiB atomic snapshot for this private test deployment
 
 Refresh generated contracts with the pin/compiler scripts after reviewing upstream changes. Do not hand-edit generated artifacts. Hosted migrations are applied by Sites during deployment; never replay or edit already applied migrations.
 
+## Remote write up to each workspace's maximum (contract v4)
+
+`nash_submit_task` accepts `requestedAccess` `read_only` (the default) or `workspace_write` (decision D-034). The Site never compares it with a workspace maximum: NASH publishes each workspace's `maxAccess` in the workspace list, checks it again when it admits the item, and refuses a higher request with `dot_access_above_maximum`, which the receipt shows unchanged.
+
+The remote contract is v4, while inbox payloads still follow dot ingress v3 (`manifest.injected.contractVersion`), so items queued before the upgrade stay deliverable. A heartbeat of any other contract version is refused, so NASH shows offline until it runs v4. A workspace list stored before v4 has no `maxAccess` and is dropped until NASH publishes again. MCP `initialize` describes the real mailbox. Status exposes the bundled manifest hash `dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400`. See `docs/dot-remote-write-handover-2026-10-06.md` at the repository root.
+
 ## Validation decisions (contract v3)
 
-The Site supports `nash_list_validation_decisions` and `nash_decide_validation` alongside the existing tools. It preserves the desktop-masked title, fixed reason and summary unchanged, lists only the oldest 50 open decisions per binding, and queues waive/reject with decisionId deduplication and an accepted-submit dependency. A settled decision cannot reopen. The decide item TTL starts at the call; pending visibility lasts seven days. Status exposes the bundled manifest hash `94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19`.
+The Site supports `nash_list_validation_decisions` and `nash_decide_validation` alongside the existing tools. It preserves the desktop-masked title, fixed reason and summary unchanged, lists only the oldest 50 open decisions per binding, and queues waive/reject with decisionId deduplication and an accepted-submit dependency. A settled decision cannot reopen. The decide item TTL starts at the call; pending visibility lasts seven days. At v3 the bundled manifest hash was `94bbd6fc2964a3a8ef79fb4000dfafd3d14a8d5567f5d6f20269fc223bad4c19`.
 
 Rebuild NASH with the v3 contract before pairing: v2 heartbeats are rejected. Old accepted receipts/events remain readable and old request snapshots acquire an empty validation fold. Queued v2 payloads retain their original hash, remain cancelable/readable and expire at their original TTL; they are not delivered as v3. The isolated v2 scaffold tests remain historical fixtures, outside the production generated catalog.
 

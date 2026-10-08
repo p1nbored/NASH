@@ -111,7 +111,10 @@ function write(
 
 const NoInput = z.object({}).strict()
 
-/** Remote submissions state at most the remote access cap (plan section 10, decision 3). */
+/**
+ * Remote submissions state at most the remote access cap (D-034: workspace_write). The real limit is
+ * each workspace's maximum, which NASH publishes and enforces when it admits the item.
+ */
 export const DotRemoteSubmitToolInputSchema = DotSubmitParamsV3.omit(NO_CONTRACT_VERSION).extend({
   requestedAccess: z.enum(DOT_REMOTE_ALLOWED_SUBMIT_ACCESS).default(DOT_DEFAULT_REQUEST_ACCESS)
 })

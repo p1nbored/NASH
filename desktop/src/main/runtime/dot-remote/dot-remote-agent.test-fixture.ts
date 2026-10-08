@@ -20,7 +20,8 @@ import {
 
 export const WORKSPACE = {
   workspaceRef: 'dws_0123456789abcdef01234567',
-  displayName: 'Fixture docs'
+  displayName: 'Fixture docs',
+  maxAccess: 'workspace_write' as const
 }
 
 export function submittedView(runState = 'active') {

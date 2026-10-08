@@ -115,7 +115,7 @@ describe('dot remote agent: switch, connection and pairing', () => {
       pairing: { deviceId: FIXTURE_DEVICE, generation: 1 }
     })
     expect(h.site.heartbeats).toEqual([
-      expect.objectContaining({ generation: 1, appVersion: '1.4.0', contractVersion: 3 })
+      expect.objectContaining({ generation: 1, appVersion: '1.4.0', contractVersion: 4 })
     ])
     expect(h.site.workspaceLists).toEqual([
       expect.objectContaining({ generation: 1, workspaces: [WORKSPACE] })

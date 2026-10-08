@@ -2,12 +2,20 @@ import {
   DOT_DECISION_SUMMARY_MAX_CHARS,
   DOT_INGRESS_ARTIFACT_MAX
 } from '../dot-ingress/dot-ingress-limits'
+import { DOT_INGRESS_CONTRACT_VERSION_THREE } from '../dot-ingress/dot-ingress-versions'
 
 // Protocol constants of the hosted mailbox. Unlike dot-remote-defaults.ts these are not user
 // decisions; RG9 keeps short polling until a Sites probe proves a held request.
 
-/** Contract version the MCP layer injects into every write payload. */
-export const DOT_REMOTE_CONTRACT_VERSION = 3 as const
+/**
+ * The remote contract between NASH and the Site: heartbeat, presence, tool manifest and vectors. v4
+ * (D-034) lets dot ask for workspace_write and publishes each workspace's maxAccess. The Site
+ * refuses a heartbeat of any other version, so mixed versions show NASH offline.
+ */
+export const DOT_REMOTE_CONTRACT_VERSION = 4 as const
+
+/** The dot ingress contract inbox payloads follow; the MCP layer injects it into every one. */
+export const DOT_REMOTE_PAYLOAD_CONTRACT_VERSION = DOT_INGRESS_CONTRACT_VERSION_THREE
 
 export const DOT_REMOTE_LEASE_SECONDS = 60
 export const DOT_REMOTE_MAX_ITEMS_PER_LEASE = 10

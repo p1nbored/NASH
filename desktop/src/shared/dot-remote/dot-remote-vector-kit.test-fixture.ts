@@ -35,6 +35,13 @@ export const OTHER_OWNER = 'owner-fixture-0002'
 export const DEVICE = 'dev_0123456789abcdef01234567'
 export const OTHER_DEVICE = 'dev_fedcba9876543210fedcba98'
 export const WORKSPACE = 'dws_0123456789abcdef01234567'
+/** A second workspace, whose maximum the user left at read_only. */
+export const READ_ONLY_WORKSPACE = 'dws_89abcdef0123456789abcdef'
+/** The workspace list NASH publishes: the first allows workspace write, the second only reads. */
+export const PUBLISHED_WORKSPACES = [
+  { workspaceRef: WORKSPACE, displayName: 'Docs site', maxAccess: 'workspace_write' },
+  { workspaceRef: READ_ONLY_WORKSPACE, displayName: 'Release notes', maxAccess: 'read_only' }
+]
 export const BINDING = {
   ownerId: OWNER,
   deviceId: DEVICE,

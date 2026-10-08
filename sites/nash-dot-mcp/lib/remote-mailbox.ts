@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { manifest, remoteError, validateEndpoint, validateTool } from './remote-contracts.ts';
+import { manifest, remoteError, validateEndpoint, validateTool, validateToolOutput } from './remote-contracts.ts';
 
 export type RemoteBinding = {
   ownerId: string;
@@ -36,12 +36,12 @@ export type RemoteMailboxState = {
   items: InboxRecord[];
   requests: Record<string, Projection>;
   eventIds: Record<string, { hash: string; storedAt: string }>;
-  heartbeat: { lastSeenAt: string; appVersion: string; contractVersion: 3 } | null;
+  heartbeat: { lastSeenAt: string; appVersion: string; contractVersion: number } | null;
   /** Pending facets evicted from the bounded per-request view still wait in the binding's open set. */
   validationDecisionOverflow: Event[];
   /** Settled ids stay fenced after their detailed event leaves the bounded projection. */
   settledValidationIds: { dotRequestId: string; validationId: string }[];
-  workspaces: { workspaceRef: string; displayName: string }[];
+  workspaces: { workspaceRef: string; displayName: string; maxAccess: string }[];
   publishedAt: string | null;
   toolCalls: number[];
 };
@@ -66,6 +66,8 @@ export function payloadSha256(value: unknown): string {
 const policy = manifest.policy;
 const limits = policy.limits;
 const defaults = policy.defaults;
+/** Inbox payloads follow the dot ingress contract (v3); manifest.contractVersion is the remote one (v4). */
+const payloadVersion = manifest.injected.contractVersion;
 const millis = (value: string) => Date.parse(value);
 const iso = (value: number) => new Date(value).toISOString();
 const clone = <T>(value: T): T => structuredClone(value);
@@ -97,8 +99,13 @@ export function createRemoteMailbox(
 
   state.validationDecisionOverflow ??= [];
   state.settledValidationIds ??= [];
-  // An old heartbeat proves contact with a v2 App, never current v3 presence.
+  // A heartbeat of another contract version proves contact with an older App, never current presence.
   if (state.heartbeat?.contractVersion !== manifest.contractVersion) state.heartbeat = null;
+  // A list published before v4 has no maxAccess; it is dropped, never shown with a guessed maximum.
+  if (!validateToolOutput('nash_list_workspaces', { workspaces: state.workspaces, publishedAt: state.publishedAt })) {
+    state.workspaces = [];
+    state.publishedAt = null;
+  }
   for (const request of Object.values(state.requests)) {
     request.validationDecisions ??= [];
     for (const event of request.validationDecisions) {
@@ -122,7 +129,7 @@ export function createRemoteMailbox(
           || item.receipt.state !== 'queued') continue;
       if (target.receipt.state === 'accepted') {
         if (item.receipt.payloadSha256 !== null) continue;
-        item.payload = { contractVersion: manifest.contractVersion, dotRequestId: target.receipt.dotRequestId };
+        item.payload = { contractVersion: payloadVersion, dotRequestId: target.receipt.dotRequestId };
         item.receipt.dotRequestId = target.receipt.dotRequestId;
         item.receipt.payloadSha256 = payloadSha256(item.payload);
         item.receipt.updatedAt = target.receipt.updatedAt;
@@ -314,13 +321,13 @@ export function createRemoteMailbox(
       });
       if (full()) return fail('inbox_full');
       const payload = target.receipt.dotRequestId ? {
-        contractVersion: manifest.contractVersion, dotRequestId: target.receipt.dotRequestId,
+        contractVersion: payloadVersion, dotRequestId: target.receipt.dotRequestId,
       } : null;
       cancel = createItem(name, 'cancel', args.submitItemId as string, payload, target);
       return ok({ outcome: 'forwarded', target: target.receipt, cancel: cancel.receipt });
     }
 
-    const payload: ObjectValue = { ...args, contractVersion: manifest.contractVersion };
+    const payload: ObjectValue = { ...args, contractVersion: payloadVersion };
     const kind = spec.nash.inboxKind;
     const key = args[spec.nash.dedupKey as string] as string;
     const repeated = existing(name, key, payload);
@@ -463,7 +470,7 @@ export function createRemoteMailbox(
     if (name === 'pairing.revoke') return revoke(caller.generation);
     if (name === 'heartbeat.post') {
       state.heartbeat = {
-        lastSeenAt: iso(clock.now()), appVersion: body.appVersion as string, contractVersion: 3,
+        lastSeenAt: iso(clock.now()), appVersion: body.appVersion as string, contractVersion: manifest.contractVersion,
       };
       return ok({ serverTime: iso(clock.now()) });
     }
@@ -475,7 +482,7 @@ export function createRemoteMailbox(
     if (name === 'events.post') return applyEvents(body);
     if (name === 'inbox.lease') {
       const eligible = state.items.filter((item) => item.receipt.state === 'queued'
-        && item.payload !== null && item.payload.contractVersion === manifest.contractVersion
+        && item.payload !== null && item.payload.contractVersion === payloadVersion
         && (item.receipt.dependsOnItemId === null
           || itemAt(item.receipt.dependsOnItemId)?.receipt.state === 'accepted'))
         .slice(0, body.maxItems as number);

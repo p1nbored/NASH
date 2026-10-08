@@ -203,17 +203,34 @@ describe('dot remote consumer', () => {
     })
   })
 
-  it('applies the remote access cap again and refuses a write request without dispatching it', async () => {
-    const payload = payloadOf('submit', submitArgs(1, { requestedAccess: 'workspace_write' }))
-    const item = leased({ item: 1, kind: 'submit', payload, created: 0, leased: 1, nonce: 1 })
-    const site = scriptedSite({ 'inbox.lease': leaseOf([item]), 'inbox.ack': ackResponse })
-    const local = fakeLocalEndpoint({ 'dotIngress.requests.submit': () => submitted() })
-    await consumerWith(site, local).run(binding())
-    expect(local.calls).toEqual([])
-    expect(site.calls[1]?.body).toMatchObject({
-      outcome: 'refused',
-      dotRequestId: null,
-      refusal: dotRemoteNashRefusal('dot_access_above_maximum')
+  describe('a remote write request (D-034)', () => {
+    const WRITE = payloadOf('submit', submitArgs(1, { requestedAccess: 'workspace_write' }))
+    const writeItem = () =>
+      leased({ item: 1, kind: 'submit', payload: WRITE, created: 0, leased: 1, nonce: 1 })
+
+    it('reaches the dot endpoint unchanged and is accepted where the workspace allows writing', async () => {
+      const site = scriptedSite({ 'inbox.lease': leaseOf([writeItem()]), 'inbox.ack': ackResponse })
+      const local = fakeLocalEndpoint({ 'dotIngress.requests.submit': () => submitted() })
+      await consumerWith(site, local).run(binding())
+      expect(local.calls.map((call) => call.params)).toEqual([WRITE])
+      expect(site.calls[1]?.body).toMatchObject({
+        outcome: 'accepted',
+        dotRequestId: requestId(1)
+      })
+    })
+
+    it('is refused with the endpoint code where the workspace maximum is read only', async () => {
+      const site = scriptedSite({ 'inbox.lease': leaseOf([writeItem()]), 'inbox.ack': ackResponse })
+      const local = fakeLocalEndpoint({
+        'dotIngress.requests.submit': () => refused('dot_access_above_maximum')
+      })
+      await consumerWith(site, local).run(binding())
+      expect(local.calls).toHaveLength(1)
+      expect(site.calls[1]?.body).toMatchObject({
+        outcome: 'refused',
+        dotRequestId: null,
+        refusal: dotRemoteNashRefusal('dot_access_above_maximum')
+      })
     })
   })
 

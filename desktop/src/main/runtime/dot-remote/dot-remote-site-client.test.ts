@@ -70,7 +70,7 @@ describe('dot remote Site client', () => {
     const body = {
       generation: 1,
       appVersion: '1.4.0',
-      contractVersion: 3 as const,
+      contractVersion: 4 as const,
       sentAt: '2026-10-05T12:00:00.000Z'
     }
     const result = await client.call('heartbeat.post', body, { credentials })
@@ -210,7 +210,7 @@ describe('dot remote Site client', () => {
       {
         generation: 1,
         appVersion: '1.4.0',
-        contractVersion: 3,
+        contractVersion: 4,
         sentAt: '2026-10-05T12:00:00.000Z'
       },
       { credentials: { ...credentials, device } }

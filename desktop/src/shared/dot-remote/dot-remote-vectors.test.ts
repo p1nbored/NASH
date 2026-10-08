@@ -73,7 +73,7 @@ describe('dot remote conformance vectors', () => {
 
   it('binds to the current manifest and contract version', () => {
     expect(file.manifestSha256).toBe(buildDotMcpToolManifest().manifestSha256)
-    expect(file.contractVersion).toBe(3)
+    expect(file.contractVersion).toBe(4)
   })
 
   it('has one accepted vector per tool', () => {
@@ -89,6 +89,29 @@ describe('dot remote conformance vectors', () => {
     for (const id of DOT_REMOTE_REQUIRED_CASES) {
       expect(ids, id).toContain(id)
     }
+  })
+
+  it('publishes the maximum of every workspace and leaves the access decision to NASH', () => {
+    const published = file.vectors.flatMap((vector) =>
+      vector.steps.flatMap((step) =>
+        step.actor === 'nash' &&
+        step.endpoint === 'workspaces.put' &&
+        Array.isArray(step.body.workspaces)
+          ? step.body.workspaces
+          : []
+      )
+    )
+    expect(published.length).toBeGreaterThan(0)
+    for (const workspace of published) {
+      expect(workspace).toHaveProperty('maxAccess')
+    }
+    const access = file.vectors.find(
+      (vector) => vector.id === 'error.access_above_workspace_maximum'
+    )
+    const acks = (access?.steps ?? []).flatMap((step) =>
+      step.actor === 'nash' && step.endpoint === 'inbox.ack' ? [step.body.outcome] : []
+    )
+    expect(acks).toEqual(['accepted', 'refused'])
   })
 
   it('reproduces every payload hash example', () => {

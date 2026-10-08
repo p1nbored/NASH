@@ -214,7 +214,7 @@ describe("R2's conformance vectors, NASH side", () => {
       'error.revoked_generation inbox.lease fenced_after_revocation',
       'error.revoked_generation events.post fenced_after_revocation'
     ])
-    // Why 92: the vectors hold 96 steps of this device; the four above are the Site's cases.
-    expect(matched).toBe(92)
+    // Why 96: the vectors hold 100 steps of this device; the four above are the Site's cases.
+    expect(matched).toBe(96)
   })
 })

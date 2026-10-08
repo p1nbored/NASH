@@ -1,4 +1,7 @@
-import { DOT_REMOTE_CONTRACT_VERSION } from './dot-remote-limits'
+import {
+  DOT_REMOTE_CONTRACT_VERSION,
+  DOT_REMOTE_PAYLOAD_CONTRACT_VERSION
+} from './dot-remote-limits'
 import { DOT_REMOTE_PAYLOAD_HASH_RULE } from './dot-remote-payload'
 import { DOT_REMOTE_VALIDATION_DECISIONS_RULE } from './dot-remote-validation-rule'
 
@@ -8,7 +11,7 @@ import { DOT_REMOTE_VALIDATION_DECISIONS_RULE } from './dot-remote-validation-ru
 export const DOT_REMOTE_RULES = {
   authority:
     'NASH is the single authority. The Site stores inbox items and a read-only copy of what NASH reported; it never decides a request status itself.',
-  contractVersion: `The MCP layer adds contractVersion ${DOT_REMOTE_CONTRACT_VERSION} to every write payload and validates it against the v${DOT_REMOTE_CONTRACT_VERSION} params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion ${DOT_REMOTE_CONTRACT_VERSION}; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online.`,
+  contractVersion: `This is remote contract version ${DOT_REMOTE_CONTRACT_VERSION}. The MCP layer adds contractVersion ${DOT_REMOTE_PAYLOAD_CONTRACT_VERSION} (injected.contractVersion, the dot ingress contract of the payloads) to every write payload and validates it against the v${DOT_REMOTE_PAYLOAD_CONTRACT_VERSION} params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion ${DOT_REMOTE_CONTRACT_VERSION}; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online. A workspace list stored under an earlier version has no maxAccess and is not shown; nash_list_workspaces stays empty until NASH of this version publishes again.`,
   payloadHash: DOT_REMOTE_PAYLOAD_HASH_RULE,
   deduplication:
     'Before it enqueues anything, the Site checks in one transaction that the key named by the tool dedupKey is unique for the owner, device and tool. The same key with the same payloadSha256 returns the original receipt in its current state; the same key with another payloadSha256 is refused with idempotency_conflict. For nash_cancel_request the key is submitItemId, and a repeat returns the current cancel answer. A refused tool call stores nothing. The Site never derives idempotencyKey or messageId from its own itemId.',
@@ -22,7 +25,7 @@ export const DOT_REMOTE_RULES = {
   events:
     'Events of one dotRequestId apply in increasing sourceRevision, in batch order. The Site checks the eventId first: an event whose eventId was already stored with the same content is a duplicate; with other content it is a conflict. Otherwise, an event whose sourceRevision is not above the highest applied revision of its request is stale and ignored, so a closed prompt never reopens. An event for a request without an accepted submit of this binding is unknown_request. Each result names the appliedRevision per request, from which NASH resends after a restore.',
   remoteAccess:
-    'Remote submissions are capped at the submitAccessCap; the tool input schema allows no higher access, and NASH applies the same cap again before forwarding an item.',
+    'A remote submission may ask for any access up to policy.decided.submitAccessCap, workspace_write; requestedAccess defaults to read_only. The real limit is the maximum the user set for each workspace in NASH, published as maxAccess in the workspace list. The Site never compares requestedAccess with maxAccess: it queues the submit, and NASH refuses one above the maximum with dot_access_above_maximum. The run keeps the access NASH admitted, which also decides dotMayAllow on its permission prompts (RG7).',
   permissionAnswers:
     'An answer is accepted only for a prompt the Site holds as open and before its deadline. allow is refused with decision_allow_not_permitted when the reported view has dotMayAllow false (RG7); deny is always possible. NASH checks again and may refuse with dot_decision_deny_only.',
   validationDecisions: DOT_REMOTE_VALIDATION_DECISIONS_RULE,

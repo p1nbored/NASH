@@ -1,5 +1,5 @@
 {
-  "artifactBundleSha256": "ba5cc07f226dc3276e6b29d2b52ebb99f9681f86b559aa910f9a989309b636c5",
-  "validatorSha256": "49433cedb69e0dd49c1fda687f878c123f1bf1dcb9b3ca221c6a8d5c45058fa7",
+  "artifactBundleSha256": "c6dce8209de95f03781930768d22b3c6da17a5680ee35f74afa26c8f573f04dc",
+  "validatorSha256": "db310af6209c35e8750fdf165c690a94d589607e1dc3ff703b22f2413eef0beb",
   "ajv": "8.20.0"
 }

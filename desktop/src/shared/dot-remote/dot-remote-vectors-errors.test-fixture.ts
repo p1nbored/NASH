@@ -1,5 +1,5 @@
-// FIXTURE_ONLY: refusals the hosted mailbox must produce: conflicts, expiry, identity, revocation
-// and the remote access cap. RG7 permission answers are in dot-remote-vectors-rg7.
+// FIXTURE_ONLY: refusals the hosted mailbox must produce: conflicts, expiry, identity and revocation.
+// RG7 permission answers are in dot-remote-vectors-rg7, remote access in dot-remote-vectors-access.
 import { dotRemoteSiteRefusal } from './dot-remote-errors'
 import {
   LEASED_SUBMIT_1,
@@ -166,21 +166,6 @@ export const DOT_REMOTE_ERROR_VECTORS: DotRemoteVector[] = [
       ),
       dot(8, 'nash_get_receipt', { itemId: itemId(1) }, ok({ receipt: acceptedSubmit(2) })),
       dot(9, 'nash_submit_task', submitArgs(3), fail('nash_never_paired'))
-    ]
-  ),
-  makeVector(
-    'error.remote_access_cap',
-    'remote access cap and injected contract version',
-    'A remote submission may not ask for workspace_write, and a tool input never carries contractVersion; both fail the input schema with payload_invalid and store nothing.',
-    { items: 0, nonces: 0 },
-    [
-      dot(
-        0,
-        'nash_submit_task',
-        { ...SUBMIT, requestedAccess: 'workspace_write' },
-        fail('payload_invalid')
-      ),
-      dot(1, 'nash_submit_task', { ...SUBMIT, contractVersion: 2 }, fail('payload_invalid'))
     ]
   )
 ]

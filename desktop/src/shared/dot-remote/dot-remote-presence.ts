@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { DotWorkspaceRefSchema } from '../dot-ingress/dot-ingress-params'
+import { DotRequestAccessSchema, DotWorkspaceRefSchema } from '../dot-ingress/dot-ingress-params'
 import { DotWorkspaceLabelSchema } from '../dot-ingress/dot-ingress-request'
 import { WORKBENCH_LIST_MAX_LIMIT } from '../workbench-request'
 import { DOT_REMOTE_CONTRACT_VERSION, DOT_REMOTE_ONLINE_WINDOW_SECONDS } from './dot-remote-limits'
@@ -11,7 +11,8 @@ import {
 } from './dot-remote-primitives'
 
 // What NASH publishes about itself: that it is online, and which workspaces dot may target. A
-// workspace is an opaque dws_ ref with the user's display name; a path never leaves the PC.
+// workspace is an opaque dws_ ref with the user's display name and its access maximum; a path never
+// leaves the PC.
 
 export const DotRemoteHeartbeatRequestSchema = z
   .object({
@@ -27,7 +28,12 @@ export const DotRemoteHeartbeatResponseSchema = z
   .strict()
 
 export const DotRemoteWorkspaceSchema = z
-  .object({ workspaceRef: DotWorkspaceRefSchema, displayName: DotWorkspaceLabelSchema })
+  .object({
+    workspaceRef: DotWorkspaceRefSchema,
+    displayName: DotWorkspaceLabelSchema,
+    /** v4 (D-034): the most access a task here may ask for, set by the user in NASH. */
+    maxAccess: DotRequestAccessSchema
+  })
   .strict()
 
 const WorkspaceListSchema = z

@@ -125,7 +125,7 @@ function pendingDecision(validationId = 'validation_fixture_1', eventNumber = 1)
   };
 }
 
-test('v2 persisted requests restore with empty validation facets and an old heartbeat stays offline', async (t) => {
+test('older persisted state restores without stale facets or workspaces and stays offline until a v4 heartbeat', async (t) => {
   const { db, workflow } = fixture(); t.after(() => db.close());
   const { session } = await enroll(workflow);
   const receipt = await acceptRequest(workflow, session);
@@ -135,7 +135,9 @@ test('v2 persisted requests restore with empty validation facets and an old hear
   for (const request of Object.values(jsonRecord(box.requests))) delete jsonRecord(request).validationDecisions;
   delete box.validationDecisionOverflow;
   delete box.settledValidationIds;
-  box.heartbeat = { lastSeenAt: FIXED_TIME, appVersion: 'legacy-fixture-2', contractVersion: 2 };
+  box.heartbeat = { lastSeenAt: FIXED_TIME, appVersion: 'legacy-fixture-3', contractVersion: 3 };
+  box.workspaces = [{ workspaceRef: submit.workspaceRef, displayName: 'Docs' }];
+  box.publishedAt = FIXED_TIME;
   db.database.prepare('UPDATE remote_scaffold_state SET state_json = ?, revision = revision + 1')
     .run(JSON.stringify(snapshot));
   const restored = createRemoteWorkflow(db, { now: () => Date.parse(FIXED_TIME) });
@@ -151,15 +153,16 @@ test('v2 persisted requests restore with empty validation facets and an old hear
   assert.equal(status.online, false);
   assert.equal(status.contractVersion, null);
   assert.equal(status.manifestSha256, manifest.manifestSha256);
+  assert.deepEqual(resultRecord(await restored.tool(owner, 'nash_list_workspaces', {})), { workspaces: [], publishedAt: null });
   assert.equal((await restored.endpoint('heartbeat.post', {
-    generation: session.generation, appVersion: 'legacy-fixture-2', contractVersion: 2, sentAt: FIXED_TIME,
+    generation: session.generation, appVersion: 'legacy-fixture-3', contractVersion: 3, sentAt: FIXED_TIME,
   }, sessionContext(session))).error?.code, 'payload_invalid');
   resultRecord(await restored.endpoint('heartbeat.post', {
-    generation: session.generation, appVersion: 'fixture-3', contractVersion: 3, sentAt: FIXED_TIME,
+    generation: session.generation, appVersion: 'fixture-4', contractVersion: 4, sentAt: FIXED_TIME,
   }, sessionContext(session)));
   const current = jsonRecord(resultRecord(await restored.tool(owner, 'nash_status', {})).status);
   assert.equal(current.online, true);
-  assert.equal(current.contractVersion, 3);
+  assert.equal(current.contractVersion, 4);
 });
 
 test('validation decisions persist with their binding, retain withheld views, and deduplicate before closure', async (t) => {

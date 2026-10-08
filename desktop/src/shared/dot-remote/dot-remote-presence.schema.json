@@ -13,7 +13,7 @@
         },
         "contractVersion": {
           "type": "number",
-          "const": 3
+          "const": 4
         },
         "sentAt": {
           "$ref": "#/$defs/__schema2"
@@ -174,11 +174,19 @@
           "minLength": 1,
           "maxLength": 120,
           "pattern": "^[^\\p{Cc}\\p{Zl}\\p{Zp}\\\\/]+$"
+        },
+        "maxAccess": {
+          "type": "string",
+          "enum": [
+            "read_only",
+            "workspace_write"
+          ]
         }
       },
       "required": [
         "workspaceRef",
-        "displayName"
+        "displayName",
+        "maxAccess"
       ],
       "additionalProperties": false
     },
@@ -212,7 +220,7 @@
       "anyOf": [
         {
           "type": "number",
-          "const": 3
+          "const": 4
         },
         {
           "type": "null"
