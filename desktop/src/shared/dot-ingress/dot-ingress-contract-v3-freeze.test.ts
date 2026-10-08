@@ -1,28 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { DOT_INGRESS_ERROR_CODES_V3 } from './dot-ingress-errors-v3'
+import { DOT_INGRESS_ERROR_CODES } from './dot-ingress-errors'
 import {
-  DotCancelParamsV3,
-  DotCancelResultV3Schema,
-  DotDecisionAnswerParamsV3,
-  DotDecisionAnswerResultV3Schema,
-  DotDecisionsListParamsV3,
-  DotDecisionsListResultV3Schema,
-  DotDecisionViewV3Schema,
-  DotHelloParamsV3,
-  DotHelloResultV3Schema,
-  DotListParamsV3,
-  DotListResultV3Schema,
-  DotMessageParamsV3,
-  DotMessageResultV3Schema,
-  DotRequestViewV3Schema,
-  DotStatusParamsV3,
-  DotStatusResultV3Schema,
-  DotSubmitParamsV3,
-  DotSubmitResultV3Schema,
-  DotWorkspacesParamsV3,
-  DotWorkspacesResultV3Schema
-} from './dot-ingress-v3'
+  DotCancelParams,
+  DotDecisionAnswerParams,
+  DotDecisionsListParams,
+  DotHelloParams,
+  DotListParams,
+  DotStatusParams,
+  DotSubmitParams,
+  DotWorkspacesParams
+} from './dot-ingress-params'
+import {
+  DotCancelResultSchema,
+  DotHelloResultSchema,
+  DotListResultSchema,
+  DotRequestViewSchema,
+  DotStatusResultSchema,
+  DotSubmitResultSchema,
+  DotWorkspacesResultSchema
+} from './dot-ingress-request'
+import {
+  DotDecisionAnswerResultSchema,
+  DotDecisionsListResultSchema,
+  DotDecisionViewSchema
+} from './dot-ingress-decision'
+import { DotMessageParams, DotMessageResultSchema } from './dot-ingress-message'
 import {
   DotValidationDecideParamsV3,
   DotValidationDecideResultV3Schema,
@@ -32,36 +35,35 @@ import {
 } from './dot-ingress-validation'
 import { DOT_INGRESS_METHOD_NAMES } from './dot-ingress-versions'
 
-// Contract freeze for version 3 (G7): version 2 pinned to 3 plus the validation decisions the user
-// allowed dot to see and decide ("Title, reason, summary"). Versions 1 and 2 stay byte-frozen.
+// The generated contract snapshot for the current ingress surface.
 const CONTRACT_V3: Readonly<Record<string, z.ZodType>> = {
-  'params.hello': DotHelloParamsV3,
-  'params.workspaces': DotWorkspacesParamsV3,
-  'params.submit': DotSubmitParamsV3,
-  'params.status': DotStatusParamsV3,
-  'params.list': DotListParamsV3,
-  'params.cancel': DotCancelParamsV3,
-  'params.message': DotMessageParamsV3,
-  'params.decisions.list': DotDecisionsListParamsV3,
-  'params.decisions.answer': DotDecisionAnswerParamsV3,
+  'params.hello': DotHelloParams,
+  'params.workspaces': DotWorkspacesParams,
+  'params.submit': DotSubmitParams,
+  'params.status': DotStatusParams,
+  'params.list': DotListParams,
+  'params.cancel': DotCancelParams,
+  'params.message': DotMessageParams,
+  'params.decisions.list': DotDecisionsListParams,
+  'params.decisions.answer': DotDecisionAnswerParams,
   'params.validations.list': DotValidationsListParamsV3,
   'params.validations.decide': DotValidationDecideParamsV3,
-  'result.hello': DotHelloResultV3Schema,
-  'result.workspaces': DotWorkspacesResultV3Schema,
-  'result.submit': DotSubmitResultV3Schema,
-  'result.status': DotStatusResultV3Schema,
-  'result.list': DotListResultV3Schema,
-  'result.cancel': DotCancelResultV3Schema,
-  'result.message': DotMessageResultV3Schema,
-  'result.decisions.list': DotDecisionsListResultV3Schema,
-  'result.decisions.answer': DotDecisionAnswerResultV3Schema,
+  'result.hello': DotHelloResultSchema,
+  'result.workspaces': DotWorkspacesResultSchema,
+  'result.submit': DotSubmitResultSchema,
+  'result.status': DotStatusResultSchema,
+  'result.list': DotListResultSchema,
+  'result.cancel': DotCancelResultSchema,
+  'result.message': DotMessageResultSchema,
+  'result.decisions.list': DotDecisionsListResultSchema,
+  'result.decisions.answer': DotDecisionAnswerResultSchema,
   'result.validations.list': DotValidationsListResultV3Schema,
   'result.validations.decide': DotValidationDecideResultV3Schema,
-  'view.request': DotRequestViewV3Schema,
-  'view.decision': DotDecisionViewV3Schema,
+  'view.request': DotRequestViewSchema,
+  'view.decision': DotDecisionViewSchema,
   'view.validation': DotValidationViewSchema,
-  // The closed error list of version 3: version 2's codes, then the one version 3 adds.
-  'error.code': z.enum(DOT_INGRESS_ERROR_CODES_V3)
+  // The current closed error catalog.
+  'error.code': z.enum(DOT_INGRESS_ERROR_CODES)
 }
 
 const METHOD_KEYS: Readonly<Record<(typeof DOT_INGRESS_METHOD_NAMES)[number], string>> = {
@@ -114,7 +116,7 @@ describe('dot ingress contract v3 freeze', () => {
 
   it('freezes the error codes of version 3 in the golden file', () => {
     expect(z.toJSONSchema(CONTRACT_V3['error.code'] ?? z.never())).toMatchObject({
-      enum: [...DOT_INGRESS_ERROR_CODES_V3]
+      enum: [...DOT_INGRESS_ERROR_CODES]
     })
   })
 

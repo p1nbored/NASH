@@ -6,15 +6,13 @@ import {
   saveZcodePlanApiKey
 } from '../zcode/zcode-plan-api-key-store'
 import { hasZcodeCliPlanCredentials } from '../rate-limits/zcode-usage-fetcher'
-import { USAGE_METER_SOURCE } from '../rate-limits/usage-meters-policy'
 import type { RateLimitService } from '../rate-limits/service'
 import type { ZcodePlanCredentialsStatus } from '../../shared/zcode-plan-sites'
 
 function getZcodePlanCredentialsStatus(): ZcodePlanCredentialsStatus {
   return {
     apiKeyConfigured: hasZcodePlanApiKey(),
-    // Why: the ZCode CLI's plan key only feeds the usage meter, which NASH keeps off.
-    zcodeCliConfigured: USAGE_METER_SOURCE === 'orca-inherited' && hasZcodeCliPlanCredentials(),
+    zcodeCliConfigured: hasZcodeCliPlanCredentials(),
     apiKeyProtection: getZcodePlanApiKeyProtection()
   }
 }

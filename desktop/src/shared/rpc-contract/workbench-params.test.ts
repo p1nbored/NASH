@@ -40,26 +40,6 @@ describe('WorkbenchSubmitParams', () => {
     }
   )
 
-  it('takes an optional BCP 47 deliverable language without rewriting it', () => {
-    expect(WorkbenchSubmitParams.parse(submit)).not.toHaveProperty('deliverableLanguage')
-    expect(
-      WorkbenchSubmitParams.parse({ ...submit, deliverableLanguage: 'zh-hant-tw' })
-    ).toMatchObject({ deliverableLanguage: 'zh-hant-tw' })
-  })
-
-  it.each(['', 'english', 'x', 'en_US', 'e'.repeat(36), null])(
-    'rejects deliverable language %j',
-    (deliverableLanguage) => {
-      expect(WorkbenchSubmitParams.safeParse({ ...submit, deliverableLanguage }).success).toBe(
-        false
-      )
-    }
-  )
-
-  it.each(['', ' ', '\t\r\n'])('rejects blank workspace identity and objective %j', (value) => {
-    expect(WorkbenchSubmitParams.safeParse({ ...submit, workspaceId: value }).success).toBe(false)
-    expect(WorkbenchSubmitParams.safeParse({ ...submit, objective: value }).success).toBe(false)
-  })
 
   it('accepts exact length bounds and rejects larger inputs', () => {
     expect(

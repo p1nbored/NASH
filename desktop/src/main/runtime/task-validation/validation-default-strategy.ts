@@ -1,15 +1,8 @@
 import type { AttemptFacts } from './attempt-evidence'
-import { DEFAULT_PROCESS_CHECKS } from './validation-policy'
-import {
-  machineStrategy,
-  type StrategyDeps,
-  type ValidationStrategy
-} from './validation-strategies'
+import type { ValidationStrategy } from './validation-strategies'
 
-// D-027 ("Process check; Claude's report"): a TaskSpec without machine checks and without a review
-// request gets no second-model review. What passes it depends on who ran the attempt.
+// A TaskSpec without machine checks or an explicit review request gets no second-model review.
 
-export const PROCESS_CHECK_VALIDATOR_ID = 'process_check'
 export const SESSION_REPORT_VALIDATOR_ID = 'session_report'
 const SESSION_REPORT = 'session_report'
 /** The only targets whose attempts pass on the primary's report; restriction 27 stays for the rest. */
@@ -53,13 +46,7 @@ function sessionReportStrategy(facts: AttemptFacts): ValidationStrategy {
   }
 }
 
-/** A Codex or agy attempt passes on its process check; an in-session attempt on the primary's report. */
-export function defaultStrategy(
-  facts: AttemptFacts,
-  deps: StrategyDeps,
-  signal?: AbortSignal
-): ValidationStrategy {
-  return facts.evidence.executor
-    ? machineStrategy(DEFAULT_PROCESS_CHECKS, facts, deps, signal, PROCESS_CHECK_VALIDATOR_ID)
-    : sessionReportStrategy(facts)
+/** In-session attempts use the primary's recorded report. */
+export function defaultStrategy(facts: AttemptFacts): ValidationStrategy {
+  return sessionReportStrategy(facts)
 }

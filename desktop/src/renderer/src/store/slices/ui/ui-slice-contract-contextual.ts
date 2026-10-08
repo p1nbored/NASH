@@ -99,9 +99,6 @@ export type UISliceContextual = {
   dismissSetupScriptPrompt: (repoHostIdentity: string) => void
   setupGuideSidebarDismissed: boolean
   setSetupGuideSidebarDismissed: (dismissed: boolean) => void
-  setupGuideBrowserMilestoneMigrated: boolean
-  setupGuideBrowserMilestoneLegacyComplete: boolean
-  markSetupGuideBrowserMilestoneMigrated: (legacyComplete: boolean) => void
   browserImportHintHidden: boolean
   setBrowserImportHintHidden: (hidden: boolean) => void
   mobileEmulatorTabIntroDismissed: boolean
@@ -116,4 +113,8 @@ export type UISliceContextual = {
   dismissUsageEmptyState: () => void
   codexTerminalServerIsolationNoticeSeen: boolean
   markCodexTerminalServerIsolationNoticeSeen: () => void
+  codexSharedSettingsNoticeSeen: boolean
+  markCodexSharedSettingsNoticeSeen: () => void
+  claudeAccountSignInNoticeSeen: boolean
+  markClaudeAccountSignInNoticeSeen: () => void
 }

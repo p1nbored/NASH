@@ -43,12 +43,11 @@ describe('dot ingress handoff context', () => {
     expect(getDotIngressHandoffContext(owner, 'wb-1')).toBeNull()
   })
 
-  it('gives the language tag, its English directive, the raw objective and the provenance of a dot-origin request', () => {
+  it('gives the objective and provenance without reviving a retired output-language directive', () => {
     const objective = '  Écris le plan pour `docs/Résumé.md`.\r\n'
     const id = submitAndLink(
       {
         objective,
-        deliverableLanguage: 'fr-CA',
         requestedAccess: 'workspace_write',
         client: { name: 'dot-local', version: '0.1.0' },
         scanRules: ['posix_absolute_path']
@@ -60,9 +59,6 @@ describe('dot ingress handoff context', () => {
       source: 'dot_ingress',
       senderAuth: 'ingress_token_holder',
       client: { name: 'dot-local', version: '0.1.0' },
-      deliverableLanguage: 'fr-CA',
-      deliverableLanguageDirective:
-        'Write deliverables and output files in fr-CA; report to the framework in English.',
       objective,
       spanCount: 1,
       scanRules: ['posix_absolute_path'],
@@ -76,8 +72,6 @@ describe('dot ingress handoff context', () => {
     expect(getDotIngressHandoffContext(owner, 'wb-2')).toMatchObject({
       dotRequestId: id,
       client: null,
-      deliverableLanguage: null,
-      deliverableLanguageDirective: null,
       objective: FIXTURE_OBJECTIVE,
       requestedAccess: 'read_only'
     })

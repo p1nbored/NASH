@@ -75,6 +75,13 @@ function readyStep(snapshot: AutopilotTaskSnapshot, commands: Commands): Step {
 function attemptStep(snapshot: AutopilotTaskSnapshot, commands: Commands): Step {
   const { attempt } = snapshot
   if (snapshot.status === 'dispatched') {
+    if (attempt?.nativeWorker) {
+      return step(
+        'running',
+        `The Orca worker reports through the run mailbox. Wait with ${commands.wait}; do not task-report on its behalf.`,
+        true
+      )
+    }
     if (attempt?.runsIn === 'session') {
       return step(
         'running',
@@ -106,7 +113,12 @@ function attemptStep(snapshot: AutopilotTaskSnapshot, commands: Commands): Step 
 function stepFor(snapshot: AutopilotTaskSnapshot, commands: Commands): Step {
   switch (snapshot.status) {
     case 'completed':
-      return step('completed', 'The task is completed: its result was validated.')
+      return step(
+        'completed',
+        snapshot.attempt?.nativeWorker
+          ? 'The Orca worker reported completion. Read its result and evidence in the run mailbox.'
+          : 'The task is completed: its result was validated.'
+      )
     case 'failed':
       return step(
         'failed',

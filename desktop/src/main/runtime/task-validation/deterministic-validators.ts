@@ -1,5 +1,4 @@
 import { checkArtifactExists, checkSecretScanClean, type ArtifactRecorder } from './artifact-checks'
-import { checkExecutorCompleted, checkOutputSchema } from './executor-checks'
 import {
   errorNameOf,
   quoted,
@@ -36,12 +35,8 @@ async function runOne(
   deps: MachineCheckDeps
 ): Promise<CheckOutcome> {
   switch (check.kind) {
-    case 'executor_completed':
-      return checkExecutorCompleted(evidence)
     case 'artifact_exists':
       return checkArtifactExists(evidence, check, deps.recorder, deps.now().toISOString())
-    case 'output_schema':
-      return checkOutputSchema(evidence, check.schema)
     case 'no_workspace_writes':
       return checkNoWorkspaceWrites(evidence, deps.git, deps.signal)
     case 'secret_scan_clean':

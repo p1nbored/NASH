@@ -25,10 +25,9 @@ const stepCopy = {
       )
     },
     get subtitle() {
-      // Why: NASH runs its own tasks through Claude Code; this choice only sets terminals you open.
       return translate(
         'auto.components.onboarding.OnboardingFlow.agentSubtitleNash',
-        'Choose the agent for terminals you open yourself. NASH runs its tasks through Claude Code. Switch any time.'
+        'Choose the agent for terminals you open yourself. Set the primary agent for NASH tasks in Settings → Task routing.'
       )
     }
   },

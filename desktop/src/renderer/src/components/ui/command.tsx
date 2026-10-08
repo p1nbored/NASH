@@ -4,9 +4,11 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Command as CommandPrimitive } from 'cmdk'
 import { SearchIcon } from 'lucide-react'
-import { Dialog as DialogPrimitive } from 'radix-ui'
+import * as DialogPrimitive from 'radix-ui/dialog'
 
 import { cn } from '@/lib/utils'
+import { handleImeOverlayEscape } from '@/lib/ime-overlay-escape'
+import { useImeTextFieldProps } from '@/lib/ime-text-field'
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
@@ -61,6 +63,7 @@ function CommandDialog({
             'fixed top-[20%] left-[50%] z-50 w-[660px] max-w-[90vw] translate-x-[-50%] rounded-xl border border-floating-border bg-popover text-popover-foreground shadow-floating outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
             contentClassName
           )}
+          onEscapeKeyDown={(event) => handleImeOverlayEscape(event)}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
         >
@@ -97,6 +100,7 @@ function CommandInput({
   /** Rendered after the field, inside the input frame (e.g. a filter control). */
   trailing?: React.ReactNode
 }) {
+  const imeProps = useImeTextFieldProps<HTMLInputElement>(props)
   return (
     <div
       className={cn(
@@ -114,6 +118,7 @@ function CommandInput({
           className
         )}
         {...props}
+        {...imeProps}
       />
       {trailing}
     </div>
@@ -122,9 +127,13 @@ function CommandInput({
 
 function CommandList({
   className,
+  animateHeight = false,
   ref,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.List>) {
+}: React.ComponentProps<typeof CommandPrimitive.List> & {
+  /** Glide to the filtered height (cmdk publishes it) instead of jumping. */
+  animateHeight?: boolean
+}) {
   const internalRef = React.useRef<HTMLDivElement>(null)
 
   // Why: Radix Dialog applies react-remove-scroll which calls preventDefault()
@@ -167,6 +176,8 @@ function CommandList({
       data-slot="command-list"
       className={cn(
         'max-h-[min(400px,60vh)] overflow-y-auto overflow-x-hidden scrollbar-sleek scroll-pb-4 scroll-pt-4',
+        animateHeight &&
+          'h-[min(var(--cmdk-list-height),400px,60vh)] transition-[height] duration-150 ease-out motion-reduce:transition-none',
         className
       )}
       {...props}

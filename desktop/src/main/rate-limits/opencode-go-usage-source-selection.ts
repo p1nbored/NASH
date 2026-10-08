@@ -4,7 +4,7 @@ import {
   resolveOpenCodeGoApiKey,
   type OpenCodeGoApiKeyResolution
 } from './opencode-go-api-key-source'
-import type { OpenCodeGoUsageWindows } from './opencode-go-status-parsing'
+import { makeOpenCodeGoZenBalance, type OpenCodeGoUsageWindows } from './opencode-go-status-parsing'
 import type { OpenCodeCredentialBackend } from '../opencode/opencode-credential-backend'
 import {
   fetchOpenCodeGoUsageWithApiKey,
@@ -13,7 +13,7 @@ import {
 import { fetchOpenCodeGoRateLimits, normalizeCookieInput } from './opencode-go-usage-fetcher'
 
 export type OpenCodeGoUsageSourceInput = {
-  /** Explicit Orca override; the highest-precedence key tier. */
+  /** Explicit NASH override; the highest-precedence key tier. */
   settingsApiKey?: string
   environment?: NodeJS.ProcessEnv
   backend?: OpenCodeCredentialBackend
@@ -52,6 +52,7 @@ function usageResult(
     session: windows.session,
     weekly: windows.weekly,
     monthly: windows.monthly,
+    extraUsage: makeOpenCodeGoZenBalance(null, 'api-key-source'),
     updatedAt: Date.now(),
     error: null,
     status: 'ok',
@@ -93,8 +94,8 @@ function apiFailureResult(
  * The keyed `GET /zen/go/v1/usage` endpoint is tried first because it needs no
  * console session; the legacy cookie path stays as the fallback for Black and
  * other legacy-console accounts, which upstream `fe51b0b19a` still serves.
- * @param input.settingsApiKey - Explicit Orca override, if the user set one.
- * @param input.cookie - The opencode.ai cookie header from Orca settings.
+ * @param input.settingsApiKey - Explicit NASH override, if the user set one.
+ * @param input.cookie - The opencode.ai cookie header from NASH settings.
  * @returns A provider snapshot for the status bar.
  */
 export async function fetchOpenCodeGoUsage(

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { DOT_INGRESS_ERROR_CODES } from '../../../shared/dot-ingress/dot-ingress-errors'
-import { DOT_INGRESS_V2_ONLY_ERROR_CODES } from '../../../shared/dot-ingress/dot-ingress-errors-v2'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import { PERMISSION_RELAY_ERROR_CODES } from '../permission-relay/permission-relay-caller'
 import { APP_RUN_POLICY_ERROR_CODES } from '../workflow-run/app-run-policy'
@@ -24,12 +23,7 @@ const AUTOPILOT_CODES = [
   'autopilot_route_not_available',
   'autopilot_classification_failed'
 ]
-const DOT_CODES = [
-  ...DOT_INGRESS_ERROR_CODES,
-  ...DOT_INGRESS_V2_ONLY_ERROR_CODES,
-  'dot_invalid_input',
-  'dot_transaction_unavailable'
-]
+const DOT_CODES = [...DOT_INGRESS_ERROR_CODES, 'dot_invalid_input', 'dot_transaction_unavailable']
 
 describe('autopilot and dot error passthrough', () => {
   it.each([...AUTOPILOT_CODES, ...DOT_CODES])('keeps %s with its message and data', (code) => {

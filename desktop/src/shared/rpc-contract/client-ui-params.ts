@@ -128,6 +128,7 @@ export const UiUpdateFields = z
     // Why: sync hydration ignores this persisted startup view, so paired windows stay put.
     activeView: TopLevelViewSchema.optional(),
     sidebarWidth: z.number().finite().optional(),
+    sidebarOpen: z.boolean().optional(),
     rightSidebarOpen: z.boolean().optional(),
     rightSidebarTab: RightSidebarTabParam.optional(),
     rightSidebarExplorerView: z.enum(['files', 'search']).optional(),
@@ -146,6 +147,9 @@ export const UiUpdateFields = z
     visibleWorkspaceHostIds: z.array(z.string()).nullable().optional(),
     agentsVisibleHostIds: z.array(z.string()).nullable().optional(),
     agentsFilterRepoIds: StringArray.optional(),
+    agentsHideWorkspacesFromOtherDevices: z.boolean().optional(),
+    agentsHideAutomationGeneratedWorkspaces: z.boolean().optional(),
+    agentsHideCliCreatedWorkspaces: z.boolean().optional(),
     agentsShowChildAgents: z.boolean().optional(),
     agentsCompactMode: z.boolean().optional(),
     agentsShowSearch: z.boolean().optional(),
@@ -231,8 +235,6 @@ export const UiUpdateFields = z
     // Why: one-shot dismissals the renderer writes through ui.set; each was a
     // whole-payload rejection for paired clients while unlisted.
     setupGuideSidebarDismissed: z.boolean().optional(),
-    setupGuideBrowserMilestoneMigrated: z.boolean().optional(),
-    setupGuideBrowserMilestoneLegacyComplete: z.boolean().optional(),
     browserImportHintHidden: z.boolean().optional(),
     mobileEmulatorTabIntroDismissed: z.boolean().optional(),
     mobileEmulatorAgentSetupDismissed: z.boolean().optional(),
@@ -240,6 +242,8 @@ export const UiUpdateFields = z
     usagePercentageDisplayChangeNoticeDismissed: z.boolean().optional(),
     usageEmptyStateDismissed: z.boolean().optional(),
     codexTerminalServerIsolationNoticeSeen: z.boolean().optional(),
+    codexSharedSettingsNoticeSeen: z.boolean().optional(),
+    claudeAccountSignInNoticeSeen: z.boolean().optional(),
     petVisible: z.boolean().optional(),
     petId: z.string().optional(),
     customPets: UnknownRecordArray.optional(),

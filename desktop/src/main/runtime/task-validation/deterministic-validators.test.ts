@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -38,12 +38,9 @@ describe('deterministic validators', () => {
   let deps: MachineCheckDeps
   beforeEach(() => {
     base = mkdtempSync(join(tmpdir(), 'c5-machine-'))
-    mkdirSync(join(base, 'run'))
-    writeFileSync(join(base, 'run', 'last-message.txt'), 'Done.')
     writeFileSync(join(base, 'report.md'), 'Report body.')
     evidence = fakeEvidence({
-      workspace: { path: base, kind: 'git' },
-      runDirectory: join(base, 'run')
+      workspace: { path: base, kind: 'git' }
     })
     deps = {
       recorder: memoryRecorder(),
@@ -57,7 +54,6 @@ describe('deterministic validators', () => {
     const outcomes = await runMachineChecks(
       [
         { kind: 'secret_scan_clean' },
-        { kind: 'executor_completed' },
         { kind: 'artifact_exists', path: 'report.md', root: 'worktree' },
         { kind: 'no_workspace_writes' }
       ],
@@ -66,7 +62,6 @@ describe('deterministic validators', () => {
     )
     expect(outcomes.map((outcome) => [outcome.kind, outcome.status])).toEqual([
       ['secret_scan_clean', 'pass'],
-      ['executor_completed', 'pass'],
       ['artifact_exists', 'pass'],
       ['no_workspace_writes', 'pass']
     ])

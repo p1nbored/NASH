@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compileOutputSchema } from '../../codex-exec/codex-exec-output-schema'
-import { REVIEW_OUTPUT_SCHEMA, parseReviewOutput, reviewChecks } from './model-review-verdict'
+import { parseReviewOutput, reviewChecks } from './model-review-verdict'
 
 const review = (value: unknown): string => JSON.stringify(value)
 const PASS = {
@@ -87,9 +86,5 @@ describe('model review verdict', () => {
         note: 'Criterion 2: The result does not show this.'
       }
     ])
-  })
-
-  it('offers Codex a schema its own output-schema guard accepts', () => {
-    expect(compileOutputSchema(REVIEW_OUTPUT_SCHEMA).ok).toBe(true)
   })
 })

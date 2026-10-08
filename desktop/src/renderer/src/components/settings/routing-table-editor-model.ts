@@ -4,6 +4,7 @@ import type { ProposalChanges } from '../../../../shared/routing-table/routing-t
 import {
   CoordinatorSchema,
   RouteSchema,
+  type Coordinator,
   type Route,
   type RoutingTable,
   type ValidationPolicy
@@ -26,7 +27,11 @@ export type EditableRoute = {
 }
 
 export type EditorDraft = {
-  readonly coordinator: { readonly model: string; readonly reasoningLevel: ConcreteReasoningLevel }
+  readonly coordinator: {
+    readonly agent: Coordinator['agent']
+    readonly model: string
+    readonly reasoningLevel: ConcreteReasoningLevel
+  }
   readonly routes: readonly EditableRoute[]
   /** A proposed reviewer list, carried through unchanged; reviewers are not edited here. */
   readonly validation?: ValidationPolicy
@@ -48,7 +53,11 @@ export type RouteEdit = Partial<
 export function draftFromTable(table: RoutingTable, change?: TableChangeSet): EditorDraft {
   const coordinator = change?.coordinator ?? table.coordinator
   return {
-    coordinator: { model: coordinator.model, reasoningLevel: coordinator.reasoning_level },
+    coordinator: {
+      agent: coordinator.agent,
+      model: coordinator.model,
+      reasoningLevel: coordinator.reasoning_level
+    },
     routes: table.routes.map((active) => {
       const route = change?.changes.find((row) => row.task_type === active.task_type) ?? active
       return {
@@ -64,6 +73,14 @@ export function draftFromTable(table: RoutingTable, change?: TableChangeSet): Ed
   }
 }
 
+/** Switching CLIs requires an explicit model choice for the new CLI. */
+export function withCoordinatorAgent(
+  coordinator: EditorDraft['coordinator'],
+  agent: Coordinator['agent']
+): EditorDraft['coordinator'] {
+  return agent === coordinator.agent ? coordinator : { ...coordinator, agent, model: '' }
+}
+
 export function withRouteEdit(
   draft: EditorDraft,
   taskType: RoutingTaskType,
@@ -77,11 +94,6 @@ export function withRouteEdit(
 
 export function modelProblemMessage(model: string): string {
   switch (modelPinViolation(model)) {
-    case 'model_family_excluded':
-      return translate(
-        'auto.components.settings.routingTable.editor.geminiExcluded',
-        'Gemini 4 models are excluded from routing.'
-      )
     case 'model_alias_unpinned':
       return translate(
         'auto.components.settings.routingTable.editor.aliasUnpinned',
@@ -96,7 +108,7 @@ export function modelProblemMessage(model: string): string {
     case null:
       return translate(
         'auto.components.settings.routingTable.editor.modelInvalid',
-        'Enter an exact model ID, such as claude-sonnet-5-5.'
+        'Enter an exact model ID for the selected CLI.'
       )
   }
 }
@@ -106,17 +118,17 @@ function ruleMessage(message: string): string {
     case 'Only claude_primary and claude_workflow may inherit':
       return translate(
         'auto.components.settings.routingTable.editor.onlyPrimaryInherits',
-        'Only the Claude primary session and Claude workflows can inherit the coordinator settings.'
+        'Only the primary session and Claude workflows can inherit the primary settings.'
       )
     case 'claude_primary uses the coordinator configuration':
       return translate(
         'auto.components.settings.routingTable.editor.primaryInherits',
-        'The Claude primary session always uses the coordinator settings: set model and reasoning to Inherit.'
+        'The primary session always uses the primary settings: set model and reasoning to Inherit.'
       )
     case 'coordinator_reasoning stays in the primary session':
       return translate(
         'auto.components.settings.routingTable.editor.coordinatorStays',
-        'Coordinator reasoning always stays in the Claude primary session.'
+        'Primary reasoning always stays in the primary session.'
       )
     case 'if_supported needs a concrete level':
       return translate(
@@ -173,6 +185,7 @@ export function changesFromDraft(active: RoutingTable, draft: EditorDraft): Draf
     }
   }
   const coordinator = CoordinatorSchema.safeParse({
+    agent: draft.coordinator.agent,
     model: draft.coordinator.model.trim(),
     reasoning_level: draft.coordinator.reasoningLevel
   })
@@ -183,6 +196,7 @@ export function changesFromDraft(active: RoutingTable, draft: EditorDraft): Draf
     return { ok: false, errors }
   }
   const coordinatorChanged =
+    coordinator.data.agent !== active.coordinator.agent ||
     coordinator.data.model !== active.coordinator.model ||
     coordinator.data.reasoning_level !== active.coordinator.reasoning_level
   if (changes.length === 0 && !coordinatorChanged && draft.validation === undefined) {

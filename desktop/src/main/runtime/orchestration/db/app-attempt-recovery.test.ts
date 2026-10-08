@@ -3,21 +3,14 @@ import { planLegacyWorkerTerminalRecovery } from '../orchestration-legacy-worker
 import type { LegacyWorkerTerminalRecoveryRow } from '../types'
 import { getAppAttemptSettlement } from './app-attempt-settlement'
 import { getAttemptArtifactStore } from './attempt-artifact-store'
-import { getExecutorProcessStore } from './executor-process-store'
 import { getTaskClassificationStore } from './task-classification-store'
 import { getTaskRouteStore } from './task-route-store'
 import { getTaskSpecStore } from './task-spec-store'
 import { getTaskValidationStore } from './task-validation-store'
 import { seedRoutedTask } from './app-attempt-routing.test-fixture'
 import { createAppRunHarness, type AppRunHarness } from './app-attempt.test-fixture'
-import {
-  FIXTURE_HASH_A,
-  FIXTURE_HASH_B,
-  errorCodeOf,
-  fixtureTime
-} from './autopilot-runtime.test-fixture'
+import { FIXTURE_HASH_A, errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
 
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
 const LEAF_ID = '11111111-1111-4111-8111-111111111111'
 const INCARNATION_ID = '22222222-2222-4222-8222-222222222222'
 
@@ -34,7 +27,7 @@ describe('app attempts against Orca recovery and reset', () => {
     const view = settlement().start({
       taskId: seeded.taskId,
       routeId: seeded.routeId,
-      executor: 'codex_cli',
+      executor: 'in_session',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER,
       timestamp: fixtureTime(5)
@@ -45,7 +38,6 @@ describe('app attempts against Orca recovery and reset', () => {
     const attempt = startAttempt()
     settlement().markRunning({
       dispatchId: attempt.dispatchId,
-      executableEvidence: { executable: 'codex' },
       timestamp: fixtureTime(6)
     })
     return attempt
@@ -54,9 +46,6 @@ describe('app attempts against Orca recovery and reset', () => {
     const attempt = runAttempt()
     settlement().settleClaim({
       dispatchId: attempt.dispatchId,
-      exitCode: 0,
-      tree: EXITED,
-      lastMessage: { sha256: FIXTURE_HASH_B, bytes: 1, secretLike: false },
       timestamp: fixtureTime(7)
     })
     return attempt
@@ -85,19 +74,6 @@ describe('app attempts against Orca recovery and reset', () => {
       const starting = startAttempt()
       const runningAttempt = runAttempt()
       const claimed = claimedAttempt()
-      const unknownStart = startAttempt()
-      settlement().markStartUnknown({
-        dispatchId: unknownStart.dispatchId,
-        reason: 'restart',
-        timestamp: fixtureTime(6)
-      })
-      const unknownStop = runAttempt()
-      settlement().settleStop({
-        dispatchId: unknownStop.dispatchId,
-        stopVerdict: 'unverifiable',
-        reason: 'restart',
-        timestamp: fixtureTime(7)
-      })
       const stopping = runAttempt()
       harness.owner.beginWorkerStop(stopping.dispatchId, 'fixture_epoch')
 
@@ -106,8 +82,6 @@ describe('app attempts against Orca recovery and reset', () => {
       expect(states.get(starting.dispatchId)).toBe('starting')
       expect(states.get(runningAttempt.dispatchId)).toBe('ready')
       expect(states.get(claimed.dispatchId)).toBe('ready')
-      expect(states.get(unknownStart.dispatchId)).toBe('start_unknown')
-      expect(states.get(unknownStop.dispatchId)).toBe('stop_unknown')
       expect(states.get(stopping.dispatchId)).toBe('stopping')
       for (const row of rows) {
         expect(row).toMatchObject({
@@ -140,7 +114,6 @@ describe('app attempts against Orca recovery and reset', () => {
         dispatchId: attempt.dispatchId,
         outcome: 'failed',
         reason: 'executor_failed',
-        tree: EXITED,
         timestamp: fixtureTime(7)
       })
       const listed = harness.owner
@@ -178,7 +151,6 @@ describe('app attempts against Orca recovery and reset', () => {
       spec: getTaskSpecStore(harness.owner).get(rows.attempt.taskId),
       classification: getTaskClassificationStore(harness.owner).get(rows.attempt.classificationId),
       route: getTaskRouteStore(harness.owner).get(rows.attempt.routeId),
-      executor: getExecutorProcessStore(harness.owner).get(rows.attempt.dispatchId),
       artifact: getAttemptArtifactStore(harness.owner).get(rows.artifact.artifactId),
       validation: getTaskValidationStore(harness.owner).get(rows.validation.validationId)
     })
@@ -201,22 +173,9 @@ describe('app attempts against Orca recovery and reset', () => {
           expect(record?.orphaned).toBe(true)
         }
         // The rows themselves are kept as evidence; only their reading changes.
-        expect(all.executor).toMatchObject({ state: 'completed' })
         expect(all.validation).toMatchObject({ verdict: 'pending' })
       }
     )
-
-    it('still lists the orphaned executor that was open, so its process can be stopped', () => {
-      const rows = everySideRow()
-      harness.owner.resetAll()
-      expect(getExecutorProcessStore(harness.owner).listOpen(10)).toEqual([
-        expect.objectContaining({
-          dispatchId: rows.running.dispatchId,
-          state: 'running',
-          orphaned: true
-        })
-      ])
-    })
 
     it('does not list an orphaned attempt as waiting for validation, nor count its pass', () => {
       const rows = everySideRow()
@@ -226,26 +185,20 @@ describe('app attempts against Orca recovery and reset', () => {
       expect(getTaskValidationStore(harness.owner).hasPassing(rows.attempt.taskId)).toBe(false)
     })
 
-    it('refuses every settlement on an orphaned attempt and changes nothing', () => {
+    it('refuses every settlement after reset, with surviving evidence distinguished from missing attempts', () => {
       const rows = everySideRow()
       harness.owner.resetAll()
-      const { dispatchId } = rows.running
       const timestamp = fixtureTime(9)
-      const refusals = [
+      const refusals = (dispatchId: string) => [
         () =>
           settlement().markRunning({
             dispatchId,
-            executableEvidence: { executable: 'codex' },
             timestamp
           }),
         () => settlement().markStartFailed({ dispatchId, reason: 'spawn_failed', timestamp }),
-        () => settlement().markStartUnknown({ dispatchId, reason: 'restart', timestamp }),
         () =>
           settlement().settleClaim({
             dispatchId,
-            exitCode: 0,
-            tree: EXITED,
-            lastMessage: { sha256: FIXTURE_HASH_B, bytes: 1, secretLike: false },
             timestamp
           }),
         () =>
@@ -253,21 +206,17 @@ describe('app attempts against Orca recovery and reset', () => {
             dispatchId,
             outcome: 'failed',
             reason: 'executor_failed',
-            tree: EXITED,
-            timestamp
-          }),
-        () =>
-          settlement().settleStop({
-            dispatchId,
-            stopVerdict: 'exited',
-            reason: 'user_stop',
             timestamp
           })
       ]
-      for (const refuse of refusals) {
+      for (const refuse of refusals(rows.attempt.dispatchId)) {
         expect(errorCodeOf(refuse)).toBe('autopilot_attempt_orphaned')
       }
-      expect(getExecutorProcessStore(harness.owner).get(dispatchId)?.state).toBe('running')
+      for (const refuse of refusals(rows.running.dispatchId)) {
+        expect(errorCodeOf(refuse)).toBe('autopilot_attempt_not_found')
+      }
+      expect(harness.owner.getTask(rows.running.taskId)).toBeUndefined()
+      expect(harness.owner.getWorkerDispatch(rows.running.dispatchId)).toBeUndefined()
     })
   })
 })

@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ProviderRateLimits } from '../../shared/rate-limit-types'
 import { RateLimitService } from './service'
@@ -14,11 +15,15 @@ import {
   resetRateLimitProviderMocks
 } from './rate-limit-service-test-harness'
 
-// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
-vi.mock('./usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
+const profileRouter = vi.hoisted((): { userConfigDir?: string } => ({}))
+vi.mock('../claude-accounts/claude-profile-installed-router', () => ({
+  getClaudeProfileRouter: () =>
+    profileRouter.userConfigDir ? { userConfigDir: () => profileRouter.userConfigDir } : undefined
+}))
 
 vi.mock('./claude-fetcher', () => ({
-  fetchClaudeRateLimits: vi.fn()
+  fetchClaudeRateLimits: vi.fn(),
+  fetchManagedAccountUsage: vi.fn()
 }))
 
 vi.mock('./codex-fetcher', () => ({
@@ -282,6 +287,60 @@ describe('RateLimitService', () => {
     }
   })
 
+  it('attributes statusline posts to System Default when it inherits CLAUDE_CONFIG_DIR', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(fetchClaudeRateLimits).mockResolvedValue(okProvider('claude', 18))
+      mockFreshBackgroundProviderFetches()
+      vi.stubEnv('CLAUDE_CONFIG_DIR', resolve('/own/claude-config'))
+      const service = new RateLimitService()
+      service.setClaudeAuthPreparationResolver(async () => ({
+        configDir: resolve('/own/claude-config'),
+        envPatch: {},
+        stripAuthEnv: false,
+        provenance: 'system'
+      }))
+      await service.refresh()
+      service.ingestLiveClaudeRateLimits({
+        configDir: resolve('/own/claude-config'),
+        fiveHour: { used_percentage: 44 },
+        sevenDay: null
+      })
+      expect(service.getState().claude?.session?.usedPercent).toBe(44)
+    } finally {
+      vi.unstubAllEnvs()
+      vi.useRealTimers()
+    }
+  })
+
+  it("attributes System Default posts to the login shell's CLAUDE_CONFIG_DIR a Dock launch lacks", async () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(fetchClaudeRateLimits).mockResolvedValue(okProvider('claude', 18))
+      mockFreshBackgroundProviderFetches()
+      vi.stubEnv('CLAUDE_CONFIG_DIR', '')
+      profileRouter.userConfigDir = '/shell/claude-config'
+      const service = new RateLimitService()
+      service.setClaudeAuthPreparationResolver(async () => ({
+        configDir: '/shell/claude-config',
+        envPatch: {},
+        stripAuthEnv: false,
+        provenance: 'system'
+      }))
+      await service.refresh()
+      service.ingestLiveClaudeRateLimits({
+        configDir: '/shell/claude-config',
+        fiveHour: { used_percentage: 44 },
+        sevenDay: null
+      })
+      expect(service.getState().claude?.session?.usedPercent).toBe(44)
+    } finally {
+      profileRouter.userConfigDir = undefined
+      vi.unstubAllEnvs()
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps the other window when a statusline post carries only one', async () => {
     vi.useFakeTimers()
     try {
@@ -416,7 +475,7 @@ describe('RateLimitService', () => {
     }
   })
 
-  it('does not restore the outgoing auth snapshot when the Claude target switches mid-resolve', async () => {
+  it('does not restore the outgoing account auth snapshot when the account switches mid-resolve', async () => {
     vi.useFakeTimers()
     try {
       const staleClaudeFetch = deferred<ProviderRateLimits>()
@@ -450,7 +509,7 @@ describe('RateLimitService', () => {
       // The first cycle is parked inside the outgoing account's resolver await when the switch lands.
       const firstRefresh = service.refresh()
       await flushMicrotasks()
-      const switchPromise = service.refreshClaudeForTarget({ runtime: 'wsl', wslDistro: 'Ubuntu' })
+      const switchPromise = service.refreshForClaudeAccountChange('outgoing-account')
       await flushMicrotasks()
       authGate.resolve()
       await flushMicrotasks(8)

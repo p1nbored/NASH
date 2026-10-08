@@ -2,7 +2,10 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getDotIngressMetadataPath } from '../../../shared/dot-ingress/dot-ingress-metadata'
+import {
+  getDotIngressMetadataPath,
+  type DotIngressMetadata
+} from '../../../shared/dot-ingress/dot-ingress-metadata'
 import { OrchestrationDb } from '../orchestration/db'
 import { defineMethod, defineStreamingMethod, type RpcContext } from '../rpc/core'
 import { DOT_INGRESS_RPC_METHODS } from '../rpc/methods/dot-ingress'
@@ -26,15 +29,15 @@ const hello = (token: string, id = 'req-1') => ({
   id,
   authToken: token,
   method: 'dotIngress.hello',
-  params: { contractVersion: 1 }
+  params: { contractVersion: 3 }
 })
 
-const staleMetadata = (pid: number) => ({
+const staleMetadata = (pid: number): DotIngressMetadata => ({
   schemaVersion: 1 as const,
   runtimeId: 'runtime-crashed',
   pid,
   startedAt: STARTED_AT,
-  contractVersions: [1] as [1],
+  contractVersions: [3],
   // Why: derived from the runtime naming code, so the fixture follows the app identity prefix.
   transport: createDotIngressTransportMetadata('/data', 1, 'win32', 'ab12'),
   ingressToken: 'd'.repeat(64)
@@ -137,7 +140,7 @@ describe('dot ingress listener', () => {
         runtimeId: FIXTURE_RUNTIME_ID,
         pid: process.pid,
         startedAt: STARTED_AT,
-        contractVersions: [1],
+        contractVersions: [3],
         transport: { endpoint: endpointOf() }
       })
       expect(metadata.ingressToken).toMatch(/^[0-9a-f]{64}$/)
@@ -156,7 +159,7 @@ describe('dot ingress listener', () => {
         method: 'dotIngress.hello'
       })
 
-      expect(accepted).toMatchObject({ id: 'req-1', ok: true, result: { contractVersion: 1 } })
+      expect(accepted).toMatchObject({ id: 'req-1', ok: true, result: { contractVersion: 3 } })
       expect(errorCodeOfFrame(withCliToken)).toBe('unauthorized')
       expect(errorCodeOfFrame(withoutToken)).toBe('unauthorized')
     })

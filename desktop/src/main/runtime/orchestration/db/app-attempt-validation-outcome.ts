@@ -24,7 +24,6 @@ import {
   parseAutopilotInput,
   runAutopilotWrite
 } from './autopilot-store-input'
-import { getExecutorProcessStore, type ExecutorProcessStore } from './executor-process-store'
 import type { TaskSpecRecord } from './task-spec-record'
 import { getTaskSpecStore, type TaskSpecStore } from './task-spec-store'
 import { ValidationVerdictInputSchema, type TaskValidationRecord } from './task-validation-record'
@@ -83,13 +82,11 @@ function conflict(message: string): OrchestrationError {
  * promotes its dependents; a fail fails it; an inconclusive result keeps it blocked for the user or dot.
  */
 export class ValidationOutcomeService {
-  private readonly executors: ExecutorProcessStore
   private readonly validations: TaskValidationStore
   private readonly specs: TaskSpecStore
 
   constructor(private readonly owner: OrchestrationDb) {
     ensureAutopilotRuntimeSchema(owner.db)
-    this.executors = getExecutorProcessStore(owner)
     this.validations = getTaskValidationStore(owner)
     this.specs = getTaskSpecStore(owner)
   }
@@ -240,7 +237,7 @@ export class ValidationOutcomeService {
           'The validation was not found.'
         )
       }
-      const attempt = loadAttempt(this.owner, this.executors, validation.dispatchId)
+      const attempt = loadAttempt(this.owner, validation.dispatchId)
       if (!['pending', 'inconclusive'].includes(validation.verdict) || validation.waiver !== null) {
         throw conflict('The validation is already settled or was waived.')
       }
@@ -267,7 +264,7 @@ export class ValidationOutcomeService {
       }
       return {
         validation: settled,
-        attempt: readAttemptView(this.owner, this.executors, attempt.dispatch.id, message)
+        attempt: readAttemptView(this.owner, attempt.dispatch.id, message)
       }
     })
   }

@@ -54,6 +54,8 @@ function settingsWithActive(activeAccountId: string | null): GlobalSettings {
     codexManagedAccounts: [codexAccount('account-1', 2), codexAccount('account-2', 1)],
     activeCodexManagedAccountId: activeAccountId,
     activeCodexManagedAccountIdsByRuntime: { host: activeAccountId, wsl: {} },
+    claudeManagedAccounts: [],
+    activeClaudeManagedAccountId: null,
     localAccountRuntime: 'host',
     localAccountWslDistro: null,
     skipCodexRateLimitResetConfirm: false
@@ -88,7 +90,8 @@ vi.mock('@/runtime/runtime-provider-accounts-client', () => ({
     claude: { accounts: [], activeAccountId: null },
     failedProviders: []
   })),
-  selectCodexProviderAccount: vi.fn(async () => codexSnapshot(null))
+  selectCodexProviderAccount: vi.fn(async () => codexSnapshot(null)),
+  selectClaudeProviderAccount: vi.fn(async () => ({ accounts: [], activeAccountId: null }))
 }))
 
 vi.mock('@/runtime/runtime-rpc-client', () => ({

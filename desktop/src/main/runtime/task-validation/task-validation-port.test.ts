@@ -7,7 +7,6 @@ import {
 } from '../orchestration/db/app-attempt.test-fixture'
 import {
   FIXTURE_HASH_A,
-  FIXTURE_HASH_B,
   errorCodeOf,
   fixtureTime
 } from '../orchestration/db/autopilot-runtime.test-fixture'
@@ -17,8 +16,6 @@ import {
   type TaskValidationPort,
   type ValidationDecisionPort
 } from './task-validation-port'
-
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
 
 describe('task validation port', () => {
   let harness: AppRunHarness
@@ -32,26 +29,30 @@ describe('task validation port', () => {
   afterEach(() => harness.owner.close())
 
   function claimed() {
-    const seeded = seedRoutedTask(harness)
+    const seeded = seedRoutedTask(harness, {
+      route: {
+        target: 'claude_subagent',
+        model: 'claude-sonnet-5-5',
+        policyLevel: 'max',
+        cliSetting: null
+      }
+    })
     const settlement = getAppAttemptSettlement(harness.owner)
     const { dispatchId } = settlement.start({
       taskId: seeded.taskId,
       routeId: seeded.routeId,
-      executor: 'codex_cli',
+      executor: 'in_session',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER,
       timestamp: fixtureTime(5)
     })
     settlement.markRunning({
       dispatchId,
-      executableEvidence: { executable: 'codex' },
       timestamp: fixtureTime(6)
     })
     settlement.settleClaim({
       dispatchId,
-      exitCode: 0,
-      tree: EXITED,
-      lastMessage: { sha256: FIXTURE_HASH_B, bytes: 5, secretLike: false },
+      notice: { subject: 'Task claimed', body: 'Done.' },
       timestamp: fixtureTime(7)
     })
     return { ...seeded, dispatchId }
@@ -81,10 +82,6 @@ describe('task validation port', () => {
     ])
     const spec = port.getSpec(taskId)
     expect(spec?.machineChecks).toEqual([{ kind: 'artifact_exists', path: 'report.md' }])
-    expect(port.getExecutor(dispatchId)).toMatchObject({
-      state: 'completed',
-      lastMessage: { sha256: FIXTURE_HASH_B }
-    })
 
     const artifact = port.recordArtifact({
       dispatchId,
@@ -182,7 +179,6 @@ describe('task validation port', () => {
       )
     ).toBe('autopilot_validation_not_found')
     expect(port.getSpec('task_unknown')).toBeNull()
-    expect(port.getExecutor('ctx_unknown')).toBeNull()
     expect(port.getValidation('validation_unknown')).toBeNull()
   })
 })

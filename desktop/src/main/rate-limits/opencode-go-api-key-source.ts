@@ -220,7 +220,7 @@ export async function readOpenCodeCredentialDatabaseGoKey(
  * outrank the shared OPENCODE_API_KEY environment variable in both backends.
  * An unknown backend can still use the shared environment key, but no store.
  * An unreadable V2 database withholds the env key, which may belong to Zen.
- * @param input.settingsOverride - The key a user saved in Orca's settings.
+ * @param input.settingsOverride - The key a user saved in NASH's settings.
  * @param input.environment - Process environment to read; injectable for tests.
  * @returns The key and its tier, `missing`, or `credential-database-unreadable`.
  */

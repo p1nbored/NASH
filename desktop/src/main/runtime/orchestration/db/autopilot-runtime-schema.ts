@@ -9,9 +9,9 @@ import { AUTOPILOT_MESSAGE_SCHEMA_DEFINITIONS } from './autopilot-message-schema
 import { requireIdleAutopilotConnection } from './autopilot-store-input'
 import { runLifecycleWriteTransaction } from './lifecycle-write-transaction-runner'
 
-export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 1
+export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 2
 
-/** Every v1 object in creation order; the exact-SQL check compares each one. */
+/** Every current object in creation order; the exact-SQL check compares each one. */
 export const AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS: readonly AutopilotSchemaDefinition[] = [
   ...AUTOPILOT_RUN_SCHEMA_DEFINITIONS,
   ...AUTOPILOT_TASK_SCHEMA_DEFINITIONS,
@@ -78,7 +78,7 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
 }
 
 /**
- * Creates the v1 family, or verifies an existing one and fails closed without changes. Adds new
+ * Creates the current family or verifies an existing matching layout without migration. Adds new
  * objects only: no Orca object changes and user_version is never written. The Workbench family must
  * exist before task_classifications or clef_classification_spend is written (they reference it).
  */

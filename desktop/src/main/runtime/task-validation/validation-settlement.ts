@@ -6,11 +6,6 @@ import {
   VALIDATION_EVIDENCE_MAX_ITEMS,
   type EvidenceRef
 } from '../orchestration/db/task-validation-record'
-import type { AttemptPlacement } from '../task-execution/attempt-workspace'
-import {
-  attemptWorkspaceNotice,
-  type WorktreeChangeFacts
-} from '../task-execution/task-result-notice'
 import type { CheckStatus } from './validation-context'
 import { recordLine } from './validation-record-text'
 
@@ -92,23 +87,8 @@ function countsOf(checks: readonly DecidedCheck[]): string {
   return `${checks.length} checks: ${count('pass')} passed, ${count('fail')} failed, ${count('inconclusive')} undecided.`
 }
 
-/** The fixed counts line, then the D-025 merge rule for a task that wrote in its own place. */
-function noticeBody(
-  checks: readonly DecidedCheck[],
-  verdict: Verdict,
-  attempt: VerdictAttempt | undefined
-): string {
-  const fixed = `${countsOf(checks)} Read the validation record for the reasons.`
-  const workspace = attempt ? attemptWorkspaceNotice({ ...attempt, verdict }) : null
-  return workspace === null ? fixed : `${fixed} ${workspace}`
-}
-
-/** The attempt a verdict settles, for the notice; `placement` comes from its launch evidence. */
-export type VerdictAttempt = {
-  readonly dispatchId: string
-  readonly placement: AttemptPlacement | null
-  /** What git showed in its own worktree, read only for a pass; absent, no git fact is stated. */
-  readonly changes?: WorktreeChangeFacts
+function noticeBody(checks: readonly DecidedCheck[]): string {
+  return `${countsOf(checks)} Read the validation record for the reasons.`
 }
 
 /** The verdict a record of these checks gets: a pass with no evidence is left undecided. */
@@ -126,7 +106,6 @@ export function buildVerdictInput(input: {
   readonly taskId: string
   readonly checks: readonly DecidedCheck[]
   readonly evidence: readonly EvidenceRef[]
-  readonly attempt?: VerdictAttempt
   readonly timestamp: string
 }): RecordVerdictInput {
   const evidenceRefs = uniqueEvidence(input.evidence)
@@ -161,7 +140,7 @@ export function buildVerdictInput(input: {
         }
       ),
       // Why: fixed templates, so no worker or reviewer text reaches the primary's mailbox.
-      body: noticeBody(checks, verdict, input.attempt)
+      body: noticeBody(checks)
     },
     timestamp: input.timestamp
   }

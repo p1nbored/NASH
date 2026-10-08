@@ -1,9 +1,8 @@
 import { z } from 'zod'
 import type Database from '../../../sqlite/sync-database'
 import { OrchestrationError } from '../orchestration-error'
-import { EXECUTOR_KINDS } from './autopilot-task-schema-definition'
 
-export const ATTEMPT_EXECUTORS = [...EXECUTOR_KINDS, 'in_session'] as const
+export const ATTEMPT_EXECUTORS = ['in_session'] as const
 export const AttemptExecutorSchema = z.enum(ATTEMPT_EXECUTORS)
 export type AttemptExecutor = (typeof ATTEMPT_EXECUTORS)[number]
 
@@ -32,19 +31,12 @@ export function assertDispatchableRoute(
   if (!route) {
     throw new OrchestrationError('autopilot_route_not_found', 'The route was not found.')
   }
-  // Why: a task the classification kept with the primary still gets an attempt (U29); only the
-  // primary itself can run it, so a process executor is never admitted on such a route.
-  if (route.status === 'not_delegated' && params.executor === 'in_session') {
+  if (route.status === 'not_delegated') {
     return
   }
   const target = String(route.target)
-  const namesExecutor =
-    params.executor === 'in_session'
-      ? IN_SESSION_TARGETS.includes(target)
-      : target === params.executor
-  // Why: a headless executor needs a concrete model; only an in-session route may inherit one.
-  const hasModel =
-    Boolean(route.model) || (params.executor === 'in_session' && route.policy_level === 'inherit')
+  const namesExecutor = IN_SESSION_TARGETS.includes(target)
+  const hasModel = Boolean(route.model) || route.policy_level === 'inherit'
   if (route.status !== 'available' || !namesExecutor || !hasModel) {
     throw new OrchestrationError(
       'autopilot_route_not_dispatchable',

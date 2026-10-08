@@ -26,7 +26,7 @@ type ZcodeUsageCredentials = {
   authProvenance: string
 }
 
-/** A GLM Coding Plan key saved through Orca's AI Provider Accounts; takes priority over the ZCode CLI config. */
+/** A GLM Coding Plan key saved through NASH's AI Provider Accounts; takes priority over the ZCode CLI config. */
 export type ZcodePlanCredential = {
   apiKey: string
   baseUrl: string

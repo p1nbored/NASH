@@ -1,8 +1,7 @@
 import { z } from 'zod'
 
 /**
- * D-013 deliverable language: an optional BCP 47 tag that tells an agent which language to write
- * deliverables in. It is advisory; nothing in the framework rejects a deliverable for its language.
+ * BCP 47 metadata for artifacts and historical queued requests; never an output-language instruction.
  */
 
 export const DELIVERABLE_LANGUAGE_MAX_LENGTH = 35
@@ -43,11 +42,3 @@ export const DeliverableLanguageSchema = z
   .string()
   .max(DELIVERABLE_LANGUAGE_MAX_LENGTH)
   .refine((value) => canonicalizeDeliverableLanguage(value).ok, 'Not a valid BCP 47 language tag')
-
-/** The one English sentence that carries the language to an agent; null when none was requested. */
-export function deliverableLanguageDirective(tag: string | null | undefined): string | null {
-  const canonical = canonicalizeDeliverableLanguage(tag)
-  return canonical.ok
-    ? `Write deliverables and output files in ${canonical.tag}; report to the framework in English.`
-    : null
-}

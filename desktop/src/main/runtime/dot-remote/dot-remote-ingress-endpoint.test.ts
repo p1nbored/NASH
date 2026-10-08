@@ -54,9 +54,9 @@ describe('the remote agent reaches the real dot endpoint as the dot client does'
     enabled = true
     await listener.sync()
     const client = createDotIngressEndpointClient({ userDataPath, ready: () => true })
-    expect(await client.call('dotIngress.hello', { contractVersion: 1 }, 5_000)).toEqual({
+    expect(await client.call('dotIngress.hello', { contractVersion: 3 }, 5_000)).toEqual({
       ok: true,
-      result: expect.objectContaining({ contractVersion: 1 })
+      result: expect.objectContaining({ contractVersion: 3 })
     })
   })
 
@@ -68,7 +68,7 @@ describe('the remote agent reaches the real dot endpoint as the dot client does'
     expect(refused).toMatchObject({ ok: false, kind: 'refused' })
     enabled = false
     await listener.sync()
-    expect(await client.call('dotIngress.hello', { contractVersion: 1 }, 5_000)).toEqual({
+    expect(await client.call('dotIngress.hello', { contractVersion: 3 }, 5_000)).toEqual({
       ok: false,
       kind: 'unavailable'
     })

@@ -30,15 +30,19 @@ import {
   PRIMARY_SESSION_LAUNCH_SOURCE,
   createPrimarySessionSurfaces
 } from './primary-session-surfaces'
-import type { PrimarySessionResult, SubagentRouteRowInput } from './primary-session-types'
+import type {
+  PrimarySessionAgent,
+  PrimarySessionResult,
+  SubagentRouteRowInput
+} from './primary-session-types'
 
 export type { PrimarySessionLaunchOutcome } from './primary-session-launch-settlement'
 
 export type PreparePrimaryLaunchRequest = {
+  readonly agent: PrimarySessionAgent
   readonly runId: string
   readonly generation: number
   readonly access: WorkflowRunRecord['requestedAccess']
-  readonly deliverableLanguage: string | null
   readonly objective: string
   readonly model: string
   readonly effort: string
@@ -55,11 +59,16 @@ export type PrimarySessionLauncherDeps = {
   executeLaunch(args: {
     intent: AgentLaunchIntent
     surfaces: AgentLaunchSurfaceFactory
+    onSurfacePublished: (surface: AgentLaunchResult) => void
   }): Promise<AgentLaunchResult>
   /** `preparePrimarySessionLaunch` bound to the user data path, platform, CLI name and settings. */
   prepare(request: PreparePrimaryLaunchRequest): PrimarySessionResult<PrimarySessionLaunchPlan>
   /** `deliverTerminalAgentLaunchPrompt`, for a prompt that does not ride argv (too long, or Windows). */
-  deliverAfterStart(args: { handle: string; text: string }): Promise<boolean>
+  deliverAfterStart(args: {
+    handle: string
+    agent: PrimarySessionAgent
+    text: string
+  }): Promise<boolean>
   /** Stops a session whose launch prompt did not land; `stopped` only when the pane is gone. */
   stopUndelivered(owner: PrimarySessionRecord): Promise<'stopped' | 'stop_unconfirmed'>
   readonly exitWatches?: { watch(owner: PrimarySessionRecord): void }
@@ -80,7 +89,7 @@ function intentFor(
   plan: PrimarySessionLaunchPlan
 ): AgentLaunchIntent {
   return {
-    agent: 'claude',
+    agent: request.run.coordinatorAgent,
     target: {
       kind: 'existing',
       worktree: request.run.workspaceId,
@@ -95,7 +104,7 @@ function intentFor(
   }
 }
 
-/** One visible Claude Code primary per run (D-016): launched once, never relaunched on an unknown outcome. */
+/** One visible primary per run: launched once, never relaunched on an unknown outcome. */
 export function createPrimarySessionLauncher(deps: PrimarySessionLauncherDeps) {
   const { db, terminal } = deps
   const inFlight = new Map<string, Promise<PrimarySessionLaunchOutcome>>()
@@ -148,10 +157,10 @@ export function createPrimarySessionLauncher(deps: PrimarySessionLauncherDeps) {
   ): Promise<Admitted | PrimarySessionLaunchOutcome> {
     const { run, owner } = launching
     const plan = deps.prepare({
+      agent: run.coordinatorAgent,
       runId: run.runId,
       generation: owner.generation,
       access: run.requestedAccess,
-      deliverableLanguage: run.deliverableLanguage,
       objective: request.objective,
       model: run.coordinatorModel,
       effort: run.coordinatorEffort,
@@ -211,7 +220,14 @@ export function createPrimarySessionLauncher(deps: PrimarySessionLauncherDeps) {
     try {
       result = await deps.executeLaunch({
         intent,
-        surfaces: createPrimarySessionSurfaces(terminal, spawn)
+        surfaces: createPrimarySessionSurfaces(terminal, spawn),
+        onSurfacePublished: (surface) => {
+          void admission.record(surface).catch((error: unknown) => {
+            console.warn(
+              `[primary-session] the launch ledger did not record its surface: ${errorCodeOf(error)}`
+            )
+          })
+        }
       })
     } catch (error) {
       const code = errorCodeOf(error)

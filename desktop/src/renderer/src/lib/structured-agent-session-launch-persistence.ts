@@ -1,4 +1,5 @@
-import type { AgentSessionHandleProvider } from '../../../shared/agent-session-provider-handle'
+import { isTuiAgent } from '../../../shared/tui-agent-config'
+import type { TuiAgent } from '../../../shared/tui-agent'
 import type { StructuredAgentSessionResumeSource } from '../../../shared/structured-agent-session-create'
 import { parseStructuredLaunchSeedOptions } from '../../../shared/native-chat-session-option-defaults'
 import type { StructuredAgentSessionLaunchIntent } from './launch-structured-agent-session'
@@ -15,7 +16,7 @@ export type StructuredAgentLaunchPersistedRecord = {
   /** The host the chat was created on. Records written before paired hosts could hold a chat lack
    *  it and load as local, the only host a chat could then be launched on. */
   executionHostId: ExecutionHostId
-  agent: AgentSessionHandleProvider
+  agent: TuiAgent
   lifecycle: StructuredAgentLaunchPersistedLifecycle
   clientOperationId: string
   payloadFingerprint: string
@@ -23,6 +24,8 @@ export type StructuredAgentLaunchPersistedRecord = {
   resumeFrom?: StructuredAgentSessionResumeSource
   /** A paired server's reported seed, which this machine cannot re-derive after a reload. */
   seedOptions?: Readonly<Record<string, string>>
+  /** When a failed launch failed; records written by older builds lack it. */
+  failedAt?: number
 }
 
 /** What survives a reload of an unpublished launch. */
@@ -85,16 +88,18 @@ function validRecord(value: unknown): value is Omit<
   } = value
   const resumeFrom = 'resumeFrom' in value ? value.resumeFrom : undefined
   const executionHostId = 'executionHostId' in value ? value.executionHostId : undefined
+  const failedAt = 'failedAt' in value ? value.failedAt : undefined
   return (
     (executionHostId === undefined ||
       (typeof executionHostId === 'string' && parseExecutionHostId(executionHostId) !== null)) &&
     typeof sessionId === 'string' &&
     sessionId.length > 0 &&
-    (agent === 'claude' || agent === 'codex') &&
+    isTuiAgent(agent) &&
     (lifecycle === 'pending' || lifecycle === 'visibility-unknown' || lifecycle === 'failed') &&
     typeof clientOperationId === 'string' &&
     typeof payloadFingerprint === 'string' &&
     (expectedRuntimeFence === null || typeof expectedRuntimeFence === 'number') &&
+    (failedAt === undefined || Number.isFinite(failedAt)) &&
     (resumeFrom === undefined ||
       (typeof resumeFrom === 'object' &&
         resumeFrom !== null &&

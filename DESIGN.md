@@ -52,15 +52,10 @@ Status text clears 4.5:1 on every surface and on its own tint there; light succe
 ### Families
 
 - **UI (`font-sans`):** `--app-font-family` (default `system-ui`, then `-apple-system`, BlinkMacSystemFont, 'Segoe UI'), then `--app-cjk-font-family`, then `sans-serif`. The `appFontFamily` setting replaces only the first part, so a chosen font still keeps the CJK fallbacks behind it.
-- **CJK order follows `<html lang>`**, which tracks the UI language (`en`, `zh-Hans`, `ja`, `ko`, `es`, `fr`, or a plugin pack's locale). Han characters share code points, so the first CJK family decides the glyph form:
-  - Simplified Chinese: Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC.
-  - Traditional Chinese (`zh-Hant`, `zh-TW`, `zh-HK`): Microsoft JhengHei UI, PingFang TC, Noto Sans CJK TC.
-  - Japanese: Yu Gothic UI, Hiragino Sans, Meiryo, Noto Sans CJK JP.
-  - Korean: Malgun Gothic, Apple SD Gothic Neo, Noto Sans CJK KR.
-  - Other languages use the Simplified Chinese order, then Japanese and Korean families. Each list keeps the other languages' families behind its own.
-- **Display (`font-display`):** Georgia, then a CJK serif (Songti, Yu Mincho, Hiragino Mincho, Noto Serif CJK) and the CJK sans. Windows ships no modern CJK serif, so CJK titles there use the CJK sans rather than SimSun. Used only for page titles, dialog and sheet titles, settings subsection headings and Workbench section headings, at regular weight.
+- **CJK:** bundled Noto Sans CJK for navigation, controls and body text; bundled Noto Serif CJK for main titles. Both full-coverage fonts use the document's language tag and OpenType `locl` for regional glyph forms. The two assets serve every supported language, without runtime font downloads or OS font dependencies.
+- **Display (`font-display`):** Georgia, Iowan Old Style, Charter or Cambria for Latin text, followed by bundled Noto Serif CJK. Use regular weight only for page, dialog and sheet main titles and editorial summaries. Compact Settings and Workbench group headings use `font-sans text-heading font-semibold`. The same roles apply to every language.
 - **Code (`font-mono`):** SF Mono, Cascadia Mono, Cascadia Code, Menlo, Consolas, then the CJK sans for wide characters. Terminals and editors use the user's configured family, size and weight.
-- No font files are bundled for these roles; every family is a system font.
+- **Bundled font provenance:** Noto Sans CJK SC variable, [Sans 2.004](https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/OTF), and Noto Serif CJK SC Regular, [Serif 2.003](https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif/OTF/SimplifiedChinese). Full glyph coverage and language substitutions are preserved by WOFF2 compression with fontTools 4.66.1. Font sources have SHA-256 `2745e9681cb9d8a5c8901b62c9e1bd98c9c774365fc3b84dd467621013b51cd3` and `2a2eae2628df83556c54018c41e20fa532c1b862c5256ae8b3f23feb918d12ca`. The SIL Open Font License is shipped at `desktop/resources/licenses/NotoCJK-OFL.txt`. No new application dependency or font-loading code is needed.
 
 ### Scale
 
@@ -74,7 +69,7 @@ Status text clears 4.5:1 on every surface and on its own tint there; light succe
 | `text-title` | 20 / 28 | Page and dialog titles, with `font-display` (equals `text-xl`) |
 | `text-display` | 26 / 34 | Rare editorial headers, with `font-display` |
 
-Section headings are a step larger than the labels beneath them, never smaller or lighter. Tailwind's default sizes still work; new code uses the token names. `cn()` must know these names before they are mixed with a text colour there (see STYLEGUIDE.md, Typography).
+Section headings are a step larger than the labels beneath them, never smaller or lighter. Tailwind's default sizes still work; new code uses the token names. `cn()` registers these names through `extendTailwindMerge` (see STYLEGUIDE.md, Typography).
 
 ## Spacing
 

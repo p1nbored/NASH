@@ -5,7 +5,6 @@ import type {
   ValidationDecisionChoice,
   WorkbenchValidationDecisionView
 } from '../../../../shared/rpc-contract/workbench-validation-decision-params'
-import IdentifierText from './IdentifierText'
 import type { ValidationDecisionRow } from './use-workbench-validation-decisions'
 import WorkbenchCallout from './WorkbenchCallout'
 import WorkbenchCopyDetails from './WorkbenchCopyDetails'
@@ -13,8 +12,7 @@ import { errorDetails, type WorkbenchDetail } from './workbench-details'
 import {
   decisionConfirmText,
   decisionExecutorText,
-  decisionOutcomeText,
-  decisionPlacementLabel
+  decisionOutcomeText
 } from './workbench-validation-decision-copy'
 import { formatWorkbenchRequestTime } from './workbench-request-time'
 
@@ -32,20 +30,13 @@ function decisionDetails(row: ValidationDecisionRow): WorkbenchDetail[] {
     ['dispatch_id', view.dispatchId],
     ['executor', view.executorKind],
     ['model', view.model],
-    ['placement', view.placement],
-    ['branch', view.worktree?.branch],
-    ['worktree_path', view.worktree?.path],
-    ['base_commit', view.worktree?.baseCommit],
     ['inconclusive_at', view.inconclusiveAt],
-    ['process_may_run', view.processMayRun === undefined ? null : String(view.processMayRun)],
     ['decision', outcome?.decision],
     ['notice_filed', outcome ? String(outcome.noticeFiled) : null],
     ...errorDetails(row.error, 'decision')
   ]
 }
 
-// Why the branch stays visible: a waive tells the main session to merge it; the base commit and
-// worktree path are for "Copy details".
 function DecisionFacts({ view }: { view: WorkbenchValidationDecisionView }): React.JSX.Element {
   return (
     <dl className="flex flex-wrap gap-x-3 gap-y-0.5 text-meta text-muted-foreground">
@@ -61,19 +52,6 @@ function DecisionFacts({ view }: { view: WorkbenchValidationDecisionView }): Rea
           </time>
         </dd>
       </div>
-      {view.worktree ? (
-        <div className="flex min-w-0 gap-1">
-          <dt>{translate('workbench.decisions.branch', 'Branch')}</dt>
-          <dd className="min-w-0 break-words font-mono text-foreground">
-            <IdentifierText value={view.worktree.branch} />
-          </dd>
-        </div>
-      ) : (
-        <div className="flex gap-1">
-          <dt>{translate('workbench.decisions.workspace', 'Workspace')}</dt>
-          <dd className="text-foreground">{decisionPlacementLabel(view.placement)}</dd>
-        </div>
-      )}
     </dl>
   )
 }
@@ -103,9 +81,7 @@ function DecisionConfirm({
   }
   return (
     <div className="space-y-1.5">
-      <p className="break-words text-meta text-foreground">
-        {decisionConfirmText(row.view, decision)}
-      </p>
+      <p className="break-words text-meta text-foreground">{decisionConfirmText(decision)}</p>
       <div className="flex flex-wrap items-center gap-2">
         <Button
           ref={confirmRef}

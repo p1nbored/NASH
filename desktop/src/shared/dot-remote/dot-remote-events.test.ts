@@ -147,7 +147,7 @@ describe('event allowlist (RG6)', () => {
 })
 
 describe('event data', () => {
-  it('keeps request status to the coarse v2 run projection', () => {
+  it('keeps request status to the coarse run projection', () => {
     const variant = DOT_REMOTE_EVENT_VARIANTS.request_status
     for (const extra of [{ sequence: 1 }, { result: null }, { artifacts: [] }, { reply: null }]) {
       const data = { ...SAMPLE_DATA.request_status, ...extra }

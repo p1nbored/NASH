@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { ImeInput } from '@/lib/ime-text-field'
 
 const inputVariants = cva(
   [
@@ -31,7 +32,7 @@ type InputProps = Omit<React.ComponentProps<'input'>, 'size'> & VariantProps<typ
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, size = 'default', ...props }, ref) => {
     return (
-      <input
+      <ImeInput
         ref={ref}
         type={type}
         data-slot="input"

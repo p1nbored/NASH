@@ -1,21 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DotHelloResultV2Schema } from '../../../../shared/dot-ingress/dot-ingress-v2'
+import { DotDecisionsListResultSchema } from '../../../../shared/dot-ingress/dot-ingress-decision'
 import {
-  DotDecisionsListResultV3Schema,
-  DotHelloResultV3Schema,
-  DotListResultV3Schema,
-  DotMessageResultV3Schema,
-  DotStatusResultV3Schema,
-  DotWorkspacesResultV3Schema
-} from '../../../../shared/dot-ingress/dot-ingress-v3'
+  DotHelloResultSchema,
+  DotListResultSchema,
+  DotStatusResultSchema,
+  DotWorkspacesResultSchema
+} from '../../../../shared/dot-ingress/dot-ingress-request'
+import { DotMessageResultSchema } from '../../../../shared/dot-ingress/dot-ingress-message'
 import {
   DotValidationDecideResultV3Schema,
   DotValidationsListResultV3Schema
 } from '../../../../shared/dot-ingress/dot-ingress-validation'
-import {
-  DOT_INGRESS_METHOD_NAMES,
-  DOT_INGRESS_V2_METHOD_NAMES
-} from '../../../../shared/dot-ingress/dot-ingress-versions'
+import { DOT_INGRESS_METHOD_NAMES } from '../../../../shared/dot-ingress/dot-ingress-versions'
 import { issueDotIngressCaller } from '../../dot-ingress/dot-ingress-caller'
 import { submitDotRequest } from '../../dot-ingress/dot-ingress-intake'
 import {
@@ -74,9 +70,9 @@ describe('dot ingress RPC surface, contract version 3', () => {
     return response.ok ? null : response.error.code
   }
 
-  it('says hello in version 3 with every method; versions 1 and 2 never see the new ones', async () => {
-    const v3 = DotHelloResultV3Schema.parse(await call('dotIngress.hello', { contractVersion: 3 }))
-    expect(v3.supportedContractVersions).toEqual([1, 2, 3])
+  it('says hello with only the current contract and every registered method', async () => {
+    const v3 = DotHelloResultSchema.parse(await call('dotIngress.hello', { contractVersion: 3 }))
+    expect(v3.supportedContractVersions).toEqual([3])
     expect(v3.methods).toEqual(DOT_INGRESS_RPC_METHODS.map((method) => method.name))
     expect(v3.methods).toEqual([...DOT_INGRESS_METHOD_NAMES])
     expect(v3.capabilities.validationDecisions).toBe(true)
@@ -84,36 +80,33 @@ describe('dot ingress RPC surface, contract version 3', () => {
       maxValidationTitleChars: 200,
       maxValidationSummaryChars: 500
     })
-    const v2 = DotHelloResultV2Schema.parse(await call('dotIngress.hello', { contractVersion: 2 }))
-    expect(v2.supportedContractVersions).toEqual([1, 2])
-    expect(v2.methods).toEqual([...DOT_INGRESS_V2_METHOD_NAMES])
   })
 
-  it('answers every version 2 method in version 3', async () => {
+  it('answers the current methods', async () => {
     const { record } = await submitDotRequest(dot.deps, dot.submitRequest())
     const id = record.dotRequestId
     expect(
-      DotStatusResultV3Schema.parse(
+      DotStatusResultSchema.parse(
         await call('dotIngress.requests.status', { contractVersion: 3, dotRequestId: id })
       ).request.contractVersion
     ).toBe(3)
     expect(
-      DotListResultV3Schema.parse(
+      DotListResultSchema.parse(
         await call('dotIngress.requests.list', { contractVersion: 3 })
       ).requests.map((request) => request.dotRequestId)
     ).toEqual([id])
     expect(
-      DotWorkspacesResultV3Schema.parse(
+      DotWorkspacesResultSchema.parse(
         await call('dotIngress.workspaces.list', { contractVersion: 3 })
       ).workspaces
     ).toEqual([{ workspaceRef: dot.workspaceRef, label: 'fixture-repo', maxAccess: 'read_only' }])
     expect(
-      DotDecisionsListResultV3Schema.parse(
+      DotDecisionsListResultSchema.parse(
         await call('dotIngress.decisions.list', { contractVersion: 3 })
       )
     ).toEqual({ contractVersion: 3, decisions: [] })
     expect(
-      DotMessageResultV3Schema.parse(
+      DotMessageResultSchema.parse(
         await call('dotIngress.requests.message', {
           contractVersion: 3,
           dotRequestId: id,

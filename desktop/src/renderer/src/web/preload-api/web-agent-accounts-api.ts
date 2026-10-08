@@ -45,7 +45,7 @@ export function createZcodePlanCredentialsApi(): PreloadApi['zcodePlanCredential
 
 export function createCursorAccountsApi(): NonNullable<Partial<PreloadApi>['cursorAccounts']> {
   // Why an explanation and not a bare `signedIn: false`: Cursor's session lives on
-  // the machine running Orca, and this bridge cannot read it. The host may well be
+  // the machine running NASH, and this bridge cannot read it. The host may well be
   // signed in — its usage meter still arrives over the rate-limit snapshot — so
   // asserting "not signed in" here would contradict the meter beside it.
   return {
@@ -97,6 +97,18 @@ function createEmptyManagedAccountsState(): {
     accounts: [],
     activeAccountId: null,
     activeAccountIdsByRuntime: { host: null, wsl: {} }
+  }
+}
+
+export function createClaudeAccountsApi(): PreloadApi['claudeAccounts'] {
+  const empty = createEmptyManagedAccountsState()
+  return {
+    list: () => Promise.resolve(empty),
+    add: () => Promise.resolve(empty),
+    cancelPendingLogin: () => Promise.resolve(false),
+    reauthenticate: () => Promise.resolve(empty),
+    remove: () => Promise.resolve(empty),
+    select: () => Promise.resolve(empty)
   }
 }
 

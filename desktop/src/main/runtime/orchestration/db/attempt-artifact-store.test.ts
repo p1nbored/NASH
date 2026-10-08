@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   ATTEMPT_ARTIFACT_LIMIT_PER_DISPATCH,
+  AttemptArtifactInputSchema,
   getAttemptArtifactStore,
   type AttemptArtifactInput
 } from './attempt-artifact-store'
@@ -58,10 +59,10 @@ describe('attempt artifact store', () => {
       expect(record.artifactId).toMatch(/^artifact_/)
     })
 
-    it('keeps files under the run directory apart from files under the worktree', () => {
-      store().record(artifact())
-      expect(() => store().record(artifact({ root: 'run_directory' }))).not.toThrow()
-      expect(rowCount()).toBe(2)
+    it('refuses the retired custom executor run directory', () => {
+      expect(
+        AttemptArtifactInputSchema.safeParse({ ...artifact(), root: 'run_directory' }).success
+      ).toBe(false)
     })
 
     it('returns the existing record for the same file and refuses changed content for it', () => {

@@ -1,5 +1,46 @@
 # Decision Log
 
+## D-043 Finish retired executor cleanup and reset the development task database
+
+- Date: 2026-10-08 (America/New_York). User explicitly approved the remaining deletions and requested commit/push.
+- Remove the old executor-only worker-report guard, process/worktree decision warnings, their store/table and unused helpers. Current in-session report/validation transitions and Orca native report ownership checks remain.
+- No compatibility replacement, migration or second execution framework is introduced.
+- The old `nash-dev` task database had zero tasks and two workflow runs. A checked SQLite snapshot and original files were preserved under `C:\Users\Administrator\AppData\Roaming\nash-backups\task-db-20261008043437`, then the task database was reset. The application initializes the current schema on next startup. CLI accounts and unrelated settings were not reset; Dot must be paired again.
+- The earlier automatic-approval blocks in the checkpoint are resolved by this explicit approval and completed deletion. Current verification and source comparison are in the [checkpoint](nash-checkpoint-2026-10-06.md).
+
+## D-042 Current formats, selectable primary CLI, and English workflow messages
+
+- Date: 2026-10-08. Accepted user instructions supersede older compatibility and fixed-deliverable-language decisions.
+- The primary CLI can be Claude Code or Codex. New runs persist the selected CLI, model and reasoning effort. Active runs keep their original selection. The chain remains one primary → Clef → routing → Orca native execution and context delivery.
+- Dot output, accepted tasks, internal coordination and the primary response to Dot use English. Remove `deliverableLanguage`, the fixed `zh-Hans` default and deliverable-language directives. Artifact content follows the task's own requirements.
+- There are no users or tasks requiring an old-version upgrade path. Remove NASH-specific old schema/protocol adapters, legacy executor/result/history paths and missing-agent fallbacks; use explicit current shapes. Do not remove current validation, native provider/platform support, or the existing Orca plugin mechanism under this cleanup.
+- Pull latest Orca `61de2d8ec8598803c0177aea9613444f6d2ef79d`; restore its account and quota implementation. Retain the local AGY Windows credential adapter because this upstream version still rejects Windows switching.
+- Implementation and verification status are recorded in the [checkpoint](nash-checkpoint-2026-10-06.md). Temporary candidates are not the running application. Removing compatibility does not itself authorize erasing existing local profile data.
+
+## D-041 Route new delegated tasks into Orca native workers
+
+- Date: 2026-10-08 (America/New_York). Implements the user's D-040 execution request.
+- Chain remains primary Claude → Clef classification → recorded route and availability recheck → execution. No second planner is introduced.
+- New Codex/AGY delegated task attempts now call Orca `startLocalWorker`. Native dispatch creation, host launch choice, readiness, preamble transport, mailbox report, stop and release own their lifecycle. There is no new task path through `runCodexExec`/`runAgyExec`.
+- TaskSpec outputs, acceptance criteria and constraints extend the native brief without rewriting the objective or classification hash. Native workers ask the primary for further delegation; app tasks still pass classification/routing.
+- Task access is an explicit per-launch ceiling: Codex receives read-only/workspace-write plus approval prompts; AGY retains its existing sandbox flag for read-only tasks (this is not a full filesystem read-only guarantee). The ceiling persists across native Codex option changes and resume. Global user settings are not modified. Git write tasks use native child worktrees from the current branch; folder/read-only tasks use the current workspace.
+- Models/effort stay exactly as dynamically verified by routing. `routeValidated` carries that internal result through native launch rendering; no new model catalog entries are invented and no effort is downgraded.
+- Native `worker_done` is completion, not a fabricated NASH validation pass. Existing in-session tasks retain task-report/validation; old executor rows retain result/stop/restart compatibility. The independent model-review subsystem still uses its existing headless reviewer implementation and is explicitly listed as a remaining NASH difference.
+- Cancellation waits for pending native starts, tries every native worker, and keeps unconfirmed stops visible. Failed/canceled runs retain a cleanup entry. One failed stop does not prevent stopping other workers.
+- Full comparison: [checkpoint and functional table](nash-checkpoint-2026-10-06.md), [all changed files](nash-orca-change-table.csv).
+
+## D-040 Keep one primary agent and task classification/routing; reuse Orca invocation and context
+
+- Date: 2026-10-07 (America/New_York).
+- Status: ACCEPTED clarification from the user. The user requires one primary agent, keeps the task classifier and task routing, and does not want NASH to change how CLIs/agents call each other or pass context.
+- Boundary: the primary coordinates; Clef classifies; routing selects the agent, exact model and supported effort; the existing Orca worker/dispatch, handoff, messaging and context-delivery mechanisms perform execution. Do not build another invocation/context framework to satisfy this requirement.
+- Gemini: remove the hard-coded Gemini 4/Argon family exclusion. Actual provider model availability decides eligibility, just as for other models. Do not add unavailable future models to the default table or claim they are live.
+- Finding: the current implementation does not yet meet this boundary. Original worker-start/dispatch is blocked for app-owned runs; Codex/agy use separate headless executors and a separate task prompt. Existing native preamble/delivery code remains available. The classifier and route table must survive any execution-layer correction.
+- Applied in this audit: Gemini family exclusion removed with positive listed-model and negative unlisted-model tests. The native-execution migration is not represented as complete; historical tasks and records have not been reset or deleted.
+- Supersedes earlier descriptions that treat the Gemini family exclusion or replacing Orca invocation as required by the user. Earlier decisions remain historical evidence, not authority over this clarification.
+
+---
+
 ## D-039 Orca's plugin catalog is an opt-in; the plugin mechanism stays unchanged
 
 - Date: 2026-10-06.

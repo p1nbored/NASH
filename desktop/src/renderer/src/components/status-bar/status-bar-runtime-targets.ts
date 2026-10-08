@@ -22,6 +22,25 @@ export type CodexStatusSwitchGroup = {
   targets: CodexStatusSwitchTarget[]
 }
 
+export type ClaudeStatusSwitchTarget = {
+  id: string | null
+  label: string
+  active: boolean
+  runtimeTarget: CodexStatusRuntimeTarget
+  /** Set for an account that must be signed in again (or fixed) before it can be selected. */
+  disabled?: boolean
+  /** Its folder holds no login yet; the switcher offers Sign in on it. */
+  needsSignIn?: boolean
+  hint?: string | null
+}
+
+export type ClaudeStatusSwitchGroup = {
+  key: string
+  label: string
+  runtimeTarget: CodexStatusRuntimeTarget
+  targets: ClaudeStatusSwitchTarget[]
+}
+
 export type StatusSwitchGroupOptions = {
   fallbackWslDistro?: string | null
   includeFallbackWsl?: boolean

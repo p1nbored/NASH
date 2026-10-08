@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { redactSecretShapes } from './crash-report-redaction'
 import {
   formatCrashReportText,
   formatUncapturedCrashReportText,
@@ -499,4 +500,32 @@ describe('user note section fencing', () => {
     expect(text).toContain('  - captured_crash_report: false')
     expect(text).toMatch(/^- captured_crash_report: true$/m)
   })
+})
+
+describe('copied diagnostic redaction', () => {
+  it('redacts tokens, JWTs and quoted credential assignments while preserving diagnostic paths', () => {
+    const value =
+      'path=C:/repo/file.ts Bearer abc123 sk-123456789012345678901234 eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.signature {"access_token":"private-value"}'
+    const result = redactSecretShapes(value)
+    expect(result).toContain('path=C:/repo/file.ts')
+    expect(result).not.toMatch(/abc123|123456789012345678901234|eyJ|private-value/)
+    expect(result).toContain('[redacted')
+  })
+
+  it('preserves diagnostic text without an arbitrary length cutoff', () => {
+    const text = `${'message '.repeat(1400)}end of report`
+    expect(redactSecretShapes(text)).toBe(text)
+    expect(redactSecretShapes(`Bearer ${'x'.repeat(700)}`)).toBe('[redacted-secret]')
+  })
+})
+
+it('redacts provider environment credentials and escaped quoted secret values', () => {
+  const json = JSON.stringify({
+    password: '" secret-tail',
+    client_secret: 'backslash\\ secret-tail'
+  })
+  const diagnostic = `ANTHROPIC_AUTH_TOKEN=opaque-provider-value GOOGLE_API_KEY=another-private-value\n${json}`
+  expect(redactSecretShapes(diagnostic)).not.toMatch(
+    /opaque-provider-value|another-private-value|secret-tail/
+  )
 })

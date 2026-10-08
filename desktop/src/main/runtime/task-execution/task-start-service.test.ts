@@ -1,6 +1,5 @@
 // FIXTURE_ONLY: synthetic runs, routes and fake executors; no CLI, model, network or credential is used.
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
-import type { TreeProof } from '../../agent-exec-shared/tree-termination'
 import { isEnglishText } from '../../../shared/english-text'
 import type {
   RouteAvailabilityResult,
@@ -8,15 +7,13 @@ import type {
 } from '../../routing-table/availability/route-availability-types'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import { fixtureTime } from '../orchestration/db/autopilot-runtime.test-fixture'
-import { getExecutorProcessStore } from '../orchestration/db/executor-process-store'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { getTaskRouteStore } from '../orchestration/db/task-route-store'
-import { createExecutorRegistry, type ExecutorRegistry } from './executor-registry'
-import type { AttemptPlacement } from './attempt-workspace'
-import type { ExecutorRunReport } from './executor-run-report'
-import type { ProcessAttemptPlan, ProcessTaskExecutor } from './process-executor-contract'
-import type { TaskExecutionLogEvent } from './task-execution-ports'
-import { createTaskStartService, type TaskStartService } from './task-start-service'
+import {
+  createTaskStartService,
+  type TaskStartService,
+  type TaskStartDeps
+} from './task-start-service'
 import type { RouteRecheckPort } from './task-start-route'
 import {
   AGY_ROUTE,
@@ -25,74 +22,20 @@ import {
   PRIMARY_ROUTE,
   SUBAGENT_ROUTE,
   WORKFLOW_ROUTE,
-  announceSpy,
   availableResult,
-  completedReport,
   createAppRunHarness,
-  deferred,
   seedKeptAppTask,
   seedRoutedAppTask,
   unavailableResult,
-  type AnnounceSpy,
   type AppRunHarness,
   type RouteFixture
 } from './task-execution.test-fixture'
 
-const LAST_MESSAGE_TEXT = 'EXECUTOR-OUTPUT-SENTINEL'
-const UNVERIFIABLE = { verdict: 'unverifiable', method: 'root_exit_only' } as const
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
-const RUN_WORKSPACE: AttemptPlacement = { mode: 'run_workspace' }
-
-type FakeRun = {
-  readonly signal: AbortSignal
-  readonly finish: (report: ExecutorRunReport) => void
-}
-
-function fakeExecutor(
-  kind: 'codex_cli' | 'agy_cli',
-  onAbort: TreeProof = UNVERIFIABLE,
-  placement: AttemptPlacement = { mode: 'run_workspace' }
-) {
-  const runs: FakeRun[] = []
-  const plans: ProcessAttemptPlan[] = []
-  const executor: ProcessTaskExecutor = {
-    kind,
-    prepare: vi.fn(async (plan: ProcessAttemptPlan) => {
-      plans.push(plan)
-      return {
-        ok: true as const,
-        prepared: {
-          evidence: { executor: kind, entryFile: 'fixture-cli' },
-          placement,
-          run: (signal: AbortSignal) =>
-            new Promise<ExecutorRunReport>((resolve) => {
-              runs.push({ signal, finish: resolve })
-              signal.addEventListener('abort', () =>
-                resolve(
-                  completedReport({
-                    verdict: { status: 'failed', failureKinds: ['cancelled'] },
-                    cancellation: { requested: true, trigger: 'abort_signal', proof: onAbort },
-                    treeProof: onAbort,
-                    lastMessage: null
-                  })
-                )
-              )
-            })
-        }
-      }
-    })
-  }
-  return { executor, runs, plans }
-}
-
 describe('task start service', () => {
   let harness: AppRunHarness
-  let spy: AnnounceSpy
   let recheck: Mock<RouteRecheckPort['recheck']>
   let latch: Mock<RouteRecheckPort['latch']>
-  let registry: ExecutorRegistry
-  let codex: ReturnType<typeof fakeExecutor>
-  let agy: ReturnType<typeof fakeExecutor>
+  let startWorker: Mock<TaskStartDeps['startWorker']>
   let service: TaskStartService
   let clock: number
 
@@ -102,29 +45,16 @@ describe('task start service', () => {
 
   beforeEach(() => {
     harness = createAppRunHarness()
-    spy = announceSpy()
     clock = FIXTURE_NOW_MS
     recheck = vi.fn<RouteRecheckPort['recheck']>()
     latch = vi.fn<RouteRecheckPort['latch']>()
-    codex = fakeExecutor('codex_cli')
-    agy = fakeExecutor('agy_cli')
-    const executors = getExecutorProcessStore(harness.owner)
-    registry = createExecutorRegistry({
-      recordedTree: (dispatchId) => {
-        const record = executors.get(dispatchId)
-        return record?.treeVerdict && record.treeMethod
-          ? { verdict: record.treeVerdict, method: record.treeMethod }
-          : null
-      }
-    })
+    startWorker = vi.fn()
     service = createTaskStartService({
       owner: harness.owner,
       routes: { recheck, latch },
-      executors: { codex_cli: codex.executor, agy_cli: agy.executor },
-      registry,
+      startWorker,
       now: () => (clock += 1000),
       cliCommand: 'orca',
-      announce: spy.announce,
       log: () => undefined
     })
   })
@@ -161,7 +91,7 @@ describe('task start service', () => {
         reasons: ['quota_exhausted'],
         target: 'codex_cli'
       })
-      expect(codex.executor.prepare).not.toHaveBeenCalled()
+      expect(startWorker).not.toHaveBeenCalled()
     })
 
     it('refuses Codex in a folder workspace as the re-check reports it, and never works around it', async () => {
@@ -176,7 +106,7 @@ describe('task start service', () => {
         workspace: { workspaceId: 'folder:fixture-folder' },
         liveRunPrimary: null
       })
-      expect(codex.executor.prepare).not.toHaveBeenCalled()
+      expect(startWorker).not.toHaveBeenCalled()
     })
 
     it('refuses a Codex route row that names no model, before any re-check', async () => {
@@ -226,360 +156,39 @@ describe('task start service', () => {
     })
   })
 
-  describe('Codex and agy attempts', () => {
-    it('starts a Codex attempt as a running app process and tells the primary not to do it', async () => {
-      const { seeded, started } = await startRouted(CODEX_ROUTE)
-      expect(started.view).toMatchObject({
-        taskId: seeded.taskId,
-        target: 'codex_cli',
-        runsIn: 'process',
-        workerState: 'ready'
-      })
-      expect(isEnglishText(started.view.instruction)).toBe(true)
-      expect(started.view.instruction).toContain(
-        `orca orchestration task-show --task ${seeded.taskId} --json`
-      )
-      const executor = getExecutorProcessStore(harness.owner).get(started.view.dispatchId)
-      expect(executor).toMatchObject({
-        state: 'running',
-        routeId: started.view.routeId,
-        executableEvidence: { executor: 'codex_cli', entryFile: 'fixture-cli' }
-      })
-      expect(started.view.routeId).not.toBe(seeded.routeId)
-      expect(codex.plans[0]).toMatchObject({
-        dispatchId: started.view.dispatchId,
-        access: 'read_only',
-        cli: { model: 'gpt-6.1-sol', effort: 'max' }
-      })
-      codex.runs[0]?.finish(completedReport())
-      await started.settled
-    })
-
-    it('settles a claim: the task waits for validation and the notice carries no executor output', async () => {
-      const { seeded, started } = await startRouted(CODEX_ROUTE)
-      codex.runs[0]?.finish(
-        completedReport({ lastMessage: { sha256: 'a'.repeat(64), bytes: 24, secretLike: true } })
-      )
-      await started.settled
-      expect(harness.owner.getTask(seeded.taskId)?.status).toBe('blocked')
-      expect(getExecutorProcessStore(harness.owner).get(started.view.dispatchId)).toMatchObject({
-        state: 'completed',
-        lastMessage: { sha256: 'a'.repeat(64), bytes: 24, secretLike: true },
-        treeVerdict: 'unverifiable',
-        treeMethod: 'root_exit_only'
-      })
-      expect(harness.owner.getWorkerDispatch(started.view.dispatchId)).toMatchObject({
-        state: 'ready',
-        stage: 'validation_pending'
-      })
-      expect(spy.messages).toHaveLength(1)
-      const [notice] = spy.messages
-      expect(notice).toMatchObject({ to_handle: `run:${harness.runId}`, type: 'status' })
-      expect(isEnglishText(`${notice?.subject}\n${notice?.body}`)).toBe(true)
-      expect(notice?.body).not.toContain(LAST_MESSAGE_TEXT)
-      expect(notice?.body).toMatch(/masked/)
-      expect(registry.holds(started.view.dispatchId)).toBe(false)
-    })
-
-    it('latches the route and fails the task when the executor reports a quota block', async () => {
-      const { seeded, started } = await startRouted(AGY_ROUTE)
-      agy.runs[0]?.finish(
-        completedReport({
-          verdict: { status: 'blocked', reason: 'quota', failureKinds: ['nonzero_exit'] },
-          exitCode: 1,
-          lastMessage: null
-        })
-      )
-      await started.settled
-      expect(latch).toHaveBeenCalledWith(AGY_ROUTE.subject, 'quota')
-      expect(harness.owner.getTask(seeded.taskId)?.status).toBe('failed')
-      expect(getExecutorProcessStore(harness.owner).get(started.view.dispatchId)?.state).toBe(
-        'blocked'
-      )
-      expect(spy.messages[0]?.body).toMatch(/quota/)
-    })
-
-    it('names the own worktree of a write attempt in the reply to the primary (D-025)', async () => {
-      codex = fakeExecutor('codex_cli', UNVERIFIABLE, {
-        mode: 'own_worktree',
-        worktree: {
-          worktreeId: 'fixture-repo::C:/fixture/workspaces/nash-task-1',
-          branch: 'nash-task-1',
-          path: 'C:/fixture/workspaces/nash-task-1',
-          baseCommit: '0123456789abcdef0123456789abcdef01234567'
+  it.each([CODEX_ROUTE, AGY_ROUTE, SUBAGENT_ROUTE])(
+    'hands a rechecked $target route to the native worker without opening a duplicate dispatch',
+    async (route) => {
+      if (route.target === 'claude_subagent') {
+        harness.owner.db.exec("UPDATE workflow_runs SET coordinator_agent = 'codex'")
+      }
+      const seeded = seedRoutedAppTask(harness, route)
+      recheckAnswers(() => availableResult(route))
+      startWorker.mockImplementation(async (input, checked) => {
+        expect(harness.owner.getDispatchContext(input.taskId)).toBeUndefined()
+        expect(checked.availability.cli).toMatchObject({ model: route.model, effort: route.effort })
+        return {
+          view: {
+            taskId: input.taskId,
+            dispatchId: 'ctx_native',
+            routeId: checked.routeId,
+            target: checked.target,
+            delegated: true,
+            runsIn: 'process',
+            nativeWorker: true,
+            taskStatus: 'dispatched',
+            workerState: 'ready',
+            instruction: 'Wait for the native worker report.'
+          },
+          settled: Promise.resolve()
         }
       })
-      service = createTaskStartService({
-        owner: harness.owner,
-        routes: { recheck, latch },
-        executors: { codex_cli: codex.executor, agy_cli: agy.executor },
-        registry,
-        now: () => (clock += 1000),
-        cliCommand: 'orca',
-        announce: spy.announce,
-        log: () => undefined
-      })
-      const { started } = await startRouted(CODEX_ROUTE)
-      expect(started.view.instruction).toContain('`nash-task-1`')
-      expect(started.view.instruction).toMatch(/last commit/)
-      codex.runs[0]?.finish(completedReport())
-      await started.settled
-    })
-
-    it('never sends agy an effort and hands the executor the run access', async () => {
-      await startRouted(AGY_ROUTE)
-      expect(agy.plans[0]?.cli).toEqual({ model: 'gemini-3.8-flash-high', effort: null })
-      agy.runs[0]?.finish(completedReport())
-    })
-
-    it.each([
-      [EXITED, 'stopped', 'stopped'],
-      [UNVERIFIABLE, 'stop_unknown', 'stop_unknown']
-    ] as const)(
-      'stops through the executor port (%o gives %s)',
-      async (proof, executorState, workerState) => {
-        codex = fakeExecutor('codex_cli', proof)
-        service = createTaskStartService({
-          owner: harness.owner,
-          routes: { recheck, latch },
-          executors: { codex_cli: codex.executor, agy_cli: agy.executor },
-          registry,
-          now: () => (clock += 1000),
-          cliCommand: 'orca',
-          announce: spy.announce,
-          log: () => undefined
-        })
-        const { started } = await startRouted(CODEX_ROUTE)
-        harness.owner.beginWorkerStop(started.view.dispatchId, 'fixture_epoch')
-        const outcome = await registry.stopExecutor({
-          dispatchId: started.view.dispatchId,
-          kind: 'codex_cli'
-        })
-        expect(outcome).toEqual(proof)
-        expect(getExecutorProcessStore(harness.owner).get(started.view.dispatchId)).toMatchObject({
-          state: executorState,
-          stopVerdict: proof.verdict
-        })
-        expect(harness.owner.getWorkerDispatch(started.view.dispatchId)?.state).toBe(workerState)
-      }
-    )
-
-    it('aborts every child on quit and records the stop as unknown when the tree is unproven', async () => {
-      const first = await startRouted(CODEX_ROUTE)
-      const second = await startRouted(AGY_ROUTE)
-      await registry.abortAll()
-      expect(codex.runs[0]?.signal.aborted).toBe(true)
-      expect(agy.runs[0]?.signal.aborted).toBe(true)
-      await Promise.all([first.started.settled, second.started.settled])
-      for (const { started } of [first, second]) {
-        expect(getExecutorProcessStore(harness.owner).get(started.view.dispatchId)).toMatchObject({
-          state: 'stop_unknown',
-          verdict: { reason: 'app_quit' }
-        })
-      }
-      const late = seedRoutedAppTask(harness, CODEX_ROUTE)
-      recheckAnswers(() => availableResult(CODEX_ROUTE))
-      const view = (await start(late.taskId)).view
-      expect(view.workerState).toBe('failed')
-      expect(getExecutorProcessStore(harness.owner).get(view.dispatchId)).toMatchObject({
-        state: 'failed',
-        verdict: { reason: 'app_quitting' }
-      })
-    })
-
-    it('refuses a process start whose Orca task row is gone, before it opens an attempt', async () => {
-      const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-      recheckAnswers(() => availableResult(CODEX_ROUTE))
-      vi.spyOn(harness.owner, 'getTask').mockReturnValue(undefined)
-      const error = await start(seeded.taskId).catch((caught: unknown) => caught)
-      expect(codeOf(error)).toBe('autopilot_task_not_found')
-      expect(codex.executor.prepare).not.toHaveBeenCalled()
-      vi.restoreAllMocks()
-      expect(harness.owner.getDispatchContext(seeded.taskId)).toBeUndefined()
-    })
-
-    it('fails the start without running anything when the executor cannot be prepared', async () => {
-      const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-      recheckAnswers(() => availableResult(CODEX_ROUTE))
-      vi.mocked(codex.executor.prepare).mockResolvedValueOnce({
-        ok: false,
-        reason: 'workspace_unavailable'
-      })
-      const { view, settled } = await start(seeded.taskId)
-      await settled
-      expect(view.workerState).toBe('failed')
-      expect(harness.owner.getTask(seeded.taskId)?.status).toBe('failed')
-      expect(getExecutorProcessStore(harness.owner).get(view.dispatchId)).toMatchObject({
-        state: 'failed',
-        treeVerdict: 'exited',
-        treeMethod: 'not_started'
-      })
-      expect(spy.messages[0]?.body).toContain('workspace_unavailable')
-      expect(codex.runs).toHaveLength(0)
-    })
-
-    it.each([
-      ['a stop request', 'stop_requested'],
-      ['an app quit', 'app_quit']
-    ] as const)(
-      'settles %s that arrives while the launch is prepared as stopped, with nothing run',
-      async (_label, reason) => {
-        const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-        recheckAnswers(() => availableResult(CODEX_ROUTE))
-        const gate = deferred<void>()
-        const run = vi.fn()
-        vi.mocked(codex.executor.prepare).mockImplementationOnce(async () => {
-          await gate.promise
-          return {
-            ok: true as const,
-            prepared: { evidence: { executor: 'codex_cli' }, placement: RUN_WORKSPACE, run }
-          }
-        })
-        const starting = start(seeded.taskId)
-        await vi.waitFor(() =>
-          expect(harness.owner.getDispatchContext(seeded.taskId)).toBeDefined()
-        )
-        const dispatchId = harness.owner.getDispatchContext(seeded.taskId)?.id ?? ''
-        const stopped =
-          reason === 'stop_requested'
-            ? registry.stopExecutor({ dispatchId, kind: 'codex_cli' })
-            : registry.abortAll().then(() => null)
-        gate.resolve()
-        const { view } = await starting
-        expect(view.workerState).toBe('stopped')
-        if (reason === 'stop_requested') {
-          await expect(stopped).resolves.toEqual({ verdict: 'exited', method: 'not_started' })
-        }
-        await stopped
-        expect(run).not.toHaveBeenCalled()
-        expect(getExecutorProcessStore(harness.owner).get(dispatchId)).toMatchObject({
-          state: 'stopped',
-          stopVerdict: 'exited',
-          treeMethod: 'not_started',
-          verdict: { reason }
-        })
-      }
-    )
-
-    describe('a start abandoned after its own worktree was created (D-025)', () => {
-      const LEFT: AttemptPlacement = {
-        mode: 'own_worktree',
-        worktree: {
-          worktreeId: 'fixture-repo::C:/fixture/workspaces/nash-task-1',
-          branch: 'nash-task-1',
-          path: 'C:/fixture/workspaces/nash-task-1',
-          baseCommit: '0123456789abcdef0123456789abcdef01234567'
-        }
-      }
-      let log: Mock<(event: TaskExecutionLogEvent) => void>
-
-      beforeEach(() => {
-        log = vi.fn<(event: TaskExecutionLogEvent) => void>()
-        service = createTaskStartService({
-          owner: harness.owner,
-          routes: { recheck, latch },
-          executors: { codex_cli: codex.executor, agy_cli: agy.executor },
-          registry,
-          now: () => (clock += 1000),
-          cliCommand: 'orca',
-          announce: spy.announce,
-          log
-        })
-      })
-
-      it('logs worktree_left_behind and records the branch and path when a stop came during prepare', async () => {
-        const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-        recheckAnswers(() => availableResult(CODEX_ROUTE))
-        const gate = deferred<void>()
-        const run = vi.fn()
-        vi.mocked(codex.executor.prepare).mockImplementationOnce(async () => {
-          await gate.promise
-          return {
-            ok: true as const,
-            prepared: { evidence: { executor: 'codex_cli' }, placement: LEFT, run }
-          }
-        })
-        const starting = start(seeded.taskId)
-        await vi.waitFor(() =>
-          expect(harness.owner.getDispatchContext(seeded.taskId)).toBeDefined()
-        )
-        const dispatchId = harness.owner.getDispatchContext(seeded.taskId)?.id ?? ''
-        const stopped = registry.stopExecutor({ dispatchId, kind: 'codex_cli' })
-        gate.resolve()
-        expect((await starting).view.workerState).toBe('stopped')
-        await stopped
-        expect(run).not.toHaveBeenCalled()
-        expect(log).toHaveBeenCalledWith({ event: 'worktree_left_behind', dispatchId })
-        expect(getExecutorProcessStore(harness.owner).get(dispatchId)?.verdict).toEqual({
-          reason: 'stop_requested',
-          worktreeLeftBehind: { branch: 'nash-task-1', path: 'C:/fixture/workspaces/nash-task-1' }
-        })
-      })
-
-      it('logs worktree_left_behind and records the branch and path when marking it running fails', async () => {
-        const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-        recheckAnswers(() => availableResult(CODEX_ROUTE))
-        const run = vi.fn()
-        // Evidence past the column bound makes the running write refuse after prepare succeeded.
-        vi.mocked(codex.executor.prepare).mockResolvedValueOnce({
-          ok: true,
-          prepared: {
-            evidence: { executor: 'codex_cli', padding: 'x'.repeat(5000) },
-            placement: LEFT,
-            run
-          }
-        })
-        await expect(start(seeded.taskId)).rejects.toThrow()
-        const dispatchId = harness.owner.getDispatchContext(seeded.taskId)?.id ?? ''
-        expect(run).not.toHaveBeenCalled()
-        expect(log).toHaveBeenCalledWith({ event: 'worktree_left_behind', dispatchId })
-        expect(getExecutorProcessStore(harness.owner).get(dispatchId)).toMatchObject({
-          state: 'failed',
-          verdict: {
-            reason: 'executor_mark_running_failed',
-            worktreeLeftBehind: { branch: 'nash-task-1', path: 'C:/fixture/workspaces/nash-task-1' }
-          }
-        })
-      })
-
-      it('logs nothing about a worktree when the abandoned start ran in the run workspace', async () => {
-        const seeded = seedRoutedAppTask(harness, CODEX_ROUTE)
-        recheckAnswers(() => availableResult(CODEX_ROUTE))
-        vi.mocked(codex.executor.prepare).mockResolvedValueOnce({
-          ok: true,
-          prepared: {
-            evidence: { executor: 'codex_cli', padding: 'x'.repeat(5000) },
-            placement: RUN_WORKSPACE,
-            run: vi.fn()
-          }
-        })
-        await expect(start(seeded.taskId)).rejects.toThrow()
-        expect(log).not.toHaveBeenCalledWith(
-          expect.objectContaining({ event: 'worktree_left_behind' })
-        )
-      })
-    })
-
-    it('retries a failed task from its last attempt on the next explicit start', async () => {
-      const { seeded, started } = await startRouted(CODEX_ROUTE)
-      codex.runs[0]?.finish(
-        completedReport({
-          verdict: { status: 'failed', failureKinds: ['nonzero_exit'] },
-          exitCode: 1,
-          lastMessage: null
-        })
-      )
-      await started.settled
-      expect(harness.owner.getTask(seeded.taskId)?.status).toBe('failed')
-      const again = await start(seeded.taskId)
-      expect(again.view.dispatchId).not.toBe(started.view.dispatchId)
-      expect(harness.owner.getDispatchContextById(again.view.dispatchId)).toMatchObject({
-        retry_of_dispatch_id: started.view.dispatchId
-      })
-      codex.runs[1]?.finish(completedReport())
-      await again.settled
-    })
-  })
+      const result = await start(seeded.taskId)
+      expect(result.view.nativeWorker).toBe(true)
+      expect(startWorker).toHaveBeenCalledTimes(1)
+      expect(result.view.routeId).not.toBe(seeded.routeId)
+    }
+  )
 
   describe('in-session attempts', () => {
     it('declares a ready worker and returns the subagent instruction without starting a process', async () => {
@@ -597,9 +206,7 @@ describe('task start service', () => {
       expect(harness.owner.getDispatchContextById(started.view.dispatchId)?.status).toBe(
         'dispatched'
       )
-      expect(getExecutorProcessStore(harness.owner).get(started.view.dispatchId)).toBeNull()
-      expect(codex.executor.prepare).not.toHaveBeenCalled()
-      expect(agy.executor.prepare).not.toHaveBeenCalled()
+      expect(startWorker).not.toHaveBeenCalled()
       await started.settled
     })
 
@@ -624,8 +231,7 @@ describe('task start service', () => {
       expect(getTaskRouteStore(harness.owner).latestForTask(kept.taskId)?.routeId).toBe(
         kept.routeId
       )
-      expect(getExecutorProcessStore(harness.owner).get(view.dispatchId)).toBeNull()
-      expect(codex.executor.prepare).not.toHaveBeenCalled()
+      expect(startWorker).not.toHaveBeenCalled()
     })
 
     it('keeps an inheriting workflow route without a model of its own', async () => {
@@ -663,7 +269,13 @@ describe('task start service', () => {
       await startRouted(PRIMARY_ROUTE)
       expect(recheck).toHaveBeenCalledWith(PRIMARY_ROUTE.subject, {
         workspace: { workspaceId: 'fixture-repo::/fixture/repo' },
-        liveRunPrimary: { runId: harness.runId, ownerId: session.ownerId }
+        liveRunPrimary: {
+          runId: harness.runId,
+          ownerId: session.ownerId,
+          agent: 'claude',
+          model: 'claude-opus-5-5',
+          effort: 'max'
+        }
       })
     })
 

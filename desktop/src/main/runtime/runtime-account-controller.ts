@@ -1,9 +1,10 @@
-import type { ClaudeRuntimeAuthService } from '../claude-accounts/runtime-auth-service'
+import type { ClaudeAccountService } from '../claude-accounts/service'
 import { hasAppEnvironment } from '../../shared/app-environment'
-import { createEmptyClaudeAccountsState } from '../../shared/claude-accounts-removed'
 import { getManagedDataAccountService } from '../managed-data-accounts/service'
 import type {
+  ClaudeAccountSignIn,
   ClaudeRateLimitAccountsState,
+  ClaudeSignInRequest,
   CodexRateLimitAccountsState,
   ManagedDataAccountProvider,
   ManagedDataAccountsState
@@ -20,8 +21,7 @@ import type { CommitMessageAgentEnvironmentResolvers } from '../text-generation/
 import type { ClaudeAccountSelectionTarget } from '../claude-accounts/runtime-selection'
 
 export type RuntimeAccountServices = {
-  // Why only the config dir: Claude account switching is gone; Claude runs on the user's own login.
-  claudeRuntimeAuth: Pick<ClaudeRuntimeAuthService, 'getRuntimeConfigDir'>
+  claudeAccounts: ClaudeAccountService
   codexAccounts: CodexAccountService
   rateLimits: RateLimitService
 }
@@ -63,14 +63,14 @@ export class RuntimeAccountController {
   }
 
   getClaudeConfigDirectory(target: ClaudeAccountSelectionTarget): string | null {
-    return this.services?.claudeRuntimeAuth.getRuntimeConfigDir(target) ?? null
+    return this.services?.claudeAccounts.getRuntimeConfigDir(target) ?? null
   }
 
   getSnapshot(): AccountsSnapshot {
-    const { codexAccounts, rateLimits } = this.requireServices()
+    const { claudeAccounts, codexAccounts, rateLimits } = this.requireServices()
     return {
       ...this.dataAccountsSnapshot(),
-      claude: createEmptyClaudeAccountsState(),
+      claude: claudeAccounts.listAccounts(),
       codex: codexAccounts.listAccounts(),
       rateLimits: rateLimits.getState()
     }
@@ -108,15 +108,24 @@ export class RuntimeAccountController {
 
   async refreshForMobile(): Promise<void> {
     const { rateLimits } = this.requireServices()
-    await Promise.allSettled([rateLimits.refresh(), rateLimits.fetchInactiveCodexAccountsOnOpen()])
+    await Promise.allSettled([
+      rateLimits.refresh(),
+      rateLimits.fetchInactiveClaudeAccountsOnOpen(),
+      rateLimits.fetchInactiveCodexAccountsOnOpen()
+    ])
   }
 
   async refreshForMobileSubscriber(): Promise<void> {
     const { rateLimits } = this.requireServices()
     await Promise.allSettled([
       rateLimits.refreshIfStale(),
+      rateLimits.fetchInactiveClaudeAccountsOnOpen(),
       rateLimits.fetchInactiveCodexAccountsOnOpen()
     ])
+  }
+
+  selectClaude(accountId: string | null): Promise<ClaudeRateLimitAccountsState> {
+    return this.requireServices().claudeAccounts.selectAccount(accountId)
   }
 
   selectCodex(accountId: string | null): Promise<CodexRateLimitAccountsState> {
@@ -134,10 +143,10 @@ export class RuntimeAccountController {
     idempotencyKey: string,
     expectedScope: CodexResetCreditExpectedScope
   ): Promise<CodexRateLimitResetRpcResult> {
-    const { codexAccounts } = this.requireServices()
+    const { claudeAccounts, codexAccounts } = this.requireServices()
     const result = await codexAccounts.consumeRateLimitResetCredit(idempotencyKey, expectedScope)
     const snapshot = {
-      claude: createEmptyClaudeAccountsState(),
+      claude: claudeAccounts.listAccounts(),
       codex: result.codex,
       rateLimits: result.rateLimits
     }
@@ -151,6 +160,24 @@ export class RuntimeAccountController {
       }
     }
     return { outcome: result.outcome, scope: result.scope, snapshot }
+  }
+
+  removeClaude(accountId: string): Promise<ClaudeRateLimitAccountsState> {
+    return this.requireServices().claudeAccounts.removeAccount(accountId)
+  }
+
+  beginClaudeSignIn(request: ClaudeSignInRequest): Promise<ClaudeAccountSignIn> {
+    return this.requireServices().claudeAccounts.beginSignIn(request)
+  }
+
+  finishClaudeSignIn(
+    signIn: Omit<ClaudeAccountSignIn, 'configDir'>
+  ): Promise<ClaudeRateLimitAccountsState> {
+    return this.requireServices().claudeAccounts.finishSignIn(signIn)
+  }
+
+  cancelClaudeSignIn(signIn: Omit<ClaudeAccountSignIn, 'configDir'>): Promise<void> {
+    return this.requireServices().claudeAccounts.cancelSignIn(signIn)
   }
 
   removeCodex(accountId: string): Promise<CodexRateLimitAccountsState> {
@@ -172,7 +199,7 @@ export class RuntimeAccountController {
     const unsubscribeUsage = services.rateLimits.onStateChange((rateLimits) => {
       listener({
         ...this.dataAccountsSnapshot(),
-        claude: createEmptyClaudeAccountsState(),
+        claude: services.claudeAccounts.listAccounts(),
         codex: services.codexAccounts.listAccounts(),
         rateLimits
       })

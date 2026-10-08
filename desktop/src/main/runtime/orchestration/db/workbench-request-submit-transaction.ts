@@ -64,8 +64,8 @@ function conflict(): OrchestrationError {
 }
 
 /**
- * Runs inside the store transaction: replays a known key, refusing different bytes, scope, access
- * or deliverable language, or records a new RECEIVED request with its settings.
+ * Runs inside the store transaction: replays a known key, refusing different bytes, scope or access,
+ * or records a new RECEIVED request with its settings.
  */
 export function submitWorkbenchRequestRow(
   db: Database.Database,

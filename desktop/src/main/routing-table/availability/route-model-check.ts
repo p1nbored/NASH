@@ -12,10 +12,6 @@ export type ModelCheck = {
 export type ModelCheckOptions = {
   /** Claude only: a pinned full id may match a listed alias through its resolved model. */
   readonly matchResolvedModel: boolean
-  /** A provider rule beyond the pin policy, on the pinned id; returns a violation code or null. */
-  readonly extraIdViolation?: (model: string) => string | null
-  /** A provider rule on the matched listing row (agy: the Gemini 4 exclusion on the label). */
-  readonly rowViolation?: (row: ListedModel) => string | null
 }
 
 function excluded(violation: string): ModelCheck {
@@ -26,7 +22,7 @@ function excluded(violation: string): ModelCheck {
 }
 
 /**
- * The model check shared by all targets: the pin policy first (alias, Gemini 4, rejected slug), then an
+ * The model check shared by all targets: the pin policy first (alias, rejected slug), then an
  * exact match in the listing. Nothing here substitutes another model for the pinned one.
  */
 export function checkModel(
@@ -34,7 +30,7 @@ export function checkModel(
   listing: ModelListing,
   options: ModelCheckOptions
 ): ModelCheck {
-  const idViolation = modelPinViolation(model) ?? options.extraIdViolation?.(model) ?? null
+  const idViolation = modelPinViolation(model)
   if (idViolation !== null) {
     return excluded(idViolation)
   }
@@ -47,12 +43,6 @@ export function checkModel(
   }
   if (match.kind === 'not_listed') {
     return { outcome: { check: 'model', result: 'fail', reason: 'model_not_listed' }, rows: null }
-  }
-  for (const row of match.rows) {
-    const rowViolation = options.rowViolation?.(row) ?? null
-    if (rowViolation !== null) {
-      return excluded(rowViolation)
-    }
   }
   return {
     outcome: { check: 'model', result: 'pass', evidence: { matchedBy: match.matchedBy } },

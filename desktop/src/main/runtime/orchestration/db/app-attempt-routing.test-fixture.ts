@@ -3,7 +3,6 @@ import { APP_ATTEMPT_STAGES } from './app-attempt-stages'
 import { fixtureTime } from './autopilot-runtime.test-fixture'
 import { transitionLifecycleWithDb } from './lifecycle-transition'
 import { seedTask, type AppRunHarness } from './app-attempt.test-fixture'
-import { getExecutorProcessStore } from './executor-process-store'
 import { getTaskClassificationStore } from './task-classification-store'
 import { getTaskRouteStore, type TaskRouteInput } from './task-route-store'
 import type { TaskSpecInput } from './task-spec-store'
@@ -16,10 +15,10 @@ export function routeInput(
     classificationId,
     routingTableVersion: 1,
     routingTableSha256: 'c'.repeat(64),
-    target: 'codex_cli',
-    model: 'gpt-6.1-sol',
+    target: 'claude_subagent',
+    model: 'claude-sonnet-5-5',
     policyLevel: 'max',
-    cliSetting: { reasoningEffort: 'max' },
+    cliSetting: null,
     status: 'available',
     reasons: [],
     availability: { cli: 'present', auth: 'ok' },
@@ -56,7 +55,7 @@ export function seedRoutedTask(
   return { taskId, classificationId: classification.classificationId, routeId: route.routeId }
 }
 
-/** Orca's starting Dispatch only, as `createStartingWorkerDispatch` leaves it before the executor row exists. */
+/** Orca's starting Dispatch for an in-session attempt. */
 export function startOrcaDispatch(
   harness: AppRunHarness,
   taskId: string,
@@ -65,7 +64,7 @@ export function startOrcaDispatch(
 ): { dispatchId: string } {
   const started = harness.owner.createStartingWorkerDispatch({
     taskId,
-    startOptions: { executor: 'codex_cli', route_id: routeId },
+    startOptions: { executor: 'in_session', route_id: routeId },
     creator: { kind: 'system' },
     maxDepth: Number.MAX_SAFE_INTEGER,
     retryOf: options.retryOf
@@ -73,23 +72,14 @@ export function startOrcaDispatch(
   return { dispatchId: started.dispatch.id }
 }
 
-/** Orca's starting Dispatch plus the executor row, written as the task-start service will write them. */
+/** An in-session attempt recorded through Orca's existing Dispatch. */
 export function seedStartedAttempt(
   harness: AppRunHarness,
   taskId: string,
   routeId: string,
-  options: { retryOf?: string; runDirectory?: string } = {}
+  options: { retryOf?: string } = {}
 ): { dispatchId: string } {
   const { dispatchId } = startOrcaDispatch(harness, taskId, routeId, options)
-  getExecutorProcessStore(harness.owner).insertStarting({
-    dispatchId,
-    runId: harness.runId,
-    taskId,
-    executorKind: 'codex_cli',
-    routeId,
-    runDirectory: options.runDirectory ?? `autopilot-runs/${harness.runId}/${dispatchId}`,
-    timestamp: fixtureTime(4)
-  })
   return { dispatchId }
 }
 

@@ -57,6 +57,7 @@ export const DotDecisionViewSchema = z
   .object({
     decisionId: DotDecisionIdSchema,
     dotRequestId: DotRequestIdSchema,
+    dotMayAllow: z.boolean(),
     toolName: IdentifierSchema,
     agentId: IdentifierSchema.nullable(),
     summary: DecisionSummarySchema,
@@ -83,7 +84,7 @@ export const DotDecisionsListResultSchema = z
 export const DotDecisionAnswerResultSchema = z
   .object({
     contractVersion: ContractVersionSchema,
-    outcome: z.enum(['decided', 'already_decided']),
+    outcome: z.enum(['decided', 'already_decided', 'closed']),
     decision: DotDecisionViewSchema
   })
   .strict()

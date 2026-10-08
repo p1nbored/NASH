@@ -18,7 +18,7 @@ function makeInput(
     hasConnectedTaskSource: false,
     worktreesByRepo: {},
     hasSetupScript: false,
-    claudeCodeDetected: false,
+    primaryCliDetected: false,
     clefConnected: false,
     dotConnected: false,
     hasWorkbenchRun: false,
@@ -49,7 +49,7 @@ describe('getFeatureWallSetupProgress', () => {
 
     const progress = getFeatureWallSetupProgress(
       makeInput({
-        claudeCodeDetected: true,
+        primaryCliDetected: true,
         clefConnected: true,
         dotConnected: true,
         hasWorkbenchRun: true
@@ -121,7 +121,7 @@ describe('getFeatureWallSetupProgress', () => {
         } as never,
         hasConnectedTaskSource: true,
         hasSetupScript: true,
-        claudeCodeDetected: true,
+        primaryCliDetected: true,
         clefConnected: true,
         dotConnected: true
       })
@@ -148,7 +148,7 @@ describe('getFeatureWallSetupProgress', () => {
         },
         hasConnectedTaskSource: true,
         hasSetupScript: true,
-        claudeCodeDetected: true,
+        primaryCliDetected: true,
         clefConnected: true,
         dotConnected: true,
         hasWorkbenchRun: true

@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/colla
 import { diffProposal, type RouteChange } from './routing-table-diff'
 import {
   proposalDecisionLabel,
+  primaryAgentLabel,
   proposerLabel,
   reasoningLevelLabel,
   reviewerTargetLabel,
@@ -47,7 +48,7 @@ function BeforeAfter(props: { before: string; after: string }): React.JSX.Elemen
 function coordinatorText(coordinator: Coordinator | null): string {
   return coordinator === null
     ? translate('auto.components.settings.routingTable.proposals.none', 'none')
-    : `${coordinator.model} · ${reasoningLevelLabel(coordinator.reasoning_level)}`
+    : `${primaryAgentLabel(coordinator.agent)} · ${coordinator.model} · ${reasoningLevelLabel(coordinator.reasoning_level)}`
 }
 
 function reviewersText(policy: ValidationPolicy | null): string {
@@ -94,10 +95,7 @@ function ProposalDiffList(props: {
       {diff.coordinator ? (
         <li className="space-y-0.5">
           <span className="block font-medium text-foreground">
-            {translate(
-              'auto.components.settings.routingTable.proposals.coordinator',
-              'Coordinator'
-            )}
+            {translate('auto.components.settings.routingTable.proposals.coordinator', 'Primary')}
           </span>
           <BeforeAfter
             before={coordinatorText(diff.coordinator.before)}

@@ -1,13 +1,11 @@
 import { defineMethod, defineStreamingMethod } from '../core'
 import {
-  ClaudeAccountsRemovedError,
-  createEmptyClaudeAccountsState
-} from '../../../../shared/claude-accounts-removed'
-import {
   AddDataAccountParams,
   SelectDataAccountParams,
   RemoveDataAccountParams,
   AccountsUnsubscribeParams,
+  BeginClaudeSignInParams,
+  FinishClaudeSignInParams,
   AddClaudeFromConfigDirParams,
   AddCodexFromHomeParams,
   ConsumeCodexResetCreditParams,
@@ -23,13 +21,39 @@ import {
 // registerSubscriptionCleanup's existing-key eviction path.
 let accountsSubscriptionSeq = 0
 
-// Why: bridges the desktop CodexAccountService / RateLimitService into the
-// WebSocket / local-socket RPC. Read + switch + remove for all clients;
-// interactive add/re-auth flows spawn `codex login` PTYs that need a desktop
-// browser, so they intentionally remain desktop-only. Claude account switching
-// was removed (Claude runs on the user's own login): the Claude methods stay as
-// stubs so mixed-version clients get a clear claude_accounts_removed code.
 export const ACCOUNT_METHODS = [
+  // Why local only: sign-in runs `claude auth login` in a terminal on the execution host.
+  defineMethod({
+    name: 'accounts.beginClaudeSignIn',
+    params: BeginClaudeSignInParams,
+    handler: async (params, { runtime, clientKind }) => {
+      if (clientKind !== undefined) {
+        throw new Error('Sign in on the NASH execution host.')
+      }
+      return runtime.beginClaudeSignIn(params)
+    }
+  }),
+  defineMethod({
+    name: 'accounts.finishClaudeSignIn',
+    params: FinishClaudeSignInParams,
+    handler: async (params, { runtime, clientKind }) => {
+      if (clientKind !== undefined) {
+        throw new Error('Sign in on the NASH execution host.')
+      }
+      return runtime.finishClaudeSignIn(params)
+    }
+  }),
+  defineMethod({
+    name: 'accounts.cancelClaudeSignIn',
+    params: FinishClaudeSignInParams,
+    handler: async (params, { runtime, clientKind }) => {
+      if (clientKind !== undefined) {
+        throw new Error('Sign in on the NASH execution host.')
+      }
+      await runtime.cancelClaudeSignIn(params)
+      return {}
+    }
+  }),
   defineMethod({
     name: 'accounts.listData',
     params: null,
@@ -40,7 +64,7 @@ export const ACCOUNT_METHODS = [
     params: AddDataAccountParams,
     handler: async (params, { runtime, clientKind }) => {
       if (clientKind !== undefined) {
-        throw new Error('Adding accounts is only available on the Orca host runtime.')
+        throw new Error('Adding accounts is only available on the NASH host runtime.')
       }
       return runtime.addDataAccountFromHome(params.provider, params.sourceDataHome, params.label)
     }
@@ -74,13 +98,7 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.selectClaude',
     params: SelectAccountParams,
-    handler: async (params) => {
-      // Why: selecting the system default is what an old client sends to leave a managed account.
-      if (params.accountId === null) {
-        return createEmptyClaudeAccountsState()
-      }
-      throw new ClaudeAccountsRemovedError()
-    }
+    handler: async (params, { runtime }) => runtime.selectClaudeAccount(params.accountId)
   }),
   defineMethod({
     name: 'accounts.selectCodex',
@@ -104,9 +122,7 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.removeClaude',
     params: RemoveAccountParams,
-    handler: async () => {
-      throw new ClaudeAccountsRemovedError()
-    }
+    handler: async (params, { runtime }) => runtime.removeClaudeAccount(params.accountId)
   }),
   defineMethod({
     name: 'accounts.removeCodex',
@@ -116,12 +132,10 @@ export const ACCOUNT_METHODS = [
   defineMethod({
     name: 'accounts.addClaudeFromConfigDir',
     params: AddClaudeFromConfigDirParams,
-    handler: async (_params, { clientKind }) => {
-      // Why: keep the paired-device refusal first so a remote token learns nothing new.
-      if (clientKind !== undefined) {
-        throw new Error('Adding Claude accounts is only available on the Orca host runtime.')
-      }
-      throw new ClaudeAccountsRemovedError()
+    handler: async () => {
+      throw new Error(
+        'Update the NASH CLI to add accounts. Importing Claude logins is no longer supported.'
+      )
     }
   }),
   defineMethod({
@@ -129,7 +143,7 @@ export const ACCOUNT_METHODS = [
     params: AddCodexFromHomeParams,
     handler: async (params, { runtime, clientKind }) => {
       if (clientKind !== undefined) {
-        throw new Error('Adding Codex accounts is only available on the Orca host runtime.')
+        throw new Error('Adding Codex accounts is only available on the NASH host runtime.')
       }
       return runtime.addCodexAccountFromHome(params.sourceHome, {
         runtime: params.runtime,

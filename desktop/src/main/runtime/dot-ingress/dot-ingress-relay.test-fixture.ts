@@ -52,9 +52,9 @@ export function seedForeignRun(owner: OrchestrationDb, runId: string): void {
     workspaceId: 'fixture-repo::/fixture/repo',
     workspaceBinding: 'c'.repeat(64),
     requestedAccess: 'workspace_write',
-    deliverableLanguage: null,
     routingTableVersion: 1,
     routingTableSha256: 'b'.repeat(64),
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: new Date(Date.now()).toISOString()

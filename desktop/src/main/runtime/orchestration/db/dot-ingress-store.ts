@@ -235,9 +235,9 @@ export class DotIngressStore {
       .prepare(
         `INSERT INTO dot_ingress_requests (dot_request_id, workspace_ref, workspace_id, workspace_binding, source,
           sender_auth, data_class, idempotency_key, input_hash, objective, span_count, scan_rules, requested_access,
-          deliverable_language, reply_correlation_id, client_name, client_version, state, revision,
+          reply_correlation_id, client_name, client_version, state, revision,
           workbench_idempotency_key, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'received', 1, ?, ?, ?)`
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'received', 1, ?, ?, ?)`
       )
       .run(
         dotRequestId,
@@ -253,7 +253,6 @@ export class DotIngressStore {
         countQuotedSpans(params.objective),
         JSON.stringify(params.scanRules),
         params.requestedAccess,
-        params.deliverableLanguage,
         params.replyCorrelationId,
         params.client?.name ?? null,
         params.client?.version ?? null,

@@ -4,12 +4,10 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from '../../shared/constants'
 import { OrchestrationError } from '../runtime/orchestration/orchestration-error'
 import { createValidationRoots } from './autopilot-validation-roots'
 
-const USER_DATA = join('C:', 'fixture', 'userData')
-
 function roots(requireWorkspace = vi.fn(() => ({ path: join('C:', 'fixture', 'workspace') }))) {
   return {
     requireWorkspace,
-    port: createValidationRoots({ requireWorkspace, userDataPath: USER_DATA })
+    port: createValidationRoots({ requireWorkspace })
   }
 }
 
@@ -36,16 +34,5 @@ describe('createValidationRoots', () => {
     const { port, requireWorkspace } = roots()
     expect(await port.resolveWorkspace(FLOATING_TERMINAL_WORKTREE_ID)).toBeNull()
     expect(requireWorkspace).not.toHaveBeenCalled()
-  })
-
-  it('resolves only attempt folders strictly under the app runs folder', () => {
-    const { port } = roots()
-    expect(port.resolveRunDirectory('autopilot-runs/run_1/ctx_1')).toBe(
-      join(USER_DATA, 'autopilot-runs', 'run_1', 'ctx_1')
-    )
-    expect(port.resolveRunDirectory('autopilot-runs')).toBeNull()
-    expect(port.resolveRunDirectory('autopilot-runs/../settings')).toBeNull()
-    expect(port.resolveRunDirectory('../outside/autopilot-runs/run_1')).toBeNull()
-    expect(port.resolveRunDirectory('autopilot-reviews/run_1')).toBeNull()
   })
 })

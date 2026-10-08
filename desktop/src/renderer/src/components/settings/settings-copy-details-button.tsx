@@ -1,4 +1,4 @@
-import { sanitizeCopiedDiagnostics } from '../../../../shared/crash-report-redaction'
+import { redactSecretShapes } from '../../../../shared/crash-report-redaction'
 import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
@@ -19,7 +19,7 @@ export function CopyDetailsButton({
   const copy = async (): Promise<void> => {
     try {
       await window.api.ui.writeClipboardText(
-        sanitizeCopiedDiagnostics(typeof details === 'function' ? details() : details)
+        redactSecretShapes(typeof details === 'function' ? details() : details)
       )
       toast.success(translate('auto.components.settings.copyDetails.copied', 'Details copied.'))
     } catch {

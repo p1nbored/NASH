@@ -36,7 +36,7 @@ function nextTable(version: number, overrides: Record<string, unknown> = {}) {
     source: 'user',
     based_on: version > 1 ? { table_version: version - 1, sha256: 'a'.repeat(64) } : null,
     created_at: '2026-10-04T13:00:00Z',
-    coordinator: { model: 'claude-opus-5-5', reasoning_level: 'high' },
+    coordinator: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'high' },
     ...overrides
   })
 }
@@ -240,7 +240,11 @@ describe('activating a version', () => {
     const env = installed()
     const broken = {
       ...nextTable(2),
-      coordinator: { model: 'gemini-4', reasoning_level: 'max' as const }
+      coordinator: {
+        agent: 'claude' as const,
+        model: 'invalid model',
+        reasoning_level: 'max' as const
+      }
     }
     expect(activateRoutingTable(env.ctx, { table: broken, proposalId: null })).toMatchObject({
       ok: false,

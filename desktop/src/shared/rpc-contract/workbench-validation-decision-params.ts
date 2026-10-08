@@ -13,19 +13,8 @@ export const WORKBENCH_VALIDATION_DECISIONS_MAX_LIMIT = 100
 export const VALIDATION_DECISION_CHOICES = ['waive', 'reject'] as const
 export type ValidationDecisionChoice = (typeof VALIDATION_DECISION_CHOICES)[number]
 
-/** Where the attempt wrote: its own worktree, the folder itself, nowhere of its own, or not recorded. */
-export const VALIDATION_DECISION_PLACEMENTS = [
-  'own_worktree',
-  'folder',
-  'run_workspace',
-  'in_session',
-  'unrecorded'
-] as const
-
 export const DECISION_TITLE_MAX_CHARS = 240
 export const DECISION_REASON_MAX_CHARS = 500
-export const DECISION_BRANCH_MAX_CHARS = 1024
-export const DECISION_PATH_MAX_CHARS = 4096
 
 const BoundedText = (max: number) => z.string().max(max)
 
@@ -39,14 +28,6 @@ export const WorkbenchValidationDecideParams = z
   .object({ validationId: AutopilotIdSchema, decision: z.enum(VALIDATION_DECISION_CHOICES) })
   .strict()
 
-export const WorkbenchValidationDecisionWorktreeSchema = z.object({
-  branch: BoundedText(DECISION_BRANCH_MAX_CHARS),
-  path: BoundedText(DECISION_PATH_MAX_CHARS),
-  baseCommit: BoundedText(64)
-})
-
-// Why strings for placement and executor: a newer host may name one this build does not know; the
-// renderer then shows a neutral label instead of failing the whole list.
 export const WorkbenchValidationDecisionViewSchema = z.object({
   validationId: AutopilotIdSchema,
   runId: AutopilotIdSchema,
@@ -58,11 +39,7 @@ export const WorkbenchValidationDecisionViewSchema = z.object({
   model: BoundedText(128).nullable(),
   /** Why validation could not decide, as one English line with secret shapes masked. */
   reason: BoundedText(DECISION_REASON_MAX_CHARS),
-  inconclusiveAt: BoundedText(64),
-  placement: BoundedText(32),
-  worktree: WorkbenchValidationDecisionWorktreeSchema.nullable(),
-  /** True when a process of the attempt may still run (tree live or unverifiable); desktop only. */
-  processMayRun: z.boolean().optional()
+  inconclusiveAt: BoundedText(64)
 })
 
 export const WorkbenchValidationListDecisionsResultSchema = z.object({

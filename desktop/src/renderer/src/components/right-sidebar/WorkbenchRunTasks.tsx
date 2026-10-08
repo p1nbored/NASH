@@ -1,4 +1,5 @@
-import { ScrollText, SquareTerminal } from 'lucide-react'
+import { MessageSquare, SquareTerminal } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
@@ -10,12 +11,16 @@ import {
   elapsedBetween,
   taskExecutorLabel
 } from '../task-window/task-window-copy'
-import { isTaskWindowExecutor, taskWindowTitle } from '../task-window/task-window-tab'
 import { useWorkbenchRunTasks } from './use-workbench-run-tasks'
 import WorkbenchCallout from './WorkbenchCallout'
 import { errorDetails } from './workbench-details'
-import { findRunTerminalTabId, showRunTerminal } from './workbench-run-terminal'
+import { findRunTerminalTabId, showRunTerminal, showTaskSource } from './workbench-run-terminal'
+import { toWorkbenchError, type WorkbenchError } from './workbench-rpc-error'
 import WorkbenchStateChip from './WorkbenchStateChip'
+
+function taskTitle(title: string | null): string {
+  return title?.trim() || translate('workbench.tasks.untitledTask', 'Untitled task')
+}
 
 function taskSummary(task: WorkbenchRunTask, readAt: number): string {
   const latest = task.attempts.at(-1) ?? null
@@ -37,32 +42,39 @@ function TaskAction({
   const tabId = useAppStore((state) =>
     findRunTerminalTabId(state.tabsByWorktree, run.workspaceId, run.primary?.paneKey ?? null)
   )
-  const title = taskWindowTitle(task.title)
+  const [openError, setOpenError] = useState<WorkbenchError | null>(null)
+  const title = taskTitle(task.title)
   const latest = task.attempts.at(-1)
   const kind = task.executorKind
-  if (isTaskWindowExecutor(kind) && latest) {
+  const source = latest?.source
+  if (source) {
     return (
-      <Button
-        type="button"
-        variant="ghost"
-        size="xs"
-        aria-label={translate('workbench.tasks.openWindowLabel', 'Open task window for {{title}}', {
-          title
-        })}
-        onClick={() =>
-          useAppStore.getState().openTaskWindow(run.workspaceId, {
-            runId: run.runId,
-            taskId: task.taskId,
-            title: task.title,
-            executorKind: kind,
-            attempts: task.attempts,
-            selectedDispatchId: latest.dispatchId
-          })
-        }
-      >
-        <ScrollText />
-        {translate('workbench.tasks.openWindow', 'Open task window')}
-      </Button>
+      <div className="space-y-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          aria-label={translate('workbench.tasks.openSessionLabel', 'Open session for {{title}}', {
+            title
+          })}
+          onClick={() => {
+            setOpenError(null)
+            void showTaskSource(source).catch((error: unknown) =>
+              setOpenError(toWorkbenchError(error))
+            )
+          }}
+        >
+          <MessageSquare />
+          {translate('workbench.tasks.openSession', 'Open session')}
+        </Button>
+        {openError && (
+          <WorkbenchCallout
+            tone="error"
+            label={openError.message}
+            details={{ subject: 'open task session', entries: errorDetails(openError) }}
+          />
+        )}
+      </div>
     )
   }
   // Why the primary's terminal: Claude subagents and workflows run inside the main session (D-024).
@@ -85,7 +97,7 @@ function TaskAction({
   return null
 }
 
-/** D-024: the run's tasks under its details; Codex and agy attempts open a read-only task window. */
+/** The run's tasks link to their existing native session or the primary session. */
 export default function WorkbenchRunTasks({
   run
 }: {
@@ -123,9 +135,7 @@ export default function WorkbenchRunTasks({
             return (
               <li key={task.taskId} className="flex min-w-0 items-start gap-2">
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <p className="break-words text-body text-foreground">
-                    {taskWindowTitle(task.title)}
-                  </p>
+                  <p className="break-words text-body text-foreground">{taskTitle(task.title)}</p>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-meta text-muted-foreground">
                     <WorkbenchStateChip
                       kind={attemptStateKind(state)}

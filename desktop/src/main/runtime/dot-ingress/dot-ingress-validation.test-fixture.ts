@@ -21,9 +21,9 @@ export function seedWorkflowRun(dot: DotHarness, requestId: string): AppRunHarne
     workspaceId: 'fixture-repo::/fixture/repo',
     workspaceBinding: 'a'.repeat(64),
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     routingTableVersion: 1,
     routingTableSha256: 'b'.repeat(64),
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: fixtureTime()

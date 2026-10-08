@@ -3,6 +3,7 @@ import {
   type DotDecisionView
 } from '../../../../shared/dot-ingress/dot-ingress-decision'
 import {
+  type DotRequestAccess,
   DOT_DECISION_SUMMARY_MAX_CHARS,
   DOT_INGRESS_CONTRACT_VERSION
 } from '../../../../shared/dot-ingress/dot-ingress-limits'
@@ -55,7 +56,7 @@ export function toDotRequestView(
     revision: record.revision,
     state: record.state,
     workspaceRef: record.workspaceRef,
-    deliverableLanguage: record.deliverableLanguage,
+    requestedAccess: record.requestedAccess,
     reply: record.replyCorrelationId === null ? null : { correlationId: record.replyCorrelationId },
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
@@ -67,10 +68,16 @@ export function toDotRequestView(
 }
 
 /** Enabled workspaces only, by opaque reference and label: no workspace id, binding or path. */
-export function toDotWorkspaceViews(entries: readonly DotWorkspaceEntry[]): DotWorkspaceView[] {
+export function toDotWorkspaceViews(
+  entries: readonly (DotWorkspaceEntry & { maxAccess: DotRequestAccess })[]
+): DotWorkspaceView[] {
   return entries
     .filter((entry) => entry.enabled)
-    .map((entry) => ({ workspaceRef: entry.workspaceRef, label: entry.label }))
+    .map((entry) => ({
+      workspaceRef: entry.workspaceRef,
+      label: entry.label,
+      maxAccess: entry.maxAccess
+    }))
 }
 
 /** The desktop's settings view; it carries the workspace id, never the binding hash, and no connection claim. */
@@ -105,11 +112,13 @@ function redactedSummary(summary: string): string {
  */
 export function toDotDecisionView(
   record: PermissionDecisionRecord,
-  dotRequestId: string
+  dotRequestId: string,
+  dotMayAllow: boolean
 ): DotDecisionView {
   return parseDotRow(DotDecisionViewSchema, {
     decisionId: record.decisionId,
     dotRequestId,
+    dotMayAllow,
     toolName: record.toolName,
     agentId: record.agentId,
     summary: redactedSummary(record.summary),

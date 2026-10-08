@@ -1,9 +1,5 @@
 import { z } from 'zod'
 import {
-  deliverableLanguageDirective,
-  DeliverableLanguageSchema
-} from '../../../../shared/deliverable-language'
-import {
   DOT_INGRESS_SENDER_AUTH,
   DOT_INGRESS_SOURCE,
   DOT_REQUEST_ACCESS_LEVELS,
@@ -20,8 +16,7 @@ import { getDotIngressStore } from './dot-ingress-store'
 import { parseDotInput, parseDotRow } from './dot-ingress-store-input'
 
 /**
- * Facts about a Workbench request that came from the dot. The run's handoff reads the language
- * directive and the raw objective; the app can label the request from the provenance fields.
+ * Facts about a Workbench request that came from dot; task messages remain English.
  */
 export type DotIngressHandoffContext = {
   dotRequestId: string
@@ -29,9 +24,6 @@ export type DotIngressHandoffContext = {
   senderAuth: typeof DOT_INGRESS_SENDER_AUTH
   /** Claimed by the sender and untrusted. */
   client: DotClientDescriptor | null
-  deliverableLanguage: string | null
-  /** One fixed English sentence, or null when the dot asked for no language. */
-  deliverableLanguageDirective: string | null
   /** The stored bytes, quoted spans included, unchanged. */
   objective: string
   spanCount: number
@@ -46,7 +38,6 @@ const RowSchema = z.object({
   span_count: z.number().int().min(0).max(32),
   scan_rules: z.string(),
   requested_access: z.enum(DOT_REQUEST_ACCESS_LEVELS),
-  deliverable_language: DeliverableLanguageSchema.nullable(),
   client_name: z.string().nullable(),
   client_version: z.string().nullable(),
   created_at: z.string()
@@ -63,7 +54,7 @@ export function getDotIngressHandoffContext(
   getDotIngressStore(owner)
   const row = owner.db
     .prepare(
-      `SELECT dot_request_id, objective, span_count, scan_rules, requested_access, deliverable_language,
+      `SELECT dot_request_id, objective, span_count, scan_rules, requested_access,
         client_name, client_version, created_at FROM dot_ingress_requests WHERE workbench_request_id = ?`
     )
     .get(id)
@@ -83,8 +74,6 @@ export function getDotIngressHandoffContext(
     source: DOT_INGRESS_SOURCE,
     senderAuth: DOT_INGRESS_SENDER_AUTH,
     client,
-    deliverableLanguage: stored.deliverable_language,
-    deliverableLanguageDirective: deliverableLanguageDirective(stored.deliverable_language),
     objective: stored.objective,
     spanCount: stored.span_count,
     scanRules: parseDotRow(ScanRulesSchema, JSON.parse(stored.scan_rules)),

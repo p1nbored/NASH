@@ -15,7 +15,6 @@ import {
   routingTableSha256
 } from './routing-table-bundle'
 
-const GEMINI_4_FAMILY = /gemini[\s._-]*4(?![0-9])|argon/i
 const DEFAULT_FILE = join(import.meta.dirname, 'default-routing-table.json')
 
 function bundledRoute(taskType: string) {
@@ -51,6 +50,7 @@ describe('the bundled default table (D-016, D-017)', () => {
 
   it('holds the coordinator row of claude-opus-5-5 at max', () => {
     expect(getBundledRoutingTable().coordinator).toEqual({
+      agent: 'claude',
       model: 'claude-opus-5-5',
       reasoning_level: 'max'
     })
@@ -85,10 +85,6 @@ describe('the bundled default table (D-016, D-017)', () => {
       { target: 'claude_headless', model: 'claude-opus-5-5', reasoning_level: 'high' }
     ])
     expect(validation.notes).toMatch(/awaiting user confirmation/i)
-  })
-
-  it('contains no Gemini 4 id anywhere in the file, notes included', () => {
-    expect(GEMINI_4_FAMILY.test(readFileSync(DEFAULT_FILE, 'utf8'))).toBe(false)
   })
 
   it('keeps benchmark scores out of the file: the only numbers are version numbers', () => {
@@ -151,10 +147,12 @@ describe('parseRoutingTableText', () => {
 
   it('never reports table content in an error', () => {
     const text = JSON.stringify(
-      buildTestRoutingTable({ coordinator: { model: 'gemini-4-secret', reasoning_level: 'max' } })
+      buildTestRoutingTable({
+        coordinator: { model: 'invalid secret model', reasoning_level: 'max' }
+      })
     )
     const parsed = parseRoutingTableText(text)
-    expect(!parsed.ok && parsed.error).not.toContain('gemini-4-secret')
+    expect(!parsed.ok && parsed.error).not.toContain('invalid secret model')
   })
 })
 

@@ -163,86 +163,7 @@ describe('autopilot task-side tables', () => {
     })
   })
 
-  describe('executor_processes and attempt_artifacts', () => {
-    const insertProcess = (
-      state: string,
-      settledAt: string | null,
-      tree: [string, string] | null
-    ) =>
-      run(
-        `INSERT INTO executor_processes (dispatch_id, run_id, task_id, executor_kind, route_id, state,
-          run_directory, tree_verdict, tree_method, started_at, settled_at)
-          VALUES (?, 'run_fixture01', 'task_fixture01', 'codex_cli', 'route_fixture01', ?, 'run_fixture01/dispatch_x', ?, ?, ?, ?)`,
-        `dispatch_${state}_${unique()}`,
-        state,
-        tree?.[0] ?? null,
-        tree?.[1] ?? null,
-        fixtureTime(),
-        settledAt
-      )
-
-    beforeEach(() => {
-      run(
-        `INSERT INTO task_classifications (classification_id, task_id, attempt, outcome, needs_delegation, task_type, created_at)
-          VALUES ('classification_a', 'task_fixture01', 1, 'classified', 1, 'general_research_analysis', ?)`,
-        fixtureTime()
-      )
-      run(
-        `INSERT INTO task_routes (route_id, classification_id, routing_table_version, routing_table_sha256,
-          target, model, policy_level, status, reasons, created_at)
-          VALUES ('route_fixture01', 'classification_a', 1, ?, 'codex_cli', 'gpt-6.1-sol', 'max', 'available', '[]', ?)`,
-        FIXTURE_HASH_A,
-        fixtureTime()
-      )
-    })
-
-    it('settles a process exactly when it is no longer starting or running', () => {
-      expect(() => insertProcess('starting', null, null)).not.toThrow()
-      expect(() => insertProcess('running', null, null)).not.toThrow()
-      expect(() =>
-        insertProcess('completed', fixtureTime(), ['exited', 'root_exit_only'])
-      ).not.toThrow()
-      expect(() => insertProcess('start_unknown', fixtureTime(), null)).not.toThrow()
-      expect(() =>
-        insertProcess('stop_unknown', fixtureTime(), ['unverifiable', 'root_exit_only'])
-      ).not.toThrow()
-      expect(() => insertProcess('running', fixtureTime(), null)).toThrow(/constraint/i)
-      expect(() => insertProcess('completed', null, null)).toThrow(/constraint/i)
-      expect(() => insertProcess('restarted', fixtureTime(), null)).toThrow(/constraint/i)
-    })
-
-    it('refuses an executor process whose run is not the run of its task', () => {
-      insertRawRun(owner.db, 'run_fixture02', 'request_fixture02')
-      expect(() =>
-        run(
-          `INSERT INTO executor_processes (dispatch_id, run_id, task_id, executor_kind, route_id, state,
-            run_directory, started_at) VALUES ('dispatch_cross', 'run_fixture02', 'task_fixture01', 'codex_cli',
-            'route_fixture01', 'running', 'x/y', ?)`,
-          fixtureTime()
-        )
-      ).toThrow(/constraint/i)
-    })
-
-    it('uses Orca tree verdicts with their method, and never one without the other', () => {
-      expect(() =>
-        insertProcess('failed', fixtureTime(), ['live', 'posix_group_probe'])
-      ).not.toThrow()
-      expect(() => insertProcess('failed', fixtureTime(), ['dead', 'root_exit_only'])).toThrow(
-        /constraint/i
-      )
-      expect(() => insertProcess('failed', fixtureTime(), ['exited', 'guessed'])).toThrow(
-        /constraint/i
-      )
-      expect(() =>
-        run(
-          `INSERT INTO executor_processes (dispatch_id, run_id, task_id, executor_kind, route_id, state,
-            run_directory, tree_verdict, started_at) VALUES ('dispatch_half', 'run_fixture01', 'task_fixture01',
-            'codex_cli', 'route_fixture01', 'running', 'x/y', 'exited', ?)`,
-          fixtureTime()
-        )
-      ).toThrow(/constraint/i)
-    })
-
+  describe('attempt_artifacts', () => {
     it('records artifacts only by a relative path that stays inside its root', () => {
       const artifact = (root: string, path: string) =>
         run(
@@ -255,7 +176,7 @@ describe('autopilot task-side tables', () => {
           fixtureTime()
         )
       expect(() => artifact('worktree', 'docs/report.md')).not.toThrow()
-      expect(() => artifact('run_directory', 'last-message.txt')).not.toThrow()
+      expect(() => artifact('run_directory', 'last-message.txt')).toThrow(/constraint/i)
       for (const escaping of [
         '../secret.txt',
         'a/../../b',

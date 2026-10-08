@@ -27,7 +27,7 @@ export const ANTIGRAVITY_USAGE_ARGS: readonly string[] = [
 ]
 
 /**
- * How long the child may run before Orca kills it.
+ * How long the child may run before NASH kills it.
  *
  * Observed cost on a warm macOS install is 2.1–2.6 s (three consecutive runs), which is the CLI
  * starting its language server and refreshing the quota. The ceiling is generous because a cold
@@ -48,7 +48,7 @@ export const ANTIGRAVITY_VERSION_TIMEOUT_MS = 5_000
 /** Cap on captured output; the envelope is a single JSON line well under a kilobyte. */
 export const ANTIGRAVITY_USAGE_MAX_OUTPUT_BYTES = 512 * 1024
 
-/** The command name Orca already uses to detect Antigravity, so both agree on the binary. */
+/** The command name NASH already uses to detect Antigravity, so both agree on the binary. */
 export function antigravityCommandName(): string {
   return TUI_AGENT_CONFIG.antigravity.detectCmd
 }

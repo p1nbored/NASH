@@ -36,6 +36,7 @@ function input(
   overrides: Partial<PrimarySessionLaunchPlanInput> = {}
 ): PrimarySessionLaunchPlanInput {
   return {
+    agent: 'claude',
     userDataPath: USER_DATA,
     platform: process.platform,
     cliCommand: 'orca',
@@ -43,7 +44,6 @@ function input(
     runId: 'run_plan01',
     generation: 1,
     access: 'read_only',
-    deliverableLanguage: null,
     objective: 'Summarize the repository layout.',
     model: 'claude-opus-5-5',
     effort: 'max',
@@ -53,6 +53,51 @@ function input(
 }
 
 describe('primary session launch plan', () => {
+  it.each(['read_only', 'workspace_write'] as const)(
+    'starts Codex with native %s permissions and no Claude configuration',
+    (access) => {
+      const writeSettings = vi.fn(() => true)
+      const readSettingsText = vi.fn(() => null)
+      const plan = preparePrimarySessionLaunch(
+        input({
+          agent: 'codex',
+          model: 'fixture-provider-model',
+          effort: 'ultra',
+          access,
+          clientSettings: {
+            agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
+          }
+        }),
+        { writeSettings, readSettingsText }
+      )
+      expect(plan.ok).toBe(true)
+      if (!plan.ok) {
+        throw new Error(plan.refusal.detail)
+      }
+      expect(plan.value.sessionOptions).toMatchObject({
+        model: 'fixture-provider-model',
+        effort: 'ultra',
+        taskAccess: access,
+        routeValidated: 'true'
+      })
+      expect(plan.value.probeCommand).toContain('codex')
+      expect(plan.value.probeCommand).toContain('fixture-provider-model')
+      expect(plan.value.probeCommand).toContain('model_reasoning_effort=')
+      expect(plan.value.probeCommand).toContain('ultra')
+      expect(plan.value.probeCommand).toContain(
+        access === 'read_only' ? 'read-only' : 'workspace-write'
+      )
+      expect(plan.value.probeCommand).toContain('on-request')
+      expect(plan.value.probeCommand).not.toMatch(
+        /dangerously|--permission-mode|--settings|--agents/
+      )
+      expect(plan.value.settingsPath).toBeNull()
+      expect(plan.value.subagentNames).toEqual([])
+      expect(plan.value.prompt.text).toContain('primary Codex session')
+      expect(writeSettings).not.toHaveBeenCalled()
+      expect(readSettingsText).not.toHaveBeenCalled()
+    }
+  )
   it('writes the owner-only settings file and returns the checked launch arguments', () => {
     const write = vi.fn(() => true)
     const plan = preparePrimarySessionLaunch(input(), { writeSettings: write })

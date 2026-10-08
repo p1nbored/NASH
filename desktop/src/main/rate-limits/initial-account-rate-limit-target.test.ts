@@ -25,6 +25,13 @@ const providers = [
     selectionSettings: (selection: RuntimeSelection) => ({
       activeCodexManagedAccountIdsByRuntime: selection
     })
+  },
+  {
+    name: 'Claude',
+    getTarget: getInitialClaudeRateLimitTarget,
+    selectionSettings: (selection: RuntimeSelection) => ({
+      activeClaudeManagedAccountIdsByRuntime: selection
+    })
   }
 ] as const
 
@@ -152,51 +159,5 @@ describe.each(providers)('$name initial rate-limit target', ({ getTarget, select
     }
 
     expect(getTarget(settings, scenario.platform ?? 'win32')).toEqual(scenario.expected)
-  })
-})
-
-// Why no selection scenarios: Claude account switching is gone, so only the runtime policy decides.
-describe('Claude initial rate-limit target', () => {
-  const retiredSelection = {
-    activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'wsl-account-1' } }
-  }
-
-  it.each([
-    [
-      'uses the trimmed configured WSL distro',
-      { localAccountRuntime: 'wsl', localAccountWslDistro: ' Fedora ' },
-      { runtime: 'wsl', wslDistro: 'Fedora' }
-    ],
-    [
-      'keeps an unpinned WSL runtime on the default distro',
-      { localAccountRuntime: 'wsl' },
-      { runtime: 'wsl', wslDistro: null }
-    ],
-    [
-      'keeps an explicit host runtime on host',
-      { localAccountRuntime: 'host' },
-      { runtime: 'host' }
-    ],
-    [
-      'auto follows the global WSL runtime',
-      {
-        localAccountRuntime: 'auto',
-        localWindowsRuntimeDefault: { kind: 'wsl', distro: 'Ubuntu' }
-      },
-      { runtime: 'wsl', wslDistro: 'Ubuntu' }
-    ]
-  ] as const)('%s', (_name, overrides, expected) => {
-    const settings = { ...getDefaultSettings('/tmp'), ...overrides, ...retiredSelection }
-
-    expect(getInitialClaudeRateLimitTarget(settings as GlobalSettings, 'win32')).toEqual(expected)
-  })
-
-  it('ignores a retired WSL account selection in legacy settings', () => {
-    const settings: Partial<GlobalSettings> = { ...getDefaultSettings('/tmp'), ...retiredSelection }
-    delete settings.localAccountRuntime
-
-    expect(getInitialClaudeRateLimitTarget(settings as GlobalSettings, 'darwin')).toEqual({
-      runtime: 'host'
-    })
   })
 })

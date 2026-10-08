@@ -60,7 +60,7 @@ describe('WorkbenchRequestQueue', () => {
     expect(within(row).getByText('Launch blocked')).toBeDefined()
     expect(row.textContent).not.toContain('request-1')
     expect(
-      screen.getByText('Starts a run with a Claude Code session in this workspace.')
+      screen.getByText('Starts a run with the configured primary CLI in this workspace.')
     ).toBeDefined()
     expect(screen.queryByText(/Routing|Routed|Retry|Request intake/)).toBeNull()
   })

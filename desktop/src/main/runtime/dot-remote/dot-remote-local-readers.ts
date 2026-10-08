@@ -2,13 +2,16 @@ import {
   DOT_MESSAGE_REASONS,
   type DotMessageReason
 } from '../../../shared/dot-ingress/dot-ingress-message'
-import { DotDecisionsListResultV2Schema } from '../../../shared/dot-ingress/dot-ingress-v2'
+import { DotDecisionsListResultSchema } from '../../../shared/dot-ingress/dot-ingress-decision'
 import { DotRemoteRequestStatusDataSchema } from '../../../shared/dot-remote/dot-remote-events'
 import { decisionsListResult, statusResult } from '../dot-ingress/dot-ingress-views'
 import { findDotRequestRun, hasAppTable } from '../dot-ingress/dot-ingress-run-link'
 import { PERMISSION_DECISION_STATUSES } from '../orchestration/db/autopilot-run-schema-definition'
-import type { AttemptArtifactRecord } from '../orchestration/db/attempt-artifact-store'
-import { getAttemptArtifactStore } from '../orchestration/db/attempt-artifact-store'
+import {
+  type AttemptArtifactRecord,
+  getAttemptArtifactStore
+} from '../orchestration/db/attempt-artifact-store'
+
 import { getDotIngressStore } from '../orchestration/db/dot-ingress-store'
 import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import type { PermissionDecisionRecord } from '../orchestration/db/permission-decision-store'
@@ -178,7 +181,7 @@ export function createDotRemoteLocalReaders(
       return null
     }
     const record = getDotIngressStore(db).get(dotRequestId)
-    const view = statusResult(db, 2, record).request
+    const view = statusResult(db, record).request
     const status = DotRemoteRequestStatusDataSchema.parse({
       state: view.state,
       statusText: view.statusText,
@@ -204,7 +207,7 @@ export function createDotRemoteLocalReaders(
     const validations = latestValidations(db, run.runId)
     return {
       status,
-      prompts: DotDecisionsListResultV2Schema.parse(decisionsListResult(db, 2, entries)).decisions,
+      prompts: DotDecisionsListResultSchema.parse(decisionsListResult(db, entries)).decisions,
       messages: messagesOf(db, run.runId, known.messageIds),
       validations: validationFactsOf(validations),
       deliverable: deliverableOf(db, run, validations),

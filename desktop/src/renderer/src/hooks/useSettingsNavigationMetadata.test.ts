@@ -1,3 +1,5 @@
+import { buildCmdJSettingsResults } from '../components/cmd-j/palette-results'
+import { matchesSettingsSearch } from '../components/settings/settings-search'
 import { describe, expect, it } from 'vitest'
 import { buildSettingsNavigationMetadata } from './useSettingsNavigationMetadata'
 import type { Repo } from '../../../shared/repo-types'
@@ -31,6 +33,47 @@ function ids(
 }
 
 describe('settings navigation metadata', () => {
+  it.each([false, undefined])(
+    'omits Chat navigation and search when the opt-in is %s',
+    (enabled) => {
+      const sections = buildSettingsNavigationMetadata({
+        isMac: false,
+        isWindows: false,
+        isWebClient: false,
+        experimentalStructuredNativeChat: enabled,
+        repos: []
+      })
+      expect(sections.some((section) => section.id === 'chat')).toBe(false)
+      expect(buildCmdJSettingsResults(sections).some((result) => result.sectionId === 'chat')).toBe(
+        false
+      )
+      for (const query of ['Code text size', 'Reset chat appearance']) {
+        expect(
+          sections.some((section) => matchesSettingsSearch(query, section.searchEntries))
+        ).toBe(false)
+      }
+    }
+  )
+
+  it('places Chat directly after Appearance in Interface and moves its search entries', () => {
+    const sections = buildSettingsNavigationMetadata({
+      isMac: false,
+      isWindows: false,
+      isWebClient: false,
+      experimentalStructuredNativeChat: true,
+      repos: []
+    })
+    const appearanceIndex = sections.findIndex((section) => section.id === 'appearance')
+    const chat = sections[appearanceIndex + 1]
+    expect(chat.id).toBe('chat')
+    expect(chat.title).toBe('Chat')
+    expect(chat.group).toBe('interface')
+    for (const query of ['Code text size', 'Reset chat appearance']) {
+      expect(matchesSettingsSearch(query, chat.searchEntries)).toBe(true)
+      expect(matchesSettingsSearch(query, sections[appearanceIndex].searchEntries)).toBe(false)
+    }
+  })
+
   it('puts AI capability panes at the top on desktop', () => {
     expect(ids().slice(0, 10)).toEqual([
       'agents',
@@ -86,7 +129,7 @@ describe('settings navigation metadata', () => {
     expect(ids().indexOf('task-routing')).toBe(ids().indexOf('orchestration') + 1)
   })
 
-  it('keeps category descriptions free of retired providers and switching claims', () => {
+  it('describes native account support while keeping unrelated retired claims hidden', () => {
     const sections = buildSettingsNavigationMetadata({
       isMac: false,
       isWindows: false,
@@ -97,7 +140,9 @@ describe('settings navigation metadata', () => {
     const stats = sections.find((section) => section.id === 'stats')
     const servers = sections.find((section) => section.id === 'servers')
 
-    expect(accounts?.description).not.toMatch(/Claude|Grok|Gemini|MiniMax/)
+    expect(accounts?.description).toBe(
+      'Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.'
+    )
     expect(stats?.description).not.toMatch(/Grok/)
     expect(servers?.description).not.toMatch(/mobile/i)
   })

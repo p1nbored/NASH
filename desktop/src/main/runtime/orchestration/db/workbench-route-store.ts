@@ -40,7 +40,7 @@ export class WorkbenchRouteStore {
     private readonly db: Database.Database,
     private readonly now: () => Date = () => new Date()
   ) {
-    ensureWorkbenchRequestSchema(db, now)
+    ensureWorkbenchRequestSchema(db)
     this.spend = new WorkbenchClefSpendStore(db)
   }
 

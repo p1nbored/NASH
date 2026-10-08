@@ -2,7 +2,6 @@ import {
   CLAUDE_SESSION_FLAG_LEVELS,
   CONCRETE_REASONING_LEVELS
 } from '../../../shared/routing-table/routing-table-taxonomy'
-import { CODEX_EXEC_EFFORTS } from '../../codex-exec/codex-exec-types'
 import type {
   CheckOutcome,
   EffortDelivery,
@@ -94,8 +93,8 @@ export function mapCodexEffort(input: {
   listedEfforts: readonly string[]
 }): EffortMapping {
   const { level, listedEfforts } = input
-  const runnerAccepts = CODEX_EXEC_EFFORTS.some((effort) => effort === level)
-  return runnerAccepts && listedEfforts.includes(level)
+  const policyAccepts = CONCRETE_REASONING_LEVELS.some((effort) => effort === level)
+  return policyAccepts && listedEfforts.includes(level)
     ? resolved(level, 'codex_config_override', 'applied')
     : UNSUPPORTED
 }

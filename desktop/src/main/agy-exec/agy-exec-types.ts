@@ -12,7 +12,7 @@ export type AgyExecRequest = {
   readonly prompt: string
   /** An exact agy model id such as gemini-3.8-flash-high; agy's own default is never used. */
   readonly model: string
-  /** The label agy shows for the model; only screened for the Gemini 4 family, never sent. */
+  /** The provider display label; metadata only, never sent as a model id. */
   readonly modelLabel?: string
   /** Omit for a variant id; whether `--effort` combines with one is unverified. */
   readonly effort?: string

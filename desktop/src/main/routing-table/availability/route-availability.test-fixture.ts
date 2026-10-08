@@ -97,9 +97,13 @@ export function subjectOf(
   model: string,
   reasoningLevel: RouteSubject['reasoningLevel'],
   requirement: ReasoningRequirement = 'required',
-  inheritsCoordinator = false
+  inheritsCoordinator = false,
+  primaryAgent: 'claude' | 'codex' = 'claude'
 ): RouteSubject {
-  return { target, model, reasoningLevel, requirement, inheritsCoordinator }
+  const fields = { model, reasoningLevel, requirement, inheritsCoordinator }
+  return target === 'claude_primary' || target === 'claude_subagent' || target === 'claude_workflow'
+    ? { ...fields, target, primaryAgent }
+    : { ...fields, target }
 }
 
 export function detectionOf(
@@ -120,7 +124,6 @@ export function observationsOf(
 ): RouteObservations {
   return {
     nowMs: NOW_MS,
-    usageSource: 'orca-inherited',
     detection: detectionOf(),
     listing,
     rateLimits: headroomOf(),

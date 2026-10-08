@@ -266,10 +266,11 @@ export function ensureWindowsProcessTreeCommandLinePatch(
 export function stageWindowsProcessTreeNodeAddonApiHeaders(
   packageDir = WINDOWS_PROCESS_TREE_PACKAGE_DIR
 ) {
+  const physicalPackageDir = realpathSync(packageDir)
   const nodeAddonApiDir = dirname(
-    createRequire(join(packageDir, 'package.json')).resolve('node-addon-api/package.json')
+    createRequire(join(physicalPackageDir, 'package.json')).resolve('node-addon-api/package.json')
   )
-  const stagedHeaderDir = join(packageDir, 'deps', 'node-addon-api')
+  const stagedHeaderDir = join(physicalPackageDir, 'deps', 'node-addon-api')
   mkdirSync(stagedHeaderDir, { recursive: true })
   for (const header of WINDOWS_PROCESS_TREE_NODE_ADDON_API_HEADERS) {
     copyFileSync(join(nodeAddonApiDir, header), join(stagedHeaderDir, header))

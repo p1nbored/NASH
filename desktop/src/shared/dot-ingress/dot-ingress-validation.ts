@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { WORKBENCH_LIST_DEFAULT_LIMIT, WORKBENCH_LIST_MAX_LIMIT } from '../workbench-request'
 import { DotRequestIdSchema } from './dot-ingress-params'
-import { DOT_INGRESS_CONTRACT_VERSION_THREE } from './dot-ingress-versions'
+import { DOT_INGRESS_CONTRACT_VERSION } from './dot-ingress-limits'
 
 // Contract version 3 (G7): the inconclusive validations of runs dot started, which dot may waive or
 // reject. A narrow exception to U32 chosen by the user ("Title, reason, summary"): a view carries
@@ -36,7 +36,7 @@ export const DOT_VALIDATION_DECIDE_OUTCOMES = ['decided', 'already_decided', 'cl
 /** How a pending decision ended, as the remote events report it. */
 export const DOT_VALIDATION_SETTLED_OUTCOMES = ['waived', 'rejected', 'closed'] as const
 
-const Version = z.literal(DOT_INGRESS_CONTRACT_VERSION_THREE)
+const Version = z.literal(DOT_INGRESS_CONTRACT_VERSION)
 const TimestampSchema = z.iso.datetime({ offset: true })
 
 /** Opaque: the desktop's validation id, which holds no path or name. */

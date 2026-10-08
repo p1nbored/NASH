@@ -7,19 +7,17 @@ import {
   WorkbenchValidationListDecisionsResultSchema
 } from './workbench-validation-decision-params'
 
-// FIXTURE_ONLY: synthetic ids and a synthetic worktree.
+// FIXTURE_ONLY: synthetic in-session task ids.
 const VIEW = {
   validationId: 'validation_0123456789ab',
   runId: 'run_0123456789ab',
   taskId: 'task_0123456789ab',
   dispatchId: 'ctx_0123456789ab',
   title: 'Summarize the repository layout.',
-  executorKind: 'codex',
-  model: 'gpt-6.1-sol',
-  reason: 'The attempt worktree is gone.',
-  inconclusiveAt: '2026-10-06T08:00:00.000Z',
-  placement: 'own_worktree',
-  worktree: { branch: 'nash-task-1', path: 'C:/fixture/nash-task-1', baseCommit: 'a'.repeat(40) }
+  executorKind: 'claude_primary',
+  model: null,
+  reason: 'The task report could not be verified.',
+  inconclusiveAt: '2026-10-06T08:00:00.000Z'
 }
 
 describe('workbench validation decision contract', () => {
@@ -56,28 +54,14 @@ describe('workbench validation decision contract', () => {
     }
   })
 
-  it('accepts a view of a newer placement or executor name instead of failing the list', () => {
-    const newer = { ...VIEW, placement: 'future_mode', executorKind: 'future_cli', worktree: null }
+  it('accepts a view of a newer executor name instead of failing the list', () => {
+    const newer = { ...VIEW, executorKind: 'future_cli' }
     expect(
       WorkbenchValidationListDecisionsResultSchema.safeParse({
         decisions: [VIEW, newer],
         hasMore: true
       }).success
     ).toBe(true)
-  })
-
-  it('keeps whether a process may still run, and accepts a view from a host that does not say', () => {
-    const parsed = WorkbenchValidationListDecisionsResultSchema.parse({
-      decisions: [{ ...VIEW, processMayRun: true }, VIEW],
-      hasMore: false
-    })
-    expect(parsed.decisions.map((view) => view.processMayRun)).toEqual([true, undefined])
-    expect(
-      WorkbenchValidationListDecisionsResultSchema.safeParse({
-        decisions: [{ ...VIEW, processMayRun: 'live' }],
-        hasMore: false
-      }).success
-    ).toBe(false)
   })
 
   it('describes a decision outcome by its result words', () => {

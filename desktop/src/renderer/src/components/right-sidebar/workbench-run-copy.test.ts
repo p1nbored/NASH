@@ -122,13 +122,13 @@ describe('run labels', () => {
       'Cannot be verified'
     )
     expect(liveActivityLabel(null)).toBeNull()
-    expect(liveActivityLabel({ kind: 'live', activity: 'working' })).toBe('Claude is working')
+    expect(liveActivityLabel({ kind: 'live', activity: 'working' })).toBe('The primary is working')
     expect(liveActivityLabel({ kind: 'live', activity: 'dialog_open' })).toBe(
       'A permission or question dialog is open'
     )
     expect(liveActivityLabel({ kind: 'live', activity: 'idle' })).toBe('Waiting for input')
     expect(liveActivityLabel({ kind: 'agent_absent' })).toBe(
-      'Claude Code is not running in the terminal'
+      'The primary CLI is not running in the terminal'
     )
     expect(liveActivityLabel({ kind: 'unverifiable', reason: 'incarnation_mismatch' })).toBe(
       'The terminal process changed, so its activity cannot be verified'
@@ -174,7 +174,7 @@ describe('message outcome copy', () => {
       detail: 'Write the message in English; put names or text in another language in quotes.'
     })
     expect(describeRunMessageResult(sent('queued', 'agent_busy')).text).toBe(
-      'Queued. Claude is working, so the message waits in the session.'
+      'Queued. The primary is working, so the message waits in the session.'
     )
   })
 

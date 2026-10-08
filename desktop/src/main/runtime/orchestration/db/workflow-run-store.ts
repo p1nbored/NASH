@@ -29,12 +29,9 @@ export const WorkflowRunCreateSchema = z
     workspaceId: z.string().min(1).max(512),
     workspaceBinding: z.string().min(1).max(128),
     requestedAccess: AutopilotAccessSchema,
-    deliverableLanguage: z
-      .string()
-      .regex(/^[A-Za-z0-9-]{2,35}$/)
-      .nullable(),
     routingTableVersion: z.number().int().positive(),
     routingTableSha256: Sha256HexSchema,
+    coordinatorAgent: z.enum(['claude', 'codex']),
     coordinatorModel: AutopilotModelIdSchema,
     coordinatorEffort: AutopilotEffortSchema,
     timestamp: UtcTimestampSchema
@@ -62,9 +59,9 @@ const WorkflowRunRowSchema = z.object({
   status: z.enum(WORKFLOW_RUN_STATUSES),
   revision: z.number(),
   requested_access: z.enum(WORKFLOW_RUN_ACCESS_LEVELS),
-  deliverable_language: z.string().nullable(),
   routing_table_version: z.number(),
   routing_table_sha256: z.string(),
+  coordinator_agent: z.enum(['claude', 'codex']),
   coordinator_model: z.string(),
   coordinator_effort: z.enum(AUTOPILOT_EFFORT_LEVELS),
   end_reason: z.string().nullable(),
@@ -81,9 +78,9 @@ export type WorkflowRunRecord = {
   status: WorkflowRunStatus
   revision: number
   requestedAccess: (typeof WORKFLOW_RUN_ACCESS_LEVELS)[number]
-  deliverableLanguage: string | null
   routingTableVersion: number
   routingTableSha256: string
+  coordinatorAgent: 'claude' | 'codex'
   coordinatorModel: string
   coordinatorEffort: (typeof AUTOPILOT_EFFORT_LEVELS)[number]
   endReason: string | null
@@ -93,8 +90,8 @@ export type WorkflowRunRecord = {
 }
 
 const COLUMNS = `run_id, request_id, workspace_id, workspace_binding, status, revision, requested_access,
-  deliverable_language, routing_table_version, routing_table_sha256, coordinator_model,
-  coordinator_effort, end_reason, created_at, updated_at, ended_at`
+  routing_table_version, routing_table_sha256, coordinator_model,
+  coordinator_agent, coordinator_effort, end_reason, created_at, updated_at, ended_at`
 
 function toRecord(row: unknown): WorkflowRunRecord {
   const stored = parseStoredRow(WorkflowRunRowSchema, row, 'workflow run')
@@ -106,9 +103,9 @@ function toRecord(row: unknown): WorkflowRunRecord {
     status: stored.status,
     revision: stored.revision,
     requestedAccess: stored.requested_access,
-    deliverableLanguage: stored.deliverable_language,
     routingTableVersion: stored.routing_table_version,
     routingTableSha256: stored.routing_table_sha256,
+    coordinatorAgent: stored.coordinator_agent,
     coordinatorModel: stored.coordinator_model,
     coordinatorEffort: stored.coordinator_effort,
     endReason: stored.end_reason,
@@ -179,8 +176,8 @@ export class WorkflowRunStore {
       this.db
         .prepare(
           `INSERT INTO workflow_runs (run_id, request_id, workspace_id, workspace_binding, status, revision,
-            requested_access, deliverable_language, routing_table_version, routing_table_sha256,
-            coordinator_model, coordinator_effort, created_at, updated_at)
+            requested_access, routing_table_version, routing_table_sha256,
+            coordinator_agent, coordinator_model, coordinator_effort, created_at, updated_at)
             VALUES (?, ?, ?, ?, 'launching', 1, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
@@ -189,9 +186,9 @@ export class WorkflowRunStore {
           params.workspaceId,
           params.workspaceBinding,
           params.requestedAccess,
-          params.deliverableLanguage,
           params.routingTableVersion,
           params.routingTableSha256,
+          params.coordinatorAgent,
           params.coordinatorModel,
           params.coordinatorEffort,
           params.timestamp,

@@ -42,8 +42,8 @@ export type FakeAutopilot = {
   readonly routingContext: RoutingTableContext
   /** What the stubs saw in the registries when they were called. */
   readonly seen: Record<string, unknown>
-  /** Releases the will-quit waits of the executors and the launches. */
-  readonly release: { executors(): void; launches(): void; validation(): void; remote(): void }
+  /** Releases the will-quit waits of launches and validation. */
+  readonly release: { launches(): void; validation(): void; remote(): void }
 }
 
 export type FakeAutopilotOptions = {
@@ -89,7 +89,6 @@ function failingIf(options: FakeAutopilotOptions, name: FakeBuilderName): void {
 export function createFakeAutopilot(options: FakeAutopilotOptions = {}): FakeAutopilot {
   const calls: string[] = []
   const seen: Record<string, unknown> = {}
-  const executorsQuit = deferred()
   const launchesQuit = deferred()
   const validationQuit = deferred()
   const remoteQuit = deferred()
@@ -97,7 +96,6 @@ export function createFakeAutopilot(options: FakeAutopilotOptions = {}): FakeAut
     remoteQuit.resolve()
   }
   if (!options.holdQuit) {
-    executorsQuit.resolve()
     launchesQuit.resolve()
     validationQuit.resolve()
   }
@@ -153,15 +151,6 @@ export function createFakeAutopilot(options: FakeAutopilotOptions = {}): FakeAut
   })
   const execution = stub<TaskExecutionRuntime>({
     startTask: vi.fn(),
-    stopPort: { stopExecutor: vi.fn() },
-    abortAllForQuit: vi.fn(() => {
-      calls.push('execution.abortAllForQuit')
-      return executorsQuit.promise.then(record('execution.settled'))
-    }),
-    reconcileAfterRestart: vi.fn(() => {
-      calls.push('execution.reconcileAfterRestart')
-      return { startUnknown: [], stopUnknown: [], startFailed: [], skipped: [], failed: [] }
-    }),
     readAttemptResult: vi.fn()
   })
   const validation = stub<ValidationRunner>({
@@ -297,7 +286,6 @@ export function createFakeAutopilot(options: FakeAutopilotOptions = {}): FakeAut
     routingContext,
     seen,
     release: {
-      executors: executorsQuit.resolve,
       launches: launchesQuit.resolve,
       validation: validationQuit.resolve,
       remote: remoteQuit.resolve

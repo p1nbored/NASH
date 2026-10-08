@@ -12,8 +12,6 @@ export type AwaitingValidationEntry = {
   verdict: 'pending' | 'inconclusive' | null
 }
 
-export type UnrecordedStart = { dispatchId: string; taskId: string; runId: string }
-
 const AwaitingRowSchema = z.object({
   task_id: z.string(),
   run_id: z.string(),
@@ -65,26 +63,4 @@ export function getAwaitingValidation(
 ): AwaitingValidationEntry | null {
   const row = db.prepare(`${SELECT_AWAITING} AND d.id = ? LIMIT 1`).get(dispatchId)
   return row ? awaitingEntryOf(row) : null
-}
-
-/** Starts whose executor row was never written (a crash between the two writes): no process can exist. */
-export function listUnrecordedStarts(db: Database.Database, limit: number): UnrecordedStart[] {
-  const bound = parseAutopilotInput(AutopilotLimitSchema, limit, 'start list limit')
-  return db
-    .prepare(
-      `SELECT d.id AS dispatch_id, d.task_id, d.run_id
-         FROM dispatch_contexts d
-         JOIN worker_dispatches w ON w.dispatch_id = d.id
-         JOIN task_specs s ON s.task_id = d.task_id AND s.run_id = d.run_id
-        WHERE w.state = 'starting' AND d.status = 'pending'
-          AND CASE WHEN json_valid(w.start_options) THEN json_extract(w.start_options, '$.executor') END IN ('codex_cli', 'agy_cli')
-          AND NOT EXISTS (SELECT 1 FROM executor_processes e WHERE e.dispatch_id = d.id)
-        ORDER BY d.rowid LIMIT ?`
-    )
-    .all(bound)
-    .map((row) => ({
-      dispatchId: String(row.dispatch_id),
-      taskId: String(row.task_id),
-      runId: String(row.run_id)
-    }))
 }

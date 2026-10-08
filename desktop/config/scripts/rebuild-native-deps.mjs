@@ -34,6 +34,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   writeFileSync
 } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -283,10 +284,11 @@ function restoreNodePtyWindowsConptyRuntime() {
     return
   }
 
-  const nodePtyDir = resolve(projectDir, 'node_modules', 'node-pty')
-  if (!existsSync(join(nodePtyDir, 'build', 'Release', 'conpty.node'))) {
+  const nodePtyPackageDir = resolve(projectDir, 'node_modules', 'node-pty')
+  if (!existsSync(join(nodePtyPackageDir, 'build', 'Release', 'conpty.node'))) {
     return
   }
+  const nodePtyDir = realpathSync(nodePtyPackageDir)
   const conptyRoot = join(nodePtyDir, 'third_party', 'conpty')
   const sourceDir = readdirSync(conptyRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())

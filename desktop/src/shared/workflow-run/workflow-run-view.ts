@@ -103,10 +103,13 @@ export const WorkflowRunViewSchema = z
     status: z.enum(WORKFLOW_RUN_VIEW_STATUSES),
     revision: z.number().int().min(1),
     requestedAccess: z.enum(WORKFLOW_RUN_VIEW_ACCESS_LEVELS),
-    deliverableLanguage: z.string().min(2).max(35).nullable(),
     routingTable: z.object({ version: z.number().int().min(1), sha256: Sha256Schema }).strict(),
     coordinator: z
-      .object({ model: ModelIdSchema, effort: z.enum(WORKFLOW_RUN_VIEW_EFFORTS) })
+      .object({
+        agent: z.enum(['claude', 'codex']),
+        model: ModelIdSchema,
+        effort: z.enum(WORKFLOW_RUN_VIEW_EFFORTS)
+      })
       .strict(),
     endReason: ReasonCodeSchema.nullable(),
     createdAt: TimestampSchema,

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hasSecretLikeText } from '../../agent-exec-shared/secret-shapes'
 import { isEnglishText } from '../../../shared/english-text'
-import { AttemptNoticeSchema } from '../orchestration/db/app-attempt-input'
-import type { AttemptPlacement } from '../task-execution/attempt-workspace'
-import type { WorktreeChangeFacts } from '../task-execution/task-result-notice'
 import { buildVerdictInput, decideVerdict } from './validation-settlement'
 
 const check = (status: 'pass' | 'fail' | 'inconclusive', note = `It is ${status}.`) => ({
@@ -84,78 +81,6 @@ describe('validation settlement', () => {
     expect(input.notice).toEqual({
       subject: 'Validation failed for task task_1',
       body: '1 checks: 0 passed, 1 failed, 0 undecided. Read the validation record for the reasons.'
-    })
-  })
-
-  describe('the merge rule in the notice (D-025)', () => {
-    const WORKTREE = {
-      worktreeId: 'fixture-repo::C:/fixture/workspaces/nash-task-1',
-      branch: 'nash-task-1',
-      path: 'C:/fixture/workspaces/nash-task-1',
-      baseCommit: '0123456789abcdef0123456789abcdef01234567'
-    }
-    const COMMITTED = { readable: true, commitsAhead: 1, uncommitted: false } as const
-    const verdictFor = (
-      status: 'pass' | 'fail' | 'inconclusive',
-      placement: AttemptPlacement,
-      changes: WorktreeChangeFacts | undefined = COMMITTED
-    ) =>
-      buildVerdictInput({
-        validationId: 'v',
-        taskId: 'task_1',
-        checks: [check(status)],
-        evidence: EVIDENCE,
-        attempt: { dispatchId: 'ctx_1', placement, changes },
-        timestamp: TIME
-      })
-
-    it('tells the primary to merge the passed task branch in its terminal', () => {
-      const body = verdictFor('pass', { mode: 'own_worktree', worktree: WORKTREE }).notice?.body
-      expect(body).toMatch(/^1 checks: 1 passed/)
-      expect(body).toContain('`nash-task-1`')
-      expect(body).toContain('`C:/fixture/workspaces/nash-task-1`')
-      expect(body).toMatch(/merge that branch into your worktree in your terminal/i)
-      expect(
-        AttemptNoticeSchema.safeParse(verdictFor('pass', { mode: 'folder' }).notice).success
-      ).toBe(true)
-    })
-
-    it('states no git fact in a pass notice when the worktree was not read', () => {
-      const body = verdictFor(
-        'pass',
-        { mode: 'own_worktree', worktree: WORKTREE },
-        {
-          readable: false
-        }
-      ).notice?.body
-      expect(body).toMatch(/\bcheck\b/i)
-      expect(body).not.toMatch(/changes are (committed|uncommitted)/)
-    })
-
-    it.each(['fail', 'inconclusive'] as const)(
-      'leaves a %s task branch for inspection and asks for no merge',
-      (status) => {
-        const body = verdictFor(status, { mode: 'own_worktree', worktree: WORKTREE }).notice?.body
-        expect(body).toMatch(/left for inspection/)
-        expect(body).not.toMatch(/merge that branch into your worktree/i)
-      }
-    )
-
-    it('says a folder task wrote in the folder itself', () => {
-      expect(verdictFor('pass', { mode: 'folder' }).notice?.body).toMatch(/already in the folder/)
-    })
-
-    it('keeps the fixed notice for a read-only attempt', () => {
-      expect(verdictFor('pass', { mode: 'run_workspace' }).notice?.body).toBe(
-        '1 checks: 1 passed, 0 failed, 0 undecided. Read the validation record for the reasons.'
-      )
-    })
-
-    it('keeps a notice with a long path within the mailbox bound', () => {
-      const long = { ...WORKTREE, path: `C:/${'d'.repeat(900)}`, branch: 'b'.repeat(250) }
-      const input = verdictFor('pass', { mode: 'own_worktree', worktree: long })
-      expect(AttemptNoticeSchema.safeParse(input.notice).success).toBe(true)
-      expect(hasSecretLikeText(input.notice?.body ?? '')).toBe(false)
     })
   })
 

@@ -13,6 +13,7 @@ import { isLinuxUserAgent } from '../terminal-pane/pane-helpers'
 import { MAX_TOKENIZATION_LINE_LENGTH } from '@/lib/monaco-languages/monarch-embed-entry-budget'
 import { buildFileEditorWordWrapOptions } from './file-editor-word-wrap-options'
 import { toEditorModelUri } from './editor-model-uri'
+import { getEditorModelOwnerKey } from './editor-model-owner'
 import { getMonacoAutoHeightForContent, isMonacoAutoHeightCapped } from './monaco-auto-height'
 import { monacoFindOptions } from './monaco-find-options'
 import { useMonacoRevealScheduler } from './use-monaco-reveal-scheduler'
@@ -98,7 +99,16 @@ export default function MonacoEditor({
   )
   const editorFontFamily = resolveEditorFontFamily(settings)
   const editorWordWrap = settings?.editorWordWrap
-  const modelUri = useMemo(() => toEditorModelUri(filePath), [filePath])
+  const modelOwnerKey = useAppStore((state) => {
+    const file = state.openFiles?.find((entry) => entry.id === fileId)
+    return file
+      ? getEditorModelOwnerKey(file, state)
+      : JSON.stringify([null, `unresolved:${fileId}`])
+  })
+  const modelUri = useMemo(
+    () => toEditorModelUri(filePath, modelOwnerKey),
+    [filePath, modelOwnerKey]
+  )
   const estimatedAutoHeight = useMemo(() => {
     if (!autoHeight) {
       return null
@@ -128,7 +138,7 @@ export default function MonacoEditor({
     content,
     contentRef,
     contentSyncModeRef,
-    filePath,
+    modelKey: modelUri,
     onContentChange
   })
   const annotations = useMonacoMarkdownAnnotations({
@@ -155,7 +165,7 @@ export default function MonacoEditor({
       unregisterFileSearchSelectionRef.current?.()
       unregisterFileSearchSelectionRef.current = null
     }
-  }, [cancelScheduledReveal, clearTransientRevealHighlight, viewStateKey])
+  }, [cancelScheduledReveal, clearTransientRevealHighlight, modelUri, viewStateKey])
 
   // Update editor options when settings change
   useEffect(() => {
@@ -184,6 +194,7 @@ export default function MonacoEditor({
   const handleMount = useMonacoEditorMount({
     fileId,
     filePath,
+    modelOwnerKey,
     viewStateKey,
     viewStateId,
     worktreeId,
@@ -233,6 +244,7 @@ export default function MonacoEditor({
         onSubmitMarkdownComment={annotations.handleSubmitMarkdownComment}
       />
       <Editor
+        key={modelUri}
         height={renderedEditorHeight === null ? '100%' : `${renderedEditorHeight}px`}
         language={language}
         // Why: defaultValue, not controlled value — Orca owns post-mount content sync; a controlled path would double setValue.
@@ -241,6 +253,7 @@ export default function MonacoEditor({
         onChange={contentSync.handleChange}
         onMount={handleMount}
         options={{
+          dropIntoEditor: { enabled: false },
           // `IGlobalEditorOptions`, not per-editor: setting it here pins it for every
           // Monaco surface (diff, Peek) too, so this is the only site that needs it.
           // Defense-in-depth only — it does NOT guard the Monarch embed recursion,

@@ -1,13 +1,10 @@
 import { commonListedEfforts } from './listed-model-match'
-import type { LiveRunPrimary, RouteSubject, RouteTarget } from './route-availability-types'
+import type { LiveRunPrimary, RouteSubject } from './route-availability-types'
 import type { RouteCheckResult, RouteObservations } from './route-check-observations'
 import { cliCheckOf } from './route-cli-detection-check'
 import { claudeDeliveryFor, mapClaudeEffort, reasoningCheckOf } from './route-effort-mapping'
 import { checkModel } from './route-model-check'
 import { authQuotaChecksOf } from './route-auth-quota-checks'
-
-/** Targets that run inside the run's primary session, so they have no separate login. */
-const IN_SESSION_TARGETS: readonly RouteTarget[] = ['claude_subagent', 'claude_workflow']
 
 /** The live-primary evidence, when this route is in-session and the caller gave usable ids. */
 function inheritedLoginFor(
@@ -16,7 +13,12 @@ function inheritedLoginFor(
 ): LiveRunPrimary | null {
   const live = observations.liveRunPrimary
   const usable = live !== null && live.runId.trim() !== '' && live.ownerId.trim() !== ''
-  return usable && IN_SESSION_TARGETS.includes(subject.target) ? live : null
+  return usable &&
+    live.agent === 'claude' &&
+    (subject.target === 'claude_subagent' || subject.target === 'claude_workflow') &&
+    subject.primaryAgent === 'claude'
+    ? live
+    : null
 }
 
 /**
@@ -35,7 +37,10 @@ export function checkClaudeRoute(
       : mapClaudeEffort({
           level: subject.reasoningLevel,
           requirement: subject.requirement,
-          delivery: claudeDeliveryFor(subject.target, subject.inheritsCoordinator),
+          delivery:
+            subject.target === 'claude_subagent' && subject.primaryAgent === 'codex'
+              ? 'claude_effort_flag'
+              : claudeDeliveryFor(subject.target, subject.inheritsCoordinator),
           listedEfforts: commonListedEfforts(model.rows, observations.listing)
         })
   return {

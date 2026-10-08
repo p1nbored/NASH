@@ -2,7 +2,7 @@ import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import { useAppStore } from '@/store'
 import {
   hasWorkbenchRun,
-  isClaudeCodeDetected,
+  isPrimaryCliDetected,
   isClefConnected,
   isDotConnected,
   type NashSetupSignalValues
@@ -16,7 +16,7 @@ const MIN_REFRESH_INTERVAL_MS = 2_000
 
 const INITIAL_STATE: NashSetupSignalState = {
   checked: false,
-  claudeCodeDetected: false,
+  primaryCliDetected: false,
   clefConnected: false,
   dotConnected: false,
   hasWorkbenchRun: false
@@ -40,8 +40,8 @@ export async function readNashSetupSignalsFromRuntime(): Promise<NashSetupSignal
   const value = (result: PromiseSettledResult<unknown>): unknown =>
     result.status === 'fulfilled' ? result.value : null
   return {
-    claudeCodeDetected:
-      agents.status === 'fulfilled' ? isClaudeCodeDetected(agents.value) : state.claudeCodeDetected,
+    primaryCliDetected:
+      agents.status === 'fulfilled' ? isPrimaryCliDetected(agents.value) : state.primaryCliDetected,
     clefConnected:
       routing.status === 'fulfilled' ? isClefConnected(routing.value) : state.clefConnected,
     dotConnected:

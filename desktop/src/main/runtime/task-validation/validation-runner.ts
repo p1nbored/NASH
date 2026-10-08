@@ -1,13 +1,11 @@
 import type { AwaitingValidationEntry } from '../orchestration/db/app-attempt-queries'
 import { OrchestrationError } from '../orchestration/orchestration-error'
-import type { WorktreeChangeFacts } from '../task-execution/task-result-notice'
 import type { AttemptFacts } from './attempt-evidence'
-import type { AttemptWorktreeChangesReader } from './attempt-worktree-changes'
 import type { ModelReviewDeps } from './model-review'
 import type { TaskValidationPort } from './task-validation-port'
 import { defaultStrategy } from './validation-default-strategy'
 import { planValidation } from './validation-policy'
-import { buildVerdictInput, settledVerdict, type Verdict } from './validation-settlement'
+import { buildVerdictInput, type Verdict } from './validation-settlement'
 import {
   interruptedReview,
   machineStrategy,
@@ -28,7 +26,6 @@ export type ValidationRunnerDeps = {
   readonly reader: { read(entry: AwaitingValidationEntry): Promise<AttemptFacts | null> }
   readonly git: WorkspaceGitPort
   /** Git facts of a passed attempt's own worktree for its merge notice; absent, none are stated. */
-  readonly readWorktreeChanges?: AttemptWorktreeChangesReader
   readonly review: ModelReviewDeps
   readonly now: () => Date
 }
@@ -79,7 +76,7 @@ async function strategyFor(
     case 'model_review':
       return reviewStrategy(facts, strategyDeps, signal, plan.checks)
     case 'default':
-      return defaultStrategy(facts, strategyDeps, signal)
+      return defaultStrategy(facts)
   }
 }
 
@@ -129,28 +126,6 @@ async function openAndDecide(
   }
 }
 
-/** D-025: before a pass tells the primary to merge, git is read in the attempt's own worktree. */
-async function passedWorktreeChanges(
-  facts: AttemptFacts,
-  decided: Decided,
-  deps: ValidationRunnerDeps,
-  signal?: AbortSignal
-): Promise<WorktreeChangeFacts | undefined> {
-  const { placement } = facts.evidence
-  if (
-    placement?.mode !== 'own_worktree' ||
-    settledVerdict(decided.checks, decided.evidence) !== 'pass'
-  ) {
-    return undefined
-  }
-  try {
-    return await deps.readWorktreeChanges?.(placement.worktree, signal)
-  } catch {
-    // Why: a failed read must not hold the verdict back; the notice then asks for a check instead.
-    return { readable: false }
-  }
-}
-
 async function decideAndRecord(
   entry: AwaitingValidationEntry,
   deps: ValidationRunnerDeps,
@@ -165,13 +140,11 @@ async function decideAndRecord(
     return skipped(entry.dispatchId, decision.kind === 'skip' ? decision.reason : 'cancelled')
   }
   const { validationId, decided } = decision
-  const changes = await passedWorktreeChanges(facts, decided, deps, signal)
   const outcome = deps.port.recordVerdict(
     buildVerdictInput({
       validationId,
       taskId: entry.taskId,
       ...decided,
-      attempt: { dispatchId: entry.dispatchId, placement: facts.evidence.placement, changes },
       timestamp: deps.now().toISOString()
     })
   )

@@ -1,8 +1,4 @@
-// The onboarding checklist (D-038): each step completes from a signal NASH already has.
-// Retained Orca steps keep their ids, so completion recorded by earlier builds still counts.
-// Retired ids: 'default-agent' (only affected manual terminals; NASH runs tasks through Claude Code),
-// 'agent-capabilities' (installed Orca's retired orchestration skill), 'add-two-repos' and 'browser'
-// (dropped to keep the list at eight; the browser stays in the Explore NASH tour).
+// Each current setup step completes from a signal NASH already has.
 export type FeatureWallSetupStepId =
   | 'claude-code'
   | 'clef'
@@ -25,23 +21,15 @@ export const FEATURE_WALL_SETUP_PARALLEL_WORK_STEP_IDS = [
   'two-worktrees'
 ] as const satisfies readonly FeatureWallSetupStepId[]
 
-/** Steps Orca's checklist already had; a profile that finished that checklist keeps them done. */
-export const ORCA_LEGACY_SETUP_STEP_IDS = [
-  'task-sources',
-  'notifications',
-  'setup-script',
-  'two-worktrees'
-] as const satisfies readonly FeatureWallSetupStepId[]
-
 export type FeatureWallSetupSectionId = 'parallel-work' | 'setup'
 
 export const FEATURE_WALL_SETUP_STEPS: readonly FeatureWallSetupStep[] = [
   {
     id: 'claude-code',
-    name: 'Set up Claude Code',
-    subtitle: 'Set up Claude Code',
+    name: 'Set up a primary agent',
+    subtitle: 'Set up a primary agent',
     description:
-      'NASH runs every task through a Claude Code session. Install Claude Code and sign in once from a terminal.'
+      'Install Claude Code or Codex for the primary session, then sign in from a terminal.'
   },
   {
     id: 'clef',

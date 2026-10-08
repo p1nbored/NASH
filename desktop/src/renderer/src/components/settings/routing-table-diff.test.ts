@@ -39,7 +39,7 @@ describe('diffProposal', () => {
   it('reports coordinator and reviewer replacements against the active values', () => {
     const proposal = fixtureProposal({
       changes: [],
-      coordinator: { model: 'claude-opus-5-5', reasoning_level: 'xhigh' },
+      coordinator: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'xhigh' },
       validation: {
         reviewers: [
           { target: 'claude_headless', model: 'claude-opus-5-5', reasoning_level: 'high' }
@@ -50,8 +50,8 @@ describe('diffProposal', () => {
     const diff = diffProposal(fixtureTable(), proposal)
 
     expect(diff.coordinator).toEqual({
-      before: { model: 'claude-opus-5-5', reasoning_level: 'max' },
-      after: { model: 'claude-opus-5-5', reasoning_level: 'xhigh' }
+      before: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'max' },
+      after: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'xhigh' }
     })
     expect(diff.validation?.before?.reviewers).toHaveLength(2)
     expect(diff.validation?.after.reviewers).toHaveLength(1)

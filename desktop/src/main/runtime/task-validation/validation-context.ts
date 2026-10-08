@@ -1,6 +1,4 @@
-import type { ExecutorProcessRecord } from '../orchestration/db/executor-process-record'
 import type { EvidenceRef } from '../orchestration/db/task-validation-record'
-import type { AttemptPlacement } from '../task-execution/attempt-workspace'
 import { recordLine } from './validation-record-text'
 
 export type CheckStatus = 'pass' | 'fail' | 'inconclusive'
@@ -21,16 +19,10 @@ export type AttemptEvidence = {
   readonly taskId: string
   readonly runId: string
   readonly dispatchId: string
-  /** Null for an in-session attempt, which has no process and no run directory. */
-  readonly executor: ExecutorProcessRecord | null
   /** When the attempt began, in epoch milliseconds; null when no record dates it. */
   readonly startedAtMs: number | null
-  /** Where the attempt wrote: its own worktree when it had one (D-025), else the run workspace. */
+  /** The workspace of the primary session that reported the attempt. */
   readonly workspace: ResolvedWorkspace | null
-  /** Where a Codex or agy attempt ran, from its launch evidence; null in session or before D-025. */
-  readonly placement: AttemptPlacement | null
-  /** Absolute run directory of a process attempt, or null when it cannot be resolved locally. */
-  readonly runDirectory: string | null
 }
 
 const GENERIC_NOTES: Record<CheckStatus, string> = {

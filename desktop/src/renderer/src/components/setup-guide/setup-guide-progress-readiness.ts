@@ -15,7 +15,7 @@ export type SetupGuideProgressReadinessInput = {
   linearStatusChecked: boolean
   jiraStatusChecked: boolean
   setupScriptProbeReady: boolean
-  /** The NASH signals (Claude Code, Clef, dot, Workbench runs) have answered at least once. */
+  /** The NASH signals (primary CLI, Clef, dot, Workbench runs) have answered at least once. */
   nashSignalsChecked: boolean
 }
 

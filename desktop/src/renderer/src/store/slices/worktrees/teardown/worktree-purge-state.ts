@@ -15,7 +15,7 @@ import {
   shouldRetainStructuredAgentSessionLaunchTab,
   structuredLaunchStates
 } from '@/lib/structured-agent-session-launch-registry'
-import { discardStructuredAgentSessionLaunchOutbox } from '@/components/native-chat/structured-agent-session-outbox-storage'
+import { discardStructuredAgentSessionChatSends } from '@/lib/structured-agent-session-launch-prompt'
 import { clearWebSessionFocusIntentIfMatches } from '@/runtime/web-session-focus-intent'
 import {
   structuredAgentSessionFocusOwner,
@@ -44,7 +44,7 @@ export function buildWorktreePurgeState(
         launch.intent.sessionId,
         launch.intent.executionHostId
       )
-      discardStructuredAgentSessionLaunchOutbox(launch.intent.sessionId)
+      discardStructuredAgentSessionChatSends(launch.intent.sessionId)
       clearWebSessionFocusIntentIfMatches(
         structuredAgentSessionFocusOwner(launch.intent.target),
         worktreeId,
@@ -67,7 +67,7 @@ export function buildWorktreePurgeState(
         shouldRetainStructuredAgentSessionLaunchTab(worktreeId, tab.entityId)
       ) {
         markStructuredAgentSessionLaunchCancelledSilently(worktreeId, tab.entityId, owner)
-        discardStructuredAgentSessionLaunchOutbox(tab.entityId)
+        discardStructuredAgentSessionChatSends(tab.entityId)
         clearWebSessionFocusIntentIfMatches(
           structuredAgentSessionFocusOwner(target),
           worktreeId,
@@ -195,6 +195,7 @@ export function buildWorktreePurgeState(
     activeBrowserTabIdByWorktree: omitByWorktree(s.activeBrowserTabIdByWorktree),
     // Why: keyed by page/workspace id, only cleaned by closeBrowserTab on the single-removal path; the bulk reconcile missed them, orphaning an entry per page of externally-removed worktrees.
     browserAnnotationsByPageId: omitByPageId(s.browserAnnotationsByPageId),
+    browserAnnotationMarkerIdsByPageId: omitByPageId(s.browserAnnotationMarkerIdsByPageId),
     remoteBrowserPageHandlesByPageId: omitByPageId(s.remoteBrowserPageHandlesByPageId),
     pendingAddressBarFocusByPageId: omitByPageId(s.pendingAddressBarFocusByPageId),
     // createBrowserTab writes both the workspace id and the page id into this map.

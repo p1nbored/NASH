@@ -1,4 +1,3 @@
-import { canonicalizeDeliverableLanguage } from '../../../shared/deliverable-language'
 import {
   DOT_INGRESS_ERROR_MESSAGES,
   type DotIngressErrorCode
@@ -30,8 +29,6 @@ const ANY_LETTER = /\p{L}/u
 export type DotRequirementAnalysis = {
   /** Content rules matched inside quoted spans, by name only. */
   readonly scanRules: readonly string[]
-  /** The canonical BCP 47 tag, or null when none was requested. */
-  readonly deliverableLanguage: string | null
 }
 
 function isSecretRule(rule: string): boolean {
@@ -55,22 +52,8 @@ function requireNoSecret(text: string): void {
   }
 }
 
-function canonicalLanguage(tag: string | null | undefined): string | null {
-  if (tag === undefined || tag === null) {
-    return null
-  }
-  const canonical = canonicalizeDeliverableLanguage(tag)
-  if (!canonical.ok) {
-    throw refused('dot_deliverable_language_invalid')
-  }
-  return canonical.tag
-}
-
 /** Throws the dot error the requirement fails first; a credential is checked before anything else. */
-export function analyzeDotRequirement(input: {
-  objective: string
-  deliverableLanguage?: string | null
-}): DotRequirementAnalysis {
+export function analyzeDotRequirement(input: { objective: string }): DotRequirementAnalysis {
   const text = input.objective.normalize('NFC').replace(/\r\n?/g, '\n')
   requireNoSecret(text)
   if (text.trim() === '') {
@@ -95,7 +78,6 @@ export function analyzeDotRequirement(input: {
   }
   const spanRules = [...new Set(split.spans.flatMap((span) => scanClefText(span.content)))].sort()
   return {
-    scanRules: spanRules.slice(0, DOT_INGRESS_SCAN_RULE_MAX_COUNT),
-    deliverableLanguage: canonicalLanguage(input.deliverableLanguage)
+    scanRules: spanRules.slice(0, DOT_INGRESS_SCAN_RULE_MAX_COUNT)
   }
 }

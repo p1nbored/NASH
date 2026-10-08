@@ -1,6 +1,9 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
-import { dotIngressErrorMessage } from '../../../shared/dot-ingress/dot-ingress-errors'
-import { isDotIngressContractErrorCodeV3 } from '../../../shared/dot-ingress/dot-ingress-errors-v3'
+import {
+  dotIngressErrorMessage,
+  isDotIngressErrorCode
+} from '../../../shared/dot-ingress/dot-ingress-errors'
+
 import type { RpcRequest, RpcResponse } from '../rpc/core'
 import { errorResponse } from '../rpc/errors'
 import { issueDotIngressCaller, type DotIngressCaller } from './dot-ingress-caller'
@@ -107,7 +110,7 @@ export function sanitizeDotIngressResponse(response: RpcResponse): RpcResponse {
     return response
   }
   const { code, message } = response.error
-  if (isDotIngressContractErrorCodeV3(code)) {
+  if (isDotIngressErrorCode(code)) {
     return response
   }
   if (TRANSPORT_ERROR_CODES.has(code)) {

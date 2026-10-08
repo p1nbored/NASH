@@ -70,6 +70,7 @@ describe('primary session runtime', () => {
     counter = 0
     const coordinator: CoordinatorResolution = {
       ok: true,
+      agent: 'claude',
       table: { version: 1, sha256: 'f'.repeat(64) },
       coordinator: {
         model: TABLE.coordinator.model,
@@ -78,6 +79,7 @@ describe('primary session runtime', () => {
       availability: {
         subject: {
           target: 'claude_primary',
+          primaryAgent: 'claude',
           model: TABLE.coordinator.model,
           reasoningLevel: TABLE.coordinator.reasoning_level,
           requirement: 'required',
@@ -110,6 +112,7 @@ describe('primary session runtime', () => {
         admit: vi.fn(async () => ({
           decision: 'execute' as const,
           ledger: 'orca' as const,
+          record: async () => undefined,
           settle: async () => undefined,
           fail: async () => undefined
         })),
@@ -154,8 +157,7 @@ describe('primary session runtime', () => {
       workspaceId: WORKSPACE.workspaceId,
       workspaceBinding: workbenchWorkspaceBinding(WORKSPACE.workspaceId, WORKSPACE),
       objective: 'Summarize the repository.',
-      requestedAccess: 'read_only',
-      deliverableLanguage: null
+      requestedAccess: 'read_only'
     })
 
   it('refuses with a fixed code until the runtime is installed', () => {

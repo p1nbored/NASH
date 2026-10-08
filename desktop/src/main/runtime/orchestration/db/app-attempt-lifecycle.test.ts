@@ -4,14 +4,7 @@ import { getValidationOutcomeService } from './app-attempt-validation-outcome'
 import { getTaskValidationStore } from './task-validation-store'
 import { seedRoutedTask } from './app-attempt-routing.test-fixture'
 import { createAppRunHarness, type AppRunHarness } from './app-attempt.test-fixture'
-import { FIXTURE_HASH_B, errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
-
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
-const CLAIM = {
-  exitCode: 0,
-  tree: EXITED,
-  lastMessage: { sha256: FIXTURE_HASH_B, bytes: 120, secretLike: false }
-}
+import { errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
 
 // The headline behavior of D-016: an executor saying done is never enough, and the one path that
 // completes a task is a passing validation through Orca's own status update.
@@ -29,7 +22,7 @@ describe('app attempt lifecycle against Orca', () => {
     settlement().start({
       taskId: seeded.taskId,
       routeId: seeded.routeId,
-      executor: 'codex_cli',
+      executor: 'in_session',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER,
       retryOf,
@@ -38,11 +31,10 @@ describe('app attempt lifecycle against Orca', () => {
   const run = (dispatchId: string) =>
     settlement().markRunning({
       dispatchId,
-      executableEvidence: { executable: 'codex' },
       timestamp: fixtureTime(6)
     })
   const claim = (dispatchId: string) =>
-    settlement().settleClaim({ dispatchId, ...CLAIM, timestamp: fixtureTime(7) })
+    settlement().settleClaim({ dispatchId, timestamp: fixtureTime(7) })
   const openChecks = (taskId: string, dispatchId: string) =>
     getTaskValidationStore(harness.owner).open({
       taskId,
@@ -58,8 +50,7 @@ describe('app attempt lifecycle against Orca', () => {
       validationId,
       verdict: value,
       checks: [{ kind: 'artifact_exists', status: value }],
-      evidenceRefs:
-        value === 'pass' ? [{ kind: 'executor_last_message', ref: FIXTURE_HASH_B }] : [],
+      evidenceRefs: value === 'pass' ? [{ kind: 'artifact', ref: 'report.md' }] : [],
       timestamp: fixtureTime(9)
     })
   const oneCheck = { spec: { machineChecks: [{ kind: 'artifact_exists', path: 'report.md' }] } }
@@ -121,7 +112,6 @@ describe('app attempt lifecycle against Orca', () => {
       dispatchId: first,
       outcome: 'failed',
       reason: 'executor_failed',
-      tree: EXITED,
       timestamp: fixtureTime(7)
     })
     expect(status(seeded.taskId)).toBe('failed')
@@ -140,49 +130,6 @@ describe('app attempt lifecycle against Orca', () => {
     expect(start(seeded, first)).not.toBe(first)
   })
 
-  it('retries a stopped task, which is blocked, from the stopped attempt', () => {
-    const seeded = seedRoutedTask(harness)
-    const first = start(seeded)
-    run(first)
-    settlement().settleStop({
-      dispatchId: first,
-      stopVerdict: 'exited',
-      reason: 'user_stop',
-      timestamp: fixtureTime(7)
-    })
-    expect(status(seeded.taskId)).toBe('blocked')
-    expect(harness.owner.getDispatchContextById(start(seeded, first))?.retry_of_dispatch_id).toBe(
-      first
-    )
-  })
-
-  it('refuses to retry while a start or a stop is of unknown outcome, until the user abandons it', () => {
-    const unknownStart = seedRoutedTask(harness)
-    const startDispatch = start(unknownStart)
-    settlement().markStartUnknown({
-      dispatchId: startDispatch,
-      reason: 'restart',
-      timestamp: fixtureTime(6)
-    })
-    expect(errorCodeOf(() => start(unknownStart, startDispatch))).toBe('task_not_startable')
-
-    const unknownStop = seedRoutedTask(harness)
-    const stopDispatch = start(unknownStop)
-    run(stopDispatch)
-    settlement().settleStop({
-      dispatchId: stopDispatch,
-      stopVerdict: 'unverifiable',
-      reason: 'restart',
-      timestamp: fixtureTime(7)
-    })
-    expect(errorCodeOf(() => start(unknownStop, stopDispatch))).toBe('task_not_startable')
-
-    harness.owner.abandonWorkerDispatch(stopDispatch, 'fixture_epoch', 'fixture_user')
-    expect(
-      harness.owner.getDispatchContextById(start(unknownStop, stopDispatch))?.retry_of_dispatch_id
-    ).toBe(stopDispatch)
-  })
-
   it('refuses to retry an attempt whose validation is still pending', () => {
     const seeded = seedRoutedTask(harness, oneCheck)
     const first = start(seeded)
@@ -198,7 +145,7 @@ describe('app attempt lifecycle against Orca', () => {
     run(dispatchId)
     claim(dispatchId)
     const validationId = openChecks(seeded.taskId, dispatchId)
-    // A failing or inconclusive verdict, a decision to reject, or a stop never completes it.
+    // An inconclusive verdict never completes the task.
     getValidationOutcomeService(harness.owner).recordVerdict({
       validationId,
       verdict: 'inconclusive',

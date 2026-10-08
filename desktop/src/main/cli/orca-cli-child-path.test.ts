@@ -1,4 +1,4 @@
-import { delimiter, join } from 'node:path'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const shim = vi.hoisted(() => ({ ensureLinuxTerminalOrcaCliShimDir: vi.fn() }))
@@ -27,6 +27,7 @@ describe('prependOrcaCliDirToChildPath', () => {
       platform: 'linux'
     })
     expect(env.PATH).toBe(`${SHIM_DIR}:/usr/local/bin:/usr/bin`)
+    expect(env.ORCA_CLI_BIN_DIR).toBe(SHIM_DIR)
     expect(shim.ensureLinuxTerminalOrcaCliShimDir).toHaveBeenCalledWith({
       userDataPath: USER_DATA
     })
@@ -44,13 +45,14 @@ describe('prependOrcaCliDirToChildPath', () => {
 
   it('leaves packaged Linux PATH untouched when no shim could be written', () => {
     shim.ensureLinuxTerminalOrcaCliShimDir.mockReturnValue(null)
-    const env: Record<string, string> = { PATH: '/usr/bin' }
+    const env: Record<string, string> = { PATH: '/usr/bin', ORCA_CLI_BIN_DIR: '/old-host/cli' }
     prependOrcaCliDirToChildPath(env, {
       isPackaged: true,
       userDataPath: USER_DATA,
       platform: 'linux'
     })
     expect(env.PATH).toBe('/usr/bin')
+    expect(env.ORCA_CLI_BIN_DIR).toBeUndefined()
   })
 
   it('leads packaged macOS PATH with the in-session orca alias dir, then the bundled NASH CLI dir', () => {
@@ -62,14 +64,21 @@ describe('prependOrcaCliDirToChildPath', () => {
       platform: 'darwin'
     })
     expect(env.PATH).toBe(
-      [join(RESOURCES, 'session-bin'), join(RESOURCES, 'bin'), '/usr/bin'].join(delimiter)
+      [join(RESOURCES, 'session-bin'), join(RESOURCES, 'bin'), '/usr/bin'].join(':')
+    )
+    expect(env.ORCA_CLI_BIN_DIR).toBe(
+      [join(RESOURCES, 'session-bin'), join(RESOURCES, 'bin')].join(':')
     )
     expect(returned).toBe(join(RESOURCES, 'bin', 'nash'))
     expect(shim.ensureLinuxTerminalOrcaCliShimDir).not.toHaveBeenCalled()
   })
 
   it('leads packaged Windows PATH with the alias dir and the bundled CLI dir under the env block spelling', () => {
-    const env: Record<string, string> = { Path: 'C:\\Windows\\System32' }
+    const env: Record<string, string> = {
+      Path: 'C:\\Windows\\System32',
+      ORCA_CLI_BIN_DIR: '/parent-host/cli',
+      ORCA_WSL_CLI_DIR: '/guest/orca/bin'
+    }
     const returned = prependOrcaCliDirToChildPath(env, {
       isPackaged: true,
       userDataPath: USER_DATA,
@@ -81,6 +90,8 @@ describe('prependOrcaCliDirToChildPath', () => {
     )
     expect(returned).toBe(join(RESOURCES, 'bin', 'nash.exe'))
     expect(env.PATH).toBeUndefined()
+    expect(env.ORCA_CLI_BIN_DIR).toBeUndefined()
+    expect(env.ORCA_WSL_CLI_DIR).toBe('/guest/orca/bin')
   })
 
   it('names the dev launcher after nash-dev', () => {
@@ -117,6 +128,9 @@ describe('prependOrcaCliDirToChildPath', () => {
       platform
     })
     expect(env.PATH).toBe(`${join(USER_DATA, 'cli', 'bin')}${pathDelimiter}/usr/bin`)
+    expect(env.ORCA_CLI_BIN_DIR).toBe(
+      platform === 'win32' ? undefined : join(USER_DATA, 'cli', 'bin')
+    )
     expect(shim.ensureLinuxTerminalOrcaCliShimDir).not.toHaveBeenCalled()
   })
 

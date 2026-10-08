@@ -11,6 +11,7 @@ import {
   type PrimarySessionLauncherDeps
 } from './primary-session-launcher'
 import type { PrimarySessionLaunchPlan } from './primary-session-launch-plan'
+import { preparePrimarySessionLaunch } from './primary-session-launch-plan'
 import { primarySessionOk, primarySessionRefused } from './primary-session-types'
 import {
   FIXTURE_HANDLE,
@@ -41,6 +42,7 @@ function planWith(delivery: 'launch_argument' | 'after_start_paste'): PrimarySes
 async function terminalExecutor(args: {
   intent: AgentLaunchIntent
   surfaces: AgentLaunchSurfaceFactory
+  onSurfacePublished?: (surface: AgentLaunchResult) => void
 }): Promise<AgentLaunchResult> {
   const { intent, surfaces } = args
   const worktreeId = intent.target.kind === 'existing' ? intent.target.worktree : ''
@@ -52,7 +54,7 @@ async function terminalExecutor(args: {
     ...(intent.sessionOptions ? { options: intent.sessionOptions } : {}),
     ...(intent.launchSource ? { launchSource: intent.launchSource } : {})
   })
-  return {
+  const result: AgentLaunchResult = {
     outcome: {
       kind: 'terminal',
       handle: created.handle,
@@ -69,12 +71,15 @@ async function terminalExecutor(args: {
       ? { prompt: { delivery: intent.prompt.delivery, outcome: 'handed-to-terminal' as const } }
       : {})
   }
+  args.onSurfacePublished?.(result)
+  return result
 }
 
 describe('primary session launcher', () => {
   let db: OrchestrationDb
   let fake: ReturnType<typeof createFakeTerminal>
   let admission: {
+    record: Mock<(result: AgentLaunchResult) => Promise<void>>
     settle: Mock<(result: AgentLaunchResult) => Promise<void>>
     fail: Mock<(code: string) => Promise<void>>
   }
@@ -83,7 +88,11 @@ describe('primary session launcher', () => {
   beforeEach(() => {
     db = new OrchestrationDb(':memory:')
     fake = createFakeTerminal()
-    admission = { settle: vi.fn(async () => undefined), fail: vi.fn(async () => undefined) }
+    admission = {
+      record: vi.fn(async () => undefined),
+      settle: vi.fn(async () => undefined),
+      fail: vi.fn(async () => undefined)
+    }
     deps = {
       db,
       terminal: fake.terminal,
@@ -91,6 +100,7 @@ describe('primary session launcher', () => {
         admit: vi.fn(async (): Promise<PrimaryLaunchAdmission> => ({
           decision: 'execute',
           ledger: 'orca',
+          record: admission.record,
           settle: admission.settle,
           fail: admission.fail
         })),
@@ -169,6 +179,68 @@ describe('primary session launcher', () => {
     expect(deps.prepare).toHaveBeenCalledWith(
       expect.objectContaining({ workspacePath: '/fixture/repo' })
     )
+  })
+
+  it('launches exactly the pinned Codex primary and delivers its context through Codex readiness', async () => {
+    const run = seedPrimaryRun(db, {
+      status: 'launching',
+      owner: 'none',
+      coordinatorAgent: 'codex'
+    }).run
+    vi.mocked(deps.prepare).mockImplementation((request) =>
+      preparePrimarySessionLaunch({
+        ...request,
+        userDataPath: '/fixture/data',
+        platform: 'win32',
+        cliCommand: 'orca',
+        clientSettings: {}
+      })
+    )
+    const outcome = await launch(run)
+    expect(outcome).toMatchObject({
+      ok: true,
+      run: { coordinatorAgent: 'codex', status: 'active' }
+    })
+    expect(deps.executeLaunch).toHaveBeenCalledOnce()
+    expect(fake.terminal.createTerminal).toHaveBeenCalledOnce()
+    expect(vi.mocked(deps.executeLaunch).mock.calls[0][0].intent).toMatchObject({
+      agent: 'codex',
+      sessionOptions: {
+        model: run.coordinatorModel,
+        effort: run.coordinatorEffort,
+        taskAccess: 'read_only'
+      }
+    })
+    expect(fake.terminal.createTerminal.mock.calls[0][1]).toMatchObject({
+      startupAgent: 'codex',
+      launchPreferences: {
+        model: run.coordinatorModel,
+        effort: run.coordinatorEffort,
+        taskAccess: 'read_only',
+        routeValidated: true
+      }
+    })
+    expect(deps.deliverAfterStart).toHaveBeenCalledWith({
+      handle: FIXTURE_HANDLE,
+      agent: 'codex',
+      text: expect.stringContaining('primary Codex session')
+    })
+  })
+
+  it('records the published terminal even when prompt delivery later fails', async () => {
+    vi.mocked(deps.executeLaunch).mockImplementationOnce(async (args) => {
+      await terminalExecutor(args)
+      throw new Error('prompt delivery interrupted')
+    })
+    const outcome = await launch()
+    expect(outcome).toMatchObject({ ok: false, run: { status: 'unverifiable' } })
+    expect(admission.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: { kind: 'terminal', handle: FIXTURE_HANDLE, paneKey: FIXTURE_PANE }
+      })
+    )
+    expect(admission.settle).not.toHaveBeenCalled()
+    expect(admission.fail).not.toHaveBeenCalled()
   })
 
   it('runs one launch per run: a concurrent second call joins the first', async () => {
@@ -348,6 +420,7 @@ describe('primary session launcher', () => {
     vi.mocked(deps.ledger.admit).mockResolvedValueOnce({
       decision: 'execute',
       ledger: 'app_only',
+      record: async () => undefined,
       settle: async () => undefined,
       fail: async () => undefined
     })
@@ -371,6 +444,7 @@ describe('primary session launcher', () => {
     expect(vi.mocked(deps.executeLaunch).mock.calls[0][0].intent.prompt).toBeUndefined()
     expect(deps.deliverAfterStart).toHaveBeenCalledWith({
       handle: FIXTURE_HANDLE,
+      agent: 'claude',
       text: 'You are the primary session. Plan the task.'
     })
   })

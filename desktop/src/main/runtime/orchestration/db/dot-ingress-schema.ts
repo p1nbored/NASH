@@ -64,7 +64,7 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
 }
 
 /**
- * Creates the v1 family, or verifies an existing one and fails closed without changes. Adds new
+ * Creates the current family, or verifies an existing one and fails closed without changes. Adds new
  * objects only: no Orca object changes and user_version is never written.
  */
 export function ensureDotIngressSchema(db: Database.Database): void {

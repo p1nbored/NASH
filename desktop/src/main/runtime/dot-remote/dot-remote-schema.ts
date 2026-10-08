@@ -5,12 +5,9 @@ import {
   DOT_REMOTE_SCHEMA_DEFINITIONS,
   type DotRemoteSchemaDefinition
 } from './dot-remote-schema-definition'
-import { migrateDotRemoteSchemaV1 } from './dot-remote-schema-migration'
-import { DOT_REMOTE_SCHEMA_V1_DEFINITIONS } from './dot-remote-schema-v1'
 
-/** v2 (G7): the validation decision event and item kinds; a v1 family is migrated in place. */
+/** The current remote event and item schema. */
 export const DOT_REMOTE_SCHEMA_VERSION = 2
-const SCHEMA_VERSION_ONE = 1
 
 export const DOT_REMOTE_RECOVERY_REQUIRED = 'dot_remote_recovery_required'
 
@@ -77,22 +74,14 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
   }
   verifyDefinitions(db, SCHEMA_TABLE_DEFINITIONS)
   const stored = db.prepare('SELECT version FROM dot_remote_schema WHERE id = 1').get()
-  const known =
-    stored?.version === DOT_REMOTE_SCHEMA_VERSION || stored?.version === SCHEMA_VERSION_ONE
-  if (!known || present.size !== FAMILY_NAMES.length) {
+  if (stored?.version !== DOT_REMOTE_SCHEMA_VERSION || present.size !== FAMILY_NAMES.length) {
     throw recoveryRequired()
-  }
-  if (stored?.version === SCHEMA_VERSION_ONE) {
-    // Why verify first: only the exact v1 layout is migrated; anything else fails closed unchanged.
-    verifyDefinitions(db, DOT_REMOTE_SCHEMA_V1_DEFINITIONS)
-    migrateDotRemoteSchemaV1(db, DOT_REMOTE_SCHEMA_VERSION)
   }
   verifyDefinitions(db, DOT_REMOTE_SCHEMA_DEFINITIONS)
 }
 
 /**
- * The family's own ensure step: creates every object at the current version, migrates an exact v1
- * family, or verifies an existing family and fails closed without changes. user_version is never written.
+ * Creates every object at the current version or verifies an existing family and fails closed without changes. user_version is never written.
  */
 export function ensureDotRemoteSchema(db: Database.Database): void {
   runDotRemoteWrite(db, 'dot_remote_schema', () => {

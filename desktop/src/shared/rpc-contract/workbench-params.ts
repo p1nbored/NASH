@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DeliverableLanguageSchema } from '../deliverable-language'
 import {
   WORKBENCH_DEFAULT_REQUEST_ACCESS,
   WORKBENCH_LIST_DEFAULT_LIMIT,
@@ -11,14 +10,12 @@ import {
   WorkbenchWorkspaceIdSchema
 } from '../workbench-request'
 
-/** `requestedAccess` and `deliverableLanguage` are additive: older clients omit both (D-018, D-013). */
 export const WorkbenchSubmitParams = z
   .object({
     workspaceId: WorkbenchWorkspaceIdSchema,
     objective: WorkbenchObjectiveSchema,
     idempotencyKey: z.uuid(),
-    requestedAccess: WorkbenchRequestAccessSchema.default(WORKBENCH_DEFAULT_REQUEST_ACCESS),
-    deliverableLanguage: DeliverableLanguageSchema.optional()
+    requestedAccess: WorkbenchRequestAccessSchema.default(WORKBENCH_DEFAULT_REQUEST_ACCESS)
   })
   .strict()
 

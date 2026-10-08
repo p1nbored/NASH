@@ -14,7 +14,7 @@ const pipe = {
   runtimeId: 'runtime-fixture-1',
   pid: 4321,
   startedAt: 1_790_000_000_000,
-  contractVersions: [1],
+  contractVersions: [3],
   transport: { kind: 'named-pipe', endpoint: '\\\\.\\pipe\\orca-4321-ab12cd-dot' },
   ingressToken: FIXTURE_TOKEN
 }
@@ -63,7 +63,7 @@ describe('dot ingress discovery file', () => {
     }
   })
 
-  it('accepts contract version 1 only and a known schema version', () => {
+  it('accepts contract version 3 only and a known schema version', () => {
     expect(DotIngressMetadataSchema.safeParse({ ...pipe, contractVersions: [1, 2] }).success).toBe(
       false
     )

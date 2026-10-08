@@ -35,23 +35,6 @@ describe('validation runner: the default check (D-027)', () => {
   const validationOf = (report: Awaited<ReturnType<typeof world.runner.validatePending>>[0]) =>
     report?.outcome === 'settled' ? world.port.getValidation(report.validationId) : null
 
-  it('passes a Codex attempt whose process finished with a result, with no review', async () => {
-    const task = world.claimedTask({ spec: { machineChecks: [] } })
-    const [report] = await world.runner.validatePending()
-    expect(report).toMatchObject({ outcome: 'settled', verdict: 'pass' })
-    expect(world.taskStatus(task.taskId)).toBe('completed')
-    expect(world.state.reviewRequests).toEqual([])
-    expect(world.state.resolverCalls).toBe(0)
-    expect(validationOf(report)).toMatchObject({
-      policy: 'machine_checks',
-      validatorId: 'process_check',
-      checks: [
-        expect.objectContaining({ kind: 'executor_completed', status: 'pass' }),
-        expect.objectContaining({ kind: 'secret_scan_clean', status: 'pass' })
-      ]
-    })
-  })
-
   it.each([
     ['subagent', undefined],
     ['workflow', WORKFLOW_ROUTE]
@@ -115,13 +98,13 @@ describe('validation runner: the default check (D-027)', () => {
       reportedModels: ['claude-opus-5-5']
     }
     const task = world.claimedTask({
-      spec: { machineChecks: [{ kind: 'executor_completed' }], review: 'model' }
+      spec: { machineChecks: [{ kind: 'artifact_exists', path: 'report.md' }], review: 'model' }
     })
     const [report] = await world.runner.validatePending()
     expect(report).toMatchObject({ outcome: 'settled', verdict: 'pass' })
     expect(world.state.reviewRequests).toHaveLength(1)
     expect(validationOf(report)?.checks.map((check) => check.kind)).toEqual([
-      'executor_completed',
+      'artifact_exists',
       'model_review',
       'review_criterion'
     ])

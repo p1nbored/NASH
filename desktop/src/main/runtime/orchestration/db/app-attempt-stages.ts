@@ -7,13 +7,7 @@ export const APP_ATTEMPT_STAGES = {
   /** Validators could not decide; the user or dot resolves it, never the primary. */
   validationInconclusive: 'validation_inconclusive',
   startFailed: 'start_failed',
-  startOutcomeUnknown: 'start_outcome_unknown',
   executorFailed: 'executor_failed',
-  executorBlocked: 'executor_blocked',
-  // Orca's own names for a stop, so a stop settled here reads like one settled by Orca.
-  stopRequested: 'stop_requested',
-  processStopped: 'process_stopped',
-  stopOutcomeUnknown: 'stop_outcome_unknown',
   settled: 'settled'
 } as const
 

@@ -7,11 +7,6 @@ import {
   WORKBENCH_SCHEMA_VERSION_CURRENT,
   type WorkbenchSchemaDefinition
 } from './workbench-request-schema-definition'
-import { migrateWorkbenchSchemaV2ToV3 } from './workbench-schema-migration-v3'
-import {
-  WORKBENCH_V2_SCHEMA_DEFINITIONS,
-  WORKBENCH_V2_SCHEMA_VERSION
-} from './workbench-schema-v2-definitions'
 
 const SCHEMA_TABLE = 'workbench_request_schema'
 
@@ -22,8 +17,6 @@ function tablesOf(definitions: readonly WorkbenchSchemaDefinition[]): string[] {
 }
 
 const CURRENT_TABLES = tablesOf(WORKBENCH_SCHEMA_DEFINITIONS)
-// Why both layouts: a v2 table left beside v3 ones must read as an incomplete layout, never be ignored.
-const KNOWN_TABLES = [...new Set([...CURRENT_TABLES, ...tablesOf(WORKBENCH_V2_SCHEMA_DEFINITIONS)])]
 // Why: the version table is checked before its version is read, so a drifted table is never trusted.
 const SCHEMA_TABLE_DEFINITIONS = WORKBENCH_SCHEMA_DEFINITIONS.filter(
   (definition) => definition.name === SCHEMA_TABLE
@@ -37,7 +30,7 @@ function incomplete(): OrchestrationError {
 function unsupportedVersion(): OrchestrationError {
   return new OrchestrationError(
     'workbench_recovery_required',
-    'Workbench schema version is unsupported. Pre-release layouts are not migrated and nothing was written.'
+    'Workbench schema version is unsupported.'
   )
 }
 
@@ -65,10 +58,10 @@ function verifyWorkbenchDefinitions(
 }
 
 function presentTables(db: Database.Database): Set<string> {
-  const placeholders = KNOWN_TABLES.map(() => '?').join(', ')
+  const placeholders = CURRENT_TABLES.map(() => '?').join(', ')
   const rows = db
     .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (${placeholders})`)
-    .all(...KNOWN_TABLES)
+    .all(...CURRENT_TABLES)
   return new Set(rows.map((row) => String(row.name)))
 }
 
@@ -93,13 +86,9 @@ function readVersion(db: Database.Database, present: ReadonlySet<string>): unkno
 }
 
 /**
- * Creates the v3 layout, migrates an exact v2 one (D-016 section 1.2), or verifies an existing v3
- * one. Anything else fails closed with no change.
+ * Creates or verifies the current Workbench layout.
  */
-export function ensureWorkbenchRequestSchema(
-  db: Database.Database,
-  now: () => Date = () => new Date()
-): void {
+export function ensureWorkbenchRequestSchema(db: Database.Database): void {
   requireIdleWorkbenchConnection(db)
   runLifecycleWriteTransaction(db, 'workbench_schema', () => {
     const present = presentTables(db)
@@ -111,12 +100,6 @@ export function ensureWorkbenchRequestSchema(
       return
     }
     const version = readVersion(db, present)
-    if (version === WORKBENCH_V2_SCHEMA_VERSION) {
-      requireExactLayout(db, present, WORKBENCH_V2_SCHEMA_DEFINITIONS)
-      migrateWorkbenchSchemaV2ToV3(db, now().toISOString())
-      requireExactLayout(db, presentTables(db), WORKBENCH_SCHEMA_DEFINITIONS)
-      return
-    }
     if (version !== WORKBENCH_SCHEMA_VERSION_CURRENT) {
       throw unsupportedVersion()
     }

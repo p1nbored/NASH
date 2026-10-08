@@ -1,5 +1,7 @@
 # Architecture Direction
 
+> D-040 (2026-10-07 America/New_York): one primary agent, the task classifier and the task router remain. After routing, reuse Orca's original CLI/agent invocation, handoff, messaging and context delivery. The router chooses parameters; it does not require another execution or context framework.
+
 Use this document to align the current implementation. This project is already being developed by modifying the Orca codebase into a new application. Orca is the scaffold and source foundation; it is not an external subsystem that should be embedded wholesale.
 
 The project is still early enough that existing architecture may be changed where necessary. Preserve useful existing implementation, but do not keep obsolete abstractions merely for compatibility.
@@ -475,7 +477,7 @@ Use only explicitly available model IDs and supported thinking settings.
 
 For now, Gemini 3.8 Flash may be used as a configurable initial agy candidate when available.
 
-Gemini 4 remains disabled until broad availability is verified.
+No Gemini family is hard-coded out (D-040). A model is unavailable until the installed CLI/provider actually lists it; future availability requires no family-ban removal.
 
 ---
 

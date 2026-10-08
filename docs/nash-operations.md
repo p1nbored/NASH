@@ -112,7 +112,7 @@ The remaining gates run in order. Each needs your explicit authorization at the 
 ### G8: agy smoke
 
 - **Needs first:**
-  - P-01: confirm `gemini-3.8-flash-high` or another non-Gemini-4 id;
+  - P-01: confirm `gemini-3.8-flash-high` or another actually listed model id;
   - P-03: review agy's global permissions, including the persisted allow rules, `allowNonWorkspaceAccess` and the trusted home directory.
 - **Authorize:** billed agy runs.
 - **Verifies:**
@@ -209,3 +209,11 @@ The paths are for Windows. On macOS the user data folders sit under the applicat
 - **Cancel a request:** before launch this cancels only the request. After launch it stops the run first.
 - **Unanswered permission prompts:** they wait 240 s, then fall back to Claude Code's own dialog in the terminal. They are never allowed or denied automatically.
 - **Quit NASH:** quitting aborts classification, validations and Codex and agy children within the 20 s shutdown window. On Windows only the root process's exit can be proven, so check Task Manager for leftover `codex.exe` or `agy.exe` after an interrupted run.
+
+## Native execution update — 2026-10-08
+
+For new routed Codex/AGY tasks, task-start now uses Orca worker launch, native preamble delivery, mailbox reports and worker stop/release. Task-show reads the native result. Do not task-report on behalf of those workers. Claude primary/subagent/workflow tasks keep their existing in-session reporting. Existing headless attempt logs remain readable.
+
+Task access ceilings are passed into native PTY/structured launch; user global settings are not rewritten. Dynamically verified route choices carry through to native argv, including an effort absent from the old static catalog. There are no new hard-coded model availability entries. Failed/canceled runs still offer Stop run for leftover-worker cleanup.
+
+Native reports are not automatically labeled as independent validation passes. The existing independent Codex/Claude reviewer path remains headless for in-session/historical validation; it is not used to launch new routed Codex/AGY task workers. Actual provider/account, WSL and SSH behavior still requires live verification; passing fixture tests is not a claim of live model access.

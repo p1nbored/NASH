@@ -1,7 +1,7 @@
 import {
-  dotIngressErrorMessageV3,
-  type DotIngressErrorCodeV3
-} from '../../../shared/dot-ingress/dot-ingress-errors-v3'
+  dotIngressErrorMessage,
+  type DotIngressErrorCode
+} from '../../../shared/dot-ingress/dot-ingress-errors'
 import { DOT_INGRESS_PRINCIPAL_ID } from '../../../shared/dot-ingress/dot-ingress-limits'
 import { getDotIngressSettingsStore } from '../orchestration/db/dot-ingress-settings-store'
 import { workbenchWorkspaceBinding } from '../orchestration/db/workbench-request-scope'
@@ -14,10 +14,10 @@ import type { DotIngressServiceDeps } from './dot-ingress-ports'
 
 /** A contract error with its fixed English message; data carries codes and names, never request text. */
 export function dotRefusal(
-  code: DotIngressErrorCodeV3,
+  code: DotIngressErrorCode,
   data?: Record<string, unknown>
 ): OrchestrationError {
-  return new OrchestrationError(code, dotIngressErrorMessageV3(code), data)
+  return new OrchestrationError(code, dotIngressErrorMessage(code), data)
 }
 
 /** Off means off: every dot call but hello is refused while the user has the interface switched off. */

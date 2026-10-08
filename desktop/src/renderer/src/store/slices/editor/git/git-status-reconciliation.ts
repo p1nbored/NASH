@@ -140,11 +140,7 @@ export function reconcileOpenFilesForStatus(
       return [file]
     }
 
-    if (
-      file.mode === 'conflict-review' ||
-      file.mode === 'check-details' ||
-      file.mode === 'task-window'
-    ) {
+    if (file.mode === 'conflict-review' || file.mode === 'check-details') {
       return [file]
     }
 

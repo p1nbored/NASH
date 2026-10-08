@@ -8,16 +8,20 @@ import type {
   ProposalDecision,
   RoutingTableProposal
 } from '../../../../shared/routing-table/routing-table-proposal-schema'
-import type { Route } from '../../../../shared/routing-table/routing-table-schema'
+import type { Coordinator, Route } from '../../../../shared/routing-table/routing-table-schema'
 
 type ReasoningLevel = Route['reasoning_level']
+
+export function primaryAgentLabel(agent: Coordinator['agent']): string {
+  return agent === 'codex' ? 'Codex' : 'Claude Code'
+}
 
 export function taskTypeLabel(taskType: RoutingTaskType): string {
   switch (taskType) {
     case 'coordinator_reasoning':
       return translate(
         'auto.components.settings.routingTable.labels.coordinatorReasoning',
-        'Coordinator reasoning'
+        'Primary reasoning'
       )
     case 'complex_planning_reasoning':
       return translate(
@@ -72,7 +76,7 @@ export function executionTargetLabel(target: ExecutionTarget): string {
     case 'claude_primary':
       return translate(
         'auto.components.settings.routingTable.labels.claudePrimary',
-        'Claude primary session'
+        'Primary session'
       )
     case 'claude_subagent':
       return translate(
@@ -164,7 +168,7 @@ export function tableSourceLabel(source: 'bundled' | 'user'): string {
 export function sameAsCoordinatorLabel(): string {
   return translate(
     'auto.components.settings.routingTable.labels.sameAsCoordinator',
-    'Same as coordinator'
+    'Same as primary'
   )
 }
 

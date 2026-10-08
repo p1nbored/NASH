@@ -292,14 +292,6 @@ describe('font stacks', () => {
   const root = themes.light
   const flat = (value: string | undefined): string => (value ?? '').replace(/\s+/g, ' ').trim()
 
-  function rule(selector: string): Record<string, string> {
-    const escaped = selector.replace(/[()]/g, '\\$&')
-    const body = new RegExp(`\\n${escaped}\\s*{([\\s\\S]*?)\\n}`).exec(mainCss)?.[1] ?? ''
-    return Object.fromEntries(
-      [...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, flat(value)])
-    )
-  }
-
   it('keeps the user-overridable UI family Latin-only and appends CJK and generic fallbacks', () => {
     expect(flat(root['--app-font-family'])).toBe(
       "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI'"
@@ -309,43 +301,23 @@ describe('font stacks', () => {
     )
   })
 
-  it('lists Simplified Chinese, Japanese and Korean system families in the default CJK stack', () => {
-    const stack = flat(root['--app-cjk-font-family'])
-    for (const family of [
-      'Microsoft YaHei UI',
-      'PingFang SC',
-      'Hiragino Sans',
-      'Yu Gothic UI',
-      'Malgun Gothic',
-      'Noto Sans CJK SC'
-    ]) {
-      expect(stack).toContain(`'${family}'`)
+  it('uses bundled CJK families for the same sans and serif roles in every language', () => {
+    expect(root['--app-cjk-font-family']).toBe("'Noto Sans CJK'")
+    expect(root['--app-cjk-serif-font-family']).toBe("'Noto Serif CJK'")
+    for (const file of ['NotoSansCJKsc-VF.woff2', 'NotoSerifCJKsc-Regular.woff2']) {
+      expect(
+        fs
+          .readFileSync(new URL(`./fonts/${file}`, import.meta.url))
+          .subarray(0, 4)
+          .toString()
+      ).toBe('wOF2')
     }
-  })
-
-  it.each([
-    [':root:lang(zh)', 'Microsoft YaHei UI'],
-    [':root:lang(zh-Hant),\n:root:lang(zh-TW),\n:root:lang(zh-HK)', 'Microsoft JhengHei UI'],
-    [':root:lang(ja)', 'Yu Gothic UI'],
-    [':root:lang(ko)', 'Malgun Gothic']
-  ])('%s puts its own CJK family first', (selector, family) => {
-    const tokens = rule(selector)
-    expect(tokens['--app-cjk-font-family'], selector).toMatch(new RegExp(`^'${family}'`))
-    expect(tokens['--app-cjk-serif-font-family'], selector).toBeDefined()
-  })
-
-  it('places the Traditional Chinese rule after the generic Chinese rule so it wins', () => {
-    expect(mainCss.indexOf(':root:lang(zh-Hant)')).toBeGreaterThan(
-      mainCss.indexOf(':root:lang(zh) {')
-    )
   })
 
   it('gives the display serif and the monospace stacks CJK fallbacks', () => {
     const display = flat(root['--app-display-font-family'])
     expect(display).toMatch(/^Georgia,/)
-    expect(display).toMatch(
-      /var\(--app-cjk-serif-font-family\), var\(--app-cjk-font-family\), serif$/
-    )
+    expect(display).toMatch(/var\(--app-cjk-serif-font-family\), serif$/)
     expect(flat(root['--font-mono'])).toMatch(/var\(--app-cjk-font-family\), monospace$/)
   })
 

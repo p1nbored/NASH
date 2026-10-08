@@ -7,11 +7,10 @@ import {
 } from './app-attempt-validation-outcome'
 import { seedRoutedTask } from './app-attempt-routing.test-fixture'
 import { createAppRunHarness, type AppRunHarness } from './app-attempt.test-fixture'
-import { FIXTURE_HASH_B, errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
+import { errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
 import { getTaskValidationStore } from './task-validation-store'
 import type { TaskRouteInput } from './task-route-store'
 
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
 const SUBAGENT: Partial<TaskRouteInput> = {
   target: 'claude_subagent',
   model: 'claude-sonnet-5-5',
@@ -32,10 +31,6 @@ const KEPT_BY_PRIMARY: Partial<TaskRouteInput> = {
   cliSetting: null,
   availability: null
 }
-const PROCESS_PASS = [
-  { kind: 'executor_completed', status: 'pass' },
-  { kind: 'secret_scan_clean', status: 'pass' }
-] as const
 const REPORT_PASS = [{ kind: 'session_report', status: 'pass' }] as const
 const CLAIM_REF = { kind: 'session_report_claim', ref: 'message_1' }
 
@@ -60,31 +55,6 @@ describe('app attempt validation outcome: the default check (D-027)', () => {
       reviewerModel: null,
       timestamp: fixtureTime(8)
     }).record.validationId
-  }
-
-  function processClaim(): { taskId: string; validationId: string } {
-    const seeded = seedRoutedTask(harness, { spec: { machineChecks: [] } })
-    const { dispatchId } = settlement().start({
-      taskId: seeded.taskId,
-      routeId: seeded.routeId,
-      executor: 'codex_cli',
-      creator: { kind: 'system' },
-      maxDepth: Number.MAX_SAFE_INTEGER,
-      timestamp: fixtureTime(5)
-    })
-    settlement().markRunning({
-      dispatchId,
-      executableEvidence: { executable: 'codex' },
-      timestamp: fixtureTime(6)
-    })
-    settlement().settleClaim({
-      dispatchId,
-      exitCode: 0,
-      tree: EXITED,
-      lastMessage: { sha256: FIXTURE_HASH_B, bytes: 5, secretLike: false },
-      timestamp: fixtureTime(7)
-    })
-    return { taskId: seeded.taskId, validationId: open(seeded.taskId, dispatchId, 'process_check') }
   }
 
   function inSessionClaim(route: Partial<TaskRouteInput>): {
@@ -118,24 +88,6 @@ describe('app attempt validation outcome: the default check (D-027)', () => {
     checks,
     evidenceRefs,
     timestamp: fixtureTime(9)
-  })
-
-  it('completes a process attempt that passed executor_completed and secret_scan_clean', () => {
-    const { taskId, validationId } = processClaim()
-    const refs = [{ kind: 'executor_result', ref: FIXTURE_HASH_B }]
-    outcome().recordVerdict(pass(validationId, [...PROCESS_PASS], refs))
-    expect(harness.owner.getTask(taskId)?.status).toBe('completed')
-  })
-
-  it('refuses a process pass that stands on anything but its process check', () => {
-    const { taskId, validationId } = processClaim()
-    const refs = [{ kind: 'executor_result', ref: FIXTURE_HASH_B }]
-    for (const checks of [[PROCESS_PASS[0]], [...REPORT_PASS], PROCESS_PASS.toReversed()]) {
-      expect(errorCodeOf(() => outcome().recordVerdict(pass(validationId, checks, refs)))).toBe(
-        'autopilot_validation_insufficient'
-      )
-    }
-    expect(harness.owner.getTask(taskId)?.status).toBe('blocked')
   })
 
   it.each([

@@ -5,7 +5,6 @@ import type {
   RouteSubject,
   UnavailableReason
 } from '../../routing-table/availability/route-availability-types'
-import type { MessageRow } from '../orchestration/types'
 import {
   createAppRunHarness,
   seedTask,
@@ -16,7 +15,6 @@ import { fixtureTime } from '../orchestration/db/autopilot-runtime.test-fixture'
 import { getTaskClassificationStore } from '../orchestration/db/task-classification-store'
 import { getTaskRouteStore } from '../orchestration/db/task-route-store'
 import type { TaskSpecInput } from '../orchestration/db/task-spec-store'
-import type { ExecutorRunReport } from './executor-run-report'
 
 export const FIXTURE_NOW_MS = Date.parse('2026-10-05T12:00:00.000Z')
 export const FIXTURE_CLI = 'orca'
@@ -68,6 +66,7 @@ export const SUBAGENT_ROUTE: RouteFixture = {
   taskType: 'software_engineering',
   subject: {
     target: 'claude_subagent',
+    primaryAgent: 'claude',
     model: 'claude-sonnet-5-5',
     reasoningLevel: 'max',
     requirement: 'required',
@@ -83,6 +82,7 @@ export const WORKFLOW_ROUTE: RouteFixture = {
   taskType: 'configured_project_workflow',
   subject: {
     target: 'claude_workflow',
+    primaryAgent: 'claude',
     model: 'claude-opus-5-5',
     reasoningLevel: 'max',
     requirement: 'required',
@@ -98,6 +98,7 @@ export const PRIMARY_ROUTE: RouteFixture = {
   taskType: 'complex_planning_reasoning',
   subject: {
     target: 'claude_primary',
+    primaryAgent: 'claude',
     model: 'claude-opus-5-5',
     reasoningLevel: 'max',
     requirement: 'required',
@@ -214,42 +215,6 @@ export function seedKeptAppTask(harness: AppRunHarness): { taskId: string; route
     timestamp: fixtureTime(3)
   })
   return { taskId, routeId: stored.routeId }
-}
-
-/** A clean, completed run as a runner would report it on a host that proves only the root's exit. */
-export function completedReport(overrides: Partial<ExecutorRunReport> = {}): ExecutorRunReport {
-  return {
-    verdict: { status: 'completed' },
-    spawned: true,
-    exitCode: 0,
-    cancellation: { requested: false },
-    treeProof: { verdict: 'unverifiable', method: 'root_exit_only' },
-    lastMessage: { sha256: 'f'.repeat(64), bytes: 120, secretLike: false },
-    usage: { inputTokens: 10, outputTokens: 5 },
-    threadId: 'thread-fixture-1',
-    facts: { versionProbe: 'ok' },
-    sandbox: { requested: 'read_only', applied: 'read_only' },
-    ...overrides
-  }
-}
-
-export type AnnounceSpy = {
-  readonly messages: MessageRow[]
-  readonly announce: (m: MessageRow) => void
-}
-
-export function announceSpy(): AnnounceSpy {
-  const messages: MessageRow[] = []
-  return { messages, announce: (message) => messages.push(message) }
-}
-
-/** A promise with its resolver, so a test decides when a fake run ends. */
-export function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
-  let resolve: (value: T) => void = () => undefined
-  const promise = new Promise<T>((settle) => {
-    resolve = settle
-  })
-  return { promise, resolve }
 }
 
 export { createAppRunHarness, type AppRunHarness }

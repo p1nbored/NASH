@@ -12,7 +12,7 @@ export default function WorkbenchSectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-6 items-center justify-between gap-2">
-      <h2 id={id} className="font-display text-base font-normal">
+      <h2 id={id} className="font-sans text-heading font-semibold">
         {title}
       </h2>
       {children}

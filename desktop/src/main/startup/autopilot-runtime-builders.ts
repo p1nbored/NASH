@@ -1,3 +1,4 @@
+import type { NativeReviewerDeps } from '../runtime/task-validation/reviewer-runner'
 import type { LaunchTarget } from '../agent-exec-shared/launch-target'
 import type { AgyExecutable } from '../agy-exec/agy-exec-executable'
 import type { RoutingTableContext } from '../routing-table/routing-table-context'
@@ -33,6 +34,7 @@ export type AutopilotHostPorts = Pick<
   RoutingTableRuntimePorts,
   'agents' | 'models' | 'rateLimits' | 'codex'
 > & {
+  readonly reviewer: Pick<NativeReviewerDeps, 'resolveInvocation'>
   readonly agy: { readonly resolveExecutable: () => AgyExecutable }
   /** The installed Claude Code launch target for `claude -p` reviews, or null. */
   readonly claude: { readonly resolveExecutable: () => LaunchTarget | null }

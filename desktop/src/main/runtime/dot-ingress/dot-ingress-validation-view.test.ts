@@ -9,7 +9,6 @@ import type { ValidationCheck } from '../orchestration/db/task-validation-record
 import { createTaskValidationPort } from '../task-validation/task-validation-port'
 import { createValidationDecisionService } from '../task-validation/validation-decision-service'
 import {
-  FIXTURE_OWN_WORKTREE,
   FIXTURE_REASON,
   inconclusiveAttempt
 } from '../task-validation/validation-decision.test-fixture'
@@ -130,37 +129,26 @@ describe('dot validation view (the U32 exception: title, reason, summary)', () =
     return entry
   }
 
-  it('shows only the approved fields, even for a write task in its own worktree', () => {
-    const write = inconclusiveAttempt(harness, {
-      executableEvidence: { executable: 'codex', attemptWorkspace: FIXTURE_OWN_WORKTREE }
-    })
+  it('shows only the approved fields for an in-session result', () => {
+    const write = inconclusiveAttempt(harness)
     const view = buildDotValidationView(harness.owner, pendingEntry(), DOT_REQUEST)
     expect(DotValidationViewSchema.parse(view)).toEqual({
       validationId: write.validationId,
       dotRequestId: DOT_REQUEST,
       title: 'Summarize the repository layout in a short report.',
-      reason: 'checks_inconclusive',
+      reason: 'primary_did_task',
       summary: FIXTURE_REASON,
       summaryWithheld: false,
       createdAt: fixtureTime(9)
     })
     const text = JSON.stringify(view)
-    for (const hidden of [
-      FIXTURE_OWN_WORKTREE.branch,
-      FIXTURE_OWN_WORKTREE.path,
-      FIXTURE_OWN_WORKTREE.baseCommit,
-      'gpt-6.1-sol',
-      harness.runId,
-      write.taskId,
-      write.dispatchId
-    ]) {
+    for (const hidden of ['gpt-6.1-sol', harness.runId, write.taskId, write.dispatchId]) {
       expect(text).not.toContain(hidden)
     }
   })
 
   it("sends the primary's masked report for a task it did itself", () => {
     const task = inconclusiveAttempt(harness, {
-      executor: 'in_session',
       route: PRIMARY_ROUTE,
       verdict: 'pending'
     })

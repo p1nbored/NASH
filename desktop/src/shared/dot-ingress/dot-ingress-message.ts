@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { DotRequestIdSchema } from './dot-ingress-params'
-import { DOT_INGRESS_CONTRACT_VERSION_TWO } from './dot-ingress-versions'
+import { DOT_INGRESS_CONTRACT_VERSION } from './dot-ingress-limits'
 
 // D-019: a follow-up message to the run a dot request started. It is addressed by the dot request id,
 // never by a run id, and the app applies the same checks as a new task before typing it into the
 // run's Claude Code terminal. The text never comes back to dot.
 
-/** The dot v2 bound in code points; the run message store holds more since D-027 (pinned remote manifest). */
+/** The dot bound in code points; the run message store holds more since D-027 (pinned remote manifest). */
 export const DOT_MESSAGE_TEXT_MAX_CHARS = 4_000
 // Why twice: the app counts code points, and one code point is at most two UTF-16 units.
 const TEXT_MAX_UTF16_UNITS = DOT_MESSAGE_TEXT_MAX_CHARS * 2
@@ -37,7 +37,7 @@ export const DOT_MESSAGE_REASONS = [
 ] as const
 export type DotMessageReason = (typeof DOT_MESSAGE_REASONS)[number]
 
-const ContractVersionSchema = z.literal(DOT_INGRESS_CONTRACT_VERSION_TWO)
+const ContractVersionSchema = z.literal(DOT_INGRESS_CONTRACT_VERSION)
 
 /** The message id is the dot's idempotency key: a replay returns the first outcome. */
 export const DotMessageParams = z

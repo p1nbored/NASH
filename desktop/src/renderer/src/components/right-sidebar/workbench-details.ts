@@ -1,4 +1,4 @@
-import { sanitizeCopiedDiagnostics } from '../../../../shared/crash-report-redaction'
+import { redactSecretShapes } from '../../../../shared/crash-report-redaction'
 import type { WorkbenchError } from './workbench-rpc-error'
 
 /** One `key: value` line of the block "Copy details" puts on the clipboard. */
@@ -14,7 +14,7 @@ export function formatWorkbenchDetails(
     const text = value === null || value === undefined ? '' : String(value)
     return text.trim() === '' ? [] : [`${key}: ${text.replace(/\r?\n|\r/g, ' ')}`]
   })
-  return sanitizeCopiedDiagnostics([`NASH Workbench: ${subject}`, ...lines].join('\n'))
+  return redactSecretShapes([`NASH Workbench: ${subject}`, ...lines].join('\n'))
 }
 
 /** The error's code, any sub-code and the raw server or runtime text (else the shown sentence). */

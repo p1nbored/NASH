@@ -51,7 +51,6 @@ const record: DotRequestRecord = {
   state: 'received',
   workspaceRef: 'dws_0123456789abcdef01234567',
   requestedAccess: 'workspace_write',
-  deliverableLanguage: 'zh-Hans',
   replyCorrelationId: 'conv-1',
   workbenchRequestId: null,
   failureCode: null,
@@ -71,13 +70,13 @@ describe('dot-facing request view', () => {
     const view = toDotRequestView(record)
     expect(DotRequestViewSchema.safeParse(view).success).toBe(true)
     expect(view).toEqual({
-      contractVersion: 1,
+      contractVersion: 3,
       dotRequestId: record.dotRequestId,
       sequence: 7,
       revision: 1,
       state: 'received',
       workspaceRef: record.workspaceRef,
-      deliverableLanguage: 'zh-Hans',
+      requestedAccess: record.requestedAccess,
       reply: { correlationId: 'conv-1' },
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -113,10 +112,10 @@ describe('dot-facing request view', () => {
     )
   })
 
-  it('never exposes the Workbench request id or the access the dot asked for', () => {
+  it('keeps the requested access but never exposes the Workbench request id', () => {
     const text = JSON.stringify(toDotRequestView(submitted, { state: 'active', blocker: null }))
     expect(text).not.toContain('wb-secret-1')
-    expect(text).not.toContain('workspace_write')
+    expect(text).toContain('workspace_write')
   })
 
   it.each(['canceled', 'failed'] as const)(
@@ -136,9 +135,6 @@ describe('dot-facing request view', () => {
   )
 
   it('fails closed on a record that cannot be a valid view', () => {
-    expect(errorCodeOf(() => toDotRequestView({ ...record, deliverableLanguage: 'en_US' }))).toBe(
-      'dot_recovery_required'
-    )
     expect(errorCodeOf(() => toDotRequestView({ ...record, workspaceRef: 'repo::/x' }))).toBe(
       'dot_recovery_required'
     )
@@ -221,8 +217,13 @@ describe('dot-facing workspace views and desktop settings view', () => {
   const disabled = { ...enabled, workspaceRef: 'dws_aaaaaaaaaaaaaaaaaaaaaaaa', enabled: false }
 
   it('lists enabled workspaces by opaque reference and label only', () => {
-    const views = toDotWorkspaceViews([enabled, disabled])
-    expect(views).toEqual([{ workspaceRef: enabled.workspaceRef, label: 'fixture-repo' }])
+    const views = toDotWorkspaceViews([
+      { ...enabled, maxAccess: 'read_only' },
+      { ...disabled, maxAccess: 'read_only' }
+    ])
+    expect(views).toEqual([
+      { workspaceRef: enabled.workspaceRef, label: 'fixture-repo', maxAccess: 'read_only' }
+    ])
     const text = JSON.stringify(views)
     expect(text).not.toContain(FIXTURE_WORKSPACE_ID)
     expect(text).not.toContain(FIXTURE_BINDING)
@@ -286,11 +287,12 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
   }
 
   it('keeps the tool, agent, one-line summary, status and times, and drops every internal id and the hash', () => {
-    const view = toDotDecisionView(decision, DOT_REQUEST_ID)
+    const view = toDotDecisionView(decision, DOT_REQUEST_ID, true)
     expect(DotDecisionViewSchema.safeParse(view).success).toBe(true)
     expect(view).toEqual({
       decisionId: decision.decisionId,
       dotRequestId: DOT_REQUEST_ID,
+      dotMayAllow: true,
       toolName: 'Bash',
       agentId: 'agent_7',
       summary: 'Bash: git status',
@@ -312,7 +314,7 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
       toolInput: 'FILE CONTENTS: password list',
       contents: 'FILE CONTENTS'
     }
-    const text = JSON.stringify(toDotDecisionView(smuggled, DOT_REQUEST_ID))
+    const text = JSON.stringify(toDotDecisionView(smuggled, DOT_REQUEST_ID, true))
     expect(text).not.toContain('FILE CONTENTS')
     expect(text).not.toContain('toolInput')
   })
@@ -323,7 +325,8 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
         ...decision,
         summary: `curl -H "Authorization: Bearer ${FAKE_BEARER_SECRET}" https://example.test`
       },
-      DOT_REQUEST_ID
+      DOT_REQUEST_ID,
+      true
     )
     expect(view.summary).not.toContain(FAKE_BEARER_SECRET)
     expect(view.summary).toContain('[redacted]')
@@ -332,20 +335,22 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
   it('cuts an overlong stored summary to 500 characters and flattens line breaks', () => {
     const long = toDotDecisionView(
       { ...decision, summary: `${'a'.repeat(300)}\n${'b'.repeat(400)}` },
-      DOT_REQUEST_ID
+      DOT_REQUEST_ID,
+      true
     )
     expect(Array.from(long.summary)).toHaveLength(DOT_DECISION_SUMMARY_MAX_CHARS)
     expect(long.summary).not.toMatch(/[\n\r]/)
     const emoji = toDotDecisionView(
       { ...decision, summary: '\u{1F600}'.repeat(600) },
-      DOT_REQUEST_ID
+      DOT_REQUEST_ID,
+      true
     )
     expect(Array.from(emoji.summary)).toHaveLength(DOT_DECISION_SUMMARY_MAX_CHARS)
     expect(DotDecisionViewSchema.safeParse(emoji).success).toBe(true)
   })
 
   it('refuses a request id that is not a dot request uuid', () => {
-    expect(errorCodeOf(() => toDotDecisionView(decision, 'request-1'))).toBe(
+    expect(errorCodeOf(() => toDotDecisionView(decision, 'request-1', true))).toBe(
       'dot_recovery_required'
     )
   })
@@ -357,7 +362,8 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
   ] as const)('shows a %s decision decided by %s', (status, decidedBy) => {
     const view = toDotDecisionView(
       { ...decision, status, decidedBy, decidedAt: fixtureTime(60) },
-      DOT_REQUEST_ID
+      DOT_REQUEST_ID,
+      true
     )
     expect(view).toMatchObject({ status, decidedBy, decidedAt: fixtureTime(60) })
   })
@@ -401,7 +407,7 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
         deadlineAt: fixtureTime(240),
         timestamp: fixtureTime(10)
       })
-      const view = toDotDecisionView(created, requestId)
+      const view = toDotDecisionView(created, requestId, true)
       expect(view.summary).toBe('Edit: src/billing/invoice.ts')
       const answered = store.answer({
         decisionId: created.decisionId,
@@ -412,7 +418,8 @@ describe('dot-facing decision view (D-017: redacted summary only)', () => {
       expect(answered.outcome).toBe('decided')
       const after = toDotDecisionView(
         answered.outcome === 'decided' ? answered.record : created,
-        requestId
+        requestId,
+        true
       )
       expect(after).toMatchObject({ status: 'allowed', decidedBy: 'dot' })
       const text = JSON.stringify([view, after])

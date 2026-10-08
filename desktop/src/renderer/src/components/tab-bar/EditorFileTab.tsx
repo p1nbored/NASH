@@ -1,6 +1,6 @@
 import { createElement, useCallback, useEffect, useRef, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
-import { GitCompareArrows, Eye, ShieldAlert, Pin, ListChecks, ScrollText } from 'lucide-react'
+import { GitCompareArrows, Eye, ShieldAlert, Pin, ListChecks } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { basename } from '@/lib/path'
@@ -16,7 +16,7 @@ import type { GitFileStatus } from '../../../../shared/git-status-types'
 import type { OpenFile } from '../../store/slices/editor'
 import { getUntitledFileRoot } from '@/components/editor/untitled-file-rename-path'
 import { preventMiddleButtonDefault } from './middle-button-default-guard'
-import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from './SortableTab'
+import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
 import type { TabDragItemData } from '../tab-group/useTabDragSplit'
 import {
   ACTIVE_TAB_INDICATOR_CLASSES,
@@ -32,6 +32,7 @@ import { TAB_LABEL_WIDTH_CLASSES } from './tab-width-rules'
 import { useTabStripSlotProps } from './use-tab-strip-slot-props'
 import { EditorFileTabCloseButton } from './EditorFileTabCloseButton'
 import { useTabStripPointerActivation } from './tab-strip-pointer-activation'
+import { editorTabDocumentFolderAccess } from '@/lib/local-file-access'
 
 export default function EditorFileTab({
   file,
@@ -88,7 +89,6 @@ export default function EditorFileTab({
   const isDiff = file.mode === 'diff'
   const isConflictReview = file.mode === 'conflict-review'
   const isCheckDetails = file.mode === 'check-details'
-  const isTaskWindow = file.mode === 'task-window'
   const isMarkdownPreviewTab = file.mode === 'markdown-preview'
   // Why: only deleted/renamed mean the file is gone from its path, which is
   // what strikethrough conveys. 'changed' keeps a normal label — its surface
@@ -163,7 +163,9 @@ export default function EditorFileTab({
       oldPath: file.filePath,
       newName,
       worktreeId: file.worktreeId,
-      worktreePath
+      worktreePath,
+      // Why: a file opened outside every project may be renamed to any path, wherever it lives.
+      documentScoped: editorTabDocumentFolderAccess(useAppStore.getState(), file) !== undefined
     })
   }
 
@@ -270,11 +272,6 @@ export default function EditorFileTab({
       {isConflictReview ? (
         <ShieldAlert
           className={`w-3 h-3 mr-1 shrink-0 ${isActive ? 'text-orange-400' : 'text-orange-400/70'}`}
-        />
-      ) : isTaskWindow ? (
-        <ScrollText
-          data-active={isActive}
-          className="mr-1 size-3 shrink-0 text-muted-foreground data-[active=true]:text-foreground"
         />
       ) : isCheckDetails ? (
         <ListChecks

@@ -31,7 +31,7 @@ export const DOT_REMOTE_TOOL_TEXT = {
   nash_submit_task: {
     title: 'Submit a task to NASH',
     description:
-      "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId."
+      "Queue a task for NASH on the user's PC and return its receipt at once. Keep task handoffs, workflow messages and reports returned to dot in English. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId."
   },
   nash_get_receipt: {
     title: 'Get a receipt',

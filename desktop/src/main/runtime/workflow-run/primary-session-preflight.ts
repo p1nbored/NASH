@@ -22,10 +22,12 @@ import {
 } from './primary-session-permission'
 import {
   parseClaudeModelChoice,
+  parsePrimaryModelChoice,
   primarySessionOk,
   primarySessionRefused,
   type PrimaryPermissionMode,
   type PrimarySessionAccess,
+  type PrimarySessionAgent,
   type PrimarySessionResult
 } from './primary-session-types'
 
@@ -33,12 +35,13 @@ import {
 export type PrimarySessionClientSettings = AgentStartupSettings & Partial<NativeChatDefaultSettings>
 
 export type PrimarySessionPreflightInput = {
+  readonly agent: PrimarySessionAgent
   readonly settings: PrimarySessionClientSettings
   readonly platform: NodeJS.Platform
   readonly access: PrimarySessionAccess
-  readonly settingsFilePath: string
-  readonly agentsJson: string | null
-  /** The coordinator route's model and resolved Claude effort. */
+  readonly settingsFilePath?: string
+  readonly agentsJson?: string | null
+  /** The coordinator route's exact model and resolved provider effort. */
   readonly model: string
   readonly effort: string
 }
@@ -46,8 +49,14 @@ export type PrimarySessionPreflightInput = {
 export type PrimarySessionLaunchSpec = {
   /** The replacement for the Settings default arguments; `YOLO_TUI_AGENT_ARGS` never applies. */
   readonly agentArgs: string
+  /** Stored NASH posture; the provider's flags are derived from requested access. */
   readonly permissionMode: PrimaryPermissionMode
-  readonly sessionOptions: { readonly model: string; readonly effort: string }
+  readonly sessionOptions: {
+    readonly model: string
+    readonly effort: string
+    readonly taskAccess?: PrimarySessionAccess
+    readonly routeValidated?: 'true'
+  }
   readonly launchPreferences: AgentLaunchPreferences | undefined
   readonly shell: AgentStartupShell
   /** The command the check built with a neutral prompt, for the launch receipt and diagnostics. */
@@ -162,6 +171,9 @@ export function runPrimarySessionPreflight(
   input: PrimarySessionPreflightInput,
   buildPlan: StartupPlanBuilder = buildAgentStartupPlan
 ): PrimarySessionResult<PrimarySessionLaunchSpec> {
+  if (input.agent === 'codex') {
+    return runCodexPreflight(input, buildPlan)
+  }
   if (input.settings.agentCmdOverrides?.claude) {
     return primarySessionRefused(
       'autopilot_session_command_override',
@@ -176,7 +188,7 @@ export function runPrimarySessionPreflight(
   if (!choice.ok) {
     return choice
   }
-  if (!settingsPathIsUsable(input.settingsFilePath, input.platform)) {
+  if (!input.settingsFilePath || !settingsPathIsUsable(input.settingsFilePath, input.platform)) {
     return primarySessionRefused(
       'autopilot_session_settings_path_invalid',
       'The settings file path must be an absolute path without control characters.'
@@ -185,7 +197,7 @@ export function runPrimarySessionPreflight(
   const argv = buildPrimarySessionArgv({
     mode: mode.value,
     settingsFilePath: input.settingsFilePath,
-    agentsJson: input.agentsJson
+    agentsJson: input.agentsJson ?? null
   })
   const expected: readonly FlagPair[] = [
     ...pairsOf(argv),
@@ -223,6 +235,71 @@ export function runPrimarySessionPreflight(
   }
   return primarySessionOk({
     agentArgs: agentArgs.value,
+    permissionMode: mode.value,
+    sessionOptions,
+    launchPreferences: toAgentLaunchPreferences(sessionOptions),
+    shell,
+    probeCommand: plan.launchCommand
+  })
+}
+
+function runCodexPreflight(
+  input: PrimarySessionPreflightInput,
+  buildPlan: StartupPlanBuilder
+): PrimarySessionResult<PrimarySessionLaunchSpec> {
+  if (input.settings.agentCmdOverrides?.codex) {
+    return primarySessionRefused(
+      'autopilot_session_command_override',
+      'The Codex launch command is overridden in Settings; remove the override to start a run.'
+    )
+  }
+  const mode = resolvePrimaryPermissionMode(input.access)
+  const choice = parsePrimaryModelChoice('codex', input.model, input.effort)
+  if (!mode.ok) {
+    return mode
+  }
+  if (!choice.ok) {
+    return choice
+  }
+  const sessionOptions = {
+    model: choice.value.model,
+    effort: choice.value.effort,
+    taskAccess: input.access,
+    routeValidated: 'true' as const
+  }
+  const base = resolveAgentStartupPlanInputs({
+    agent: 'codex',
+    settings: input.settings,
+    platform: input.platform,
+    isRemote: false,
+    sessionOptions
+  })
+  const shell = resolveStartupShell(input.platform, base.shell)
+  const plan = buildPlan({ ...base, prompt: PROBE_PROMPT })
+  const permissions = [
+    ['--sandbox', input.access === 'read_only' ? 'read-only' : 'workspace-write'],
+    ['--ask-for-approval', 'on-request']
+  ]
+  if (
+    !plan ||
+    plan.agent !== 'codex' ||
+    plan.followupPrompt !== null ||
+    plan.sessionOptions?.model !== input.model ||
+    plan.sessionOptions?.effort !== input.effort ||
+    !permissions.every(([flag, value]) =>
+      plan.launchCommand.includes(
+        `${quoteStartupArg(flag, shell)} ${quoteStartupArg(value, shell)}`
+      )
+    ) ||
+    /dangerously|bypass|dontask|--permission-mode|--settings|--agents/i.test(plan.launchCommand)
+  ) {
+    return primarySessionRefused(
+      'autopilot_session_startup_plan_mismatch',
+      'The native Codex startup plan did not preserve the selected model, effort and task permissions.'
+    )
+  }
+  return primarySessionOk({
+    agentArgs: base.agentArgs ?? '',
     permissionMode: mode.value,
     sessionOptions,
     launchPreferences: toAgentLaunchPreferences(sessionOptions),

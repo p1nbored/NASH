@@ -1380,7 +1380,7 @@
                 },
                 "message": {
                   "type": "string",
-                  "const": "Unsupported contract version. Supported versions: 1."
+                  "const": "Unsupported contract version. Supported versions: 3."
                 }
               },
               "required": [
@@ -1519,29 +1519,6 @@
                 "message": {
                   "type": "string",
                   "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                }
-              },
-              "required": [
-                "by",
-                "code",
-                "message"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "by": {
-                  "type": "string",
-                  "const": "nash"
-                },
-                "code": {
-                  "type": "string",
-                  "const": "dot_deliverable_language_invalid"
-                },
-                "message": {
-                  "type": "string",
-                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                 }
               },
               "required": [

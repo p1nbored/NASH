@@ -4,8 +4,6 @@ import { OrchestrationDb } from '../orchestration/db'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { OrchestrationCoordinatorKey } from '../orchestration/orchestration-caller-identity'
 import {
-  insertRawRun,
-  insertRawTaskSpec,
   readSchemaEntries,
   readUserVersion
 } from '../orchestration/db/autopilot-runtime.test-fixture'
@@ -16,8 +14,7 @@ import {
   assertAppRunTaskUpdateAllowed,
   assertAppRunUseAllowed,
   assertAppRunUsesTaskStart,
-  assertNoOpenAppRunBeforeReset,
-  assertWorkerReportNotForAppAttempt
+  assertNoOpenAppRunBeforeReset
 } from './app-run-policy'
 import type { AppRunReaders } from './app-run-readers'
 import {
@@ -25,7 +22,6 @@ import {
   PRIMARY_PANE_KEY,
   PRIMARY_PANE_KEY_REMINTED,
   addAppTaskSpec,
-  addExecutorAttempt,
   addValidationRow,
   markRunAsAppRun
 } from './app-run-policy.test-fixture'
@@ -453,89 +449,6 @@ describe('app-run policy', () => {
     })
   })
 
-  describe('worker report settlement', () => {
-    /** An app attempt: a real Orca dispatch with an executor row, which a report must never settle. */
-    function appAttempt(): { runId: string; dispatchId: string } {
-      const runId = orcaRun()
-      markRunAsAppRun(db, { runId })
-      const taskId = appTask(runId)
-      const started = db.createStartingWorkerDispatch({
-        creator: { kind: 'system' },
-        maxDepth: Number.MAX_SAFE_INTEGER,
-        taskId,
-        startOptions: {}
-      })
-      addExecutorAttempt(db, { dispatchId: started.dispatch.id, runId, taskId, kind: 'codex_cli' })
-      return { runId, dispatchId: started.dispatch.id }
-    }
-
-    it('refuses a report for a dispatch that has an executor row', () => {
-      const { dispatchId } = appAttempt()
-
-      expect(refusal(() => assertWorkerReportNotForAppAttempt(db, dispatchId))).toMatchObject({
-        code: CODES.reportRefused,
-        data: { effectsApplied: false }
-      })
-    })
-
-    it('lets a report for another dispatch through, beside an app attempt', () => {
-      const { runId } = appAttempt()
-      const other = db.createStartingWorkerDispatch({
-        creator: { kind: 'system' },
-        maxDepth: Number.MAX_SAFE_INTEGER,
-        taskId: db.createTask({ spec: 'plain worker', runId }).id,
-        startOptions: {}
-      })
-
-      expect(refusal(() => assertWorkerReportNotForAppAttempt(db, other.dispatch.id))).toBeNull()
-    })
-
-    it('ignores an executor row whose dispatch Orca no longer holds', () => {
-      const { dispatchId } = appAttempt()
-      db.resetTasks()
-
-      expect(refusal(() => assertWorkerReportNotForAppAttempt(db, dispatchId))).toBeNull()
-    })
-
-    it('is inert without the autopilot tables and creates nothing', () => {
-      const entriesBefore = readSchemaEntries(db.db)
-
-      expect(refusal(() => assertWorkerReportNotForAppAttempt(db, 'ctx_any'))).toBeNull()
-      expect(readSchemaEntries(db.db)).toEqual(entriesBefore)
-    })
-
-    it('answers inside an open transaction, where no store may be opened', () => {
-      // Raw rows only: no A2 store has been opened on this connection yet.
-      ensureAutopilotRuntimeSchema(db.db)
-      const runId = orcaRun()
-      insertRawRun(db.db, runId, 'request_raw')
-      const taskId = db.createTask({ spec: 'work', runId }).id
-      insertRawTaskSpec(db.db, taskId, runId)
-      const started = db.createStartingWorkerDispatch({
-        creator: { kind: 'system' },
-        maxDepth: Number.MAX_SAFE_INTEGER,
-        taskId,
-        startOptions: {}
-      })
-      addExecutorAttempt(db, {
-        dispatchId: started.dispatch.id,
-        runId,
-        taskId,
-        kind: 'codex_cli'
-      })
-
-      db.db.exec('BEGIN IMMEDIATE')
-      try {
-        expect(
-          refusal(() => assertWorkerReportNotForAppAttempt(db, started.dispatch.id))?.code
-        ).toBe(CODES.reportRefused)
-        expect(refusal(() => assertWorkerReportNotForAppAttempt(db, 'ctx_other'))).toBeNull()
-      } finally {
-        db.db.exec('ROLLBACK')
-      }
-    })
-  })
-
   describe('injected readers', () => {
     it('reads validations through the port it is given', () => {
       const runId = orcaRun()
@@ -543,8 +456,7 @@ describe('app-run policy', () => {
         findAppRun: (id) => (id === runId ? { runId, status: 'active' } : null),
         listOpenAppRuns: () => [],
         listLivePrimaryPanes: () => [],
-        hasPassingValidation: (taskId) => taskId === 'task_validated',
-        findExecutorAttempt: () => null
+        hasPassingValidation: (taskId) => taskId === 'task_validated'
       }
 
       expect(

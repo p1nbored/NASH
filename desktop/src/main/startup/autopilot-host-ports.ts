@@ -1,9 +1,16 @@
+import {
+  requireLegacyAgentSessionAccountHome,
+  type AgentSessionAccountHome
+} from '../../shared/agent-session-account-home'
+import { claudeConfigDirEnvPatch } from '../claude/claude-config-dir-pin'
+import { resolveClaudeStructuredInvocation } from '../claude/claude-structured-launch-resolution'
+import { resolveCodexStructuredInvocation } from '../codex/codex-structured-launch-resolution'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import { nativeChatShellEnvironmentPolicy } from '../../shared/native-chat-shell-environment'
 import { resolveTuiAgentLaunchEnv } from '../../shared/tui-agent-launch-defaults'
 import type { LaunchTarget } from '../agent-exec-shared/launch-target'
 import { resolveAgyExecutable, type AgyExecutable } from '../agy-exec/agy-exec-executable'
-import { claudeStructuredAuthPolicy } from '../claude-accounts/claude-structured-auth-policy'
+import { claudeStructuredAuthPolicyForSettings } from '../claude-accounts/claude-structured-auth-policy'
 import {
   createClaudeModelCatalogProbe,
   type ClaudeModelCatalogProbeDeps
@@ -20,7 +27,6 @@ import {
   type CatalogProbeSuccess
 } from '../routing-table/availability/model-listing'
 import type { RateLimitHeadroomState } from '../routing-table/availability/route-provider-headroom'
-import { USAGE_METER_SOURCE } from '../rate-limits/usage-meters-policy'
 import {
   createStructuredAgentEnvironmentResolvers,
   type StructuredAgentEnvironmentSources
@@ -39,6 +45,8 @@ type ProbeOf<Deps> = (deps: Deps) => (accountHomePath: string) => Promise<Catalo
 
 /** The producers, replaceable in tests; production binds Orca's own. */
 export type AutopilotHostSeams = {
+  readonly resolveClaudeInvocation: typeof resolveClaudeStructuredInvocation
+  readonly resolveCodexInvocation: typeof resolveCodexStructuredInvocation
   readonly detectInstalled: () => Promise<readonly string[]>
   readonly createEnvironmentResolvers: (
     sources: StructuredAgentEnvironmentSources
@@ -52,6 +60,8 @@ export type AutopilotHostSeams = {
 }
 
 const PRODUCTION_SEAMS: AutopilotHostSeams = {
+  resolveClaudeInvocation: resolveClaudeStructuredInvocation,
+  resolveCodexInvocation: resolveCodexStructuredInvocation,
   detectInstalled: () => detectInstalledAgentsWithShellPathHydration(),
   createEnvironmentResolvers: createStructuredAgentEnvironmentResolvers,
   createClaudeProbe: createClaudeModelCatalogProbe,
@@ -65,6 +75,9 @@ const PRODUCTION_SEAMS: AutopilotHostSeams = {
 
 export type AutopilotHostSettings = Pick<
   GlobalSettings,
+  | 'claudeManagedAccounts'
+  | 'activeClaudeManagedAccountId'
+  | 'activeClaudeManagedAccountIdsByRuntime'
   | 'disabledTuiAgents'
   | 'agentDefaultEnv'
   | 'nativeChatInheritShellEnvironment'
@@ -82,7 +95,7 @@ export type AutopilotRateLimitSource = {
 export type AutopilotHostSources = {
   /** `runtime.resolveStructuredAgentAccountHome`: the home a structured launch would pin now. */
   readonly runtime: {
-    resolveStructuredAgentAccountHome(agent: 'claude' | 'codex'): Promise<{ path: string }>
+    resolveStructuredAgentAccountHome(agent: 'claude' | 'codex'): Promise<AgentSessionAccountHome>
   }
   /** The persisted settings, re-read on every use. */
   readonly settings: () => AutopilotHostSettings
@@ -115,7 +128,7 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
   const claudeProbe = onFirstUse(() =>
     seams.createClaudeProbe({
       resolveInheritedEnv: () => environment().resolveClaudeInheritedEnv(),
-      resolveAuthPolicy: () => claudeStructuredAuthPolicy(),
+      resolveAuthPolicy: () => claudeStructuredAuthPolicyForSettings(settings()),
       resolveEnv: () => resolveTuiAgentLaunchEnv('claude', settings().agentDefaultEnv)
     })
   )
@@ -123,8 +136,29 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
     seams.createCodexProbe({ resolveEnvironment: () => environment().resolveCodexEnvironment() })
   )
   const homeOf = async (agent: 'claude' | 'codex'): Promise<string> =>
-    (await sources.runtime.resolveStructuredAgentAccountHome(agent)).path
+    requireLegacyAgentSessionAccountHome(
+      await sources.runtime.resolveStructuredAgentAccountHome(agent)
+    ).path
   return {
+    reviewer: {
+      resolveInvocation: async (agent) => {
+        const home = await homeOf(agent)
+        if (agent === 'codex') {
+          const launch = await seams.resolveCodexInvocation({
+            resolveEnvironment: () => environment().resolveCodexEnvironment()
+          })
+          return { command: launch.command, env: { ...launch.environment, CODEX_HOME: home } }
+        }
+        return seams.resolveClaudeInvocation(
+          {
+            resolveInheritedEnv: () => environment().resolveClaudeInheritedEnv(),
+            resolveAuthPolicy: () => claudeStructuredAuthPolicyForSettings(settings()),
+            resolveEnv: () => resolveTuiAgentLaunchEnv('claude', settings().agentDefaultEnv)
+          },
+          (env) => ({ ...env, ...claudeConfigDirEnvPatch(home, { env }) })
+        )
+      }
+    },
     agents: {
       detectInstalled: () => seams.detectInstalled(),
       disabled: () => settings().disabledTuiAgents
@@ -147,9 +181,7 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
     },
     rateLimits: {
       read: () => sources.rateLimits()?.getState() ?? null,
-      refresh: async () => (await sources.rateLimits()?.refresh()) ?? null,
-      // Why: NASH reads usage only through the CLIs; latches still block.
-      usageSource: USAGE_METER_SOURCE
+      refresh: async () => (await sources.rateLimits()?.refresh()) ?? null
     },
     codex: { resolveExecutable: () => seams.resolveCodexExecutable() },
     agy: { resolveExecutable: () => seams.resolveAgyExecutable() },

@@ -11,6 +11,32 @@ export type RateLimitWindow = {
 
 export type ProviderRateLimitStatus = 'idle' | 'fetching' | 'ok' | 'error' | 'unavailable'
 
+type ExtraUsageBalanceBase = {
+  enabled: boolean
+  disabledReason: string | null
+  resetsAt: number | null
+}
+
+type CurrencyExtraUsageBalance = ExtraUsageBalanceBase & {
+  unit: 'currency'
+  /** Null when the current balance is unavailable. */
+  balance: number | null
+  currencyCode: string
+  spent: number | null
+  spendLimit: number | null
+  spentPercent: number | null
+}
+
+type CreditExtraUsageBalance = ExtraUsageBalanceBase & {
+  unit: 'credits'
+  balance: number
+  unlimited: boolean
+}
+
+// Why: currency and unitless credits have different metadata; the discriminator
+// prevents consumers from inventing dummy currency or spend-limit values.
+export type ExtraUsageBalance = CurrencyExtraUsageBalance | CreditExtraUsageBalance
+
 export type RateLimitBucket = RateLimitWindow & {
   name: string
 }
@@ -41,7 +67,6 @@ export type UsageRateLimitMetadata = {
   failureKind?: UsageRateLimitFailureKind
   credentialSource?: string
   authProvenance?: string
-  deferredByLiveClaudeSession?: boolean
   lastSuccessfulSource?: UsageRateLimitSource
   /** Unix ms timestamp before which usage refetches should not be attempted (from HTTP Retry-After). */
   retryAtMs?: number
@@ -67,6 +92,8 @@ export type ProviderRateLimits = {
   fableWeekly?: RateLimitWindow | null
   /** 30-day monthly window (OpenCode Go, Grok unified billing, Cursor plan pools), null if not available. */
   monthly?: RateLimitWindow | null
+  /** Overage / pay-as-you-go balance the plan spends into once its windows cap. */
+  extraUsage?: ExtraUsageBalance | null
   /** Named per-model buckets (Gemini models, Cursor plan pools). */
   buckets?: RateLimitBucket[]
   /** Available earned Codex rate-limit reset credits, if reported. */
@@ -156,7 +183,7 @@ export type RateLimitState = {
    */
   minimaxApiKeyConfigured: boolean
   /**
-   * True when main resolved an OpenCode Go API key (Orca settings,
+   * True when main resolved an OpenCode Go API key (NASH settings,
    * OPENCODE_API_KEY, or what OpenCode stored on /connect). The key itself
    * never leaves main; the status bar ORs this with the session cookie to
    * decide whether the OpenCode Go bar stays visible.
@@ -171,22 +198,11 @@ export type RateLimitState = {
    */
   cursorAuthConfigured: boolean
   /**
-   * True when a GLM Coding Plan API key is saved in Orca's AI Provider
+   * True when a GLM Coding Plan API key is saved in NASH's AI Provider
    * Accounts. The key itself never leaves main; the status bar uses this to
    * keep the ZCode bar visible across reloads between snapshot refreshes.
    */
   zcodePlanApiKeyConfigured?: boolean
-  /**
-   * True when the host keeps Orca's vendor usage meters off (NASH, D-023 correction): no
-   * provider is read through a stored credential or a vendor endpoint, so clients hide those
-   * providers instead of waiting for them. Absent on older hosts.
-   */
-  usageMetersDisabled?: boolean
-  /**
-   * True when the host reads Claude, Codex and agy usage only through each CLI (NASH): the
-   * Claude status line, codex app-server and agy /usage. Absent on older hosts.
-   */
-  cliUsageReadings?: boolean
   claudeTarget: RateLimitRuntimeTarget
   codexTarget: RateLimitRuntimeTarget
   inactiveClaudeAccounts: InactiveAccountUsage[]

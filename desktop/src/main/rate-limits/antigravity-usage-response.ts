@@ -19,7 +19,7 @@ import { deriveMostConstrainedWindow } from './rate-limit-bucket-summary'
  * that rounds the fraction to a whole percent and drops both the bucket ids and `disabled`.
  */
 
-/** 7 days. agy reports the window by name, so the minute count is Orca's mapping, not agy's. */
+/** 7 days. agy reports the window by name, so the minute count is NASH's mapping, not agy's. */
 const WEEKLY_WINDOW_MINUTES = 10_080
 /** 5 hours. Only some tiers expose a 5h bucket; a tier without one reports weekly alone. */
 const SESSION_WINDOW_MINUTES = 300
@@ -55,7 +55,7 @@ function readString(value: unknown): string | null {
 }
 
 /**
- * Maps agy's window name onto Orca's minute count.
+ * Maps agy's window name onto NASH's minute count.
  *
  * Why only these two: agy groups models into pools that share a limit, and a pool carries at most a
  * rolling 5h bucket and a weekly bucket. An unrecognised name is reported as a named bucket with no
@@ -219,7 +219,7 @@ export function parseAntigravityUsageStdout(stdout: string): AntigravityUsageRea
  *
  * Why this matters: in print mode an *unrecognised* slash command is not an error — agy sends the
  * text to the model as an ordinary prompt. On a build of agy that does not know `/usage`, polling
- * would quietly start a conversation and spend the user's quota every cycle while Orca reported
+ * would quietly start a conversation and spend the user's quota every cycle while NASH reported
  * "did not report a quota". A real command reply carries an empty `conversation_id` and
  * `num_turns: 0`; a prompt carries a conversation id and at least one turn.
  */

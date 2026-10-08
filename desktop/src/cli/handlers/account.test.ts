@@ -6,17 +6,23 @@ import type * as NodeFs from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
+  deleteKeychainMock,
   getVersionManagerBinPathsMock,
+  readKeychainMock,
   resolveCliCommandMock,
   rmSyncMock,
   spawnMock,
-  stdioForWindowsInteractiveChildMock
+  stdioForWindowsInteractiveChildMock,
+  writeKeychainMock
 } = vi.hoisted(() => ({
+  deleteKeychainMock: vi.fn(),
   getVersionManagerBinPathsMock: vi.fn(),
+  readKeychainMock: vi.fn(),
   resolveCliCommandMock: vi.fn(),
   rmSyncMock: vi.fn(),
   spawnMock: vi.fn(),
-  stdioForWindowsInteractiveChildMock: vi.fn()
+  stdioForWindowsInteractiveChildMock: vi.fn(),
+  writeKeychainMock: vi.fn()
 }))
 
 // Why: keep real temp-dir cleanup by default so leak assertions stay honest,
@@ -31,6 +37,11 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
   execFileSync: vi.fn(),
   spawn: spawnMock
+}))
+vi.mock('../../main/claude-accounts/keychain', () => ({
+  deleteActiveClaudeKeychainCredentialsStrict: deleteKeychainMock,
+  readActiveClaudeKeychainCredentialsStrict: readKeychainMock,
+  writeActiveClaudeKeychainCredentials: writeKeychainMock
 }))
 // Why importOriginal: withCliRuntimeOnPath is a pure filesystem-probing helper,
 // and the PATH assertions below are only meaningful against the real one.
@@ -51,7 +62,10 @@ import {
   WINDOWS_BATCH_UNSAFE_ARGUMENTS_ERROR,
   WINDOWS_BATCH_UNSAFE_CHARACTERS_LABEL
 } from '../../shared/windows-batch-spawn'
-import { ACCOUNT_IMPORT_RUNTIME_CAPABILITY } from '../../shared/protocol-version'
+import {
+  ACCOUNT_IMPORT_RUNTIME_CAPABILITY,
+  CLAUDE_SIGN_IN_RUNTIME_CAPABILITY
+} from '../../shared/protocol-version'
 
 function successfulChild(): EventEmitter {
   const child = new EventEmitter()
@@ -110,14 +124,23 @@ describe('account CLI handlers', () => {
     }))
     resolveCliCommandMock.mockReset().mockImplementation((command: string) => command)
     getVersionManagerBinPathsMock.mockReset().mockReturnValue([])
+    readKeychainMock.mockReset().mockResolvedValue(null)
+    deleteKeychainMock.mockReset().mockResolvedValue(undefined)
+    writeKeychainMock.mockReset().mockResolvedValue(undefined)
     callMock.mockReset().mockImplementation((method: string) =>
       Promise.resolve({
         id: 'test',
         ok: true,
         result:
           method === 'status.get'
-            ? { capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY] }
-            : accountState(method.includes('Claude') ? 'claude@example.com' : 'codex@example.com'),
+            ? {
+                capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY, CLAUDE_SIGN_IN_RUNTIME_CAPABILITY]
+              }
+            : method === 'accounts.beginClaudeSignIn'
+              ? { accountId: 'draft', configDir: '/fake/final-profile', runtime: 'host' }
+              : accountState(
+                  method.includes('Claude') ? 'claude@example.com' : 'codex@example.com'
+                ),
         _meta: { runtimeId: 'test-runtime' }
       })
     )
@@ -291,6 +314,19 @@ describe('account CLI handlers', () => {
     expect(pathValues).toContain(`${nodeBin}${delimiter}${effectivePathBefore}`)
   })
 
+  it('runs login in the final profile and never reads, writes or cleans up Keychain credentials', async () => {
+    await ACCOUNT_HANDLERS['account add'](context('claude'))
+    expect(spawnMock.mock.calls[0]?.[2].env.CLAUDE_CONFIG_DIR).toBe('/fake/final-profile')
+    expect(callMock).toHaveBeenCalledWith(
+      'accounts.finishClaudeSignIn',
+      { accountId: 'draft', runtime: 'host', wslDistro: undefined },
+      { timeoutMs: 300000 }
+    )
+    expect(readKeychainMock).not.toHaveBeenCalled()
+    expect(writeKeychainMock).not.toHaveBeenCalled()
+    expect(deleteKeychainMock).not.toHaveBeenCalled()
+  })
+
   it('attributes a Codex account added through the WSL bridge to the cwd distro', async () => {
     Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
 
@@ -312,24 +348,32 @@ describe('account CLI handlers', () => {
     process.env.ORCA_CLI_WSL_DISTRO = 'Debian'
 
     await ACCOUNT_HANDLERS['account add'](
-      context('codex', false, String.raw`\\wsl.localhost\Ubuntu-22.04\home\user`)
+      context('claude', false, String.raw`\\wsl.localhost\Ubuntu-22.04\home\user`)
     )
 
     expect(callMock).toHaveBeenCalledWith(
-      'accounts.addCodexFromHome',
-      expect.objectContaining({ runtime: 'wsl', wslDistro: 'Debian' })
+      'accounts.beginClaudeSignIn',
+      expect.objectContaining({ runtime: 'wsl', wslDistro: 'Debian' }),
+      { timeoutMs: 300000 }
     )
   })
 
-  it('attributes codex from a Windows mount to the bridge distro', async () => {
-    Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
-    process.env.ORCA_CLI_WSL_DISTRO = 'Ubuntu Work'
-    await ACCOUNT_HANDLERS['account add'](context('codex', false, String.raw`C:\work with spaces`))
-    expect(callMock).toHaveBeenCalledWith(
-      'accounts.addCodexFromHome',
-      expect.objectContaining({ runtime: 'wsl', wslDistro: 'Ubuntu Work' })
-    )
-  })
+  it.each(['claude', 'codex'])(
+    'attributes %s from a Windows mount to the bridge distro',
+    async (agent) => {
+      Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
+      process.env.ORCA_CLI_WSL_DISTRO = 'Ubuntu Work'
+      await ACCOUNT_HANDLERS['account add'](context(agent, false, String.raw`C:\work with spaces`))
+      expect(
+        callMock.mock.calls.some(
+          ([method, params]) =>
+            method ===
+              (agent === 'claude' ? 'accounts.beginClaudeSignIn' : 'accounts.addCodexFromHome') &&
+            params.wslDistro === 'Ubuntu Work'
+        )
+      ).toBe(true)
+    }
+  )
 
   it('ignores an ambient WSL distro in a native Windows account add', async () => {
     Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
@@ -433,7 +477,9 @@ describe('account CLI handlers', () => {
         ? Promise.resolve({
             id: 'test',
             ok: true,
-            result: { capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY] },
+            result: {
+              capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY, CLAUDE_SIGN_IN_RUNTIME_CAPABILITY]
+            },
             _meta: { runtimeId: 'test-runtime' }
           })
         : method === 'accounts.list'
@@ -473,21 +519,39 @@ describe('account CLI handlers', () => {
     expect(spawnMock).not.toHaveBeenCalled()
   })
 
-  it('fails before login when the running runtime predates account imports', async () => {
+  it('still adds Codex through an older host that advertises only the retired import capability', async () => {
     callMock.mockResolvedValue({
       id: 'test',
       ok: true,
-      result: { capabilities: [] },
+      result: { capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY] },
       _meta: { runtimeId: 'test-runtime' }
     })
+    spawnMock.mockImplementation(() => {
+      throw new Error('stop after the capability gate')
+    })
 
-    await expect(ACCOUNT_HANDLERS['account add'](context('codex'))).rejects.toThrow(
-      'runtime is too old'
-    )
-    expect(callMock).toHaveBeenCalledOnce()
-    expect(callMock).toHaveBeenCalledWith('status.get')
-    expect(spawnMock).not.toHaveBeenCalled()
+    await expect(ACCOUNT_HANDLERS['account add'](context('codex'))).rejects.toThrow()
+    expect(spawnMock).toHaveBeenCalled()
   })
+
+  it.each(['claude', 'codex'] as const)(
+    'refuses %s login before spawning when its capability is absent',
+    async (agent) => {
+      callMock.mockResolvedValue({
+        id: 'test',
+        ok: true,
+        result: { capabilities: [] },
+        _meta: { runtimeId: 'test-runtime' }
+      })
+
+      await expect(ACCOUNT_HANDLERS['account add'](context(agent))).rejects.toThrow(
+        'The running NASH runtime is too old to add accounts from the CLI.'
+      )
+      expect(callMock).toHaveBeenCalledOnce()
+      expect(callMock).toHaveBeenCalledWith('status.get')
+      expect(spawnMock).not.toHaveBeenCalled()
+    }
+  )
 
   it.each(['environment', 'pairing-code'])(
     'rejects --%s instead of silently ignoring it',
@@ -534,7 +598,9 @@ describe('account CLI handlers', () => {
         ? Promise.resolve({
             id: 'test',
             ok: true,
-            result: { capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY] },
+            result: {
+              capabilities: [ACCOUNT_IMPORT_RUNTIME_CAPABILITY, CLAUDE_SIGN_IN_RUNTIME_CAPABILITY]
+            },
             _meta: { runtimeId: 'test-runtime' }
           })
         : method === 'accounts.list'
@@ -566,39 +632,23 @@ describe('account CLI handlers', () => {
     expect(logSpy).not.toHaveBeenCalled()
   })
 
-  it('adds a Codex account when no --agent is given', async () => {
-    await ACCOUNT_HANDLERS['account add']({ ...context('codex'), flags: new Map() })
-
-    expect(spawnMock).toHaveBeenCalledOnce()
-    expect(spawnMock.mock.calls[0]?.[0]).toBe('codex')
-    expect(spawnMock.mock.calls[0]?.[1]).toEqual(['login', '--device-auth'])
-    expect(callMock).toHaveBeenCalledWith(
-      'accounts.addCodexFromHome',
-      expect.objectContaining({ sourceHome: expect.any(String) })
-    )
+  it('does not touch a locked Keychain while the CLI signs in', async () => {
+    readKeychainMock.mockRejectedValue(new Error('locked'))
+    deleteKeychainMock.mockRejectedValue(new Error('locked'))
+    writeKeychainMock.mockRejectedValue(new Error('locked'))
+    await ACCOUNT_HANDLERS['account add'](context('claude'))
+    expect(readKeychainMock).not.toHaveBeenCalled()
+    expect(deleteKeychainMock).not.toHaveBeenCalled()
+    expect(writeKeychainMock).not.toHaveBeenCalled()
   })
 
-  it('refuses `--agent claude` and points to the user own Claude login', async () => {
-    const error: unknown = await ACCOUNT_HANDLERS['account add'](context('claude')).then(
-      () => null,
-      (caught: unknown) => caught
-    )
-
-    expect(error).toMatchObject({
-      code: 'claude_accounts_removed',
-      message: expect.stringContaining('claude /login')
-    })
-    expect(spawnMock).not.toHaveBeenCalled()
-    expect(callMock).not.toHaveBeenCalled()
-  })
-
-  it('rejects `--agent` with no value instead of defaulting to Codex', async () => {
+  it('rejects `--agent` with no value instead of defaulting to Claude', async () => {
     // Why: the parser turns a valueless flag into boolean true, so a silent
     // default would run a full OAuth login for the wrong provider.
     await expect(
-      ACCOUNT_HANDLERS['account add']({ ...context('codex'), flags: new Map([['agent', true]]) })
+      ACCOUNT_HANDLERS['account add']({ ...context('claude'), flags: new Map([['agent', true]]) })
     ).rejects.toThrow(
-      'Missing a value for --agent. Use `--agent codex`, `--agent opencode`, or `--agent devin`.'
+      'Missing a value for --agent. Use `--agent claude`, `--agent codex`, `--agent opencode`, or `--agent devin`.'
     )
     expect(spawnMock).not.toHaveBeenCalled()
   })
@@ -608,21 +658,45 @@ describe('account CLI handlers', () => {
       id: 'test',
       ok: true,
       result: {
-        claude: { accounts: [], activeAccountId: null },
-        codex: {
-          accounts: [{ id: 'codex-wsl', email: 'codex@example.com' }],
+        claude: {
+          accounts: [{ id: 'claude-wsl', email: 'claude@example.com' }],
           activeAccountId: null,
-          activeAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'codex-wsl' } }
-        }
+          activeAccountIdsByRuntime: { host: null, wsl: { Ubuntu: 'claude-wsl' } }
+        },
+        codex: { accounts: [], activeAccountId: null }
       },
       _meta: { runtimeId: 'test-runtime' }
     })
 
     await ACCOUNT_HANDLERS['account list']({ ...context('claude'), flags: new Map() })
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('codex@example.com (active)'))
-    // Why: Claude has no managed accounts, so its always-empty roster is not rendered.
-    expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining('Claude'))
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('claude@example.com (active)'))
+  })
+
+  it('tells the user which saved Claude accounts need a fresh sign-in', async () => {
+    callMock.mockResolvedValue({
+      id: 'test',
+      ok: true,
+      result: {
+        claude: {
+          accounts: [
+            { id: 'old', email: 'old@example.com', needsSignIn: true },
+            { id: 'ok', email: 'ok@example.com' }
+          ],
+          activeAccountId: 'old'
+        },
+        codex: { accounts: [], activeAccountId: null }
+      },
+      _meta: { runtimeId: 'test-runtime' }
+    })
+
+    await ACCOUNT_HANDLERS['account list']({ ...context('claude'), flags: new Map() })
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '  old@example.com (active) (sign in again in NASH Settings > AI Provider Accounts)\n  ok@example.com\n'
+      )
+    )
   })
 
   it('lists accounts without forcing a provider usage refresh', async () => {

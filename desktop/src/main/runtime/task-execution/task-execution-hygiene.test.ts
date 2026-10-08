@@ -25,15 +25,4 @@ describe('task execution hygiene', () => {
       )
     }
   )
-
-  it('maps only the sandbox policy to workspace-write', () => {
-    const writers = SOURCES.filter((source) => source.text.includes('workspace-write'))
-    expect(writers.map((source) => source.name)).toEqual(['executor-sandbox-policy.ts'])
-  })
-
-  it('never spells an agy effort flag', () => {
-    const agy = SOURCES.find((source) => source.name === 'agy-task-executor.ts')
-    expect(agy?.text).toBeDefined()
-    expect(agy?.text).not.toMatch(/effort\s*:/)
-  })
 })

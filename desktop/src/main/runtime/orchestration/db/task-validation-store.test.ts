@@ -212,15 +212,6 @@ describe('task validation store', () => {
       ).toBe('autopilot_invalid_input')
     })
 
-    it('refuses a worker model that is not the model the route ran', () => {
-      const { taskId, dispatchId } = awaiting(false)
-      expect(
-        errorCodeOf(() =>
-          store().open(reviewOpen(taskId, dispatchId, { workerModel: 'claude-sonnet-5-5' }))
-        )
-      ).toBe('autopilot_validation_worker_model_mismatch')
-    })
-
     it("refuses an attempt that has no recorded claim, or that is not the task's", () => {
       const seeded = seedRoutedTask(harness)
       const running = seedStartedAttempt(harness, seeded.taskId, seeded.routeId)

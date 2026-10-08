@@ -32,6 +32,7 @@ export function attachMainWindowCoreServices(
   const openCodeUsage = state.openCodeUsage
   const museUsage = state.museUsage
   const codexAccounts = state.codexAccounts
+  const claudeAccounts = state.claudeAccounts
   const rateLimits = state.rateLimits
   const automations = state.automations
   const keybindings = state.keybindings
@@ -46,6 +47,7 @@ export function attachMainWindowCoreServices(
     !openCodeUsage ||
     !museUsage ||
     !codexAccounts ||
+    !claudeAccounts ||
     !rateLimits ||
     !automations ||
     !keybindings ||
@@ -63,6 +65,7 @@ export function attachMainWindowCoreServices(
     openCodeUsage,
     museUsage,
     codexAccounts,
+    claudeAccounts,
     rateLimits,
     window.webContents.id,
     automations,
@@ -121,7 +124,7 @@ export function attachMainWindowCoreServices(
       onPtyExit: handlePtyExit,
       onBeforeUpdateQuit: async () => {
         await preserveAgentAuthBeforeRestart({ codexRuntimeHome, store })
-        await store.writeLatestProfileStateJsonCompatibilityExportAsync()
+        await store.flushPendingOrThrowAsync({ fullCheckpoint: true })
       },
       onBeforeUpdateQuitFailure: 'abort',
       updateInstallMode: resolveUpdateInstallMode(state.isServeMode),

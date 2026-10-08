@@ -1,3 +1,4 @@
+import { recordManagedHookInstallFailure } from '../agent-hooks/install-telemetry'
 import { app, nativeTheme } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
@@ -14,7 +15,14 @@ import { startPreGoneCrashSampling } from '../crash-reporting/process-gone-diagn
 import { recordProcessGoneCrash } from './main-window-lifecycle-flags'
 import { handleGpuChildCrash } from './gpu-lifecycle'
 import { isGpuFallbackCrashCandidate } from '../crash-reporting/gpu-crash-fallback-decision'
-import { reconcileStartupManagedHooks } from './startup-managed-hooks'
+import { startCodexHooks } from '../codex/codex-hook-reconcile'
+import { hydrateAgentCliShellPath } from '../agent-hooks/local-agent-cli-presence'
+import {
+  installManagedAgentHooks,
+  isAgentStatusHooksEnabledForAgent,
+  resolveStartupManagedHookAction,
+  shouldContinueManagedHookStartup
+} from '../agent-hooks/managed-agent-hook-controls'
 import { shouldInstallManagedHooks } from './configure-process'
 import { mainProcessState as state } from './main-process-state'
 import { initializeMainProcessObservers } from './main-process-observers'
@@ -31,6 +39,7 @@ import { loadWorktreeRemovalRecordsForStore } from './worktree-removal-records-l
 import { runAfterFirstWindowShown } from './first-window-deferral'
 import { logStartupMilestone } from './startup-diagnostics'
 import { refreshInstalledOpenCodeStatusPlugins } from '../opencode/opencode-status-plugin-startup-refresh'
+import { pruneDesktopOrcadArtifactCache } from '../orcad/orcad-artifact-cache-retention'
 
 // Headless serve never opens a window, so the sweep still has to run off a timer there.
 const WORKTREE_TRASH_SWEEP_FALLBACK_MS = 15_000
@@ -101,18 +110,42 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   runAfterFirstWindowShown(() => {
     refreshInstalledOpenCodeStatusPlugins(store.getSettings())
   }, WORKTREE_TRASH_SWEEP_FALLBACK_MS)
+  runAfterFirstWindowShown(() => {
+    void pruneDesktopOrcadArtifactCache(app.getPath('userData')).catch((error) => {
+      console.warn('[orcad-artifacts] Failed to bound the slot cache:', error)
+    })
+  }, WORKTREE_TRASH_SWEEP_FALLBACK_MS)
   nativeTheme.themeSource = store.getSettings().theme ?? 'system'
-  // Why a module: the startup hook install follows NASH's Claude-only scope (user decision of
-  // 2026-10-06) and is tested there; it runs in the background and never rejects.
-  void reconcileStartupManagedHooks({
-    managedHooksAllowed: shouldInstallManagedHooks(is.dev),
-    settings: () => store.getSettings(),
-    isQuitting: () => state.isQuitting,
-    hydrateShellPath: app.isPackaged,
-    userDataPath: () => app.getPath('userData'),
-    isRealCodexHomeSelected: () =>
-      state.codexRuntimeHome?.isHostSystemDefaultRealHomeSelected() === true
+  // Why here, after PATH hydration: the first Codex launch usually finds Codex's hook hash ready,
+  // and launches find the reconcile in flight before CLI detection ends.
+  startCodexHooks({
+    pathReady: app.isPackaged ? hydrateAgentCliShellPath() : Promise.resolve(),
+    isEnabled: () => isAgentStatusHooksEnabledForAgent(store.getSettings(), 'codex'),
+    resolveLaunchHome: () => {
+      if (!state.codexRuntimeHome) {
+        throw new Error('Codex runtime home service is not initialized')
+      }
+      return state.codexRuntimeHome.resolveHostCodexHomePathForLaunchReadOnly()
+    }
   })
+  const startupManagedHookSettings = store.getSettings()
+  const shouldReconcileStartupManagedHooks =
+    shouldInstallManagedHooks(is.dev) &&
+    resolveStartupManagedHookAction(startupManagedHookSettings) === 'install'
+  // Why skip rather than remove when the off switch is set: the hook files are user-global but this
+  // decision reads only THIS profile's settings, so removing here deletes the hooks every other Orca
+  // instance depends on (STA-5679). Skipping already keeps removed hooks from reappearing on launch.
+  if (shouldReconcileStartupManagedHooks) {
+    const managedHookStore = store
+    void installManagedAgentHooks(managedHookStore.getSettings(), {
+      shouldHydrateShellPath: app.isPackaged,
+      onInstallError: recordManagedHookInstallFailure,
+      shouldContinue: (agent) =>
+        shouldContinueManagedHookStartup(state.isQuitting, managedHookStore.getSettings(), agent)
+    }).catch((error: unknown) =>
+      console.warn('[agent-hooks] failed to reconcile managed hooks on startup:', error)
+    )
+  }
   // Why: process-gone metrics only see survivors, and the gone-time host memory
   // read lands after the corpse released its pages; both need a live pre-gone
   // sample to compare against in crash reports.

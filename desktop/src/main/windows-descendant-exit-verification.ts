@@ -1,6 +1,5 @@
-import { getProcessTableIndex } from '../shared/process-table-index'
+import { collectDescendantsFromIndex, getProcessTableIndex } from '../shared/process-table-index'
 import type { DescendantTreeVerdict } from './pty-descendant-exit-verification'
-import { windowsDescendantsFromRows } from './providers/windows-foreground-process-rows'
 import { readWindowsProcessTableFresh } from './windows/windows-process-table'
 import { terminateWindowsProcessTree } from './windows-process-tree-kill'
 
@@ -100,10 +99,9 @@ export async function captureWindowsDescendantSnapshot(
         (parentCreationTimeMs === undefined || row.creationTimeMs >= parentCreationTimeMs))
     )
   })
-  const descendants = windowsDescendantsFromRows(currentRows, rootPid)
-  if (!descendants) {
-    return null
-  }
+  const descendants = collectDescendantsFromIndex(getProcessTableIndex(currentRows), rootPid).sort(
+    (a, b) => b.depth - a.depth
+  )
   return {
     root: { pid: root.pid, creationTimeMs: root.creationTimeMs },
     descendants: descendants.flatMap((row) =>

@@ -32,7 +32,7 @@ export type ReviewPromptInput = {
     | { readonly kind: 'text'; readonly text: string }
     | { readonly kind: 'session_report'; readonly text: string }
     | { readonly kind: 'none'; readonly reason: string }
-  /** Codex: reads the workspace in `codex exec`'s documented default sandbox (read-only), no flag. */
+  /** Native Codex read-only or Claude plan mode can inspect the assigned workspace. */
   readonly canReadWorkspace: boolean
 }
 

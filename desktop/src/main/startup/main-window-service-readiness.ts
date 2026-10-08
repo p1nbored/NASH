@@ -17,6 +17,7 @@ const MAIN_WINDOW_SERVICE_REQUIREMENTS = [
     'codexRuntimeHome',
     'Codex runtime home service must be initialized before opening the main window'
   ],
+  ['claudeAccounts', 'Claude account service must be initialized before opening the main window'],
   [
     'claudeRuntimeAuth',
     'Claude runtime auth service must be initialized before opening the main window'

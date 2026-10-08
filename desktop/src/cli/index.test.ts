@@ -307,7 +307,7 @@ describe('unknown command surfaces a suggestion', () => {
     expect(process.exitCode).toBe(1)
     const stderr = errorSpy.mock.calls.map((call) => String(call[0])).join('\n')
     expect(stderr).toContain('Unknown command: worktree remov')
-    expect(stderr).toContain('orca worktree')
+    expect(stderr).toContain('nash worktree')
   })
 
   it('reports a mistyped pre-command flag without swallowing the command', async () => {
@@ -389,7 +389,7 @@ describe('unknown help command surfaces a suggestion', () => {
     await main(argv, '/tmp/repo')
 
     expect(process.exitCode).toBe(1)
-    expect(logSpy.mock.calls.flat().join('\n')).toContain('Did you mean: orca worktree')
+    expect(logSpy.mock.calls.flat().join('\n')).toContain('Did you mean: nash worktree')
     logSpy.mockRestore()
     process.exitCode = 0
   })

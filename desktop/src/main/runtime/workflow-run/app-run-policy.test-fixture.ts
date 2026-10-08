@@ -7,7 +7,6 @@ import {
   insertRawTaskSpec
 } from '../orchestration/db/autopilot-runtime.test-fixture'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
-import { ensureWorkbenchRequestSchema } from '../orchestration/db/workbench-request-schema'
 import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
 import type { WorkflowRunStatus } from '../orchestration/db/workflow-run-transition'
 
@@ -86,9 +85,9 @@ export function markRunAsAppRun(db: OrchestrationDb, seed: AppRunSeed): void {
     workspaceId: 'fixture-repo::/fixture/repo',
     workspaceBinding: FIXTURE_HASH_A,
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     routingTableVersion: 1,
     routingTableSha256: FIXTURE_HASH_B,
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: fixtureTime()
@@ -112,7 +111,7 @@ export function markRunAsAppRun(db: OrchestrationDb, seed: AppRunSeed): void {
   }
 }
 
-/** The side row an app task has; validation and executor rows hang off it. */
+/** The side row an app task has; validation rows hang off it. */
 export function addAppTaskSpec(db: OrchestrationDb, taskId: string, runId: string): void {
   insertRawTaskSpec(db.db, taskId, runId)
 }
@@ -141,43 +140,6 @@ export function addValidationRow(
       waiver,
       waiver ? fixtureTime() : null,
       fixtureTime(),
-      fixtureTime()
-    )
-}
-
-/** The classification, route and executor row a Codex or agy attempt has once task-start ran. */
-export function addExecutorAttempt(
-  db: OrchestrationDb,
-  attempt: { dispatchId: string; runId: string; taskId: string; kind: 'codex_cli' | 'agy_cli' }
-): void {
-  const { dispatchId, runId, taskId, kind } = attempt
-  // Why: task_classifications points at the spend tables, which the Workbench family owns.
-  ensureWorkbenchRequestSchema(db.db)
-  db.db
-    .prepare(
-      `INSERT INTO task_classifications (classification_id, task_id, attempt, outcome, needs_delegation, task_type, created_at)
-        VALUES (?, ?, 1, 'classified', 1, 'general_research_analysis', ?)`
-    )
-    .run(`classification_${taskId}`, taskId, fixtureTime())
-  db.db
-    .prepare(
-      `INSERT INTO task_routes (route_id, classification_id, routing_table_version, routing_table_sha256,
-        target, model, policy_level, status, reasons, created_at)
-        VALUES (?, ?, 1, ?, ?, 'gpt-6.1-sol', 'max', 'available', '[]', ?)`
-    )
-    .run(`route_${taskId}`, `classification_${taskId}`, FIXTURE_HASH_B, kind, fixtureTime())
-  db.db
-    .prepare(
-      `INSERT INTO executor_processes (dispatch_id, run_id, task_id, executor_kind, route_id, state,
-        run_directory, started_at) VALUES (?, ?, ?, ?, ?, 'running', ?, ?)`
-    )
-    .run(
-      dispatchId,
-      runId,
-      taskId,
-      kind,
-      `route_${taskId}`,
-      `${runId}/${dispatchId}`,
       fixtureTime()
     )
 }

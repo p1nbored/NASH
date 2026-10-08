@@ -68,6 +68,7 @@ vi.mock('@/runtime/runtime-rpc-client', async () => {
 })
 vi.mock('@/lib/browser-uuid', () => ({ createBrowserUuid: uuid }))
 vi.mock('@/i18n/i18n', () => ({
+  i18n: { language: 'en' },
   translate: (_key: string, fallback: string, values?: Record<string, unknown>) =>
     fallback.replace(/{{(\w+)}}/g, (_match, key: string) => String(values?.[key] ?? '')),
   getIntlLocale: () => 'en-US'

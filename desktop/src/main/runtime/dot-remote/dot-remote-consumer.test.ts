@@ -39,7 +39,6 @@ function requestView(n: number) {
     sequence: n,
     revision: 1,
     workspaceRef: 'dws_0123456789abcdef01234567',
-    deliverableLanguage: null,
     reply: null,
     createdAt: at(1),
     updatedAt: at(1),

@@ -38,11 +38,11 @@ export function ClaudeCodeSetupAction(props: { done: boolean }): React.JSX.Eleme
         {props.done
           ? translate(
               'auto.components.feature.wall.FeatureWallSetupNashActions.claudeCodeFound',
-              'Claude Code is installed on this computer.'
+              'Claude Code or Codex is installed on this computer.'
             )
           : translate(
               'auto.components.feature.wall.FeatureWallSetupNashActions.claudeCodeMissing',
-              'Claude Code was not found. Install it, run claude once in a terminal to sign in, then check again.'
+              'Install Claude Code or Codex, sign in from a terminal, then check again.'
             )}
       </p>
       {props.done ? null : (

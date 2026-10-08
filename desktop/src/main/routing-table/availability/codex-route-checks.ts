@@ -1,4 +1,3 @@
-import { isCodexExecModelSlug } from '../../codex-exec/codex-exec-argv'
 import { CodexExecutableError, type CodexExecutable } from '../../codex-exec/codex-exec-executable'
 import type { WorkspaceLaunchKind } from '../../../shared/workspace-launch-kind'
 import { commonEfforts } from './listed-model-match'
@@ -71,15 +70,13 @@ function workspaceOutcome(workspaceKind: WorkspaceLaunchKind | null): CheckOutco
   }
 }
 
-/** Codex routes: `codex exec` read-only, the account's own model list, the effort always passed. */
+/** Codex routes use the account model list and pass its resolved effort to the native launcher. */
 export function checkCodexRoute(
   subject: RouteSubject,
   observations: RouteObservations
 ): RouteCheckResult {
   const model = checkModel(subject.model, observations.listing, {
-    matchResolvedModel: false,
-    // Why: the runner refuses a slug outside its pattern, so such a model could never launch.
-    extraIdViolation: (id) => (isCodexExecModelSlug(id) ? null : 'runner_slug')
+    matchResolvedModel: false
   })
   const mapping =
     model.rows === null

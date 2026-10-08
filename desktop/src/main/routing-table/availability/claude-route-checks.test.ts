@@ -88,12 +88,12 @@ describe('claude model check', () => {
     expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_excluded' })
   })
 
-  it('excludes a Gemini 4 id whatever the target', () => {
+  it('rejects a Gemini 4 id absent from the Claude listing', () => {
     const { checks } = checkClaudeRoute(
       subagent('gemini-4-flash-high'),
       observationsOf(listingOf(CLAUDE_MODELS))
     )
-    expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_excluded' })
+    expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_not_listed' })
   })
 })
 
@@ -274,7 +274,13 @@ describe('claude cli, auth and quota checks', () => {
 })
 
 describe('claude auth inherited from a live primary session', () => {
-  const LIVE = { runId: 'run-1', ownerId: 'owner-1' }
+  const LIVE = {
+    runId: 'run-1',
+    ownerId: 'owner-1',
+    agent: 'claude' as const,
+    model: 'claude-opus-5-5',
+    effort: 'max' as const
+  }
   const deferredLimits = (kind: UsageRateLimitFailureKind = 'deferred-by-live-session') =>
     headroomOf({
       claude: limitsOf('claude', { status: 'error', usageMetadata: { failureKind: kind } })
@@ -308,6 +314,23 @@ describe('claude auth inherited from a live primary session', () => {
     }
   )
 
+  it('does not inherit Claude authentication from a live Codex primary', () => {
+    const subject = subjectOf(
+      'claude_subagent',
+      'claude-opus-5-5',
+      'max',
+      'required',
+      false,
+      'codex'
+    )
+    expect(authOf(subject, { liveRunPrimary: { ...LIVE, agent: 'codex' } })).toMatchObject({
+      result: 'unobserved',
+      reason: 'auth_unobserved'
+    })
+    const result = checkClaudeRoute(subject, observationsOf(listingOf(CLAUDE_MODELS)))
+    expect(result.mapping).toMatchObject({ delivery: 'claude_effort_flag' })
+  })
+
   it('does not apply to the primary session itself or to the separate headless process', () => {
     for (const target of ['claude_primary', 'claude_headless'] as const) {
       expect(
@@ -320,8 +343,8 @@ describe('claude auth inherited from a live primary session', () => {
     const subject = subagent('claude-opus-5-5')
     expect(authOf(subject)).toMatchObject({ result: 'unobserved', reason: 'auth_unobserved' })
     for (const liveRunPrimary of [
-      { runId: '', ownerId: 'owner-1' },
-      { runId: 'run-1', ownerId: '  ' }
+      { ...LIVE, runId: '' },
+      { ...LIVE, ownerId: '  ' }
     ]) {
       expect(authOf(subject, { liveRunPrimary })).toMatchObject({ result: 'unobserved' })
     }

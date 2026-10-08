@@ -49,6 +49,7 @@ function inputFor(
   overrides: Partial<PrimarySessionPreflightInput> = {}
 ): PrimarySessionPreflightInput {
   return {
+    agent: 'claude',
     settings: {},
     platform: 'win32',
     access: 'read_only',

@@ -1,12 +1,15 @@
 import type { z } from 'zod'
-import { isDotIngressContractErrorCodeV3 } from '../../../shared/dot-ingress/dot-ingress-errors-v3'
-import type { DotMessageReason } from '../../../shared/dot-ingress/dot-ingress-message'
+import { isDotIngressErrorCode } from '../../../shared/dot-ingress/dot-ingress-errors'
 import {
-  DotCancelResultV3Schema,
-  DotDecisionAnswerResultV3Schema,
-  DotMessageResultV3Schema,
-  DotSubmitResultV3Schema
-} from '../../../shared/dot-ingress/dot-ingress-v3'
+  type DotMessageReason,
+  DotMessageResultSchema
+} from '../../../shared/dot-ingress/dot-ingress-message'
+import {
+  DotCancelResultSchema,
+  DotSubmitResultSchema
+} from '../../../shared/dot-ingress/dot-ingress-request'
+import { DotDecisionAnswerResultSchema } from '../../../shared/dot-ingress/dot-ingress-decision'
+
 import { DotValidationDecideResultV3Schema } from '../../../shared/dot-ingress/dot-ingress-validation'
 import { dotRemoteNashRefusal } from '../../../shared/dot-remote/dot-remote-errors'
 import type { DotRemoteInboxItem } from '../../../shared/dot-remote/dot-remote-inbox'
@@ -74,19 +77,19 @@ function refusedRequestOf(
 function acceptedOutcome(item: DotRemoteInboxItem, result: unknown): DotRemoteDispatch | null {
   switch (item.kind) {
     case 'submit': {
-      const submit = parsed(DotSubmitResultV3Schema, result)
+      const submit = parsed(DotSubmitResultSchema, result)
       return submit ? decided(admitted(submit.request.dotRequestId, submit.duplicate)) : null
     }
     case 'cancel': {
-      const cancel = parsed(DotCancelResultV3Schema, result)
+      const cancel = parsed(DotCancelResultSchema, result)
       return cancel ? decided(admitted(cancel.request.dotRequestId, false)) : null
     }
     case 'permission_answer': {
-      const answer = parsed(DotDecisionAnswerResultV3Schema, result)
+      const answer = parsed(DotDecisionAnswerResultSchema, result)
       return answer ? decided(admitted(answer.decision.dotRequestId, false)) : null
     }
     case 'message': {
-      const message = parsed(DotMessageResultV3Schema, result)
+      const message = parsed(DotMessageResultSchema, result)
       if (!message) {
         return null
       }
@@ -114,7 +117,7 @@ function outcomeOf(
     if (answer.kind === 'unavailable') {
       return { kind: 'retry_later', code: 'local_unavailable' }
     }
-    if (!isDotIngressContractErrorCodeV3(answer.code)) {
+    if (!isDotIngressErrorCode(answer.code)) {
       return { kind: 'retry_later', code: 'local_error' }
     }
     return decided({

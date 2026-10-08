@@ -73,21 +73,19 @@ describe('codex model and reasoning checks', () => {
     expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_excluded' })
   })
 
-  it('excludes a listed id the runner could not pass as a model slug', () => {
+  it('preserves an exact listed id accepted by the native launcher', () => {
     const upper: ListedModel = {
-      id: 'GPT-7-Test',
+      id: 'Fixture-Listed-Model',
       resolvedModel: null,
       label: 'x',
       efforts: ['max']
     }
     const { checks } = checkCodexRoute(
-      codex('GPT-7-Test'),
+      codex('Fixture-Listed-Model'),
       observationsOf(listingOf([...CODEX_MODELS, upper]))
     )
     expect(outcome(checks, 'model')).toMatchObject({
-      result: 'fail',
-      reason: 'model_excluded',
-      evidence: { violation: 'runner_slug' }
+      result: 'pass'
     })
   })
 

@@ -11,8 +11,8 @@ export type FeatureWallSetupProgressInput = {
   hasConnectedTaskSource: boolean
   worktreesByRepo: Record<string, Worktree[]>
   hasSetupScript: boolean
-  /** Claude Code is on this computer's PATH (agent detection). */
-  claudeCodeDetected: boolean
+  /** Claude Code or Codex is on this computer's PATH (agent detection). */
+  primaryCliDetected: boolean
   /** Clef credentials are stored and its profile verified (routing status). */
   clefConnected: boolean
   /** The local dot interface is on, or a GPT Site is paired. */
@@ -63,7 +63,7 @@ export function getFeatureWallSetupProgress(
   input: FeatureWallSetupProgressInput
 ): FeatureWallSetupProgress {
   const stepDone: Record<FeatureWallSetupStepId, boolean> = {
-    'claude-code': input.claudeCodeDetected,
+    'claude-code': input.primaryCliDetected,
     clef: input.clefConnected,
     dot: input.dotConnected,
     'workbench-run': input.hasWorkbenchRun,

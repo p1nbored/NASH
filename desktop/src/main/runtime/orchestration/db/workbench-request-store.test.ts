@@ -43,7 +43,7 @@ describe('Workbench requests in the existing orchestration database', () => {
   const stored = (requestId: string) =>
     owner.db
       .prepare(
-        `SELECT r.status, r.revision, s.requested_access, s.deliverable_language FROM workbench_requests r
+        `SELECT r.status, r.revision, s.requested_access FROM workbench_requests r
         JOIN workbench_request_settings s ON s.request_id = r.request_id WHERE r.request_id = ?`
       )
       .get(requestId)
@@ -84,8 +84,7 @@ describe('Workbench requests in the existing orchestration database', () => {
     expect(stored(result.request.requestId)).toEqual({
       status: 'RECEIVED',
       revision: 1,
-      requested_access: 'read_only',
-      deliverable_language: null
+      requested_access: 'read_only'
     })
     expect(counts()).toEqual({ requests: 1, events: 1, settings: 1 })
     expect(
@@ -94,15 +93,14 @@ describe('Workbench requests in the existing orchestration database', () => {
     expect(list().requests).toEqual([result.request])
   })
 
-  it('stores the requested access and the canonical deliverable language', () => {
+  it('stores the requested access', () => {
     const request = store.submit(
       principal,
-      { ...input(), requestedAccess: 'workspace_write', deliverableLanguage: 'zh-hant-tw' },
+      { ...input(), requestedAccess: 'workspace_write' },
       workspace
     ).request
     expect(stored(request.requestId)).toMatchObject({
-      requested_access: 'workspace_write',
-      deliverable_language: 'zh-Hant-TW'
+      requested_access: 'workspace_write'
     })
   })
 
@@ -130,20 +128,6 @@ describe('Workbench requests in the existing orchestration database', () => {
     expect(counts()).toEqual({ requests: 2, events: 2, settings: 2 })
   })
 
-  it('treats the same key with a different deliverable language as a conflict, not its spelling', () => {
-    const params = { ...input(), deliverableLanguage: 'zh-Hant-TW' }
-    const first = store.submit(principal, params, workspace)
-    expect(
-      store.submit(principal, { ...params, deliverableLanguage: 'zh-hant-tw' }, workspace)
-    ).toEqual({ ...first, duplicate: true })
-    expect(() =>
-      store.submit(principal, { ...params, deliverableLanguage: 'de' }, workspace)
-    ).toThrow(conflict)
-    expect(() =>
-      store.submit(principal, { ...params, deliverableLanguage: undefined }, workspace)
-    ).toThrow(conflict)
-  })
-
   it('round-trips Unicode, combining marks and CRLF, rejecting lossy input before writes', () => {
     const params = { ...input(), objective: 'Fixture \u{1F680} é\r\n  ' }
     const first = store.submit(principal, params, workspace)
@@ -155,9 +139,6 @@ describe('Workbench requests in the existing orchestration database', () => {
     expect(() =>
       store.submit(principal, { ...input(), objective: 'Fixture\0tail' }, workspace)
     ).toThrow('null characters')
-    expect(() =>
-      store.submit(principal, { ...input(), deliverableLanguage: 'english' }, workspace)
-    ).toThrow()
     expect(counts()).toEqual({ requests: 1, events: 1, settings: 1 })
   })
 

@@ -25,7 +25,11 @@
     },
     "components": {
       "CodexRestartChip": {
-        "9263e75f49": "Codex is using the previous account"
+        "3ea91b5c07": "This Codex session is using an outdated configuration",
+        "7b1d20f4c8": "Keep current session",
+        "8f0d5c92a1": "Codex setup changed",
+        "9263e75f49": "Codex is using the previous account",
+        "e6b7139d2a": "Restart this session to load your current Codex configuration."
       },
       "GitHubItemDialog": {
         "04539beb48": "issue",
@@ -73,8 +77,11 @@
         "f5a6b38a14": "sheet"
       },
       "NativeChatResumeOnRestartModal": {
+        "continueUnconfirmed": "Continuation delivery is unconfirmed for {{value0}} chats. Open them to check before sending another message.",
         "continueUnconfirmed_one": "Continuation delivery is unconfirmed for {{value0}} chat. Open it to check before sending another message.",
-        "continueUnconfirmed_other": "Continuation delivery is unconfirmed for {{value0}} chats. Open them to check before sending another message."
+        "continueUnconfirmed_other": "Continuation delivery is unconfirmed for {{value0}} chats. Open them to check before sending another message.",
+        "dismiss": "Dismiss",
+        "dismissUnconfirmed": "Dismissing the resume offer was not confirmed — it may still be in the status bar."
       },
       "NewWorkspaceComposerCard": {
         "0e587e31fb": "yaml",
@@ -199,10 +206,19 @@
         "ActivityPrototypePage": {
           "770d458144": "Group by",
           "a472a14700": "More options",
-          "beb2c19173": "Unread"
+          "beb2c19173": "Unread",
+          "threadListOptionsFiltered": "Thread list options, filters active"
         },
         "ActivityScopeFilterControls": {
           "hiddenCount": "{{value0}} hidden"
+        },
+        "ActivityThreadContextMenu": {
+          "clearMany_one": "Clear {{count}} Agent from List",
+          "clearMany_other": "Clear {{count}} Agents from List",
+          "markManyRead_one": "Mark {{count}} Agent Read",
+          "markManyRead_other": "Mark {{count}} Agents Read",
+          "markManyUnread_one": "Mark {{count}} Agent Unread",
+          "markManyUnread_other": "Mark {{count}} Agents Unread"
         }
       },
       "artifacts": {
@@ -382,6 +398,11 @@
           "d07e4b8553": "branch",
           "d16e037f40": "rich"
         },
+        "EditorPanelHeader": {
+          "openContainingFolder": "Open Containing Folder",
+          "revealInFileExplorer": "Reveal in File Explorer",
+          "revealInFinder": "Reveal in Finder"
+        },
         "ReviewNotesSendMenuContent": {
           "50f7e753ea": "Sending notes to active agent...",
           "bb9c69a0c9": "Notes sent to active agent.",
@@ -474,6 +495,11 @@
           },
           "agents": {
             "orchestration": {
+              "UsageAccountsCard": {
+                "4e71d72912": "Claude sign-in failed.",
+                "9ddeb558f9": "Claude account added.",
+                "d90d2e1f6d": "Track session and weekly usage."
+              },
               "orchestration": {
                 "cards": {
                   "da6f1f97c9": "working"
@@ -531,7 +557,14 @@
       "floating": {
         "terminal": {
           "FloatingTerminalPanel": {
-            "25d7817f79": "terminal"
+            "25d7817f79": "terminal",
+            "5ddc688c52": "\"{{value0}}\" has unsaved changes. Do you want to save before closing?",
+            "690b6fb98a": "Unsaved Changes",
+            "918c2139f3": "Don't Save",
+            "b085fb58b5": "This file has unsaved changes.",
+            "d6b563ae24": "Loading editor...",
+            "da508bd7f5": "Save",
+            "e7bf09d4d4": "Cancel"
           },
           "FloatingTerminalWindowControls": {
             "1e502f1284": "Open"
@@ -605,10 +638,15 @@
             "ab1a2c357d": "Roadmap (unsupported)",
             "b787682111": "Browse all",
             "ba0ab9a117": "Browse all (loading…)",
-            "cafb908f34": "TABLE_LAYOUT"
+            "cafb908f34": "TABLE_LAYOUT",
+            "d34ef9b554": "Board (unsupported)"
           },
           "ProjectRow": {
             "c3b81ddea2": "DRAFT_ISSUE"
+          },
+          "ProjectViewStates": {
+            "ac83c45672": "Switch to a Table or Roadmap view to work with this project in NASH.",
+            "e4cc8b14f2": "NASH renders table and roadmap project views. This view uses a layout it cannot render yet."
           },
           "ProjectViewWrapper": {
             "1bf8c01c8b": "Switch to a Table view to work with this project in NASH."
@@ -663,6 +701,15 @@
         "slides": {
           "WorktreeListSlide": {
             "c5ad56786d": "spinner"
+          }
+        }
+      },
+      "native": {
+        "chat": {
+          "NativeChatStructuredSession": {
+            "1f772bb5d0": "Message delivery is unconfirmed.",
+            "93ef441197": "Message was not sent.",
+            "a5e7f14068": "Retry"
           }
         }
       },
@@ -872,6 +919,7 @@
           },
           "SourceControlAgentActionDialogForm": {
             "1bb611240f": "Use {basePrompt} for NASH's default prompt.",
+            "1bc0bdbb5e": "Launch:",
             "3e8f21954f": "error",
             "74168d7ada": "idle",
             "d8f40128ee": "{basePrompt} is NASH's default prompt."
@@ -882,6 +930,9 @@
                 "f1132ea95d": "neutral"
               }
             }
+          },
+          "aiVaultSessionLogOpen": {
+            "notAuthorized": "Couldn't open log — path not authorized."
           },
           "checks": {
             "panel": {
@@ -1365,6 +1416,7 @@
           "d536b5e20d": "Choose which network address to advertise in the QR code. Use your LAN address for same-network pairing, or an overlay network address (Tailscale, ZeroTier) for cross-network access."
         },
         "MobilePane": {
+          "35100bca5d": "While you're using a terminal on your phone, NASH shrinks it to fit your phone screen. When you close the app or switch away, this controls whether it stays at phone size (so interactive CLI tools don't reflow) or resizes back to your desktop. You can always use Restore this terminal or Restore all terminals on the banner to resize manually.",
           "relayDegradedNotice": "Relay couldn’t be reached — this code only works on your LAN or Tailscale. Regenerate to try again."
         },
         "MobileRelayBetaAvailability": {
@@ -1566,7 +1618,9 @@
           "ask_before_closing_running_terminals_description": "Show a confirmation before closing a terminal that has a running command or agent.",
           "ask_before_closing_running_terminals_title": "Ask Before Closing Running Terminals",
           "cc8c5ca224": "Windows default",
-          "d78fc4fdef": "Loading distributions"
+          "customShellHelp": "Enter a shell name on PATH or an executable path. NASH starts it as a login shell.",
+          "d78fc4fdef": "Loading distributions",
+          "defaultShellDescription": "Choose what NASH opens for new local terminal panes."
         },
         "TerminalSettingsPreview": {
           "d06664e889": "dark"
@@ -1604,6 +1658,7 @@
           "a42f6fbdd8": "Keeps this computer and display awake while agents are working. NASH also asks this device to stay awake when the lid is closed, subject to its power policy.",
           "e5995ce268": "Keep computer awake while agents are working",
           "modeDescriptionDefault": "Choose On, Agent, or Off. Agent mode stays awake while agents are working. NASH also asks this device to stay awake when the lid is closed, subject to its power policy.",
+          "modeDescriptionMac": "Choose On, Agent, or Off. Agent mode prevents idle sleep while agents work, so long runs finish with the lid open. Closing the lid still puts this Mac to sleep.",
           "modeDescriptionWindows": "Choose On, Agent, or Off. Agent mode stays awake while agents are working; lid-close behavior follows this device's power settings.",
           "modeTitle": "Keep computer awake"
         },
@@ -1696,6 +1751,16 @@
               "remoteRuntime": "Bitbucket credentials saved here are stored on this local machine only. Set ORCA_BITBUCKET_* environment variables on the remote runtime instead."
             }
           }
+        },
+        "cliUsageReadings": {
+          "agyHintPlain": "Use Refresh usage while the agy meter is on in the status bar.",
+          "body": "NASH reads usage only from each CLI: Claude Code's status line, codex app-server and agy /usage. It reads no sign-in and asks no vendor for usage.",
+          "bodyPlain": "Each reading comes from the CLI itself, never from a sign-in.",
+          "claudeHintPlain": "Appears while a Claude session started in NASH runs.",
+          "codexHintPlain": "Use Refresh usage to read it.",
+          "noReading": "No reading yet",
+          "refresh": "Refresh usage",
+          "title": "Usage from the CLIs"
         },
         "computerUseSkillRuntime": {
           "thisDevice": "This device"
@@ -1793,11 +1858,6 @@
             }
           }
         },
-        "plugins": {
-          "search": {
-            "orcaMarketplace": "orca marketplace"
-          }
-        },
         "providerAccountScope": {
           "localMac": "Local Mac"
         },
@@ -1809,6 +1869,11 @@
             "remote": "remote",
             "ssh": "ssh",
             "vm": "vm"
+          }
+        },
+        "routingTable": {
+          "editor": {
+            "geminiExcluded": "Gemini 4 models are excluded from routing."
           }
         },
         "runtime": {
@@ -1832,6 +1897,12 @@
             "62826efbe9": "Add a new remote SSH target.",
             "74c6d90d78": "Manage remote SSH targets."
           }
+        },
+        "sshHostServer": {
+          "terminalsElsewhere_one": "Runs the relay while {{count}} terminal another NASH desktop or session opened on this host is running.",
+          "terminalsElsewhere_other": "Runs the relay while {{count}} terminals another NASH desktop or session opened on this host are running.",
+          "terminalsLive_one": "Runs the relay until its {{count}} open terminal is closed, then moves to a managed server.",
+          "terminalsLive_other": "Runs the relay until its {{count}} open terminals are closed, then moves to a managed server."
         },
         "terminal": {
           "windows": {
@@ -1867,6 +1938,10 @@
               }
             }
           }
+        },
+        "usageMetersOff": {
+          "bodyPlain": "Only Claude Code, Codex and agy report usage, from their own CLIs. Other providers are not read.",
+          "title": "Usage is not shown in NASH"
         },
         "useWarpThemeImport": {
           "imported_one": "Imported 1 theme",
@@ -1918,6 +1993,9 @@
         },
         "CacheTimer": {
           "07729cc155": "expired"
+        },
+        "DeleteWorktreeDirtyChangeHint": {
+          "8e2994ce28": "Deleting this workspace permanently removes these changes from disk."
         },
         "FolderWorkspaceComposerDialog": {
           "chooseSourceProject": "Choose task source",
@@ -2383,6 +2461,12 @@
           "tooltip": {
             "7567cd1c6b": "Usage unavailable",
             "cedb7b99e3": "% used"
+          },
+          "usageReadingSource": {
+            "agyUsage": "agy /usage",
+            "claudeStatusLine": "Claude Code status line",
+            "codexAppServer": "codex app-server",
+            "from": "From {{source}}"
           }
         }
       },
@@ -2398,7 +2482,10 @@
             "1d04b1630b": "Split Down",
             "6b3efb106e": "Split Up",
             "e3ff145b98": "Split Left",
-            "f7c3d7d5af": "Split Right"
+            "f7c3d7d5af": "Split Right",
+            "openContainingFolder": "Open Containing Folder",
+            "revealInFileExplorer": "Reveal in File Explorer",
+            "revealInFinder": "Reveal in Finder"
           },
           "SortableTabContextMenu": {
             "0ce4bae39d": "Split Left",
@@ -2555,7 +2642,16 @@
             "ebd2fa844d": "Close"
           },
           "MobileDriverOverlay": {
-            "3eed73394f": "Your keyboard is paused"
+            "3eed73394f": "Your keyboard is paused",
+            "54f7d6f69d": "Take back all terminals",
+            "7cffad954c": "Collapse",
+            "a6b1d8f3e2": "Your phone session ended. Restore to desktop size for this terminal, or for all terminals your phone left at phone size.",
+            "b3d8e1f42a": "Restore this terminal",
+            "c8f2e1a4b9": "Take back this terminal",
+            "d9f3c6e2a4": "Desktop keyboard is paused. Take back this terminal to type here, take back all terminals your phone controls, or collapse to keep watching.",
+            "e8c4f2a91b": "Restore all terminals",
+            "f2a8b9c1d3": "From your phone",
+            "faa367dc74": "Your phone left this at phone size"
           },
           "TerminalErrorToast": {
             "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in NASH or another program, then try again.",
@@ -2679,6 +2775,7 @@
         }
       },
       "useComposerState": {
+        "7eb3f44ff7": "Selected agent is disabled. Choose an enabled agent before creating.",
         "dropPartiallyAttached_one": "{{failureCount}} of {{count}} item could not be attached.",
         "dropPartiallyAttached_other": "{{failureCount}} of {{count}} items could not be attached."
       },
@@ -2692,7 +2789,7 @@
       },
       "useSettingsNavigationMetadata": {
         "5235c215ca": "Choose which task providers appear in the Tasks page and sidebar.",
-        "b1c2f8b0ac": "Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.",
+        "accountsDescription": "Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.",
         "b351014180": "NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage."
       }
     },
@@ -2746,16 +2843,28 @@
         "timedOut": "Timed out loading check details."
       }
     },
+    "ssh": {
+      "managedServerMove": {
+        "offer_one": "Move {{host}} to a managed NASH server for more reliable connections. Its {{count}} open terminal will restart.",
+        "offer_other": "Move {{host}} to a managed NASH server for more reliable connections. Its {{count}} open terminals will restart.",
+        "refusedLive_one": "Not moved: {{count}} terminal on {{host}} is still running.",
+        "refusedLive_other": "Not moved: {{count}} terminals on {{host}} are still running.",
+        "refusedUnverifiable_one": "Not moved: NASH couldn’t confirm that {{count}} terminal on {{host}} stopped.",
+        "refusedUnverifiable_other": "Not moved: NASH couldn’t confirm that {{count}} terminals on {{host}} stopped."
+      }
+    },
     "store": {
       "slices": {
         "settings": {
           "faa8fb83dd": "Save or close unsaved editor tabs before switching servers."
         },
         "worktrees": {
+          "19db0085fb": "Local branch deleted",
           "2b0afc7f14": "Could not keep local {{value0}} up to date",
           "34a03a6565": "Keep {{value0}} up to date",
           "4a18052018": "Local {{value0}} is behind {{value1}}",
           "4e6496f3d2": "{{value0}} deleted, branch kept",
+          "5a58e03a26": "Deleted \"{{value0}}\".",
           "670864ab52": "Keeping local {{value0}} up to date",
           "889487d8bb": "Dismiss",
           "d1d78a7baa": "Git could not safely delete branch \"{{value0}}\"{{value1}}, so NASH kept it to avoid losing local commits.",
@@ -2778,19 +2887,74 @@
   },
   "components": {
     "native-chat": {
+      "approval": {
+        "askRule": "Ask rule",
+        "blockedPath": "Blocked path"
+      },
       "ask": {
         "asked": "Asked:",
         "awaiting": "Awaiting user input:",
         "awaitingUnnamed": "Awaiting user input",
         "questionCount": "{{value0}} questions"
       },
+      "backgroundTasks": {
+        "agent": "Background agent",
+        "command": "Background command",
+        "countAgentsMany": "{{value0}} agents",
+        "countAgentsOne": "1 agent",
+        "countMonitorsMany": "{{value0}} monitors",
+        "countMonitorsOne": "1 monitor",
+        "countShellCommandOne": "1 shell command",
+        "countShellMany": "{{value0}} shells",
+        "countShellOne": "1 shell",
+        "countTasksMany": "{{value0}} tasks",
+        "countTasksOne": "1 task",
+        "countWorkflowsMany": "{{value0}} workflows",
+        "countWorkflowsOne": "1 workflow",
+        "detailsUnavailable": "Task details are unavailable for this session.",
+        "groupAgents": "Agents",
+        "groupMonitors": "Monitors",
+        "groupShell": "Shell",
+        "groupTasks": "Tasks",
+        "groupWorkflows": "Workflows",
+        "headerTotal": "{{value0}} background tasks",
+        "monitor": "Background monitor",
+        "monitoring": "Monitoring background tasks",
+        "reasonBlocked": "failed",
+        "reasonWaiting": "needs approval",
+        "stateBlocked": "blocked",
+        "stateBlockedCount": "{{value0}} blocked",
+        "stateDone": "done",
+        "stateDoneCount": "{{value0}} done",
+        "stateIdle": "stopped",
+        "stateIdleCount": "{{value0}} stopped",
+        "stateMonitoring": "monitoring",
+        "stateMonitoringCount": "{{value0}} monitoring",
+        "stateUnverifiable": "status unavailable",
+        "stateUnverifiableCount": "{{value0}} with status unavailable",
+        "stateWaiting": "waiting",
+        "stateWaitingCount": "{{value0}} waiting",
+        "stateWorking": "working",
+        "stateWorkingCount": "{{value0}} working",
+        "stop": "Stop",
+        "stopAll": "Stop background tasks",
+        "stopTask": "Stop {{value0}}",
+        "task": "Background task",
+        "workflow": "Background workflow"
+      },
       "composer": {
         "effort": "Effort",
-        "imageUnsupported": "Image paste is not supported for this agent."
+        "imageUnsupported": "Image paste is not supported for this agent.",
+        "mentionHint": "Referencing file:"
       },
       "failureWords": {
         "accountSwitchInProgress": "A Claude account switch is in progress. Try again after it finishes.",
+        "agentCommandNotRunnable": "{{agent}}'s Command in Settings → Agents must be a program path or name NASH can find, with no arguments or variables. Change it or reset it.",
         "answerUnconfirmed": "Your answer was recorded but the agent did not confirm it.",
+        "argumentsMissingValue": "Saved Arguments need a value for {{option}}.",
+        "argumentsMultipleValues": "Saved Arguments give {{option}} more than one value.",
+        "argumentsPositionalPrompt": "Saved Arguments include a prompt.",
+        "argumentsUnsupportedOption": "Saved Arguments contain an unsupported option ({{option}}).",
         "attachmentAtMost": "{{agent}} accepts at most {{limit}} images in one message, so this message was not sent.",
         "attachmentEmpty": "An image on this message is empty, so the message was not sent.",
         "attachmentInvalid": "An attachment on this message can't be sent to the agent.",
@@ -2809,6 +2973,8 @@
         "chooseClaudeAccount": "Choose or add one in Claude Accounts settings.",
         "chooseClaudeAccountThenRunCommand": "Choose or add one in Claude Accounts settings, then run /{{command}} again.",
         "chooseClaudeAccountThenSend": "Choose or add one in Claude Accounts settings, then send your message again.",
+        "claudeAccountFolderMissing": "The selected Claude account's folder is missing. Sign in to it again or choose another account.",
+        "claudeAccountSetupFailed": "The selected Claude account could not be set up. Try again or choose another account.",
         "commandRefused": "This command didn't run.",
         "commandRefusedTryAgain": "This command didn't run. Try it again.",
         "compactionFailed": "Compaction failed.",
@@ -2816,30 +2982,38 @@
         "compactionUnconfirmed": "Compaction completion is unconfirmed.",
         "couldNotRestart": "{{agent}} couldn't restart.",
         "couldNotStart": "{{agent}} couldn't start.",
+        "editSavedArguments": "Edit them in Settings > Agents > Arguments.",
         "emptyMessage": "This message is empty, so it was not sent.",
+        "historyInOtherAccount": "This chat's history is in another Claude account. Switch back to that account to continue it.",
         "historyTooLarge": "This conversation's history is too large to restore here.",
         "hostFault": "NASH ran into a problem, so this didn't go through.",
         "hostFaultTryAgain": "NASH ran into a problem, so this didn't go through. Try again.",
         "hostRestarted": "NASH restarted before this message was sent.",
         "hostStopped": "{{agent}} never finished starting, so NASH stopped it.",
+        "launchFolderMissing": "The folder this chat ran in no longer exists. Restore it to continue this chat.",
         "managedAccountEnvOverride": "This Claude launch sets its own Anthropic sign-in variables. Remove them to use a managed Claude account.",
         "managedAccountUnsupported": "While a Claude account is added in WSL, Claude chats need a Windows Claude account.",
         "noTurnToStop": "{{agent}} had no turn running to stop.",
         "notDelivered": "This message was not delivered.",
         "notDeliveredSendAgain": "This message was not delivered. Send it again to continue.",
         "notSignedIn": "{{agent}} is not signed in for the selected account.",
-        "previousExitUnverifiable": "{{agent}} from before may still be running. Your messages will send once it stops.",
+        "previousExitUnverifiable": "Couldn't stop {{agent}} from before.",
         "providerExitedRejection": "{{agent}} stopped before this message was sent.",
         "providerExitedRow": "{{agent}} stopped while this response was in progress. You can continue in this conversation.",
         "providerRateLimited": "{{agent}} is rate-limited and retrying.",
         "providerRejected": "The provider did not accept this message.",
         "providerRejectedQuoted": "The provider did not accept this message: {{detail}}.",
+        "providerRetryLastError": "Last error: {{detail}}.",
+        "providerRetryNumber": "Retry {{attempt}}.",
+        "providerRetryNumberOf": "Retry {{attempt}} of {{maxRetries}}.",
         "providerRetrying": "{{agent}} hit a temporary problem and is retrying.",
         "providerRetryingQuoted": "{{agent}} is retrying: {{detail}}.",
         "providerStartFailed": "{{agent}} stopped before it finished starting.",
         "queueFull": "Too many messages were waiting for the agent, so this one was not sent.",
         "runCommandAgain": "Run /{{command}} again.",
+        "sendAgainToTryOnceMore": "Send your message again to try once more.",
         "sendToTryAgain": "Send your message to try again.",
+        "sessionNotRestored": "{{agent}} couldn't reopen its earlier session, so this chat continues in a new one. {{agent}} doesn't remember the earlier messages.",
         "signInFirst": "Sign in first.",
         "signInThenRunCommand": "Sign in, then run /{{command}} again.",
         "signInThenSend": "Sign in, then send your message again.",
@@ -2854,6 +3028,12 @@
       },
       "question": {
         "other": "Other…"
+      },
+      "queuedMessages": {
+        "queuePausedCleared": "Queue paused after you cleared the conversation",
+        "queuePausedRestarted": "Queue paused because NASH restarted",
+        "sendConfirmBody_one": "You are about to send a message. Do you want to clear the {{count}} message previously queued?",
+        "sendConfirmBody_other": "You are about to send a message. Do you want to clear the {{count}} messages previously queued?"
       },
       "state": {
         "empty": {
@@ -2871,26 +3051,55 @@
         "notAgent": {
           "subtitle": "This terminal is not running a recognized coding agent.",
           "title": "No conversation here"
-        }
+        },
+        "reconnecting": "Reconnecting to this chat…"
       },
       "status": {
         "failedAfter": "Failed after {{value0}}",
         "interruptedAfter": "Interrupted after {{value0}}",
+        "queueAfterStop": "Queue a message to run after the stop",
         "responding": "Agent is responding",
+        "sendAfterStop": "Send a message to run after the stop",
         "toggleDetails": "Toggle turn details",
         "workedFor": "Worked for {{value0}}",
         "workingFor": "Working for {{value0}}"
       },
+      "subagents": {
+        "ranN": "Ran {{value0}} subagents",
+        "ranOne": "Ran 1 subagent",
+        "startedN": "Kicked off {{value0}} subagents",
+        "startedOne": "Kicked off 1 subagent",
+        "state": {
+          "completed": "completed",
+          "failed": "failed",
+          "failedCount": "{{value0}} failed",
+          "idle": "idle",
+          "idleCount": "{{value0}} idle",
+          "stopped": "stopped",
+          "stoppedCount": "{{value0}} stopped",
+          "unverifiable": "status unavailable",
+          "unverifiableCount": "{{value0}} with status unavailable",
+          "working": "working",
+          "workingCount": "{{value0}} working"
+        },
+        "tokens": "{{value0}} tokens"
+      },
       "tool": {
+        "addedFile": "Added file",
         "countN": "{{value0}} tool calls",
         "countOne": "1 tool call",
+        "deletedFile": "Deleted file",
+        "editedFile": "Edited file",
         "failedCallsLabel": "Failed tool calls: {{value0}}",
         "failedCount": "{{value0}} failed",
+        "interruptedCallsLabel": "Interrupted tool calls: {{value0}}",
+        "interruptedCount": "{{value0}} interrupted",
         "moreCalls": "+{{value0}} more",
         "ranCommandManyToolsSummary": "Ran {{commandCount}} command and used {{toolCount}} tools",
         "ranCommandOneToolSummary": "Ran {{commandCount}} command and used {{toolCount}} tool",
         "ranCommandsManyToolsSummary": "Ran {{commandCount}} commands and used {{toolCount}} tools",
         "ranCommandsOneToolSummary": "Ran {{commandCount}} commands and used {{toolCount}} tool",
+        "renamedFile": "Renamed file",
         "running": "Running…",
         "runningCommand": "Running command",
         "runningNamed": "Running {{toolName}}",
@@ -2903,9 +3112,12 @@
         "agentRefused": "The agent turned this down.",
         "agentStarting": "The agent is still starting.",
         "answerFirst": "Answer the question or approval first.",
+        "attachmentExpired": "This attachment expired.",
         "backgroundTasksRunning": "Background tasks are still running.",
+        "cannotRunHere": "NASH can't run this agent in a chat here.",
         "capacity": "NASH has received too many requests in the last day.",
         "chatNotFound": "NASH can't find this chat.",
+        "chatSavedByNewerOrca": "This chat was saved by a newer NASH.",
         "clearUnfinished": "The last /clear didn't finish.",
         "commandRunning": "A /compact or /clear is still running.",
         "conversationCleared": "This conversation has been cleared.",
@@ -2933,6 +3145,7 @@
         "promptPending": "The agent is waiting for an answer to a question or approval.",
         "questionChanged": "This question was already answered or has changed.",
         "quitTerminalAgent": "Quit that agent to continue the chat here.",
+        "reattachFile": "Remove it and attach it again.",
         "recordFailed": "NASH couldn't save this to the chat's history.",
         "recordUnreadable": "NASH couldn't read this chat's saved state.",
         "reopenChat": "Reopen the chat to check again.",
@@ -2948,6 +3161,7 @@
         "unreachable": "NASH couldn't reach the agent.",
         "unsupported": "This needs a newer NASH on the computer running this chat. Update NASH there, then try again.",
         "updateOrcaToKeepUsing": "Update NASH to keep using them.",
+        "updateOrcaToOpenChat": "Update NASH to open it.",
         "waitForBackgroundTasks": "Wait for the background tasks to finish.",
         "waitForCommand": "Wait for the /compact or /clear to finish.",
         "waitForStart": "Wait for the agent to finish starting.",
@@ -3050,6 +3264,14 @@
     "findPath": "Find a folder…",
     "finishEditing": "Save or cancel the preset to continue creating your workspace.",
     "pathHelp": "One repository-relative directory per line. Spaces within a path are preserved."
+  },
+  "terminal": {
+    "codexSharedServerBanner": {
+      "dismiss": "Dismiss",
+      "dontShowAgain": "Don't show again",
+      "learnMore": "Learn more",
+      "openNewTerminal": "Open new terminal"
+    }
   },
   "worktreeJumpPalette": {
     "filter": {

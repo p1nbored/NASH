@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DeliverableLanguageSchema } from '../deliverable-language'
 import {
   WORKBENCH_LIST_DEFAULT_LIMIT,
   WORKBENCH_LIST_MAX_LIMIT,
@@ -67,7 +66,6 @@ export const DotSubmitParams = z
     workspaceRef: DotWorkspaceRefSchema,
     objective: WorkbenchObjectiveSchema,
     requestedAccess: DotRequestAccessSchema.default(DOT_DEFAULT_REQUEST_ACCESS),
-    deliverableLanguage: DeliverableLanguageSchema.optional(),
     idempotencyKey: z.uuid(),
     reply: DotReplyMetadataSchema.optional(),
     client: DotClientDescriptorSchema.optional()

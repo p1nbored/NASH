@@ -6,13 +6,13 @@ import type { ProviderRateLimits } from '../../../../shared/rate-limit-types'
 import { normalizeUsagePercentageDisplay } from '../../../../shared/usage-percentage-display'
 import { normalizeStatusBarUsageMode } from '../../../../shared/status-bar-usage-mode'
 import { isStatusBarItemAvailable } from './status-bar-agent-gating'
+import { getVisibleUsageProvider, isUsageEmptyState } from './status-bar-provider-visibility'
 import {
-  getVisibleUsageProvider,
-  isUsageEmptyState,
-  usageProviderSettingsFor
-} from './status-bar-provider-visibility'
-import { getUsageProviderAccountsSectionId } from './usage-provider-settings-target'
-import { CLOSE_ALL_CONTEXT_MENUS_EVENT, useStatusBarMenuFocusHandoff } from './ProviderDetailsMenu'
+  getUsageProviderAccountsSectionId,
+  usageRowSignInOpensSettings
+} from './usage-provider-settings-target'
+import { useStatusBarMenuFocusHandoff } from './ProviderDetailsMenu'
+import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
 import { useStatusBarDensity } from './status-bar-density'
 
 export function useStatusBarController(floatingTerminalOpen: boolean) {
@@ -82,7 +82,7 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     }
     setIsRefreshing(true)
     try {
-      // Why: re-run PATH detection so a freshly-installed/removed CLI's bar appears/hides without restarting Orca.
+      // Why: re-run PATH detection so a freshly-installed/removed CLI's bar appears/hides without restarting NASH.
       await Promise.all([refreshRateLimits(), refreshDetectedAgents()])
     } finally {
       if (mountedRef.current) {
@@ -104,12 +104,16 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     statusBarItems.includes('antigravity') &&
     isStatusBarItemAvailable('antigravity', detectedAgentIds)
   // Why: thread non-GlobalSettings durability flags so bars stay visible across reloads and snapshot refreshes.
-  // Null with the host's usage meters off (NASH): no meter, setup prompt or refresh button shows.
-  const usageSettings = usageProviderSettingsFor({
-    settings,
-    rateLimits,
-    antigravityUsageConfigured
-  })
+  const usageSettings = {
+    ...settings,
+    antigravityUsageConfigured,
+    minimaxCookieConfigured: rateLimits.minimaxCookieConfigured,
+    minimaxApiKeyConfigured: rateLimits.minimaxApiKeyConfigured,
+    opencodeGoApiKeyConfigured: rateLimits.opencodeGoApiKeyConfigured,
+    grokAuthConfigured: rateLimits.grokAuthConfigured,
+    cursorAuthConfigured: rateLimits.cursorAuthConfigured,
+    zcodePlanApiKeyConfigured: rateLimits.zcodePlanApiKeyConfigured
+  }
   const visibleClaude = getVisibleUsageProvider('claude', claude, usageSettings)
   const visibleCodex = getVisibleUsageProvider('codex', codex, usageSettings)
   const visibleGemini = getVisibleUsageProvider('gemini', gemini, usageSettings)
@@ -174,8 +178,7 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     showGrok ||
     showCursor ||
     showZcode
-  // Why: the refresh button only refreshes usage, so it goes with the meters.
-  const anyVisible = hasVisibleUsageMeters || (showResourceUsage && usageSettings !== null)
+  const anyVisible = hasVisibleUsageMeters || showResourceUsage
   // Why: include Settings so durable managed accounts count — a configured user isn't shown the empty state while snapshots hydrate.
   const isEmptyUsageState = isUsageEmptyState(
     { claude, codex, gemini, opencodeGo, kimi, antigravity, minimax, grok, cursor, zcode },
@@ -234,6 +237,8 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     openSettingsTarget({ pane: 'accounts', repoId: null, sectionId })
     openSettingsPage()
   }
+  const canSignInFromUsageRow = (provider: ProviderRateLimits['provider']): boolean =>
+    usageRowSignInOpensSettings(provider, settings)
   const handleUsageMenuOpenChange = (nextOpen: boolean): void => {
     if (nextOpen) {
       usageMenuFocusHandoff.reset()
@@ -246,6 +251,7 @@ export function useStatusBarController(floatingTerminalOpen: boolean) {
     anyFetching,
     anyVisible,
     barRef,
+    canSignInFromUsageRow,
     collapseUsage,
     collapsedUsageProviders,
     compact,

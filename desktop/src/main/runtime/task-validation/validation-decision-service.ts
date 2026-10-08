@@ -8,10 +8,7 @@ import type { TaskValidationRecord } from '../orchestration/db/task-validation-r
 import { getTaskValidationStore } from '../orchestration/db/task-validation-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { MessageRow } from '../orchestration/types'
-import type { AttemptWorktree } from '../task-execution/attempt-worktree'
-import type { WorktreeChangeFacts } from '../task-execution/task-result-notice'
 import { readWorkflowRunOrigin, type WorkflowRunOrigin } from '../workflow-run/workflow-run-origin'
-import type { AttemptWorktreeChangesReader } from './attempt-worktree-changes'
 import { createValidationDecisionPort } from './task-validation-port'
 import {
   buildDecisionNotice,
@@ -23,11 +20,10 @@ import { createDecisionViewReader } from './validation-decision-view'
 /**
  * The one place an inconclusive validation is resolved (architecture section 9): the user from the
  * desktop, or dot for a run dot started. The primary session has no route here. Each decision files
- * a notice for the primary: merge a waived write task's branch, leave a rejected one for inspection.
+ * its outcome in the primary session's mailbox.
  */
 export type ValidationDecisionService = {
   listPending(input: ListPendingInput): WorkbenchValidationListDecisionsResult
-  /** Async because a waive reads git in the attempt's own worktree before its notice is filed. */
   decide(input: DecideInput): Promise<WorkbenchValidationDecideResult>
 }
 
@@ -51,13 +47,10 @@ export type ValidationDecisionServiceDeps = {
   readonly announce?: (message: MessageRow) => void
   /** Who started a run; tests inject it, production reads the intake records. */
   readonly readOrigin?: (runId: string) => WorkflowRunOrigin
-  /** Git facts of a waived attempt's own worktree; absent, the notice states none and asks for a check. */
-  readonly readWorktreeChanges?: AttemptWorktreeChangesReader
 }
 
 /** The store's own bound; an origin filter scans this far so a filtered page is still full. */
 const ORIGIN_SCAN_LIMIT = 1000
-const UNREAD: WorktreeChangeFacts = { readable: false }
 
 function conflict(message: string): OrchestrationError {
   return new OrchestrationError('autopilot_validation_conflict', message)
@@ -77,14 +70,6 @@ export function createValidationDecisionService(
       const read = readWorkflowRunOrigin(owner, runId)
       return read.found ? read.origin : 'unknown'
     })
-  const readChanges = async (worktree: AttemptWorktree): Promise<WorktreeChangeFacts> => {
-    try {
-      return (await deps.readWorktreeChanges?.(worktree)) ?? UNREAD
-    } catch {
-      return UNREAD
-    }
-  }
-
   /** The validation and its run, once the decider may decide it; the store re-checks inside its write. */
   const decidable = (
     validationId: string,
@@ -126,25 +111,14 @@ export function createValidationDecisionService(
 
     async decide({ validationId, decision, by }) {
       const { validation, runId } = decidable(validationId, by)
-      const placement = views.placementOf(validation.dispatchId)
-      // Why: a process that may still write must end before a merge; the waive still records.
-      const processMayRun = decision === 'waive' && views.processMayRunOf(validation.dispatchId)
-      const changes =
-        decision === 'waive' && !processMayRun && placement?.mode === 'own_worktree'
-          ? await readChanges(placement.worktree)
-          : undefined
       const input = {
         validationId,
         by,
         resultSummary: decisionResultSummary(decision, by),
         notice: buildDecisionNotice({
           taskId: validation.taskId,
-          dispatchId: validation.dispatchId,
           decision,
-          by,
-          placement,
-          changes,
-          processMayRun
+          by
         }),
         timestamp: now().toISOString()
       }

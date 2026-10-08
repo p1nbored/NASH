@@ -15,10 +15,6 @@ import {
   type AttemptArtifactInput,
   type AttemptArtifactRecord
 } from '../orchestration/db/attempt-artifact-store'
-import {
-  getExecutorProcessStore,
-  type ExecutorProcessRecord
-} from '../orchestration/db/executor-process-store'
 import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import { getTaskSpecStore, type TaskSpecRecord } from '../orchestration/db/task-spec-store'
 import {
@@ -45,7 +41,6 @@ export type TaskValidationPort = {
   /** One waiting attempt, read alone so a batch never re-scans the whole list per attempt. */
   getAwaiting(dispatchId: string): AwaitingValidationEntry | null
   getSpec(taskId: string): TaskSpecRecord | null
-  getExecutor(dispatchId: string): ExecutorProcessRecord | null
   listArtifacts(dispatchId: string): AttemptArtifactRecord[]
   recordArtifact(input: AttemptArtifactInput): { duplicate: boolean; record: AttemptArtifactRecord }
   open(input: TaskValidationOpenInput): { duplicate: boolean; record: TaskValidationRecord }
@@ -65,7 +60,6 @@ export type ValidationDecisionPort = {
 export function createTaskValidationPort(owner: OrchestrationDb): TaskValidationPort {
   const settlement = getAppAttemptSettlement(owner)
   const specs = getTaskSpecStore(owner)
-  const executors = getExecutorProcessStore(owner)
   const artifacts = getAttemptArtifactStore(owner)
   const validations = getTaskValidationStore(owner)
   const outcome = getValidationOutcomeService(owner)
@@ -73,7 +67,6 @@ export function createTaskValidationPort(owner: OrchestrationDb): TaskValidation
     listAwaiting: (limit) => settlement.listAwaitingValidation(limit),
     getAwaiting: (dispatchId) => getAwaitingValidation(owner.db, dispatchId),
     getSpec: (taskId) => specs.get(taskId),
-    getExecutor: (dispatchId) => executors.get(dispatchId),
     listArtifacts: (dispatchId) => artifacts.listForDispatch(dispatchId),
     recordArtifact: (input) => artifacts.record(input),
     open: (input) => validations.open(input),

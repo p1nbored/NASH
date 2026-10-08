@@ -15,18 +15,18 @@ import {
 import type { PrimarySessionAccess } from './primary-session-types'
 
 type PromptOverrides = {
+  agent?: 'claude' | 'codex'
   objective?: string
   access?: PrimarySessionAccess
-  deliverableLanguage?: string | null
   cliCommand?: string
   platform?: NodeJS.Platform
 }
 
 function promptFor(overrides: PromptOverrides = {}) {
   const result = buildPrimarySessionPrompt({
+    agent: 'claude',
     objective: 'Add a retry button to the queue.',
     access: 'read_only',
-    deliverableLanguage: null,
     cliCommand: 'orca',
     platform: 'linux',
     ...overrides
@@ -138,10 +138,8 @@ describe('buildPrimarySessionPrompt framework text', () => {
     }
   })
 
-  it('passes the English check with a deliverable language and a different CLI name', () => {
-    const { before, after } = splitFence(
-      promptFor({ deliverableLanguage: 'zh-hant-tw', cliCommand: 'orca-dev' }).text
-    )
+  it('passes the English check with a Codex primary and a different CLI name', () => {
+    const { before, after } = splitFence(promptFor({ agent: 'codex', cliCommand: 'orca-dev' }).text)
     expect(isEnglishText(before)).toBe(true)
     expect(isEnglishText(after)).toBe(true)
   })
@@ -159,31 +157,17 @@ describe('buildPrimarySessionPrompt framework text', () => {
     expect(writable).not.toContain('read-only')
   })
 
-  it('carries the deliverable language directive only when a language is given', () => {
-    const withTag = promptFor({ deliverableLanguage: 'zh-hant-tw' }).text
-    expect(withTag).toContain(
-      'Write deliverables and output files in zh-Hant-TW; report to the framework in English.'
-    )
-    const without = promptFor({ deliverableLanguage: null }).text
-    expect(without).toContain(
-      'Report to the framework in English. Write deliverables in the language the requirement asks for.'
-    )
-    expect(without).not.toContain('output files in')
-  })
-
-  it.each([['not a tag'], ['x'], ['en_US'], ['']])('refuses the language tag %j', (tag) => {
-    const result = buildPrimarySessionPrompt({
-      objective: 'Do it.',
-      access: 'read_only',
-      deliverableLanguage: tag,
-      cliCommand: 'orca',
-      platform: 'linux'
-    })
-    expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(result.refusal.code).toBe('autopilot_session_language_invalid')
+  it.each(['claude', 'codex'] as const)(
+    'keeps %s task communication in English without constraining artifact language',
+    (agent) => {
+      const text = promptFor({ agent }).text
+      expect(text).toContain('Communicate with Dot, the framework and workers in English')
+      expect(text).not.toMatch(/Write deliverables|output files in|zh-Hans|BCP 47/)
+      expect(text).toContain(
+        agent === 'codex' ? 'primary Codex session' : 'primary Claude Code session'
+      )
     }
-  })
+  )
 
   it('names no bypass, dontAsk or dangerous flag anywhere in the framework text', () => {
     const { before, after } = splitFence(promptFor().text)
@@ -272,9 +256,9 @@ describe('buildPrimarySessionPrompt refusals', () => {
     ['an objective with a NUL byte', 'run\u0000this']
   ])('refuses %s', (_label, objective) => {
     const result = buildPrimarySessionPrompt({
+      agent: 'claude',
       objective,
       access: 'read_only',
-      deliverableLanguage: null,
       cliCommand: 'orca',
       platform: 'linux'
     })
@@ -286,9 +270,9 @@ describe('buildPrimarySessionPrompt refusals', () => {
 
   it('refuses an invalid CLI name', () => {
     const result = buildPrimarySessionPrompt({
+      agent: 'claude',
       objective: 'Do it.',
       access: 'read_only',
-      deliverableLanguage: null,
       cliCommand: 'orca; rm',
       platform: 'linux'
     })
@@ -304,7 +288,6 @@ describe('buildPrimarySessionPrompt refusals', () => {
       JSON.stringify({
         objective: 'Do it.',
         access: 'bypassPermissions',
-        deliverableLanguage: null,
         cliCommand: 'orca'
       })
     )

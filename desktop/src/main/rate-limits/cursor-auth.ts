@@ -135,9 +135,9 @@ export type CursorAuthReadOptions = {
 }
 
 /**
- * Resolve the Cursor session Orca should poll with, preferring the CLI login
+ * Resolve the Cursor session NASH should poll with, preferring the CLI login
  * (keychain, then legacy auth.json) over the Cursor IDE's own session. Read-only:
- * Orca never writes, refreshes, or rotates the user's Cursor credentials.
+ * NASH never writes, refreshes, or rotates the user's Cursor credentials.
  */
 export async function readCursorAuthSession(
   options: CursorAuthReadOptions = {}
@@ -190,7 +190,7 @@ export async function readCursorAuthSession(
 
   // Why not pushed to `errors`: the IDE holds a lock on state.vscdb while it runs,
   // so a busy open is transient. Reporting it would pin an alert-triangle bar on
-  // every Cursor IDE user who never set Cursor up in Orca.
+  // every Cursor IDE user who never set Cursor up in NASH.
   const desktopRead = await readCursorDesktopProfile(desktopDbPath)
   if (desktopRead.status === 'ok' && desktopRead.profile.accessToken) {
     const session = takeLive(

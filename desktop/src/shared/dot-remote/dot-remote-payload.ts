@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto'
 import { canonicalJson } from '../canonical-json'
 import {
-  DotCancelParamsV3,
-  DotDecisionAnswerParamsV3,
-  DotMessageParamsV3,
-  DotSubmitParamsV3
-} from '../dot-ingress/dot-ingress-v3'
+  DotCancelParams,
+  DotDecisionAnswerParams,
+  DotSubmitParams
+} from '../dot-ingress/dot-ingress-params'
+import { DotMessageParams } from '../dot-ingress/dot-ingress-message'
 import { DotValidationDecideParamsV3 } from '../dot-ingress/dot-ingress-validation'
 import { DOT_REMOTE_PAYLOAD_CONTRACT_VERSION } from './dot-remote-limits'
 
@@ -23,10 +23,10 @@ export const DOT_REMOTE_ITEM_KINDS = [
 export type DotRemoteItemKind = (typeof DOT_REMOTE_ITEM_KINDS)[number]
 
 export const DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS = {
-  submit: DotSubmitParamsV3,
-  cancel: DotCancelParamsV3,
-  permission_answer: DotDecisionAnswerParamsV3,
-  message: DotMessageParamsV3,
+  submit: DotSubmitParams,
+  cancel: DotCancelParams,
+  permission_answer: DotDecisionAnswerParams,
+  message: DotMessageParams,
   validation_decision: DotValidationDecideParamsV3
 } as const
 

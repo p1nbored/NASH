@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { Separator as SeparatorPrimitive } from 'radix-ui'
+import * as SeparatorPrimitive from 'radix-ui/separator'
 
 import { cn } from '@/lib/utils'
 

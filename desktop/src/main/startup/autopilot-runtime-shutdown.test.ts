@@ -14,7 +14,6 @@ import {
   requireWorkbenchRoutingRuntime,
   setWorkbenchRoutingRuntime
 } from '../runtime/workbench-routing/workbench-routing-runtime'
-import { registerExecutorStopPort } from '../runtime/workflow-run/executor-stop-port'
 import {
   getPrimarySessionRuntime,
   requirePrimarySessionRuntime,
@@ -55,10 +54,9 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
     const stopping = installation.shutdown()
     await flush()
 
-    expect(fake.calls.slice(0, 5)).toEqual([
+    expect(fake.calls.slice(0, 4)).toEqual([
       'dotRemote.stop',
       'classifier.abortAll',
-      'execution.abortAllForQuit',
       'clef.abortAllRouting',
       'settleLaunches'
     ])
@@ -70,28 +68,22 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
       ok: false,
       code: 'autopilot_primary_session_not_configured'
     })
-    fake.release.executors()
     fake.release.launches()
     fake.release.validation()
     await stopping
   })
 
-  it('keeps the primary runtime (and the database) until the executors and launches settled', async () => {
+  it('keeps the primary runtime (and the database) until launches settled', async () => {
     const { fake, installation } = await installed()
     const stopping = installation.shutdown()
     await flush()
     expect(fake.calls).not.toContain('primary.dispose')
     expect(getPrimarySessionRuntime()).not.toBeNull()
 
-    fake.release.executors()
-    await flush()
-    expect(fake.calls).not.toContain('primary.dispose')
-
     fake.release.launches()
     const report = await stopping
     expect(report.pending).toEqual([])
     const order = fake.calls
-    expect(order.indexOf('execution.settled')).toBeLessThan(order.indexOf('primary.dispose'))
     expect(order.indexOf('launches.settled')).toBeLessThan(order.indexOf('primary.dispose'))
     expect(order.slice(order.indexOf('primary.dispose'))).toEqual([
       'primary.dispose',
@@ -111,7 +103,6 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
       expect(fake.validation.validateAttempt).toHaveBeenCalledWith('ctx_running', expect.anything())
     )
     const signal = vi.mocked(fake.validation.validateAttempt).mock.calls[0]?.[1]
-    fake.release.executors()
     fake.release.launches()
     const report = await installation.shutdown()
     expect(signal?.aborted).toBe(true)
@@ -120,7 +111,6 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
 
   it('unregisters everything it installed', async () => {
     const { fake, installation } = await installed()
-    fake.release.executors()
     fake.release.launches()
     fake.release.validation()
     await installation.shutdown()
@@ -140,8 +130,6 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
     expect(routingTableAvailabilityOf(fake.runtime)).toBeNull()
     expect(codeOf(() => requireWorkbenchRoutingRuntime())).toBe('workbench_routing_not_configured')
     expect(getTaskClassificationRuntime()).toBeNull()
-    const unregister = registerExecutorStopPort(fake.runtime, { stopExecutor: vi.fn() })
-    unregister()
     // The dot interface switch now reads off, so a server that syncs again closes the endpoint.
     const reader = vi.mocked(fake.runtime.installDotIngressEnabledReader).mock.calls.at(-1)?.[0]
     expect(reader?.()).toBe(false)
@@ -150,12 +138,11 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
   it('bounds the wait, reports what did not settle, and still disposes', async () => {
     const { fake, installation } = await installed({ quitWaitMs: 20 })
     const report = await installation.shutdown()
-    expect([...report.pending].sort()).toEqual(['executors', 'launches'])
+    expect([...report.pending].sort()).toEqual(['launches'])
     expect(fake.calls).toContain('primary.dispose')
     expect(codeOf(() => requirePrimarySessionRuntime())).toBe(
       'autopilot_primary_session_not_configured'
     )
-    fake.release.executors()
     fake.release.launches()
   })
 
@@ -178,7 +165,6 @@ describe('will-quit: fence, then wait for the runs to settle, then dispose', () 
 
   it('runs once: a second call is a no-op', async () => {
     const { fake, installation } = await installed()
-    fake.release.executors()
     fake.release.launches()
     fake.release.validation()
     await installation.shutdown()

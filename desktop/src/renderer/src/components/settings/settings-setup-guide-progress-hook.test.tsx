@@ -43,10 +43,10 @@ describe('useSettingsSetupGuideProgress', () => {
     mocks.useSetupGuideProgress.mockReturnValue(makeProgress())
 
     expect(renderToStaticMarkup(<SettingsProgressProbe />)).toContain('4/8')
-    expect(mocks.useSetupGuideProgress).toHaveBeenCalledWith(true, false, false)
+    expect(mocks.useSetupGuideProgress).toHaveBeenCalledWith(true)
   })
 
-  it('uses legacy-aware completion returned by the shared setup progress path', () => {
+  it('uses completion returned by the shared setup progress path', () => {
     mocks.useSetupGuideProgress.mockReturnValue({
       ...makeProgress(),
       stepDone: {
@@ -65,7 +65,7 @@ describe('useSettingsSetupGuideProgress', () => {
     expect(renderToStaticMarkup(<SettingsProgressProbe />)).toContain('8/8')
   })
 
-  it('shows browser incomplete after the browser migration has already run for fresh users', () => {
+  it('shows Workbench incomplete until a run exists', () => {
     mocks.useSetupGuideProgress.mockReturnValue({
       ...makeProgress(),
       stepDone: {

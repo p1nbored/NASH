@@ -25,8 +25,9 @@ import {
   type WorkflowRunLaunchBlocker
 } from './primary-session-ports'
 import {
-  parseClaudeModelChoice,
+  parsePrimaryModelChoice,
   type ClaudeEffortLevel,
+  type PrimarySessionAgent,
   type SubagentRouteRowInput
 } from './primary-session-types'
 
@@ -35,8 +36,7 @@ const StartWorkflowRunInputSchema = WorkflowRunCreateSchema.pick({
   requestId: true,
   workspaceId: true,
   workspaceBinding: true,
-  requestedAccess: true,
-  deliverableLanguage: true
+  requestedAccess: true
 })
   .extend({ objective: z.string().min(1) })
   .strict()
@@ -76,6 +76,7 @@ export type WorkflowRunServiceDeps = {
 }
 
 type Coordinator = {
+  readonly agent: PrimarySessionAgent
   readonly version: number
   readonly sha256: string
   readonly model: string
@@ -112,7 +113,7 @@ export function createWorkflowRunService(deps: WorkflowRunServiceDeps) {
     }
     const availability = resolved.availability
     const choice = isDispatchable(availability)
-      ? parseClaudeModelChoice(availability.cli.model, availability.cli.effort)
+      ? parsePrimaryModelChoice(resolved.agent, availability.cli.model, availability.cli.effort)
       : null
     if (choice === null || !choice.ok) {
       const reasons = availability.reasons.join(', ') || 'no usable model and effort'
@@ -133,6 +134,7 @@ export function createWorkflowRunService(deps: WorkflowRunServiceDeps) {
       )
     }
     return {
+      agent: resolved.agent,
       version: resolved.table.version,
       sha256: resolved.table.sha256,
       model: choice.value.model,
@@ -187,9 +189,9 @@ export function createWorkflowRunService(deps: WorkflowRunServiceDeps) {
       workspaceId: input.workspaceId,
       workspaceBinding: input.workspaceBinding,
       requestedAccess: input.requestedAccess,
-      deliverableLanguage: input.deliverableLanguage,
       routingTableVersion: coordinator.version,
       routingTableSha256: coordinator.sha256,
+      coordinatorAgent: coordinator.agent,
       coordinatorModel: coordinator.model,
       coordinatorEffort: coordinator.effort,
       timestamp: clockTimestamp(deps.clock)

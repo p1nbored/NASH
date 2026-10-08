@@ -5,9 +5,8 @@ import { getAppAttemptSettlement } from './app-attempt-settlement'
 import { getTaskValidationStore } from './task-validation-store'
 import { seedRoutedTask } from './app-attempt-routing.test-fixture'
 import { createAppRunHarness, type AppRunHarness } from './app-attempt.test-fixture'
-import { FIXTURE_HASH_B, errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
+import { errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
 
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
 const LEAF_ID = '11111111-1111-4111-8111-111111111111'
 
 // Why: Orca has two other routes that move a task toward completed; an app attempt must reach neither.
@@ -24,7 +23,7 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
     const view = settlement().start({
       taskId: seeded.taskId,
       routeId: seeded.routeId,
-      executor: 'codex_cli',
+      executor: 'in_session',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER,
       timestamp: fixtureTime(5)
@@ -35,7 +34,6 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
     const attempt = startAttempt()
     settlement().markRunning({
       dispatchId: attempt.dispatchId,
-      executableEvidence: { executable: 'codex' },
       timestamp: fixtureTime(6)
     })
     return attempt
@@ -44,23 +42,10 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
     const attempt = runAttempt()
     settlement().settleClaim({
       dispatchId: attempt.dispatchId,
-      exitCode: 0,
-      tree: EXITED,
-      lastMessage: { sha256: FIXTURE_HASH_B, bytes: 1, secretLike: false },
       timestamp: fixtureTime(7)
     })
     return attempt
   }
-  const unknownStartAttempt = () => {
-    const attempt = startAttempt()
-    settlement().markStartUnknown({
-      dispatchId: attempt.dispatchId,
-      reason: 'restart',
-      timestamp: fixtureTime(6)
-    })
-    return attempt
-  }
-
   const reportDone = (
     attempt: { taskId: string; dispatchId: string },
     sender: { from: string; senderPaneKey?: string }
@@ -90,8 +75,7 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
   describe('a worker_done report', () => {
     it.each([
       ['running', runAttempt, 'dispatched'],
-      ['awaiting validation', claimedAttempt, 'blocked'],
-      ['of an unknown start', unknownStartAttempt, 'blocked']
+      ['awaiting validation', claimedAttempt, 'blocked']
     ] as const)('is refused for an attempt that is %s, whoever sends it', (_name, seed, status) => {
       const attempt = seed()
       for (const sender of SENDERS) {
@@ -154,8 +138,7 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
   describe('a decision gate', () => {
     it.each([
       ['running', runAttempt],
-      ['awaiting validation', claimedAttempt],
-      ['of an unknown start', unknownStartAttempt]
+      ['awaiting validation', claimedAttempt]
     ] as const)('cannot be opened on an attempt that is %s', (_name, seed) => {
       const attempt = seed()
       const before = harness.owner.getTask(attempt.taskId)?.status
@@ -179,7 +162,7 @@ describe('app attempts against the other Orca paths that complete or reopen a ta
       const view = settlement().start({
         taskId: seeded.taskId,
         routeId: seeded.routeId,
-        executor: 'codex_cli',
+        executor: 'in_session',
         creator: { kind: 'system' },
         maxDepth: Number.MAX_SAFE_INTEGER,
         timestamp: fixtureTime(5)

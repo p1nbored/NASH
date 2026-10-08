@@ -1,3 +1,4 @@
+import '../unused-default-rpc-methods.test-fixture'
 import { describe, expect, it, vi } from 'vitest'
 import { getDefaultUIState } from '../../../../shared/constants'
 import { omitPairingLocalUiFields } from '../../../../shared/pairing-local-ui-fields'
@@ -594,11 +595,6 @@ describe('client UI RPC methods', () => {
     ['activeView', { activeView: 'tasks' }],
     ['showDotfilesByWorktree', { showDotfilesByWorktree: { 'repo::/worktree': true } }],
     ['setupGuideSidebarDismissed', { setupGuideSidebarDismissed: true }],
-    ['setupGuideBrowserMilestoneMigrated', { setupGuideBrowserMilestoneMigrated: true }],
-    [
-      'setupGuideBrowserMilestoneLegacyComplete',
-      { setupGuideBrowserMilestoneLegacyComplete: true }
-    ],
     ['browserImportHintHidden', { browserImportHintHidden: true }],
     ['mobileEmulatorTabIntroDismissed', { mobileEmulatorTabIntroDismissed: true }],
     ['mobileEmulatorAgentSetupDismissed', { mobileEmulatorAgentSetupDismissed: true }],

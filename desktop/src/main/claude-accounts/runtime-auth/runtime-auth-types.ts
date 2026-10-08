@@ -7,7 +7,7 @@ export type ClaudeRuntimeAuthPreparation = {
   wslLinuxConfigDir?: string | null
   envPatch: ClaudeEnvPatch
   stripAuthEnv: boolean
-  /** Never set since Claude account switching was removed; read only by Orca's inherited meters. */
-  managedRefreshDeferredByLivePty?: boolean
   provenance: string
+  /** Usage only: why the selected account cannot be read; usage polling must not throw for it. */
+  usageError?: string
 }

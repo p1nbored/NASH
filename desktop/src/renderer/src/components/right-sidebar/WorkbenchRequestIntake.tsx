@@ -46,7 +46,7 @@ export default function WorkbenchRequestIntake({
         <p id="workbench-request-objective-help" className="text-meta text-muted-foreground">
           {translate(
             'workbench.requests.intakeHelp',
-            'Starts a run with a Claude Code session in this workspace.'
+            'Starts a run with the configured primary CLI in this workspace.'
           )}
         </p>
         <Button

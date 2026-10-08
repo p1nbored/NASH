@@ -3,6 +3,7 @@ import { RateLimitService } from '../rate-limits/service'
 import { CodexRuntimeHomeService } from '../codex-accounts/runtime-home-service'
 import { CodexAccountService } from '../codex-accounts/service'
 import { ClaudeRuntimeAuthService } from '../claude-accounts/runtime-auth-service'
+import { ClaudeAccountService } from '../claude-accounts/service'
 import { KeybindingService } from '../keybindings/keybinding-service'
 import { createCodexSessionMigrationScheduler } from '../codex/codex-session-migration-scheduler'
 import { startCodexSessionBackfillInBackground } from '../codex/codex-session-backfill'
@@ -22,16 +23,11 @@ import {
 } from '../opencode/opencode-go-api-key-store'
 import { createAccountRuntimeTargetSettingsSync } from '../rate-limits/account-runtime-target-sync'
 import { normalizeCodexRuntimeSelection } from '../codex-accounts/runtime-selection'
+import { normalizeClaudeRuntimeSelection } from '../claude-accounts/runtime-selection'
 import { agentHookServer } from '../agent-hooks/server'
-import {
-  isRealHomeCodexHookLaneUsable,
-  setRealHomeCodexHooksEnabledReader
-} from '../codex/codex-real-home-hook-install'
-import { isAgentStatusHooksEnabledForAgent } from '../agent-hooks/managed-agent-hook-controls'
 import { resolveHostCodexSessionSourceHome } from '../codex/codex-session-source-home'
 import { browserManager } from '../browser/browser-manager'
 import { mainProcessState as state } from './main-process-state'
-import { installClefCredentialStore } from './clef-credential-store-install'
 
 export function initializeMainProcessAccountServices(): void {
   const store = state.store
@@ -44,18 +40,9 @@ export function initializeMainProcessAccountServices(): void {
   ) {
     throw new Error('Usage stores must be initialized before account services')
   }
-  // Why here: after ready (Linux keyring) and before the runtime that routes Workbench requests,
-  // in desktop and serve mode alike.
-  installClefCredentialStore()
   state.rateLimits = new RateLimitService()
   state.codexRuntimeHome = new CodexRuntimeHomeService(store)
   void startCodexStateDbBackfillRecoveryInBackground(getOrcaManagedCodexHomePath())
-  // Why: an incapable trust-grant host must fall back to the managed home for
-  // every consumer (PTY env, rate limits, commit messages) in one place.
-  state.codexRuntimeHome.setRealHomeLaneGate(() => isRealHomeCodexHookLaneUsable())
-  setRealHomeCodexHooksEnabledReader(() =>
-    isAgentStatusHooksEnabledForAgent(store.getSettings(), 'codex')
-  )
   state.codexSessionMigration = createCodexSessionMigrationScheduler({
     isEligible: () =>
       state.codexRuntimeHome?.isHostSystemDefaultSessionMigrationEligible() === true,
@@ -74,19 +61,11 @@ export function initializeMainProcessAccountServices(): void {
   // Why: migrate historical shared-home sessions after startup; compatibility
   // launches re-arm the non-destructive pass for new rollouts (#4444, #8612, #12480).
   state.codexSessionMigration.scheduleInitialRun()
-  // Why system-only: Claude account switching is gone; every Claude launch uses the user's own login.
   state.claudeRuntimeAuth = new ClaudeRuntimeAuthService(store)
+  state.claudeAccounts = new ClaudeAccountService(store, state.rateLimits, state.claudeRuntimeAuth)
   state.rateLimits.setCodexHomePathResolver((target) =>
     state.codexRuntimeHome!.prepareForRateLimitFetch(target)
   )
-  // Why: NASH reads Codex usage in the home its own Codex launches pin, resolved read-only (no sync).
-  state.rateLimits.setCliCodexHomeResolver(async () => {
-    const runtime = state.runtime
-    if (!runtime) {
-      throw new Error('The Codex account home is not available yet.')
-    }
-    return (await runtime.resolveStructuredAgentAccountHome('codex')).path
-  })
   state.rateLimits.setCodexFetchTarget(getInitialCodexRateLimitTarget(store.getSettings()))
   // Why: Kimi's CLI refreshes its OAuth token in whichever runtime it runs in, so the
   // usage fetch must read the WSL-side credentials when that's the configured runtime (#12370).
@@ -188,6 +167,23 @@ export function initializeMainProcessAccountServices(): void {
     }
   })
   browserManager.setSettingsResolver(() => ({ keybindings: state.keybindings?.getOverrides() }))
+  state.rateLimits.setInactiveClaudeAccountsResolver(() => {
+    const settings = store.getSettings()
+    const activeIds = new Set(
+      [
+        normalizeClaudeRuntimeSelection(settings).host,
+        ...Object.values(normalizeClaudeRuntimeSelection(settings).wsl)
+      ].filter(Boolean)
+    )
+    return settings.claudeManagedAccounts
+      .filter((account) => !activeIds.has(account.id))
+      .map((account) => ({
+        id: account.id,
+        managedAuthRuntime: account.managedAuthRuntime,
+        wslDistro: account.wslDistro,
+        wslLinuxAuthPath: account.wslLinuxAuthPath
+      }))
+  })
   state.rateLimits.setInactiveCodexAccountsResolver(() => {
     const settings = store.getSettings()
     const activeIds = new Set(

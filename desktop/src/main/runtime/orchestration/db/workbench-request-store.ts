@@ -98,7 +98,7 @@ export class WorkbenchRequestStore {
     private readonly db: Database.Database,
     private readonly now: () => Date = () => new Date()
   ) {
-    ensureWorkbenchRequestSchema(db, now)
+    ensureWorkbenchRequestSchema(db)
   }
 
   private transaction<T>(operation: () => T): T {

@@ -1,11 +1,14 @@
-import type { DotDecisionViewV2 } from '../../shared/dot-ingress/dot-ingress-v2'
 import type {
-  DotDecisionAnswerResultV3,
-  DotHelloResultV3,
-  DotMessageResultV3,
-  DotRequestViewV3,
-  DotWorkspacesResultV3
-} from '../../shared/dot-ingress/dot-ingress-v3'
+  DotDecisionView,
+  DotDecisionAnswerResult
+} from '../../shared/dot-ingress/dot-ingress-decision'
+
+import type {
+  DotHelloResult,
+  DotRequestView,
+  DotWorkspacesResult
+} from '../../shared/dot-ingress/dot-ingress-request'
+import type { DotMessageResult } from '../../shared/dot-ingress/dot-ingress-message'
 import type {
   DotValidationDecideResultV3,
   DotValidationsListResultV3
@@ -13,7 +16,7 @@ import type {
 
 // Short English lines for a person at a terminal; --json prints the contract result instead.
 
-export function formatDotHello(hello: DotHelloResultV3): string {
+export function formatDotHello(hello: DotHelloResult): string {
   return [
     `Dot interface contract versions: ${hello.supportedContractVersions.join(', ')}.`,
     `Methods: ${hello.methods.join(', ')}.`,
@@ -21,7 +24,7 @@ export function formatDotHello(hello: DotHelloResultV3): string {
   ].join('\n')
 }
 
-export function formatDotWorkspaces(result: DotWorkspacesResultV3): string {
+export function formatDotWorkspaces(result: DotWorkspacesResult): string {
   if (result.workspaces.length === 0) {
     return 'No workspace is enabled for dot.'
   }
@@ -33,23 +36,23 @@ export function formatDotWorkspaces(result: DotWorkspacesResultV3): string {
     .join('\n')
 }
 
-export function formatDotRequest(request: DotRequestViewV3): string {
+export function formatDotRequest(request: DotRequestView): string {
   const run = request.run
     ? `, run ${request.run.state}${request.run.blocker ? ` (${request.run.blocker})` : ''}`
     : ''
   return `Request ${request.dotRequestId}: ${request.state}${run}, access ${request.requestedAccess}`
 }
 
-export function formatDotDecision(decision: DotDecisionViewV2): string {
+export function formatDotDecision(decision: DotDecisionView): string {
   const answers = decision.dotMayAllow ? 'allow or deny' : 'deny only'
   return `${decision.decisionId}  ${decision.summary}  [${decision.status}; dot may ${answers}]`
 }
 
-export function formatDotDecisionAnswer(result: DotDecisionAnswerResultV3): string {
+export function formatDotDecisionAnswer(result: DotDecisionAnswerResult): string {
   return `${result.decision.decisionId}: ${result.outcome}, ${result.decision.status}`
 }
 
-export function formatDotMessage(result: DotMessageResultV3): string {
+export function formatDotMessage(result: DotMessageResult): string {
   const reason = result.reason ? ` (${result.reason})` : ''
   return `Message ${result.messageId}: ${result.outcome}${reason}${result.duplicate ? ', sent before' : ''}`
 }

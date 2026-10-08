@@ -1,5 +1,9 @@
 import { canonicalJson } from './canonical-json'
 import { sha256 } from './sha256'
+import {
+  isAgentSessionHandleProvider,
+  type StructuredAgentId
+} from './agent-session-provider-handle'
 
 export function structuredAgentSessionPayloadFingerprint(input: {
   method: string
@@ -29,7 +33,7 @@ export function structuredAgentSessionDomainFingerprint(input: {
 export function structuredAgentSessionCreateFingerprint(input: {
   sessionId: string
   worktree: string
-  agent: 'claude' | 'codex'
+  agent: StructuredAgentId
   resumeFrom?: { providerSessionId: string }
   tabId?: string
 }): string {
@@ -54,11 +58,7 @@ export function showStructuredAgentSessionChoice(input: {
   workspaceSupport: boolean
   agent: string
 }): boolean {
-  return (
-    input.hostCapability &&
-    input.workspaceSupport &&
-    (input.agent === 'claude' || input.agent === 'codex')
-  )
+  return input.hostCapability && input.workspaceSupport && isAgentSessionHandleProvider(input.agent)
 }
 
 export function createStructuredAgentSessionOperationId(

@@ -22,12 +22,12 @@ const SECRET_OBJECTIVE = 'Rewrite the billing module for ACME and list the findi
 const noArtifacts: DotRequestView['artifacts'] = []
 
 const common = {
-  contractVersion: 1 as const,
+  contractVersion: 3 as const,
   dotRequestId: 'd059ca24-0f93-4c06-b317-dc2a95d6920b',
   sequence: 4,
   revision: 1,
   workspaceRef: 'dws_0123456789abcdef01234567',
-  deliverableLanguage: 'zh-Hans',
+  requestedAccess: 'read_only' as const,
   reply: { correlationId: 'conv-1' },
   createdAt: '2026-10-05T00:00:00.000Z',
   updatedAt: '2026-10-05T00:00:00.000Z',
@@ -140,7 +140,7 @@ describe('DotRequestViewSchema', () => {
     expect(JSON.stringify(DotRequestViewSchema.parse(received))).not.toContain(SECRET_OBJECTIVE)
   })
 
-  it('reserves the result as null and the artifact list as at most 50 references in v1', () => {
+  it('reserves the result as null and the artifact list as at most 50 references', () => {
     expect(DotResultSchema.safeParse(null).success).toBe(true)
     expect(DotResultSchema.safeParse({ summary: 'done' }).success).toBe(false)
     expect(DotRequestViewSchema.safeParse({ ...received, result: { summary: 'x' } }).success).toBe(
@@ -167,7 +167,6 @@ describe('DotRequestViewSchema', () => {
   })
 
   it.each([
-    ['deliverable language', { deliverableLanguage: 'en_US' }],
     ['revision', { revision: 0 }],
     ['sequence', { sequence: 0 }],
     ['request id', { dotRequestId: 'request-1' }],
@@ -178,11 +177,8 @@ describe('DotRequestViewSchema', () => {
     expect(DotRequestViewSchema.safeParse({ ...received, ...override }).success).toBe(false)
   })
 
-  it('allows a null deliverable language and a null reply', () => {
-    expect(
-      DotRequestViewSchema.safeParse({ ...received, deliverableLanguage: null, reply: null })
-        .success
-    ).toBe(true)
+  it('allows a null reply', () => {
+    expect(DotRequestViewSchema.safeParse({ ...received, reply: null }).success).toBe(true)
   })
 })
 
@@ -228,17 +224,17 @@ describe('DotRunViewSchema', () => {
 describe('dot ingress result wrappers', () => {
   it('wraps one request for submit, status and cancel', () => {
     expect(
-      DotSubmitResultSchema.parse({ contractVersion: 1, request: received, duplicate: false })
+      DotSubmitResultSchema.parse({ contractVersion: 3, request: received, duplicate: false })
     ).toMatchObject({ duplicate: false })
-    expect(DotStatusResultSchema.parse({ contractVersion: 1, request: submitted })).toBeTruthy()
+    expect(DotStatusResultSchema.parse({ contractVersion: 3, request: submitted })).toBeTruthy()
     expect(
       DotCancelResultSchema.parse({
-        contractVersion: 1,
+        contractVersion: 3,
         request: canceled,
         changed: true
       })
     ).toMatchObject({ changed: true })
-    expect(DotSubmitResultSchema.safeParse({ contractVersion: 1, request: received }).success).toBe(
+    expect(DotSubmitResultSchema.safeParse({ contractVersion: 3, request: received }).success).toBe(
       false
     )
   })
@@ -246,28 +242,32 @@ describe('dot ingress result wrappers', () => {
   it('lists at most 100 requests with a nullable paging cursor', () => {
     expect(
       DotListResultSchema.safeParse({
-        contractVersion: 1,
+        contractVersion: 3,
         requests: [received, submitted],
         nextBeforeSequence: null
       }).success
     ).toBe(true)
     expect(
       DotListResultSchema.safeParse({
-        contractVersion: 1,
+        contractVersion: 3,
         requests: Array.from({ length: 101 }, () => received),
         nextBeforeSequence: null
       }).success
     ).toBe(false)
     expect(
-      DotListResultSchema.safeParse({ contractVersion: 1, requests: [], nextBeforeSequence: 0 })
+      DotListResultSchema.safeParse({ contractVersion: 3, requests: [], nextBeforeSequence: 0 })
         .success
     ).toBe(false)
   })
 
   it('lists workspaces as an opaque ref and a path-free label only', () => {
-    const ok = { workspaceRef: 'dws_0123456789abcdef01234567', label: 'billing-app' }
+    const ok = {
+      workspaceRef: 'dws_0123456789abcdef01234567',
+      label: 'billing-app',
+      maxAccess: 'read_only'
+    }
     expect(
-      DotWorkspacesResultSchema.safeParse({ contractVersion: 1, workspaces: [ok] }).success
+      DotWorkspacesResultSchema.safeParse({ contractVersion: 3, workspaces: [ok] }).success
     ).toBe(true)
     for (const bad of [
       { ...ok, label: 'C:\\work\\billing' },
@@ -279,7 +279,7 @@ describe('dot ingress result wrappers', () => {
       { ...ok, path: '/work/billing' }
     ]) {
       expect(
-        DotWorkspacesResultSchema.safeParse({ contractVersion: 1, workspaces: [bad] }).success
+        DotWorkspacesResultSchema.safeParse({ contractVersion: 3, workspaces: [bad] }).success
       ).toBe(false)
     }
   })
@@ -313,31 +313,31 @@ describe('DotWorkspaceLabelSchema', () => {
 
 describe('DotHelloResultSchema', () => {
   const hello = {
-    contractVersion: 1,
-    supportedContractVersions: [1],
+    contractVersion: 3,
+    supportedContractVersions: [3],
+    methods: ['dotIngress.hello'],
     limits: {
       maxObjectiveChars: 12_000,
       maxProseChars: 2_000,
       listMaxLimit: 100,
       maxSubmissionsPerMinute: 6,
       maxSubmissionsPerUtcDay: 100,
-      maxDecisionSummaryChars: 500
+      maxDecisionSummaryChars: 500,
+      maxMessageChars: 4000,
+      maxValidationTitleChars: 200,
+      maxValidationSummaryChars: 500
     },
     capabilities: {
-      submit: true,
-      status: true,
-      list: true,
-      cancel: true,
-      decisions: true,
       startsWithoutConfirmation: true,
       results: false,
-      artifacts: false
+      artifacts: false,
+      validationDecisions: true
     }
   }
 
   it('tells the dot that requests start without confirmation and that results are not released', () => {
     expect(DotHelloResultSchema.parse(hello)).toEqual(hello)
-    for (const field of ['startsWithoutConfirmation', 'cancel', 'decisions'] as const) {
+    for (const field of ['startsWithoutConfirmation', 'validationDecisions'] as const) {
       expect(
         DotHelloResultSchema.safeParse({
           ...hello,

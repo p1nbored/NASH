@@ -35,29 +35,7 @@ export const TASK_ROUTE_STATUSES = [
   'not_delegated'
 ] as const
 
-export const EXECUTOR_KINDS = ['codex_cli', 'agy_cli'] as const
-export const EXECUTOR_PROCESS_STATES = [
-  'starting',
-  'running',
-  'completed',
-  'failed',
-  'blocked',
-  'stopped',
-  'stop_unknown',
-  'start_unknown'
-] as const
-/** Orca's verdict vocabulary for a process tree, with no synonyms. */
-export const EXECUTOR_TREE_VERDICTS = ['exited', 'live', 'unverifiable'] as const
-export const EXECUTOR_TREE_METHODS = [
-  'posix_group_quiescence',
-  'posix_group_probe',
-  'windows_descendant_snapshot',
-  'root_exit_only',
-  'version_probe_unproven',
-  'not_started'
-] as const
-
-export const ARTIFACT_ROOTS = ['worktree', 'run_directory'] as const
+export const ARTIFACT_ROOTS = ['worktree'] as const
 
 export const TASK_VALIDATION_POLICIES = ['machine_checks', 'model_review'] as const
 export const TASK_VALIDATION_VERDICTS = ['pending', 'pass', 'fail', 'inconclusive'] as const
@@ -150,43 +128,6 @@ export const AUTOPILOT_TASK_SCHEMA_DEFINITIONS = [
   {
     name: 'autopilot_task_route_classification',
     sql: 'CREATE INDEX autopilot_task_route_classification ON task_routes (classification_id, sequence)'
-  },
-  {
-    name: 'executor_processes',
-    sql: `CREATE TABLE executor_processes (
-      dispatch_id TEXT PRIMARY KEY NOT NULL CHECK (length(dispatch_id) BETWEEN 1 AND 128),
-      run_id TEXT NOT NULL,
-      task_id TEXT NOT NULL,
-      executor_kind TEXT NOT NULL CHECK (executor_kind IN (${sqlStringList(EXECUTOR_KINDS)})),
-      route_id TEXT NOT NULL REFERENCES task_routes(route_id),
-      state TEXT NOT NULL CHECK (state IN (${sqlStringList(EXECUTOR_PROCESS_STATES)})),
-      executable_evidence TEXT CHECK (executable_evidence IS NULL OR (json_valid(executable_evidence) AND length(executable_evidence) <= 4096)),
-      run_directory TEXT NOT NULL CHECK (${relativePathCheck('run_directory')}),
-      thread_id TEXT CHECK (thread_id IS NULL OR length(thread_id) BETWEEN 1 AND 256),
-      tree_verdict TEXT CHECK (tree_verdict IS NULL OR tree_verdict IN (${sqlStringList(EXECUTOR_TREE_VERDICTS)})),
-      tree_method TEXT CHECK (tree_method IS NULL OR tree_method IN (${sqlStringList(EXECUTOR_TREE_METHODS)})),
-      stop_verdict TEXT CHECK (stop_verdict IS NULL OR stop_verdict IN (${sqlStringList(EXECUTOR_TREE_VERDICTS)})),
-      exit_code INTEGER,
-      verdict TEXT CHECK (verdict IS NULL OR (json_valid(verdict) AND length(verdict) <= 8192)),
-      last_message_sha256 TEXT CHECK (last_message_sha256 IS NULL OR length(last_message_sha256) = 64),
-      last_message_bytes INTEGER CHECK (last_message_bytes IS NULL OR last_message_bytes >= 0),
-      secret_shaped INTEGER CHECK (secret_shaped IS NULL OR secret_shaped IN (0, 1)),
-      usage TEXT CHECK (usage IS NULL OR (json_valid(usage) AND length(usage) <= 2048)),
-      started_at TEXT NOT NULL,
-      settled_at TEXT,
-      FOREIGN KEY (task_id, run_id) REFERENCES task_specs (task_id, run_id),
-      CHECK ((tree_verdict IS NULL) = (tree_method IS NULL)),
-      CHECK ((state IN ('starting', 'running')) = (settled_at IS NULL)),
-      CHECK ((last_message_sha256 IS NULL) = (secret_shaped IS NULL))
-    )`
-  },
-  {
-    name: 'autopilot_executor_process_task',
-    sql: 'CREATE INDEX autopilot_executor_process_task ON executor_processes (task_id)'
-  },
-  {
-    name: 'autopilot_executor_process_open',
-    sql: "CREATE INDEX autopilot_executor_process_open ON executor_processes (state) WHERE state IN ('starting', 'running')"
   },
   {
     name: 'attempt_artifacts',

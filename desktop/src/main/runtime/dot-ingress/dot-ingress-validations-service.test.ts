@@ -59,7 +59,7 @@ describe('dot validation decisions service', () => {
       ])
       for (const view of listed.views) {
         expect(DotValidationViewSchema.parse(view)).toMatchObject({
-          reason: 'checks_inconclusive',
+          reason: 'primary_did_task',
           summary: FIXTURE_REASON,
           summaryWithheld: false
         })

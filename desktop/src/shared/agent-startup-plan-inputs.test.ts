@@ -150,3 +150,30 @@ describe('a picked session option outranks configured launch arguments', () => {
     )
   })
 })
+
+it.each([
+  ['claude', 'read_only', '--permission-mode plan'],
+  ['claude', 'workspace_write', '--permission-mode acceptEdits'],
+  ['codex', 'read_only', '--sandbox read-only --ask-for-approval on-request'],
+  ['codex', 'workspace_write', '--sandbox workspace-write --ask-for-approval on-request'],
+  ['antigravity', 'read_only', '--sandbox'],
+  ['antigravity', 'workspace_write', '']
+] as const)(
+  'limits native %s launch to task access %s without inheriting bypass flags',
+  (agent, taskAccess, expected) => {
+    const settings = {
+      agentDefaultArgs: {
+        [agent]: '--dangerously-bypass-approvals-and-sandbox --dangerously-skip-permissions'
+      }
+    }
+    const inputs = resolveAgentStartupPlanInputs({
+      agent,
+      settings,
+      platform: 'win32',
+      isRemote: false,
+      sessionOptions: { model: 'model-exact', taskAccess }
+    })
+    expect(inputs.agentArgs).toBe(expected)
+    expect(settings.agentDefaultArgs[agent]).toContain('--dangerously')
+  }
+)

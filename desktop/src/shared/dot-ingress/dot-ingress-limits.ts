@@ -1,11 +1,11 @@
-// Constants of dot ingress contract v1. A change to any value is a deliberate contract edit.
+// Constants of dot ingress contract v3. A change to any value is a deliberate contract edit.
 //
 // User decision 2026-10-05: tasks sent from dot do not require the user's confirmation. A valid
 // submission goes straight through the single intake door under the dot principal. The two safety
 // rails below are DEFAULTS the user can change; neither needs a per-task step.
 
-export const DOT_INGRESS_CONTRACT_VERSION = 1 as const
-export const DOT_INGRESS_SUPPORTED_CONTRACT_VERSIONS = [1] as const
+export const DOT_INGRESS_CONTRACT_VERSION = 3 as const
+export const DOT_INGRESS_SUPPORTED_CONTRACT_VERSIONS = [3] as const
 
 /** The principal the dot's Workbench requests are filed under; the desktop principal is a different one. */
 export const DOT_INGRESS_PRINCIPAL_ID = 'dot-ingress' as const

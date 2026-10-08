@@ -106,9 +106,9 @@ function createFakeDoor(owner: OrchestrationDb, now: () => string): FakeDoor {
         workspaceId: workspace.workspaceId,
         workspaceBinding: FIXTURE_BINDING,
         requestedAccess: params.requestedAccess ?? 'read_only',
-        deliverableLanguage: params.deliverableLanguage ?? null,
         routingTableVersion: 1,
         routingTableSha256: 'b'.repeat(64),
+        coordinatorAgent: 'claude',
         coordinatorModel: 'claude-opus-5-5',
         coordinatorEffort: 'max',
         timestamp: now()

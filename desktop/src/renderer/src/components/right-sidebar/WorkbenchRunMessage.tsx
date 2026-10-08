@@ -133,7 +133,7 @@ export default function WorkbenchRunMessage({
         <p id={helpId} className="text-meta text-muted-foreground">
           {translate(
             'workbench.runs.message.helpShort',
-            'Typed into the Claude Code session; held while a dialog is open.'
+            'Typed into the primary session; held while a dialog is open.'
           )}
         </p>
         <Button type="submit" variant="secondary" size="sm" disabled={sending || empty}>

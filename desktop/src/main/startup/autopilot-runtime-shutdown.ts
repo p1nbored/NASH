@@ -10,11 +10,11 @@ import type { AutopilotInstallContext } from './autopilot-install-context'
 import { installFailureCode } from './autopilot-install-runner'
 
 // Will-quit, in three phases. 1: fence (no launch, task command, classification or dot intake
-// starts) and ask every child to stop. 2: wait, bounded, for executors, launches and validations to
+// starts). 2: wait, bounded, for launches and validations to
 // settle while the database and the primary runtime stay up. 3: dispose and unregister the rest.
 
 export type AutopilotShutdownReport = {
-  /** What had not settled when the bounded wait ended: 'executors', 'launches' or 'validations'. */
+  /** What had not settled when the bounded wait ended: 'launches', 'validations' or 'dotRemote'. */
   readonly pending: readonly string[]
 }
 
@@ -44,7 +44,7 @@ function settlingOf(
 
 function fence(context: AutopilotInstallContext): Settling[] {
   const { parts, runtime } = context
-  const { classifier, execution, validation, dotRemote } = parts
+  const { classifier, validation, dotRemote } = parts
   // Why first: no remote item may be leased while the app quits; its outbox flushes within the wait.
   const remote = dotRemote ? settlingOf(context, 'dotRemote', () => dotRemote.stop()) : []
   guarded(context, 'gate', () => parts.gate?.close())
@@ -58,9 +58,6 @@ function fence(context: AutopilotInstallContext): Settling[] {
     })
   }
   guarded(context, 'validation', () => validation?.abort())
-  const executors = execution
-    ? settlingOf(context, 'executors', () => execution.abortAllForQuit())
-    : []
   guarded(context, 'clefAdministration', () => parts.clef?.runtime.abortAllRouting())
   const launches = settlingOf(context, 'launches', () => context.builders.settleLaunches())
   const validations = validation ? [{ name: 'validations', promise: validation.drain() }] : []
@@ -68,7 +65,7 @@ function fence(context: AutopilotInstallContext): Settling[] {
     // Why: a server that aligns the endpoint again now closes it.
     guarded(context, 'dotIngress', () => runtime.installDotIngressEnabledReader(() => false))
   }
-  return [...remote, ...executors, ...launches, ...validations]
+  return [...remote, ...launches, ...validations]
 }
 
 /** Resolves with the names that had not settled when the wait ended; a rejection counts as settled. */
@@ -106,7 +103,6 @@ function dispose(context: AutopilotInstallContext): void {
   }
   guarded(context, 'permissionRelay', () => parts.uninstallRelay?.())
   guarded(context, 'validation', () => parts.unregisterValidationBacklog?.())
-  guarded(context, 'execution', () => parts.unregisterStopPort?.())
   guarded(context, 'accountChanges', () => parts.unwatchAccountChanges?.())
   guarded(context, 'routingTable', () => parts.unregisterRoutingContext?.())
   guarded(context, 'clefAdministration', () => parts.clef?.uninstall())

@@ -1,146 +1,99 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { LaunchTarget } from '../../agent-exec-shared/launch-target'
-import { createClaudeReviewer, type ClaudeReviewerDeps } from './claude-reviewer'
+import { describe, expect, it, vi } from 'vitest'
+import type { ProcessSpec } from '../../../shared/child-process/run-process'
+import { createClaudeReviewer } from './claude-reviewer'
 import { REVIEW_OUTPUT_SCHEMA } from './model-review-verdict'
 import type { ReviewerRequest } from './reviewer-runner'
-import { sha256Of } from './task-validation.test-fixture'
-
-// FIXTURE_ONLY: a scripted node stand-in; no real Claude CLI, model or credential is involved.
-const FAKE_CLAUDE = join(__dirname, '__fixtures__', 'fake-claude-review.mjs')
-const RUN_ID = 'review-0001'
-
-const fakeLaunch: LaunchTarget = {
-  program: process.execPath,
-  prefixArgs: [FAKE_CLAUDE],
-  entryPath: FAKE_CLAUDE,
-  requestedPath: FAKE_CLAUDE,
-  launch: 'node-entry'
+const REVIEW = '{"verdict":"pass","criteria":[],"summary":"Done."}'
+const request: ReviewerRequest = {
+  prompt: 'Exact task evidence.',
+  model: 'fixture-claude-model',
+  effort: 'max',
+  workspacePath: '/fixture/workspace',
+  runId: 'review-claude',
+  outputSchema: REVIEW_OUTPUT_SCHEMA
 }
-
-const envelope = (result: string): string =>
-  JSON.stringify({
-    type: 'result',
-    subtype: 'success',
-    is_error: false,
-    result,
-    modelUsage: { 'claude-opus-5-5': {} }
+function fixture() {
+  const run = vi.fn(async (spec: ProcessSpec) => {
+    spec.onChildTerminated?.()
+    return {
+      code: 0,
+      signal: null,
+      stdout: JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        result: REVIEW,
+        modelUsage: { 'fixture-claude-model': {} }
+      }),
+      stderr: '',
+      timedOut: false
+    }
   })
-
-describe('headless Claude reviewer', () => {
-  let base: string
-  let runsRoot: string
-  beforeEach(() => {
-    base = mkdtempSync(join(tmpdir(), 'c5-claude-'))
-    runsRoot = join(base, 'runs')
-    mkdirSync(runsRoot)
-  })
-  afterEach(() => rmSync(base, { recursive: true, force: true }))
-
-  function scenario(value: Record<string, unknown>): void {
-    writeFileSync(join(runsRoot, 'fake-claude-scenario.json'), JSON.stringify(value))
-  }
-
-  function reviewer(overrides: Partial<ClaudeReviewerDeps> = {}) {
-    return createClaudeReviewer({
-      runsRoot,
-      resolveExecutable: () => fakeLaunch,
-      tempRoots: () => [],
-      termination: { captureWindowsTree: async () => null },
-      ...overrides
-    })
-  }
-
-  const request = (overrides: Partial<ReviewerRequest> = {}): ReviewerRequest => ({
-    prompt: 'Fixture review prompt.',
-    model: 'claude-opus-5-5',
-    effort: 'high',
-    workspacePath: null,
-    runId: RUN_ID,
-    outputSchema: REVIEW_OUTPUT_SCHEMA,
-    ...overrides
-  })
-
-  function received(): { argv: string[]; stdin: string; cwd: string; envNames: string[] } {
-    return JSON.parse(readFileSync(join(runsRoot, RUN_ID, 'fake-received.json'), 'utf8'))
-  }
-
-  it('runs print mode with default settings in a fresh run directory with the prompt on stdin', async () => {
-    scenario({ stdout: envelope('{"verdict":"pass"}') })
-    expect(await reviewer()(request())).toEqual({
+  const resolveInvocation = vi.fn(async () => ({
+    command: 'claude',
+    env: {
+      CLAUDE_CONFIG_DIR: '/fixture/selected-account',
+      ANTHROPIC_BASE_URL: 'https://fixture.invalid'
+    }
+  }))
+  return { run, resolveInvocation, review: createClaudeReviewer({ run, resolveInvocation }) }
+}
+describe('Claude reviewer using Orca native one-shot primitives', () => {
+  it('uses the selected native account and read-only plan mode in the actual workspace', async () => {
+    const f = fixture()
+    await expect(f.review(request)).resolves.toMatchObject({
       status: 'completed',
-      text: '{"verdict":"pass"}',
-      outputSha256: sha256Of('{"verdict":"pass"}'),
-      reportedModels: ['claude-opus-5-5']
+      text: REVIEW,
+      reportedModels: ['fixture-claude-model']
     })
-    const seen = received()
-    expect(seen.argv).toEqual([
-      '-p',
-      '--output-format',
-      'json',
-      '--model',
-      'claude-opus-5-5',
-      '--effort',
-      'high',
-      '--no-session-persistence'
-    ])
-    expect(seen.stdin).toBe('Fixture review prompt.')
-    expect(seen.cwd.toLowerCase()).toBe(join(runsRoot, RUN_ID).toLowerCase())
-    expect(seen.envNames.some((name) => /KEY|TOKEN|SECRET|ANTHROPIC/i.test(name))).toBe(false)
+    expect(f.resolveInvocation).toHaveBeenCalledWith('claude')
+    expect(f.run.mock.calls[0]![0]).toMatchObject({
+      cwd: request.workspacePath,
+      input: request.prompt,
+      terminationBarrier: true,
+      env: {
+        CLAUDE_CONFIG_DIR: '/fixture/selected-account',
+        ANTHROPIC_BASE_URL: 'https://fixture.invalid'
+      }
+    })
+    expect(f.run.mock.calls[0]![0].args).toEqual(
+      expect.arrayContaining([
+        '-p',
+        '--output-format',
+        'json',
+        '--permission-mode',
+        'plan',
+        '--effort',
+        'max'
+      ])
+    )
   })
-
-  it('reports a nonzero exit, an unusable envelope and a timeout as failed', async () => {
-    scenario({ stdout: envelope('x'), exit: 1 })
-    expect(await reviewer()(request())).toEqual({ status: 'failed', reason: 'nonzero_exit' })
-    rmSync(join(runsRoot, RUN_ID), { recursive: true, force: true })
-    scenario({ stdout: 'plain text' })
-    expect(await reviewer()(request())).toEqual({
+  it('keeps provider errors and malformed result envelopes out of review verdicts', async () => {
+    const f = fixture()
+    f.run.mockImplementationOnce(async (spec) => {
+      spec.onChildTerminated?.()
+      return {
+        code: 0,
+        signal: null,
+        stdout: '{"type":"result","subtype":"error","result":"pass"}',
+        stderr: '',
+        timedOut: false
+      }
+    })
+    await expect(f.review(request)).resolves.toEqual({
       status: 'failed',
       reason: 'review_output_invalid'
     })
-    rmSync(join(runsRoot, RUN_ID), { recursive: true, force: true })
-    scenario({ hang: true })
-    expect(await reviewer({ timeoutMs: 400 })(request())).toEqual({
-      status: 'failed',
-      reason: 'timed_out'
-    })
   })
-
-  it('starts nothing for a bad model, a missing CLI or a launch it must refuse', async () => {
-    scenario({ stdout: envelope('x') })
-    expect(await reviewer()(request({ model: 'opus' }))).toEqual({
+  it('re-reads account preparation for each review and never launches after preparation refusal', async () => {
+    const run = vi.fn()
+    const resolveInvocation = vi.fn(async () => { throw new Error('account unavailable') })
+    const review = createClaudeReviewer({ run, resolveInvocation })
+    await expect(review(request)).resolves.toEqual({
       status: 'unavailable',
-      reason: 'invalid_request'
+      reason: 'account_unavailable'
     })
-    expect(await reviewer({ resolveExecutable: () => null })(request())).toEqual({
-      status: 'unavailable',
-      reason: 'cli_missing'
-    })
-    const relative: LaunchTarget = {
-      ...fakeLaunch,
-      program: 'claude.exe',
-      launch: 'direct',
-      prefixArgs: []
-    }
-    expect(
-      await reviewer({ resolveExecutable: () => relative })(request({ runId: 'review-0002' }))
-    ).toEqual({
-      status: 'unavailable',
-      reason: 'cli_not_launchable'
-    })
-    for (const runId of [RUN_ID, 'review-0002']) {
-      expect(existsSync(join(runsRoot, runId, 'fake-received.json'))).toBe(false)
-    }
-  })
-
-  it('refuses to reuse a run directory', async () => {
-    scenario({ stdout: envelope('x') })
-    mkdirSync(join(runsRoot, RUN_ID))
-    expect(await reviewer()(request())).toEqual({
-      status: 'unavailable',
-      reason: 'run_dir_unusable'
-    })
+    await review(request)
+    expect(resolveInvocation).toHaveBeenCalledTimes(2)
+    expect(run).not.toHaveBeenCalled()
   })
 })

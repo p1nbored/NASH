@@ -1,7 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { FeatureInteractionId } from '../../../../shared/feature-interaction-catalog'
-import type { CodexRateLimitAccountsState } from '../../../../shared/managed-account-types'
+import type {
+  ClaudeRateLimitAccountsState,
+  CodexRateLimitAccountsState
+} from '../../../../shared/managed-account-types'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 import {
@@ -13,14 +16,19 @@ import {
   getProviderAccountRuntime
 } from './provider-account-visibility'
 import type {
+  ClaudeAccountAction,
+  ClaudeAccountActionRunner,
   CodexAccountAction,
   CodexAccountActionRunner,
   LocalAccountRuntime
 } from './accounts-pane-types'
 import {
+  getClaudeAccountErrorDescription,
   getCodexAccountErrorDescription,
+  isClaudeAccountCancellation,
   isCodexAccountCancellation
 } from './accounts-pane-action-errors'
+import { getClaudeAccountLabel } from './accounts-pane-runtime'
 
 type CodexActionContext = {
   settings: GlobalSettings
@@ -126,6 +134,85 @@ export function createCodexAccountActionRunner(
       )
     } finally {
       setCodexAction('idle')
+    }
+  }
+}
+
+type ClaudeActionContext = {
+  settings: GlobalSettings
+  accountRuntime: LocalAccountRuntime
+  isRemoteAccountScope: boolean
+  claudeAccounts: ClaudeRateLimitAccountsState
+  setClaudeAccounts: Dispatch<SetStateAction<ClaudeRateLimitAccountsState>>
+  setClaudeAction: Dispatch<SetStateAction<ClaudeAccountAction>>
+  fetchSettings: () => Promise<void>
+  recordFeatureInteraction: (featureId: FeatureInteractionId) => void
+}
+
+export function createClaudeAccountActionRunner(
+  context: ClaudeActionContext
+): ClaudeAccountActionRunner {
+  const {
+    accountRuntime,
+    claudeAccounts,
+    fetchSettings,
+    isRemoteAccountScope,
+    recordFeatureInteraction,
+    setClaudeAccounts,
+    setClaudeAction
+  } = context
+  const syncClaudeAccounts = async (next: ClaudeRateLimitAccountsState): Promise<void> => {
+    setClaudeAccounts(next)
+    if (!isRemoteAccountScope) {
+      await fetchSettings()
+    }
+  }
+
+  return async (action, operation, actionRuntime = accountRuntime): Promise<void> => {
+    const previousActiveAccountId = getProviderAccountActiveIdForView(claudeAccounts, actionRuntime)
+    setClaudeAction(action)
+    try {
+      const next = await operation()
+      await syncClaudeAccounts(next)
+      recordFeatureInteraction('claude-account-switching')
+      const nextActiveAccountId = getProviderAccountActiveIdForView(next, actionRuntime)
+      // Why: switching reaches the next `claude` started in any terminal, so nothing restarts.
+      if (action === 'adding' || previousActiveAccountId !== nextActiveAccountId) {
+        toast.info(
+          translate('auto.components.settings.AccountsPane.f921d32606', 'Claude account updated.'),
+          {
+            description:
+              previousActiveAccountId === nextActiveAccountId
+                ? translate(
+                    'accounts.claude.added',
+                    'Account added. Select it to use it for the next Claude you start.'
+                  )
+                : translate(
+                    'accounts.claude.nextLaunch',
+                    '{{value0}} → {{value1}}. The next Claude you start uses it. Running sessions keep their account.',
+                    {
+                      value0: getClaudeAccountLabel(claudeAccounts, previousActiveAccountId),
+                      value1: getClaudeAccountLabel(next, nextActiveAccountId)
+                    }
+                  )
+          }
+        )
+      }
+    } catch (error) {
+      if (isClaudeAccountCancellation(error)) {
+        return
+      }
+      toast.error(
+        translate(
+          'auto.components.settings.AccountsPane.2743cdc0af',
+          'Claude account update failed.'
+        ),
+        {
+          description: getClaudeAccountErrorDescription(error)
+        }
+      )
+    } finally {
+      setClaudeAction('idle')
     }
   }
 }

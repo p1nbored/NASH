@@ -35,7 +35,12 @@ export function resolveNativeChatSessionOptionDefaults(
 
 /** Canonical values seed through the existing durable string record; the codec
  *  is the only boundary that represents the boolean Fast preference as text. */
-export const STRUCTURED_LAUNCH_SEED_OPTION_IDS = ['model', 'effort', 'fastMode'] as const
+export const STRUCTURED_LAUNCH_SEED_OPTION_IDS = [
+  'model',
+  'effort',
+  'fastMode',
+  'taskAccess'
+] as const
 
 /** Any chosen option set narrowed to what a structured create may seed: the seedable ids only,
  *  each encoded as a bounded string. An empty result is `undefined` rather than `{}` — an empty map fails
@@ -50,6 +55,9 @@ export function narrowStructuredLaunchSeedOptions(
   const seeded: Record<string, string> = {}
   for (const id of STRUCTURED_LAUNCH_SEED_OPTION_IDS) {
     const value = values?.[id]
+    if (id === 'taskAccess' && value !== 'read_only' && value !== 'workspace_write') {
+      continue
+    }
     if ((id === 'model' || id === 'effort') && !(typeof value === 'string' && value.trim())) {
       continue
     }

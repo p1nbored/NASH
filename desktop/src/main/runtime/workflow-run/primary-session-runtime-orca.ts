@@ -1,3 +1,4 @@
+import { stopNativeRunWorkers } from '../task-execution/task-start-native'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -58,14 +59,20 @@ export function createOrcaPrimarySessionRuntime(
       runtime.getStructuredAgentSessionCreateSupport(worktree, agent),
     getClientSettings: () => withStructuredNativeChatDisabled(runtime.getClientSettings())
   }
-  return composePrimarySessionRuntime({
+  const primary = composePrimarySessionRuntime({
     db: deps.db,
     terminal: runtime,
     ledger: createOrcaPrimaryLaunchLedger(runtime),
-    executeLaunch: ({ intent, surfaces }) =>
-      executeAgentLaunch({ runtime: launchModeRuntime, intent, surfaces }),
-    deliverAfterStart: ({ handle, text }) =>
-      deliverTerminalAgentLaunchPrompt({ runtime, handle, text }),
+    executeLaunch: ({ intent, surfaces, onSurfacePublished }) =>
+      executeAgentLaunch({ runtime: launchModeRuntime, intent, surfaces, onSurfacePublished }),
+    deliverAfterStart: ({ handle, agent, text }) =>
+      deliverTerminalAgentLaunchPrompt({
+        runtime,
+        handle,
+        agent,
+        freshLaunch: true,
+        text
+      }),
     workspaces: { require: (workspaceId) => runtime.requireWorkbenchWorkspace(workspaceId) },
     routing: deps.routing,
     launchSettings: {
@@ -82,4 +89,5 @@ export function createOrcaPrimarySessionRuntime(
     entropy: () => randomBytes(16).toString('hex'),
     newRequestId: () => randomUUID()
   })
+  return { ...primary, stopRunWorkers: (runId) => stopNativeRunWorkers(runtime, runId) }
 }

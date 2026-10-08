@@ -12,7 +12,7 @@ const MESSAGE_ID = '00000000-0000-4000-8000-000000000002'
 
 function params(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    contractVersion: 2,
+    contractVersion: 3,
     dotRequestId: REQUEST_ID,
     messageId: MESSAGE_ID,
     text: 'Also list the owners of `docs/plan.md`.',
@@ -22,7 +22,7 @@ function params(overrides: Record<string, unknown> = {}): Record<string, unknown
 
 function result(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    contractVersion: 2,
+    contractVersion: 3,
     dotRequestId: REQUEST_ID,
     messageId: MESSAGE_ID,
     outcome: 'delivered',
@@ -32,13 +32,13 @@ function result(overrides: Record<string, unknown> = {}): Record<string, unknown
   }
 }
 
-describe('dot follow-up message contract (version 2, D-019)', () => {
+describe('dot follow-up message contract (version 3, D-019)', () => {
   it('accepts a message addressed by the dot request id and an idempotent message id', () => {
     expect(DotMessageParams.parse(params())).toEqual(params())
   })
 
-  it('exists only in contract version 2', () => {
-    expect(DotMessageParams.safeParse(params({ contractVersion: 1 })).success).toBe(false)
+  it('exists only in contract version 3', () => {
+    expect(DotMessageParams.safeParse(params({ contractVersion: 2 })).success).toBe(false)
   })
 
   it('carries no run id, target, permission, access or authority field', () => {

@@ -11,11 +11,8 @@ import {
   type AppRunHarness
 } from '../orchestration/db/app-attempt.test-fixture'
 import { fixtureTime } from '../orchestration/db/autopilot-runtime.test-fixture'
-import type { JsonObject } from '../orchestration/db/autopilot-json-column'
 import type { TaskRouteInput } from '../orchestration/db/task-route-store'
 import type { TaskSpecInput } from '../orchestration/db/task-spec-store'
-import type { AttemptWorktree } from '../task-execution/attempt-worktree'
-import type { WorktreeChangeFacts } from '../task-execution/task-result-notice'
 import { createAttemptReader } from './attempt-evidence'
 import type { ReviewerRequest, ReviewerRunOutcome } from './reviewer-runner'
 import {
@@ -23,11 +20,9 @@ import {
   createValidationDecisionPort,
   type TaskValidationPort
 } from './task-validation-port'
-import { sha256Of } from './task-validation.test-fixture'
 import { createValidationRunner } from './validation-runner'
 import type { WorkspaceGitStatus } from './workspace-write-check'
 
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
 const SUBAGENT_ROUTE = {
   target: 'claude_subagent',
   model: 'claude-sonnet-5-5',
@@ -85,9 +80,6 @@ export type RunnerWorld = ReturnType<typeof createRunnerWorld>
 type WorldState = {
   workspaceKind: 'git' | 'folder'
   git: WorkspaceGitStatus
-  /** What the fake git shows in an attempt's own worktree, and each worktree it was asked about. */
-  worktreeChanges: WorktreeChangeFacts
-  worktreeReads: AttemptWorktree[]
   resolution: ReviewerResolution
   reviewOutcome: ReviewerRunOutcome
   reviewRequests: ReviewerRequest[]
@@ -103,14 +95,11 @@ export function createRunnerWorld(
   const harness: AppRunHarness = createAppRunHarness()
   const base = mkdtempSync(join(tmpdir(), 'c5-runner-'))
   const workspace = join(base, 'workspace')
-  const appData = join(base, 'app-data')
   mkdirSync(workspace)
   writeFileSync(join(workspace, 'report.md'), 'Report body.')
   const state: WorldState = {
     workspaceKind: 'git',
     git: { ok: true, changedFiles: [], headCommitSeconds: 1 },
-    worktreeChanges: { readable: true, commitsAhead: 1, uncommitted: false },
-    worktreeReads: [],
     resolution: reviewerResolution('available'),
     reviewOutcome: { status: 'failed', reason: 'not_scripted' },
     reviewRequests: [],
@@ -130,14 +119,9 @@ export function createRunnerWorld(
   const runner = createValidationRunner({
     port: options.wrapPort ? options.wrapPort(port) : port,
     reader: createAttemptReader(harness.owner, {
-      resolveWorkspace: async () => ({ path: workspace, kind: state.workspaceKind }),
-      resolveRunDirectory: (relative) => join(appData, relative)
+      resolveWorkspace: async () => ({ path: workspace, kind: state.workspaceKind })
     }),
     git: { readStatus: async () => state.git },
-    readWorktreeChanges: async (worktree) => {
-      state.worktreeReads.push(worktree)
-      return state.worktreeChanges
-    },
     review: {
       resolver: {
         resolveValidationReviewer: async () => {
@@ -151,45 +135,15 @@ export function createRunnerWorld(
     now: () => new Date((clock += 1000))
   })
 
-  const runDirOf = (dispatchId: string): string =>
-    join(appData, 'autopilot-runs', harness.runId, dispatchId)
-
-  /** A Codex attempt of a new task, claimed and waiting for validation, with its result on disk. */
+  /** An in-session attempt claimed with a report and waiting for validation. */
   function claimedTask(
     options: {
       spec?: Partial<TaskSpecInput>
       deps?: string[]
       route?: Partial<TaskRouteInput>
-      executableEvidence?: JsonObject
     } = {}
   ) {
-    const seeded = seedRoutedTask(harness, options)
-    const settlement = getAppAttemptSettlement(harness.owner)
-    const { dispatchId } = settlement.start({
-      taskId: seeded.taskId,
-      routeId: seeded.routeId,
-      executor: 'codex_cli',
-      creator: { kind: 'system' },
-      maxDepth: Number.MAX_SAFE_INTEGER,
-      timestamp: fixtureTime(5)
-    })
-    const runDir = runDirOf(dispatchId)
-    mkdirSync(runDir, { recursive: true })
-    writeFileSync(join(runDir, 'last-message.txt'), RESULT_TEXT)
-    settlement.markRunning({
-      dispatchId,
-      executableEvidence: options.executableEvidence ?? { executable: 'codex' },
-      timestamp: fixtureTime(6)
-    })
-    settlement.settleClaim({
-      dispatchId,
-      exitCode: 0,
-      tree: EXITED,
-      lastMessage: { sha256: sha256Of(RESULT_TEXT), bytes: 5, secretLike: false },
-      verdict: { status: 'completed' },
-      timestamp: fixtureTime(7)
-    })
-    return { ...seeded, dispatchId }
+    return inSessionClaim({ ...options, report: RESULT_TEXT })
   }
 
   /** An in-session attempt the primary claimed through task-report; `report` is the notice body. */
@@ -197,11 +151,13 @@ export function createRunnerWorld(
     options: {
       spec?: Partial<TaskSpecInput>
       report?: string
+      deps?: string[]
       route?: Partial<TaskRouteInput>
     } = {}
   ) {
     const seeded = seedRoutedTask(harness, {
       spec: options.spec,
+      deps: options.deps,
       route: options.route ?? SUBAGENT_ROUTE
     })
     const settlement = getAppAttemptSettlement(harness.owner)
@@ -233,7 +189,6 @@ export function createRunnerWorld(
     workspace,
     claimedTask,
     inSessionClaim,
-    resultPath: (dispatchId: string) => join(runDirOf(dispatchId), 'last-message.txt'),
     taskStatus: (taskId: string) => harness.owner.getTask(taskId)?.status,
     cleanup: () => {
       harness.owner.close()

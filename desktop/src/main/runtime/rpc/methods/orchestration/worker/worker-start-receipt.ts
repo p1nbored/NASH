@@ -14,7 +14,7 @@ export function failWorkerStartWithReceipt(args: {
   setup: WorkerSetupReceipt
   launch: OrchestrationWorkerLaunchReceipt
   mode: WorkerStartModeReceipt
-}): unknown {
+}) {
   const reason = args.error instanceof Error ? args.error.message : String(args.error)
   const unknown = isUnknownWorkerStartOutcome(args.error, args.failedStage)
   const worker = unknown

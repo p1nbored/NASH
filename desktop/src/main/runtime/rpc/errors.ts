@@ -35,7 +35,7 @@ import { NESTED_WORKER_DEPTH_EXCEEDED_CODE } from '../../../shared/nested-worker
 import { WORKTREE_CREATE_COLLISION_CODE } from '../../../shared/new-workspace/worktree-create-collision'
 import { AGENT_LAUNCH_PANE_ALREADY_LIVE_CODE } from '../../../shared/agent-launch-pane-already-live'
 import { AGENT_LAUNCH_SESSION_ALREADY_EXISTS_CODE } from '../../../shared/agent-launch-session-already-exists'
-import { CLAUDE_ACCOUNTS_REMOVED_CODE } from '../../../shared/claude-accounts-removed'
+import { AGENT_LAUNCH_TAB_CLOSED_CODE } from '../../../shared/agent-launch-tab-closed'
 
 export function successResponse(id: string, meta: RpcEnvelopeMeta, result: unknown): RpcSuccess {
   return {
@@ -69,6 +69,7 @@ const RUNTIME_PASSTHROUGH_CODES: ReadonlySet<string> = new Set([
   WORKTREE_CREATE_COLLISION_CODE,
   AGENT_LAUNCH_PANE_ALREADY_LIVE_CODE,
   AGENT_LAUNCH_SESSION_ALREADY_EXISTS_CODE,
+  AGENT_LAUNCH_TAB_CLOSED_CODE,
   'agent_launch_replay_unsupported',
   'runtime_unavailable',
   'selector_not_found',
@@ -163,9 +164,7 @@ const STRUCTURED_RUNTIME_PASSTHROUGH_CODES: ReadonlySet<string> = new Set([
   // Why: an owner conflict is a distinct client decision (reload the host, re-adopt,
   // stop offering the action) — flattened to runtime_error it can only be guessed at.
   ...Object.values(AUTOMATION_OWNER_CONFLICT_CODES),
-  ...Object.values(ORCHESTRATION_SESSION_CALLER_ERROR_CODES),
-  // Why: a retired Claude account call is a distinct answer (sign in with Claude itself), not a crash.
-  CLAUDE_ACCOUNTS_REMOVED_CODE
+  ...Object.values(ORCHESTRATION_SESSION_CALLER_ERROR_CODES)
 ])
 
 export function mapRuntimeError(id: string, meta: RpcEnvelopeMeta, error: unknown): RpcFailure {

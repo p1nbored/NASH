@@ -196,12 +196,6 @@ export function normalizeLoadedUiState(
     rightSidebarExplorerView,
     setupGuideSidebarDismissed,
     usagePercentageDisplayChangeNoticeDismissed,
-    setupGuideBrowserMilestoneMigrated:
-      typeof parsed.ui?.setupGuideBrowserMilestoneMigrated === 'boolean'
-        ? parsed.ui.setupGuideBrowserMilestoneMigrated
-        : false,
-    setupGuideBrowserMilestoneLegacyComplete:
-      parsed.ui?.setupGuideBrowserMilestoneLegacyComplete === true,
     // Why persist rather than notify inline: the flip lands during load, before any
     // window exists, and it must survive a crash before the user ever sees the notice.
     osc52ClipboardDefaultOnNoticePending: osc52ClipboardNoticePending,

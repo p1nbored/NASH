@@ -6,13 +6,15 @@ import type { WorkbenchRunTask } from '../../../../shared/rpc-contract/workbench
 import { primarySession, runView } from './workbench-run-test-fixture'
 import WorkbenchRunTasks from './WorkbenchRunTasks'
 
-const { rpc, store, activateTab } = vi.hoisted(() => {
+const { rpc, store, activateTab, openSession, revealWorktree } = vi.hoisted(() => {
   const tabsByWorktree: Record<string, { id: string }[]> = {
     'local-workspace': [{ id: 'tab-primary' }]
   }
   return {
     rpc: vi.fn<(target: unknown, method: string, params?: unknown) => Promise<unknown>>(),
-    store: { openTaskWindow: vi.fn(), tabsByWorktree },
+    store: { tabsByWorktree },
+    openSession: vi.fn(),
+    revealWorktree: vi.fn(),
     activateTab: vi.fn()
   }
 })
@@ -32,6 +34,10 @@ vi.mock('@/i18n/i18n', () => ({
   getIntlLocale: () => 'en-US'
 }))
 vi.mock('@/lib/activate-tab-and-focus-pane', () => ({ activateTabAndFocusPane: activateTab }))
+vi.mock('@/lib/structured-agent-session-provisional-tab', () => ({
+  openStructuredAgentSessionProvisionalTab: openSession
+}))
+vi.mock('@/lib/worktree-activation', () => ({ activateAndRevealWorktree: revealWorktree }))
 
 // FIXTURE_ONLY tasks; no runtime is read.
 function task(overrides: Partial<WorkbenchRunTask>): WorkbenchRunTask {
@@ -45,16 +51,19 @@ function task(overrides: Partial<WorkbenchRunTask>): WorkbenchRunTask {
         state: 'failed',
         startedAt: '2026-10-05T18:00:00.000Z',
         settledAt: '2026-10-05T18:00:40.000Z',
-        hasTranscript: true,
-        worktree: null
+        source: null
       },
       {
         dispatchId: 'ctx_second',
         state: 'completed',
         startedAt: '2026-10-05T18:01:00.000Z',
         settledAt: '2026-10-05T18:03:10.000Z',
-        hasTranscript: true,
-        worktree: null
+        source: {
+          kind: 'session',
+          sessionId: 'session-fixture',
+          worktreeId: 'worker-worktree',
+          agent: 'codex'
+        }
       }
     ],
     ...overrides
@@ -85,7 +94,8 @@ async function settle(): Promise<void> {
 
 beforeEach(() => {
   rpc.mockReset().mockResolvedValue({ tasks: TASKS })
-  store.openTaskWindow.mockReset()
+  openSession.mockReset()
+  revealWorktree.mockReset().mockReturnValue({ primaryTabId: null })
   activateTab.mockReset()
 })
 afterEach(() => cleanup())
@@ -123,8 +133,7 @@ describe('WorkbenchRunTasks', () => {
               state: 'failed',
               startedAt: '2026-10-05T18:00:00.000Z',
               settledAt: '2026-10-05T18:00:40.000Z',
-              hasTranscript: true,
-              worktree: null
+              source: null
             }
           ]
         }),
@@ -137,8 +146,7 @@ describe('WorkbenchRunTasks', () => {
               state: 'paused_by_host',
               startedAt: '2026-10-05T18:00:00.000Z',
               settledAt: null,
-              hasTranscript: false,
-              worktree: null
+              source: null
             }
           ]
         })
@@ -154,22 +162,51 @@ describe('WorkbenchRunTasks', () => {
     expect(odd?.getAttribute('data-tone')).not.toBe('success')
   })
 
-  it('opens the task window on the newest attempt of a Codex task', async () => {
-    const run = runView(1)
-    render(<WorkbenchRunTasks run={run} />)
+  it('opens the newest native task session in its worktree', async () => {
+    render(<WorkbenchRunTasks run={runView(1)} />)
     await settle()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open task window for Review the parser' }))
-    expect(store.openTaskWindow).toHaveBeenCalledWith('local-workspace', {
-      runId: 'run-1',
-      taskId: 'task_codex',
-      title: 'Review the parser',
-      executorKind: 'codex',
-      attempts: TASKS[0].attempts,
-      selectedDispatchId: 'ctx_second'
+    fireEvent.click(screen.getByRole('button', { name: 'Open session for Review the parser' }))
+    await settle()
+    expect(revealWorktree).toHaveBeenCalledWith('worker-worktree', {
+      providesInitialSurface: true,
+      executionHostId: 'local'
     })
-    // No attempt yet, a Claude task and an unknown executor have no task window.
-    expect(screen.getAllByRole('button', { name: /Open task window/ })).toHaveLength(1)
+    expect(openSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        worktreeId: 'worker-worktree',
+        sessionId: 'session-fixture',
+        agent: 'codex',
+        executionHostId: 'local'
+      })
+    )
+    expect(screen.getAllByRole('button', { name: /Open session/ })).toHaveLength(1)
+  })
+
+  it('focuses the existing native terminal without opening a transcript viewer', async () => {
+    const current = task({})
+    current.attempts = [
+      { ...current.attempts[1], source: { kind: 'terminal', terminal: 'terminal-fixture' } }
+    ]
+    rpc.mockResolvedValue({ tasks: [current] })
+    render(<WorkbenchRunTasks run={runView(1)} />)
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: 'Open session for Review the parser' }))
+    await settle()
+    expect(rpc).toHaveBeenCalledWith({ kind: 'local' }, 'terminal.focus', {
+      terminal: 'terminal-fixture',
+      navigation: 'host'
+    })
+    expect(openSession).not.toHaveBeenCalled()
+  })
+
+  it('does not open a chat when its worktree is unavailable', async () => {
+    revealWorktree.mockReturnValue(false)
+    render(<WorkbenchRunTasks run={runView(1)} />)
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: 'Open session for Review the parser' }))
+    await settle()
+    expect(openSession).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Copy details' })).toBeDefined()
   })
 
   it('shows the main session terminal for a Claude subagent task', async () => {

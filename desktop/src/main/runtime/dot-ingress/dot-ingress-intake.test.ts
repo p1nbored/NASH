@@ -51,20 +51,18 @@ describe('dot intake: submission through the single door (D-018)', () => {
     expect(linked).toEqual({ principal_id: DOT_INGRESS_PRINCIPAL_ID })
   })
 
-  it('passes the canonical language and an access the workspace allows to the door', async () => {
+  it('passes the allowed access to the intake door', async () => {
     harness.close()
     harness = createDotHarness({ maxAccess: 'workspace_write' })
     const outcome = await submitDotRequest(
       harness.deps,
       harness.submitRequest({
-        requestedAccess: 'workspace_write',
-        deliverableLanguage: 'zh-hant-tw'
+        requestedAccess: 'workspace_write'
       })
     )
 
     expect(harness.door.submits[0]?.params).toMatchObject({
-      requestedAccess: 'workspace_write',
-      deliverableLanguage: 'zh-Hant-TW'
+      requestedAccess: 'workspace_write'
     })
     const run = getWorkflowRunStore(harness.owner).getByRequestId(
       outcome.record.workbenchRequestId ?? ''

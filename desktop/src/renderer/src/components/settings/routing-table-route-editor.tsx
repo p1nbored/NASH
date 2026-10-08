@@ -41,7 +41,7 @@ function errorLine(error: DraftError): string {
   }
   const field =
     error.field === 'coordinator'
-      ? translate('auto.components.settings.routingTable.editor.coordinator', 'Coordinator')
+      ? translate('auto.components.settings.routingTable.editor.coordinator', 'Primary')
       : taskTypeLabel(error.field)
   return `${field}: ${error.message}`
 }

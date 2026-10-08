@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { useAppStore } from '@/store'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
-import { hasFeatureInteraction } from '../../../../shared/feature-interactions'
 import { checkRuntimeHooks } from '@/runtime/runtime-hooks-client'
 import { getLocalPreflightContext, localPreflightContextKey } from '@/lib/local-preflight-context'
 import { hasEffectiveSetupCommand } from '@/lib/setup-script-status'
@@ -11,7 +10,6 @@ import {
   type FeatureWallSetupProgress
 } from '../feature-wall/feature-wall-setup-progress'
 import { deriveIntegrationConnectionStatus } from '../feature-wall/use-integration-connection-status'
-import { useSetupGuideBrowserMilestoneProgress } from './setup-guide-browser-milestone-progress'
 import {
   getCurrentSetupScriptProbeState,
   getSetupGuideProgressReady,
@@ -26,14 +24,8 @@ import {
 
 const SETUP_SCRIPT_PROBE_SETTLE_TIMEOUT_MS = 15_000
 
-// Why the rest parameter: callers outside the checklist still pass the retired agent-skill flags,
-// which the checklist ignores since its skills step was dropped (D-038).
-export function useSetupGuideProgress(
-  shouldRefreshCoreState: boolean,
-  ..._retiredSkillFlags: readonly boolean[]
-): FeatureWallSetupProgress {
+export function useSetupGuideProgress(shouldRefreshCoreState: boolean): FeatureWallSetupProgress {
   const settings = useAppStore((s) => s.settings)
-  const featureInteractions = useAppStore((s) => s.featureInteractions)
   const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
   const preflightStatus = useAppStore((s) => s.preflightStatus)
   const preflightStatusChecked = useAppStore((s) => s.preflightStatusChecked)
@@ -187,7 +179,7 @@ export function useSetupGuideProgress(
     nashSignalsChecked: nashSignals.checked
   })
 
-  const rawProgress = useMemo(
+  return useMemo(
     () =>
       getFeatureWallSetupProgress({
         ready,
@@ -195,7 +187,7 @@ export function useSetupGuideProgress(
         hasConnectedTaskSource,
         worktreesByRepo,
         hasSetupScript: currentSetupScriptProbe.hasSetupScript,
-        claudeCodeDetected: nashSignals.claudeCodeDetected,
+        primaryCliDetected: nashSignals.primaryCliDetected,
         clefConnected: nashSignals.clefConnected,
         dotConnected: nashSignals.dotConnected,
         hasWorkbenchRun: nashSignals.hasWorkbenchRun
@@ -209,9 +201,4 @@ export function useSetupGuideProgress(
       worktreesByRepo
     ]
   )
-  const historicalSplitTerminalDone = hasFeatureInteraction(
-    featureInteractions,
-    'terminal-pane-split'
-  )
-  return useSetupGuideBrowserMilestoneProgress(rawProgress, historicalSplitTerminalDone)
 }

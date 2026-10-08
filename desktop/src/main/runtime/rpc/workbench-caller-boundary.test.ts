@@ -34,11 +34,6 @@ const D016_METHOD_PARAMS: Readonly<Record<string, unknown>> = {
     text: 'Please also check the tests.'
   },
   'workbench.runs.tasks': { runId },
-  'workbench.attempts.transcript.read': {
-    dispatchId: 'ctx_0123456789ab',
-    fromByteOffset: 0,
-    maxBytes: 65_536
-  },
   'workbench.routingTable.list': {},
   'workbench.routingTable.accept': { proposalId: 'proposal-0001' },
   'workbench.routingTable.reject': { proposalId: 'proposal-0001' },

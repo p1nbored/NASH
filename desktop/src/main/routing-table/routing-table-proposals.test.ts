@@ -88,10 +88,10 @@ describe('submitting a proposal', () => {
     expect(env.fs.files.has(versionFilePath(2))).toBe(false)
   })
 
-  it('refuses an invalid body, a Gemini 4 id and a non-English rationale', () => {
+  it('refuses an invalid body, a malformed id and a non-English rationale', () => {
     const env = installed()
     const bad = [
-      submission(env, { changes: [{ ...ASTRA_ROW, model: 'gemini-4' }] }),
+      submission(env, { changes: [{ ...ASTRA_ROW, model: 'invalid model' }] }),
       submission(env, { changes: [{ ...ASTRA_ROW, model: 'opus' }] }),
       submission(env, { rationale: '更新模型' }),
       submission(env, { changes: [{ ...ASTRA_ROW, notes: '工程' }] }),
@@ -316,7 +316,7 @@ describe('accepting a proposal', () => {
     const env = installed()
     const id = submitOk(env, {
       changes: [],
-      coordinator: { model: 'claude-opus-5-5', reasoning_level: 'high' },
+      coordinator: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'high' },
       validation: {
         reviewers: [{ target: 'claude_headless', model: 'claude-opus-5-5', reasoning_level: 'max' }]
       }
@@ -449,7 +449,7 @@ describe('accepting a proposal', () => {
     const id = submitOk(env)
     env.fs.writeLog.length = 0
     for (const changes of [
-      [{ ...ASTRA_ROW, model: 'gemini-4' }],
+      [{ ...ASTRA_ROW, model: 'invalid model' }],
       [{ ...ASTRA_ROW, notes: '修改' }],
       [{ ...ASTRA_ROW, model: 'latest' }]
     ]) {
@@ -469,7 +469,7 @@ describe('accepting a proposal', () => {
     const env = installed()
     const id = submitOk(env)
     const stored = env.fs.files.get(proposalPath(id)) ?? ''
-    env.fs.files.set(proposalPath(id), stored.replace('gpt-6-astra', 'gemini-4-flash'))
+    env.fs.files.set(proposalPath(id), stored.replace('gpt-6-astra', 'invalid model'))
     env.fs.writeLog.length = 0
     expect(
       acceptRoutingTableProposal(env.ctx, { proposalId: id, caller: 'desktop_user' })

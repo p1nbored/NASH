@@ -3,8 +3,6 @@ import type {
   CheckRunDetailsTabPatch,
   OpenCheckRunDetailsState
 } from '@/components/editor/check-run-details-tab'
-import type { OpenTaskWindowState } from '@/components/task-window/task-window-tab'
-import type { WorkbenchRunTaskAttempt } from '../../../../../../shared/rpc-contract/workbench-task-window-params'
 import type {
   GitBranchChangeEntry,
   GitBranchCompareSummary,
@@ -81,7 +79,9 @@ export type EditorFilesSlice = {
   /** Most recently closed editor tabs per worktree (for Cmd/Ctrl+Shift+T). */
   recentlyClosedEditorTabsByWorktree: Record<string, ClosedEditorTabSnapshot[]>
   reopenClosedEditorTab: (worktreeId: string) => boolean
-  setActiveFile: (fileId: string) => void
+  /** Activation uses the file's workspace unless a target is supplied; global selection
+   *  moves only when that workspace is active. */
+  setActiveFile: (fileId: string, targetWorktreeId?: string) => void
   reorderFiles: (fileIds: string[]) => void
   markFileDirty: (fileId: string, dirty: boolean) => void
   setExternalMutation: (fileId: string, mutation: 'deleted' | 'renamed' | 'changed' | null) => void
@@ -163,9 +163,6 @@ export type EditorFilesSlice = {
     state: CheckRunDetailsTabPatch
   ) => void
   reloadOpenCheckRunDetailsTab: (fileId: string) => Promise<void>
-  openTaskWindow: (worktreeId: string, input: OpenTaskWindowState) => void
-  selectTaskWindowAttempt: (fileId: string, dispatchId: string) => void
-  patchTaskWindowAttempts: (fileId: string, attempts: readonly WorkbenchRunTaskAttempt[]) => void
   openBranchAllDiffs: (
     worktreeId: string,
     worktreePath: string,

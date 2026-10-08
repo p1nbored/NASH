@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   clear: vi.fn()
 }))
-// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
-vi.mock('../rate-limits/usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
-
 vi.mock('electron', () => ({ ipcMain: { handle: mocks.handle } }))
 vi.mock('../zcode/zcode-plan-api-key-store', () => ({
   hasZcodePlanApiKey: mocks.hasKey,

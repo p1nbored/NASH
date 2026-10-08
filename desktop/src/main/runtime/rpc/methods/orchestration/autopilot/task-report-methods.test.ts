@@ -1,10 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { TaskReportParams } from '../../../../../../shared/rpc-contract/orchestration-autopilot-params'
 import { TaskReportResultSchema } from '../../../../../../shared/rpc-contract/orchestration-autopilot-views'
-import {
-  seedRoutedTask,
-  seedStartedAttempt
-} from '../../../../orchestration/db/app-attempt-routing.test-fixture'
+import { seedRoutedTask } from '../../../../orchestration/db/app-attempt-routing.test-fixture'
 import { AUTOPILOT_TASK_API_ERROR_CODES } from './autopilot-task-api'
 import {
   createTaskApiHarness,
@@ -103,14 +100,16 @@ describe('orchestration.taskReport', () => {
     expect(harness.db.getTask(taskId)?.status).toBe('dispatched')
   })
 
-  it('refuses a report for an attempt the app runs as a process', async () => {
+  it('refuses a report for an attempt running as a native worker', async () => {
     harness = createTaskApiHarness()
     const { taskId, routeId } = seedRoutedTask({ owner: harness.db, runId: harness.runId })
-    const { dispatchId } = seedStartedAttempt(
-      { owner: harness.db, runId: harness.runId },
+    const { dispatch } = harness.db.createStartingWorkerDispatch({
+      creator: { kind: 'system' },
+      maxDepth: 3,
       taskId,
-      routeId
-    )
+      startOptions: { nativeTask: true, route_id: routeId }
+    })
+    const dispatchId = dispatch.id
     await expect(report({ taskId, attemptId: dispatchId })).rejects.toMatchObject({
       code: AUTOPILOT_TASK_API_ERROR_CODES.reportNotInSession
     })

@@ -111,7 +111,7 @@ function liveRead(status: PrimarySessionStatus | null): LivePrimaryRead {
     : { kind: 'gone' }
 }
 
-/** D-019: follow-up messages from dot or the desktop, typed into the run's primary Claude Code terminal. */
+/** D-019: follow-up messages from dot or the desktop, typed into the run's primary terminal. */
 export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessageDelivery {
   const { db, terminal, clock } = deps
   const serializer = createKeyedSerializer()

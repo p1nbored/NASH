@@ -1,35 +1,108 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeClaudeAccountSelectionTarget } from './runtime-selection'
+import type { GlobalSettings } from '../../shared/global-settings-types'
+import type { ClaudeManagedAccount } from '../../shared/managed-account-types'
+import {
+  getSelectedClaudeAccountIdForTarget,
+  pruneInvalidClaudeRuntimeSelection,
+  setSelectedClaudeAccountIdForTarget
+} from './runtime-selection'
 
-describe('normalizeClaudeAccountSelectionTarget', () => {
-  it('defaults to the host and drops a stray distro there', () => {
-    expect(normalizeClaudeAccountSelectionTarget()).toEqual({ runtime: 'host', wslDistro: null })
-    expect(normalizeClaudeAccountSelectionTarget(null)).toEqual({
-      runtime: 'host',
-      wslDistro: null
+function createSettings(
+  overrides: Partial<
+    Pick<GlobalSettings, 'activeClaudeManagedAccountId' | 'activeClaudeManagedAccountIdsByRuntime'>
+  > = {}
+): Pick<GlobalSettings, 'activeClaudeManagedAccountId' | 'activeClaudeManagedAccountIdsByRuntime'> {
+  return {
+    activeClaudeManagedAccountId: null,
+    activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: {} },
+    ...overrides
+  }
+}
+
+function createAccount(
+  overrides: Partial<ClaudeManagedAccount> & Pick<ClaudeManagedAccount, 'id'>
+): ClaudeManagedAccount {
+  const { id, ...rest } = overrides
+  return {
+    id,
+    email: `${id}@example.com`,
+    managedAuthPath: `/tmp/${id}`,
+    managedAuthRuntime: 'host',
+    wslDistro: null,
+    wslLinuxAuthPath: null,
+    authMethod: 'subscription-oauth',
+    organizationUuid: null,
+    organizationName: null,
+    createdAt: 1,
+    updatedAt: 1,
+    lastAuthenticatedAt: 1,
+    ...rest
+  }
+}
+
+describe('Claude runtime account selection', () => {
+  it('selects host and WSL accounts independently', () => {
+    const first = setSelectedClaudeAccountIdForTarget({ host: null, wsl: {} }, 'host-account', {
+      runtime: 'host'
     })
-    expect(normalizeClaudeAccountSelectionTarget({ runtime: 'host', wslDistro: 'Ubuntu' })).toEqual(
-      {
-        runtime: 'host',
-        wslDistro: null
-      }
-    )
-  })
-
-  it('trims a WSL distro and treats a blank one as the default distro', () => {
-    expect(
-      normalizeClaudeAccountSelectionTarget({ runtime: 'wsl', wslDistro: ' Ubuntu ' })
-    ).toEqual({
+    const next = setSelectedClaudeAccountIdForTarget(first, 'wsl-account', {
       runtime: 'wsl',
       wslDistro: 'Ubuntu'
     })
-    expect(normalizeClaudeAccountSelectionTarget({ runtime: 'wsl', wslDistro: '   ' })).toEqual({
-      runtime: 'wsl',
-      wslDistro: null
+
+    expect(next).toEqual({
+      host: 'host-account',
+      wsl: { Ubuntu: 'wsl-account' }
     })
-    expect(normalizeClaudeAccountSelectionTarget({ runtime: 'wsl' })).toEqual({
-      runtime: 'wsl',
-      wslDistro: null
+  })
+
+  it('resolves a WSL default target when exactly one WSL distro has a selection', () => {
+    const settings = createSettings({
+      activeClaudeManagedAccountIdsByRuntime: {
+        host: 'host-account',
+        wsl: { Ubuntu: 'wsl-account' }
+      }
+    })
+
+    expect(getSelectedClaudeAccountIdForTarget(settings, { runtime: 'wsl' })).toBe('wsl-account')
+    expect(getSelectedClaudeAccountIdForTarget(settings, { runtime: 'host' })).toBe('host-account')
+  })
+
+  it('clears WSL selections without clearing the host selection for a WSL default target', () => {
+    const next = setSelectedClaudeAccountIdForTarget(
+      {
+        host: 'host-account',
+        wsl: { Ubuntu: 'wsl-account', Debian: 'other-wsl-account' }
+      },
+      null,
+      { runtime: 'wsl' }
+    )
+
+    expect(next).toEqual({
+      host: 'host-account',
+      wsl: { Ubuntu: null, Debian: null }
+    })
+  })
+
+  it('drops selections whose account belongs to another runtime', () => {
+    const selection = pruneInvalidClaudeRuntimeSelection(
+      {
+        host: 'wsl-account',
+        wsl: { Ubuntu: 'host-account', Debian: 'missing-account' }
+      },
+      [
+        createAccount({ id: 'host-account' }),
+        createAccount({
+          id: 'wsl-account',
+          managedAuthRuntime: 'wsl',
+          wslDistro: 'Ubuntu'
+        })
+      ]
+    )
+
+    expect(selection).toEqual({
+      host: null,
+      wsl: { Ubuntu: null, Debian: null }
     })
   })
 })

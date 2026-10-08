@@ -18,7 +18,14 @@ import {
 } from '../../../../shared/usage-percentage-display'
 import { formatUsagePercentageLabel } from './usage-percentage-label'
 import { useResetCountdownClock } from '@/hooks/useResetCountdownClock'
-import { getUsageReadingSourceLabel } from './usage-reading-source'
+import { barColor, ProviderExtraUsageSection } from './provider-extra-usage-section'
+
+export {
+  barColor,
+  getExtraUsageLabel,
+  USAGE_URGENT_PERCENT,
+  USAGE_WARNING_PERCENT
+} from './provider-extra-usage-section'
 
 // Re-exported from its shared home so status-bar callers keep a single import.
 export { clampUsedPercent }
@@ -209,21 +216,6 @@ export function getWindowSections(
 // `text-background` for primary text and `text-background/50` for secondary
 // to stay readable inside the inverted tooltip container.
 
-// Why: urgency color tracks % used even when fill represents % remaining;
-// low usage stays neutral so persistent chrome stays quiet.
-export const USAGE_WARNING_PERCENT = 60
-export const USAGE_URGENT_PERCENT = 80
-
-export function barColor(usedPct: number): string {
-  if (usedPct < USAGE_WARNING_PERCENT) {
-    return 'bg-muted-foreground/40'
-  }
-  if (usedPct < USAGE_URGENT_PERCENT) {
-    return 'bg-yellow-500'
-  }
-  return 'bg-red-500'
-}
-
 function ProviderRateLimitWindowSection({
   window,
   label,
@@ -330,7 +322,6 @@ export function ProviderPanel({
   }
 
   const updatedAgo = p.updatedAt ? `Updated ${formatTimeAgo(p.updatedAt)}` : 'Not yet updated'
-  const readingSource = getUsageReadingSourceLabel(p)
   const resetCreditCount =
     showResetCredits && p.provider === 'codex'
       ? (p.rateLimitResetCredits?.availableCount ?? null)
@@ -348,13 +339,6 @@ export function ProviderPanel({
           {name}
         </div>
         <div className={faintClass}>{updatedAgo}</div>
-        {readingSource ? (
-          <div className={faintClass}>
-            {translate('auto.components.status.bar.usageReadingSource.from', 'From {{source}}', {
-              source: readingSource
-            })}
-          </div>
-        ) : null}
         {resetCreditCount !== null && resetCreditCount !== undefined ? (
           <div className={mutedClass}>
             {resetCreditCount === 1
@@ -386,6 +370,18 @@ export function ProviderPanel({
           now={now}
         />
       ))}
+
+      {p.extraUsage ? (
+        <ProviderExtraUsageSection
+          balance={p.extraUsage}
+          provider={p.provider}
+          textClass={textClass}
+          mutedClass={mutedClass}
+          faintClass={faintClass}
+          emptyBarClass={emptyBarClass}
+          usagePercentageDisplay={usagePercentageDisplay}
+        />
+      ) : null}
 
       {p.error ? (
         <ErrorMessage

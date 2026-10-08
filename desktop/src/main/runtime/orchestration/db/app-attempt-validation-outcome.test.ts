@@ -8,17 +8,11 @@ import {
 import { getTaskValidationStore } from './task-validation-store'
 import { seedRoutedTask } from './app-attempt-routing.test-fixture'
 import { createAppRunHarness, type AppRunHarness } from './app-attempt.test-fixture'
-import { FIXTURE_HASH_B, errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
+import { errorCodeOf, fixtureTime } from './autopilot-runtime.test-fixture'
 
 // FIXTURE_ONLY: the secret-shaped value below is synthetic and matches no real credential.
 const FAKE_SECRET = `sk-${'x'.repeat(24)}`
 
-const EXITED = { verdict: 'exited', method: 'windows_descendant_snapshot' } as const
-const CLAIM = {
-  exitCode: 0,
-  tree: EXITED,
-  lastMessage: { sha256: FIXTURE_HASH_B, bytes: 120, secretLike: false }
-}
 const TWO_CHECKS = [{ kind: 'artifact_exists', path: 'report.md' }, { kind: 'secret_scan_clean' }]
 
 describe('app attempt validation outcome', () => {
@@ -46,17 +40,16 @@ describe('app attempt validation outcome', () => {
     const { dispatchId } = settlement().start({
       taskId: seeded.taskId,
       routeId: seeded.routeId,
-      executor: 'codex_cli',
+      executor: 'in_session',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER,
       timestamp: fixtureTime(5)
     })
     settlement().markRunning({
       dispatchId,
-      executableEvidence: { executable: 'codex' },
       timestamp: fixtureTime(6)
     })
-    settlement().settleClaim({ dispatchId, ...CLAIM, timestamp: fixtureTime(7) })
+    settlement().settleClaim({ dispatchId, timestamp: fixtureTime(7) })
     const { record } = validations().open(
       options.review
         ? {
@@ -90,7 +83,7 @@ describe('app attempt validation outcome', () => {
       { kind: 'artifact_exists', status: 'pass' },
       { kind: 'secret_scan_clean', status: 'pass' }
     ],
-    evidenceRefs: [{ kind: 'executor_last_message', ref: FIXTURE_HASH_B }],
+    evidenceRefs: [{ kind: 'artifact', ref: 'report.md' }],
     timestamp: fixtureTime(9),
     ...overrides
   })

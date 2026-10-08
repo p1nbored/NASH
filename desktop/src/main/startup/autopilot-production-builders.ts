@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import { createNodeAvailabilityFs } from '../routing-table/availability/route-availability-fs'
 import { createRoutingTableContext } from '../routing-table/routing-table-context'
 import { createNodeRoutingTableFs } from '../routing-table/routing-table-file-store'
@@ -13,7 +12,7 @@ import { ensureDotIngressSchema } from '../runtime/orchestration/db/dot-ingress-
 import { ensureWorkbenchRequestSchema } from '../runtime/orchestration/db/workbench-request-schema'
 import { installPermissionRelay } from '../runtime/permission-relay/permission-relay-registry'
 import { createTaskClassificationRuntime } from '../runtime/task-classification/classification-runtime'
-import { createRuntimeAttemptWorktreePort } from '../runtime/task-execution/attempt-worktree-runtime'
+import { startRoutedNativeWorker } from '../runtime/task-execution/task-start-native'
 import { createTaskExecutionRuntime } from '../runtime/task-execution/task-execution-runtime'
 import { createTaskValidationRuntime } from '../runtime/task-validation/task-validation-runtime'
 import { settleWorkbenchLaunches } from '../runtime/workbench-intake-launch'
@@ -22,9 +21,6 @@ import { createOrcaPrimarySessionRuntime } from '../runtime/workflow-run/primary
 import type { AutopilotHostPorts, AutopilotRuntimeBuilders } from './autopilot-runtime-builders'
 import { createValidationRoots } from './autopilot-validation-roots'
 import { installClefAdministration } from './workbench-routing-clef-administration'
-
-/** Reviewer run folders, beside the attempt run folders under the app's data folder. */
-export const REVIEW_RUNS_FOLDER = 'autopilot-reviews'
 
 /**
  * The real modules behind each builder. Building any of them starts nothing: no process, no
@@ -68,44 +64,30 @@ export function createProductionAutopilotBuilders(
       }),
     createPrimarySessions: ({ runtime, owner, routing, userDataPath }) =>
       createOrcaPrimarySessionRuntime({ runtime, db: owner, routing, userDataPath }),
-    createExecution: ({ runtime, owner, routing, userDataPath, cliCommand, now, log }) => {
-      const workspacePath = (workspaceId: string): string =>
-        runtime.requireWorkbenchWorkspace(workspaceId).path
+    createExecution: ({ runtime, owner, routing, cliCommand, now, log }) => {
       return createTaskExecutionRuntime({
         owner,
+        startWorker: (input, route) => startRoutedNativeWorker(runtime, input, route),
         routes: routing.resolver,
         now,
         cliCommand,
-        userDataPath,
-        workspacePath,
-        // D-025: a write attempt in a git workspace gets its own child worktree of the run worktree.
-        worktrees: createRuntimeAttemptWorktreePort({ runtime, workspacePath }),
-        announce: (message) => runtime.notifyMessageArrived(message.to_handle, message.type),
         log: ({ event, code, dispatchId }) =>
           log({
             event: 'execution_event',
             detail: event,
             ...(code ? { code } : {}),
             ...(dispatchId ? { dispatchId } : {})
-          }),
-        codex: { resolveExecutable: host.codex.resolveExecutable },
-        agy: { resolveExecutable: host.agy.resolveExecutable }
+          })
       })
     },
-    createValidation: ({ runtime, owner, routing, userDataPath }) =>
+    createValidation: ({ runtime, owner, routing }) =>
       createTaskValidationRuntime({
         owner,
         roots: createValidationRoots({
-          requireWorkspace: (workspaceId) => runtime.requireWorkbenchWorkspace(workspaceId),
-          userDataPath
+          requireWorkspace: (workspaceId) => runtime.requireWorkbenchWorkspace(workspaceId)
         }),
         resolver: routing.resolver,
-        reviewRunsRoot: join(userDataPath, REVIEW_RUNS_FOLDER),
-        codex: { resolveExecutable: host.codex.resolveExecutable },
-        claude: {
-          resolveExecutable: host.claude.resolveExecutable,
-          electron: { isElectron: Boolean(process.versions.electron), execPath: process.execPath }
-        }
+        reviewer: host.reviewer
       }),
     installPermissionRelay: ({ runtime, cliCommand }) =>
       installPermissionRelay(runtime, { cliCommand }),

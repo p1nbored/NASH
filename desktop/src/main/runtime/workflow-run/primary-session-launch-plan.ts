@@ -27,11 +27,13 @@ import {
   parseClaudeModelChoice,
   primarySessionOk,
   type PrimarySessionAccess,
+  type PrimarySessionAgent,
   type PrimarySessionResult,
   type SubagentRouteRowInput
 } from './primary-session-types'
 
 export type PrimarySessionLaunchPlanInput = {
+  readonly agent: PrimarySessionAgent
   readonly userDataPath: string
   readonly platform: NodeJS.Platform
   readonly cliCommand: string
@@ -39,9 +41,8 @@ export type PrimarySessionLaunchPlanInput = {
   readonly runId: string
   readonly generation: number
   readonly access: PrimarySessionAccess
-  readonly deliverableLanguage: string | null
   readonly objective: string
-  /** The coordinator route's resolved model and Claude effort. */
+  /** The coordinator route's exact model and resolved provider effort. */
   readonly model: string
   readonly effort: string
   /** Every row of the active table; only claude_subagent rows become `--agents` definitions. */
@@ -54,7 +55,7 @@ export type PrimarySessionLaunchPlanInput = {
 
 export type PrimarySessionLaunchPlan = PrimarySessionLaunchSpec & {
   readonly prompt: PrimarySessionPrompt
-  readonly settingsPath: string
+  readonly settingsPath: string | null
   readonly subagentNames: readonly string[]
 }
 
@@ -91,14 +92,35 @@ export function preparePrimarySessionLaunch(
   io: PrimarySessionLaunchPlanIo = {}
 ): PrimarySessionResult<PrimarySessionLaunchPlan> {
   const prompt = buildPrimarySessionPrompt({
+    agent: input.agent,
     objective: input.objective,
     access: input.access,
-    deliverableLanguage: input.deliverableLanguage,
     cliCommand: input.cliCommand,
     platform: input.platform
   })
   if (!prompt.ok) {
     return prompt
+  }
+  if (input.agent === 'codex') {
+    const spec = runPrimarySessionPreflight(
+      {
+        agent: 'codex',
+        settings: withStructuredNativeChatDisabled(input.clientSettings),
+        platform: input.platform,
+        access: input.access,
+        model: input.model,
+        effort: input.effort
+      },
+      io.buildPlan
+    )
+    return spec.ok
+      ? primarySessionOk({
+          ...spec.value,
+          prompt: prompt.value,
+          settingsPath: null,
+          subagentNames: []
+        })
+      : spec
   }
   const choice = parseClaudeModelChoice(input.model, input.effort)
   if (!choice.ok) {
@@ -134,6 +156,7 @@ export function preparePrimarySessionLaunch(
   }
   const spec = runPrimarySessionPreflight(
     {
+      agent: 'claude',
       settings: withStructuredNativeChatDisabled(input.clientSettings),
       platform: input.platform,
       access: input.access,

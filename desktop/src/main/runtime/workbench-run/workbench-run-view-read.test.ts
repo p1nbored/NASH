@@ -134,8 +134,7 @@ describe('workflowRunView', () => {
       workspaceId: FIXTURE_ONLY_WORKSPACE.workspaceId,
       workspaceBinding: 'c'.repeat(64),
       objective: 'x',
-      requestedAccess: 'read_only',
-      deliverableLanguage: null
+      requestedAccess: 'read_only'
     })
     expect(workflowRunView(h.owner, run)).toMatchObject({ origin: 'unknown', objective: null })
   })

@@ -163,10 +163,6 @@
                 "workspace_write"
               ]
             },
-            "deliverableLanguage": {
-              "type": "string",
-              "maxLength": 35
-            },
             "idempotencyKey": {
               "type": "string",
               "format": "uuid",
@@ -426,7 +422,8 @@
           "type": "object",
           "properties": {
             "contractVersion": {
-              "$ref": "#/$defs/__schema8"
+              "type": "number",
+              "const": 3
             },
             "dotRequestId": {
               "$ref": "#/$defs/__schema11"

@@ -1,5 +1,5 @@
 import type { z } from 'zod'
-import type { DotDecisionViewV2 } from '../../../shared/dot-ingress/dot-ingress-v2'
+import type { DotDecisionView } from '../../../shared/dot-ingress/dot-ingress-decision'
 import type {
   DotValidationSettled,
   DotValidationView
@@ -35,7 +35,7 @@ export type DotRemoteArtifactFact = {
 export type DotRemoteRequestSnapshot = {
   status: DotRemoteRequestStatusData
   /** Every prompt dot may see on the request's run, pending or decided. */
-  prompts: readonly DotDecisionViewV2[]
+  prompts: readonly DotDecisionView[]
   messages: readonly DotRemoteMessageOutcome[]
   validations: readonly DotRemoteValidationFact[]
   /** Present once the run completed: the run summary (or null) and the artifacts that passed. */

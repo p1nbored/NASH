@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import type { DotRetryable } from '../dot-ingress/dot-ingress-errors'
 import {
-  DOT_INGRESS_ERROR_CODES_V3,
-  dotIngressErrorMessageV3,
-  type DotIngressErrorCodeV3
-} from '../dot-ingress/dot-ingress-errors-v3'
+  type DotRetryable,
+  DOT_INGRESS_ERROR_CODES,
+  dotIngressErrorMessage,
+  type DotIngressErrorCode
+} from '../dot-ingress/dot-ingress-errors'
 
 // Site-level codes. They never use the dot_ namespace, which belongs to NASH; NASH refusals keep
 // their own code and fixed English message. Every message is fixed so a Site cannot reword one.
@@ -140,12 +140,12 @@ export const DotRemoteEndpointErrorSchema = z
   })
   .strict()
 
-function nashRefusal(code: DotIngressErrorCodeV3) {
+function nashRefusal(code: DotIngressErrorCode) {
   return z
     .object({
       by: z.literal('nash'),
       code: z.literal(code),
-      message: z.literal(dotIngressErrorMessageV3(code))
+      message: z.literal(dotIngressErrorMessage(code))
     })
     .strict()
 }
@@ -163,7 +163,7 @@ function siteRefusal(code: (typeof DOT_REMOTE_SITE_REFUSAL_CODES)[number]) {
 /** A v3 contract code with its fixed English message, as NASH answered the item. */
 export const DotRemoteNashRefusalSchema = z.discriminatedUnion(
   'code',
-  mapNonEmpty(DOT_INGRESS_ERROR_CODES_V3, nashRefusal)
+  mapNonEmpty(DOT_INGRESS_ERROR_CODES, nashRefusal)
 )
 
 export const DotRemoteSiteRefusalSchema = z.discriminatedUnion(
@@ -176,8 +176,8 @@ export const DotRemoteReceiptRefusalSchema = z.union([
   DotRemoteSiteRefusalSchema
 ])
 
-export function dotRemoteNashRefusal(code: DotIngressErrorCodeV3) {
-  return { by: 'nash', code, message: dotIngressErrorMessageV3(code) } as const
+export function dotRemoteNashRefusal(code: DotIngressErrorCode) {
+  return { by: 'nash', code, message: dotIngressErrorMessage(code) } as const
 }
 
 export function dotRemoteSiteRefusal(code: (typeof DOT_REMOTE_SITE_REFUSAL_CODES)[number]) {

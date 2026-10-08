@@ -8,7 +8,7 @@ import {
 } from './routing-table-inline-edit'
 import { FIXTURE_SHA_V3 } from './routing-table-view.test-fixture'
 
-const COORDINATOR = { model: 'claude-opus-5-5', reasoningLevel: 'max' } as const
+const COORDINATOR = { agent: 'claude', model: 'claude-opus-5-5', reasoningLevel: 'max' } as const
 
 function row(overrides: Partial<EditableRoute> = {}): EditableRoute {
   const base = {

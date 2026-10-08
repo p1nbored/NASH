@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -11,7 +11,6 @@ import {
 } from '../orchestration/db/app-attempt.test-fixture'
 import { fixtureTime } from '../orchestration/db/autopilot-runtime.test-fixture'
 import { createTaskValidationRuntime } from './task-validation-runtime'
-import { sha256Of } from './task-validation.test-fixture'
 import { reviewerResolution } from './validation-runner.test-fixture'
 
 describe('task validation runtime', () => {
@@ -31,20 +30,13 @@ describe('task validation runtime', () => {
     return createTaskValidationRuntime({
       owner: harness.owner,
       roots: {
-        resolveWorkspace: async () => null,
-        resolveRunDirectory: (relative) => join(base, 'app-data', relative)
+        resolveWorkspace: async () => ({ path: base, kind: 'git' as const })
       },
       resolver: { resolveValidationReviewer: async () => resolution, latch: () => {} },
-      reviewRunsRoot: join(base, 'reviews'),
-      codex: {
-        resolveExecutable: () => {
-          throw new Error('no codex in tests')
-        }
-      },
-      claude: {
-        resolveExecutable: () => {
-          claudeLookups.push('claude')
-          return null
+      reviewer: {
+        resolveInvocation: async (agent) => {
+          claudeLookups.push(agent)
+          throw new Error('test account unavailable')
         }
       }
     })
@@ -61,40 +53,42 @@ describe('task validation runtime', () => {
     expect(await runtime(reviewerResolution('available'), []).validatePending()).toEqual([])
   })
 
-  it('wires the headless Claude reviewer target to the Claude runner', async () => {
+  it('wires the Claude reviewer target to native account preparation', async () => {
     const lookups: string[] = []
-    claimCodexAttempt(harness, join(base, 'app-data'))
+    claimInSessionAttempt(harness)
     const [report] = await runtime(reviewerResolution('available'), lookups).validatePending()
     expect(lookups).toEqual(['claude'])
     expect(report).toMatchObject({ outcome: 'settled', verdict: 'inconclusive' })
   })
 })
 
-/** A Codex attempt of a TaskSpec that asks for a model review (D-027), claimed with its result on disk. */
-function claimCodexAttempt(harness: AppRunHarness, appData: string): void {
-  const seeded = seedRoutedTask(harness, { spec: { machineChecks: [], review: 'model' } })
+/** An in-session attempt whose report asks for an independent review. */
+function claimInSessionAttempt(harness: AppRunHarness): void {
+  const seeded = seedRoutedTask(harness, {
+    spec: { machineChecks: [], review: 'model' },
+    route: {
+      target: 'claude_subagent',
+      model: 'claude-sonnet-5-5',
+      policyLevel: 'max',
+      cliSetting: null
+    }
+  })
   const settlement = getAppAttemptSettlement(harness.owner)
   const { dispatchId } = settlement.start({
     taskId: seeded.taskId,
     routeId: seeded.routeId,
-    executor: 'codex_cli',
+    executor: 'in_session',
     creator: { kind: 'system' },
     maxDepth: Number.MAX_SAFE_INTEGER,
     timestamp: fixtureTime(5)
   })
-  const runDir = join(appData, 'autopilot-runs', harness.runId, dispatchId)
-  mkdirSync(runDir, { recursive: true })
-  writeFileSync(join(runDir, 'last-message.txt'), 'Done.')
   settlement.markRunning({
     dispatchId,
-    executableEvidence: { executable: 'codex' },
     timestamp: fixtureTime(6)
   })
   settlement.settleClaim({
     dispatchId,
-    exitCode: 0,
-    tree: { verdict: 'exited', method: 'windows_descendant_snapshot' },
-    lastMessage: { sha256: sha256Of('Done.'), bytes: 5, secretLike: false },
+    notice: { subject: 'Task claimed', body: 'Done.' },
     timestamp: fixtureTime(7)
   })
 }

@@ -38,7 +38,7 @@
     "clientHosted": {
       "preparationFailed": "Impossible de démarrer le navigateur distant sur ce bureau. Vérifiez la connexion couplée et réessayez.",
       "unavailableTitle": "Navigateur hébergé par le client indisponible",
-      "unavailableDescription": "Cette page est attachée à un autre bureau ou n'est plus disponible.",
+      "unavailableDescription": "Cette page n'est pas disponible sur ce bureau pour le moment.",
       "download": {
         "started": "Téléchargement de {{filename}}…",
         "completed": "Téléchargé {{filename}}",
@@ -56,7 +56,9 @@
       "hostRowOfflineNamed": "Hors ligne — a été hébergé le {{device}}",
       "hostRowOffline": "Hors ligne : l'appareil qui l'héberge s'est arrêté",
       "hostRowNamed": "Hébergé le {{device}}",
-      "hostRow": "Hébergé sur un autre appareil"
+      "hostRow": "Hébergé sur un autre appareil",
+      "unavailableOtherDesktopDescription": "Cette page est ouverte sur un autre bureau.",
+      "unavailableHostOfflineDescription": "{{host}} est hors ligne. Cette page se rechargera ici dès sa reconnexion."
     },
     "navigation": {
       "back": "Retour",
@@ -140,7 +142,8 @@
         "portsToggleDescription": "Afficher les ports actifs de l'espace de travail. Cliquez dessus pour les ports par espace de travail et les écouteurs externes.",
         "antigravityToggleDescription": "Afficher l'utilisation de l'abonnement Antigravity pour l'espace de travail actif.",
         "grokToggleDescription": "Afficher l'utilisation des crédits de l'abonnement Grok lorsque vous êtes connecté via Grok CLI.",
-        "cursorToggleDescription": "Afficher l'utilisation du forfait Cursor lorsque vous êtes connecté via cursor-agent ou Cursor IDE."
+        "cursorToggleDescription": "Afficher l'utilisation du forfait Cursor lorsque vous êtes connecté via cursor-agent ou Cursor IDE.",
+        "zcodeToggleDescription": "Afficher l'utilisation du quota du plan de codage ZCode."
       },
       "menuBarIcon": {
         "title": "Afficher l'icône dans la barre de menus",
@@ -150,6 +153,30 @@
           "statusItem": "élément de statut",
           "activity": "activité"
         }
+      },
+      "chat": {
+        "title": "Chat",
+        "textSize": "Taille du texte",
+        "textSizeDescription": "Messages, activité des outils et zone de message. {{increase}} / {{decrease}} dans un chat modifient aussi ce réglage.",
+        "codeTextSize": "Taille du texte du code",
+        "codeTextSizeDescription": "Blocs de code, code en ligne, commandes et sortie des outils.",
+        "width": "Largeur",
+        "widthDescription": "Largeur maximale des messages et de la zone de message dans un panneau large.",
+        "resetAppearance": "Réinitialiser l’apparence du chat",
+        "resetDescription": "Restaurer les valeurs par défaut ci-dessus.",
+        "comfortable": "Confortable",
+        "wide": "Large",
+        "full": "Pleine",
+        "pixels": "px",
+        "reset": "Réinitialiser",
+        "matchTerminalInterface": "Utiliser l’interface du terminal",
+        "matchTerminalInterfaceDescription": "Utilise la police et les couleurs de l’interface du terminal pour tout le chat. Les changements de thème du terminal sont appliqués automatiquement.",
+        "contrast": "Contraste",
+        "contrastDescription": "Ajuste la luminosité du texte du chat sur le fond. L’extrémité droite retrouve l’ancien aspect, plus lumineux.",
+        "softer": "Plus doux",
+        "sharper": "Plus net",
+        "terminalControlledHint": "Défini par l’interface du terminal.",
+        "terminalControlledTooltip": "Suit l’interface du terminal. Désactivez Utiliser l’interface du terminal pour le modifier."
       }
     },
     "browser": {
@@ -199,8 +226,38 @@
     },
     "agents": {
       "codexTerminalServerIsolation": {
-        "description": "Assure le bon fonctionnement des états et de la fermeture des onglets dans NASH. Désactivez cette option pour utiliser le serveur partagé de Codex et sa vue d'ensemble des agents. S'applique aux nouveaux terminaux."
+        "description": "Maintient le bon fonctionnement du statut d'NASH et des onglets de fermeture. Désactivez-la pour utiliser le serveur partagé du Codex et l'aperçu de ses agents. S'applique aux nouveaux terminaux.",
+        "title": "Exécutez chaque terminal Codex sur son propre serveur"
+      },
+      "codexSharedServerWarning": {
+        "title": "Avertir lorsqu'un onglet Codex partage un serveur",
+        "description": "Affiche un avis sur un Codex que vous avez démarré vous-même lorsqu'il partage un serveur avec d'autres onglets, car son statut d'agent peut être erroné."
       }
+    },
+    "chat": {
+      "description": "Choisissez l’apparence et le nom des chats.",
+      "names": {
+        "title": "Noms des chats",
+        "description": "Utilisez un agent pour nommer les nouveaux chats à partir de leur premier message. Sans nom généré, ils restent Claude Chat ou Codex Chat.",
+        "enable": "Nommer automatiquement les chats",
+        "recipe": "Nom du chat",
+        "recipeDescription": "Génère un nom court à partir du premier message d’un nouveau chat.",
+        "customCommandDescription": "Ligne de commande partagée par les recettes qui sélectionnent Commande personnalisée. Utilisez {prompt} pour transmettre le texte en argument ; sinon, il est envoyé sur l’entrée standard.",
+        "saveFailed": "Impossible d’enregistrer les paramètres de nom des chats.",
+        "searchAgent": "agent",
+        "searchTemplate": "modèle de commande"
+      }
+    },
+    "followSymlinkedDirectoriesKeywords": {
+      "symlink": "lien symbolique",
+      "linkedFolder": "dossier lié",
+      "quickOpen": "ouverture rapide",
+      "fileExplorer": "explorateur de fichiers"
+    },
+    "followSymlinkedDirectories": "Suivre les dossiers liés symboliquement",
+    "followSymlinkedDirectoriesDescription": "Recherchez les dossiers liés dans Quick Open et développez les dossiers liés locaux dans l'Explorateur de fichiers.",
+    "accounts": {
+      "claudeRemoveFolder": "NASH supprime de cet ordinateur le dossier Claude et la connexion de ce compte. L’historique partagé avec Valeur par défaut du système est conservé. Si ce compte est sélectionné, le prochain Claude démarrera avec Valeur par défaut du système."
     }
   },
   "menu": {
@@ -607,7 +664,12 @@
           "muse_label": "Muse",
           "opencode2_label": "OpenCode 2",
           "codebuddy_label": "CodeBuddy",
-          "zcode_label": "ZCode"
+          "zcode_label": "ZCode",
+          "freebuff_label": "Freebuff",
+          "dsh_label": "DeepSeek Harness",
+          "qoder_label": "Qoder CLI",
+          "qoder_cn_label": "Qoder CLI China",
+          "jcode_label": "Jcode"
         },
         "skill": {
           "cli": {
@@ -982,7 +1044,8 @@
             "dimensionsTooLarge": "{{fileName}} a des dimensions trop grandes pour un aperçu sans risque.",
             "invalidImage": "{{fileName}} n'est pas une image valide prise en charge.",
             "additionalErrors": "{{count}} images supplémentaires n'ont pas pu être jointes.",
-            "totalTooLarge": "{{fileName}} ferait dépasser {{maxSize}} au total pour les pièces jointes."
+            "totalTooLarge": "{{fileName}} ferait dépasser {{maxSize}} au total pour les pièces jointes.",
+            "compressed": "{{fileName}} a été compressé de {{originalSize}} à {{size}} pour respecter la limite des pièces jointes."
           }
         }
       },
@@ -1021,6 +1084,16 @@
         "tooLarge": "Trop volumineux pour être copié : NASH n'a pas pu le transmettre à l'agent.",
         "storageFull": "L'espace de stockage de NASH pour les fichiers déposés est plein : NASH n'a pas pu le transmettre à l'agent.",
         "generic": "Réessayez de déposer les fichiers."
+      },
+      "reveal": {
+        "in": {
+          "file": {
+            "manager": {
+              "notFound": "Fichier introuvable. Il a peut-être été déplacé ou supprimé.",
+              "launchFailed": "Impossible d’afficher le fichier."
+            }
+          }
+        }
       }
     },
     "hooks": {
@@ -1173,7 +1246,7 @@
         "dotDescription": "Autorisez ChatGPT dot à envoyer des tâches à NASH.",
         "statsDescription": "Activité de NASH et consommation de tokens par agent.",
         "serversDescription": "Associez NASH sur d'autres machines pour y maintenir les sessions en cours.",
-        "accountsDescription": "Facultatif. Basculez entre les comptes enregistrés pour Codex, Antigravity et d'autres outils CLI, et consultez leur consommation.",
+        "accountsDescription": "Configuration facultative de changement de compte et d'utilisation pour Claude, Codex, Gemini, OpenCode Go, MiniMax et Grok.",
         "serversWebDescription": "Connectez ce navigateur à un serveur NASH enregistré."
       },
       "useAppMenuPaste": {
@@ -1216,6 +1289,11 @@
               }
             }
           }
+        }
+      },
+      "ipcEvents": {
+        "sshManagedServer": {
+          "refusedBlocked": "Cet hôte SSH n'a pas pu basculer vers un serveur NASH géré. La section Hôtes SSH des Paramètres en indique la raison."
         }
       }
     },
@@ -3161,7 +3239,14 @@
             "f2a8b9c1d3": "Depuis votre téléphone",
             "c7e4a2b8f1": "Votre téléphone a le contrôle",
             "d9f3c6e2a4": "Le clavier de l'ordinateur est en pause. Reprenez ce terminal pour taper ici, reprenez tous les terminaux contrôlés par votre téléphone, ou réduisez pour continuer à observer.",
-            "a6b1d8f3e2": "Votre session téléphone est terminée. Restaurez ce terminal à la taille bureau, ou tous les terminaux que votre téléphone a laissés en taille téléphone."
+            "a6b1d8f3e2": "Votre session téléphone est terminée. Restaurez ce terminal à la taille bureau, ou tous les terminaux que votre téléphone a laissés en taille téléphone.",
+            "4b7e1c9a20": "Toujours dimensionné pour votre téléphone",
+            "9d2f6a3e58": "Votre session téléphonique est terminée. Restaurer pour s'adapter à cette fenêtre.",
+            "1e5c8b7d43": "Restaurer",
+            "6a3d9f2c71": "Tout restaurer",
+            "8c1a5e9f36": "La saisie sur le bureau est suspendue. La sortie continue à diffuser.",
+            "2f7b4d1e95": "Reprenez tout",
+            "3a9c5f7e12": "Minimiser"
           },
           "TerminalAgentSessionForkDialog": {
             "17fc841e59": "Copier le contexte",
@@ -3212,7 +3297,9 @@
             "sourceRestoring": "Reconnexion de ce terminal - sa sortie est en cours de rétablissement. La session est toujours en cours.",
             "remoteTerminalClosed": "Le terminal distant était fermé.",
             "ptyAllocationLimit": "Votre système ne peut plus allouer de périphériques pty. Fermez quelques terminaux inutilisés, dans NASH ou dans un autre programme, puis réessayez.",
-            "terminalProcessLimit": "Votre système ne peut pas démarrer un autre processus de terminal. Fermez les terminaux inutilisés ou quittez les processus inutiles, puis réessayez."
+            "terminalProcessLimit": "Votre système ne peut pas démarrer un autre processus de terminal. Fermez les terminaux inutilisés ou quittez les processus inutiles, puis réessayez.",
+            "heldByPreviousRelay": "Ce terminal s'exécute toujours sur l'hôte sous la version précédente d'NASH, à laquelle cette version ne peut pas se connecter. Il continue jusqu'à sa fin. Ouvrez un nouveau terminal pour continuer à travailler ici.",
+            "ownerHostMismatch": "La session enregistrée de ce terminal appartient à une autre connexion d'hôte : NASH ne peut donc pas le rattacher ici. Ouvrez un nouveau terminal pour continuer."
           },
           "TerminalProcessExitOverlay": {
             "capacityTitle": "Limite de consoles Git Bash atteinte",
@@ -3258,7 +3345,7 @@
             "missing": {
               "tui": {
                 "title": "This ZCode build has no terminal UI",
-                "description": "NASH's hooks installed correctly — the zcode on your PATH just cannot open a session. The ZCode desktop app bundles the agent runtime without its terminal UI. Install a zcode that ships the TUI, then run zcode outside NASH to confirm."
+                "description": "Cette installation de ZCode ne peut pas ouvrir de session de terminal. Installez une version avec une interface de terminal, puis lancez zcode en dehors de NASH pour la vérifier."
               }
             }
           },
@@ -3388,6 +3475,14 @@
           },
           "TerminalRestoringPlaceholder": {
             "restoring": "Restauration du terminal…"
+          },
+          "AgentLaunchPaneNotice": {
+            "commandNotFound": "Sa commande est introuvable sur cette machine.",
+            "copyPrompt": "Copier le prompt",
+            "exitedDuringStart": "Il s'est arrêté pendant le démarrage.",
+            "notStarted": "L'agent n'a pas pu démarrer.",
+            "unconfirmed": "Impossible de confirmer que l'agent a démarré.",
+            "workspaceGone": "Son espace de travail n'est plus disponible."
           }
         }
       },
@@ -3803,7 +3898,16 @@
             "codexSignInSuccess": "Connecté à Codex",
             "codexSignInError": "Échec de la connexion à Codex. Veuillez réessayer.",
             "cursorUsageMenu": "Utilisation Cursor",
-            "hiddenUsageProviders": "Aussi : {{value0}}"
+            "hiddenUsageProviders": "Aussi : {{value0}}",
+            "c98ea88392": "Aucun autre compte",
+            "9332ba8684": "Basculer vers",
+            "d450654fa2": "Compte Claude",
+            "11e2354daf": "Runtime d'utilisation Claude",
+            "3dd7ddfae1": "Ouvrir les détails Claude et le sélecteur de compte",
+            "4fba7dc1e7": "solde {{value0}}",
+            "zcodeUsageMenu": "Utilisation du code Z",
+            "4025a6f62f": "Illimité",
+            "a95969101f": "{{value0}} crédits"
           },
           "StatusBarUsageEmptyCta": {
             "828c764a79": "Connecter un compte",
@@ -4001,6 +4105,27 @@
                 "message": "Exécutez cursor-agent login dans un terminal sur l'ordinateur qui exécute NASH, puis réessayez."
               },
               "plan": "Forfait"
+            },
+            "zcode": {
+              "mcp": "MCP"
+            },
+            "fbc80d8be2": "Solde Zen",
+            "c03c61f53f": "Solde",
+            "f6a27a3c0a": "{{value0}} disponibles",
+            "7404abbece": "Crédits d’utilisation",
+            "473d45cd0f": "Solde {{value0}}",
+            "f21b2ba897": "Crédits",
+            "56c0d70577": "Illimité",
+            "87b5bda4d3": "{{value0}} crédits disponibles",
+            "claude": {
+              "waiting": {
+                "label": "Mise à jour au lancement de Claude",
+                "message": "L’utilisation de Claude sera mise à jour à son prochain lancement."
+              },
+              "expired": {
+                "label": "Connexion expirée",
+                "message": "Les données d’utilisation de Claude ont expiré. Lancez Claude avec ce compte pour les actualiser."
+              }
             }
           },
           "SshTargetStatusRow": {
@@ -4113,6 +4238,16 @@
             "codexAppServer": "codex app-server",
             "agyUsage": "agy /usage",
             "from": "Source : {{source}}"
+          },
+          "provider": {
+            "extra": {
+              "usage": {
+                "section": {
+                  "135d51c19f": "Limite {{value0}}",
+                  "apiKeyBalanceUnavailable": "Cette réponse d’utilisation n’inclut pas le solde."
+                }
+              }
+            }
           }
         }
       },
@@ -6310,7 +6445,8 @@
         "SidebarFeedbackImageAttachments": {
           "attachImages": "Joindre",
           "removeImage": "Supprimer {{fileName}}",
-          "screenshotsHint": "Joignez jusqu'à {{count}} captures d'écran, {{maxSize}} au total"
+          "screenshotsHint": "Joignez jusqu'à {{count}} captures d'écran, {{maxSize}} au total",
+          "preparing": "Préparation des pièces jointes…"
         },
         "WorkspaceKanbanSearchField": {
           "bdb753c78d": "Aucun espace de travail correspondant",
@@ -6441,6 +6577,11 @@
           "copied": "Commande copiée",
           "retry": "Réessayer maintenant",
           "restored": "Git fonctionne à nouveau. Worktrees actualisés."
+        },
+        "manualSortSwitch": {
+          "title": "Tri modifié en Manuel",
+          "description": "Manuel conserve les espaces de travail là où vous les déposez.",
+          "restore": "Retour à {{label}}"
         }
       },
       "shared": {
@@ -6556,8 +6697,8 @@
           "96f3649526": "Utiliser les identifiants Gemini CLI (expérimental)",
           "d676c41fc6": "Extrait les identifiants OAuth de votre installation locale de Gemini CLI pour vous authentifier auprès de Google. Utilise les identifiants émis pour l'app Gemini CLI, pas pour NASH. Peut cesser de fonctionner si Google met à jour la CLI. À utiliser à vos risques et périls.",
           "0c7f915b01": "Utiliser les identifiants Gemini CLI",
-          "973741a871": "Configurer les paramètres du fournisseur Gemini.",
-          "0c64dc2a64": "Gemini",
+          "973741a871": "Conserver les sessions Gemini CLI existantes disponibles. Les identifiants Gemini ne vous connectent pas à Antigravity.",
+          "0c64dc2a64": "Gemini CLI (hérité)",
           "db209ee572": "Supprimer",
           "8a0f870153": "Réauthentifier",
           "3d245ef7d9": "Codex signale que cette connexion est périmée",
@@ -6683,7 +6824,16 @@
               "placeholder": "Laissez vide pour utiliser la clé enregistrée par /connect ou OPENCODE_API_KEY",
               "help": "Utilisé pour l'utilisation d'OpenCode Go dans la barre d'état. Le cookie de session ci-dessous n'est nécessaire que pour les anciens comptes console (OpenCode Black)."
             }
-          }
+          },
+          "63843e37e2": "Supprimer le compte Claude ?",
+          "3fe7862418": "Aucun compte Claude géré pour {{value0}}. NASH utilisera la connexion Claude par défaut du système de cet environnement jusqu'à ce que vous en ajoutiez un ici.",
+          "8bbfd74556": "Comptes Claude",
+          "72b36ea174": "Facultatif. NASH peut utiliser votre connexion Claude habituelle ; ajoutez des comptes seulement si vous voulez changer rapidement sans déplacer les sessions de chat.",
+          "26ef4b55be": "Claude",
+          "2743cdc0af": "Échec de la mise à jour du compte Claude.",
+          "f921d32606": "Compte Claude mis à jour.",
+          "e05d0ff737": "Utilisez votre connexion Claude {{value0}} actuelle.",
+          "remoteEmptyClaudeAccounts": "Aucun compte Claude géré sur {{value0}}. Il utilise sa connexion Claude par défaut du système ; ajoutez des comptes sur ce serveur."
         },
         "AdvancedPane": {
           "40b29e0bf3": "Redémarrer",
@@ -7226,8 +7376,8 @@
             "shellEnvCopy": "Les chats Codex et Claude démarrent avec toutes les variables exportées par votre shell de connexion, comme un terminal. Désactivez pour choisir celles qu'ils reçoivent.",
             "shellEnvToggleLabel": "Activer l'utilisation de l'environnement de votre shell",
             "structuredTitle": "Utiliser le chat natif structuré mis à jour",
-            "structuredCopy": "Ouvre les nouveaux agents Codex et Claude sous forme de discussions structurées. Désactivé, ils s'ouvrent dans le chat basé sur le terminal. Les discussions existantes restent telles quelles.",
-            "structuredScope": "Fonctionne sur cette machine et sur les serveurs NASH appairés dont la version le prend en charge ; les serveurs plus anciens conservent le chat du terminal. WSL et les hôtes SSH continuent d'utiliser le chat du terminal, et Windows y revient à moins que NASH ne puisse lire les heures de début des processus.",
+            "structuredCopy": "Ouvre les nouveaux agents sous forme de discussions structurées lorsque c'est possible. Désactivé, ils s'ouvrent dans le chat basé sur le terminal. Les discussions existantes restent telles quelles.",
+            "structuredScope": "Fonctionne sur cette machine et sur les serveurs NASH appairés dont la version le prend en charge ; les serveurs plus anciens conservent le chat du terminal. WSL et les hôtes SSH continuent d'utiliser le chat du terminal.",
             "structuredToggleLabel": "Basculer le chat natif structuré mis à jour",
             "resumeTitle": "Reprendre automatiquement les discussions de travail après un redémarrage",
             "resumeCopy": "Lorsque NASH quitte ou installe une mise à jour, les discussions en cours reprennent automatiquement à la réouverture de NASH.",
@@ -7730,7 +7880,8 @@
           "pairingCodeReady": "Code d'appairage prêt",
           "copyPairingCode": "Copier le code d'appairage",
           "diagnosticsCopied": "Diagnostics copiés",
-          "diagnosticsCopyFailed": "Échec de la copie des diagnostics"
+          "diagnosticsCopyFailed": "Échec de la copie des diagnostics",
+          "5e2c7a1f84": "Lorsque vous utilisez un terminal sur votre téléphone, NASH le réduit pour l'adapter à l'écran de votre téléphone. Lorsque vous fermez l'application ou si vous la quittez, cela contrôle si elle reste à la taille du téléphone (afin que les outils CLI interactifs ne soient pas redistribués) ou si elle est redimensionnée sur votre bureau. Vous pouvez toujours utiliser Restaurer ou Tout restaurer sur la bannière pour la redimensionner manuellement."
         },
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub Releases",
@@ -8394,8 +8545,8 @@
           "3c88ec55d6": "Aucun paramètre trouvé pour \"",
           "c7ad095d96": "Chargement des paramètres...",
           "acc7bbdefd": "Appuyez à nouveau sur ESC pour quitter les paramètres",
-          "43b68e10f0": "Vous avez des modifications Git AI Author non enregistrées. Quitter les abandonnera.",
-          "17bdee4ff1": "Abandonner les modifications Git AI Author non enregistrées ?",
+          "43b68e10f0": "Des paramètres IA ne sont pas enregistrés. Ils seront abandonnés en quittant.",
+          "17bdee4ff1": "Abandonner les paramètres IA non enregistrés ?",
           "084d8fac5b": "Confidentialité et sécurité",
           "23931df7e8": "Hôtes distants",
           "mobile_group": "Mobile",
@@ -8646,8 +8797,11 @@
           "editDescription": "Mettez à jour les détails de connexion de cette machine. Les modifications s'appliquent à la prochaine connexion.",
           "addDescription": "Ajoutez une machine permanente sur laquelle vous pouvez vous connecter en SSH.",
           "editingPrefix": "Modification",
-          "remoteRuntimeHelp": "Choisissez le Node.js qui exécute NASH sur cet hôte. L'option gérée par NASH transfère sa propre version et ne nécessite pas npm ; l'option de l'hôte utilise le Node.js déjà installé.",
-          "remoteRuntimePinnedNode": "Node géré par NASH"
+          "remoteRuntimeHelp": "Quel Node.js exécute NASH sur cet hôte. Le nœud géré par NASH télécharge le sien et n'a besoin d'aucun npm ; Host Node utilise le Node.js déjà installé là-bas.",
+          "remoteRuntimePinnedNode": "Nœud géré par NASH",
+          "remoteRuntime": "Durée d'exécution",
+          "remoteRuntimeAuto": "Auto ",
+          "remoteRuntimeHostNode": "Nœud hôte"
         },
         "TasksPane": {
           "f71d8a9dd3": "Fournisseurs de tâches",
@@ -8830,7 +8984,38 @@
             "tuiDescription": "Rapports de molette discrets pour les applications de terminal plein écran."
           },
           "defaultShellDescription": "Choisissez ce que NASH ouvre dans les nouveaux volets de terminal locaux.",
-          "customShellHelp": "Saisissez le nom d'un shell disponible dans PATH ou le chemin d'un exécutable. NASH le démarre comme shell de connexion."
+          "customShellHelp": "Saisissez le nom d'un shell disponible dans PATH ou le chemin d'un exécutable. NASH le démarre comme shell de connexion.",
+          "8dbe0bc942": "Arguments du shell, un par ligne",
+          "f58cb71f53": "--rcfile\n/path/to/rcfile",
+          "48b91a3ed2": "Arguments personnalisés",
+          "7bd83fc1d0": "-l (par défaut)",
+          "5ffc4777b6": "Mode des arguments du shell",
+          "578ec79449": "Saisissez un argument par ligne. Laissez vide pour ne transmettre aucun argument.",
+          "884a006065": "Démarre le shell comme shell de connexion avec -l.",
+          "01c600daff": "Arguments du shell",
+          "e3ae5aed18": ". Basculez vers le shell système ou choisissez un exécutable sur cet hôte.",
+          "59573d0b33": "Saisissez un nom de shell présent dans le PATH ou le chemin d'un exécutable. NASH le lance comme shell de connexion.",
+          "5e06e87730": "Exécutable du shell personnalisé",
+          "c2bf02ce2f": "fish, nu ou /bin/zsh",
+          "f51cc79784": "Shell personnalisé",
+          "dd3f4c35da": "Shell système ({{value0}})",
+          "fd05fb109c": "Shell du terminal",
+          "69724e8f0c": "Choisissez ce qu'NASH ouvre pour les nouveaux panneaux de terminal locaux.",
+          "c2ddb189e7": "rcfile",
+          "73c211e979": "wrapper",
+          "4faf688f78": "connexion",
+          "44f8a56f66": "Args",
+          "af893aa433": "arguments",
+          "ddc72a4860": "défaut",
+          "d469840b75": "nushell",
+          "17ad899ba4": "bash",
+          "c9bc93d343": "zsh",
+          "0cbe5ad727": "fish",
+          "81694f1584": "terminal/borne",
+          "a909136b3f": "shell",
+          "1c29734248": "Shell utilisé pour les nouveaux panneaux de terminal",
+          "9589abc009": "Shell par défaut",
+          "5a5eac2f44": "Shell introuvable : {{value0}}"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "Prévisualiser le thème {{value0}}",
@@ -8967,7 +9152,8 @@
           "ad5d036ecc": "Impossible de demander l'autorisation d'accès au micro. La dictée vocale n'a pas été activée.",
           "f9a9cf6928": "L'autorisation d'accès au micro est requise avant d'activer la dictée vocale.",
           "1eac933202": "Panneau Confidentialité et sécurité de macOS ouvert. Réactivez la dictée après avoir accordé l'accès.",
-          "cd9fe37556": "Autorisation d'accès au micro accordée"
+          "cd9fe37556": "Autorisation d'accès au micro accordée",
+          "openAiKeyName": "Votre clé de transcription OpenAI"
         },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "Supprimer {{value0}}",
@@ -9080,6 +9266,20 @@
                 "usage": "utilisation"
               },
               "title": "Utilisation Cursor"
+            },
+            "dd75a73991": "Changement de compte facultatif pour Claude tout en préservant le contexte de conversation partagé.",
+            "75682e1b62": "Comptes Claude",
+            "zcodePlan": {
+              "title": "Plan de codage GLM",
+              "description": "Suivez l'utilisation du plan de codage GLM Z.AI ou Zhipu (BigModel). Choisissez le site et enregistrez la clé API du plan.",
+              "kw": {
+                "glm": "GLM",
+                "zai": "zaï",
+                "zhipu": "zhipu",
+                "bigmodel": "grand modèle",
+                "codingPlan": "plan de codage",
+                "rateLimit": "limite de taux"
+              }
             }
           }
         },
@@ -9171,7 +9371,12 @@
             "yolo": "yolo",
             "manual": "manuel",
             "skip": "sauter",
-            "checks": "chèques"
+            "checks": "chèques",
+            "7e15b89f6e": "serveur",
+            "ff457e1e7b": "démon",
+            "9f3becc4e8": "commun",
+            "34337ed5c7": "isoler",
+            "9a84e65118": "aperçu des agents"
           }
         },
         "appearance": {
@@ -9346,7 +9551,12 @@
                 "cursor": "cursor"
               },
               "title": "Utilisation Cursor"
-            }
+            },
+            "zcodeUsageTitle": "Utilisation du code Z",
+            "zcodeUsageDescription": "Afficher l'utilisation du quota du plan de codage ZCode dans la barre d'état.",
+            "zcode": "code z",
+            "zai": "zaï",
+            "glm": "GLM"
           }
         },
         "auto": {
@@ -10060,7 +10270,8 @@
               "9a9f8d4910": "Connectez Jira Cloud pour parcourir, créer et lier des issues.",
               "74f3063026": "{{value0}} site{{value1}} connecté",
               "statusConnected": "Connecté",
-              "statusNotConnected": "Non connecté"
+              "statusNotConnected": "Non connecté",
+              "jiraTokenName": "Votre jeton API Jira"
             }
           }
         },
@@ -10231,7 +10442,13 @@
             "72539aede4": "système",
             "51ae2183e1": "bureau",
             "0534c76311": "Interrupteur principal des notifications de bureau de NASH.",
-            "4a210b2f72": "Activer les notifications"
+            "4a210b2f72": "Activer les notifications",
+            "machines": "Machines",
+            "machinesDescription": "Choisissez les machines autorisées à afficher des notifications sur cet ordinateur, comme les machines SSH ou les serveurs associés.",
+            "host": "hôte",
+            "remote": "distant",
+            "ssh": "ssh",
+            "mute": "muet"
           }
         },
         "orchestration": {
@@ -10785,7 +11002,19 @@
               "statusline": "ligne d'état",
               "dim": "faible",
               "colors": "couleurs"
-            }
+            },
+            "d31ed1ac1c": "rcfile",
+            "d9e29543a1": "wrapper",
+            "50ba80b6dd": "connexion",
+            "36ba1a1357": "Args",
+            "5304b12d5c": "arguments",
+            "7c3ede6f12": "nushell",
+            "bf09070e31": "bash",
+            "d26257a80d": "zsh",
+            "454df22a5e": "fish",
+            "ddd5efe113": "shell",
+            "3de504994c": "Shell et arguments utilisés pour les nouveaux panneaux de terminal interactifs locaux",
+            "1733ccd3e9": "Shell du terminal"
           },
           "windows": {
             "search": {
@@ -10894,7 +11123,11 @@
           "a42f6fbdd8": "Maintient cet ordinateur et cet écran éveillés pendant que les agents travaillent. NASH demande également à cet appareil de rester éveillé lorsque le capot est fermé, sous réserve de sa politique d'alimentation.",
           "modeTitle": "Empêcher la mise en veille de l'ordinateur",
           "modeDescriptionWindows": "Choisissez Activé, Agent ou Désactivé. Le mode Agent reste éveillé tant que des agents travaillent ; le comportement à la fermeture du capot suit les paramètres d'alimentation de cet appareil.",
-          "modeDescriptionDefault": "Choisissez Activé, Agent ou Désactivé. Le mode Agent reste éveillé tant que des agents travaillent. NASH demande également à cet appareil de rester éveillé lorsque le capot est fermé, sous réserve de sa politique d'alimentation."
+          "modeDescriptionDefault": "Choisissez Activé, Agent ou Désactivé. Le mode Agent reste éveillé tant que des agents travaillent. NASH demande également à cet appareil de rester éveillé lorsque le capot est fermé, sous réserve de sa politique d'alimentation.",
+          "modeDescriptionMac": "Choisissez Activé, Agent ou Désactivé. Le mode Agent empêche la mise en veille pendant que des agents travaillent, pour que les longues tâches se terminent avec le capot ouvert. Fermer le capot met quand même ce Mac en veille.",
+          "lidNoteMac": "Empêche la mise en veille avec le capot ouvert ; fermer le capot met quand même ce Mac en veille.",
+          "lidNoteWindows": "Le comportement de fermeture du couvercle suit les paramètres d'alimentation de cet appareil.",
+          "lidNoteDefault": "NASH demande également à cet appareil de rester éveillé lorsque le couvercle est fermé, sous réserve de sa politique d'alimentation."
         },
         "agent-status-hooks-copy": {
           "7707c15abb": "Hooks de statut des agents",
@@ -10968,7 +11201,8 @@
                 "2d60ec7921": "Connectez un site Jira Cloud avec un jeton d'API, ou un Jira auto-hébergé avec un jeton d'accès personnel ou un nom d'utilisateur et mot de passe. Les identifiants sont envoyés au runtime distant sélectionné et y sont stockés avec le chiffrement pris en charge par le runtime.",
                 "977e360b71": "Connectez un site Jira Cloud avec un jeton d'API, ou un Jira auto-hébergé avec un jeton d'accès personnel ou un nom d'utilisateur et mot de passe. Les identifiants sont stockés localement et chiffrés lorsque le stockage du runtime local le prend en charge.",
                 "statusConnected": "Connecté",
-                "statusNotConnected": "Non connecté"
+                "statusNotConnected": "Non connecté",
+                "linearTokenName": "Votre jeton API linéaire"
               }
             }
           }
@@ -12125,7 +12359,8 @@
               "notConfigured": "Connectez un compte Bitbucket Cloud avec un token API Atlassian ou un token d'accès. Les variables d'environnement ORCA_BITBUCKET_* marchent aussi et ont priorité.",
               "disconnectFailed": "Impossible de supprimer l'identifiant Bitbucket enregistré.",
               "statusLoadFailed": "Impossible de rechercher un identifiant Bitbucket enregistré.",
-              "replaceCredentials": "Ajouter ou remplacer des informations d'identification"
+              "replaceCredentials": "Ajouter ou remplacer des informations d'identification",
+              "credentialName": "Votre identifiant Bitbucket"
             }
           }
         },
@@ -12215,12 +12450,49 @@
           "usageTitle": "Utilisation mensuelle du forfait"
         },
         "UnsealedCredentialNotice": {
-          "body": "{{credential}} est enregistré sans chiffrement : ce système ne dispose d'aucun trousseau système utilisable par NASH. Toute personne pouvant lire votre disque ou une sauvegarde peut lire cet identifiant. Installez et déverrouillez gnome-keyring ou kwallet, puis enregistrez-le à nouveau pour le protéger."
+          "body": "{{credential}} est stocké non crypté : ce système n'a pas de trousseau de clés de système d'exploitation qu'NASH peut utiliser. Toute personne pouvant lire votre disque ou une sauvegarde de celui-ci peut lire les informations d'identification. Installez et déverrouillez gnome-keyring ou kwallet, puis enregistrez-le à nouveau pour le sceller."
         },
         "ZcodePlanAccountsSection": {
-          "usingCliHelp": "NASH lit la clé Coding Plan dans ~/.zcode/cli/config.json. Vous pouvez plutôt enregistrer une clé d'API ci-dessous pour associer l'offre ici.",
-          "hostOnly": "Modifiez le site de l'offre et la clé d'API dans l'application de bureau sur l'ordinateur qui exécute NASH.",
-          "detailsUnavailable": "Les détails des identifiants de l'offre ne sont consultables que sur l'ordinateur qui exécute NASH."
+          "usingCliHelp": "NASH lit la clé du plan de codage à partir de ~/.zcode/cli/config.json. Enregistrez une clé API ci-dessous pour lier le plan ici à la place.",
+          "hostOnly": "Modifiez le site du plan et la clé API dans l'application de bureau sur l'ordinateur exécutant NASH.",
+          "detailsUnavailable": "Les détails des informations d'identification du plan ne sont lisibles que sur l'ordinateur exécutant NASH.",
+          "site": {
+            "bigmodel": "Zhipu · BigModel (open.bigmodel.cn)",
+            "zai": "Z.AI (z.ai)"
+          },
+          "window": {
+            "session": "5 heures",
+            "weekly": "Hebdomadaire",
+            "mcp": "MCP mensuel"
+          },
+          "resetIn": "— se réinitialise dans {{value0}}",
+          "keyRequired": "La clé API du plan de codage GLM est requise.",
+          "keySaved": "Clé API du plan de codage GLM enregistrée.",
+          "keySaveFailed": "La mise à jour des informations d'identification du plan de codage GLM a échoué.",
+          "title": "Plan de codage GLM",
+          "subtitle": "Suivez l'utilisation du plan de codage GLM Z.AI ou Zhipu (BigModel) dans la barre d'état. Enregistrez la clé API du plan ici – aucune configuration ZCode CLI n’est nécessaire.",
+          "consoleLink": "Obtenir la clé API",
+          "keyStored": "Clé API enregistrée · {{value0}}",
+          "keyStoredHelp": "Stocké localement et envoyé uniquement au site sélectionné pour les actualisations d'utilisation. Il est prioritaire sur la connexion ZCode CLI.",
+          "usingCli": "Utilisation de la connexion ZCode CLI",
+          "notConfigured": "Aucun plan de codage GLM lié",
+          "notConfiguredHelp": "Enregistrez la clé API du plan ci-dessous ou connectez-vous avec la CLI ZCode sur cet ordinateur.",
+          "refreshUsage": "Actualiser l'utilisation",
+          "siteTitle": "Planifier le site",
+          "siteDescription": "Choisissez la console à laquelle appartient votre plan de codage : Z.AI pour le site international, Zhipu BigModel pour le site continental.",
+          "keyTitle": "Clé API",
+          "keyDescription": "Collez la clé API à partir de la page Clés API de la console sélectionnée. Stocké localement, chiffré lorsque le système d'exploitation le prend en charge et envoyé uniquement à ce site pour des actualisations d'utilisation.",
+          "saved": "Enregistré",
+          "notSaved": "Non enregistré",
+          "keyPlaceholder": "Collez la clé API de votre plan de codage GLM",
+          "replace": "Remplacer",
+          "save": "Sauvegarder",
+          "forgetKey": "Clé oubliée",
+          "keyHelp": "La même clé que vos outils de codage utilisent pour le plan (par exemple Claude Code avec ANTHROPIC_BASE_URL pointé vers le site). Le fait de changer de site ci-dessus modifie l'hôte qui le reçoit.",
+          "usageTitle": "Utilisation du forfait",
+          "usageDescription": "Fenêtres de quota en direct pour le plan de codage lié, actualisées avec le cycle d'utilisation de la barre d'état.",
+          "planLevel": "Forfait : {{value0}}",
+          "siteUnavailable": "Site du plan d'hébergement indisponible"
         },
         "clef": {
           "clear": {
@@ -12437,7 +12709,7 @@
             "becomes": "devient",
             "none": "aucun",
             "noReviewers": "aucun réviseur",
-            "coordinator": "Coordinateur",
+            "coordinator": "Principal",
             "staleTitle": "Prévue pour une ancienne version",
             "accept": "Accepter",
             "edit": "Modifier et accepter",
@@ -12461,8 +12733,8 @@
             "cancel": "Annuler"
           },
           "editor": {
-            "coordinator": "Coordinateur",
-            "coordinatorModel": "Modèle du coordinateur",
+            "coordinator": "Principal",
+            "coordinatorModel": "Modèle principal",
             "taskType": "Type de tâche",
             "model": "Modèle",
             "requirement": "Exigence",
@@ -12474,10 +12746,10 @@
             "geminiExcluded": "Les modèles Gemini 4 sont exclus du routage.",
             "aliasUnpinned": "Saisissez un identifiant de modèle exact, et non un alias tel que opus ou latest.",
             "slugRejected": "Cet identifiant de modèle est retiré ou refusé. Saisissez un autre identifiant de modèle exact.",
-            "modelInvalid": "Saisissez un identifiant de modèle exact, par exemple claude-sonnet-5-5.",
-            "onlyPrimaryInherits": "Seuls la session principale Claude et les workflows Claude peuvent hériter des paramètres du coordinateur.",
-            "primaryInherits": "La session principale Claude utilise toujours les paramètres du coordinateur : choisissez Hériter pour le modèle et le raisonnement.",
-            "coordinatorStays": "Le raisonnement du coordinateur reste toujours dans la session principale Claude.",
+            "modelInvalid": "Saisissez un identifiant de modèle exact pour le CLI sélectionné.",
+            "onlyPrimaryInherits": "Seuls la session principale et les workflows Claude peuvent hériter des paramètres principaux.",
+            "primaryInherits": "La session principale utilise toujours les paramètres principaux : choisissez Hériter pour le modèle et le raisonnement.",
+            "coordinatorStays": "Le raisonnement principal reste toujours dans la session principale.",
             "ifSupportedConcrete": "« Si pris en charge » nécessite un niveau de raisonnement précis, et non Hériter.",
             "rowInvalid": "Cette ligne n'est pas valide. Vérifiez sa cible, son modèle et son niveau de raisonnement.",
             "nothingChanged": "La table active resterait inchangée. Modifiez d'abord au moins une règle de routage.",
@@ -12487,7 +12759,8 @@
             "effortFor": "Effort pour {{task}}",
             "effortRequirementFor": "Exigence d'effort pour {{task}}",
             "agent": "Agent",
-            "effort": "Effort"
+            "effort": "Effort",
+            "primaryCli": "CLI principal"
           },
           "import": {
             "title": "Importer un ensemble de modifications",
@@ -12535,7 +12808,7 @@
             "callFailedPlain": "La demande n'a pas abouti. Réessayez."
           },
           "labels": {
-            "coordinatorReasoning": "Raisonnement du coordinateur",
+            "coordinatorReasoning": "Raisonnement principal",
             "complexPlanningReasoning": "Planification et raisonnement complexes",
             "softwareEngineering": "Génie logiciel",
             "scientificExperimentValidation": "Validation d'expériences scientifiques",
@@ -12545,7 +12818,7 @@
             "highQualityWriting": "Rédaction de haute qualité",
             "fastWritingOrAlternativeDraft": "Rédaction rapide ou variante de brouillon",
             "configuredProjectWorkflow": "Workflow de projet configuré",
-            "claudePrimary": "Session principale Claude",
+            "claudePrimary": "Session principale",
             "claudeSubagent": "Sous-agent Claude",
             "claudeWorkflow": "Workflow Claude",
             "codexCli": "Codex CLI",
@@ -12571,7 +12844,7 @@
             "superseded": "Remplacée",
             "sourceBundled": "Valeur par défaut de l'application",
             "sourceUser": "Votre table",
-            "sameAsCoordinator": "Comme le coordinateur"
+            "sameAsCoordinator": "Identique au principal"
           },
           "inline": {
             "edit": "Modifier",
@@ -12580,7 +12853,7 @@
             "noReviewers": "Aucun réviseur : le travail sans contrôle automatique ne peut pas être examiné.",
             "reviewer": "Réviseur {{number}}",
             "editFor": "Modifier {{task}}",
-            "coordinator": "Coordinateur",
+            "coordinator": "Principal",
             "listLabel": "Agent pour chaque tâche",
             "save": "Enregistrer",
             "cancel": "Annuler",
@@ -12588,7 +12861,7 @@
             "modelFor": "Modèle pour {{task}}",
             "effortFor": "Effort pour {{task}}",
             "onlyIfSupported": "Uniquement si le modèle le prend en charge",
-            "coordinatorEffort": "Effort du coordinateur"
+            "coordinatorEffort": "Effort principal"
           },
           "advanced": {
             "unreadable": "Modifications suggérées illisibles : {{count}}",
@@ -12820,6 +13093,159 @@
             "effort": "effort",
             "agent": "agent"
           }
+        },
+        "NotificationHostToggles": {
+          "offCount": "{{count}} désactivées",
+          "machines": "Machines",
+          "machinesDescription": "Choisissez les machines autorisées à afficher des notifications sur cet ordinateur. Le réglage d’un serveur associé couvre aussi le travail effectué par son intermédiaire."
+        },
+        "managedServers": {
+          "row": {
+            "notRunning": "Non démarré",
+            "refresh": "Actualiser le statut",
+            "migration": "Migration : {{phase}}",
+            "update": "Mettre à jour",
+            "rollback": "Revenir en arrière",
+            "recover": "Récupérer",
+            "cancelStop": "Annuler l'arrêt",
+            "confirmStop": "Arrêter et supprimer le serveur",
+            "keep": "Laisser en marche",
+            "stop": "Arrêter…",
+            "deferredVersion": "Mise à jour vers {{version}} reportée.",
+            "confirmRestore": "Restaurer l'instantané et redémarrer",
+            "keepState": "Conserver l'état",
+            "statusUnknown": "Statut inconnu",
+            "checking": "Vérification…"
+          },
+          "title": "Serveurs gérés",
+          "description": "NASH installe et exécute un serveur sur un hôte SSH vide, et le maintient à jour.",
+          "deploy": {
+            "host": "Hôte SSH",
+            "hostPlaceholder": "Choisissez un hôte SSH vide",
+            "name": "Nom du serveur",
+            "submit": "Déployer le serveur",
+            "running": "Déploiement…"
+          },
+          "pending": {
+            "resume": "Reprendre"
+          },
+          "access": {
+            "title": "Accès SSH pour les serveurs appairés",
+            "linked": "{{name}} via SSH",
+            "unlink": "Cesser d'utiliser SSH",
+            "target": "Passer par un hôte SSH",
+            "port": "Port du serveur",
+            "link": "Utiliser SSH",
+            "linking": "Connexion…"
+          },
+          "search": {
+            "title": "Serveurs gérés",
+            "keywordSsh": "ssh"
+          },
+          "phase": {
+            "fenced": "Hôte verrouillé",
+            "staged": "Copie préparée",
+            "committed": "Copie validée",
+            "retired": "Terminé"
+          },
+          "recovery": {
+            "activate": "Une mise à jour a été interrompue",
+            "rollback": "Un retour en arrière a été interrompu",
+            "decommission": "Un arrêt a été interrompu"
+          },
+          "terminals": {
+            "unknown": "Terminaux en cours : inconnu",
+            "count": "Terminaux en cours : {{count}}"
+          },
+          "blocker": {
+            "notFound": "L'hôte SSH n'existe plus.",
+            "owned": "Cet hôte SSH appartient déjà à un serveur géré.",
+            "catalog": "Les projets de cet hôte ne peuvent pas encore être déplacés.",
+            "terminals": "Des terminaux sont encore en cours sur cet hôte ({{count}}). Fermez-les d'abord.",
+            "portForwards": "Les redirections de port enregistrées restent liées à l'hôte SSH.",
+            "dependents": "État qui ne peut pas encore être déplacé : {{kinds}}.",
+            "unverifiable": "NASH n'a pas pu lire les données enregistrées pour {{sources}}, il ne peut donc pas déterminer ce qui serait déplacé."
+          },
+          "kind": {
+            "portForward": "redirections de port",
+            "terminalLease": "terminaux",
+            "terminalRecovery": "enregistrements de récupération de terminaux",
+            "workspaceSession": "onglets ouverts et disposition",
+            "worktreeMetadata": "détails de worktree",
+            "worktreeLineage": "historique des worktrees",
+            "workspaceLineage": "historique des espaces de travail",
+            "sparsePreset": "préréglages de sparse checkout",
+            "retiredWorktreeName": "noms de worktrees retirés",
+            "automation": "automatisations",
+            "automationRun": "exécutions d'automatisations",
+            "mobileTabSelection": "sélections d'onglets mobiles",
+            "uiRouting": "paramètres de barre latérale et de filtres"
+          },
+          "loadFailed": "NASH n'a pas pu charger les hôtes SSH et les déplacements inachevés. Rouvrez les Paramètres pour réessayer.",
+          "outcome": {
+            "live": "Non effectué : des terminaux sont encore en cours sur ce serveur. Fermez-les et réessayez.",
+            "unverifiable": "Non effectué : NASH n'a pas pu confirmer ce qui tourne sur ce serveur. Réessayez lorsque l'hôte est joignable.",
+            "migration": "Non effectué : un déplacement vers ce serveur est inachevé. Reprenez-le d'abord.",
+            "deferred": "Pas encore effectué : le serveur n'est pas prêt pour cela. Réessayez plus tard.",
+            "failed": "NASH n'a pas pu terminer cette action sur le serveur. Réessayez."
+          }
+        },
+        "sshHostServer": {
+          "sourceChanged": "Modifié sur une version plus ancienne d'NASH : exécute le relais jusqu'à ce qu'il soit de nouveau déplacé vers son serveur géré.",
+          "unavailable": "Exécute le relais : un serveur NASH géré ne peut pas s'exécuter sur cet hôte ({{reason}}).",
+          "tunnelUnavailable": "Exécute le relais : le serveur SSH de cet hôte n'autorise pas les redirections de port, et NASH n'a pas non plus pu atteindre un serveur géré via la session SSH.",
+          "deploying": "Configuration d'un serveur NASH géré…",
+          "converting": "Déplacement des projets de cet hôte vers son serveur NASH géré…",
+          "connecting": "Connexion au serveur NASH géré…",
+          "updating": "Mise à jour du serveur géré…",
+          "starting": "Démarrage du serveur géré…",
+          "notServing": "Le serveur NASH géré n'est pas démarré et n'a pas pu être démarré.",
+          "hostNewer": "Exécute un serveur NASH géré issu d'une version plus récente d'NASH ; il conserve cette version.",
+          "terminalsLive": "Exécute le relais jusqu'à la fermeture de ses {{count}} terminaux ouverts, puis bascule vers un serveur géré.",
+          "terminalsLive_one": "Exécute le relais jusqu'à la fermeture de son {{count}} terminal ouvert, puis bascule vers un serveur géré.",
+          "terminalsLive_other": "Exécute le relais jusqu'à la fermeture de ses {{count}} terminaux ouverts, puis bascule vers un serveur géré.",
+          "terminalsUnverifiable": "Exécute le relais : NASH n'a pas pu confirmer que ses terminaux sont fermés. Il bascule lors d'une prochaine connexion.",
+          "retry": "Exécute le relais pour cette session ; il bascule vers un serveur géré lors d'une prochaine connexion.",
+          "failureDetails": "Détails",
+          "unavailableUnknown": "Exécute le relais : un serveur NASH géré ne peut pas s'exécuter sur cet hôte.",
+          "cause": {
+            "unsupportedHost": "NASH n'a pas de build de serveur pour ce système",
+            "artifactsUnavailable": "cette version d'NASH n'inclut pas le serveur",
+            "libcUnidentified": "NASH n'a pas pu identifier les bibliothèques système de l'hôte",
+            "runtimeSelfTest": "le runtime du serveur a échoué à son auto-test",
+            "securitySoftware": "un logiciel de sécurité a modifié le runtime du serveur",
+            "nativePreflight": "il manque à l'hôte des bibliothèques système dont le serveur a besoin"
+          },
+          "updateDeferredLater": "Exécute un serveur NASH géré ; il se met à jour lors d'une prochaine connexion.",
+          "updateFailedPrevious": "Exécute un serveur NASH géré sur sa version précédente ; sa mise à jour a échoué.",
+          "terminalsLiveUncounted": "Exécute le relais jusqu'à la fermeture de ses terminaux ouverts, puis bascule vers un serveur géré.",
+          "refusedBlocked": "Non basculé vers un serveur géré : un élément de cet hôte bloque le déplacement.",
+          "terminalsElsewhere": "Exécute le relais tant que {{count}} terminaux ouverts sur cet hôte par un autre bureau ou une autre session NASH sont en cours.",
+          "terminalsElsewhere_one": "Exécute le relais tant que {{count}} terminal ouvert sur cet hôte par un autre bureau ou une autre session NASH est en cours.",
+          "terminalsElsewhere_other": "Exécute le relais tant que {{count}} terminaux ouverts sur cet hôte par un autre bureau ou une autre session NASH sont en cours.",
+          "terminalsElsewhereUncounted": "Exécute le relais tant que des terminaux ouverts sur cet hôte par un autre bureau ou une autre session NASH sont en cours."
+        },
+        "deltaMove": {
+          "action": "Déplacer les nouveaux projets…",
+          "title": "Déplacer les nouveaux projets",
+          "description": "Une version plus ancienne d'NASH a modifié cet hôte après son déplacement vers son serveur géré. Cela ajoute au serveur ce qu'elle a créé ; rien n'est jamais fusionné par-dessus ce que le serveur contient déjà.",
+          "added": "Ajouté au serveur",
+          "nothingNew": "Rien de nouveau à ajouter.",
+          "notReflected": "Modifié ou supprimé sur la version plus ancienne ; le serveur conserve sa propre copie",
+          "cancel": "Annuler",
+          "confirm": "Déplacer les nouveaux projets",
+          "kind": {
+            "repository": "Dépôt {{name}}",
+            "folder": "Dossier {{name}}",
+            "group": "Groupe de projets {{name}}"
+          }
+        },
+        "keepServer": {
+          "action": "Conserver la version du serveur…",
+          "title": "Conserver la version du serveur",
+          "description": "Cet hôte revient à son serveur géré tel quel. Ce que la version plus ancienne d'NASH a ajouté ou modifié ici n'est pas déplacé ; cela reste uniquement dans les paramètres enregistrés de cet ordinateur jusqu'à leur nettoyage.",
+          "cancel": "Annuler",
+          "confirm": "Conserver la version du serveur"
         }
       },
       "right": {
@@ -13966,7 +14392,8 @@
             "fca915a67a": "Les éléments distants sont définitivement supprimés, sans retour arrière. Les éléments locaux sont déplacés dans {{value0}}."
           },
           "useFileExplorerHandlers": {
-            "32cd9fd991": "Impossible d'ouvrir la cible du symlink"
+            "32cd9fd991": "Impossible d'ouvrir la cible du symlink",
+            "folderLinksOutsideProject": "Ce dossier pointe en dehors du projet ; il ne peut pas être ouvert ici."
           },
           "useFileExplorerImport": {
             "25919b2050": "Ignoré : {{value0}} {{value1}}.",
@@ -14398,7 +14825,7 @@
           "69af7e9c1c": "n'est pas encore dans votre PATH. NASH le définira comme valeur par défaut et vous pourrez l'installer à tout moment.",
           "1eee1c7bd8": "Aucun agent détecté dans votre PATH. Choisissez-en un à installer plus tard, ou continuez avec un terminal vide.",
           "hideAgents": "Masquer les agents",
-          "showMoreAgents": "Afficher {{value0}} autres agents→",
+          "showMoreAgents": "Afficher {{value0}} autres agents →",
           "yoloModeLabel": "Mode Yolo",
           "yoloPermissionsDescription": "Les agents exécutent des commandes et modifient des fichiers sans demander, et certains contournent aussi leur sandbox. À utiliser uniquement dans des projets de confiance."
         },
@@ -14474,7 +14901,7 @@
           "c47e1bd149": "agent",
           "windowsTerminalTitle": "Définir les valeurs par défaut du terminal Windows",
           "windowsTerminalSubtitle": "Choisissez le shell PAR DÉFAUT des nouveaux volets et le comportement du clic droit dans le terminal.",
-          "agentSubtitleNash": "Choisissez l'agent des terminaux que vous ouvrez vous-même. NASH exécute ses tâches via Claude Code. Vous pouvez changer à tout moment."
+          "agentSubtitleNash": "Choisissez l’agent des terminaux que vous ouvrez vous-même. Définissez l’agent principal des tâches NASH dans Paramètres → Routage des tâches."
         },
         "OnboardingFooter": {
           "ba58547306": "Retour",
@@ -15203,8 +15630,8 @@
                       "workOnTwoTasks": "Travaillez sur deux tâches à la fois",
                       "agentSkillsName": "Donnez aux agents les skills NASH",
                       "agentSkillsDescription": "Installez les skills que les agents utilisent pour piloter le navigateur de NASH, contrôler votre ordinateur et coordonner des tâches en plusieurs étapes.",
-                      "claudeCodeName": "Configurer Claude Code",
-                      "claudeCodeDescription": "NASH exécute chaque tâche via une session Claude Code. Installez Claude Code et connectez-vous une première fois depuis un terminal.",
+                      "claudeCodeName": "Configurer un agent principal",
+                      "claudeCodeDescription": "Installez Claude Code ou Codex pour la session principale, puis connectez-vous depuis un terminal.",
                       "clefName": "Connecter Clef",
                       "clefDescription": "Clef classe chaque tâche par type pour que NASH puisse choisir son agent et son modèle. Ajoutez vos identifiants Clef, puis vérifiez-les.",
                       "dotName": "Connecter dot",
@@ -15287,7 +15714,10 @@
                 "c7b90c140b": "Compte Codex ajouté.",
                 "29d0653961": "Se connecter",
                 "945865332e": "Connexion en cours",
-                "accountStatusUnknown": "Statut du compte inconnu"
+                "accountStatusUnknown": "Statut du compte inconnu",
+                "d90d2e1f6d": "Suivez l'utilisation par session et par semaine.",
+                "9ddeb558f9": "Compte Claude ajouté.",
+                "4e71d72912": "Échec de la connexion à Claude."
               },
               "UsagePage": {
                 "64265cb295": "29 % utilisés sur 5 h",
@@ -15357,8 +15787,8 @@
             "6e3d62b816": "Ouvrir l'accès complet au disque"
           },
           "FeatureWallSetupNashActions": {
-            "claudeCodeFound": "Claude Code est installé sur cet ordinateur.",
-            "claudeCodeMissing": "Claude Code est introuvable. Installez-le, exécutez claude une première fois dans un terminal pour vous connecter, puis vérifiez à nouveau.",
+            "claudeCodeFound": "Claude Code ou Codex est installé sur cet ordinateur.",
+            "claudeCodeMissing": "Installez Claude Code ou Codex, connectez-vous depuis un terminal, puis vérifiez à nouveau.",
             "checkAgain": "Vérifier à nouveau",
             "openTaskRouting": "Ouvrir le routage des tâches",
             "openDotSettings": "Ouvrir les paramètres de Dot",
@@ -15616,7 +16046,12 @@
         "CsvViewer": {
           "eedd0d37a7": "colonnes",
           "ac31d2cd60": "lignes",
-          "a233d55b77": "Fichier vide"
+          "a233d55b77": "Fichier vide",
+          "delimiterComma": "Virgule",
+          "delimiterSemicolon": "Point-virgule",
+          "delimiterTab": "Languette",
+          "delimiterAuto": "Automatique ({{delimiter}})",
+          "delimiter": "Délimiteur"
         },
         "DiffNotesSendMenu": {
           "f1aa04b5cf": "Ce fichier",
@@ -16148,7 +16583,9 @@
           }
         },
         "richMarkdownLargeTextPaste": {
-          "tooLarge": "Le collage est trop volumineux."
+          "tooLarge": "Le collage est trop volumineux.",
+          "stopped": "La grosse pâte s'est arrêtée avant d'avoir fini.",
+          "cancelled": "Gros collage annulé car sa cible d'origine a changé."
         },
         "ExternalFileChangeBanner": {
           "7c41e90d12": "Ce fichier a été modifié sur le disque alors que vous avez des modifications non enregistrées. L'enregistrement écrasera le contenu plus récent présent sur le disque.",
@@ -16249,6 +16686,13 @@
           "a0af0198aa": "Les différences importantes ne sont pas rendues par défaut.",
           "c3d9f4a712": "La taille de cette différence n'est pas encore connue, elle se charge donc sur demande.",
           "f7fa7a40d0": "Charge différentielle"
+        },
+        "richMarkdownImageInsertionFeedback": {
+          "importedFileKept": "Insertion d'image annulée car la destination a changé. Le fichier importé a été conservé.",
+          "destinationChanged": "Insertion d'image annulée car la destination a changé. Essayer à nouveau."
+        },
+        "useMarkdownDocuments": {
+          "listFailed": "Impossible de lister les documents Markdown."
         }
       },
       "diff": {
@@ -16627,7 +17071,8 @@
             "9c6ce0632a": "Capture d'écran de l'élément sélectionné",
             "50f7114f99": "Vérifiez avant de joindre. Le contexte de page capturé peut inclure du contenu visible du site.",
             "f3575229df": "Capturer",
-            "405bb315da": "Sans titre"
+            "405bb315da": "Sans titre",
+            "accessibleNameOpenQuote": "\""
           },
           "browser": {
             "address": {
@@ -17305,11 +17750,17 @@
             "unverifiable": "Aucune mise à jour récente",
             "unconfirmed": "Impossible de confirmer",
             "permission": "A besoin d'attention"
-          }
+          },
+          "threadListOptionsActive": "Options de la liste des fils ({{value0}} actifs)",
+          "activityOptionsActive": "Options d'activité ({{value0}})"
         },
         "ActivityScopeFilterControls": {
           "resetScope": "Afficher tous les hôtes et projets",
-          "hiddenCount": "{{value0}} masqué"
+          "hiddenCount": "{{value0}} masqué",
+          "hideAutomationCreated": "Masquer ceux créés par l'automatisation",
+          "hideCliCreated": "Masquer ceux créés par le CLI",
+          "hideOtherClientsAria": "Masquer les agents dans les espaces de travail créés par d'autres clients NASH sur des serveurs distants partagés",
+          "hideOtherClients": "Masquer les agents d'autres clients"
         },
         "ActivityThreadRow": {
           "clearNotification": "Effacer la notification"
@@ -17334,6 +17785,25 @@
           "workspace": "Espace de travail",
           "copyPath": "Copier le chemin",
           "jumpToWorkspace": "Accéder à l'espace de travail"
+        },
+        "ActivityThreadContextMenu": {
+          "copyTitle": "Copier le titre",
+          "copyPath": "Copier le chemin",
+          "open": "Ouvrir",
+          "markRead": "Marquer comme lu",
+          "markUnread": "Marquer comme non lu",
+          "goToWorkspace": "Aller à l'espace de travail",
+          "clear": "Retirer de la liste",
+          "agentSection": "Agent",
+          "markManyRead_one": "Marquer {{count}} agent comme lu",
+          "markManyRead_other": "Marquer {{count}} agents comme lus",
+          "markManyUnread_one": "Marquer {{count}} agent comme non lu",
+          "markManyUnread_other": "Marquer {{count}} agents comme non lus",
+          "clearMany_one": "Retirer {{count}} agent de la liste",
+          "clearMany_other": "Retirer {{count}} agents de la liste",
+          "markManyRead": "Marquer {{count}} agents comme lus",
+          "markManyUnread": "Marquer {{count}} agents comme non lus",
+          "clearMany": "Retirer {{count}} agents de la liste"
         }
       },
       "confirmation": {
@@ -17716,7 +18186,8 @@
             "highlight": "Surligneur",
             "pen": "Stylo",
             "rect": "Rectangle",
-            "text": "Texte"
+            "text": "Texte",
+            "eraser": "Gomme"
           },
           "undo": "Annuler",
           "widthOption": "{{value0}} px"
@@ -17895,8 +18366,8 @@
         "listLabel": "Des discussions qui reprendraient",
         "dontAskAgain": "Ne plus demander (reprendre automatiquement)",
         "dontAskAgainHint": "Vous pouvez désactiver cette option dans Paramètres → Expérimental → Chat UI.",
-        "continuedOne": "J'ai repris 1 chat et lui ai demandé de continuer",
-        "continuedMany": "J'ai repris les discussions {{value0}} et leur ai demandé de continuer",
+        "continuedOne": "1 chat a été repris",
+        "continuedMany": "{{value0}} chats ont été repris",
         "selectAgent": "Reprendre le chat {{value0}} \"{{value1}}\" dans {{value2}}",
         "resumeSelected": "Reprendre les discussions {{value0}}",
         "resumeSelectedOne": "Reprendre 1 discussion",
@@ -17993,8 +18464,8 @@
       "NativeChatResumeFailureGuidance": {
         "unconfirmed": "NASH n'a pas pu confirmer que le message “continue” a été livré. Ouvrez le chat et vérifiez avant d'en envoyer un autre.",
         "superseded": "Ouvrez le chat et répondez. Du nouveau travail est arrivé juste après le redémarrage, donc NASH n'a pas envoyé son message “continue”.",
-        "conflict": "Une autre fenêtre NASH ou un autre terminal détient toujours cette session. Fermez l’autre fenêtre NASH ou le terminal concerné, puis réessayez.",
-        "ownershipUnknown": "NASH détermine encore quel processus détient cette session. Patientez un instant, puis réessayez.",
+        "conflict": "Ce chat est ouvert dans une autre fenêtre NASH ou un terminal. Fermez-le là-bas, puis réessayez.",
+        "ownershipUnknown": "Ce chat n’est pas encore prêt à reprendre. Patientez un instant, puis réessayez.",
         "notAttached": "Le chat ne s'est pas reconnecté. Réessayez ou ouvrez-le pour démarrer un nouveau tour.",
         "dispatchRejected": "L'agent a refusé le message “continue”. Ouvrez le chat et envoyez-en un vous-même.",
         "unsupported": "NASH ne peut pas reprendre ce chat. Ouvrez-le pour voir où il s'est arrêté.",
@@ -18055,6 +18526,28 @@
         "retry": "Réessayer",
         "connect": "Se connecter",
         "connecting": "Connexion…"
+      },
+      "managedServerMove": {
+        "offer": "Déplacez {{host}} vers un serveur NASH géré pour des connexions plus fiables. Ses {{count}} terminaux ouverts redémarreront.",
+        "offer_one": "Déplacez {{host}} vers un serveur NASH géré pour des connexions plus fiables. Son {{count}} terminal ouvert redémarrera.",
+        "offer_other": "Déplacez {{host}} vers un serveur NASH géré pour des connexions plus fiables. Ses {{count}} terminaux ouverts redémarreront.",
+        "moved": "{{host}} exécute désormais un serveur NASH géré.",
+        "refusedLive": "Non déplacé : {{count}} terminaux sur {{host}} sont encore en cours.",
+        "refusedLive_one": "Non déplacé : {{count}} terminal sur {{host}} est encore en cours.",
+        "refusedLive_other": "Non déplacé : {{count}} terminaux sur {{host}} sont encore en cours.",
+        "refusedUnverifiable": "Non déplacé : NASH n'a pas pu confirmer que {{count}} terminaux sur {{host}} se sont arrêtés.",
+        "refusedUnverifiable_one": "Non déplacé : NASH n'a pas pu confirmer que {{count}} terminal sur {{host}} s'est arrêté.",
+        "refusedUnverifiable_other": "Non déplacé : NASH n'a pas pu confirmer que {{count}} terminaux sur {{host}} se sont arrêtés.",
+        "stayed": "{{host}} exécute toujours le relais. La section Hôtes SSH des Paramètres en indique la raison.",
+        "failed": "Impossible de déplacer {{host}} : {{reason}}",
+        "running": "Déplacement de {{host}} vers un serveur NASH géré…",
+        "title": "Déplacer vers un serveur géré",
+        "confirm": "Déplacer",
+        "notNow": "Pas maintenant",
+        "close": "Fermer",
+        "offerUncounted": "Déplacez {{host}} vers un serveur NASH géré pour des connexions plus fiables. Ses terminaux ouverts redémarreront.",
+        "refusedUnverifiableUncounted": "Non déplacé : NASH n'a pas pu confirmer que les terminaux sur {{host}} se sont arrêtés.",
+        "retry": "Réessayer"
       }
     },
     "main": {
@@ -18138,7 +18631,22 @@
         "providerRateLimited": "{{agent}} est limité en débit et réessaie.",
         "providerRetrying": "{{agent}} a rencontré un problème temporaire et réessaie.",
         "providerRetryingQuoted": "{{agent}} réessaie : {{detail}}.",
-        "previousExitUnverifiable": "L'exécution précédente de {{agent}} est peut-être toujours en cours. Vos messages seront envoyés dès qu'elle s'arrêtera."
+        "previousExitUnverifiable": "Impossible d'arrêter l'exécution précédente de {{agent}}.",
+        "sendAgainToTryOnceMore": "Renvoyez votre message pour réessayer.",
+        "editSavedArguments": "Modifiez-les dans Paramètres > Agents > Arguments.",
+        "launchFolderMissing": "Le dossier dans lequel ce chat s'exécutait n'existe plus. Restaurez-le pour poursuivre ce chat.",
+        "historyInOtherAccount": "L'historique de ce chat se trouve dans un autre compte Claude. Revenez à ce compte pour le poursuivre.",
+        "claudeAccountFolderMissing": "Le dossier du compte Claude sélectionné est introuvable. Reconnectez-vous à ce compte ou choisissez-en un autre.",
+        "claudeAccountSetupFailed": "Le compte Claude sélectionné n'a pas pu être configuré. Réessayez ou choisissez un autre compte.",
+        "agentCommandNotRunnable": "{{agent}} : la Commande dans Paramètres → Agents doit être le chemin ou le nom d'un programme qu'NASH peut trouver, sans arguments ni variables. Modifiez-la ou réinitialisez-la.",
+        "argumentsMissingValue": "Les arguments enregistrés nécessitent une valeur pour {{option}}.",
+        "argumentsMultipleValues": "Les arguments enregistrés donnent plusieurs valeurs à {{option}}.",
+        "argumentsPositionalPrompt": "Les arguments enregistrés contiennent un message.",
+        "argumentsUnsupportedOption": "Les arguments enregistrés contiennent une option non prise en charge ({{option}}).",
+        "providerRetryNumber": "Nouvelle tentative {{attempt}}.",
+        "providerRetryNumberOf": "Nouvelle tentative {{attempt}} sur {{maxRetries}}.",
+        "providerRetryLastError": "Dernière erreur : {{detail}}.",
+        "sessionNotRestored": "{{agent}} n'a pas pu rouvrir sa session précédente, cette discussion continue donc dans une nouvelle. {{agent}} ne se souvient pas des messages précédents."
       },
       "writeNotice": {
         "notDoneReadHistory": "L'historique de ce chat n'a pas pu être chargé.",
@@ -18193,14 +18701,19 @@
         "recordUnreadable": "NASH n'a pas pu lire l'état enregistré de ce chat.",
         "chatNotFound": "NASH ne trouve pas ce chat.",
         "startNewChat": "Démarrez un nouveau chat pour continuer.",
-        "tryAgain": "Réessayez."
+        "tryAgain": "Réessayez.",
+        "chatSavedByNewerOrca": "Ce chat a été enregistré par une version plus récente d'NASH.",
+        "updateOrcaToOpenChat": "Mettez à jour NASH pour l'ouvrir.",
+        "cannotRunHere": "NASH ne peut pas exécuter cet agent dans un chat ici.",
+        "attachmentExpired": "Cette pièce jointe a expiré.",
+        "reattachFile": "Retirez-la et joignez-la à nouveau."
       },
       "composer": {
         "imageUnsupported": "Le collage d'image n'est pas pris en charge pour cet agent.",
         "send": "Envoyer",
         "noPty": "Aucun terminal actif — rebasculez pour vous reconnecter.",
         "locked": "La saisie est détenue par un autre appareil.",
-        "placeholder": "Envoyer un message…",
+        "placeholder": "Demandez ce que vous voulez, @ pour mentionner des fichiers, / pour les commandes",
         "mentionHint": "Fichier référencé :",
         "attach": "Joindre un fichier",
         "startDictation": "Démarrer la dictée",
@@ -18212,7 +18725,7 @@
         "skills": "Skills",
         "loadingSkills": "Chargement des skills...",
         "skillsLoaded": "Skills chargées",
-        "skillsUnavailableHost": "Les skills ne sont pas disponibles dans les chats SSH",
+        "skillsUnavailableHost": "Les skills ne peuvent pas être listées dans les chats SSH",
         "skillsLoadFailed": "Impossible de charger les skills",
         "retrySkills": "Réessayer",
         "skillCommandCollision": "Aussi un nom de skill - l'agent décide",
@@ -18258,7 +18771,29 @@
         "imagePreviewUnavailable": "Aperçu indisponible",
         "workspaceAttachmentMismatch": "Les fichiers ne peuvent être joints qu'à leur espace de travail source.",
         "attachmentOwnerChanged": "Cet espace de travail a changé d'hôte lors de la connexion : supprimez à nouveau les fichiers.",
-        "attachmentUnreadable": "Impossible de lire les fichiers supprimés."
+        "attachmentUnreadable": "Impossible de lire les fichiers supprimés.",
+        "loadingFiles": "Chargement des fichiers...",
+        "noFiles": "Aucun fichier correspondant",
+        "filesLoadFailed": "Impossible de charger les fichiers",
+        "attachFailed": "Impossible de joindre {{files}}.",
+        "attachFailedBecause": "Impossible de joindre {{files}}. {{reason}}",
+        "uploadingFile": "Envoi de {{name}}…",
+        "draftNotSaved": "Ce brouillon n'a pas encore pu être enregistré. NASH continue d'essayer.",
+        "imageNotBroughtBack": "L'image {{name}} n'a pas pu être récupérée avec ce brouillon. Joignez-la à nouveau ou retirez-la.",
+        "pastedImageNotBroughtBack": "Cette image collée n'a pas pu être récupérée avec ce brouillon. Retirez-la, puis collez-la à nouveau si vous en avez encore besoin.",
+        "removeImageToSend": "Une image n'a pas pu être récupérée. Retirez-la pour envoyer.",
+        "removeImagesToSend": "Certaines images n'ont pas pu être récupérées. Retirez-les pour envoyer.",
+        "imageAttachAgainLabel": "Joindre à nouveau",
+        "pastedImageNotKeptLabel": "Non conservée",
+        "searchModels": "Rechercher des modèles…",
+        "noModelsMatch": "Aucun modèle ne correspond à votre recherche.",
+        "copyImage": "Copier l’image",
+        "copyImageFailed": "Impossible de copier l’image",
+        "copyImageTooLarge": "L’image est trop volumineuse pour être copiée.",
+        "imageCopied": "Image copiée",
+        "tooManyAttachments": "Joignez {{value0}} fichiers maximum à la fois.",
+        "pasteFailed": "Échec du collage.",
+        "commandAttachmentsUnsupported": "Retirez les pièces jointes avant d'utiliser une commande de session de chat."
       },
       "tool": {
         "running": "En cours…",
@@ -18328,7 +18863,35 @@
         "runLivePlanOne": "Mise à jour du plan",
         "runLivePlanMany": "Mettre à jour le plan {{value0}} fois",
         "runLiveToolOne": "Utiliser 1 outil",
-        "runLiveToolMany": "Utiliser les outils {{value0}}"
+        "runLiveToolMany": "Utiliser les outils {{value0}}",
+        "interruptedCount": "{{value0}} interrompu(s)",
+        "interruptedCallsLabel": "Appels d'outil interrompus : {{value0}}",
+        "row": {
+          "running": "Exécution",
+          "reading": "Lecture",
+          "editing": "Modification",
+          "searching": "Recherche",
+          "searchingWeb": "Recherche sur le web",
+          "fetching": "Récupération",
+          "listed": "A listé",
+          "listing": "Liste",
+          "ran": "A exécuté",
+          "read": "A lu",
+          "edited": "A modifié",
+          "searched": "A recherché",
+          "searchedWeb": "A recherché sur le web",
+          "fetched": "A récupéré",
+          "added": "A ajouté",
+          "deleted": "A supprimé",
+          "renamed": "A renommé",
+          "subagent": "Sous-agent",
+          "triedRead": "A tenté de lire",
+          "triedEdit": "A tenté de modifier",
+          "triedSearch": "A tenté de rechercher",
+          "triedList": "A tenté de lister",
+          "triedFetch": "A tenté de récupérer",
+          "triedSearchWeb": "A tenté de rechercher sur le web"
+        }
       },
       "status": {
         "responding": "L'agent répond",
@@ -18338,7 +18901,10 @@
         "workedFor": "A travaillé pendant {{value0}}",
         "interruptedAfter": "Interrompu après {{value0}}",
         "failedAfter": "Échoué après {{value0}}",
-        "toggleDetails": "Basculer les détails du tour"
+        "toggleDetails": "Basculer les détails du tour",
+        "stopping": "Arrêt en cours…",
+        "queueAfterStop": "Mettez un message en file d'attente pour l'exécuter après l'arrêt",
+        "sendAfterStop": "Envoyez un message pour l'exécuter après l'arrêt"
       },
       "jumpToLatest": "Aller au dernier message",
       "toggle": {
@@ -18395,7 +18961,9 @@
         "askRule": "Demander la règle",
         "plan": {
           "file": "Dossier de planification"
-        }
+        },
+        "needsNewerOrca": "Cette demande nécessite une version plus récente d'NASH.",
+        "needsAccess": "Nécessite l'accès à"
       },
       "launchPromptNotDelivered": "Non livré — vérifiez le terminal",
       "taskList": {
@@ -18425,14 +18993,22 @@
         "cancelled": "Annulé",
         "resolved": "Résolu",
         "resolver": "Répondu le {{device}}",
-        "cancelledBy": "Annulé le {{device}}"
+        "cancelledBy": "Annulé le {{device}}",
+        "emptyAnswer": "Réponse vide"
       },
       "notices": {
         "compaction": "Contexte compacté",
         "details": "Détails",
         "plan": "Plan",
         "historyRepaired": "Une partie de l'historique de ce chat n'a pas pu être chargée.",
-        "historyItemTooLarge": "Cette partie du chat était trop volumineuse pour être affichée."
+        "historyItemTooLarge": "Cette partie du chat était trop volumineuse pour être affichée.",
+        "stoppedBeforeStart": "Arrêté manuellement",
+        "dismiss": "Ignorer",
+        "copyError": "Copier l'erreur",
+        "orcaStopUpdate": "NASH sur {{machine}} a redémarré pour une mise à jour pendant que cette réponse était en cours.",
+        "orcaStopQuit": "NASH sur {{machine}} a été fermé pendant que cette réponse était en cours.",
+        "orcaStopCrash": "NASH sur {{machine}} s'est arrêté de manière inattendue pendant que cette réponse était en cours.",
+        "orcaStopCanContinue": "Vous pouvez continuer dans cette conversation."
       },
       "providerFrame": {
         "byteLength": "{{value0}} octets"
@@ -18467,15 +19043,21 @@
         "stateBlocked": "bloqué",
         "stateDone": "fait",
         "stateIdle": "arrêté",
-        "stateUnverifiable": "aucune mise à jour récente",
-        "stateUnverifiableCount": "{{value0}} sans mise à jour récente",
+        "stateUnverifiable": "statut indisponible",
+        "stateUnverifiableCount": "{{value0}} au statut indisponible",
         "reasonWaiting": "a besoin d'approbation",
         "reasonBlocked": "échoué",
         "groupAgents": "Agents",
         "groupShell": "Coquille",
         "groupMonitors": "Moniteurs",
         "groupWorkflows": "Flux de travail",
-        "groupTasks": "Tâches"
+        "groupTasks": "Tâches",
+        "stateWorkingCount": "{{value0}} en cours",
+        "stateMonitoringCount": "{{value0}} en surveillance",
+        "stateWaitingCount": "{{value0}} en attente",
+        "stateBlockedCount": "{{value0}} à l'état bloqué",
+        "stateDoneCount": "{{value0}} à l'état terminé",
+        "stateIdleCount": "{{value0}} à l'état arrêté"
       },
       "railLabel": "Vos messages",
       "railImageMessage": "Image jointe",
@@ -18493,12 +19075,12 @@
           "idle": "idle",
           "failed": "échoué",
           "stopped": "arrêté",
-          "unverifiable": "aucune mise à jour récente",
+          "unverifiable": "statut indisponible",
           "workingCount": "{{value0}} fonctionne",
           "idleCount": "{{value0}} inactif",
           "failedCount": "{{value0}} a échoué",
           "stoppedCount": "{{value0}} arrêté",
-          "unverifiableCount": "{{value0}} sans mise à jour récente"
+          "unverifiableCount": "{{value0}} au statut indisponible"
         },
         "startedOne": "A lancé 1 sous-agent",
         "startedN": "Lancement des sous-agents {{value0}}",
@@ -18565,12 +19147,81 @@
         "queuePausedRestarted": "File d'attente en pause, car NASH a redémarré",
         "queuePausedCleared": "File d'attente en pause après l'effacement de la conversation",
         "queuePaused": "File d'attente en pause",
-        "resume": "Reprendre"
+        "resume": "Reprendre",
+        "sendConfirmTitle": "Envoyer le message ?",
+        "sendConfirmBody": "Vous êtes sur le point d'envoyer un message. Voulez-vous effacer les {{count}} messages déjà en file d'attente ?",
+        "sendConfirmBody_one": "Vous êtes sur le point d'envoyer un message. Voulez-vous effacer {{count}} message déjà en file d'attente ?",
+        "sendConfirmBody_other": "Vous êtes sur le point d'envoyer un message. Voulez-vous effacer les {{count}} messages déjà en file d'attente ?",
+        "sendConfirmClear": "Vider la file d'attente",
+        "sendConfirmSend": "Envoyer le message",
+        "from": "De {{names}}"
       },
       "structuredSessionHostDeclined": "{{value0}} ouvert dans un terminal",
       "structuredSessionHostDeclinedDescription": "Ce serveur ne peut pas exécuter de discussion {{value0}} dans cet espace de travail.",
       "structuredSessionHostUnreachable": "Impossible de joindre {{value0}}",
-      "structuredSessionHostUnreachableDescription": "NASH n'a pas ouvert de discussion {{value0}}. Vérifiez la connexion au serveur et réessayez."
+      "structuredSessionHostUnreachableDescription": "NASH n'a pas ouvert de discussion {{value0}}. Vérifiez la connexion au serveur et réessayez.",
+      "reasoning": "Raisonnement",
+      "transcriptLabel": "Conversation",
+      "prompt": {
+        "collapse": "Réduire",
+        "expand": "Développer"
+      },
+      "context": {
+        "unavailable": "L'utilisation du contexte n'est pas encore connue. Elle sera disponible après la prochaine réponse de l'agent.",
+        "summary": "Contexte : {{used}} / {{window}} tokens ({{percent}} %), estimation basée sur la dernière réponse.",
+        "used": "Contexte : {{used}} tokens utilisés, estimation basée sur la dernière réponse.",
+        "unreported": "L'utilisation du contexte n'est pas disponible pour cette session."
+      },
+      "agentMessage": {
+        "messageFrom": "Message de",
+        "unnamedSender": "un agent"
+      },
+      "addSelectionToChat": "Ajouter au chat",
+      "messageSending": "Envoi…",
+      "userMessage": {
+        "showFull": "Afficher le message complet",
+        "showLess": "Afficher moins"
+      },
+      "thought": "A réfléchi",
+      "thoughtForDuration": "A réfléchi pendant {{duration}}",
+      "hostOutage": {
+        "offline": "{{hostName}} est hors ligne",
+        "reconnecting": "{{hostName}} se reconnecte…",
+        "reconnect": "Reconnecter"
+      },
+      "interruptedContinue": {
+        "continue": "Continuer",
+        "failed": "Impossible de poursuivre cette conversation. Réessayez ou envoyez un message.",
+        "explanation": "Continuez, et l'agent vérifiera d'abord si sa dernière étape s'est terminée."
+      },
+      "rewind": {
+        "unsupported": "Ce chat ne peut pas revenir à un message antérieur.",
+        "historyNotPaginated": "Ce chat Codex plus ancien ne peut pas revenir à un message antérieur. Démarrez un nouveau chat pour utiliser « Revenir ici ».",
+        "busy": "Disponible une fois que l'agent est inactif et que plus rien dans ce chat n'attend votre action.",
+        "staleEpoch": "La conversation a changé. Examinez les derniers messages et réessayez.",
+        "invalidTarget": "La conversation ne peut pas revenir à ce message. Rien n'a été modifié.",
+        "historyLimit": "Cette conversation est trop longue pour y revenir. Rien n'a été modifié.",
+        "providerRefused": "L'agent n'a pas pu revenir à ce message.",
+        "proofMismatch": "L'historique de l'agent ne correspondait pas à ce chat. Vérifiez la conversation avant de continuer.",
+        "outcomeUnknown": "NASH n'a pas pu confirmer si la conversation est revenue à un message antérieur. NASH vérifie la conversation avant l'envoi de votre prochain message.",
+        "outcomeUnknownReturned": "NASH n'a pas pu confirmer si la conversation est revenue à ce message. Votre message est de retour dans le composer, et NASH vérifie la conversation avant l'envoi de votre prochain message.",
+        "timeout": "Le chat ne s'est pas actualisé après le retour à ce message. Rouvrez-le pour voir les derniers échanges.",
+        "refused": "NASH n'a pas pu revenir à ce message. Vérifiez la conversation avant de continuer.",
+        "unavailable": "Attendez que le chat finisse de se connecter.",
+        "pending": "Attendez que la conversation revienne au message antérieur.",
+        "title": "Revenir ici ?",
+        "confirmation": "Abandonner ce message et tout ce qui suit ? Le message revient dans le composer pour que vous puissiez le modifier et le renvoyer. Les modifications de fichiers sur le disque sont conservées.",
+        "confirm": "Revenir",
+        "cancel": "Annuler",
+        "action": "Revenir ici"
+      },
+      "visualUnavailable": "Visualisation indisponible",
+      "visualLoading": "Chargement de la visualisation",
+      "visualOpenInSidebar": "Ouvrir dans la barre latérale",
+      "visualClose": "Fermer la visualisation",
+      "claudeSignIn": {
+        "signingIn": "Connexion…"
+      }
     },
     "tab": {
       "bar": {
@@ -18830,6 +19481,16 @@
         "workspaceReadyToast": "L'espace de travail {{name}} est prêt",
         "goToWorktree": "Aller au worktree",
         "goToWorkspace": "Aller à l'espace de travail"
+      },
+      "delete": {
+        "changes": {
+          "permanentLoss": "Toutes les modifications non validées ou non suivies dans les espaces de travail Git seront définitivement supprimées.",
+          "clean": "Aucune modification non validée ou non suivie",
+          "unavailable": "Impossible de vérifier les modifications",
+          "checking": "Recherche de modifications…",
+          "checkingDetails": "Vérification…",
+          "unavailableDetails": "Détails indisponibles"
+        }
       }
     },
     "agentSessionContinuation": {
@@ -18947,6 +19608,18 @@
     },
     "agentChildRow": {
       "ended": "Terminé"
+    },
+    "jiraIssueAssigneeField": {
+      "label": "Assigné",
+      "automatic": "Automatique",
+      "assignToMe": "M'assigner ({{name}})"
+    },
+    "markdown-callout": {
+      "note": "Remarque",
+      "tip": "Conseil",
+      "important": "Important",
+      "warning": "Avertissement",
+      "caution": "Attention"
     }
   },
   "dashboardPopout": {
@@ -19115,7 +19788,8 @@
     }
   },
   "quickOpen": {
-    "moreMatchesAvailable": "D'autres correspondances sont peut-être disponibles. Affinez votre recherche pour réduire les résultats."
+    "moreMatchesAvailable": "D'autres correspondances sont peut-être disponibles. Affinez votre recherche pour réduire les résultats.",
+    "recentValidationFailed": "Impossible de vérifier les fichiers récents : {{error}}"
   },
   "notifications": {
     "agentStatus": {
@@ -19164,6 +19838,10 @@
   "sourceControl": {
     "unlinkedPr": {
       "status": "PR #{{number}} non lié"
+    },
+    "discard": {
+      "restoreStagedVersionDescription": "Cela restaurera la dernière version intermédiaire et annulera la suppression. Cela ne peut pas être annulé.",
+      "unstagedChangesDescription": "Cela annulera les modifications non planifiées apportées à ce fichier. Cela ne peut pas être annulé."
     }
   },
   "agentsSidebarIntro": {
@@ -19197,7 +19875,9 @@
     "launchFailedDetail": "NASH a réessayé {{recoveryCount}} fois sans succès.",
     "processLimitDetail": "Le système a refusé de créer un nouveau processus, car votre compte utilisateur a atteint sa limite de processus. Cela vient souvent de terminaux, de serveurs de développement ou d'agents emballés. Fermez-en quelques-uns, puis cliquez sur Réessayer.",
     "launchFailedGenericDetail": "Le système a refusé de le démarrer. Libérez de la mémoire ou fermez d'autres applications, puis cliquez sur Réessayer. Si le problème persiste, réinstallez NASH.",
-    "lowCommitAdvice": "Libérez de la mémoire en fermant des applications ou des espaces de travail NASH inutilisés, ou augmentez la taille du fichier d'échange Windows, puis cliquez sur Recharger."
+    "lowCommitAdvice": "Libérez de la mémoire en fermant les applications inutilisées ou les espaces de travail NASH, ou augmentez la taille du fichier d'échange Windows, puis cliquez sur Recharger.",
+    "lowCommitMessage": "Windows manque de mémoire.",
+    "lowCommitDetail": "Windows ne dispose que de {{availableMB}} Mo de mémoire pour les applications, donc la fenêtre a de nouveau manqué de mémoire après le rechargement."
   },
   "sessionSearch": {
     "panel": {
@@ -19227,7 +19907,7 @@
       "sessionsOfLoaded": "{{value0}} sur {{value1}} séances",
       "showMoreSessions": "Afficher plus de séances",
       "loadingMoreSessions": "Chargement de plus de sessions…",
-      "unsupportedAgent": "Cet ordinateur ne prend pas en charge la recherche dans l'historique de l'agent sélectionné. Mettez NASH à jour sur cet ordinateur ou sélectionnez un autre agent."
+      "unsupportedAgent": "Cet ordinateur ne prend pas en charge la recherche dans l'historique de l'agent sélectionné. Mettez à jour NASH sur cet ordinateur ou sélectionnez un autre agent."
     }
   },
   "sessionHistory": {
@@ -19280,7 +19960,12 @@
       "loading": "Chargement des sous-agents…",
       "loadError": "Impossible de charger tous les sous-agents.",
       "empty": "Aucun sous-agent trouvé."
-    }
+    },
+    "antigravityReferenceDescription": "Continue dans une nouvelle conversation Antigravity CLI en utilisant cette transcription comme référence.",
+    "antigravityIdeToCli": "IDE → CLI",
+    "antigravity2ToCli": "2.0 → CLI",
+    "continueInCli": "Continuer en CLI",
+    "continueInCliNewTab": "Continuer dans la CLI dans un nouvel onglet"
   },
   "common": {
     "retry": "Réessayer"
@@ -19357,22 +20042,119 @@
       "removeTitle": "Supprimer le compte géré ?",
       "removeDescription": "Arrêtez d’abord les agents utilisant ce profil. Sa suppression efface les identifiants et conversations enregistrés. Votre connexion système reste inchangée.",
       "cancel": "Annuler"
+    },
+    "antigravity": {
+      "scope": "Gérez le compte agy natif sur {{host}}.",
+      "signIn": "Démarrez agy sur cet hôte et complétez la connexion au navigateur, puis enregistrez le compte actuel. Pour ajouter un autre compte, utilisez /logout dans agy et reconnectez-vous.",
+      "docs": "Instructions de connexion",
+      "retry": "Réessayer",
+      "identityUnknown": "Identité connectée indisponible",
+      "signedOut": "Aucun compte agy natif n'est connecté.",
+      "changed": "Le compte natif a changé. Sélectionnez à nouveau un compte enregistré avant de lancer agy.",
+      "save": "Enregistrer le compte courant",
+      "refresh": "Actualiser les comptes",
+      "usage": "Actualiser l'utilisation",
+      "working": "Mise à jour du compte",
+      "usageReading": "Séance : {{session}} · Hebdomadaire : {{weekly}}",
+      "saved": "Compte Google enregistré",
+      "nativeActive": "Compte natif",
+      "selected": "Choisi",
+      "select": "Sélectionner",
+      "remove": "Retirer",
+      "sessions": "La sélection s'applique aux nouvelles sessions agy sur cet hôte. Les sessions existantes peuvent conserver leur compte précédent.",
+      "searchTitle": "Comptes antigravité",
+      "searchDescription": "Enregistrez et sélectionnez les comptes Google agy natifs sur l’hôte d’exécution.",
+      "title": "Antigravity",
+      "keyword": {
+        "antigravity": "antigravité",
+        "agy": "Agy",
+        "google": "Google",
+        "accounts": "comptes"
+      }
+    },
+    "claude": {
+      "added": "Compte ajouté. Sélectionnez-le pour le prochain lancement de Claude.",
+      "nextLaunch": "{{value0}} → {{value1}}. Le prochain Claude utilisera ce compte. Les sessions en cours conservent leur compte.",
+      "profileSwitching": "Le changement s’applique au prochain Claude lancé dans n’importe quel onglet. Les sessions en cours conservent leur compte.",
+      "systemDefaultNamed": "Valeur par défaut du système : {{value0}}",
+      "systemDefaultIsSaved": "Valeur par défaut du système est connecté en tant que {{value0}}, qui est aussi un compte enregistré. Une ancienne version de NASH a peut-être copié cette connexion à cet endroit. Si ce n’est pas votre compte, sélectionnez Valeur par défaut du système et exécutez claude /login.",
+      "systemDefaultIsSavedDismiss": "Ignorer",
+      "signInRequired": "Reconnectez-vous pour utiliser ce compte",
+      "signInAgain": "Se reconnecter",
+      "usageSignInLabel": "Se reconnecter",
+      "usageSignInMessage": "Le compte Claude sélectionné nécessite une reconnexion. Ouvrez Paramètres > Comptes de fournisseurs d’IA, ou choisissez Valeur par défaut du système.",
+      "signIn": "Se connecter",
+      "signInNotice": {
+        "title": "Terminez la configuration de vos comptes Claude",
+        "description": "Connectez-vous une fois à chaque compte enregistré pour pouvoir passer de l’un à l’autre à tout moment.",
+        "action": "Se connecter à {{value0}}"
+      }
     }
   },
   "terminal": {
     "sessionSaveFailure": {
-      "unknown": "NASH n'a pas pu enregistrer l'état du terminal. Réessayez. Si le problème persiste, partagez les journaux NASH avec l'assistance pour nous aider à en déterminer la cause."
+      "unknown": "NASH n'a pas pu sauver l'état terminal. Essayer à nouveau. Si cela continue, partagez les journaux NASH avec l'assistance afin que nous puissions identifier la cause.",
+      "title": "Impossible d'enregistrer la session de terminal",
+      "capacity": "L'appareil enregistrant ce terminal a signalé un stockage complet ou un quota de stockage dépassé. Libérez de l'espace sur cet appareil, puis réessayez."
     },
     "codexTerminalServerIsolationNotice": {
-      "title": "NASH exécute désormais Codex sans son serveur partagé"
+      "title": "NASH exécute désormais Codex sans son serveur partagé",
+      "description": "Cela rend le statut d’agent plus fiable. Vous pouvez le réactiver dans Paramètres.",
+      "openSettings": "Ouvrir les paramètres"
     },
     "codexSharedServerBanner": {
-      "openedBeforeUpdateBody": "Ce terminal a été ouvert avant que NASH n'attribue un serveur distinct à chaque instance de Codex.",
-      "dialogDescription": "Les sessions Codex démarrées directement dans un terminal partagent un serveur en arrière-plan. NASH sépare les sessions Codex qu'il démarre. Lorsque des sessions partagent un serveur, en fermer une peut arrêter les autres, et l'état des agents peut être incorrect.",
-      "step1Note": "Cela modifie vos paramètres Codex et s'applique donc aussi en dehors de NASH.",
-      "turnOffFailed": "NASH n'a pas pu désactiver cette option.",
+      "openedBeforeUpdateBody": "Ce terminal a été ouvert avant qu'NASH ne commence à donner à chaque Codex son propre serveur.",
+      "dialogDescription": "Les sessions Codex démarrées directement dans un terminal partagent un serveur en arrière-plan. NASH conserve les sessions Codex qu'il démarre séparément. Lorsque des sessions partagent un serveur, la fermeture de l'une peut mettre fin aux autres et le statut de l'agent peut être erroné.",
+      "step1Note": "Cela modifie vos paramètres Codex et s'applique donc également en dehors d'NASH.",
+      "turnOffFailed": "NASH ne pouvait pas éteindre ça.",
       "stopFailed": "NASH n'a pas pu arrêter le serveur.",
-      "confirmStopDescription": "Cela ferme toutes les sessions Codex ouvertes qui le partagent, y compris celles en dehors de NASH."
+      "confirmStopDescription": "Cela ferme toutes les sessions Codex ouvertes qui le partagent, y compris celles en dehors d'NASH.",
+      "title": "Ce Codex partage un serveur avec vos autres onglets Codex",
+      "body": "Les sessions peuvent se terminer de manière inattendue et le statut de l'agent peut être erroné.",
+      "oldTerminalDialogTitle": "Pourquoi ce Codex partage un serveur",
+      "oldTerminalDialogRisk": "Les sessions Codex qui partagent un serveur peuvent se terminer ensemble et le statut de l'agent peut être erroné.",
+      "oldTerminalDialogCause": "Les terminaux plus anciens partagent toujours un serveur Codex. Ouvrez un nouveau terminal pour exécuter Codex sur un serveur distinct.",
+      "fix": "Réparer",
+      "dialogTitle": "Donnez à chaque onglet du Codex son propre serveur",
+      "copy": "Copie",
+      "copied": "Copié",
+      "done": "Fait",
+      "step1Title": "Désactiver le partage du serveur Codex",
+      "step2Title": "Arrêtez le serveur partagé en cours d'exécution",
+      "undo": "Pour annuler, exécutez codex features enable daemon_auto_start.",
+      "step2Warning": "Ferme toutes les sessions Codex ouvertes qui partagent le serveur",
+      "turnOff": "Éteindre",
+      "turningOff": "Éteindre…",
+      "turnedOff": "Éteint",
+      "stopServer": "Arrêter le serveur",
+      "stopping": "Arrêt…",
+      "stopped": "Arrêté",
+      "confirmStopTitle": "Arrêter le serveur partagé ?",
+      "cancel": "Annuler",
+      "runs": "Fonctionne",
+      "openNewTerminal": "Ouvrir un nouveau terminal",
+      "dontShowAgain": "Ne plus afficher",
+      "dismiss": "Ignorer",
+      "learnMore": "En savoir plus"
+    },
+    "codexSharedSettingsNotice": {
+      "title": "Le Codex dans NASH utilise désormais ~/.codex",
+      "description": "Le Codex peut demander à nouveau de faire confiance aux dossiers ou d'approuver les commandes. Ajoutez à nouveau tous les serveurs MCP que vous avez ajoutés uniquement dans NASH."
+    },
+    "paneMove": {
+      "failed": "Impossible de déplacer le volet vers un nouvel onglet."
+    },
+    "paneTopBanner": {
+      "openNewTerminal": "Ouvrir un nouveau terminal",
+      "learnMore": "Apprendre encore plus",
+      "dontShowAgain": "Ne plus montrer",
+      "dismiss": "Rejeter"
+    },
+    "claudeOldTerminalBanner": {
+      "title": "Ce terminal a été ouvert avant la mise à jour des comptes Claude de NASH ; claude y utilise donc la connexion de Valeur par défaut du système.",
+      "dialogTitle": "Pourquoi claude n’utilise pas ici le compte sélectionné",
+      "dialogDescription": "NASH conserve désormais chaque compte Claude dans son propre dossier. Dans un nouveau terminal, claude utilise le compte que vous sélectionnez.",
+      "dialogCause": "Les terminaux ouverts avant cette mise à jour ne suivent pas ce choix : claude y utilise la connexion de Valeur par défaut du système. Ouvrez un nouveau terminal pour utiliser le compte sélectionné."
     }
   },
   "workbench": {
@@ -19384,13 +20166,11 @@
       },
       "empty": "Aucune tâche pour le moment.",
       "executor": {
-        "claudePrimary": "Session principale Claude",
+        "claudePrimary": "Session principale",
         "claudeSubagent": "Sous-agent Claude",
         "claudeWorkflow": "Workflow Claude",
         "other": "Autre exécuteur"
       },
-      "openWindow": "Ouvrir la fenêtre de tâche",
-      "openWindowLabel": "Ouvrir la fenêtre de la tâche {{title}}",
       "readFailed": "Les tâches n'ont pas pu être lues : {{message}}",
       "showTerminalLabel": "Afficher le terminal de {{title}}",
       "state": {
@@ -19405,73 +20185,10 @@
         "stopped": "Arrêtée",
         "unknown": "État inconnu"
       },
-      "title": "Tâches"
-    },
-    "taskWindow": {
-      "attempt": "Tentative",
-      "attemptOption": "Tentative {{number}} · {{state}}",
-      "attemptsStale": "La liste des tentatives n'a pas pu être actualisée : {{message}}",
-      "branch": "Branche",
-      "command": {
-        "completed": "Terminée",
-        "failed": "Échouée",
-        "hideOutput": "Masquer la sortie",
-        "hideOutputLabel": "Masquer la sortie de {{command}}",
-        "running": "En cours",
-        "showOutput": "Afficher la sortie",
-        "showOutputLabel": "Afficher la sortie de {{command}}"
-      },
-      "effort": "Effort",
-      "effortDefault": "Par défaut",
-      "elapsed": "Temps écoulé",
-      "empty": "La transcription est vide.",
-      "end": "Terminée",
-      "exitCode": "code de sortie {{code}}",
-      "fileChange": "Fichiers modifiés · {{status}}",
-      "jumpToLatest": "Aller au plus récent",
-      "malformed": "Ligne illisible",
-      "missing": "Aucune transcription n'a été enregistrée pour cette tentative.",
-      "model": "Modèle",
-      "noAttempt": "Cette tâche n'a pas encore de tentative.",
-      "notRecorded": "Non enregistré",
-      "note": {
-        "dropped": "{{dropped}} enregistrements ont été perdus, car la sortie arrivait plus vite qu'elle ne pouvait être enregistrée.",
-        "truncated": "La transcription a atteint sa taille limite. La suite de la sortie n'a pas été enregistrée.",
-        "unknown": "La transcription contient une note que cette version ne peut pas afficher."
-      },
-      "openWorktree": "Ouvrir le worktree",
-      "readFailed": "La transcription n'a pas pu être lue.",
-      "reading": "Lecture de la transcription…",
-      "sandbox": {
-        "readOnly": "Lecture seule",
-        "unknown": "Non enregistré",
-        "write": "Écrit dans son propre worktree",
-        "writeInFolder": "Écrit dans le dossier de l'espace de travail"
-      },
-      "sandboxLabel": "Bac à sable",
-      "showEarlier": "Afficher les enregistrements précédents ({{hidden}} masqués)",
-      "start": "Démarrage : {{executor}}",
-      "started": "Démarrée",
-      "transcript": "Transcription",
-      "truncatedNotice": "Cette transcription a atteint sa taille limite ; elle s'arrête donc avant la fin de la tentative.",
-      "turn": {
-        "completed": "Tour terminé",
-        "failed": "Échec du tour",
-        "started": "Tour démarré",
-        "usage": "{{input}} tokens en entrée · {{cached}} en cache · {{output}} en sortie"
-      },
-      "unavailable": "Les détails de la fenêtre de tâche sont indisponibles.",
-      "untitledTask": "Tâche sans titre",
-      "waiting": "En attente de la première sortie…",
-      "tool": {
-        "webSearch": "Recherche web",
-        "mcpToolCall": "Appel d'outil MCP",
-        "reasoning": "Raisonnement",
-        "todoList": "Plan mis à jour",
-        "other": "Étape d'outil"
-      },
-      "filesChanged": "Fichiers modifiés",
-      "unknownRecordShort": "Un enregistrement que cette version ne peut pas afficher."
+      "title": "Tâches",
+      "openSession": "Ouvrir la session",
+      "openSessionLabel": "Ouvrir la session de {{title}}",
+      "untitledTask": "Tâche sans titre"
     },
     "sidebar": {
       "title": "Workbench"
@@ -19566,11 +20283,11 @@
         "exited": "Terminée"
       },
       "live": {
-        "working": "Claude travaille",
+        "working": "Le principal travaille",
         "dialogOpen": "Une boîte de dialogue d'autorisation ou de question est ouverte",
         "idle": "En attente de saisie",
         "unknown": "Activité inconnue",
-        "agentAbsent": "Claude Code ne s'exécute pas dans le terminal",
+        "agentAbsent": "Le CLI principal ne s’exécute pas dans le terminal",
         "handleUnresolved": "Le terminal est introuvable",
         "incarnationMismatch": "Le processus du terminal a changé ; son activité ne peut donc pas être vérifiée",
         "statusUnreadable": "L'état du terminal ne peut pas être lu",
@@ -19579,7 +20296,7 @@
       "end": {
         "userCanceled": "Arrêtée dans l'application",
         "dotCanceled": "Annulée par dot",
-        "primaryExited": "La session Claude Code s'est terminée",
+        "primaryExited": "La session principale s’est terminée",
         "launchRefused": "Le lancement a été refusé",
         "launchFailed": "Le lancement a échoué avant tout démarrage",
         "launchUnknown": "Le lancement n'a pas pu être confirmé",
@@ -19605,7 +20322,7 @@
         "notSentPrefix": "Non envoyé.",
         "noReason": "Aucun motif n'a été indiqué.",
         "queued": {
-          "agentBusy": "En file d'attente. Claude travaille ; le message attend donc dans la session.",
+          "agentBusy": "En file d’attente. Le principal travaille ; le message attend dans la session.",
           "dialogOpen": "Retenu. Une boîte de dialogue d'autorisation ou de question est ouverte ; le message sera envoyé après sa fermeture.",
           "behindHeld": "Retenu. Un message précédent n'a pas encore été envoyé ; celui-ci sera envoyé à sa suite."
         },
@@ -19621,7 +20338,7 @@
           "runNotFound": "L'exécution est introuvable.",
           "runNotActive": "L'exécution n'est pas active.",
           "notOwned": "Cette exécution n'accepte pas les messages envoyés d'ici.",
-          "primaryNotLive": "La session Claude Code n'est pas en cours d'exécution.",
+          "primaryNotLive": "La session principale n’est pas en cours.",
           "holdCapacity": "Trop de messages sont déjà en attente pour cette exécution.",
           "holdExpired": "Le message a attendu trop longtemps la fermeture de la boîte de dialogue et a été abandonné.",
           "terminalUnavailable": "Le terminal n'a pas pu être joint.",
@@ -19631,7 +20348,7 @@
         "refusedGeneric": "La session n'a pas accepté le message.",
         "queuedGeneric": "En file d'attente. Le message sera envoyé lorsque la session pourra le recevoir.",
         "retryHintShort": "Le renvoyer ne le transmettra pas deux fois.",
-        "helpShort": "Saisi dans la session Claude Code ; retenu tant qu'une boîte de dialogue est ouverte."
+        "helpShort": "Saisi dans la session principale ; retenu tant qu’une boîte de dialogue est ouverte."
       },
       "state": {
         "working": "Au travail",
@@ -19668,25 +20385,11 @@
       "decideErrorTitle": "Décision non enregistrée",
       "executor": "Exécuteur",
       "since": "En attente de décision depuis",
-      "branch": "Branche",
-      "workspace": "Espace de travail",
       "waive": "Accepter en l'état",
       "reject": "Rejeter",
       "cancel": "Annuler",
-      "placement": {
-        "ownWorktree": "Son propre worktree",
-        "folder": "Le dossier de l'espace de travail",
-        "runWorkspace": "L'espace de travail de l'exécution, en lecture seule",
-        "inSession": "La session principale Claude",
-        "unrecorded": "Non enregistré"
-      },
       "confirm": {
-        "waiveProcessMayRun": "Accepter ce résultat comme terminé ? La tâche se termine, mais un processus de cette tentative peut encore être en cours. La session principale Claude reçoit l'instruction d'attendre son arrêt avant de fusionner ou de conserver ses modifications.",
-        "waiveWorktree": "Accepter ce résultat comme terminé ? La tâche se termine et la session principale Claude reçoit l'instruction de fusionner la branche {{branch}}.",
-        "waiveFolder": "Accepter ce résultat comme terminé ? La tâche se termine ; ses modifications sont déjà dans le dossier de l'espace de travail.",
         "waive": "Accepter ce résultat comme terminé ? La tâche se termine.",
-        "rejectWorktree": "Rejeter ce résultat ? La tâche échoue et sa branche est conservée pour examen.",
-        "rejectFolder": "Rejeter ce résultat ? La tâche échoue ; ses modifications restent dans le dossier de l'espace de travail jusqu'à ce que vous décidiez quoi conserver.",
         "reject": "Rejeter ce résultat ? La tâche échoue."
       },
       "outcome": {
@@ -19727,7 +20430,7 @@
         "runStarted": "Exécution démarrée",
         "canceled": "Annulée"
       },
-      "intakeHelp": "Démarre une exécution avec une session Claude Code dans cet espace de travail.",
+      "intakeHelp": "Démarre une exécution avec le CLI principal configuré dans cet espace de travail.",
       "startRun": "Démarrer l'exécution",
       "updateFailedTitle": "Les demandes n'ont pas pu être actualisées",
       "registered": "Demande enregistrée.",
@@ -19737,7 +20440,7 @@
       "notAllowed": "Cette fenêtre n'est pas autorisée à effectuer cette action.",
       "workspaceUnavailable": "Cet espace de travail est indisponible ici.",
       "runGone": "Cette exécution n'existe plus.",
-      "sessionNotRunning": "La session Claude Code n'est pas en cours d'exécution.",
+      "sessionNotRunning": "La session principale n’est pas en cours.",
       "attemptGone": "Cette tentative n'existe plus.",
       "invalidInput": "L'application a refusé cette entrée car elle est invalide.",
       "recoveryRequired": "Les enregistrements stockés n'ont pas pu être lus. Redémarrez l'application et réessayez.",
@@ -19763,5 +20466,85 @@
       "copyFailed": "Échec de la copie",
       "copy": "Copier les détails"
     }
+  },
+  "osDocumentOpen": {
+    "failed": "Échec de l'ouverture du fichier."
+  },
+  "fileSearch": {
+    "failed": "La recherche a échoué. Essayer à nouveau."
+  },
+  "csv": {
+    "detectingDelimiter": "Détection du délimiteur…",
+    "indexProgress": "Indexation du CSV… {{percent}} %",
+    "loadingCell": "Chargement…",
+    "nextRows": "Lignes suivantes",
+    "previousRows": "Lignes précédentes",
+    "readOnlyPreview": "Aperçu de fichier volumineux · Lecture seule",
+    "resizeColumn": "Redimensionner la colonne {{column}}",
+    "rowWindow": "Lignes {{first}}–{{last}}",
+    "editor": "Éditeur CSV",
+    "editCell": "Modifier la ligne {{row}}, colonne {{column}}",
+    "filterRows": "Filtrer les lignes",
+    "edit": "Modifier la cellule",
+    "copy": "Copier",
+    "paste": "Coller",
+    "rows": "Lignes",
+    "insertRowAbove": "Insérer une ligne au-dessus",
+    "insertRowBelow": "Insérer une ligne en dessous",
+    "deleteRows": "Supprimer les lignes sélectionnées",
+    "columns": "Colonnes",
+    "newColumn": "Colonne {{column}}",
+    "insertColumnBefore": "Insérer une colonne avant",
+    "insertColumnAfter": "Insérer une colonne après",
+    "moveColumnLeft": "Déplacer la colonne vers la gauche",
+    "moveColumnRight": "Déplacer la colonne vers la droite",
+    "deleteColumns": "Supprimer les colonnes sélectionnées",
+    "sort": "Trier",
+    "sortAscending": "Trier la colonne sélectionnée par ordre croissant",
+    "sortDescending": "Trier la colonne sélectionnée par ordre décroissant",
+    "originalOrder": "Ordre d'origine des lignes",
+    "save": "Enregistrer",
+    "inspectionOnly": "Inspection uniquement · Ordre des lignes du fichier inchangé"
+  },
+  "worktree": {
+    "nestedRemoval": {
+      "refreshFailed": "Impossible d'actualiser la liste des espaces de travail",
+      "review": "Supprimer avec les worktrees imbriqués…",
+      "title": "Supprimer l'espace de travail et les worktrees imbriqués ?",
+      "description": "Cela supprime définitivement « {{name}} », chaque worktree imbriqué listé ci-dessous et tous les fichiers qu'il contient, y compris les modifications non validées. Leurs terminaux et agents seront arrêtés.",
+      "detached": "HEAD détaché",
+      "loading": "Vérification des worktrees imbriqués…",
+      "order": "Les worktrees imbriqués sont supprimés en premier. Si l'un échoue, la suppression s'arrête et le parent est conservé. Les branches suivent vos paramètres de suppression existants.",
+      "cancel": "Annuler",
+      "retry": "Vérifier à nouveau",
+      "deleting": "Suppression…",
+      "confirm": "Supprimer tous les worktrees listés",
+      "preservedBranches": "Certaines branches de worktrees imbriqués ont été conservées"
+    }
+  },
+  "mediaPreview": {
+    "unavailable": "Impossible de lire ce fichier multimédia. Le fichier peut être indisponible ou utiliser un codec non pris en charge.",
+    "openFailed": "Impossible d’ouvrir ce fichier dans l’application par défaut.",
+    "openDefault": "Ouvrir dans l’application par défaut"
+  },
+  "projectBoard": {
+    "noColumnField": "Cette vue Board n'a pas de champ à sélection unique ni d'itération pour regrouper les éléments ; NASH les affiche donc sous forme de liste.",
+    "noField": "Aucun {{field}}"
+  },
+  "projectBoardCard": {
+    "restrictedItem": "Élément restreint",
+    "itemLabel": "{{number}} — {{title}}"
+  },
+  "projectViews": {
+    "layout": {
+      "board": "Board"
+    },
+    "unsupported": {
+      "switchLayout": "Basculez vers une vue Tableau, Board ou Feuille de route pour travailler avec ce projet dans NASH.",
+      "description": "NASH affiche les vues de projet de type Tableau, Board et Feuille de route. Cette vue utilise une mise en page qu'NASH ne peut pas encore restituer."
+    }
+  },
+  "projectField": {
+    "updateFailed": "Échec de la mise à jour du champ du projet"
   }
 }

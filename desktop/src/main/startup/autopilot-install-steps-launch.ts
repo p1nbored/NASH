@@ -17,7 +17,7 @@ function startTaskValidating(
 ): TaskExecutionRuntime['startTask'] {
   return async (input) => {
     const start = await execution.startTask(input)
-    if (start.view.delegated) {
+    if (start.view.delegated && !start.view.nativeWorker) {
       void start.settled.then(
         () => validation.validateAttempt(start.view.dispatchId),
         // Why ignored: the attempt's settlement records its own failure; there is nothing to validate.

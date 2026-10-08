@@ -42,7 +42,7 @@ The URLs below are the sources' home pages, as named in direction section 6. The
 Notes:
 
 - "high when supported" for agy means the variant id `gemini-3.8-flash-high` with no effort flag, because agy 1.2.14 encodes thinking in the model id variant. The id comes from the installed `agy models` listing (G2, 2026-10-04), not from a benchmark.
-- Gemini 4 stays excluded whatever the benchmarks show, until broad availability is verified (direction section 12).
+- Model availability is checked against the actual provider listing; no Gemini family ban remains (D-040).
 - The direction warns that "These defaults are not permanent rankings" and that benchmark differences do not prove one model is universally superior.
 
 ## Recording a snapshot

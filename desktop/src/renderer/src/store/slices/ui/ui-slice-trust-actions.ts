@@ -65,23 +65,6 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
         window.api.ui.set({ setupGuideSidebarDismissed: dismissed }).catch(console.error)
         return { setupGuideSidebarDismissed: dismissed }
       }),
-    setupGuideBrowserMilestoneMigrated: true,
-    setupGuideBrowserMilestoneLegacyComplete: false,
-    markSetupGuideBrowserMilestoneMigrated: (legacyComplete) =>
-      set((s) => {
-        if (
-          s.setupGuideBrowserMilestoneMigrated &&
-          s.setupGuideBrowserMilestoneLegacyComplete === legacyComplete
-        ) {
-          return s
-        }
-        const updates = {
-          setupGuideBrowserMilestoneMigrated: true,
-          setupGuideBrowserMilestoneLegacyComplete: legacyComplete
-        }
-        window.api.ui.set(updates).catch(console.error)
-        return updates
-      }),
     browserImportHintHidden: false,
     setBrowserImportHintHidden: (hidden) =>
       set((s) => {
@@ -148,6 +131,24 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
         }
         window.api.ui.set({ codexTerminalServerIsolationNoticeSeen: true }).catch(console.error)
         return { codexTerminalServerIsolationNoticeSeen: true }
+      }),
+    codexSharedSettingsNoticeSeen: true,
+    markCodexSharedSettingsNoticeSeen: () =>
+      set((s) => {
+        if (s.codexSharedSettingsNoticeSeen) {
+          return s
+        }
+        window.api.ui.set({ codexSharedSettingsNoticeSeen: true }).catch(console.error)
+        return { codexSharedSettingsNoticeSeen: true }
+      }),
+    claudeAccountSignInNoticeSeen: true,
+    markClaudeAccountSignInNoticeSeen: () =>
+      set((s) => {
+        if (s.claudeAccountSignInNoticeSeen) {
+          return s
+        }
+        window.api.ui.set({ claudeAccountSignInNoticeSeen: true }).catch(console.error)
+        return { claudeAccountSignInNoticeSeen: true }
       })
   }
 }

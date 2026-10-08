@@ -1,3 +1,4 @@
+import { isNativeTaskAttempt } from '../workflow-run/app-run-policy'
 import { z } from 'zod'
 import {
   WorkbenchRunTasksResultSchema,
@@ -8,16 +9,13 @@ import {
   type WorkbenchRunTasksResult
 } from '../../../shared/rpc-contract/workbench-task-window-params'
 import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
-import {
-  getExecutorProcessStore,
-  type ExecutorProcessRecord
-} from '../orchestration/db/executor-process-store'
 import { getTaskRouteStore, type TaskRouteRecord } from '../orchestration/db/task-route-store'
 import type { DispatchStatus, TaskRow } from '../orchestration/types'
 import { requireWorkflowRun } from '../workbench-run/workbench-run-view-read'
-import { locateAttemptTranscript, type AttemptTranscriptRoots } from './attempt-transcript-file'
+import { sessionIdFromStructuredWorkerIncarnation } from '../structured-worker-identity'
+import { parseOrcaSessionAddress } from '../../../shared/orca-session-address'
 
-export type RunTasksReadDeps = AttemptTranscriptRoots & { readonly owner: OrchestrationDb }
+export type RunTasksReadDeps = { readonly owner: OrchestrationDb }
 
 // Why bounds: the list is polled every few seconds; a run with more tasks shows the first ones.
 export const RUN_TASKS_MAX = 200
@@ -31,6 +29,13 @@ const ROUTE_EXECUTORS: Readonly<Record<string, TaskWindowExecutorKind>> = {
   claude_primary: 'claude_primary'
 }
 
+const NATIVE_WORKER_STATES: Readonly<Record<string, string>> = {
+  ready: 'running',
+  succeeded: 'completed',
+  stopping: 'running',
+  abandoned: 'failed'
+}
+
 const DISPATCH_STATES: Readonly<Record<DispatchStatus, TaskWindowAttemptState>> = {
   pending: 'starting',
   dispatched: 'running',
@@ -39,36 +44,12 @@ const DISPATCH_STATES: Readonly<Record<DispatchStatus, TaskWindowAttemptState>> 
   circuit_broken: 'failed'
 }
 
-/** The executor that ran the task wins; otherwise its route; a task kept with the primary is the primary's. */
-export function taskExecutorKind(
-  rows: readonly ExecutorProcessRecord[],
-  route: TaskRouteRecord | null
-): TaskWindowExecutorKind {
-  const ran = rows.at(-1)?.executorKind
-  if (ran) {
-    return ran === 'agy_cli' ? 'agy' : 'codex'
-  }
+/** The task's route names its executor; an unrouted task belongs to the primary session. */
+export function taskExecutorKind(route: TaskRouteRecord | null): TaskWindowExecutorKind {
   const target = route?.target
   return target && Object.hasOwn(ROUTE_EXECUTORS, target)
     ? ROUTE_EXECUTORS[target]
     : 'claude_primary'
-}
-
-async function processAttempt(
-  deps: RunTasksReadDeps,
-  row: ExecutorProcessRecord
-): Promise<WorkbenchRunTaskAttempt> {
-  const location = await locateAttemptTranscript(deps, row.runDirectory)
-  return {
-    dispatchId: row.dispatchId,
-    state: row.state,
-    startedAt: row.startedAt,
-    settledAt: row.settledAt,
-    hasTranscript: location.kind === 'file',
-    // Why null: a writing task's worktree reaches the window in its transcript's start record (D-025);
-    // this row's `merged` flag would need a git check of the run worktree that NASH does not run.
-    worktree: null
-  }
 }
 
 const DispatchRowSchema = z.object({
@@ -76,14 +57,19 @@ const DispatchRowSchema = z.object({
   status: z.enum(['pending', 'dispatched', 'completed', 'failed', 'circuit_broken']),
   created_at: z.string(),
   dispatched_at: z.string().nullable(),
-  completed_at: z.string().nullable()
+  completed_at: z.string().nullable(),
+  process_incarnation: z.string().nullable()
 })
 
-/** A task the primary session runs has Orca Dispatches and no executor process or transcript. */
-function sessionAttempts(owner: OrchestrationDb, taskId: string): WorkbenchRunTaskAttempt[] {
+/** Native worker and in-session attempts share the dispatch lifecycle. */
+function dispatchAttempts(
+  owner: OrchestrationDb,
+  taskId: string,
+  executorKind: TaskWindowExecutorKind
+): WorkbenchRunTaskAttempt[] {
   return owner.db
     .prepare(
-      `SELECT id, status, created_at, dispatched_at, completed_at FROM dispatch_contexts
+      `SELECT id, status, created_at, dispatched_at, completed_at, process_incarnation FROM dispatch_contexts
         WHERE task_id = ? ORDER BY rowid DESC LIMIT ?`
     )
     .all(taskId, TASK_ATTEMPTS_MAX)
@@ -92,31 +78,52 @@ function sessionAttempts(owner: OrchestrationDb, taskId: string): WorkbenchRunTa
       return parsed.success ? [parsed.data] : []
     })
     .toReversed()
-    .map((row) => ({
-      dispatchId: row.id,
-      state: DISPATCH_STATES[row.status],
-      startedAt: row.dispatched_at ?? row.created_at,
-      settledAt: row.completed_at,
-      hasTranscript: false,
-      worktree: null
-    }))
+    .map((row) => {
+      const worker = isNativeTaskAttempt(owner, row.id) ? owner.getWorkerDispatch(row.id) : null
+      const sessionId =
+        worker &&
+        (sessionIdFromStructuredWorkerIncarnation(row.process_incarnation) ??
+          parseOrcaSessionAddress(worker.agent_terminal_handle))
+      const source: WorkbenchRunTaskAttempt['source'] =
+        worker && sessionId && worker.worktree_id
+          ? {
+              kind: 'session',
+              worktreeId: worker.worktree_id,
+              sessionId,
+              agent:
+                executorKind === 'codex'
+                  ? 'codex'
+                  : executorKind === 'agy'
+                    ? 'antigravity'
+                    : 'claude'
+            }
+          : worker?.agent_terminal_handle && !sessionId
+            ? { kind: 'terminal', terminal: worker.agent_terminal_handle }
+            : null
+      return {
+        dispatchId: row.id,
+        state: worker
+          ? (NATIVE_WORKER_STATES[worker.state] ?? worker.state)
+          : DISPATCH_STATES[row.status],
+        startedAt: row.dispatched_at ?? row.created_at,
+        settledAt: row.completed_at,
+        source
+      }
+    })
 }
 
-async function taskView(deps: RunTasksReadDeps, task: TaskRow): Promise<WorkbenchRunTask> {
-  const rows = getExecutorProcessStore(deps.owner).listForTask(task.id).slice(-TASK_ATTEMPTS_MAX)
-  const executorKind = taskExecutorKind(rows, getTaskRouteStore(deps.owner).latestForTask(task.id))
-  const runsAsProcess = executorKind === 'codex' || executorKind === 'agy'
+function taskView(deps: RunTasksReadDeps, task: TaskRow): WorkbenchRunTask {
+  const executorKind = taskExecutorKind(getTaskRouteStore(deps.owner).latestForTask(task.id))
+  const attempts = dispatchAttempts(deps.owner, task.id, executorKind)
   return {
     taskId: task.id,
     title: task.task_title ?? task.display_name ?? null,
     executorKind,
-    attempts: runsAsProcess
-      ? await Promise.all(rows.map((row) => processAttempt(deps, row)))
-      : sessionAttempts(deps.owner, task.id)
+    attempts
   }
 }
 
-/** D-024: a run's tasks for the Workbench, with each attempt's state; no output or path leaves main. */
+/** A run's task states and references to their existing native session surfaces. */
 export async function readRunTasks(
   deps: RunTasksReadDeps,
   runId: string
@@ -125,7 +132,7 @@ export async function readRunTasks(
   const tasks = deps.owner.listTasks({ runId: run.runId }).slice(0, RUN_TASKS_MAX)
   const views: WorkbenchRunTask[] = []
   for (const task of tasks) {
-    views.push(await taskView(deps, task))
+    views.push(taskView(deps, task))
   }
   return WorkbenchRunTasksResultSchema.parse({ tasks: views })
 }

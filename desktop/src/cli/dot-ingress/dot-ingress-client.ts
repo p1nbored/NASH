@@ -1,22 +1,27 @@
 import type { z } from 'zod'
-import type { DotRequestAccess } from '../../shared/dot-ingress/dot-ingress-limits'
 import {
-  DotCancelResultV3Schema,
-  DotDecisionAnswerResultV3Schema,
-  DotDecisionsListResultV3Schema,
-  DotHelloResultV3Schema,
-  DotListResultV3Schema,
-  DotMessageResultV3Schema,
-  DotStatusResultV3Schema,
-  DotSubmitResultV3Schema,
-  DotWorkspacesResultV3Schema
-} from '../../shared/dot-ingress/dot-ingress-v3'
+  type DotRequestAccess,
+  DOT_INGRESS_CONTRACT_VERSION
+} from '../../shared/dot-ingress/dot-ingress-limits'
+import {
+  DotCancelResultSchema,
+  DotHelloResultSchema,
+  DotListResultSchema,
+  DotStatusResultSchema,
+  DotSubmitResultSchema,
+  DotWorkspacesResultSchema
+} from '../../shared/dot-ingress/dot-ingress-request'
+import {
+  DotDecisionAnswerResultSchema,
+  DotDecisionsListResultSchema
+} from '../../shared/dot-ingress/dot-ingress-decision'
+import { DotMessageResultSchema } from '../../shared/dot-ingress/dot-ingress-message'
 import {
   DotValidationDecideResultV3Schema,
   DotValidationsListResultV3Schema,
   type DotValidationDecision
 } from '../../shared/dot-ingress/dot-ingress-validation'
-import { DOT_INGRESS_CONTRACT_VERSION_THREE } from '../../shared/dot-ingress/dot-ingress-versions'
+
 import type { RuntimeMetadata } from '../../shared/runtime-bootstrap'
 import { sendRequest } from '../runtime/transport'
 import { RuntimeClientError, type RuntimeRpcResponse } from '../runtime/types'
@@ -43,7 +48,7 @@ export function createDotIngressClient(metadata: RuntimeMetadata, send: DotRpcSe
     const response = await send(
       metadata,
       method,
-      { contractVersion: DOT_INGRESS_CONTRACT_VERSION_THREE, ...params },
+      { contractVersion: DOT_INGRESS_CONTRACT_VERSION, ...params },
       timeoutMs
     )
     if (!response.ok) {
@@ -60,33 +65,31 @@ export function createDotIngressClient(metadata: RuntimeMetadata, send: DotRpcSe
   }
 
   return {
-    hello: () => call('dotIngress.hello', {}, DotHelloResultV3Schema),
-    workspaces: () => call('dotIngress.workspaces.list', {}, DotWorkspacesResultV3Schema),
+    hello: () => call('dotIngress.hello', {}, DotHelloResultSchema),
+    workspaces: () => call('dotIngress.workspaces.list', {}, DotWorkspacesResultSchema),
     submit: (input: {
       workspaceRef: string
       objective: string
       idempotencyKey: string
       requestedAccess?: DotRequestAccess
-      deliverableLanguage?: string
-    }) =>
-      call('dotIngress.requests.submit', input, DotSubmitResultV3Schema, DOT_CLI_LONG_TIMEOUT_MS),
+    }) => call('dotIngress.requests.submit', input, DotSubmitResultSchema, DOT_CLI_LONG_TIMEOUT_MS),
     status: (dotRequestId: string) =>
-      call('dotIngress.requests.status', { dotRequestId }, DotStatusResultV3Schema),
+      call('dotIngress.requests.status', { dotRequestId }, DotStatusResultSchema),
     list: (input: { limit?: number; beforeSequence?: number }) =>
-      call('dotIngress.requests.list', input, DotListResultV3Schema),
+      call('dotIngress.requests.list', input, DotListResultSchema),
     cancel: (dotRequestId: string) =>
       call(
         'dotIngress.requests.cancel',
         { dotRequestId },
-        DotCancelResultV3Schema,
+        DotCancelResultSchema,
         DOT_CLI_LONG_TIMEOUT_MS
       ),
     message: (input: { dotRequestId: string; messageId: string; text: string }) =>
-      call('dotIngress.requests.message', input, DotMessageResultV3Schema, DOT_CLI_LONG_TIMEOUT_MS),
+      call('dotIngress.requests.message', input, DotMessageResultSchema, DOT_CLI_LONG_TIMEOUT_MS),
     decisions: (input: { dotRequestId?: string; limit?: number }) =>
-      call('dotIngress.decisions.list', input, DotDecisionsListResultV3Schema),
+      call('dotIngress.decisions.list', input, DotDecisionsListResultSchema),
     answer: (input: { decisionId: string; decision: 'allow' | 'deny' }) =>
-      call('dotIngress.decisions.answer', input, DotDecisionAnswerResultV3Schema),
+      call('dotIngress.decisions.answer', input, DotDecisionAnswerResultSchema),
     validations: (input: { dotRequestId?: string; limit?: number }) =>
       call('dotIngress.validations.list', input, DotValidationsListResultV3Schema),
     decideValidation: (input: {

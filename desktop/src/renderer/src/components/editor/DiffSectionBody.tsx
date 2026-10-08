@@ -217,6 +217,7 @@ export function DiffSectionBody({
           keepCurrentOriginalModel
           keepCurrentModifiedModel
           options={{
+            dropIntoEditor: { enabled: false },
             // Native EditContext focus scrolls its hidden input into the combined viewport.
             editContext: false,
             readOnly: !isEditable,

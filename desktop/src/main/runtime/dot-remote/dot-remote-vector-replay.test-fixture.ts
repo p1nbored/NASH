@@ -11,9 +11,10 @@ import {
 import {
   DEVICE,
   decisionView,
-  type DotRemoteVector
+  type DotRemoteVector,
+  type DotRemoteEndpointStep
 } from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
-import type { DotRemoteEndpointStep } from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
+
 import { submittedView } from './dot-remote-agent.test-fixture'
 import type { DotRemoteLocalEndpoint, DotRemoteLocalResult } from './dot-remote-local-endpoint'
 import type { DotRemoteFetch } from './dot-remote-site-client'

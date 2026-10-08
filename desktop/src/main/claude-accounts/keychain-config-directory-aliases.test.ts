@@ -45,7 +45,7 @@ describe('Claude config directory Keychain aliases', () => {
 
   it('retains the canonical alias for an existing directory', () => {
     const configDir = join(linked, '.claude')
-    mkdirSync(configDir)
+    mkdirSync(join(canonical, '.claude'))
     expect(claudeConfigDirKeychainAliases(configDir)).toEqual([
       configDir,
       join(canonical, '.claude')

@@ -106,6 +106,7 @@ export function fakeClock(startMs = FIXTURE_EPOCH_MS) {
 }
 
 export type SeedRunOptions = {
+  coordinatorAgent?: 'claude' | 'codex'
   runId?: string
   status?: 'launching' | 'active'
   owner?: 'none' | 'starting' | 'running' | 'unverifiable'
@@ -130,10 +131,10 @@ export function seedPrimaryRun(
     workspaceId: 'fixture-repo::/fixture/repo',
     workspaceBinding: FIXTURE_HASH_A,
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     routingTableVersion: 1,
     routingTableSha256: FIXTURE_HASH_B,
-    coordinatorModel: 'claude-opus-5-5',
+    coordinatorAgent: options.coordinatorAgent ?? 'claude',
+    coordinatorModel: options.coordinatorAgent === 'codex' ? 'gpt-6.1-sol' : 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: fixtureTime()
   }).run

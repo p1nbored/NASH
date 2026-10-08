@@ -15,6 +15,11 @@ vi.mock('./codex-auth-presence', () => ({
   probeCodexAuthPresence: vi.fn(async () => 'present')
 }))
 
+// The recovery's supervised stop imports the process-table reader, which needs the real execFile.
+vi.mock('../codex/codex-state-db-backfill-recovery', () => ({
+  startCodexStateDbBackfillRecoveryInBackground: vi.fn()
+}))
+
 import { consumeCodexRateLimitResetCredit, fetchCodexRateLimits } from './codex-fetcher'
 
 describe('Codex backend rate-limit requests', () => {
@@ -72,7 +77,7 @@ describe('Codex backend rate-limit requests', () => {
 
     await expect(
       fetchCodexRateLimits({
-        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\account\\home'
+        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\account\\home'
       })
     ).resolves.toMatchObject({
       session: { usedPercent: 12, windowMinutes: 60, resetsAt: 1_800_000_000_000 },
@@ -125,7 +130,7 @@ describe('Codex backend rate-limit requests', () => {
 
     await expect(
       fetchCodexRateLimits({
-        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\nash\\account\\home'
+        codexHomePath: '\\\\wsl.localhost\\Ubuntu\\home\\alice\\.local\\share\\orca\\account\\home'
       })
     ).resolves.toMatchObject({
       session: null,

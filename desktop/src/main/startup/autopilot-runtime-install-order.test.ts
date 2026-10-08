@@ -14,7 +14,6 @@ import {
   routingTableAvailabilityOf
 } from '../runtime/workbench-run/routing-table-context-registry'
 import { setWorkbenchRoutingRuntime } from '../runtime/workbench-routing/workbench-routing-runtime'
-import { registerExecutorStopPort } from '../runtime/workflow-run/executor-stop-port'
 import {
   getPrimarySessionRuntime,
   setPrimarySessionRuntime
@@ -97,7 +96,6 @@ describe('installAutopilotRuntime: the tested startup order', () => {
       'createPrimarySessions',
       'primary.reconcile',
       'createExecution',
-      'execution.reconcileAfterRestart',
       'createValidation',
       'installPermissionRelay',
       'reconcileLaunches',
@@ -121,9 +119,6 @@ describe('installAutopilotRuntime: the tested startup order', () => {
     expect(routingTableAvailabilityOf(fake.runtime)).not.toBeNull()
     expect(() => requireAutopilotTaskApi(fake.runtime)).not.toThrow()
     expect(() => requirePermissionRelay(fake.runtime)).not.toThrow()
-    expect(() => registerExecutorStopPort(fake.runtime, { stopExecutor: vi.fn() })).toThrow(
-      /already registered/
-    )
   })
 
   it('opens run launches only after the task API, the relay and the validators are in', async () => {

@@ -6,7 +6,6 @@ import {
 import { computeAgentLaunchFingerprint } from '../../../shared/agent-launch-operation'
 import type { AgentSessionOperationRow } from '../../../shared/agent-session-operation-ledger'
 import type { AgentLaunchParams } from '../../../shared/rpc-contract/agent-launch-params'
-import { getStructuredAgentSessionHost } from '../../native-chat/agent-session-wire/structured-agent-session-registry'
 import type { OrcaRuntimeService } from '../orca-runtime'
 import {
   admitAgentLaunchOperation,
@@ -23,6 +22,7 @@ export type PrimaryLaunchAdmission =
   | {
       readonly decision: 'execute'
       readonly ledger: 'orca' | 'app_only'
+      record(result: AgentLaunchResult): Promise<void>
       settle(result: AgentLaunchResult): Promise<void>
       fail(code: string): Promise<void>
     }
@@ -39,14 +39,21 @@ export type PrimaryLaunchLedgerRow =
 
 export type PrimaryLaunchLedgerPort = {
   admit(intent: AgentLaunchIntent, operationId: string): Promise<PrimaryLaunchAdmission>
-  read(operationId: string): PrimaryLaunchLedgerRow
+  read(operationId: string): PrimaryLaunchLedgerRow | Promise<PrimaryLaunchLedgerRow>
 }
 
 export type PrimaryLaunchLedgerDeps = {
   /** `admitAgentLaunchOperation`, bound to the runtime. */
   admit(params: PrimaryLaunchParams, fingerprint: string): Promise<AgentLaunchAdmission>
-  /** The structured host's operation row, or `unavailable` when no host is installed. */
-  readRow(callerKey: string, operationId: string): AgentSessionOperationRow | null | 'unavailable'
+  /** The native operation row; opening its store does not require a chat host. */
+  readRow(
+    callerKey: string,
+    operationId: string
+  ):
+    | AgentSessionOperationRow
+    | null
+    | 'unavailable'
+    | Promise<AgentSessionOperationRow | null | 'unavailable'>
 }
 
 const ENTROPY = /^[0-9a-f]{32}$/
@@ -104,7 +111,13 @@ export function createPrimaryLaunchLedger(deps: PrimaryLaunchLedgerDeps): Primar
         admission = await deps.admit(params, computeAgentLaunchFingerprint(params))
       } catch (error) {
         return errorCodeOf(error) === STRUCTURED_HOST_UNSUPPORTED
-          ? { decision: 'execute', ledger: 'app_only', settle: NO_LEDGER, fail: NO_LEDGER }
+          ? {
+              decision: 'execute',
+              ledger: 'app_only',
+              record: NO_LEDGER,
+              settle: NO_LEDGER,
+              fail: NO_LEDGER
+            }
           : { decision: 'refuse', code: 'autopilot_launch_ledger_unavailable' }
       }
       if (admission.decision === 'replay') {
@@ -116,12 +129,13 @@ export function createPrimaryLaunchLedger(deps: PrimaryLaunchLedgerDeps): Primar
       return {
         decision: 'execute',
         ledger: 'orca',
+        record: (result) => admission.record(result),
         settle: (result) => admission.settle(result),
         fail: (code) => admission.fail(code)
       }
     },
-    read(operationId) {
-      const row = deps.readRow(PRIMARY_LAUNCH_CALLER_KEY, operationId)
+    async read(operationId) {
+      const row = await deps.readRow(PRIMARY_LAUNCH_CALLER_KEY, operationId)
       if (row === 'unavailable') {
         return { kind: 'unavailable' }
       }
@@ -144,15 +158,19 @@ export function createPrimaryLaunchLedger(deps: PrimaryLaunchLedgerDeps): Primar
   }
 }
 
-/** Bound to the running app: Orca's own admission and the structured host's operation store. */
+/** Bound to the running app: Orca's own admission and native operation store. */
 export function createOrcaPrimaryLaunchLedger(
   runtime: OrcaRuntimeService
 ): PrimaryLaunchLedgerPort {
   return createPrimaryLaunchLedger({
-    admit: (params, fingerprint) => admitAgentLaunchOperation({ runtime }, params, fingerprint),
-    readRow: (callerKey, operationId) => {
-      const host = getStructuredAgentSessionHost()
-      return host ? host.deps.store.getOperationRow(callerKey, operationId) : 'unavailable'
+    admit: (params, fingerprint) =>
+      admitAgentLaunchOperation({ runtime, caller: { kind: 'local-cli' } }, params, fingerprint),
+    readRow: async (callerKey, operationId) => {
+      try {
+        return (await runtime.openAgentSessionRecordStore()).getOperationRow(callerKey, operationId)
+      } catch {
+        return 'unavailable'
+      }
     }
   })
 }

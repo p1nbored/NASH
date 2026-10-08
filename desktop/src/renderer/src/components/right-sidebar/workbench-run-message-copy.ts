@@ -8,7 +8,7 @@ const QUEUED = new Map<string, () => string>([
     () =>
       translate(
         'workbench.runs.message.queued.agentBusy',
-        'Queued. Claude is working, so the message waits in the session.'
+        'Queued. The primary is working, so the message waits in the session.'
       )
   ],
   [
@@ -111,7 +111,7 @@ const REFUSED = new Map<string, () => string>([
     () =>
       translate(
         'workbench.runs.message.refused.primaryNotLive',
-        'The Claude Code session is not running.'
+        'The primary session is not running.'
       )
   ],
   [

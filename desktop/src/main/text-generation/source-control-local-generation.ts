@@ -108,10 +108,17 @@ function runCodexLocalPlanUnderHomeLock(
 
 export function runCodexProcessWithHomeLock<T>(
   lockKey: string,
-  start: () => LocalProcessExecution<T>
+  start: () => LocalProcessExecution<T>,
+  signal?: AbortSignal
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
+    let started = false
+    const cancelQueued = () => { if (!started) reject(signal?.reason) }
+    signal?.addEventListener('abort', cancelQueued, { once: true })
+    if (signal?.aborted) cancelQueued()
     void withCodexHomeProcessLock(lockKey, async () => {
+      signal?.throwIfAborted()
+      started = true
       const execution = start()
       try {
         resolve(await execution.result)
@@ -120,6 +127,6 @@ export function runCodexProcessWithHomeLock<T>(
       } finally {
         await execution.processClosed
       }
-    }).catch(reject)
+    }).catch(reject).finally(() => signal?.removeEventListener('abort', cancelQueued))
   })
 }

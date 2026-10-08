@@ -148,6 +148,7 @@ export function buildDefaultSettings(args: {
     openInApplications: [...DEFAULT_OPEN_IN_APPLICATIONS],
     rightSidebarOpenByDefault: true,
     showGitIgnoredFiles: true,
+    followSymlinkedDirectories: false,
     sourceControlViewMode: 'list',
     sourceControlGroupOrder: DEFAULT_SOURCE_CONTROL_GROUP_ORDER,
     sourceControlCompareAgainstUpstream: false,
@@ -184,6 +185,9 @@ export function buildDefaultSettings(args: {
     codexManagedAccounts: [],
     activeCodexManagedAccountId: null,
     activeCodexManagedAccountIdsByRuntime: { host: null, wsl: {} },
+    claudeManagedAccounts: [],
+    activeClaudeManagedAccountId: null,
+    activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: {} },
     terminalScopeHistoryByWorktree: true,
     terminalHiddenViewParking: true,
     // C1 kill switches — runtime reads stay `!== false` so older persisted

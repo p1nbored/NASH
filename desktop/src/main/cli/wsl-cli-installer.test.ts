@@ -6,9 +6,14 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const runWslProcessMock = vi.hoisted(() => vi.fn())
+const getWslGuestEnvironmentMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../wsl/wsl-runner', () => ({
   runWslProcess: runWslProcessMock
+}))
+
+vi.mock('../wsl/wsl-guest-environment', () => ({
+  getWslGuestEnvironment: getWslGuestEnvironmentMock
 }))
 
 import { WslCliInstaller, _internals } from './wsl-cli-installer'
@@ -158,6 +163,7 @@ function createWslRunner(
 describe('WslCliInstaller', () => {
   beforeEach(() => {
     runWslProcessMock.mockReset()
+    getWslGuestEnvironmentMock.mockReset().mockResolvedValue(null)
   })
 
   afterEach(() => {
@@ -776,6 +782,32 @@ describe('WslCliInstaller', () => {
     await expect(installer.repairManagedRegistration()).resolves.toMatchObject({ changed: false })
     expect(wsl.calls.filter((command) => command.includes('cat > "$command_tmp"'))).toHaveLength(1)
     expect(wsl.getFile()).toContain("ORCA_WIN_LAUNCHER='D:\\Custom Orca\\resources\\bin\\orca.exe'")
+  })
+
+  it('allows a six-second cold environment probe without extending the command budget', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(0)
+    getWslGuestEnvironmentMock.mockImplementationOnce(async () => {
+      vi.setSystemTime(6_000)
+      return { path: '/usr/bin', home: '/home/alice', envBinary: '/usr/bin/env' }
+    })
+    const wsl = createWslRunner()
+    runWslProcessMock.mockImplementation(async ({ distro, script }) => ({
+      environmentResolved: true,
+      code: 0,
+      stdout: await wsl.runner(distro, script),
+      stderr: '',
+      timedOut: false
+    }))
+    const installer = new WslCliInstaller({
+      platform: 'win32',
+      distro: 'Ubuntu',
+      hostInstaller: { getStatus: async () => makeHostStatus() }
+    })
+
+    await expect(installer.getStatus()).resolves.toMatchObject({ state: 'not_installed' })
+    expect(getWslGuestEnvironmentMock).toHaveBeenNthCalledWith(1, 'Ubuntu', 10_000)
+    expect(runWslProcessMock.mock.calls[0][0].timeoutMs).toBe(4_000)
   })
 
   it('settles when wsl.exe never reports completion', async () => {

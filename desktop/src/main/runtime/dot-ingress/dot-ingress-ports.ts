@@ -8,7 +8,6 @@ import type {
 } from '../../../shared/rpc-contract/workbench-params'
 import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import type { MessageRow } from '../orchestration/types'
-import type { AttemptWorktreeChangesReader } from '../task-validation/attempt-worktree-changes'
 import type { PermissionRelayService } from '../permission-relay/permission-request-service'
 import type { WorkbenchLocalWorkspace } from '../workbench-local-workspace'
 import type { WorkbenchIntakeTarget } from '../workbench-intake-submit'
@@ -48,7 +47,5 @@ export type DotIngressServiceDeps = {
   messenger(): DotRunMessenger
   /** Wakes the run's mailbox readers for a notice a validation decision filed (G6's service). */
   announce(message: MessageRow): void
-  /** Git facts of a waived attempt's own worktree, as the desktop decision reads them; absent, none. */
-  readonly readWorktreeChanges?: AttemptWorktreeChangesReader
   now(): Date
 }

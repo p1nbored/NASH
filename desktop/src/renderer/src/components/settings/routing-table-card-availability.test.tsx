@@ -96,7 +96,7 @@ describe('RoutingTableCard route availability', () => {
       /awaiting your confirmation/i
     )
     expect(routeRow('High-quality writing').textContent).toContain('Not checked')
-    expect(routeRow('Coordinator').textContent).toContain('Not checked')
+    expect(routeRow('Primary').textContent).toContain('Not checked')
     const reviewers = screen.getByRole('list', { name: 'Reviewers' })
     expect(within(reviewers).getAllByText('Not checked')).toHaveLength(2)
   })
@@ -200,7 +200,7 @@ describe('RoutingTableCard route availability', () => {
     })
 
     openAdvanced()
-    for (const name of ['Refresh', 'Import…', 'Edit Software engineering', 'Edit Coordinator']) {
+    for (const name of ['Refresh', 'Import…', 'Edit Software engineering', 'Edit Primary']) {
       expect(screen.getByRole('button', { name }), name).toHaveProperty('disabled', true)
     }
     const proposal = screen.getByRole('group', { name: 'App update' })

@@ -78,9 +78,9 @@ describe('dot run link: a run is addressed only through the dot request that sta
       workspaceId: 'fixture-repo::/fixture/repo',
       workspaceBinding: 'c'.repeat(64),
       requestedAccess: 'read_only',
-      deliverableLanguage: null,
       routingTableVersion: 1,
       routingTableSha256: 'b'.repeat(64),
+      coordinatorAgent: 'claude',
       coordinatorModel: 'claude-opus-5-5',
       coordinatorEffort: 'max',
       timestamp: '2026-10-05T00:00:10.000Z'

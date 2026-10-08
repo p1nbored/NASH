@@ -37,7 +37,7 @@ export const RouteSchema = z
   .object({
     task_type: z.enum(ROUTING_TASK_TYPES),
     execution_target: z.enum(EXECUTION_TARGETS),
-    // Why: PinnedModelIdSchema refuses aliases, selectors, rejected slugs and Gemini 4, so only `inherit` is added here.
+    // Why: PinnedModelIdSchema refuses aliases, selectors and rejected slugs, so only `inherit` is added here.
     model: z.union([z.literal(INHERIT), PinnedModelIdSchema]),
     reasoning_level: z.enum(REASONING_LEVELS),
     reasoning_requirement: z.enum(REASONING_REQUIREMENTS).default('required'),
@@ -77,6 +77,7 @@ export type Route = z.infer<typeof RouteSchema>
 /** The primary session's own launch configuration; `inherit` rows resolve to it. */
 export const CoordinatorSchema = z
   .object({
+    agent: z.enum(['claude', 'codex']),
     model: PinnedModelIdSchema,
     reasoning_level: z.enum(CONCRETE_REASONING_LEVELS)
   })

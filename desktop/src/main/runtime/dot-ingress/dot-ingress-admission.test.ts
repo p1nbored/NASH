@@ -25,7 +25,7 @@ const frame = (overrides: Record<string, unknown> = {}) =>
     id: 'req-1',
     authToken: FIXTURE_INGRESS_TOKEN,
     method: 'dotIngress.hello',
-    params: { contractVersion: 1 },
+    params: { contractVersion: 3 },
     ...overrides
   })
 
@@ -48,7 +48,7 @@ describe('dot ingress frame admission', () => {
       id: 'req-1',
       authToken: '',
       method: 'dotIngress.hello',
-      params: { contractVersion: 1 }
+      params: { contractVersion: 3 }
     })
     expect(requireDotIngressCaller(admission.caller)).toBe(admission.caller)
   })

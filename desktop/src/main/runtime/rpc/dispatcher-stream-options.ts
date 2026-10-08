@@ -3,6 +3,7 @@ import type { TerminalStreamFrame } from '../../../shared/terminal-stream-protoc
 import type { PairingRpcContext } from './core'
 import type { WorkbenchCaller } from '../workbench-caller'
 import type { DotIngressCaller } from '../dot-ingress/dot-ingress-caller'
+import type { RpcCallerIdentity } from './rpc-caller-identity'
 
 export type RpcDispatchStreamingOptions = {
   workbenchCaller?: WorkbenchCaller
@@ -12,6 +13,8 @@ export type RpcDispatchStreamingOptions = {
   signal?: AbortSignal
   clientId?: string
   pairedDeviceId?: string
+  /** Set by a transport that knows its caller but carries no paired device (the desktop's IPC). */
+  caller?: RpcCallerIdentity
   clientKind?: 'mobile' | 'runtime'
   clientCapabilities?: readonly RuntimeCapability[]
   updateClientCapabilities?: (capabilities: readonly RuntimeCapability[]) => void

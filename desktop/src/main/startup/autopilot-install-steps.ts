@@ -1,7 +1,6 @@
 import { setTaskClassificationRuntime } from '../runtime/task-classification/classification-runtime'
 import { registerValidationBacklogPort } from '../runtime/task-validation/validation-backlog-port'
 import { registerRoutingTableContext } from '../runtime/workbench-run/routing-table-context-registry'
-import { registerExecutorStopPort } from '../runtime/workflow-run/executor-stop-port'
 import { setPrimarySessionRuntime } from '../runtime/workflow-run/primary-session-runtime'
 import { createClassificationNotice } from './autopilot-classification-notice'
 import { requirePart, type AutopilotInstallContext } from './autopilot-install-context'
@@ -114,9 +113,6 @@ export function installExecution(context: AutopilotInstallContext): void {
     now: context.now,
     log: context.log
   })
-  // Why before the stop port: executors an earlier run left are settled from their records first.
-  execution.reconcileAfterRestart()
-  context.parts.unregisterStopPort = registerExecutorStopPort(context.runtime, execution.stopPort)
   context.parts.execution = execution
 }
 

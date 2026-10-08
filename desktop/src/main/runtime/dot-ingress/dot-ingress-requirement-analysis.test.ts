@@ -7,9 +7,9 @@ import { analyzeDotRequirement } from './dot-ingress-requirement-analysis'
 const FAKE_JWT = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmaXh0dXJlIn0.c2lnbmF0dXJl'
 const FAKE_BEARER = 'Bearer 0123456789abcdef0123'
 
-function refusal(objective: string, deliverableLanguage?: string) {
+function refusal(objective: string) {
   try {
-    analyzeDotRequirement({ objective, deliverableLanguage })
+    analyzeDotRequirement({ objective })
     return null
   } catch (error) {
     if (!(error instanceof OrchestrationError)) {
@@ -26,15 +26,14 @@ describe('dot requirement analysis', () => {
         'Summarize the config in `/srv/fixture/app.yml` and mail the owner at "owner@example.test".'
     })
     expect(analysis).toEqual({
-      scanRules: ['email_address', 'posix_absolute_path'],
-      deliverableLanguage: null
+      scanRules: ['email_address', 'posix_absolute_path']
     })
   })
 
   it('keeps quoted text in any script out of the English check', () => {
     expect(
       analyzeDotRequirement({ objective: 'Translate the title “設定ファイル” into English.' })
-    ).toEqual({ scanRules: [], deliverableLanguage: null })
+    ).toEqual({ scanRules: [] })
   })
 
   it.each([
@@ -82,16 +81,6 @@ describe('dot requirement analysis', () => {
     )
     const manySpans = Array.from({ length: 33 }, (_unused, index) => `"n${index}"`).join(' ')
     expect(refusal(`Rename these files: ${manySpans}.`)?.code).toBe('dot_requirement_too_long')
-  })
-
-  it('canonicalizes the deliverable language and refuses an invalid tag', () => {
-    expect(
-      analyzeDotRequirement({
-        objective: 'Summarize the issues.',
-        deliverableLanguage: 'zh-hant-tw'
-      }).deliverableLanguage
-    ).toBe('zh-Hant-TW')
-    expect(refusal('Summarize the issues.', 'en_US')?.code).toBe('dot_deliverable_language_invalid')
   })
 
   it('checks a secret before anything else, so no other error can hint at its position', () => {

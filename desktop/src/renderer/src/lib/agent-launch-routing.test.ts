@@ -5,11 +5,7 @@ import {
   STRUCTURED_AGENT_SESSION_RUNTIME_CAPABILITY
 } from '../../../shared/protocol-version'
 import { ELECTRON_REMOTE_RUNTIME_CLIENT_CAPABILITIES } from '../../../shared/electron-remote-runtime-client-capabilities'
-import {
-  hasExplicitTuiLaunchCommand,
-  resolveAgentLaunchRoute,
-  structuredAgentLaunchSupported
-} from './agent-launch-routing'
+import { resolveAgentLaunchRoute, structuredAgentLaunchSupported } from './agent-launch-routing'
 
 const settings = {
   experimentalNativeChat: true,
@@ -92,7 +88,7 @@ describe('resolveAgentLaunchRoute', () => {
     // openclaude and grok render native chat but have no structured adapter.
     expect(route({ agent: 'openclaude' })).toBe('legacy-native-chat')
     expect(route({ agent: 'grok' })).toBe('legacy-native-chat')
-    expect(route({ requiresTuiLaunchCommand: true })).toBe('legacy-native-chat')
+    expect(route({ startsOutsideWorkspaceRoot: true })).toBe('legacy-native-chat')
   })
 
   it('keeps an SSH workspace terminal-backed, since no Orca runtime runs there', () => {
@@ -126,7 +122,9 @@ describe('resolveAgentLaunchRoute', () => {
     expect(route({ ...server, clientCapabilities: [] })).toBe('legacy-native-chat')
     expect(route({ ...server, clientCapabilities: undefined })).toBe('legacy-native-chat')
     // A released server admits chats only with its own setting on, so it keeps the terminal.
-    expect(route({ executionHostId: 'runtime:environment-a' })).toBe('legacy-native-chat')
+    expect(
+      route({ executionHostId: 'runtime:environment-a', clientCapabilities: structured })
+    ).toBe('legacy-native-chat')
     // The server has not answered yet, or answered without structured sessions.
     expect(route({ executionHostId: 'runtime:environment-a', hostCapabilities: null })).toBe(
       'legacy-native-chat'
@@ -136,19 +134,16 @@ describe('resolveAgentLaunchRoute', () => {
     )
   })
 
-  it.each(['git-worktree', 'folder'] as const)(
-    'supports a local %s without widening floating-terminal scope',
+  // Floating joined this list: its configured directory resolves like any other workspace, so a
+  // session can be filed under it. Workspace kind no longer downgrades a launch on its own.
+  it.each(['git-worktree', 'folder', 'floating'] as const)(
+    'resolves a structured session for a local %s',
     (workspaceKind) => {
       expect(route({ workspaceKind })).toBe('structured-native-chat')
     }
   )
 
-  // Why floating is here and not with the structured kinds: it has no workspace a session can
-  // be filed under, but the chat view is a pane-level rendering the panel already hosts, so the
-  // chat default still applies — terminal-backed, not structured.
-  it('keeps floating, WSL, and repair-required launches terminal-backed', () => {
-    expect(route({ workspaceKind: 'floating' })).toBe('legacy-native-chat')
-    expect(route({ agent: 'claude', workspaceKind: 'floating' })).toBe('legacy-native-chat')
+  it('keeps WSL and repair-required launches terminal-backed', () => {
     expect(
       route({
         projectRuntime: {
@@ -178,15 +173,6 @@ describe('resolveAgentLaunchRoute', () => {
         }
       })
     ).toBe('legacy-native-chat')
-  })
-
-  it('treats a whitespace-only command override as no override', () => {
-    expect(hasExplicitTuiLaunchCommand({ agentCmdOverrides: { codex: '   ' } }, 'codex')).toBe(
-      false
-    )
-    expect(
-      hasExplicitTuiLaunchCommand({ agentCmdOverrides: { codex: 'codex-nightly' } }, 'codex')
-    ).toBe(true)
   })
 })
 

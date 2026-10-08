@@ -2,8 +2,11 @@ import { existsSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { DotIngressMetadata } from '../../../shared/dot-ingress/dot-ingress-metadata'
-import { getDotIngressMetadataPath } from '../../../shared/dot-ingress/dot-ingress-metadata'
+import {
+  type DotIngressMetadata,
+  getDotIngressMetadataPath
+} from '../../../shared/dot-ingress/dot-ingress-metadata'
+
 import * as secureFile from '../../../shared/secure-file'
 import { createDotIngressTransportMetadata } from '../runtime-rpc/runtime-rpc-socket-metadata'
 import {
@@ -32,7 +35,7 @@ const metadataFor = (overrides: Partial<DotIngressMetadata> = {}): DotIngressMet
   runtimeId: FIXTURE_RUNTIME_ID,
   pid: OWN_PID,
   startedAt: 1_790_000_000_000,
-  contractVersions: [1],
+  contractVersions: [3],
   // Why: derived from the runtime naming code, so the fixture follows the app identity prefix.
   transport: createDotIngressTransportMetadata('/data', OWN_PID, 'win32', 'ab12'),
   ingressToken: FIXTURE_INGRESS_TOKEN,

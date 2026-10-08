@@ -106,6 +106,7 @@ describe('WorkbenchRunsSection', () => {
       expect(row.textContent).not.toContain(hidden)
     }
     const copied = await copyDetailsText(row, clipboard)
+    expect(copied).not.toContain('deliverable_language')
     expect(copied.split('\n')).toEqual(
       expect.arrayContaining([
         'NASH Workbench: run',
@@ -117,6 +118,21 @@ describe('WorkbenchRunsSection', () => {
         `routing_table_sha256: ${'a'.repeat(64)}`
       ])
     )
+  })
+
+  it('names a Codex primary from the stored run configuration', async () => {
+    const run = runView(1, {
+      coordinator: { agent: 'codex', model: 'gpt-6-astra', effort: 'high' }
+    })
+    routeRpc({
+      'workbench.runs.list': () => runList([run]),
+      'workbench.runs.show': () => ({ run })
+    })
+    render(<RunsHost />)
+    const row = await screen.findByRole('listitem')
+    expect(within(row).getByText('Codex')).toBeDefined()
+    expect(within(row).queryByText('Claude Code')).toBeNull()
+    expect(await copyDetailsText(row, clipboard)).toContain('coordinator_agent: codex')
   })
 
   it('reveals the primary terminal tab without moving keyboard focus', async () => {
@@ -167,7 +183,7 @@ describe('WorkbenchRunsSection', () => {
     await screen.findByText('Canceled')
     expect(callsTo('workbench.runs.stop')).toEqual([{ runId: 'run-1' }])
     expect(screen.getByText('Stopped in the app')).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Stop run' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Stop run' })).toBeDefined()
     expect(screen.queryByLabelText('Message to the session')).toBeNull()
   })
 
@@ -270,7 +286,7 @@ describe('WorkbenchRunsSection', () => {
     const box = await screen.findByLabelText('Message to the session')
     fireEvent.change(box, { target: { value: 'Also run the lint step.' } })
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
-    await screen.findByText('Queued. Claude is working, so the message waits in the session.')
+    await screen.findByText('Queued. The primary is working, so the message waits in the session.')
     expect(box).toHaveProperty('value', '')
     fireEvent.change(box, { target: { value: 'Then summarize the result.' } })
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))

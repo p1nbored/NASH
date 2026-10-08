@@ -3,10 +3,16 @@
 // pairing and refresh vectors drive the whole agent in dot-remote-conformance-pairing.test.ts.
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
-import { DEVICE } from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
-import type { DotRemoteEndpointStep } from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
-import { buildDotRemoteConformanceVectors } from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
-import type { DotRemoteVector } from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
+import {
+  DEVICE,
+  type DotRemoteEndpointStep
+} from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
+
+import {
+  buildDotRemoteConformanceVectors,
+  type DotRemoteVector
+} from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
+
 import { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import { createDotRemoteSessionHolder } from './dot-remote-agent-session'
 import { createDotRemoteConsumer, type DotRemoteAckedItem } from './dot-remote-consumer'

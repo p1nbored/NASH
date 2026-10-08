@@ -13,6 +13,7 @@ import {
   getWorkflowRunStore,
   type WorkflowRunStore
 } from '../../../../orchestration/db/workflow-run-store'
+import { isNativeTaskAttempt } from '../../../../workflow-run/app-run-policy'
 import type { TaskRow } from '../../../../orchestration/types'
 import { defineMethod } from '../../../core'
 import {
@@ -38,12 +39,24 @@ function isUnsettled(entry: Settled): entry is Unsettled {
 }
 
 // Why the validation is re-read: completed counts only with a pass or a user/dot waiver on record.
-function settlementOf(validations: TaskValidationStore, task: TaskRow): Settled {
+function settlementOf(
+  owner: OrchestrationDb,
+  validations: TaskValidationStore,
+  task: TaskRow
+): Settled {
   if (task.status === 'failed') {
     return 'failed'
   }
   if (task.status !== 'completed') {
     return { taskId: task.id, status: task.status }
+  }
+  const dispatch = owner.getDispatchContext(task.id)
+  if (
+    dispatch &&
+    isNativeTaskAttempt(owner, dispatch.id) &&
+    owner.getWorkerDispatch(dispatch.id)?.state === 'succeeded'
+  ) {
+    return 'completed'
   }
   const validated =
     validations.hasPassing(task.id) ||
@@ -55,7 +68,7 @@ function unsettledRefusal(unsettled: Unsettled[]): Error {
   const count = unsettled.length
   return autopilotRefusal(
     AUTOPILOT_TASK_API_ERROR_CODES.tasksUnsettled,
-    `The run cannot complete: ${count} ${count === 1 ? 'task is' : 'tasks are'} not settled. Each task must be completed with a passing validation, or failed. Start or report each open task, or ask the user to fail the ones no longer needed.`,
+    `The run cannot complete: ${count} ${count === 1 ? 'task is' : 'tasks are'} not settled. Each task must have a native worker completion, a passing validation, or a failure. Start or report each open task, or ask the user to fail the ones no longer needed.`,
     { unsettledCount: count, unsettledTasks: unsettled.slice(0, UNSETTLED_LIST_LIMIT) }
   )
 }
@@ -80,7 +93,9 @@ function completeRun(
       to: 'completing',
       expectedRevision: run.revision
     })
-    const settled = owner.listTasks({ runId }).map((task) => settlementOf(stores.validations, task))
+    const settled = owner
+      .listTasks({ runId })
+      .map((task) => settlementOf(owner, stores.validations, task))
     const unsettled = settled.filter(isUnsettled)
     if (unsettled.length > 0) {
       throw unsettledRefusal(unsettled)

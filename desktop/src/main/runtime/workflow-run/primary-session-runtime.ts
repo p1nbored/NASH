@@ -75,6 +75,7 @@ export type PrimarySessionStatusRead = {
 export type PrimarySessionRuntime = {
   startWorkflowRun(input: StartWorkflowRunInput): Promise<StartWorkflowRunResult>
   stopPrimarySession(runId: string, reason: string): Promise<PrimarySessionStopResult>
+  stopRunWorkers?(runId: string): Promise<void>
   /** Null when the run has no owner record. */
   readPrimarySessionStatus(runId: string): Promise<PrimarySessionStatusRead | null>
   deliverRunMessage(input: RunMessageDeliveryInput): Promise<RunMessageDeliveryResult>

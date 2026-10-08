@@ -142,6 +142,7 @@ describe('dot MCP tool manifest', () => {
     expect(manifest.injected).toEqual({ contractVersion: 3 })
     for (const entry of manifest.tools) {
       expect(propertyNames(entry.inputSchema), entry.name).not.toContain('contractVersion')
+      expect(propertyNames(entry.inputSchema), entry.name).not.toContain('deliverableLanguage')
     }
   })
 

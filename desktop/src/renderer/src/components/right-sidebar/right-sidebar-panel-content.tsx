@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { lazyWithRetry as lazy } from '@/lib/lazy-with-retry'
 import type { ActiveRightSidebarTab } from '@/store/slices/editor'
+import type { RightSidebarVisualState } from '@/store/slices/editor/actions/right-sidebar-state'
 import { isPluginPanelTabKey } from '../../../../shared/plugins/plugin-manifest'
 
 const FileExplorer = lazy(() => import('./FileExplorer'))
@@ -12,16 +13,32 @@ const FolderWorkspaceWorktreesPanel = lazy(() => import('./FolderWorkspaceWorktr
 const FolderWorkspacePrChecksPanel = lazy(() => import('./FolderWorkspacePrChecksPanel'))
 const PluginPanel = lazy(() => import('./PluginPanel'))
 const WorkbenchPanel = lazy(() => import('./WorkbenchPanel'))
+const NativeChatVisualPanel = lazy(() => import('../native-chat/NativeChatVisualPanel'))
 
 type RightSidebarPanelContentProps = {
   effectiveTab: ActiveRightSidebarTab
   rightSidebarOpen: boolean
+  visual: RightSidebarVisualState | null
 }
 
 export function RightSidebarPanelContent({
   effectiveTab,
-  rightSidebarOpen
+  rightSidebarOpen,
+  visual
 }: RightSidebarPanelContentProps): React.JSX.Element {
+  if (visual) {
+    // Why key: a different visual is a different frame, never a reused one.
+    return (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <Suspense fallback={null}>
+          <NativeChatVisualPanel
+            key={`${visual.sessionId}:${visual.messageId}:${visual.file}`}
+            route={visual}
+          />
+        </Suspense>
+      </div>
+    )
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <Suspense fallback={null}>

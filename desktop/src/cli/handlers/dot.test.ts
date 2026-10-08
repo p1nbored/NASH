@@ -26,7 +26,6 @@ function requestView(overrides: Record<string, unknown> = {}) {
     sequence: 1,
     revision: 2,
     workspaceRef: WORKSPACE_REF,
-    deliverableLanguage: null,
     reply: null,
     createdAt: '2026-10-05T00:00:10.000Z',
     updatedAt: '2026-10-05T00:00:10.000Z',
@@ -93,17 +92,17 @@ describe('orca dot commands', () => {
       expect(spec.path[0]).toBe('dot')
       expect(spec.allowedFlags).not.toContain('objective')
       expect(spec.allowedFlags).not.toContain('text')
+      expect(spec.allowedFlags).not.toContain('language')
     }
   })
 
-  it('submits the objective read from a file, with the given key, access and language', async () => {
+  it('submits the objective read from a file, with the given key and access', async () => {
     const { send, run, printed } = harness()
     await run('dot submit', {
       workspace: WORKSPACE_REF,
       'objective-file': 'objective.txt',
       'idempotency-key': REQUEST_ID,
-      access: 'read_only',
-      language: 'de'
+      access: 'read_only'
     })
     expect(send).toHaveBeenCalledWith(
       METADATA,
@@ -113,8 +112,7 @@ describe('orca dot commands', () => {
         workspaceRef: WORKSPACE_REF,
         objective: OBJECTIVE,
         idempotencyKey: REQUEST_ID,
-        requestedAccess: 'read_only',
-        deliverableLanguage: 'de'
+        requestedAccess: 'read_only'
       },
       expect.any(Number)
     )

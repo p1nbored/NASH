@@ -1,22 +1,32 @@
 import type { SecretAtRestProtection } from '../../../../shared/secret-at-rest-protection'
 import { useEffect, useRef, useState } from 'react'
-import type { CodexRateLimitAccountsState } from '../../../../shared/managed-account-types'
+import type {
+  ClaudeRateLimitAccountsState,
+  CodexRateLimitAccountsState
+} from '../../../../shared/managed-account-types'
 import type { CodexConfigSyncStatus } from '../../../../shared/codex-config-sync-types'
 import { toast } from 'sonner'
 import { useAppStore } from '../../store'
 import { translate } from '@/i18n/i18n'
 import { isWebClientLocation } from '@/lib/web-client-location'
 import {
+  emptyClaudeAccountsState,
   emptyCodexAccountsState,
   hasRemoteProviderAccountOwner,
   watchProviderAccounts
 } from '@/runtime/runtime-provider-accounts-client'
 import {
+  getAccountsClaudeSearchEntries,
   getAccountsCodexSearchEntries,
   getAccountsGeminiSearchEntries,
+  getAccountsCursorSearchEntries,
+  getAccountsGrokSearchEntries,
   getAccountsAntigravitySearchEntries,
   getAccountsLocationSearchEntries,
-  getAccountsPaneSearchEntries
+  getAccountsMiniMaxSearchEntries,
+  getAccountsOpencodeSearchEntries,
+  getAccountsPaneSearchEntries,
+  getAccountsZcodePlanSearchEntries
 } from './accounts-search'
 import { getRemoteAccountsPaneScope } from './provider-account-scope'
 import { ProviderHostScopeControl } from './ProviderHostScopeControl'
@@ -29,24 +39,34 @@ import {
   providerAccountIsActiveInView,
   providerAccountMatchesView
 } from './provider-account-visibility'
+import { GrokAccountsSection } from './GrokAccountsSection'
 import { AntigravityAccountsSection } from './AntigravityAccountsSection'
 import { getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
+import { CursorAccountsSection } from './CursorAccountsSection'
+import { ZcodePlanAccountsSection } from './ZcodePlanAccountsSection'
 import type {
   AccountsPaneProps,
   AccountsPaneSectionModel,
+  ClaudeAccountAction,
   CodexAccountAction,
   RemoveAccountTarget
 } from './accounts-pane-types'
 import { EMPTY_WSL_DISTROS, getSelectedAccountRuntime } from './accounts-pane-runtime'
 import { watchCodexConfigSyncStatus } from './accounts-pane-config-sync'
-import { createCodexAccountActionRunner } from './accounts-pane-account-actions'
+import {
+  createClaudeAccountActionRunner,
+  createCodexAccountActionRunner
+} from './accounts-pane-account-actions'
 import { createMiniMaxCredentialActions } from './accounts-pane-minimax-actions'
 import { renderAccountsLocationSection } from './accounts-pane-location-section'
+import { renderClaudeAccountsSection } from './accounts-pane-claude-section'
 import { renderCodexAccountsSection } from './accounts-pane-codex-section'
-import { renderGeminiAccountsSection } from './accounts-pane-provider-setting-sections'
-import { renderUsageProviderSections } from './accounts-pane-usage-sections'
+import {
+  renderGeminiAccountsSection,
+  renderOpenCodeAccountsSection
+} from './accounts-pane-provider-setting-sections'
+import { renderMiniMaxAccountsSection } from './accounts-pane-minimax-section'
 import { ManagedDataAccountsSection } from './ManagedDataAccountsSection'
-import { CliUsageReadingsSection } from './CliUsageReadingsSection'
 import { renderAccountsRemovalDialogs } from './accounts-pane-removal-dialogs'
 
 export { getAccountsPaneSearchEntries }
@@ -64,8 +84,6 @@ export function AccountsPane({
   const codexRateLimits = useAppStore((s) => s.rateLimits.codex)
   const codexRateLimitTarget = useAppStore((s) => s.rateLimits.codexTarget)
   const miniMaxRateLimits = useAppStore((s) => s.rateLimits.minimax)
-  const usageMetersOn = useAppStore((s) => s.rateLimits.usageMetersDisabled !== true)
-  const cliUsageReadings = useAppStore((s) => s.rateLimits.cliUsageReadings === true)
   const recordFeatureInteraction = useAppStore((s) => s.recordFeatureInteraction)
   const fetchSettings = useAppStore((s) => s.fetchSettings)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
@@ -88,7 +106,7 @@ export function AccountsPane({
     wslDistros,
     wslCapabilitiesLoading
   )
-  // Why: with a Remote Orca Server active the server owns provider accounts
+  // Why: with a Remote NASH Server active the server owns provider accounts
   // (see #7973); every list/select/remove below must scope to it, not host/WSL.
   const isRemoteAccountScope = hasRemoteProviderAccountOwner(settings)
   const activeRuntimeEnvironmentId = settings.activeRuntimeEnvironmentId?.trim() || null
@@ -136,13 +154,20 @@ export function AccountsPane({
     useState<CodexRateLimitAccountsState>(emptyCodexAccountsState)
   const [codexAccountsLoaded, setCodexAccountsLoaded] = useState(false)
   const [codexAction, setCodexAction] = useState<CodexAccountAction>('idle')
+  const [claudeAccounts, setClaudeAccounts] =
+    useState<ClaudeRateLimitAccountsState>(emptyClaudeAccountsState)
+  const [claudeAction, setClaudeAction] = useState<ClaudeAccountAction>('idle')
   // Why: capture the account's runtime slot when the dialog opens; the roster
   // can change underneath an open dialog and lose the slot to diff for restarts.
   const [removeCodexTarget, setRemoveCodexTarget] = useState<RemoveAccountTarget | null>(null)
+  const [removeClaudeTarget, setRemoveClaudeTarget] = useState<RemoveAccountTarget | null>(null)
   const accountVisibilityOptions = {
     remoteOwner: isRemoteAccountScope,
     ownerPlatform: accountOwnerPlatform
   }
+  const visibleClaudeAccounts = claudeAccounts.accounts.filter((account) =>
+    providerAccountMatchesView(account, accountRuntime, accountVisibilityOptions)
+  )
   const visibleCodexAccounts = codexAccounts.accounts.filter((account) =>
     providerAccountMatchesView(account, accountRuntime, accountVisibilityOptions)
   )
@@ -154,6 +179,11 @@ export function AccountsPane({
     ownerPlatformUnknown ? codexAccounts.accounts : visibleCodexAccounts
   ).some((account) =>
     providerAccountIsActiveInView(account, codexAccounts, accountRuntime, accountVisibilityOptions)
+  )
+  const systemClaudeActive = !(
+    ownerPlatformUnknown ? claudeAccounts.accounts : visibleClaudeAccounts
+  ).some((account) =>
+    providerAccountIsActiveInView(account, claudeAccounts, accountRuntime, accountVisibilityOptions)
   )
   // Why: the system default's real identity is host-scoped (it reflects the
   // runtime's own ~/.codex), so only surface it in the host view. Per-distro
@@ -249,6 +279,9 @@ export function AccountsPane({
             setCodexAccounts(snapshot.codex)
             setCodexAccountsLoaded(true)
           }
+          if (!snapshot.failedProviders?.includes('claude')) {
+            setClaudeAccounts(snapshot.claude)
+          }
         },
         onError: (error) => {
           toast.error(
@@ -277,6 +310,16 @@ export function AccountsPane({
     fetchSettings,
     recordFeatureInteraction
   })
+  const runClaudeAccountAction = createClaudeAccountActionRunner({
+    settings,
+    accountRuntime,
+    isRemoteAccountScope,
+    claudeAccounts,
+    setClaudeAccounts,
+    setClaudeAction,
+    fetchSettings,
+    recordFeatureInteraction
+  })
   const model: AccountsPaneSectionModel = {
     settings,
     updateSettings,
@@ -295,6 +338,12 @@ export function AccountsPane({
     accountRuntimeSentenceLabel,
     accountRuntimeUnavailable,
     accountVisibilityOptions,
+    claudeAccounts,
+    claudeAction,
+    visibleClaudeAccounts,
+    systemClaudeActive,
+    setRemoveClaudeTarget,
+    runClaudeAccountAction,
     codexAccounts,
     codexAction,
     visibleCodexAccounts,
@@ -338,15 +387,13 @@ export function AccountsPane({
     matchesSettingsSearch(searchQuery, getAccountsLocationSearchEntries())
       ? renderAccountsLocationSection(model)
       : null,
-    cliUsageReadings &&
-    (!searchQuery || /usage|claude|codex|agy|antigravity/i.test(searchQuery)) ? (
-      <CliUsageReadingsSection key="cli-usage" />
-    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsClaudeSearchEntries())
+      ? renderClaudeAccountsSection(model)
+      : null,
     matchesSettingsSearch(searchQuery, getAccountsCodexSearchEntries())
       ? renderCodexAccountsSection(model)
       : null,
-    // Why: Gemini CLI credentials only feed its usage meter, which NASH keeps off.
-    usageMetersOn && matchesSettingsSearch(searchQuery, getAccountsGeminiSearchEntries())
+    matchesSettingsSearch(searchQuery, getAccountsGeminiSearchEntries())
       ? renderGeminiAccountsSection(model)
       : null,
     matchesSettingsSearch(searchQuery, getAccountsAntigravitySearchEntries()) ? (
@@ -355,15 +402,28 @@ export function AccountsPane({
         owner={getActiveRuntimeTarget(settings)}
         target={{ runtime: accountRuntime.runtime, wslDistro: accountRuntime.wslDistro }}
         label={accountRuntimeSentenceLabel}
-        usageShown={usageMetersOn}
       />
     ) : null,
-    ...renderUsageProviderSections(model, usageMetersOn)
+    matchesSettingsSearch(searchQuery, getAccountsOpencodeSearchEntries())
+      ? renderOpenCodeAccountsSection(model)
+      : null,
+    matchesSettingsSearch(searchQuery, getAccountsMiniMaxSearchEntries())
+      ? renderMiniMaxAccountsSection(model)
+      : null,
+    matchesSettingsSearch(searchQuery, getAccountsGrokSearchEntries()) ? (
+      <GrokAccountsSection key="grok" />
+    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsCursorSearchEntries()) ? (
+      <CursorAccountsSection key="cursor" />
+    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsZcodePlanSearchEntries()) ? (
+      <ZcodePlanAccountsSection key="zcode" />
+    ) : null
   ]
 
   return (
     <div className="space-y-8">
-      {renderAccountsRemovalDialogs(model, removeCodexTarget)}
+      {renderAccountsRemovalDialogs(model, removeCodexTarget, removeClaudeTarget)}
       <SettingsSectionStack sections={visibleSections} spacing="group" />
     </div>
   )

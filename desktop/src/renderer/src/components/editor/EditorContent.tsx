@@ -3,7 +3,6 @@ import type { MarkdownViewMode, OpenFile, PendingEditorReveal } from '@/store/sl
 import type { GitDiffResult } from '../../../../shared/git-diff-compare-types'
 import type { GitStatusEntry } from '../../../../shared/git-status-types'
 import { CheckRunDetailsPanel } from './CheckRunDetailsPanel'
-import TaskWindowPanel from '../task-window/TaskWindowPanel'
 import { CombinedDiffViewer, MarkdownPreview } from './editor-lazy-views'
 import { EditorConflictReviewSurface } from './EditorConflictReviewSurface'
 import { EditorDiffFileSurface } from './EditorDiffFileSurface'
@@ -124,10 +123,6 @@ export function EditorContent({
       activeFile.diffSource === 'combined-uncommitted' ||
       activeFile.diffSource === 'combined-branch' ||
       activeFile.diffSource === 'combined-commit')
-
-  if (activeFile.mode === 'task-window') {
-    return <TaskWindowPanel fileId={activeFile.id} state={activeFile.taskWindow ?? null} />
-  }
 
   if (activeFile.mode === 'check-details') {
     const checkRunDetails = activeFile.checkRunDetails

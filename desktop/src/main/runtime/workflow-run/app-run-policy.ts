@@ -16,9 +16,13 @@ export const APP_RUN_POLICY_ERROR_CODES = {
   useTaskStart: 'autopilot_policy_use_task_start',
   primaryFenced: 'autopilot_policy_primary_fenced',
   resetRefused: 'autopilot_policy_reset_refused',
-  reportRefused: 'autopilot_policy_report_refused',
   stopUnavailable: 'autopilot_policy_stop_unavailable'
 } as const
+
+export function isNativeTaskAttempt(db: OrchestrationDb, dispatchId: string): boolean {
+  const worker = db.getWorkerDispatch(dispatchId)
+  return worker !== undefined && JSON.parse(worker.start_options).nativeTask === true
+}
 
 const RESET_RUN_ID_LIMIT = 5
 
@@ -154,21 +158,4 @@ export function assertNoOpenAppRunBeforeReset(db: OrchestrationDb, readers?: App
     `Reset is refused while an app run is active (${open.length} open).`,
     { runIds: open.slice(0, RESET_RUN_ID_LIMIT).map((run) => run.runId) }
   )
-}
-
-/**
- * settleWorkerReport has no authority check, so it must never settle an app attempt: its claim goes
- * through B3's settlement and a validator. Runs inside Orca's transactions, so it opens no store.
- */
-export function assertWorkerReportNotForAppAttempt(
-  db: OrchestrationDb,
-  dispatchId: string,
-  readers?: AppRunReaders
-): void {
-  if ((readers ?? appRunReadersFor(db)).findExecutorAttempt(dispatchId)) {
-    throw appRunRefusal(
-      APP_RUN_POLICY_ERROR_CODES.reportRefused,
-      `Dispatch ${dispatchId} is an app attempt: its result is recorded by its executor and validated, never reported.`
-    )
-  }
 }

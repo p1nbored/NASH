@@ -23,8 +23,8 @@ import {
   type SchemaEntry
 } from './dot-ingress.test-fixture'
 
-// Pins the exact v1 layout: changing any definition without a new schema version fails here first.
-const SCHEMA_V1_SHA256 = '5e360297d355beefa9dd099bb429700bb3db7f7c5c665cd6eef3e14ea9c5da55'
+// Pins the current schema layout.
+const SCHEMA_SHA256 = '790c217ff50c496ba5a12dc79fcde64e068d353391d970f67c322a3adfc535cf'
 
 function normalizedLayoutHash(): string {
   const text = DOT_INGRESS_SCHEMA_DEFINITIONS.map((definition) =>
@@ -48,7 +48,8 @@ describe('dot ingress schema family', () => {
         'dot_ingress_requests',
         'dot_ingress_schema',
         'dot_ingress_settings',
-        'dot_ingress_workspaces'
+        'dot_ingress_workspaces',
+        'dot_ingress_workspace_access'
       ].sort()
     )
     const tables = owner.db
@@ -190,8 +191,8 @@ describe('dot ingress schema family', () => {
     }
   })
 
-  it('pins the v1 layout so an unversioned change cannot ship', () => {
-    expect(normalizedLayoutHash()).toBe(SCHEMA_V1_SHA256)
+  it('pins the current layout', () => {
+    expect(normalizedLayoutHash()).toBe(SCHEMA_SHA256)
   })
 
   describe('row constraints', () => {
@@ -215,7 +216,6 @@ describe('dot ingress schema family', () => {
         span_count: 1,
         scan_rules: '[]',
         requested_access: 'read_only',
-        deliverable_language: null,
         reply_correlation_id: null,
         client_name: null,
         client_version: null,

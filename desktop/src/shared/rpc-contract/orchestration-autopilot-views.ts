@@ -45,6 +45,7 @@ const AttemptViewSchema = z
   .object({
     attemptId: Id,
     runsIn: z.enum(['session', 'process']),
+    nativeWorker: z.literal(true).optional(),
     dispatchStatus: Code,
     workerState: Code,
     stage: z.string().max(64)
@@ -128,6 +129,7 @@ export const TaskStartResultSchema = z
         target: Code,
         delegated: z.boolean(),
         runsIn: z.enum(['session', 'process']),
+        nativeWorker: z.literal(true).optional(),
         taskStatus: Code,
         workerState: Code,
         instruction: z.string().min(1)

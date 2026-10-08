@@ -74,12 +74,6 @@ function preconditionProblem(evidence: AttemptEvidence): CheckOutcome | null {
       'The start of the attempt is not recorded, so no change can be dated.'
     )
   }
-  if (evidence.executor?.treeVerdict === 'live') {
-    return undecided(
-      NO_WORKSPACE_WRITES,
-      'A process of the attempt may still be running and writing.'
-    )
-  }
   return null
 }
 

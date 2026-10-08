@@ -23,22 +23,17 @@ import { allocateSshTargetGeneration as allocateSshTargetGenerationOperation } f
 
 import type { StoreRuntimeState } from './store-runtime-state'
 import type { WriteSchedulingOperations } from './write-scheduling'
-import type { WriteFlushBarrierOperations } from './write-flush-barriers'
 import type { RepoLifecycleOperations } from './repo-lifecycle-operations'
 import { syncProjectHostSetupCompatibilityState } from './repo-lifecycle-operations'
 import { scheduleSave } from './write-scheduling'
 import { forgetSshConnectionGeneration } from '../../ssh/ssh-connection-generation'
 
-type SshProfileOperationsRuntime = Pick<
-  StoreRuntimeState,
-  'dirtyProfileStateDomains' | 'protectedSecrets' | 'state'
->
+type SshProfileOperationsRuntime = Pick<StoreRuntimeState, 'protectedSecrets' | 'state'>
 
 const sshProfileOperationsContext = Symbol('SshProfileOperations')
 type SshProfileOperationsContext = {
   runtime: SshProfileOperationsRuntime
   scheduling: WriteSchedulingOperations
-  flushBarriers: WriteFlushBarrierOperations
   repos: RepoLifecycleOperations
 }
 
@@ -48,10 +43,9 @@ export class SshProfileOperations {
   constructor(
     runtime: SshProfileOperationsRuntime,
     scheduling: WriteSchedulingOperations,
-    flushBarriers: WriteFlushBarrierOperations,
     repos: RepoLifecycleOperations
   ) {
-    this[sshProfileOperationsContext] = { runtime, scheduling, flushBarriers, repos }
+    this[sshProfileOperationsContext] = { runtime, scheduling, repos }
   }
 
   getSshTargets(): SshTarget[] {

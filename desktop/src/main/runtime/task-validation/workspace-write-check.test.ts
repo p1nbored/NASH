@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { FIXTURE_STARTED_MS, fakeEvidence, fakeExecutor } from './task-validation.test-fixture'
+import { FIXTURE_STARTED_MS, fakeEvidence } from './task-validation.test-fixture'
 import type { AttemptEvidence } from './validation-context'
 import {
   checkNoWorkspaceWrites,
@@ -90,7 +90,7 @@ describe('no_workspace_writes', () => {
     ).toMatchObject({ status: 'inconclusive' })
   })
 
-  it('cannot decide for a folder workspace, an unknown workspace, a live process or a git failure', async () => {
+  it('cannot decide for a folder workspace, an unknown workspace, an undated attempt or a git failure', async () => {
     const git = gitReporting({ ok: true, changedFiles: [], headCommitSeconds: null })
     expect(
       await checkNoWorkspaceWrites(
@@ -108,8 +108,6 @@ describe('no_workspace_writes', () => {
       status: 'inconclusive',
       note: 'The start of the attempt is not recorded, so no change can be dated.'
     })
-    const live = { ...evidence, executor: fakeExecutor({ treeVerdict: 'live' }) }
-    expect(await checkNoWorkspaceWrites(live, git)).toMatchObject({ status: 'inconclusive' })
     expect(git.calls).toEqual([])
     expect(
       await checkNoWorkspaceWrites(evidence, gitReporting({ ok: false, reason: 'git_failed' }))

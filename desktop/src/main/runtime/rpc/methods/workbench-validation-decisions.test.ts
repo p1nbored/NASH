@@ -9,10 +9,7 @@ import {
   createAppRunHarness,
   type AppRunHarness
 } from '../../orchestration/db/app-attempt.test-fixture'
-import {
-  FIXTURE_OWN_WORKTREE,
-  inconclusiveAttempt
-} from '../../task-validation/validation-decision.test-fixture'
+import { inconclusiveAttempt } from '../../task-validation/validation-decision.test-fixture'
 import { issueWorkbenchDesktopCaller } from '../../workbench-caller'
 import type { RpcRequest } from '../core'
 import { RpcDispatcher } from '../dispatcher'
@@ -38,7 +35,6 @@ describe('workbench validation decision methods', () => {
     getRuntimeId: ReturnType<typeof vi.fn>
     getOrchestrationDb: ReturnType<typeof vi.fn>
     notifyMessageArrived: ReturnType<typeof vi.fn>
-    requireWorkbenchWorkspace: ReturnType<typeof vi.fn>
   }
   let dispatcher: RpcDispatcher
 
@@ -47,11 +43,7 @@ describe('workbench validation decision methods', () => {
     runtime = {
       getRuntimeId: vi.fn(() => 'fixture-runtime'),
       getOrchestrationDb: vi.fn(() => harness.owner),
-      notifyMessageArrived: vi.fn(),
-      // Why a refusal: the worktree is not in the catalog, so no git runs and the notice states no fact.
-      requireWorkbenchWorkspace: vi.fn(() => {
-        throw new Error('fixture: workspace not admitted')
-      })
+      notifyMessageArrived: vi.fn()
     }
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the decision methods read only these runtime members.
     dispatcher = new RpcDispatcher({ runtime: runtime as never, methods: ALL_RPC_METHODS })
@@ -86,18 +78,14 @@ describe('workbench validation decision methods', () => {
   })
 
   it('lists the results waiting for a decision for the desktop', async () => {
-    const write = inconclusiveAttempt(harness, {
-      executableEvidence: { executable: 'codex', attemptWorkspace: FIXTURE_OWN_WORKTREE }
-    })
+    const write = inconclusiveAttempt(harness)
     expect(await desktop(LIST, {})).toMatchObject({
       ok: true,
       result: {
         decisions: [
           {
             validationId: write.validationId,
-            placement: 'own_worktree',
-            worktree: { branch: 'nash-task-1' },
-            processMayRun: false
+            executorKind: 'claude_primary'
           }
         ],
         hasMore: false
@@ -106,10 +94,8 @@ describe('workbench validation decision methods', () => {
     expect(runtime.getOrchestrationDb).toHaveBeenCalledWith({ passive: true })
   })
 
-  it('waives as the desktop user, files the merge notice and announces it to the run', async () => {
-    const write = inconclusiveAttempt(harness, {
-      executableEvidence: { executable: 'codex', attemptWorkspace: FIXTURE_OWN_WORKTREE }
-    })
+  it('waives as the desktop user, files the decision notice and announces it to the run', async () => {
+    const write = inconclusiveAttempt(harness)
     expect(
       await desktop(DECIDE, { validationId: write.validationId, decision: 'waive' })
     ).toMatchObject({
@@ -121,13 +107,10 @@ describe('workbench validation decision methods', () => {
       `run:${harness.runId}`,
       'status'
     )
-    // The worktree is re-admitted through the catalog before any git read; here it is refused.
-    expect(runtime.requireWorkbenchWorkspace).toHaveBeenCalledWith(FIXTURE_OWN_WORKTREE.worktreeId)
     const notice = harness.owner.db
       .prepare('SELECT body FROM messages WHERE to_handle = ?')
       .all(`run:${harness.runId}`)
-    expect(JSON.stringify(notice)).toMatch(/\bcheck\b/i)
-    expect(JSON.stringify(notice)).not.toMatch(/changes are (committed|uncommitted)/)
+    expect(JSON.stringify(notice)).toContain('was waived by the user, so the task is completed.')
   })
 
   it('rejects as the desktop user and then answers a repeated decision with the store conflict', async () => {

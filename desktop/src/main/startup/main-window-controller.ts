@@ -63,6 +63,7 @@ export function openMainWindow(options: { revealOnDidFinishLoad?: boolean } = {}
     automations: state.automations,
     codexAccounts: state.codexAccounts,
     codexRuntimeHome: state.codexRuntimeHome,
+    claudeAccounts: state.claudeAccounts,
     claudeRuntimeAuth: state.claudeRuntimeAuth,
     keybindings: state.keybindings
   })

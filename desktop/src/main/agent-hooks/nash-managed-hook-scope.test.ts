@@ -54,8 +54,7 @@ import {
   installManagedAgentHooks,
   isAgentStatusHooksEnabledForAgent,
   removeManagedAgentHooks,
-  shouldContinueManagedHookStartup,
-  shouldInstallStartupManagedAgentHook
+  shouldContinueManagedHookStartup
 } from './managed-agent-hook-controls'
 
 const OTHER_AGENTS = AGENT_HOOK_TARGETS.filter((agent) => agent !== 'claude')
@@ -134,18 +133,16 @@ describe('NASH managed hook scope (user decision of 2026-10-06: "Claude Code onl
   })
 
   it('gates every startup and launch-time hook write to Claude', () => {
-    expect(shouldInstallStartupManagedAgentHook(ENABLED, 'claude')).toBe(true)
     expect(shouldContinueManagedHookStartup(false, ENABLED, 'claude')).toBe(true)
     expect(isAgentStatusHooksEnabledForAgent(ENABLED, 'claude')).toBe(true)
     for (const agent of ['openclaude', 'codex', 'gemini', 'antigravity', 'cursor'] as const) {
-      expect(shouldInstallStartupManagedAgentHook(ENABLED, agent), agent).toBe(false)
       expect(shouldContinueManagedHookStartup(false, ENABLED, agent), agent).toBe(false)
       expect(isAgentStatusHooksEnabledForAgent(ENABLED, agent), agent).toBe(false)
     }
   })
 
   it('still honours the global off switch and a disabled Claude', () => {
-    expect(shouldInstallStartupManagedAgentHook({ agentStatusHooksEnabled: false }, 'claude')).toBe(
+    expect(isAgentStatusHooksEnabledForAgent({ agentStatusHooksEnabled: false }, 'claude')).toBe(
       false
     )
     expect(

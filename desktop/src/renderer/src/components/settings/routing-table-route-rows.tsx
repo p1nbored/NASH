@@ -8,13 +8,53 @@ import {
 } from '../../../../shared/routing-table/routing-table-taxonomy'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import type {
-  DraftError,
-  EditableRoute,
-  EditorDraft,
-  RouteEdit
+import {
+  withCoordinatorAgent,
+  type DraftError,
+  type EditableRoute,
+  type EditorDraft,
+  type RouteEdit
 } from './routing-table-editor-model'
-import { executionTargetLabel, reasoningLevelLabel, taskTypeLabel } from './routing-table-labels'
+import {
+  executionTargetLabel,
+  primaryAgentLabel,
+  reasoningLevelLabel,
+  taskTypeLabel
+} from './routing-table-labels'
+
+export function PrimaryCliSelect(props: {
+  coordinator: EditorDraft['coordinator']
+  onChange: (coordinator: EditorDraft['coordinator']) => void
+}): React.JSX.Element {
+  return (
+    <Select
+      value={props.coordinator.agent}
+      onValueChange={(agent) => {
+        if (agent === 'claude' || agent === 'codex') {
+          props.onChange(withCoordinatorAgent(props.coordinator, agent))
+        }
+      }}
+    >
+      <SelectTrigger
+        size="sm"
+        className="w-36"
+        aria-label={translate(
+          'auto.components.settings.routingTable.editor.primaryCli',
+          'Primary CLI'
+        )}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {(['claude', 'codex'] as const).map((agent) => (
+          <SelectItem key={agent} value={agent}>
+            {primaryAgentLabel(agent)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
 
 function pick<T extends string>(options: readonly T[], value: string): T | undefined {
   return options.find((option) => option === value)
@@ -145,10 +185,11 @@ function CoordinatorRow(props: {
   onChange: (coordinator: EditorDraft['coordinator']) => void
 }): React.JSX.Element {
   const { coordinator } = props.draft
-  const label = translate('auto.components.settings.routingTable.editor.coordinator', 'Coordinator')
+  const label = translate('auto.components.settings.routingTable.editor.coordinator', 'Primary')
   return (
-    <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,2.5fr)_minmax(0,1.8fr)] items-start gap-2">
+    <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,2fr)_minmax(0,1fr)] items-start gap-2">
       <span className="pt-1.5 text-meta font-medium text-foreground">{label}</span>
+      <PrimaryCliSelect coordinator={coordinator} onChange={props.onChange} />
       <Input
         value={coordinator.model}
         spellCheck={false}
@@ -156,7 +197,7 @@ function CoordinatorRow(props: {
         aria-invalid={props.invalid ? true : undefined}
         aria-label={translate(
           'auto.components.settings.routingTable.editor.coordinatorModel',
-          'Coordinator model'
+          'Primary model'
         )}
         className="h-8"
         onChange={(event) => props.onChange({ ...coordinator, model: event.target.value })}
@@ -175,7 +216,7 @@ function CoordinatorRow(props: {
           className="w-full"
           aria-label={translate(
             'auto.components.settings.routingTable.inline.coordinatorEffort',
-            'Coordinator effort'
+            'Primary effort'
           )}
         >
           <SelectValue />

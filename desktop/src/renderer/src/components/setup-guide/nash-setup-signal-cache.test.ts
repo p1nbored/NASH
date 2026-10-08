@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc: vi.fn() }))
-vi.mock('@/store', () => ({ useAppStore: { getState: () => ({}) } }))
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), agents: vi.fn() }))
+vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc: mocks.rpc }))
+vi.mock('@/store', () => ({
+  useAppStore: { getState: () => ({ ensureDetectedAgents: mocks.agents }) }
+}))
 
 import {
   readNashSetupSignalState,
@@ -11,7 +14,7 @@ import {
 } from './nash-setup-signal-cache'
 
 const ALL_DONE = {
-  claudeCodeDetected: true,
+  primaryCliDetected: true,
   clefConnected: true,
   dotConnected: true,
   hasWorkbenchRun: true
@@ -69,10 +72,53 @@ describe('NASH setup signal cache', () => {
 
     expect(readNashSetupSignalState()).toEqual({
       checked: true,
-      claudeCodeDetected: false,
+      primaryCliDetected: false,
       clefConnected: false,
       dotConnected: false,
       hasWorkbenchRun: false
+    })
+  })
+})
+
+describe('setup signal recovery', () => {
+  afterEach(() => {
+    resetNashSetupSignalStateForTests()
+    vi.resetAllMocks()
+  })
+  it('keeps previously confirmed progress during transient RPC and agent detection failures', async () => {
+    await refreshNashSetupSignals({ read: async () => ALL_DONE })
+    mocks.rpc.mockRejectedValue(new Error('offline'))
+    mocks.agents.mockRejectedValue(new Error('offline'))
+    await refreshNashSetupSignals({ force: true })
+    expect(readNashSetupSignalState()).toEqual({ ...ALL_DONE, checked: true })
+  })
+
+  it('runs a fresh read after an in-flight read for an explicit check and coalesces repeat clicks', async () => {
+    let finish: (value: typeof ALL_DONE) => void = () => {
+      throw new Error('read has not started')
+    }
+    const firstRead = new Promise<typeof ALL_DONE>((resolve) => {
+      finish = resolve
+    })
+    const first = refreshNashSetupSignals({ read: () => firstRead })
+    const read = vi.fn(async () => ALL_DONE)
+    const forced = refreshNashSetupSignals({ force: true, read })
+    const repeated = refreshNashSetupSignals({ force: true, read })
+    finish({ ...ALL_DONE, primaryCliDetected: false })
+    await Promise.all([first, forced, repeated])
+    expect(read).toHaveBeenCalledOnce()
+    expect(readNashSetupSignalState().primaryCliDetected).toBe(true)
+  })
+
+  it('accepts a successful fresh detection that reports a removed CLI', async () => {
+    await refreshNashSetupSignals({ read: async () => ALL_DONE })
+    mocks.rpc.mockRejectedValue(new Error('offline'))
+    mocks.agents.mockResolvedValue([])
+    await refreshNashSetupSignals({ force: true })
+    expect(readNashSetupSignalState()).toEqual({
+      ...ALL_DONE,
+      checked: true,
+      primaryCliDetected: false
     })
   })
 })

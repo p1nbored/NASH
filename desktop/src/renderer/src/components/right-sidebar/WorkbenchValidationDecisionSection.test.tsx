@@ -19,7 +19,7 @@ import { WORKBENCH_DECISION_POLL_MS } from './use-workbench-validation-decisions
 import { WORKBENCH_RUN_POLL_MS } from './use-workbench-runs'
 import WorkbenchValidationDecisionSection from './WorkbenchValidationDecisionSection'
 
-// FIXTURE_ONLY: synthetic ids, model and worktree.
+// FIXTURE_ONLY: synthetic in-session task ids.
 function decisionView(
   overrides: Partial<WorkbenchValidationDecisionView> = {}
 ): WorkbenchValidationDecisionView {
@@ -29,16 +29,10 @@ function decisionView(
     taskId: 'task-1',
     dispatchId: 'ctx-1',
     title: 'Write the release notes.',
-    executorKind: 'codex',
-    model: 'gpt-6.1-sol',
-    reason: 'The attempt worktree is gone, so the artifact could not be checked.',
+    executorKind: 'claude_primary',
+    model: null,
+    reason: 'The task report could not be verified.',
     inconclusiveAt: '2026-10-06T08:00:00.000Z',
-    placement: 'own_worktree',
-    worktree: {
-      branch: 'nash-task-1',
-      path: 'C:/fixture/workspaces/nash-task-1',
-      baseCommit: '0123456789abcdef0123456789abcdef01234567'
-    },
     ...overrides
   }
 }
@@ -80,25 +74,20 @@ describe('WorkbenchValidationDecisionSection', () => {
     render(<WorkbenchValidationDecisionSection />)
     const row = await screen.findByRole('listitem')
     expect(within(row).getByText('Write the release notes.')).toBeDefined()
-    expect(within(row).getByText('Codex · gpt-6.1-sol')).toBeDefined()
-    expect(
-      within(row).getByText('The attempt worktree is gone, so the artifact could not be checked.')
-    ).toBeDefined()
-    expect(within(row).getByText('nash-task-1')).toBeDefined()
+    expect(within(row).getByText('Primary session')).toBeDefined()
+    expect(within(row).getByText('The task report could not be verified.')).toBeDefined()
     for (const name of [WAIVE, REJECT]) {
       expect(within(row).getByRole('button', { name }).dataset.variant).toBe('outline')
     }
   })
 
-  it('moves the run, task, worktree path and base commit to Copy details', async () => {
+  it('moves the run, task and dispatch identifiers to Copy details', async () => {
     routeRpc({ [LIST]: () => ({ decisions: [decisionView()], hasMore: false }) })
     render(<WorkbenchValidationDecisionSection />)
     const row = await screen.findByRole('listitem')
-    for (const hidden of ['run-1', 'ctx-1', 'validation-1', 'C:/fixture', '0123456789ab']) {
+    for (const hidden of ['run-1', 'task-1', 'ctx-1', 'validation-1']) {
       expect(row.textContent).not.toContain(hidden)
     }
-    // Why a pattern: the visible branch name nash-task-1 contains the task id.
-    expect(row.textContent).not.toMatch(/(^|[^-])task-1/)
     const copied = await copyDetailsText(row, clipboard)
     expect(copied.split('\n')).toEqual(
       expect.arrayContaining([
@@ -106,8 +95,7 @@ describe('WorkbenchValidationDecisionSection', () => {
         'validation_id: validation-1',
         'run_id: run-1',
         'task_id: task-1',
-        'worktree_path: C:/fixture/workspaces/nash-task-1',
-        'base_commit: 0123456789abcdef0123456789abcdef01234567'
+        'dispatch_id: ctx-1'
       ])
     )
   })
@@ -122,11 +110,7 @@ describe('WorkbenchValidationDecisionSection', () => {
     render(<WorkbenchValidationDecisionSection />)
     fireEvent.click(await screen.findByRole('button', { name: WAIVE }))
     expect(callsTo(DECIDE)).toEqual([])
-    expect(
-      screen.getByText(
-        'Accept this result as done? The task completes, and the main Claude session is told to merge branch nash-task-1.'
-      )
-    ).toBeDefined()
+    expect(screen.getByText('Accept this result as done? The task completes.')).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: 'Waive' }))
     expect(screen.getByRole('button', { name: 'Waive' }).hasAttribute('disabled')).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: 'Waive' }))
@@ -149,67 +133,15 @@ describe('WorkbenchValidationDecisionSection', () => {
     expect(screen.queryByRole('button', { name: /Waive|Reject/ })).toBeNull()
   })
 
-  it('warns in the waive confirmation when a process of the attempt may still run', async () => {
-    routeRpc({
-      [LIST]: () => ({ decisions: [decisionView({ processMayRun: true })], hasMore: false })
-    })
-    render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: WAIVE }))
-    expect(
-      screen.getByText(
-        'Accept this result as done? The task completes, but a process of this attempt may still be running. The main Claude session is told to wait until it has ended before merging or keeping its changes.'
-      )
-    ).toBeDefined()
-    expect(screen.queryByText(/is told to merge branch/)).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    fireEvent.click(screen.getByRole('button', { name: REJECT }))
-    expect(
-      screen.getByText('Reject this result? The task fails, and its branch is left for inspection.')
-    ).toBeDefined()
-    expect(callsTo(DECIDE)).toEqual([])
-  })
-
   it('backs out of a rejection without deciding anything', async () => {
     routeRpc({ [LIST]: () => ({ decisions: [decisionView()], hasMore: false }) })
     render(<WorkbenchValidationDecisionSection />)
     fireEvent.click(await screen.findByRole('button', { name: REJECT }))
-    expect(
-      screen.getByText('Reject this result? The task fails, and its branch is left for inspection.')
-    ).toBeDefined()
+    expect(screen.getByText('Reject this result? The task fails.')).toBeDefined()
     expect(screen.getByRole('button', { name: 'Cancel' }).dataset.variant).toBe('ghost')
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: REJECT })).toBeDefined()
     expect(callsTo(DECIDE)).toEqual([])
-  })
-
-  it('words the confirmation for a folder write and for a task without its own place', async () => {
-    routeRpc({
-      [LIST]: () => ({
-        decisions: [
-          decisionView({ placement: 'folder', worktree: null }),
-          decisionView({
-            validationId: 'validation-2',
-            taskId: 'task-2',
-            title: 'Summarize the changes.',
-            placement: 'in_session',
-            executorKind: 'claude_primary',
-            model: null,
-            worktree: null
-          })
-        ],
-        hasMore: false
-      })
-    })
-    render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: REJECT }))
-    expect(
-      screen.getByText(
-        'Reject this result? The task fails; its changes stay in the workspace folder until you decide what to keep.'
-      )
-    ).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: 'Waive Summarize the changes.' }))
-    expect(screen.getByText('Accept this result as done? The task completes.')).toBeDefined()
-    expect(screen.getByText('Main Claude session')).toBeDefined()
   })
 
   it('words a decision someone else already made and keeps its code for details', async () => {

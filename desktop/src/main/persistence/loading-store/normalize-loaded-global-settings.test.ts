@@ -1,5 +1,5 @@
 import { homedir } from 'node:os'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getDefaultPersistedState } from '../../../shared/constants'
 import { normalizeLoadedGlobalSettings } from './normalize-loaded-global-settings'
 import { prepareLoadedTerminalSettings } from './prepare-loaded-terminal-settings'
@@ -36,42 +36,12 @@ describe('retired Agents sidebar setting', () => {
   })
 })
 
-describe('retired Claude managed-account settings', () => {
-  // FIXTURE_ONLY: what a profile written before Claude account switching was removed may hold.
-  const retired = {
-    claudeManagedAccounts: [
-      { id: 'retired-a', email: 'a@example.invalid', managedAuthPath: '/fixture/a/auth' },
-      { id: 'retired-b', email: 'b@example.invalid', managedAuthPath: '/fixture/b/auth' }
-    ],
-    activeClaudeManagedAccountId: 'retired-a',
-    activeClaudeManagedAccountIdsByRuntime: { host: 'retired-a', wsl: {} }
-  }
-
-  it('drops the three keys on load and warns once with the count only', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const normalized = normalizeLegacyProfile(retired)
-
-      for (const key of Object.keys(retired)) {
-        expect(key in normalized).toBe(false)
-      }
-      expect(warn).toHaveBeenCalledOnce()
-      const line = warn.mock.calls[0]?.map(String).join(' ') ?? ''
-      expect(line).toContain('2')
-      expect(line).not.toMatch(/example\.invalid|fixture|retired-a|retired-b/)
-    } finally {
-      warn.mockRestore()
-    }
-  })
-
-  it('stays quiet for a profile without managed Claude accounts', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      normalizeLegacyProfile({ claudeManagedAccounts: [], activeClaudeManagedAccountId: null })
-      expect(warn).not.toHaveBeenCalled()
-    } finally {
-      warn.mockRestore()
-    }
+describe('retired managed servers experiment', () => {
+  it('drops the stored toggle, since managed servers are the default SSH path', () => {
+    expect('experimentalManagedServers' in normalizeLegacyProfile({})).toBe(false)
+    expect(
+      'experimentalManagedServers' in normalizeLegacyProfile({ experimentalManagedServers: true })
+    ).toBe(false)
   })
 })
 
@@ -113,5 +83,21 @@ describe('machine name setting', () => {
     )
     expect(normalizeLegacyProfile({ machineName: undefined }).machineName).toBe('')
     expect(normalizeLegacyProfile({ machineName: 'x'.repeat(300) }).machineName).toHaveLength(255)
+  })
+})
+
+describe('chat appearance settings', () => {
+  it('normalizes old and malformed profiles on load', () => {
+    expect(normalizeLegacyProfile({}).nativeChatAppearance).toBeUndefined()
+    expect(
+      normalizeLegacyProfile({
+        nativeChatAppearance: { fontSize: 40, codeFontSize: 1, width: 'wide' }
+      }).nativeChatAppearance
+    ).toEqual({ fontSize: 20, codeFontSize: 10, width: 'wide' })
+    expect(
+      normalizeLegacyProfile({
+        nativeChatAppearance: { fontSize: 14, codeFontSize: 12, width: 'comfortable' }
+      }).nativeChatAppearance
+    ).toBeUndefined()
   })
 })

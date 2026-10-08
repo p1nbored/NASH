@@ -71,12 +71,12 @@ export function SettingsSection({
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5">
         <div className="min-w-0 space-y-2">
           <h2
-            className="flex flex-wrap items-center gap-2 font-display text-2xl font-normal leading-tight text-foreground"
+            className="flex flex-wrap items-center gap-2 font-display text-title font-normal text-foreground"
             onClick={onTitleClick}
           >
             {title}
             {badge ? (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em] text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 font-sans text-caption font-medium uppercase tracking-wider text-muted-foreground">
                 {badge}
               </span>
             ) : null}

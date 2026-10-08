@@ -64,7 +64,6 @@ export abstract class RateLimitServiceAccountRefresh extends RateLimitServiceIna
     outgoingAccountId?: string | null,
     target?: CodexAccountSelectionTarget
   ): Promise<RateLimitState> {
-    // Why first: readings cached for the outgoing account must not answer while this refresh runs.
     this.notifyAccountChange('codex')
     const nextTarget = normalizeCodexAccountSelectionTarget(target)
     // Why: weekly-only plans report no session window, so gating on session alone
@@ -144,6 +143,37 @@ export abstract class RateLimitServiceAccountRefresh extends RateLimitServiceIna
       }
       throw error
     }
+  }
+
+  async refreshForClaudeAccountChange(
+    outgoingAccountId?: string | null,
+    target?: ClaudeAccountSelectionTarget
+  ): Promise<RateLimitState> {
+    this.notifyAccountChange('claude')
+    const nextTarget = normalizeClaudeAccountSelectionTarget(target)
+    // Why: snapshot the outgoing account's usage before clearing so the switcher's inline bars can show last-known data immediately.
+    if (
+      outgoingAccountId &&
+      this.state.claude?.session &&
+      this.isSameClaudeTarget(this.claudeFetchTarget, nextTarget)
+    ) {
+      this.inactiveClaudeCache.set(outgoingAccountId, this.state.claude)
+    }
+    this.claudeFetchTarget = nextTarget
+    this.inactiveClaudeAccountsGeneration += 1
+    this.pruneInactiveClaudeState()
+    this.claudeFetchGeneration += 1
+    // Why: a new account/target starts with a clean retry schedule.
+    this.activeFailureStreakByProvider.claude = 0
+    // Why: statusline posts from the outgoing account's sessions must not land on the incoming account's bar mid-switch.
+    this.lastClaudeAuthSnapshot = null
+    this.lastInactiveClaudeFetchAt = 0
+    this.updateState({
+      ...this.state,
+      claude: this.withFetchingStatus(null, 'claude')
+    })
+    await this.fetchClaudeOnly({ force: true })
+    return this.getState()
   }
 
   async refreshClaudeForTarget(target?: ClaudeAccountSelectionTarget): Promise<RateLimitState> {

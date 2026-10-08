@@ -9,7 +9,6 @@ import {
   type WorkbenchValidationDecideResult,
   type WorkbenchValidationListDecisionsResult
 } from '../../../../shared/rpc-contract/workbench-validation-decision-params'
-import { createAttemptWorktreeChangesReader } from '../../task-validation/attempt-worktree-changes'
 import { requireValidationBacklogPort } from '../../task-validation/validation-backlog-port'
 import {
   createValidationDecisionService,
@@ -40,11 +39,7 @@ function desktopDecisions(context: RpcContext): ValidationDecisionService {
   const { runtime } = context
   return createValidationDecisionService({
     owner: runtime.getOrchestrationDb({ passive: true }),
-    announce: (message) => runtime.notifyMessageArrived(message.to_handle, message.type),
-    // Why through the catalog: git is read only in a worktree it still admits as local.
-    readWorktreeChanges: createAttemptWorktreeChangesReader({
-      resolvePath: async (worktreeId) => runtime.requireWorkbenchWorkspace(worktreeId).path
-    })
+    announce: (message) => runtime.notifyMessageArrived(message.to_handle, message.type)
   })
 }
 

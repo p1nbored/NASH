@@ -204,18 +204,5 @@ export class TaskValidationStore {
         'A review must come from a different model than the one that did the work.'
       )
     }
-    const ran = this.db
-      .prepare(
-        `SELECT r.model FROM executor_processes e JOIN task_routes r ON r.route_id = e.route_id
-          WHERE e.dispatch_id = ?`
-      )
-      .get(params.dispatchId)
-    // Why: the model that did the work is on record for executor attempts, so a caller cannot name another.
-    if (ran?.model && !isSameUnderlyingModel(params.workerModel, String(ran.model))) {
-      throw refused(
-        'autopilot_validation_worker_model_mismatch',
-        'The worker model is not the model the route ran.'
-      )
-    }
   }
 }

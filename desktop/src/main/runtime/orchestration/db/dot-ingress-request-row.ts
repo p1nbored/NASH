@@ -14,7 +14,6 @@ import {
   DOT_REQUEST_STATES,
   type DotRequestState
 } from '../../../../shared/dot-ingress/dot-ingress-status-text'
-import { DeliverableLanguageSchema } from '../../../../shared/deliverable-language'
 import { parseDotRow } from './dot-ingress-store-input'
 
 /**
@@ -28,7 +27,6 @@ export type DotRequestRecord = {
   state: DotRequestState
   workspaceRef: string
   requestedAccess: DotRequestAccess
-  deliverableLanguage: string | null
   replyCorrelationId: string | null
   workbenchRequestId: string | null
   failureCode: DotSubmissionFailure | null
@@ -49,22 +47,20 @@ export type DotIntakeHandle = {
   workspaceBinding: string
   objective: string
   requestedAccess: DotRequestAccess
-  deliverableLanguage: string | null
   workbenchIdempotencyKey: string
 }
 
-export const DOT_RECORD_COLUMNS = `sequence, dot_request_id, workspace_ref, requested_access, deliverable_language,
+export const DOT_RECORD_COLUMNS = `sequence, dot_request_id, workspace_ref, requested_access,
   reply_correlation_id, state, revision, workbench_request_id, failure_code, created_at, updated_at, ended_at`
 
 export const DOT_INTAKE_COLUMNS = `dot_request_id, workspace_ref, workspace_id, workspace_binding, objective,
-  requested_access, deliverable_language, workbench_idempotency_key`
+  requested_access, workbench_idempotency_key`
 
 const RecordRowSchema = z.object({
   sequence: z.number().int().positive(),
   dot_request_id: DotRequestIdSchema,
   workspace_ref: DotWorkspaceRefSchema,
   requested_access: z.enum(DOT_REQUEST_ACCESS_LEVELS),
-  deliverable_language: DeliverableLanguageSchema.nullable(),
   reply_correlation_id: DotCorrelationIdSchema.nullable(),
   state: z.enum(DOT_REQUEST_STATES),
   revision: z.number().int().positive(),
@@ -82,7 +78,6 @@ const IntakeRowSchema = z.object({
   workspace_binding: z.string().length(64),
   objective: z.string().min(1),
   requested_access: z.enum(DOT_REQUEST_ACCESS_LEVELS),
-  deliverable_language: DeliverableLanguageSchema.nullable(),
   workbench_idempotency_key: z.uuid()
 })
 
@@ -95,7 +90,6 @@ export function toDotRequestRecord(row: unknown): DotRequestRecord {
     state: stored.state,
     workspaceRef: stored.workspace_ref,
     requestedAccess: stored.requested_access,
-    deliverableLanguage: stored.deliverable_language,
     replyCorrelationId: stored.reply_correlation_id,
     workbenchRequestId: stored.workbench_request_id,
     failureCode: stored.failure_code,
@@ -114,7 +108,6 @@ export function toDotIntakeHandle(row: unknown): DotIntakeHandle {
     workspaceBinding: stored.workspace_binding,
     objective: stored.objective,
     requestedAccess: stored.requested_access,
-    deliverableLanguage: stored.deliverable_language,
     workbenchIdempotencyKey: stored.workbench_idempotency_key
   }
 }

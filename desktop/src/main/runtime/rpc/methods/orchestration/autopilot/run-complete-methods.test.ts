@@ -53,6 +53,25 @@ describe('orchestration.runComplete', () => {
     return taskId
   }
 
+  it('accepts a native worker report without fabricating a validation row', async () => {
+    harness = createTaskApiHarness()
+    const { taskId } = seedTask({ owner: harness.db, runId: harness.runId })
+    const { dispatch } = harness.db.createStartingWorkerDispatch({
+      creator: { kind: 'system' },
+      maxDepth: 4,
+      taskId,
+      startOptions: { nativeTask: true }
+    })
+    harness.db.markWorkerDispatchReady(dispatch.id)
+    harness.db.settleWorkerReport({
+      taskId,
+      dispatchId: dispatch.id,
+      outcome: 'succeeded',
+      result: 'Native evidence.'
+    })
+    expect(RunCompleteResultSchema.parse(await complete())).toMatchObject({ completedTasks: 1 })
+  })
+
   it('is the strict-params method orchestration.runComplete', () => {
     expect(RUN_COMPLETE_METHOD.name).toBe('orchestration.runComplete')
     expect(RUN_COMPLETE_METHOD.params).toBe(RunCompleteParams)

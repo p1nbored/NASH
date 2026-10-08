@@ -85,7 +85,7 @@ describe('Workbench request response and scope guards', () => {
     await openQueue()
     const list = screen.getByRole('list')
     const objective = screen.getByLabelText('Objective')
-    const help = screen.getByText('Starts a run with a Claude Code session in this workspace.')
+    const help = screen.getByText('Starts a run with the configured primary CLI in this workspace.')
     expect(list.compareDocumentPosition(objective) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(objective.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

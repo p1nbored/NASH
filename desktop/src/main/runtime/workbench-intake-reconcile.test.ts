@@ -68,8 +68,7 @@ function runFor(h: RuntimeHarness, request: WorkbenchRequest, status: 'active' |
       workspaceId: request.workspaceId,
       workspaceBinding: 'a'.repeat(64),
       objective: request.objective,
-      requestedAccess: 'read_only',
-      deliverableLanguage: null
+      requestedAccess: 'read_only'
     },
     status
   )

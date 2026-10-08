@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   hasWorkbenchRun,
-  isClaudeCodeDetected,
+  isPrimaryCliDetected,
   isClefConnected,
   isDotConnected
 } from './nash-setup-signals'
@@ -17,10 +17,13 @@ import {
 import { runList, runView } from '../right-sidebar/workbench-run-test-fixture'
 
 describe('NASH onboarding signals (D-038)', () => {
-  it('detects Claude Code from the agents found on PATH', () => {
-    expect(isClaudeCodeDetected(['codex', 'claude'])).toBe(true)
-    expect(isClaudeCodeDetected(['codex'])).toBe(false)
-    expect(isClaudeCodeDetected(null)).toBe(false)
+  it('detects either supported primary CLI from the agents found on PATH', () => {
+    expect(isPrimaryCliDetected(['codex', 'claude'])).toBe(true)
+    expect(isPrimaryCliDetected(['codex'])).toBe(true)
+    expect(isPrimaryCliDetected(['claude'])).toBe(true)
+    expect(isPrimaryCliDetected(['gemini'])).toBe(false)
+    expect(isPrimaryCliDetected([])).toBe(false)
+    expect(isPrimaryCliDetected(null)).toBe(false)
   })
 
   it('counts Clef as connected only after its profile is verified and pinned', () => {

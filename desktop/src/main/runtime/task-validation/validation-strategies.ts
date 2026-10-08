@@ -4,7 +4,6 @@ import type {
   EvidenceRef
 } from '../orchestration/db/task-validation-store'
 import type { AttemptFacts } from './attempt-evidence'
-import { readAttemptResultFile, type AttemptResultFile } from './attempt-result-file'
 import { runMachineChecks, type MachineCheckDeps } from './deterministic-validators'
 import {
   runModelReview,
@@ -12,7 +11,7 @@ import {
   type ModelReviewDeps,
   type ReviewerSelection
 } from './model-review'
-import { buildReviewPrompt, type ReviewPromptInput } from './model-review-prompt'
+import { buildReviewPrompt } from './model-review-prompt'
 import type { TaskValidationPort } from './task-validation-port'
 import type { PlannedCheck } from './validation-policy'
 import { errorNameOf } from './validation-context'
@@ -23,15 +22,11 @@ export const REVIEWER_UNASSIGNED = 'unassigned'
 export const MACHINE_VALIDATOR_ID = 'machine_checks'
 const REVIEW_VALIDATOR_ID = 'model_review'
 /** Checks that show the work happened; the others only show that nothing went wrong. */
-const POSITIVE_CHECK_KINDS: ReadonlySet<string> = new Set([
-  'executor_completed',
-  'artifact_exists',
-  'output_schema'
-])
+const POSITIVE_CHECK_KINDS: ReadonlySet<string> = new Set(['artifact_exists'])
 const NO_WORK_EVIDENCE = {
   kind: 'work_evidence',
   status: 'inconclusive',
-  note: 'The TaskSpec lists no check that shows the work was done, such as executor_completed, artifact_exists or output_schema.'
+  note: 'The TaskSpec lists no check that shows the work was done, such as artifact_exists.'
 } as const
 
 export type Decided = {
@@ -114,17 +109,6 @@ export function interruptedReview(): Decided {
   }
 }
 
-const NOTHING_TO_REVIEW: Decided = {
-  checks: [
-    {
-      kind: 'model_review',
-      status: 'inconclusive',
-      note: 'The reviewer has no tools and there is no worker result for it to judge.'
-    }
-  ],
-  evidence: []
-}
-
 const SESSION_REPORT_UNUSABLE = {
   missing:
     'The in-session worker filed no report in the run mailbox, so there is nothing to review.',
@@ -134,19 +118,6 @@ const SESSION_REPORT_UNUSABLE = {
 
 function unreviewable(note: string): Decided {
   return { checks: [{ kind: 'model_review', status: 'inconclusive', note }], evidence: [] }
-}
-
-function resultForPrompt(read: AttemptResultFile): ReviewPromptInput['result'] {
-  if (read.status === 'ok') {
-    return { kind: 'text', text: read.text }
-  }
-  return {
-    kind: 'none',
-    reason:
-      read.status === 'no_process'
-        ? 'The work was done inside the primary session, which leaves no result file.'
-        : `The executor result could not be read (${read.status}).`
-  }
 }
 
 function reviewRunIdOf(validationId: string): string {
@@ -164,17 +135,11 @@ async function reviewAttempt(
 ): Promise<Decided> {
   const { evidence, spec, sessionReport } = facts
   // Why: a missing or foreign report leaves nothing of this attempt to judge, so no review is billed.
-  if (sessionReport && sessionReport.status !== 'ok') {
+  if (sessionReport.status !== 'ok') {
     return unreviewable(SESSION_REPORT_UNUSABLE[sessionReport.status])
   }
-  const canReadWorkspace = selection.reviewer.target === 'codex_cli'
-  const result = sessionReport
-    ? ({ kind: 'session_report', text: sessionReport.text } as const)
-    : resultForPrompt(await readAttemptResultFile(evidence))
-  // Why: a reviewer with no tools and no result could only guess, so it is not run (or billed).
-  if (result.kind === 'none' && !canReadWorkspace) {
-    return NOTHING_TO_REVIEW
-  }
+  const canReadWorkspace = evidence.workspace !== null
+  const result = { kind: 'session_report', text: sessionReport.text } as const
   const prompt = buildReviewPrompt({
     objective: facts.objective,
     expectedOutputs: spec.expectedOutputs,
@@ -197,12 +162,10 @@ async function reviewAttempt(
     },
     deps.review
   )
-  return sessionReport
-    ? {
-        ...reviewed,
-        evidence: [...reviewed.evidence, { kind: 'session_report', ref: sessionReport.messageId }]
-      }
-    : reviewed
+  return {
+    ...reviewed,
+    evidence: [...reviewed.evidence, { kind: 'session_report', ref: sessionReport.messageId }]
+  }
 }
 
 /** D-027: the TaskSpec's machine checks run before a requested review; a failing one bills no review. */

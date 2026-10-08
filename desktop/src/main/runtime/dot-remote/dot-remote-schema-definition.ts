@@ -21,7 +21,7 @@ const ARTIFACT_REF_GLOB = `art_${'[0-9a-f]'.repeat(24)}`
 const EVENT_BODY_MAX_CHARS = 65_536
 const OUTCOME_MAX_CHARS = 4_096
 
-/** The event outbox with the event kinds of one schema version; v1 is frozen in dot-remote-schema-v1. */
+/** The event outbox with the current event kinds. */
 export function dotRemoteOutboxSql(eventKinds: readonly string[]): string {
   return `CREATE TABLE dot_remote_outbox (
       sequence INTEGER PRIMARY KEY AUTOINCREMENT,

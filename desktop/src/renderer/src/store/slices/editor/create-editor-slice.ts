@@ -18,7 +18,6 @@ import { createOpenCombinedDiff } from './actions/open-combined-diff'
 import { createOpenConflictFile } from './actions/open-conflict-file'
 import { createOpenConflictReview } from './actions/open-conflict-review'
 import { createCheckRunDetailsActions } from './actions/check-run-details-actions'
-import { createTaskWindowActions } from './actions/task-window-actions'
 import { createEditorCursorLine } from './actions/editor-cursor-line'
 import { createGitStatusActions } from './actions/git-status-actions'
 import { createGitRemoteStatus } from './actions/git-remote-status'
@@ -48,7 +47,6 @@ export const createEditorSlice: StateCreator<AppState, [], [], EditorSlice> = (s
   ...createOpenConflictFile(set, get),
   ...createOpenConflictReview(set, get),
   ...createCheckRunDetailsActions(set, get),
-  ...createTaskWindowActions(set, get),
   ...createEditorCursorLine(set, get),
   ...createGitStatusActions(set, get),
   ...createGitRemoteStatus(set, get),

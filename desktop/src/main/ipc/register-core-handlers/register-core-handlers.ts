@@ -57,6 +57,7 @@ import { registerSpeechHandlers } from '../speech'
 import { registerTerminalRenderDesyncEvidenceHandler } from '../terminal-render-desync-evidence'
 import { registerOrcaProfileHandlers } from '../orca-profiles'
 import { registerCodexAccountHandlers } from '../codex-accounts'
+import { registerClaudeAccountHandlers } from '../claude-accounts'
 import { registerAgentHookHandlers } from '../agent-hooks'
 import { registerCodexConfigSyncHandlers } from '../codex-config-sync'
 import { getPtyIdForPaneKey } from '../pty'
@@ -80,6 +81,7 @@ import type { OpenCodeUsageStore } from '../../opencode-usage/store'
 import type { MuseUsageStore } from '../../muse-usage/store'
 import type { RateLimitService } from '../../rate-limits/service'
 import type { CodexAccountService } from '../../codex-accounts/service'
+import type { ClaudeAccountService } from '../../claude-accounts/service'
 import type { AutomationService } from '../../automations/service'
 import type { AgentAwakeService } from '../../agent-awake-service'
 import type { CrashReportStore } from '../../crash-reporting/crash-report-store'
@@ -120,6 +122,7 @@ export function registerCoreHandlers(
   openCodeUsage: OpenCodeUsageStore,
   museUsage: MuseUsageStore,
   codexAccounts: CodexAccountService,
+  claudeAccounts: ClaudeAccountService,
   rateLimits: RateLimitService,
   mainWindowWebContentsId: number | null = null,
   automations?: AutomationService,
@@ -149,6 +152,7 @@ export function registerCoreHandlers(
   registerPreflightHandlers()
   registerUsageProviderHandlers({ claudeUsage, codexUsage, openCodeUsage, museUsage })
   registerCodexAccountHandlers(codexAccounts, () => store.getSettings())
+  registerClaudeAccountHandlers(claudeAccounts)
   registerAgentHookHandlers(runtime, { getPtyIdForPaneKey })
   registerCodexConfigSyncHandlers(codexAccounts.runtimeHomeService)
   registerOpenCodeGoCredentialsHandlers(rateLimits)
@@ -226,16 +230,16 @@ export function registerCoreHandlers(
   registerRuntimeHandlers(runtime)
   registerRuntimeEnvironmentHandlers(store)
   registerEphemeralVmHandlers(store, pluginService)
+  // Session history and terminal resume are not chats; a refused host leaves nothing to check.
+  const ensureStructuredSessionOwnership = () =>
+    ensureStructuredAgentSessionHostUnlessRefused(() => runtime.ensureStructuredAgentSessionHost())
   registerAiVaultSearchHandlers({
     callRuntimeSearch: (environmentId, method, params) =>
-      callRuntimeSessionSearch(app.getPath('userData'), environmentId, method, params)
+      callRuntimeSessionSearch(app.getPath('userData'), environmentId, method, params),
+    ensureStructuredSessionOwnership
   })
   registerAiVaultHandlers({
-    // Session history and terminal resume are not chats; a refused host leaves nothing to check.
-    ensureStructuredSessionOwnership: () =>
-      ensureStructuredAgentSessionHostUnlessRefused(() =>
-        runtime.ensureStructuredAgentSessionHost()
-      ),
+    ensureStructuredSessionOwnership,
     getAdditionalCodexHomePaths: lifecycleOptions.getAdditionalAiVaultCodexHomePaths,
     prepareSessionResume: lifecycleOptions.prepareAiVaultSessionResume,
     getActiveRuntimeAiVaultHostInfos: () =>

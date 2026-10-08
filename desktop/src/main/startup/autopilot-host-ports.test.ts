@@ -8,12 +8,21 @@ const MODEL = { id: 'fixture-model', label: 'Fixture model', isDefault: true, ef
 
 function seams(overrides: Partial<AutopilotHostSeams> = {}) {
   const resolvers = {
+    resolveBaseEnvironment: vi.fn(async () => ({ PATH: '/fixture/bin' })),
     resolveCodexEnvironment: vi.fn(async () => ({ PATH: '/fixture/bin' })),
     resolveClaudeInheritedEnv: vi.fn(async () => ({ PATH: '/fixture/bin' }))
   }
   const claudeProbe = vi.fn(async (_home: string) => ({ models: [MODEL] }))
   const codexProbe = vi.fn(async (_home: string) => ({ models: [MODEL] }))
   const all: AutopilotHostSeams = {
+    resolveCodexInvocation: vi.fn(async (deps) => ({
+      command: '/fixture/version-manager/codex',
+      environment: await deps.resolveEnvironment?.()
+    })),
+    resolveClaudeInvocation: vi.fn(async (deps, decorate = (env) => env) => ({
+      command: '/fixture/version-manager/claude',
+      env: decorate({ ...(await deps.resolveInheritedEnv?.()), ...(await deps.resolveEnv?.()) })
+    })),
     detectInstalled: vi.fn(async () => ['claude', 'codex']),
     createEnvironmentResolvers: vi.fn(() => resolvers),
     // Why through the deps: a real probe takes its environment from them, which is what starts the shell.
@@ -41,6 +50,9 @@ function seams(overrides: Partial<AutopilotHostSeams> = {}) {
 function build(overrides: Partial<AutopilotHostSeams> = {}) {
   const fakes = seams(overrides)
   const settings = vi.fn(() => ({
+    claudeManagedAccounts: [],
+    activeClaudeManagedAccountId: null,
+    activeClaudeManagedAccountIdsByRuntime: { host: null, wsl: {} },
     disabledTuiAgents: DISABLED,
     agentDefaultEnv: {}
   }))
@@ -127,17 +139,42 @@ describe('createAutopilotHostPorts: agents, limits and executables', () => {
     await expect(ports.rateLimits.refresh()).resolves.toBeNull()
   })
 
-  it('tells route checks that usage comes only from the CLIs (user instruction 2026-10-06)', () => {
-    const { ports, rateLimits } = build()
-    expect(ports.rateLimits.usageSource).toBe('cli-native')
-    expect(rateLimits).not.toHaveBeenCalled()
-  })
-
   it('resolves the executables only when asked', () => {
     const { ports, all } = build()
     expect(() => ports.codex.resolveExecutable()).toThrow(/no codex/)
     expect(() => ports.agy.resolveExecutable()).toThrow(/no agy/)
     expect(ports.claude.resolveExecutable()).toBeNull()
     expect(all.resolveClaudeLaunchTarget).toHaveBeenCalledTimes(1)
+  })
+})
+
+it('uses the same native shell/provider settings and selected homes for reviewer invocations', async () => {
+  const f = build()
+  f.settings.mockReturnValue({
+    ...f.settings(),
+    disabledTuiAgents: DISABLED,
+    agentDefaultEnv: {
+      claude: {
+        CLAUDE_CONFIG_DIR: '/fixture/custom-claude',
+        ANTHROPIC_BASE_URL: 'https://provider.invalid'
+      }
+    }
+  })
+  f.runtime.resolveStructuredAgentAccountHome.mockImplementation(async (agent) => ({
+    variable: agent === 'claude' ? 'CLAUDE_CONFIG_DIR' : 'CODEX_HOME',
+    path: agent === 'claude' ? '/fixture/custom-claude' : '/fixture/selected-codex'
+  }))
+  const claude = await f.ports.reviewer.resolveInvocation('claude')
+  expect(claude).toMatchObject({
+    command: '/fixture/version-manager/claude',
+    env: {
+      PATH: '/fixture/bin',
+      CLAUDE_CONFIG_DIR: '/fixture/custom-claude',
+      ANTHROPIC_BASE_URL: 'https://provider.invalid'
+    }
+  })
+  expect(await f.ports.reviewer.resolveInvocation('codex')).toMatchObject({
+    command: '/fixture/version-manager/codex',
+    env: { PATH: '/fixture/bin', CODEX_HOME: '/fixture/selected-codex' }
   })
 })

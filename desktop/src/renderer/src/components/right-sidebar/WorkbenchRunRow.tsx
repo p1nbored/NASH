@@ -2,8 +2,9 @@ import { CircleStop, SquareTerminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
+import { primaryAgentLabel } from '../settings/routing-table-labels'
 import type { WorkflowRunView } from '../../../../shared/workflow-run/workflow-run-view'
-import { canMessageRun, isRunEnded, type WorkbenchRuns } from './use-workbench-runs'
+import { canMessageRun, type WorkbenchRuns } from './use-workbench-runs'
 import WorkbenchCopyDetails from './WorkbenchCopyDetails'
 import WorkbenchRunActionError from './WorkbenchRunActionError'
 import WorkbenchRunMessage from './WorkbenchRunMessage'
@@ -28,8 +29,7 @@ function Separator(): React.JSX.Element {
 function RunIdentity({ run }: { run: WorkflowRunView }): React.JSX.Element {
   return (
     <p className="flex flex-wrap gap-x-1 text-meta text-muted-foreground">
-      {/* Why not localized: the CLI's product name. */}
-      <span>Claude Code</span>
+      <span>{primaryAgentLabel(run.coordinator.agent)}</span>
       <Separator />
       <span className="break-words font-mono text-foreground">{run.coordinator.model}</span>
       <Separator />
@@ -57,13 +57,13 @@ function RunActions({
   const tabId = useAppStore((state) =>
     findRunTerminalTabId(state.tabsByWorktree, run.workspaceId, paneKey)
   )
-  const ended = isRunEnded(run)
-  if (ended && !tabId) {
+  const stoppable = run.status !== 'completed'
+  if (!stoppable && !tabId) {
     return null
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {!ended && (
+      {stoppable && (
         <Button
           type="button"
           variant="outline"

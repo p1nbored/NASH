@@ -9,14 +9,10 @@ import {
   listDotValidations
 } from '../../dot-ingress/dot-ingress-validations-service'
 import {
-  answerInVersion,
   DotVersionedParamsSchema,
-  parseDotCallFromV3
+  parseDotCall
 } from '../../dot-ingress/dot-ingress-versioned-params'
-import {
-  validationDecideResult,
-  validationsListResult
-} from '../../dot-ingress/dot-ingress-views-v3'
+import { validationDecideResult, validationsListResult } from '../../dot-ingress/dot-ingress-views'
 import { defineMethod } from '../core'
 
 /**
@@ -28,39 +24,29 @@ export const DOT_INGRESS_VALIDATION_RPC_METHODS = [
   defineMethod({
     name: 'dotIngress.validations.list',
     params: DotVersionedParamsSchema,
-    handler: (raw, context) =>
-      answerInVersion(raw, () => {
-        requireDotIngressCaller(context.dotIngressCaller)
-        const { params } = parseDotCallFromV3(
-          'dotIngress.validations.list',
-          raw,
-          DotValidationsListParamsV3
-        )
-        const deps = dotIngressServiceDeps(context.runtime)
-        const { dotRequestId, limit } = params
-        return validationsListResult(
-          listDotValidations(deps, dotRequestId ? { dotRequestId, limit } : { limit })
-        )
-      })
+    handler: (raw, context) => {
+      requireDotIngressCaller(context.dotIngressCaller)
+      const params = parseDotCall(raw, DotValidationsListParamsV3)
+      const deps = dotIngressServiceDeps(context.runtime)
+      const { dotRequestId, limit } = params
+      return validationsListResult(
+        listDotValidations(deps, dotRequestId ? { dotRequestId, limit } : { limit })
+      )
+    }
   }),
   defineMethod({
     name: 'dotIngress.validations.decide',
     params: DotVersionedParamsSchema,
-    handler: (raw, context) =>
-      answerInVersion(raw, async () => {
-        requireDotIngressCaller(context.dotIngressCaller)
-        const { params } = parseDotCallFromV3(
-          'dotIngress.validations.decide',
-          raw,
-          DotValidationDecideParamsV3
-        )
-        const { decisionId, validationId, decision } = params
-        const decided = await decideDotValidation(dotIngressServiceDeps(context.runtime), {
-          decisionId,
-          validationId,
-          decision
-        })
-        return validationDecideResult(decided)
+    handler: async (raw, context) => {
+      requireDotIngressCaller(context.dotIngressCaller)
+      const params = parseDotCall(raw, DotValidationDecideParamsV3)
+      const { decisionId, validationId, decision } = params
+      const decided = await decideDotValidation(dotIngressServiceDeps(context.runtime), {
+        decisionId,
+        validationId,
+        decision
       })
+      return validationDecideResult(decided)
+    }
   })
 ]

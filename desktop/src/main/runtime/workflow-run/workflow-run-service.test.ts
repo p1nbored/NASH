@@ -29,6 +29,7 @@ const BINDING = workbenchWorkspaceBinding(WORKSPACE.workspaceId, WORKSPACE)
 function availability(status: 'available' | 'unverified'): RouteAvailabilityResult {
   const subject = {
     target: 'claude_primary' as const,
+    primaryAgent: 'claude' as const,
     model: TABLE.coordinator.model,
     reasoningLevel: TABLE.coordinator.reasoning_level,
     requirement: 'required' as const,
@@ -63,6 +64,7 @@ function availability(status: 'available' | 'unverified'): RouteAvailabilityResu
 function coordinatorWith(status: 'available' | 'unverified'): CoordinatorResolution {
   return {
     ok: true,
+    agent: 'claude',
     table: { version: 3, sha256: TABLE_SHA },
     coordinator: {
       model: TABLE.coordinator.model,
@@ -115,7 +117,6 @@ describe('workflow run service', () => {
     workspaceBinding: BINDING,
     objective: 'Summarize the repository.',
     requestedAccess: 'read_only' as const,
-    deliverableLanguage: null,
     ...overrides
   })
 
@@ -129,6 +130,7 @@ describe('workflow run service', () => {
     const request = launch.mock.calls[0][0]
     expect(db.getRun(request.run.runId)).toMatchObject({ objective: 'Summarize the repository.' })
     expect(request.run).toMatchObject({
+      coordinatorAgent: 'claude',
       requestId: 'request_service01',
       status: 'launching',
       workspaceBinding: BINDING,
@@ -162,6 +164,42 @@ describe('workflow run service', () => {
       .prepare("SELECT name FROM sqlite_master WHERE name LIKE 'workbench_%'")
       .all()
     expect(workbench).toEqual([])
+  })
+
+  it('pins the selected primary CLI and does not launch another when the table changes', async () => {
+    const selected = coordinatorWith('available')
+    if (!selected.ok || selected.availability.status !== 'available') {
+      throw new Error('fixture route unavailable')
+    }
+    coordinator = {
+      ...selected,
+      agent: 'codex',
+      coordinator: { model: 'gpt-6.1-sol', reasoningLevel: 'max' },
+      availability: {
+        ...selected.availability,
+        cli: {
+          ...selected.availability.cli,
+          target: 'codex_cli',
+          model: 'gpt-6.1-sol',
+          effort: 'max',
+          effortDelivery: 'codex_config_override'
+        }
+      }
+    }
+    await start()
+    const request = vi.mocked(deps.launcher.launch).mock.calls[0][0]
+    expect(request.run).toMatchObject({
+      coordinatorAgent: 'codex',
+      coordinatorModel: 'gpt-6.1-sol'
+    })
+    expect(getWorkflowRunStore(db).get(request.run.runId)?.coordinatorAgent).toBe('codex')
+    coordinator = coordinatorWith('available')
+    await expect(start()).resolves.toMatchObject({
+      ok: true,
+      duplicate: true,
+      run: { coordinatorAgent: 'codex' }
+    })
+    expect(deps.launcher.launch).toHaveBeenCalledOnce()
   })
 
   it('starts nothing for a duplicate request and returns the existing run', async () => {
@@ -259,8 +297,8 @@ describe('workflow run service', () => {
     const orphans = () =>
       db.listRuns().runs.filter((run) => run.objective === 'Summarize the repository.')
 
-    it('refuses a deliverable language the run store would refuse, before reading anything', async () => {
-      await expect(start({ deliverableLanguage: 'English (US)' })).resolves.toMatchObject({
+    it('refuses unknown active request fields before reading anything', async () => {
+      await expect(start({ unexpectedLaunchControl: true })).resolves.toMatchObject({
         ok: false,
         blocker: { detail: 'launch_refused', code: 'autopilot_invalid_input' },
         run: null
@@ -299,9 +337,9 @@ describe('workflow run service', () => {
           workspaceId: WORKSPACE.workspaceId,
           workspaceBinding: BINDING,
           requestedAccess: 'read_only',
-          deliverableLanguage: null,
           routingTableVersion: 3,
           routingTableSha256: TABLE_SHA,
+          coordinatorAgent: 'claude',
           coordinatorModel: TABLE.coordinator.model,
           coordinatorEffort: 'max',
           timestamp: '2026-10-05T00:00:00.000Z'

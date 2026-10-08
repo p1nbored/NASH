@@ -5,7 +5,6 @@ import type { MachineCheck } from '../orchestration/db/task-spec-record'
 import { createRunnerWorld, type RunnerWorld } from './validation-runner.test-fixture'
 
 const MACHINE_CHECKS: MachineCheck[] = [
-  { kind: 'executor_completed' },
   { kind: 'artifact_exists', path: 'report.md' },
   { kind: 'secret_scan_clean' }
 ]
@@ -79,7 +78,6 @@ describe('validation runner: machine checks', () => {
     const validation =
       report.outcome === 'settled' ? world.port.getValidation(report.validationId) : null
     expect(validation?.checks.map((check) => check.kind)).toEqual([
-      'executor_completed',
       'artifact_exists',
       'secret_scan_clean',
       'unit_tests_pass'
@@ -187,9 +185,7 @@ describe('validation runner: a validation settled elsewhere', () => {
           port.recordVerdict({
             validationId: opened.record.validationId,
             verdict: 'inconclusive',
-            checks: [
-              { kind: 'executor_completed', status: 'inconclusive', note: 'Settled elsewhere.' }
-            ],
+            checks: [{ kind: 'work_evidence', status: 'inconclusive', note: 'Settled elsewhere.' }],
             evidenceRefs: [],
             timestamp: '2026-10-05T03:00:00.000Z'
           })

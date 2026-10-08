@@ -36,7 +36,6 @@ export type DotSubmitRequest = {
   workspaceRef: string
   objective: string
   requestedAccess: DotRequestAccess
-  deliverableLanguage?: string
   idempotencyKey: string
   reply?: { correlationId?: string }
   client?: DotClientDescriptor
@@ -97,7 +96,7 @@ function decideRecordedIntake(
       requestedAccess: handle.requestedAccess,
       recorded: { workspaceId: handle.workspaceId, workspaceBinding: handle.workspaceBinding }
     })
-    requireRecordedRequirement(handle.objective, handle.deliverableLanguage)
+    requireRecordedRequirement(handle.objective)
     return { kind: 'admitted', admitted }
   } catch (error) {
     const failure = intakeFailureOfRefusal(error)
@@ -137,10 +136,7 @@ export async function finishDotIntake(
       workspaceId: handle.workspaceId,
       objective: handle.objective,
       idempotencyKey: handle.workbenchIdempotencyKey,
-      requestedAccess: handle.requestedAccess,
-      ...(handle.deliverableLanguage === null
-        ? {}
-        : { deliverableLanguage: handle.deliverableLanguage })
+      requestedAccess: handle.requestedAccess
     })
     workbenchRequestId = result.request.requestId
   } catch (error) {
@@ -183,15 +179,10 @@ export async function submitDotRequest(
   request: DotSubmitRequest
 ): Promise<DotSubmitOutcome> {
   let admitted: AdmittedDotWorkspace
-  let deliverableLanguage: string | null
   let scanRules: string[]
   try {
     requireDotInterfaceOn(deps.db)
-    const analysis = analyzeDotRequirement({
-      objective: request.objective,
-      deliverableLanguage: request.deliverableLanguage
-    })
-    deliverableLanguage = analysis.deliverableLanguage
+    const analysis = analyzeDotRequirement({ objective: request.objective })
     scanRules = [...analysis.scanRules]
     admitted = admitDotIntake(deps, {
       workspaceRef: request.workspaceRef,
@@ -207,7 +198,6 @@ export async function submitDotRequest(
     workspaceBinding: admitted.binding,
     objective: request.objective,
     requestedAccess: request.requestedAccess,
-    deliverableLanguage,
     idempotencyKey: request.idempotencyKey,
     replyCorrelationId: request.reply?.correlationId ?? null,
     client: request.client ?? null,

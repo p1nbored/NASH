@@ -1,7 +1,7 @@
 // FIXTURE_ONLY: synthetic ids; the instructions are checked as text only.
 import { describe, expect, it } from 'vitest'
 import { isEnglishText } from '../../../shared/english-text'
-import { inSessionInstruction, processInstruction } from './task-start-instruction'
+import { inSessionInstruction } from './task-start-instruction'
 
 const IDS = { taskId: 'task_0123456789ab', dispatchId: 'ctx_0123456789ab', cliCommand: 'orca' }
 const REPORT =
@@ -84,61 +84,5 @@ describe('inSessionInstruction', () => {
         workflowName: null
       })
     ).toThrow()
-  })
-})
-
-describe('processInstruction', () => {
-  it.each([
-    ['codex_cli', 'Codex CLI'],
-    ['agy_cli', 'agy CLI']
-  ] as const)(
-    'tells the primary that the %s runs it and where the result arrives',
-    (kind, name) => {
-      const text = processInstruction({ ...IDS, kind, placement: { mode: 'run_workspace' } })
-      expect(isEnglishText(text)).toBe(true)
-      expect(text).toContain(name)
-      expect(text).toMatch(/do not do this task yourself/i)
-      expect(text).toContain('`orca orchestration task-show --task task_0123456789ab --json`')
-      expect(text).not.toMatch(/worktree|commit/i)
-    }
-  )
-
-  const WORKTREE = {
-    worktreeId: 'fixture-repo::C:/fixture/workspaces/nash-task-1',
-    branch: 'nash-task-1',
-    path: 'C:/fixture/workspaces/nash-task-1',
-    baseCommit: '0123456789abcdef0123456789abcdef01234567'
-  }
-
-  it('names the own worktree and branch, and says each writing task starts from the last commit (D-025)', () => {
-    const text = processInstruction({
-      ...IDS,
-      kind: 'codex_cli',
-      placement: { mode: 'own_worktree', worktree: WORKTREE }
-    })
-    expect(isEnglishText(text)).toBe(true)
-    expect(text).toContain('`nash-task-1`')
-    expect(text).toContain('`C:/fixture/workspaces/nash-task-1`')
-    expect(text).toContain('`0123456789ab`')
-    expect(text).toMatch(/last commit/)
-    expect(text).toMatch(/commit what a task needs before you start it/i)
-  })
-
-  it('says a folder workspace task writes in the folder itself, not kept apart (D-025)', () => {
-    const text = processInstruction({ ...IDS, kind: 'agy_cli', placement: { mode: 'folder' } })
-    expect(isEnglishText(text)).toBe(true)
-    expect(text).toMatch(/folder/)
-    expect(text).toMatch(/not kept apart/)
-  })
-
-  it('leaves out a worktree path or branch it cannot quote safely', () => {
-    const text = processInstruction({
-      ...IDS,
-      kind: 'codex_cli',
-      placement: { mode: 'own_worktree', worktree: { ...WORKTREE, branch: 'odd`branch' } }
-    })
-    expect(text).not.toContain('odd`branch')
-    expect(text).toMatch(/its own worktree/)
-    expect(text).toMatch(/last commit/)
   })
 })

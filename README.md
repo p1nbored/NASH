@@ -1,6 +1,6 @@
 # NASH
 
-NASH is a desktop development workspace built from a snapshot of Orca (`desktop/`). dot (ChatGPT) or the desktop submits a request; NASH starts one visible Claude Code primary session per workflow run; Claude proposes TaskSpecs; Clef classifies each TaskSpec into `needs_delegation` and `task_type`; the versioned, user-customizable Routing Table picks the executor, model and effort; executors (Claude subagents, Claude workflows, Codex CLI, agy CLI) do the work; validators decide completion. Orca's runs, tasks and attempts are the single authoritative state.
+NASH is a desktop development workspace built from Orca (`desktop/`). Dot (ChatGPT) or the desktop submits a request, and NASH starts one primary session using Claude Code or Codex, selected in Settings → Task routing. The primary proposes TaskSpecs; Clef classifies them; the versioned routing table selects the CLI, model and effort. Execution, context delivery, messages and stopping reuse Orca's native mechanisms. In-session work uses NASH validation, while native workers retain their native completion lifecycle. Orca's runs, tasks and attempts remain the authoritative state.
 
 NASH uses the official Claude Code, Codex and agy CLIs installed on this machine, the same binaries the shell finds on PATH. It does not bundle, patch or update them.
 
@@ -22,7 +22,7 @@ NASH uses the official Claude Code, Codex and agy CLIs installed on this machine
 
 ## Status
 
-The October 6 interface/independence plan is implemented. See [the delivery report](docs/nash-delivery-2026-10-08.md) for checks and limits. All 1,633 NASH-specific keys are translated into the five supported non-English languages. Windows credential I/O passed a disposable real-store test. The owner-private remote mailbox is deployed on contract v4; the desktop is currently offline.
+The October 6 interface/independence plan is implemented. See [the current checkpoint](docs/nash-checkpoint-2026-10-06.md) for checks and limits. All 1,633 NASH-specific keys are translated into the five supported non-English languages. Windows credential I/O passed a disposable real-store test. The owner-private remote mailbox is deployed on contract v4; the desktop is currently offline.
 
 Real routed CLI/Clef tasks, two-account switching and release packaging remain unverified.
 

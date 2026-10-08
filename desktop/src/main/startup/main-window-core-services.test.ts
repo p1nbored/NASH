@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { requireMainWindowServices } from './main-window-service-readiness'
 
 const {
   attachMainWindowServicesMock,
@@ -9,7 +10,7 @@ const {
   store
 } = vi.hoisted(() => {
   const store = {
-    writeLatestProfileStateJsonCompatibilityExportAsync: vi.fn(async () => {}),
+    flushPendingOrThrowAsync: vi.fn(async () => {}),
     writeLatestProfileStateJsonExportAsync: vi.fn(async () => {}),
     getSettings: vi.fn(() => ({}))
   }
@@ -27,6 +28,7 @@ const {
       openCodeUsage: {},
       museUsage: {},
       codexAccounts: {},
+      claudeAccounts: {},
       rateLimits: { attach: vi.fn(), start: vi.fn() },
       automations: { setWebContents: vi.fn(), start: vi.fn() },
       keybindings: {},
@@ -80,33 +82,55 @@ describe('main window profile-state update preparation', () => {
     vi.clearAllMocks()
   })
 
-  it('publishes both recovery forms with one profile checkpoint before an update quit', async () => {
-    const window = { webContents: { id: 17 } }
+  it.each([false, true])(
+    'flushes SQL after preserving auth before an update quit (failure: %s)',
+    async (fails) => {
+      const window = { webContents: { id: 17 } }
 
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: mocked BrowserWindow only needs webContents for this composition-root wiring test.
-    attachMainWindowCoreServices(window as never, {
-      markExpectedRendererReload: vi.fn(),
-      recordRendererReload: vi.fn()
-    })
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: mocked BrowserWindow only needs webContents for this composition-root wiring test.
+      attachMainWindowCoreServices(window as never, {
+        markExpectedRendererReload: vi.fn(),
+        recordRendererReload: vi.fn()
+      })
 
-    const options = attachMainWindowServicesMock.mock.calls[0]?.[5]
-    if (
-      typeof options !== 'object' ||
-      options === null ||
-      !('onBeforeUpdateQuit' in options) ||
-      typeof options.onBeforeUpdateQuit !== 'function'
-    ) {
-      throw new Error('Expected update quit cleanup to be wired')
+      const options = attachMainWindowServicesMock.mock.calls[0]?.[5]
+      if (
+        typeof options !== 'object' ||
+        options === null ||
+        !('onBeforeUpdateQuit' in options) ||
+        typeof options.onBeforeUpdateQuit !== 'function'
+      ) {
+        throw new Error('Expected update quit cleanup to be wired')
+      }
+
+      const failure = new Error('SQL commit refused')
+      if (fails) {
+        store.flushPendingOrThrowAsync.mockRejectedValueOnce(failure)
+        await expect(options.onBeforeUpdateQuit()).rejects.toBe(failure)
+      } else {
+        await options.onBeforeUpdateQuit()
+      }
+
+      expect(preserveAgentAuthBeforeRestartMock).toHaveBeenCalledWith({
+        codexRuntimeHome: state.codexRuntimeHome,
+        store
+      })
+      expect(store.writeLatestProfileStateJsonExportAsync).not.toHaveBeenCalled()
+      expect(store.flushPendingOrThrowAsync).toHaveBeenCalledOnce()
+      expect(store.flushPendingOrThrowAsync).toHaveBeenCalledWith({ fullCheckpoint: true })
+      expect(preserveAgentAuthBeforeRestartMock.mock.invocationCallOrder[0]).toBeLessThan(
+        store.flushPendingOrThrowAsync.mock.invocationCallOrder[0]
+      )
+      expect(options).toHaveProperty('onBeforeUpdateQuitFailure', 'abort')
     }
+  )
+})
 
-    await options.onBeforeUpdateQuit()
-
-    expect(preserveAgentAuthBeforeRestartMock).toHaveBeenCalledWith({
-      codexRuntimeHome: state.codexRuntimeHome,
-      store
-    })
-    expect(store.writeLatestProfileStateJsonExportAsync).not.toHaveBeenCalled()
-    expect(store.writeLatestProfileStateJsonCompatibilityExportAsync).toHaveBeenCalledOnce()
-    expect(options).toHaveProperty('onBeforeUpdateQuitFailure', 'abort')
+describe('main window service readiness', () => {
+  it('requires native Claude accounts before opening the main window', () => {
+    expect(() => requireMainWindowServices({ ...state, claudeAccounts: null })).toThrow(
+      'Claude account service must be initialized before opening the main window'
+    )
+    expect(requireMainWindowServices(state).claudeAccounts).toBe(state.claudeAccounts)
   })
 })

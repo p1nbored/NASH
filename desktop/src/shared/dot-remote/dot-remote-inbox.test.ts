@@ -1,16 +1,17 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
-  DOT_INGRESS_ERROR_CODES_V3,
-  dotIngressErrorMessageV3
-} from '../dot-ingress/dot-ingress-errors-v3'
-import { DOT_INGRESS_ERROR_MESSAGES } from '../dot-ingress/dot-ingress-errors'
+  DOT_INGRESS_ERROR_CODES,
+  dotIngressErrorMessage,
+  DOT_INGRESS_ERROR_MESSAGES
+} from '../dot-ingress/dot-ingress-errors'
+
 import {
-  DotCancelParamsV3,
-  DotDecisionAnswerParamsV3,
-  DotMessageParamsV3,
-  DotSubmitParamsV3
-} from '../dot-ingress/dot-ingress-v3'
+  DotCancelParams,
+  DotDecisionAnswerParams,
+  DotSubmitParams
+} from '../dot-ingress/dot-ingress-params'
+import { DotMessageParams } from '../dot-ingress/dot-ingress-message'
 import { DotValidationDecideParamsV3 } from '../dot-ingress/dot-ingress-validation'
 import { DotRemoteAckRequestSchema } from './dot-remote-ack'
 import { DotRemoteNashRefusalSchema, dotRemoteNashRefusal } from './dot-remote-errors'
@@ -91,10 +92,10 @@ describe('inbox payloads are exactly the v3 params', () => {
       'message',
       'validation_decision'
     ])
-    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.submit).toBe(DotSubmitParamsV3)
-    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.cancel).toBe(DotCancelParamsV3)
-    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.permission_answer).toBe(DotDecisionAnswerParamsV3)
-    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.message).toBe(DotMessageParamsV3)
+    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.submit).toBe(DotSubmitParams)
+    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.cancel).toBe(DotCancelParams)
+    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.permission_answer).toBe(DotDecisionAnswerParams)
+    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.message).toBe(DotMessageParams)
     expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.validation_decision).toBe(DotValidationDecideParamsV3)
     for (const kind of DOT_REMOTE_ITEM_KINDS) {
       expect(DOT_REMOTE_INBOX_ITEM_VARIANTS[kind].shape.payload).toBe(
@@ -238,9 +239,9 @@ describe('ack from NASH', () => {
   })
 
   it('covers every v3 error code with its v3 message', () => {
-    for (const code of DOT_INGRESS_ERROR_CODES_V3) {
+    for (const code of DOT_INGRESS_ERROR_CODES) {
       const refusal = dotRemoteNashRefusal(code)
-      expect(refusal).toEqual({ by: 'nash', code, message: dotIngressErrorMessageV3(code) })
+      expect(refusal).toEqual({ by: 'nash', code, message: dotIngressErrorMessage(code) })
       expect(DotRemoteNashRefusalSchema.safeParse(refusal).success).toBe(true)
     }
   })

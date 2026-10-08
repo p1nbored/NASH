@@ -8,7 +8,7 @@ import { WorkflowRunListResultSchema } from '../../../../shared/workflow-run/wor
 // gives (agent detection or a read-only desktop RPC); anything that does not parse counts as not done.
 
 export type NashSetupSignalValues = {
-  claudeCodeDetected: boolean
+  primaryCliDetected: boolean
   clefConnected: boolean
   dotConnected: boolean
   hasWorkbenchRun: boolean
@@ -22,8 +22,11 @@ const CLEF_CONNECTED_STATUSES: ReadonlySet<RoutingStatus> = new Set<RoutingStatu
   'quota_latched'
 ])
 
-export function isClaudeCodeDetected(detectedAgentIds: unknown): boolean {
-  return Array.isArray(detectedAgentIds) && detectedAgentIds.includes('claude')
+export function isPrimaryCliDetected(detectedAgentIds: unknown): boolean {
+  return (
+    Array.isArray(detectedAgentIds) &&
+    (detectedAgentIds.includes('claude') || detectedAgentIds.includes('codex'))
+  )
 }
 
 export function isClefConnected(routingStatus: unknown): boolean {

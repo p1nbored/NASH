@@ -1,10 +1,12 @@
 import type { AgentLaunchPreferences } from '../../../../../../shared/agent-session-host-authority'
 import {
   findCatalogModel,
-  findCatalogOption,
-  getAgentSessionOptionCatalog
+  findCatalogOption
 } from '../../../../../../shared/agent-session-option-catalog'
-import { resolveAgentSessionOptionLaunch } from '../../../../../../shared/agent-session-option-launch'
+import {
+  getAgentSessionOptionLaunchCatalog,
+  resolveAgentSessionOptionLaunch
+} from '../../../../../../shared/agent-session-option-launch'
 import { ORCHESTRATION_WORKER_LAUNCH_PREFERENCES_RUNTIME_CAPABILITY } from '../../../../../../shared/protocol-version'
 import type { TuiAgent } from '../../../../../../shared/tui-agent'
 import { OrchestrationError } from '../../../../orchestration/orchestration-error'
@@ -49,7 +51,10 @@ export function createPendingWorkerLaunchReceipt(args: {
 }
 
 export function resolveWorkerLaunchPreferences(args: {
+  routeValidated?: true
   agent: TuiAgent
+  openCodeModelLaunchSupported?: boolean
+  createsWorktree?: boolean
   model?: string
   effort?: string
 }): {
@@ -66,7 +71,21 @@ export function resolveWorkerLaunchPreferences(args: {
     }
   }
 
-  const catalog = getAgentSessionOptionCatalog(args.agent)
+  if (args.agent === 'opencode' && args.createsWorktree) {
+    throw new OrchestrationError(
+      'capability_unsupported',
+      'OpenCode model selection requires an existing worktree. Use --worktree current or an existing worktree selector, or omit --model.'
+    )
+  }
+
+  if (args.agent === 'opencode' && args.openCodeModelLaunchSupported !== true) {
+    throw new OrchestrationError(
+      'capability_unsupported',
+      'This OpenCode TUI cannot verify launch-time model selection. Omit --model or use a supported OpenCode CLI.'
+    )
+  }
+
+  const catalog = getAgentSessionOptionLaunchCatalog(args.agent)
   if (!catalog?.supportsWorkerLaunchPreferences || !catalog.modelApply.launchArgs) {
     throw new OrchestrationError(
       'invalid_argument',
@@ -74,7 +93,7 @@ export function resolveWorkerLaunchPreferences(args: {
     )
   }
 
-  if (args.effort) {
+  if (args.effort && !args.routeValidated) {
     const model = findCatalogModel(catalog, args.model)
     const option =
       findCatalogOption(model, 'effort') ??
@@ -96,7 +115,12 @@ export function resolveWorkerLaunchPreferences(args: {
     model: args.model,
     ...(args.effort ? { effort: args.effort } : {})
   }
-  const resolved = resolveAgentSessionOptionLaunch(args.agent, requested, [], false)
+  const resolved = resolveAgentSessionOptionLaunch(
+    args.agent,
+    { ...requested, ...(args.routeValidated ? { routeValidated: 'true' } : {}) },
+    [],
+    false
+  )
   if (
     resolved.appliedValues.model !== args.model ||
     resolved.appliedValues.effort !== args.effort
@@ -107,7 +131,10 @@ export function resolveWorkerLaunchPreferences(args: {
     )
   }
 
-  const preferences: AgentLaunchPreferences = requested
+  const preferences: AgentLaunchPreferences = {
+    ...requested,
+    ...(args.routeValidated ? { routeValidated: true } : {})
+  }
   return {
     preferences,
     receipt: createWorkerLaunchReceipt({ agent: args.agent, ...preferences })

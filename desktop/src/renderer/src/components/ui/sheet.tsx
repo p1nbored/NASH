@@ -2,10 +2,11 @@
 
 import * as React from 'react'
 import { XIcon } from 'lucide-react'
-import { Dialog as SheetPrimitive } from 'radix-ui'
+import * as SheetPrimitive from 'radix-ui/dialog'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { handleImeOverlayEscape } from '@/lib/ime-overlay-escape'
 import { translate } from '@/i18n/i18n'
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -88,6 +89,7 @@ function SheetContent({
         // document root and its header overlaps the titlebar drag strip.
         style={{ ...style, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         {...props}
+        onEscapeKeyDown={(event) => handleImeOverlayEscape(event, props.onEscapeKeyDown)}
       >
         {children}
         {showCloseButton && (
@@ -120,7 +122,7 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn('font-display text-base font-normal text-foreground', className)}
+      className={cn('font-display text-title font-normal text-foreground', className)}
       {...props}
     />
   )

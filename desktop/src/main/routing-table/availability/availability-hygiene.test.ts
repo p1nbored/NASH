@@ -54,7 +54,7 @@ describe('route availability source hygiene', () => {
     expect(offenders).toEqual([])
   })
 
-  it('keeps the Gemini 4 rule in the one model policy', () => {
+  it('does not hardcode provider families in availability checks', () => {
     const copies = files.filter((path) => /gemini|argon/i.test(codeOf(path)))
     expect(copies).toEqual([])
   })

@@ -3,7 +3,6 @@ import type { AttemptArtifactRecord } from '../orchestration/db/attempt-artifact
 import type { EvidenceRef } from '../orchestration/db/task-validation-record'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import { inspectArtifactFile, type ArtifactFileResult } from './artifact-file-inspection'
-import { readAttemptResultFile } from './attempt-result-file'
 import type { TaskValidationPort } from './task-validation-port'
 import {
   failed,
@@ -19,23 +18,10 @@ const ARTIFACT_EXISTS = 'artifact_exists'
 const SECRET_SCAN = 'secret_scan_clean'
 /** The artifact kind recorded for a file a TaskSpec names. */
 const DELIVERABLE_KIND = 'deliverable'
-/** Artifact files keep the earlier 4 MiB read bound; D-027 raised only the executor answer's. */
+/** Bound text retained for secret scanning. */
 const ARTIFACT_TEXT_MAX_BYTES = 4 * 1024 * 1024
 
 export type ArtifactRecorder = Pick<TaskValidationPort, 'recordArtifact' | 'listArtifacts'>
-
-function rootPathOf(evidence: AttemptEvidence, root: ArtifactRoot): string | null {
-  return root === 'worktree' ? (evidence.workspace?.path ?? null) : evidence.runDirectory
-}
-
-function missingRoot(root: ArtifactRoot): CheckOutcome {
-  return undecided(
-    ARTIFACT_EXISTS,
-    root === 'worktree'
-      ? 'The workspace is not a local directory the validators can read.'
-      : 'The attempt has no local run directory to look in.'
-  )
-}
 
 function inspectionProblem(
   path: string,
@@ -99,9 +85,12 @@ export async function checkArtifactExists(
   recorder: ArtifactRecorder,
   timestamp: string
 ): Promise<CheckOutcome> {
-  const rootPath = rootPathOf(evidence, check.root)
+  const rootPath = evidence.workspace?.path ?? null
   if (rootPath === null) {
-    return missingRoot(check.root)
+    return undecided(
+      ARTIFACT_EXISTS,
+      'The workspace is not a local directory the validators can read.'
+    )
   }
   const inspected = await inspectArtifactFile(rootPath, check.path)
   if (inspected.status !== 'ok') {
@@ -129,26 +118,11 @@ export async function checkArtifactExists(
 
 type Scan = { readonly verdict: 'clean' | 'secret' | 'unknown'; readonly ref: EvidenceRef | null }
 
-async function scanResult(evidence: AttemptEvidence): Promise<Scan | null> {
-  const read = await readAttemptResultFile(evidence)
-  if (read.status === 'no_process') {
-    return null
-  }
-  if (read.status !== 'ok') {
-    return { verdict: 'unknown', ref: null }
-  }
-  const secret = hasSecretLikeText(read.text)
-  return {
-    verdict: secret ? 'secret' : 'clean',
-    ref: { kind: 'executor_result', ref: read.sha256 }
-  }
-}
-
 async function scanArtifact(
   evidence: AttemptEvidence,
   artifact: AttemptArtifactRecord
 ): Promise<Scan> {
-  const rootPath = rootPathOf(evidence, artifact.root)
+  const rootPath = evidence.workspace?.path ?? null
   if (rootPath === null) {
     return { verdict: 'unknown', ref: null }
   }
@@ -162,17 +136,13 @@ async function scanArtifact(
   return { verdict: hasSecretLikeText(read.text) ? 'secret' : 'clean', ref }
 }
 
-/** No output of the attempt (its result and every recorded artifact) holds a credential shape. */
+/** No recorded artifact holds a credential shape. */
 export async function checkSecretScanClean(
   evidence: AttemptEvidence,
   recorder: Pick<ArtifactRecorder, 'listArtifacts'>
 ): Promise<CheckOutcome> {
   const artifacts = recorder.listArtifacts(evidence.dispatchId)
-  const result = await scanResult(evidence)
-  const scans = [
-    ...(result ? [result] : []),
-    ...(await Promise.all(artifacts.map((artifact) => scanArtifact(evidence, artifact))))
-  ]
+  const scans = await Promise.all(artifacts.map((artifact) => scanArtifact(evidence, artifact)))
   const refs = scans.flatMap((scan) => (scan.ref ? [scan.ref] : []))
   const secrets = scans.filter((scan) => scan.verdict === 'secret').length
   if (secrets > 0) {

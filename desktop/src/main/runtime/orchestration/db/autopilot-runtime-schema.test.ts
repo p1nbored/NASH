@@ -26,10 +26,8 @@ import {
   type SchemaEntry
 } from './autopilot-runtime.test-fixture'
 
-// Pins the exact v1 layout: changing any definition without a new schema version fails here first.
-// v1 is unreleased; D-019 amended it in place with run_messages, and D-027 with task_specs.review,
-// the run message ceiling and the none, minimal and ultra effort levels.
-const SCHEMA_V1_SHA256 = 'cef7b79ed9f74eecbbf61ea34176f46171dcaff367d6d16b785f44e64952fefb'
+// Pins the fresh current layout; unsupported local layouts fail closed without migration.
+const SCHEMA_V2_SHA256 = '97b3d23e255d5e3511c0b93b402e2008fe8f082ae9f97f65cc34dbb747295621'
 
 function normalizedLayoutHash(): string {
   const text = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) =>
@@ -45,7 +43,7 @@ describe('autopilot runtime schema family', () => {
   })
   afterEach(() => owner.close())
 
-  it('creates the whole family at version 1 and verifies it on the next start', () => {
+  it('creates the whole family at version 2 and verifies it on the next start', () => {
     ensureAutopilotRuntimeSchema(owner.db)
     const tables = owner.db
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
@@ -57,7 +55,6 @@ describe('autopilot runtime schema family', () => {
         'attempt_artifacts',
         'autopilot_runtime_schema',
         'clef_classification_spend',
-        'executor_processes',
         'permission_decisions',
         'primary_sessions',
         'run_messages',
@@ -68,10 +65,10 @@ describe('autopilot runtime schema family', () => {
         'workflow_runs'
       ].sort()
     )
-    expect(AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT).toBe(1)
+    expect(AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT).toBe(2)
     expect(
       owner.db.prepare('SELECT version FROM autopilot_runtime_schema WHERE id = 1').get()
-    ).toEqual({ version: 1 })
+    ).toEqual({ version: 2 })
     const entries = readSchemaEntries(owner.db)
     expect(() => ensureAutopilotRuntimeSchema(owner.db)).not.toThrow()
     expect(readSchemaEntries(owner.db)).toEqual(entries)
@@ -148,6 +145,10 @@ describe('autopilot runtime schema family', () => {
           db.exec('CREATE TABLE permission_decisions (decision_id TEXT)')
         }
       ],
+      [
+        'an older schema version',
+        (db) => db.exec('UPDATE autopilot_runtime_schema SET version = 1 WHERE id = 1')
+      ],
       ['a missing table', (db) => db.exec('DROP TABLE clef_classification_spend')],
       ['a missing version table', (db) => db.exec('DROP TABLE autopilot_runtime_schema')],
       [
@@ -170,8 +171,8 @@ describe('autopilot runtime schema family', () => {
         }
       ],
       [
-        'a stored version that is not 1',
-        (db) => db.exec('UPDATE autopilot_runtime_schema SET version = 2 WHERE id = 1')
+        'an unsupported future version',
+        (db) => db.exec('UPDATE autopilot_runtime_schema SET version = 3 WHERE id = 1')
       ],
       [
         'a weakened permission-mode CHECK',
@@ -210,8 +211,8 @@ describe('autopilot runtime schema family', () => {
     }
   })
 
-  it('pins the v1 layout so an unversioned change cannot ship', () => {
-    expect(normalizedLayoutHash()).toBe(SCHEMA_V1_SHA256)
+  it('pins the current layout so an unversioned change cannot ship', () => {
+    expect(normalizedLayoutHash()).toBe(SCHEMA_V2_SHA256)
   })
 
   describe('the Clef spend link', () => {

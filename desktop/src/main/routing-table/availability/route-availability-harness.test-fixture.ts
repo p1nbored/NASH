@@ -1,6 +1,5 @@
 // FIXTURE_ONLY: fake ports for the route availability evaluator; no CLI, network or file system is touched.
 import type { RateLimitHeadroomState } from './route-provider-headroom'
-import type { UsageMeterSource } from '../../rate-limits/usage-meters-policy'
 import type { CodexExecutable } from '../../codex-exec/codex-exec-executable'
 import { FIXTURE_USER_DATA } from '../routing-table-test-context.test-fixture'
 import type { ModelListing } from './model-listing'
@@ -31,8 +30,6 @@ export type HarnessOverrides = {
   models?: Partial<Record<RouteProvider, () => Promise<ModelListing>>>
   readRateLimits?: () => RateLimitHeadroomState | null
   refreshRateLimits?: () => Promise<unknown>
-  /** Leave out for Orca's inherited meters; 'cli-native' is NASH reading usage through each CLI. */
-  usageSource?: UsageMeterSource
   resolveCodexExecutable?: () => CodexExecutable
   waits?: Partial<EvaluatorWaits>
   fs?: MemoryAvailabilityFs
@@ -87,8 +84,7 @@ export function createEvaluatorHarness(overrides: HarnessOverrides = {}) {
       refresh: async () => {
         calls.refresh += 1
         return overrides.refreshRateLimits?.()
-      },
-      ...(overrides.usageSource === undefined ? {} : { usageSource: overrides.usageSource })
+      }
     },
     resolveCodexExecutable: () => {
       calls.executable += 1

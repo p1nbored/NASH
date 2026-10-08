@@ -1,92 +1,88 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { OrchestrationError } from '../orchestration/orchestration-error'
-import { FIXTURE_OBJECTIVE, seedTask } from '../orchestration/db/app-attempt.test-fixture'
+import { seedTask } from '../orchestration/db/app-attempt.test-fixture'
 import { seedRoutedTask } from '../orchestration/db/app-attempt-routing.test-fixture'
 import { readRunTasks } from './run-tasks-read'
 import {
-  FIXTURE_START,
   createTaskWindowHarness,
-  seedAgyAttempt,
+  seedNativeAttempt,
   seedClaudeTask,
-  seedCodexAttempt,
-  settleAttempt,
-  writeTranscript,
   type TaskWindowHarness
 } from './task-window.test-fixture'
-
 let harness: TaskWindowHarness | null = null
-
 afterEach(() => {
   harness?.close()
   harness = null
 })
-
 function setup() {
   harness = createTaskWindowHarness()
   return harness
 }
-
-function tasksOf(h: TaskWindowHarness, runId = h.runId) {
-  return readRunTasks({ owner: h.owner, userDataPath: h.userDataPath }, runId)
-}
-
+const tasksOf = (h: TaskWindowHarness, runId = h.runId) => readRunTasks({ owner: h.owner }, runId)
 describe('readRunTasks', () => {
-  it('lists the run tasks in order with executor, attempts and whether a transcript exists', async () => {
+  it('reads native session and terminal attempts directly from worker dispatches', async () => {
     const h = setup()
-    const codex = seedCodexAttempt(h, { title: 'Review the parser' })
-    writeTranscript(codex.runDir, FIXTURE_START)
-    const agy = seedAgyAttempt(h)
-    settleAttempt(h, agy.dispatchId)
-
+    const codex = seedNativeAttempt(h, { title: 'Review the parser', sessionId: 'session-fixture' })
+    const agy = seedNativeAttempt(h, {
+      route: { target: 'agy_cli', model: 'gemini-3.8-flash-high', cliSetting: null },
+      terminal: 'terminal-fixture'
+    })
     const { tasks } = await tasksOf(h)
     expect(tasks).toHaveLength(2)
-    expect(tasks[0]).toEqual({
+    expect(tasks[0]).toMatchObject({
       taskId: codex.taskId,
       title: 'Review the parser',
       executorKind: 'codex',
       attempts: [
         {
           dispatchId: codex.dispatchId,
-          state: 'starting',
-          startedAt: expect.any(String),
-          settledAt: null,
-          hasTranscript: true,
-          worktree: null
+          state: 'running',
+          source: {
+            kind: 'session',
+            worktreeId: 'fixture-worker-worktree',
+            sessionId: 'session-fixture',
+            agent: 'codex'
+          }
         }
       ]
     })
     expect(tasks[1]).toMatchObject({
       taskId: agy.taskId,
-      title: FIXTURE_OBJECTIVE,
       executorKind: 'agy',
       attempts: [
-        { dispatchId: agy.dispatchId, state: 'completed', hasTranscript: false, worktree: null }
+        { dispatchId: agy.dispatchId, source: { kind: 'terminal', terminal: 'terminal-fixture' } }
       ]
     })
-    expect(tasks[1].attempts[0].settledAt).not.toBeNull()
+    expect(JSON.stringify(tasks)).not.toMatch(/hasTranscript|runDirectory|autopilot-runs/)
   })
-
-  it('takes the executor of a Claude task from its route and its attempts from Orca', async () => {
+  it('shows native completion without a saved transcript or executor row', async () => {
     const h = setup()
-    const subagent = seedClaudeTask(h, { target: 'claude_subagent' })
-    const workflow = seedClaudeTask(h, { target: 'claude_workflow' })
-
+    const { dispatchId } = seedNativeAttempt(h)
+    h.owner.db
+      .prepare("UPDATE worker_dispatches SET state = 'succeeded' WHERE dispatch_id = ?")
+      .run(dispatchId)
+    const { tasks } = await tasksOf(h)
+    expect(tasks[0].attempts).toEqual([
+      expect.objectContaining({ dispatchId, state: 'completed', source: null })
+    ])
+  })
+  it('takes in-session task kinds from their routes and their attempts from dispatches', async () => {
+    const h = setup()
+    const sub = seedClaudeTask(h, { target: 'claude_subagent' })
+    seedClaudeTask(h, { target: 'claude_workflow' })
     const { tasks } = await tasksOf(h)
     expect(tasks.map((task) => task.executorKind)).toEqual(['claude_subagent', 'claude_workflow'])
     expect(tasks[0].attempts).toEqual([
       {
-        dispatchId: subagent.dispatchId,
+        dispatchId: sub.dispatchId,
         state: 'starting',
         startedAt: expect.any(String),
         settledAt: null,
-        hasTranscript: false,
-        worktree: null
+        source: null
       }
     ])
-    expect(tasks[1].attempts[0].dispatchId).toBe(workflow.dispatchId)
   })
-
-  it('treats a task with no route or a route kept with the primary as the primary session', async () => {
+  it('uses the primary session for tasks without a delegated route', async () => {
     const h = setup()
     seedTask(h)
     seedRoutedTask(h, {
@@ -98,23 +94,11 @@ describe('readRunTasks', () => {
         status: 'not_delegated'
       }
     })
-
-    const { tasks } = await tasksOf(h)
-    expect(tasks.map((task) => [task.executorKind, task.attempts])).toEqual([
+    expect((await tasksOf(h)).tasks.map((task) => [task.executorKind, task.attempts])).toEqual([
       ['claude_primary', []],
       ['claude_primary', []]
     ])
   })
-
-  it('reports no transcript for a run directory outside the runs root', async () => {
-    const h = setup()
-    const codex = seedCodexAttempt(h, { runDirectory: 'elsewhere/run/ctx' })
-    writeTranscript(codex.runDir, FIXTURE_START)
-
-    const { tasks } = await tasksOf(h)
-    expect(tasks[0].attempts[0].hasTranscript).toBe(false)
-  })
-
   it('refuses a run the app does not know', async () => {
     const h = setup()
     await expect(tasksOf(h, 'run_unknown0001')).rejects.toSatisfy(

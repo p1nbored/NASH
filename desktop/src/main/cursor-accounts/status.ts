@@ -1,7 +1,6 @@
 import type { CursorAccountStatus } from '../../shared/rate-limit-types'
 import { readCursorAuthSession } from '../rate-limits/cursor-auth'
 import { isCursorSessionTokenExpired } from '../rate-limits/cursor-session-token'
-import { USAGE_METER_SOURCE } from '../rate-limits/usage-meters-policy'
 
 function signedOut(error: string | null): CursorAccountStatus {
   return {
@@ -16,10 +15,6 @@ function signedOut(error: string | null): CursorAccountStatus {
 }
 
 export async function getCursorAccountStatus(): Promise<CursorAccountStatus> {
-  // Why: this status only serves the usage meter, which NASH keeps off (no credential read).
-  if (USAGE_METER_SOURCE !== 'orca-inherited') {
-    return signedOut(null)
-  }
   const readResult = await readCursorAuthSession()
   if (readResult.status !== 'ok') {
     return signedOut(readResult.status === 'error' ? readResult.error : null)

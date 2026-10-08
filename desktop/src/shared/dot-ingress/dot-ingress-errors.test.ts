@@ -20,7 +20,7 @@ import {
 import { DOT_REQUEST_STATES, DOT_REQUEST_STATUS_TEXT } from './dot-ingress-status-text'
 
 describe('dot ingress error catalog', () => {
-  it('pins the closed set of codes of contract version 1', () => {
+  it('pins the closed set of codes of contract version 3', () => {
     expect([...DOT_INGRESS_ERROR_CODES]).toEqual([
       'dot_ingress_disabled',
       'dot_ingress_forbidden',
@@ -31,7 +31,6 @@ describe('dot ingress error catalog', () => {
       'dot_requirement_unclear',
       'dot_requirement_too_long',
       'dot_requirement_rejected_content',
-      'dot_deliverable_language_invalid',
       'dot_idempotency_conflict',
       'dot_request_not_found',
       'dot_request_not_cancelable',
@@ -39,7 +38,11 @@ describe('dot ingress error catalog', () => {
       'dot_rate_limited',
       'dot_recovery_required',
       'dot_decision_not_found',
-      'dot_decision_desktop_only'
+      'dot_decision_desktop_only',
+      'dot_access_above_maximum',
+      'dot_decision_deny_only',
+      'dot_request_busy',
+      'dot_validation_not_found'
     ])
   })
 
@@ -102,7 +105,6 @@ describe('dot ingress error catalog', () => {
       dot_requirement_unclear: 'yes',
       dot_requirement_too_long: 'yes',
       dot_requirement_rejected_content: 'yes',
-      dot_deliverable_language_invalid: 'yes',
       dot_idempotency_conflict: 'no',
       dot_request_not_found: 'no',
       dot_request_not_cancelable: 'no',
@@ -147,7 +149,7 @@ describe('dot ingress limits', () => {
     expect(DOT_INGRESS_DEFAULT_RATE_PER_MINUTE).toBe(6)
     expect(DOT_INGRESS_DEFAULT_RATE_PER_UTC_DAY).toBe(100)
     expect(DOT_INGRESS_RATE_WINDOW_MS).toBe(60_000)
-    expect(DOT_INGRESS_CONTRACT_VERSION).toBe(1)
+    expect(DOT_INGRESS_CONTRACT_VERSION).toBe(3)
   })
 
   it('files the dot under its own principal, never the desktop one, and defaults access to read_only', () => {

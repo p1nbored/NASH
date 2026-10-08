@@ -14,19 +14,32 @@ export type ReasoningRequirement = (typeof REASONING_REQUIREMENTS)[number]
 
 /** What is checked for one route: concrete values only, with `inherit` already resolved to the coordinator. */
 export type RouteSubject = {
-  readonly target: RouteTarget
   readonly model: string
   readonly reasoningLevel: ConcreteReasoningLevel
   readonly requirement: ReasoningRequirement
   /** True when the table row says `inherit` for both fields, so the values are the coordinator's. */
   readonly inheritsCoordinator: boolean
-}
+} & (
+  | {
+      readonly target: 'claude_primary' | 'claude_subagent' | 'claude_workflow'
+      readonly primaryAgent: 'claude' | 'codex'
+    }
+  | {
+      readonly target: 'codex_cli' | 'agy_cli' | 'claude_headless'
+    }
+)
 
 /**
  * Evidence that this run's primary session is live, read by the caller from the primary-session store.
  * An in-session route has no login of its own: it runs inside that session.
  */
-export type LiveRunPrimary = { readonly runId: string; readonly ownerId: string }
+export type LiveRunPrimary = {
+  readonly runId: string
+  readonly ownerId: string
+  readonly agent: 'claude' | 'codex'
+  readonly model: string
+  readonly effort: ConcreteReasoningLevel
+}
 
 export function providerForTarget(target: RouteTarget): RouteProvider {
   switch (target) {
@@ -42,9 +55,18 @@ export function providerForTarget(target: RouteTarget): RouteProvider {
   }
 }
 
+/** Primary and workflow targets use the selected CLI. */
+export function providerForSubject(subject: RouteSubject): RouteProvider {
+  return subject.target === 'claude_primary' || subject.target === 'claude_workflow'
+    ? subject.primaryAgent
+    : providerForTarget(subject.target)
+}
+
 /** Identity of a route for latches: the executor-reported failure belongs to this target, model and level. */
 export function routeKeyOf(subject: RouteSubject): string {
-  return `${subject.target}|${subject.model}|${subject.reasoningLevel}`
+  const primary =
+    'primaryAgent' in subject && subject.primaryAgent === 'codex' ? '|primary:codex' : ''
+  return `${subject.target}|${subject.model}|${subject.reasoningLevel}${primary}`
 }
 
 /** Certain failures: the route cannot run. */

@@ -74,7 +74,7 @@ describe('dot follow-up messages (D-019)', () => {
   }
 
   it('never lets dot send more than the run message store holds', () => {
-    // D-027 raised the store to a technical ceiling; the dot v2 wire bound and its remote manifest
+    // D-027 raised the store to a technical ceiling; the dot wire bound and its remote manifest
     // stay until that contract is revised with the Site, so dot can only send less.
     expect(DOT_MESSAGE_TEXT_MAX_CHARS).toBeLessThanOrEqual(RUN_MESSAGE_TEXT_MAX_CHARS)
   })

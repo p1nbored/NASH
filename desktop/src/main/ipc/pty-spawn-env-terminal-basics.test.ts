@@ -1,7 +1,8 @@
+import { join } from 'node:path'
 import { withFreshOmpLaunch } from '../../shared/omp-fresh-launch'
 import { describe, expect, it, vi } from 'vitest'
 import { piBuildPtyEnvMock, spawnMock } from './pty-ipc-mock-registry'
-import { TEST_CODEX_HOME, makeDisposable } from './pty-ipc-test-constants'
+import { TEST_CODEX_HOME } from './pty-ipc-test-constants'
 import { setupPtyIpcSuite } from './pty-ipc-test-harness'
 import { LocalPtyProvider } from '../providers/local-pty-provider'
 import { __resetPersistedWindowsPathCacheForTests } from '../pty/windows-environment-path'
@@ -10,6 +11,7 @@ import { wslHookRelayManager } from '../agent-hooks/wsl-hook-relay-manager'
 import { registerPtyHandlers, buildPtyHostEnv } from './pty'
 import { buildJcodeRuntimeDir, shouldInjectJcodeRuntimeDir } from '../../shared/jcode-runtime-dir'
 import { makePaneKey } from '../../shared/stable-pane-id'
+import { selectShellStartupFeatures } from '../shell-startup-features'
 
 vi.mock('electron', () => import('./pty-ipc-mock-registry').then((m) => m.electronModuleMock()))
 vi.mock('fs', () => import('./pty-ipc-mock-registry').then((m) => m.fsModuleMock()))
@@ -59,6 +61,41 @@ describe('registerPtyHandlers', () => {
   const { handlers, mainWindow, spawnAndGetEnv, withBundledCli } = setupPtyIpcSuite()
 
   describe('spawn environment', () => {
+    it.each(['/bin/bash', '/bin/zsh'])(
+      'does not wrap a bare %s pane merely to expose this app CLI',
+      (shellPath) => {
+        const originalPlatform = process.platform
+        Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' })
+        try {
+          const env = buildPtyHostEnv(
+            'bare-cli-pane',
+            {},
+            {
+              isPackaged: false,
+              userDataPath: '/tmp/orca-user-data',
+              selectedCodexHomePath: null,
+              agentStatusHooksEnabled: false
+            }
+          )
+          expect(env.ORCA_CLI_BIN_DIR).toBe(join('/tmp/orca-user-data', 'cli', 'bin'))
+          expect(
+            selectShellStartupFeatures({
+              shellPath,
+              env,
+              hasStartupCommand: false,
+              waitsForShellReady: false,
+              emitsStartupIdentity: false
+            })
+          ).toEqual([])
+        } finally {
+          Object.defineProperty(process, 'platform', {
+            configurable: true,
+            value: originalPlatform
+          })
+        }
+      }
+    )
+
     it('does not install managed Pi extensions when Pi is disabled', () => {
       piBuildPtyEnvMock.mockClear()
 
@@ -282,38 +319,6 @@ describe('registerPtyHandlers', () => {
       expect(mainWindow.webContents.send).toHaveBeenCalledWith('pty:spawned', {
         id: expect.any(String)
       })
-    })
-    it('prepares a local Claude launch once and kills it without an account gate', async () => {
-      let exitCb: ((info: { exitCode: number }) => void) | undefined
-      spawnMock.mockReturnValue({
-        onData: vi.fn(() => makeDisposable()),
-        onExit: vi.fn((cb: (info: { exitCode: number }) => void) => {
-          exitCb = cb
-          return makeDisposable()
-        }),
-        write: vi.fn(),
-        resize: vi.fn(),
-        kill: vi.fn(() => exitCb?.({ exitCode: -1 })),
-        process: 'zsh',
-        pid: 12345
-      })
-      const prepareClaudeAuth = vi.fn(async () => ({
-        configDir: '/tmp/claude',
-        envPatch: {},
-        stripAuthEnv: false,
-        provenance: 'system'
-      }))
-      registerPtyHandlers(mainWindow as never, undefined, undefined, undefined, prepareClaudeAuth)
-
-      const spawnResult = (await handlers.get('pty:spawn')!(null, {
-        cols: 80,
-        rows: 24,
-        command: 'claude'
-      })) as { id: string }
-
-      expect(prepareClaudeAuth).toHaveBeenCalledTimes(1)
-
-      await expect(handlers.get('pty:kill')!(null, { id: spawnResult.id })).resolves.not.toThrow()
     })
     it('defaults LANG to en_US.UTF-8 when not inherited from process.env', async () => {
       const env = await spawnAndGetEnv(undefined, { LANG: undefined })

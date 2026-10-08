@@ -8,7 +8,7 @@ describe('preserveAgentAuthBeforeRestart', () => {
     vi.restoreAllMocks()
   })
 
-  it('syncs Codex before flushing the store and has no Claude step', async () => {
+  it('syncs Codex and flushes the store', async () => {
     const calls: string[] = []
 
     await preserveAgentAuthBeforeRestart({

@@ -36,15 +36,13 @@ const METHOD_PARAMS: readonly [string, ParamsSchema, Record<string, unknown>][] 
   ['run-complete', RunCompleteParams, { summary: 'The run is done.' }]
 ]
 
-const ROUTING_AND_LANGUAGE_KEYS = [
+const ROUTING_KEYS = [
   'target',
   'executionTarget',
   'model',
   'effort',
   'reasoningLevel',
-  'dataClass',
-  'language',
-  'deliverableLanguage'
+  'dataClass'
 ]
 
 describe('orchestration autopilot params', () => {
@@ -53,9 +51,9 @@ describe('orchestration autopilot params', () => {
   })
 
   it.each(METHOD_PARAMS)(
-    '%s refuses a target, model, effort, data class or language at the top level',
+    '%s refuses a target, model, effort or data class at the top level',
     (_name, schema, valid) => {
-      for (const key of ROUTING_AND_LANGUAGE_KEYS) {
+      for (const key of ROUTING_KEYS) {
         expect(schema.safeParse({ ...valid, [key]: 'x' }).success).toBe(false)
       }
     }
@@ -70,8 +68,8 @@ describe('orchestration autopilot params', () => {
     }
   )
 
-  it('refuses every routing or language key inside the TaskSpec', () => {
-    for (const key of ROUTING_AND_LANGUAGE_KEYS) {
+  it('refuses every routing key inside the TaskSpec', () => {
+    for (const key of ROUTING_KEYS) {
       expect(AutopilotTaskSpecSchema.safeParse({ ...SPEC, [key]: 'x' }).success).toBe(false)
       expect(TaskProposeParams.safeParse({ spec: { ...SPEC, [key]: 'x' } }).success).toBe(false)
     }
@@ -208,7 +206,7 @@ describe('orchestration autopilot params', () => {
 })
 
 describe('findRefusedTaskSpecKeys', () => {
-  it('names each routing or language key, also inside machine checks', () => {
+  it('names each routing key, also inside machine checks', () => {
     const found = findRefusedTaskSpecKeys({
       ...SPEC,
       model: 'claude-opus-5-5',
@@ -225,7 +223,7 @@ describe('findRefusedTaskSpecKeys', () => {
 
   it('lists every key the refusal names', () => {
     expect(AUTOPILOT_TASK_SPEC_REFUSED_KEYS).toEqual(
-      expect.arrayContaining(ROUTING_AND_LANGUAGE_KEYS)
+      expect.arrayContaining(ROUTING_KEYS)
     )
   })
 })

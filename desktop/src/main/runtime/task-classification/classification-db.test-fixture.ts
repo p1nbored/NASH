@@ -53,9 +53,9 @@ export function createClassificationDbHarness(): ClassificationDbHarness {
     workspaceId: FIXTURE_CLASSIFY_WORKSPACE.workspaceId,
     workspaceBinding: 'a'.repeat(64),
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     routingTableVersion: FIXTURE_RUN_TABLE.version,
     routingTableSha256: FIXTURE_RUN_TABLE.sha256,
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: fixtureClassifyTime()

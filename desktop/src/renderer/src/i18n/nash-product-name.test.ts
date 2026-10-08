@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import nashKeys from './nash-catalog-keys.test-fixture.json'
 import en from './locales/en.json'
 import es from './locales/es.json'
 import fr from './locales/fr.json'
@@ -70,5 +71,28 @@ describe('NASH product name in the renderer catalogs (D-017)', () => {
     expect(english.get('menu.exploreOrca')).toBe('Explore NASH')
     expect(english.get('rendererRecovery.title')).toBe('NASH keeps failing to load')
     expect(flatten(ja).get('tray.openOrca')).toContain('NASH')
+  })
+})
+
+const placeholders = (value: string): string[] => (value.match(/\{\{[^}]+\}\}/g) ?? []).sort()
+
+describe('NASH catalog coverage', () => {
+  const english = flatten(en)
+  for (const [locale, catalog] of Object.entries(CATALOGS)) {
+    if (locale === 'en') {
+      continue
+    }
+    it(`${locale}: translates every NASH key with matching placeholders`, () => {
+      const target = flatten(catalog)
+      expect(nashKeys.filter((key) => !target.get(key)?.trim())).toEqual([])
+      for (const key of nashKeys) {
+        expect(placeholders(target.get(key) ?? ''), key).toEqual(
+          placeholders(english.get(key) ?? '')
+        )
+      }
+    })
+  }
+  it('keeps the key fixture tied to live English copy', () => {
+    expect(nashKeys.filter((key) => !english.has(key))).toEqual([])
   })
 })

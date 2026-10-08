@@ -46,9 +46,9 @@ export function seedLaunchedRun(
     workspaceId: input.workspaceId,
     workspaceBinding: input.workspaceBinding,
     requestedAccess: input.requestedAccess,
-    deliverableLanguage: input.deliverableLanguage,
     routingTableVersion: 1,
     routingTableSha256: FIXTURE_TABLE_SHA256,
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: FIXTURE_TIME

@@ -19,7 +19,7 @@ When in doubt:
 | Color tokens                                  | `src/renderer/src/assets/main.css` (`:root`, `.dark`)                  |
 | Tailwind theme bindings                       | Same file: `@theme inline { … }` (colors, radii, shadow)               |
 | Type scale and spacing roles                  | Same file: `@theme static { … }`                                       |
-| Font stacks and per-language CJK order        | Same file: `:root` and the `:root:lang(…)` rules                       |
+| Font stacks and bundled CJK families        | Same file: `@font-face` and `:root`                       |
 | Component primitives                          | `src/renderer/src/components/ui/` (shadcn-style)                       |
 | Token values and rationale                    | Root `DESIGN.md`                                                       |
 | App typography / scrollbars / titlebar chrome | Same `main.css`                                                        |
@@ -101,8 +101,8 @@ This keeps light/dark parity automatic.
 
 ## Typography
 
-- **Families:** `font-sans` is the system UI font (`system-ui`, or the user's `appFontFamily`), followed by the CJK family for the document language and `sans-serif`. `font-display` (Georgia plus CJK serif fallbacks) is for page, dialog and sheet titles and section headings only. `font-mono` is for paths, IDs, code and anything literal. Geist stays bundled only as an explicit `appFontFamily` choice.
-- **Languages:** `<html lang>` follows the UI language (`i18n/document-language.ts`), and `main.css` reorders the CJK families per language so Chinese, Japanese and Korean text get their own glyph forms. Don't set `font-family` per component for CJK text.
+- **Families:** `font-sans` is for navigation, controls, labels, body text and compact group headings. It combines the user's UI font with bundled Noto Sans CJK. `font-display` is reserved for page, dialog and sheet main titles and editorial summaries: Georgia plus bundled Noto Serif CJK, at regular weight. `font-mono` is for terminals, code, paths and literal identifiers. Apply these roles identically in every language; do not set all headings in serif. Geist remains an optional UI font.
+- **Languages:** `<html lang>` follows the UI language. The two bundled full-coverage Noto CJK fonts use OpenType `locl` to choose Simplified Chinese, Traditional Chinese, Japanese and Korean glyph forms. The `sc` asset filename selects the default only; these are not region-subset fonts. No font is downloaded at runtime. Sources and license are recorded in root `DESIGN.md`.
 - **Body letter-spacing:** `0.01em` (set globally on `body`). Don't override per component.
 - **Sizes:** use the type scale utilities, not `text-[Npx]`:
 
@@ -118,7 +118,7 @@ This keeps light/dark parity automatic.
 
 `text-xs` (= meta), `text-sm` (= body-lg) and `text-xl` (= title) remain valid and are what the primitives use internally.
 
-- **`cn()` and the type scale:** `cn()` merges through tailwind-merge. Until `lib/utils.ts` registers the token names with `extendTailwindMerge`, tailwind-merge files `text-meta` under text color and drops it when a text color follows in the same `cn()` call, and it cannot resolve `p-row` against `p-2`. Until then, put token sizes in a static `className` string or after no text color, or use `text-xs`/`text-sm`.
+- **`cn()` and the type scale:** `lib/utils.ts` registers every semantic type and spacing token with `extendTailwindMerge`, so token sizes remain intact beside text colors and spacing overrides.
 
 ## Spacing
 

@@ -20,7 +20,11 @@ describe('RoutingTableSchema: the document table', () => {
     const parsed = RoutingTableSchema.safeParse(buildTestRoutingTable())
     expect(parsed.success).toBe(true)
     expect(parsed.data?.routes).toHaveLength(DOCUMENT_ROUTE_ROWS.length)
-    expect(parsed.data?.coordinator).toEqual({ model: 'claude-opus-5-5', reasoning_level: 'max' })
+    expect(parsed.data?.coordinator).toEqual({
+      agent: 'claude',
+      model: 'claude-opus-5-5',
+      reasoning_level: 'max'
+    })
   })
 
   it('defaults the reasoning requirement to required and keeps if_supported when given', () => {
@@ -41,8 +45,8 @@ describe('RoutingTableSchema: the document table', () => {
   })
 })
 
-describe('RoutingTableSchema: model pins and the Gemini 4 exclusion', () => {
-  it.each(['gemini-4', 'Gemini 4 Flash', 'gemini-4-pro-high', 'argon'])(
+describe('RoutingTableSchema: exact model pins', () => {
+  it.each(['bad model', '-bad-model', '', 'model@latest'])(
     'refuses %s on any route, the coordinator and the reviewers',
     (model) => {
       expect(parses(buildTestTableWithRoute('fast_writing_or_alternative_draft', { model }))).toBe(
@@ -206,7 +210,12 @@ describe('RoutingTableSchema: levels, shape and totality', () => {
     expect(
       parses(
         buildTestRoutingTable({
-          coordinator: { model: 'claude-opus-5-5', reasoning_level: 'max', effort: 'max' }
+          coordinator: {
+            agent: 'claude',
+            model: 'claude-opus-5-5',
+            reasoning_level: 'max',
+            effort: 'max'
+          }
         })
       )
     ).toBe(false)
@@ -295,7 +304,7 @@ describe('validation reviewers (D-017)', () => {
     }
   })
 
-  it.each(['inherit', 'latest', 'opus', 'gemini-4', 'gpt-6-sol'])(
+  it.each(['inherit', 'latest', 'opus', 'bad model', 'gpt-6-sol'])(
     'applies the model pin policy to the reviewer model %s',
     (model) => {
       expect(
@@ -343,13 +352,38 @@ describe('validation reviewers (D-017)', () => {
 describe('CoordinatorSchema', () => {
   it('needs a pinned model and a concrete level', () => {
     expect(
-      CoordinatorSchema.safeParse({ model: 'claude-opus-5-5', reasoning_level: 'max' }).success
+      CoordinatorSchema.safeParse({
+        agent: 'claude',
+        model: 'claude-opus-5-5',
+        reasoning_level: 'max'
+      }).success
     ).toBe(true)
-    expect(CoordinatorSchema.safeParse({ model: 'inherit', reasoning_level: 'max' }).success).toBe(
-      false
-    )
     expect(
-      CoordinatorSchema.safeParse({ model: 'claude-opus-5-5', reasoning_level: 'inherit' }).success
+      CoordinatorSchema.safeParse({ agent: 'claude', model: 'inherit', reasoning_level: 'max' })
+        .success
+    ).toBe(false)
+    expect(
+      CoordinatorSchema.safeParse({
+        agent: 'claude',
+        model: 'claude-opus-5-5',
+        reasoning_level: 'inherit'
+      }).success
     ).toBe(false)
   })
+})
+
+it('requires an explicit supported primary CLI', () => {
+  expect(
+    CoordinatorSchema.safeParse({ model: 'claude-opus-5-5', reasoning_level: 'max' }).success
+  ).toBe(false)
+  expect(
+    CoordinatorSchema.parse({ agent: 'codex', model: 'gpt-6.1-sol', reasoning_level: 'max' })
+  ).toMatchObject({ agent: 'codex' })
+  expect(
+    CoordinatorSchema.safeParse({
+      agent: 'antigravity',
+      model: 'gemini-3.8-flash-high',
+      reasoning_level: 'high'
+    }).success
+  ).toBe(false)
 })

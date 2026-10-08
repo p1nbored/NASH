@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { DOT_MESSAGE_OUTCOMES, DOT_MESSAGE_REASONS } from '../dot-ingress/dot-ingress-message'
 import { DotRequestIdSchema } from '../dot-ingress/dot-ingress-params'
-import { DotDecisionViewV2Schema, DotRequestViewV2Schema } from '../dot-ingress/dot-ingress-v2'
+import { DotDecisionViewSchema } from '../dot-ingress/dot-ingress-decision'
+import { DotRequestViewSchema } from '../dot-ingress/dot-ingress-request'
 import {
   DotValidationSettledSchema,
   DotValidationViewSchema
@@ -39,9 +40,9 @@ export const DOT_REMOTE_EVENT_KINDS = [
 export type DotRemoteEventKind = (typeof DOT_REMOTE_EVENT_KINDS)[number]
 
 const COARSE_VIEW = { state: true, statusText: true, run: true } as const
-const [ReceivedView, SubmittedView, CanceledView, FailedView] = DotRequestViewV2Schema.options
+const [ReceivedView, SubmittedView, CanceledView, FailedView] = DotRequestViewSchema.options
 
-/** The coarse v2 run projection only: request state, its fixed English text and the coarse run view. */
+/** The coarse run projection only: request state, its fixed English text and the coarse run view. */
 export const DotRemoteRequestStatusDataSchema = z.discriminatedUnion('state', [
   ReceivedView.pick(COARSE_VIEW),
   SubmittedView.pick(COARSE_VIEW),
@@ -49,11 +50,11 @@ export const DotRemoteRequestStatusDataSchema = z.discriminatedUnion('state', [
   FailedView.pick(COARSE_VIEW)
 ])
 
-/** The v2 decision view: names only, secrets masked, one line of at most 500 characters (D-017). */
-export const DotRemotePromptOpenedDataSchema = DotDecisionViewV2Schema.safeExtend({
+/** The decision view: names only, secrets masked, one line of at most 500 characters (D-017). */
+export const DotRemotePromptOpenedDataSchema = DotDecisionViewSchema.safeExtend({
   status: z.literal('pending')
 })
-export const DotRemotePromptClosedDataSchema = DotDecisionViewV2Schema.safeExtend({
+export const DotRemotePromptClosedDataSchema = DotDecisionViewSchema.safeExtend({
   status: z.enum(['allowed', 'denied', 'answered_in_terminal', 'expired'])
 })
 

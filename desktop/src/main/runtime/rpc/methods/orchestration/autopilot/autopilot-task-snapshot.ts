@@ -1,9 +1,9 @@
 import type { AutopilotTaskView } from '../../../../../../shared/rpc-contract/orchestration-autopilot-views'
 import type { OrchestrationDb } from '../../../../orchestration/db'
-import { getExecutorProcessStore } from '../../../../orchestration/db/executor-process-store'
 import { getTaskClassificationStore } from '../../../../orchestration/db/task-classification-store'
 import { getTaskRouteStore } from '../../../../orchestration/db/task-route-store'
 import { getTaskValidationStore } from '../../../../orchestration/db/task-validation-store'
+import { isNativeTaskAttempt } from '../../../../workflow-run/app-run-policy'
 import type { TaskRow } from '../../../../orchestration/types'
 import {
   AUTOPILOT_TASK_API_ERROR_CODES,
@@ -53,7 +53,8 @@ function attemptOf(owner: OrchestrationDb, taskId: string): AutopilotTaskView['a
   }
   return {
     attemptId: dispatch.id,
-    runsIn: getExecutorProcessStore(owner).get(dispatch.id) ? 'process' : 'session',
+    runsIn: isNativeTaskAttempt(owner, dispatch.id) ? 'process' : 'session',
+    ...(isNativeTaskAttempt(owner, dispatch.id) ? { nativeWorker: true as const } : {}),
     dispatchStatus: dispatch.status,
     workerState: worker.state,
     stage: worker.stage.slice(0, 64)

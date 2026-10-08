@@ -15,10 +15,15 @@ export function toAgentLaunchPreferences(
   const model = readString('model')
   const effort = readString('effort')
   const mode = readString('mode')
+  const taskAccess = sessionOptions.taskAccess
+  const routeValidated =
+    sessionOptions.routeValidated === true || sessionOptions.routeValidated === 'true'
   const preferences: AgentLaunchPreferences = {
     ...(model ? { model } : {}),
     ...(effort ? { effort } : {}),
-    ...(mode ? { mode } : {})
+    ...(mode ? { mode } : {}),
+    ...(taskAccess === 'read_only' || taskAccess === 'workspace_write' ? { taskAccess } : {}),
+    ...(routeValidated ? { routeValidated: true } : {})
   }
   return Object.keys(preferences).length > 0 ? preferences : undefined
 }

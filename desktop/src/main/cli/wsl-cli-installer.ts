@@ -1,6 +1,7 @@
 import type { CliInstallStatus } from '../../shared/cli-install-types'
 import { getDefaultWslDistro } from '../wsl'
 import { runWslProcess } from '../wsl/wsl-runner'
+import { getWslGuestEnvironment } from '../wsl/wsl-guest-environment'
 import { CliInstaller } from './cli-installer'
 import {
   buildManagedLegacyRemoveCommand,
@@ -278,6 +279,9 @@ export class WslCliInstaller {
 }
 
 async function runWslCommand(distro: string, command: string): Promise<string> {
+  const deadline = Date.now() + WSL_COMMAND_TIMEOUT_MS
+  // CLI status needs the login PATH; a cold distro can exceed the generic runner's 4s probe cap.
+  await getWslGuestEnvironment(distro, WSL_COMMAND_TIMEOUT_MS)
   // Why the probe lane fixes #14288: the prior login shell (`bash -lc`) sourced
   // ~/.profile, so one blocking line there ate the whole 10s timeout.
   const result = await runWslProcess({
@@ -287,7 +291,7 @@ async function runWslCommand(distro: string, command: string): Promise<string> {
     // Declared, not assumed: the payload is opaque here, so the guard cannot
     // check it for bashisms. These are POSIX (`-eu`, `case`), hence sh.
     shell: 'sh',
-    timeoutMs: WSL_COMMAND_TIMEOUT_MS
+    timeoutMs: Math.max(1, deadline - Date.now())
   })
   // Timeout first: it is the more specific diagnosis, and a timed-out run also
   // leaves the environment unresolved, so the order decides which one shows.

@@ -1,4 +1,9 @@
 import { activateTabAndFocusPane } from '@/lib/activate-tab-and-focus-pane'
+import { activateAndRevealWorktree } from '@/lib/worktree-activation'
+import { openStructuredAgentSessionProvisionalTab } from '@/lib/structured-agent-session-provisional-tab'
+import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
+import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
+import type { WorkbenchTaskSource } from '../../../../shared/rpc-contract/workbench-task-window-params'
 import { parseLegacyNumericPaneKey, parsePaneKey } from '../../../../shared/stable-pane-id'
 
 type TabsByWorkspace = Readonly<Record<string, readonly { readonly id: string }[]>>
@@ -23,4 +28,23 @@ export function findRunTerminalTabId(
 // Why no leaf id: the tab is shown, but keyboard focus stays in the Workbench panel.
 export function showRunTerminal(tabId: string): void {
   activateTabAndFocusPane(tabId, null)
+}
+
+export async function showTaskSource(source: WorkbenchTaskSource): Promise<void> {
+  if (source.kind === 'terminal') {
+    await callRuntimeRpc({ kind: 'local' }, 'terminal.focus', {
+      terminal: source.terminal,
+      navigation: 'host'
+    })
+    return
+  }
+  if (
+    activateAndRevealWorktree(source.worktreeId, {
+      providesInitialSurface: true,
+      executionHostId: LOCAL_EXECUTION_HOST_ID
+    }) === false
+  ) {
+    throw new Error('The task workspace is unavailable.')
+  }
+  openStructuredAgentSessionProvisionalTab({ ...source, executionHostId: LOCAL_EXECUTION_HOST_ID })
 }

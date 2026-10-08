@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DOT_RUN_STATES } from '../../../shared/dot-ingress/dot-ingress-request'
 import { DOT_REQUEST_STATUS_TEXT } from '../../../shared/dot-ingress/dot-ingress-status-text'
-import { DotDecisionViewV2Schema } from '../../../shared/dot-ingress/dot-ingress-v2'
+import { DotDecisionViewSchema } from '../../../shared/dot-ingress/dot-ingress-decision'
 import {
   decisionView,
   messageId,
@@ -19,7 +19,7 @@ import { fixtureClock } from './dot-remote.test-fixture'
 
 type DotRunState = (typeof DOT_RUN_STATES)[number]
 const view = (...args: Parameters<typeof decisionView>) =>
-  DotDecisionViewV2Schema.parse(decisionView(...args))
+  DotDecisionViewSchema.parse(decisionView(...args))
 const SUBMIT_ITEM = '10000000-0000-4000-8000-000000000001'
 const active = (state: DotRunState = 'active') => ({
   state: 'submitted' as const,

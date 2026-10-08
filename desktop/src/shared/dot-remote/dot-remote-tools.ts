@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { DOT_DEFAULT_REQUEST_ACCESS } from '../dot-ingress/dot-ingress-limits'
 import {
-  DotDecisionAnswerParamsV3,
-  DotDecisionsListParamsV3,
-  DotMessageParamsV3,
-  DotStatusParamsV3,
-  DotSubmitParamsV3
-} from '../dot-ingress/dot-ingress-v3'
+  DotDecisionAnswerParams,
+  DotDecisionsListParams,
+  DotStatusParams,
+  DotSubmitParams
+} from '../dot-ingress/dot-ingress-params'
+import { DotMessageParams } from '../dot-ingress/dot-ingress-message'
 import {
   DotValidationDecideParamsV3,
   DotValidationsListParamsV3
@@ -115,7 +115,7 @@ const NoInput = z.object({}).strict()
  * Remote submissions state at most the remote access cap (D-034: workspace_write). The real limit is
  * each workspace's maximum, which NASH publishes and enforces when it admits the item.
  */
-export const DotRemoteSubmitToolInputSchema = DotSubmitParamsV3.omit(NO_CONTRACT_VERSION).extend({
+export const DotRemoteSubmitToolInputSchema = DotSubmitParams.omit(NO_CONTRACT_VERSION).extend({
   requestedAccess: z.enum(DOT_REMOTE_ALLOWED_SUBMIT_ACCESS).default(DOT_DEFAULT_REQUEST_ACCESS)
 })
 
@@ -135,7 +135,7 @@ const ListRequestsInput = z.object(PAGE).strict()
 const ListValidationsInput = DotValidationsListParamsV3.omit(NO_CONTRACT_VERSION).extend(PAGE)
 
 const answerTool = write('nash_answer_permission_prompt', 'permission_answer', 'decisionId', true, {
-  input: DotDecisionAnswerParamsV3.omit(NO_CONTRACT_VERSION),
+  input: DotDecisionAnswerParams.omit(NO_CONTRACT_VERSION),
   output: z.object({ receipt: DotRemoteAnswerReceiptSchema }).strict()
 })
 
@@ -160,7 +160,7 @@ export const DOT_REMOTE_TOOLS: readonly DotRemoteTool[] = [
   read(
     'nash_get_request',
     'events',
-    DotStatusParamsV3.omit(NO_CONTRACT_VERSION),
+    DotStatusParams.omit(NO_CONTRACT_VERSION),
     z.object({ request: DotRemoteRequestProjectionSchema }).strict()
   ),
   read('nash_list_requests', 'receipts', ListRequestsInput, DotRemoteRequestListOutputSchema),
@@ -171,12 +171,12 @@ export const DOT_REMOTE_TOOLS: readonly DotRemoteTool[] = [
   read(
     'nash_list_permission_prompts',
     'events',
-    DotDecisionsListParamsV3.omit(NO_CONTRACT_VERSION),
+    DotDecisionsListParams.omit(NO_CONTRACT_VERSION),
     DotRemotePromptListOutputSchema
   ),
   ...(DOT_REMOTE_PERMISSION_ANSWERS_ALLOWED ? [answerTool] : []),
   write('nash_send_message_to_run', 'message', 'messageId', false, {
-    input: DotMessageParamsV3.omit(NO_CONTRACT_VERSION),
+    input: DotMessageParams.omit(NO_CONTRACT_VERSION),
     output: z.object({ receipt: DotRemoteMessageReceiptSchema }).strict()
   }),
   read(

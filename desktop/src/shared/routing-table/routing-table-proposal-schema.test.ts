@@ -43,7 +43,7 @@ describe('RoutingTableProposalSchema', () => {
   })
 
   it('accepts a coordinator, validation or benchmark date change on its own', () => {
-    const coordinator = { model: 'claude-opus-5-5', reasoning_level: 'high' }
+    const coordinator = { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'high' }
     expect(
       RoutingTableProposalSchema.safeParse(proposal({ changes: [], coordinator })).success
     ).toBe(true)
@@ -66,8 +66,8 @@ describe('RoutingTableProposalSchema', () => {
     expect(RoutingTableProposalSchema.safeParse(proposal({ proposer })).success).toBe(false)
   })
 
-  it('refuses a Gemini 4 id, an alias and an inherit on a proposed row', () => {
-    for (const model of ['gemini-4-flash', 'sonnet', 'latest']) {
+  it('refuses a malformed id, an alias and an inherit on a proposed row', () => {
+    for (const model of ['invalid model', 'sonnet', 'latest']) {
       const changes = [{ ...ROUTE, model }]
       expect(RoutingTableProposalSchema.safeParse(proposal({ changes })).success).toBe(false)
     }
@@ -77,8 +77,8 @@ describe('RoutingTableProposalSchema', () => {
     )
   })
 
-  it('refuses a Gemini 4 coordinator in a proposal', () => {
-    const coordinator = { model: 'gemini-4', reasoning_level: 'max' }
+  it('refuses a malformed coordinator model in a proposal', () => {
+    const coordinator = { agent: 'claude', model: 'invalid model', reasoning_level: 'max' }
     expect(RoutingTableProposalSchema.safeParse(proposal({ coordinator })).success).toBe(false)
   })
 
@@ -141,7 +141,7 @@ describe('ProposalSubmissionSchema', () => {
   })
 
   it('applies the same row and rationale rules as a stored proposal', () => {
-    const changes = [{ ...ROUTE, model: 'gemini-4' }]
+    const changes = [{ ...ROUTE, model: 'invalid model' }]
     expect(ProposalSubmissionSchema.safeParse(submission({ changes })).success).toBe(false)
     expect(ProposalSubmissionSchema.safeParse(submission({ rationale: 'п' })).success).toBe(false)
   })

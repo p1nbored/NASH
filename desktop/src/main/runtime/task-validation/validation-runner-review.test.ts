@@ -1,4 +1,3 @@
-import { rmSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { fixtureTime } from '../orchestration/db/autopilot-runtime.test-fixture'
 import {
@@ -44,7 +43,7 @@ describe('validation runner: review by a different model', () => {
       report?.outcome === 'settled' ? world.port.getValidation(report.validationId) : null
     expect(validation).toMatchObject({
       policy: 'model_review',
-      workerModel: 'gpt-6.1-sol',
+      workerModel: 'claude-sonnet-5-5',
       reviewerModel: 'claude-opus-5-5'
     })
     const [request] = world.state.reviewRequests
@@ -104,7 +103,7 @@ describe('validation runner: review by a different model', () => {
       dispatchId: task.dispatchId,
       policy: 'model_review',
       validatorId: 'model_review',
-      workerModel: 'gpt-6.1-sol',
+      workerModel: 'claude-sonnet-5-5',
       reviewerModel: 'claude-opus-5-5',
       timestamp: fixtureTime(8)
     })
@@ -130,12 +129,11 @@ describe('validation runner: review by a different model', () => {
     expect(JSON.stringify(validation)).not.toContain(FAKE_TOKEN)
   })
 
-  it('does not run a reviewer without tools when there is no worker result to judge', async () => {
-    const task = reviewedTask()
-    rmSync(world.resultPath(task.dispatchId))
+  it('does not invoke a reviewer without the current in-session report', async () => {
+    const task = world.inSessionClaim({ spec: { machineChecks: [], review: 'model' } })
     const [report] = await world.runner.validatePending()
     expect(report).toMatchObject({ outcome: 'settled', verdict: 'inconclusive' })
-    expect(world.state.reviewRequests).toEqual([])
+    expect(world.state.reviewRequests).toHaveLength(0)
     expect(world.taskStatus(task.taskId)).toBe('blocked')
   })
 

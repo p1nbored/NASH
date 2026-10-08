@@ -31,15 +31,24 @@ describe('migrateAgentYoloDefaults', () => {
 })
 
 describe('stripRetiredGlobalSettings', () => {
-  it('drops the retired Claude managed-account keys on load and on update', () => {
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: retired keys are no longer part of GlobalSettings.
-    const stripped = stripRetiredGlobalSettings({
-      claudeManagedAccounts: [{ id: 'retired-account' }],
-      activeClaudeManagedAccountId: 'retired-account',
-      activeClaudeManagedAccountIdsByRuntime: { host: 'retired-account', wsl: {} },
+  it('preserves Claude accounts and runtime selections on load and update', () => {
+    const settings = {
+      claudeManagedAccounts: [
+        {
+          id: 'saved-account',
+          email: 'saved@example.com',
+          managedAuthPath: '/fixture/claude-profiles/saved-account/home',
+          authMethod: 'subscription-oauth' as const,
+          createdAt: 1,
+          updatedAt: 1,
+          lastAuthenticatedAt: 1
+        }
+      ],
+      activeClaudeManagedAccountId: 'saved-account',
+      activeClaudeManagedAccountIdsByRuntime: { host: 'saved-account', wsl: {} },
       machineName: 'kept'
-    } as never)
+    }
 
-    expect(stripped).toEqual({ machineName: 'kept' })
+    expect(stripRetiredGlobalSettings(settings)).toEqual(settings)
   })
 })

@@ -92,6 +92,9 @@ export type AgentSessionClaimedSpawnResult = {
 }
 
 export type AgentLaunchPreferences = {
+  routeValidated?: true
+  /** Optional access ceiling for a routed task; ordinary sessions keep their own settings. */
+  taskAccess?: 'read_only' | 'workspace_write'
   model?: string
   effort?: string
   mode?: string

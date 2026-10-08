@@ -1,10 +1,6 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import {
-  canonicalizeDeliverableLanguage,
-  DeliverableLanguageSchema
-} from '../../../../shared/deliverable-language'
-import {
   DOT_INGRESS_CONTRACT_VERSION,
   DOT_INGRESS_SCAN_RULE_MAX_COUNT,
   DOT_SUBMISSION_FAILURES
@@ -30,12 +26,6 @@ import { dotIngressError } from './dot-ingress-store-input'
 /** Rule names only, so matched text can never be stored with a request. */
 const ScanRuleNameSchema = z.string().regex(/^[a-z0-9_:.-]{1,64}$/)
 
-/** The service canonicalizes the tag, so the stored form and the hashed form are one. */
-const CanonicalLanguageSchema = DeliverableLanguageSchema.refine((tag) => {
-  const canonical = canonicalizeDeliverableLanguage(tag)
-  return canonical.ok && canonical.tag === tag
-}, 'Deliverable language must be in canonical form')
-
 export const DotIngressSubmitInputSchema = z
   .object({
     workspaceRef: DotWorkspaceRefSchema,
@@ -44,7 +34,6 @@ export const DotIngressSubmitInputSchema = z
     objective: WorkbenchObjectiveSchema,
     /** Recorded as the dot stated it; the store never raises it. */
     requestedAccess: DotRequestAccessSchema,
-    deliverableLanguage: CanonicalLanguageSchema.nullable(),
     idempotencyKey: z.uuid(),
     replyCorrelationId: DotCorrelationIdSchema.nullable(),
     client: DotClientDescriptorSchema.nullable(),
@@ -64,7 +53,6 @@ export function dotIngressRequestHash(input: DotIngressSubmitInput): string {
         workspaceBinding: input.workspaceBinding,
         objective: input.objective,
         requestedAccess: input.requestedAccess,
-        deliverableLanguage: input.deliverableLanguage,
         replyCorrelationId: input.replyCorrelationId
       })
     )

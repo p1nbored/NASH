@@ -32,6 +32,7 @@ export type PersistedUIState = {
   /** Active top-level view at save time, restored on relaunch; sanitized to 'terminal' if unknown or now-gated. */
   activeView: TopLevelView
   sidebarWidth: number
+  sidebarOpen?: boolean
   rightSidebarOpen: boolean
   rightSidebarTab: RightSidebarTab
   rightSidebarExplorerView: RightSidebarExplorerView
@@ -81,6 +82,10 @@ export type PersistedUIState = {
   agentsVisibleHostIds?: VisibleWorkspaceHostIds
   /** Agents-view project filter; empty = all projects. Separate from filterRepoIds (workspace nav). */
   agentsFilterRepoIds?: string[]
+  /** Agents-view workspace-origin filters; separate from the workspace-nav hide flags. Absent means off. */
+  agentsHideWorkspacesFromOtherDevices?: boolean
+  agentsHideAutomationGeneratedWorkspaces?: boolean
+  agentsHideCliCreatedWorkspaces?: boolean
   /** Agents-view: include child (orchestration-dispatched) agent threads. Absent means off. */
   agentsShowChildAgents?: boolean
   /** Agents-view compact thread rows. Absent means on. */
@@ -150,10 +155,6 @@ export type PersistedUIState = {
   manuallyUnreadTurnsByPaneKey?: Record<string, number>
   /** User-hidden setup-guide sidebar entry; a reversible declutter pref (Help menu stays available), not completion. */
   setupGuideSidebarDismissed?: boolean
-  /** One-shot marker for the browser setup-guide milestone; profiles missing it are evaluated once in the renderer (completion needs runtime probes). */
-  setupGuideBrowserMilestoneMigrated?: boolean
-  /** Existing users who completed/dismissed the pre-browser checklist stay complete after the browser milestone is added. */
-  setupGuideBrowserMilestoneLegacyComplete?: boolean
   /** User-dismissed browser import toolbar hint; import stays available from Settings > Browser and the overflow menu. */
   browserImportHintHidden?: boolean
   /** Why: Windows-only. Set once on first hide to tray so the "Orca is still running" notice shows only once. */
@@ -172,6 +173,10 @@ export type PersistedUIState = {
   usageEmptyStateDismissed?: boolean
   /** One-shot toast announcing per-terminal Codex servers; set when shown, so absent means not yet seen. */
   codexTerminalServerIsolationNoticeSeen?: boolean
+  /** Windows one-shot toast for Codex moving onto ~/.codex; set when shown, so absent means not yet seen. */
+  codexSharedSettingsNoticeSeen?: boolean
+  /** One-shot toast asking for one sign-in to each Claude account saved before per-account folders. */
+  claudeAccountSignInNoticeSeen?: boolean
   /** URL for new browser tabs; null = blank tab. */
   browserDefaultUrl?: string | null
   browserDefaultSearchEngine?: 'google' | 'duckduckgo' | 'bing' | 'kagi' | null

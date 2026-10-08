@@ -13,7 +13,7 @@ const METADATA_FILE = {
   runtimeId: 'runtime-fixture-1',
   pid: 4242,
   startedAt: 1,
-  contractVersions: [1],
+  contractVersions: [3],
   transport: { kind: 'named-pipe', endpoint: FIXTURE_ENDPOINT },
   ingressToken: FIXTURE_TOKEN
 }
@@ -85,7 +85,7 @@ describe('dot ingress client', () => {
   it('speaks contract version 3 and checks every result against the contract', async () => {
     const hello = {
       contractVersion: 3,
-      supportedContractVersions: [1, 2, 3],
+      supportedContractVersions: [3],
       methods: ['dotIngress.hello', 'dotIngress.validations.list'],
       limits: {
         maxObjectiveChars: 12_000,

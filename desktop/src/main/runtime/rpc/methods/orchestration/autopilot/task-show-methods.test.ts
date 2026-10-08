@@ -4,8 +4,7 @@ import { TaskShowResultSchema } from '../../../../../../shared/rpc-contract/orch
 import { seedTask } from '../../../../orchestration/db/app-attempt.test-fixture'
 import {
   routeInput,
-  seedRoutedTask,
-  seedStartedAttempt
+  seedRoutedTask
 } from '../../../../orchestration/db/app-attempt-routing.test-fixture'
 import { fixtureTime } from '../../../../orchestration/db/autopilot-runtime.test-fixture'
 import { getTaskClassificationStore } from '../../../../orchestration/db/task-classification-store'
@@ -83,7 +82,7 @@ describe('orchestration.taskShow', () => {
     expect(result.task).toMatchObject({ taskId, phase: 'ready', waitable: false })
     expect(result.task.route).toEqual({
       status: 'available',
-      target: 'codex_cli',
+      target: 'claude_subagent',
       delegated: true,
       reasons: []
     })
@@ -91,14 +90,19 @@ describe('orchestration.taskShow', () => {
     expect(harness.ports.readAttemptResult).not.toHaveBeenCalled()
   })
 
-  it('shows only the bounded, masked result view of a process attempt, marked untrusted', async () => {
+  it('shows only the bounded, masked native worker result, marked untrusted', async () => {
     harness = createTaskApiHarness()
-    const { taskId, routeId } = seedRoutedTask({ owner: harness.db, runId: harness.runId })
-    const { dispatchId } = seedStartedAttempt(
+    const { taskId, routeId } = seedRoutedTask(
       { owner: harness.db, runId: harness.runId },
-      taskId,
-      routeId
+      { route: { target: 'codex_cli', model: 'gpt-6.1-sol' } }
     )
+    const { dispatch } = harness.db.createStartingWorkerDispatch({
+      creator: { kind: 'system' },
+      maxDepth: 3,
+      taskId,
+      startOptions: { nativeTask: true, route_id: routeId }
+    })
+    const dispatchId = dispatch.id
     harness.ports.readAttemptResult.mockResolvedValueOnce(OK_RESULT)
     const result = await show({ taskId })
     expect(harness.ports.readAttemptResult).toHaveBeenCalledWith(dispatchId)
@@ -111,7 +115,11 @@ describe('orchestration.taskShow', () => {
       sha256: OK_RESULT.sha256,
       untrusted: true
     })
-    expect(result.task.attempt).toMatchObject({ attemptId: dispatchId, runsIn: 'process' })
+    expect(result.task.attempt).toMatchObject({
+      attemptId: dispatchId,
+      runsIn: 'process',
+      nativeWorker: true
+    })
   })
 
   it('reads no result for an in-session attempt', async () => {

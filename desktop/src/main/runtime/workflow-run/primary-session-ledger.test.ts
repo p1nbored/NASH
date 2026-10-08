@@ -1,10 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { closeTestJournalHostDatabase } from '../../native-chat/agent-session-journal/journal-host-database-test-support'
+import { openTestAgentSessionRecordStore } from '../agent-session-record-store-test-harness'
+import {
+  rpcContext,
+  runtimeStub,
+  setAgentLaunchRecordStore
+} from '../rpc/methods/agent-launch.test-fixture'
 import type { AgentLaunchIntent, AgentLaunchResult } from '../../../shared/agent-launch-intent'
 import { computeAgentLaunchFingerprint } from '../../../shared/agent-launch-operation'
 import { parseAgentSessionOperationTimestamp } from '../../../shared/agent-session-host-authority'
 import type { AgentSessionOperationOutcome } from '../../../shared/agent-session-operation-ledger'
 import {
   PRIMARY_LAUNCH_CALLER_KEY,
+  createOrcaPrimaryLaunchLedger,
   createPrimaryLaunchLedger,
   mintPrimaryLaunchOperationId,
   primaryLaunchParams,
@@ -39,6 +50,7 @@ function ledgerWith(overrides: Partial<PrimaryLaunchLedgerDeps>) {
   const deps: PrimaryLaunchLedgerDeps = {
     admit: vi.fn(async () => ({
       decision: 'execute' as const,
+      record: vi.fn(async () => undefined),
       settle: vi.fn(async () => undefined),
       fail: vi.fn(async () => undefined),
       attachOperationId: 'child',
@@ -63,6 +75,49 @@ function row(outcome: AgentSessionOperationOutcome) {
 }
 
 describe('primary session launch ledger', () => {
+  it('admits, records and reopens a terminal launch through the native ledger without a chat host', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'primary-native-ledger-'))
+    try {
+      const store = await openTestAgentSessionRecordStore(directory)
+      setAgentLaunchRecordStore(store)
+      const runtime = rpcContext(runtimeStub(), {}).runtime
+      const ledger = createOrcaPrimaryLaunchLedger(runtime)
+      const operationId = mintPrimaryLaunchOperationId(Date.now(), ENTROPY)
+      const admission = await ledger.admit(INTENT, operationId)
+      expect(admission).toMatchObject({ decision: 'execute', ledger: 'orca' })
+      if (admission.decision !== 'execute') {
+        throw new Error('The native launch was refused.')
+      }
+      const provisional: AgentLaunchResult = {
+        ...RESULT,
+        prompt: { delivery: 'submit', outcome: 'unconfirmed' }
+      }
+      await admission.record(provisional)
+      expect(store.getOperationRow(PRIMARY_LAUNCH_CALLER_KEY, operationId)?.outcome).toMatchObject({
+        status: 'succeeded',
+        launch: provisional
+      })
+      setAgentLaunchRecordStore(await openTestAgentSessionRecordStore(directory))
+      const reopened = createOrcaPrimaryLaunchLedger(runtime)
+      expect(await reopened.read(operationId)).toEqual({ kind: 'succeeded', result: provisional })
+      expect(store.getOperationRow(PRIMARY_LAUNCH_CALLER_KEY, operationId)?.outcome).toMatchObject({
+        status: 'succeeded',
+        launch: provisional
+      })
+      await admission.settle(RESULT)
+      setAgentLaunchRecordStore(await openTestAgentSessionRecordStore(directory))
+      expect(await reopened.read(operationId)).toEqual({ kind: 'succeeded', result: RESULT })
+      await expect(reopened.admit(INTENT, operationId)).resolves.toEqual({
+        decision: 'refuse',
+        code: 'autopilot_launch_operation_replayed'
+      })
+    } finally {
+      setAgentLaunchRecordStore(null)
+      closeTestJournalHostDatabase(directory)
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
   it("mints ids in the format Orca's launch ledger accepts", () => {
     expect(parseAgentSessionOperationTimestamp(OPERATION_ID)).toBe(
       Date.parse('2026-10-05T00:00:00.000Z')
@@ -159,9 +214,9 @@ describe('primary session launch ledger', () => {
       row({ status: 'succeeded', sessionId: '', launch: { odd: true } }),
       { kind: 'unreadable' }
     ]
-  ])('reads %s without admitting anything', (_label, stored, expected) => {
+  ])('reads %s without admitting anything', async (_label, stored, expected) => {
     const { ledger, deps } = ledgerWith({ readRow: vi.fn(() => stored) })
-    expect(ledger.read(OPERATION_ID)).toEqual(expected)
+    expect(await ledger.read(OPERATION_ID)).toEqual(expected)
     expect(deps.readRow).toHaveBeenCalledWith(PRIMARY_LAUNCH_CALLER_KEY, OPERATION_ID)
     expect(deps.admit).not.toHaveBeenCalled()
   })

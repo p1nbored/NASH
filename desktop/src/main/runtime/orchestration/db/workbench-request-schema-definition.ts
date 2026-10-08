@@ -1,4 +1,3 @@
-import { DELIVERABLE_LANGUAGE_MAX_LENGTH } from '../../../../shared/deliverable-language'
 import { WORKBENCH_REQUEST_ACCESS_LEVELS } from '../../../../shared/workbench-request'
 import { WORKBENCH_ROUTE_SCHEMA_DEFINITIONS } from './workbench-route-schema-definition'
 
@@ -16,15 +15,10 @@ export const WORKBENCH_STORED_STATUSES = [
 ] as const
 export type WorkbenchStoredStatus = (typeof WORKBENCH_STORED_STATUSES)[number]
 
-/** v2 kinds stay so migrated history still reads; `migrated` marks a v2 request requeued as RECEIVED. */
+/** Events produced by the current request lifecycle. */
 export const WORKBENCH_REQUEST_EVENT_KINDS = [
   'accepted',
-  'routing_started',
-  'routed',
-  'routing_blocked',
-  'route_discarded',
   'canceled',
-  'migrated',
   'launch_started',
   'launched',
   'launch_blocked'
@@ -99,8 +93,7 @@ export const WORKBENCH_REQUEST_SCHEMA_DEFINITIONS = [
     name: 'workbench_request_settings',
     sql: `CREATE TABLE workbench_request_settings (
       request_id TEXT PRIMARY KEY NOT NULL REFERENCES workbench_requests(request_id),
-      requested_access TEXT NOT NULL CHECK (requested_access IN (${workbenchSqlList(WORKBENCH_REQUEST_ACCESS_LEVELS)})),
-      deliverable_language TEXT CHECK (deliverable_language IS NULL OR length(deliverable_language) BETWEEN 2 AND ${DELIVERABLE_LANGUAGE_MAX_LENGTH})
+      requested_access TEXT NOT NULL CHECK (requested_access IN (${workbenchSqlList(WORKBENCH_REQUEST_ACCESS_LEVELS)}))
     )`
   }
 ] as const satisfies readonly WorkbenchSchemaDefinition[]

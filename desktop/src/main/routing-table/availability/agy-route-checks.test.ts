@@ -61,27 +61,33 @@ describe('agy model check', () => {
     }
   })
 
-  it('excludes a Gemini 4 id before looking at the listing', () => {
+  it('admits an exact Gemini 4 id when the provider actually lists it', () => {
     const { checks } = checkAgyRoute(
       agy('gemini-4-flash-high'),
       observationsOf(
         listingOf([...AGY_MODELS, listed('gemini-4-flash-high', 'Gemini 4 Flash (High)')])
       )
     )
-    expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_excluded' })
+    expect(outcome(checks, 'model')).toMatchObject({ result: 'pass' })
   })
 
-  it('excludes a listed model whose label names Gemini 4, although its id does not', () => {
+  it('does not reject a listed model based on its display label', () => {
     const sneaky = listed('experimental-flash-high', 'Gemini 4 Experimental (High)')
     const { checks } = checkAgyRoute(
       agy('experimental-flash-high'),
       observationsOf(listingOf([...AGY_MODELS, sneaky]))
     )
     expect(outcome(checks, 'model')).toMatchObject({
-      result: 'fail',
-      reason: 'model_excluded',
-      evidence: { violation: 'label' }
+      result: 'pass'
     })
+  })
+
+  it('keeps an unlisted Gemini 4 model unavailable', () => {
+    const { checks } = checkAgyRoute(
+      agy('gemini-4-flash-high'),
+      observationsOf(listingOf(AGY_MODELS))
+    )
+    expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_not_listed' })
   })
 
   it('is not affected by another row that names Gemini 4', () => {

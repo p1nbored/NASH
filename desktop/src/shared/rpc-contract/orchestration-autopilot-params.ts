@@ -10,8 +10,8 @@ import {
 /**
  * Wire contract of the primary session's task commands (D-016): task-propose, task-start,
  * task-show, task-report and run-complete. The caller is the attested pane of the request, so no
- * param names a caller or a run. No param carries an execution target, model, effort, data class or
- * language: Clef classifies, the Routing Table selects, and the run fixes the deliverable language.
+ * param names a caller or a run. Clef classifies, and routing selects the execution target, model
+ * and effort. Coordination uses English; artifact language follows the task objective.
  */
 
 /** Each server wait returns within this, below the socket idle limit, so the CLI loops. */
@@ -43,10 +43,7 @@ export const AUTOPILOT_TASK_SPEC_REFUSED_KEYS = [
   'profile',
   'surface',
   'dataClass',
-  'data_class',
-  'language',
-  'deliverableLanguage',
-  'deliverable_language'
+  'data_class'
 ] as const
 
 /**

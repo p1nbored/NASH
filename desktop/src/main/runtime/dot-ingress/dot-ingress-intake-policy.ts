@@ -68,11 +68,8 @@ export function admitDotIntake(
 }
 
 /** The requirement rules again, for a recorded request; the stored text is checked as stored. */
-export function requireRecordedRequirement(
-  objective: string,
-  deliverableLanguage: string | null
-): void {
-  analyzeDotRequirement({ objective, deliverableLanguage })
+export function requireRecordedRequirement(objective: string): void {
+  analyzeDotRequirement({ objective })
 }
 
 // A refusal of a recorded request as the coarse failure the store keeps (A6's three values).
@@ -84,8 +81,7 @@ const FAILURE_BY_REFUSAL: ReadonlyMap<string, DotSubmissionFailure> = new Map([
   ['dot_requirement_not_english', 'intake_refused'],
   ['dot_requirement_unclear', 'intake_refused'],
   ['dot_requirement_too_long', 'intake_refused'],
-  ['dot_requirement_rejected_content', 'intake_refused'],
-  ['dot_deliverable_language_invalid', 'intake_refused']
+  ['dot_requirement_rejected_content', 'intake_refused']
 ])
 
 /** The failure a policy refusal settles a recorded request with, or null for any other error. */

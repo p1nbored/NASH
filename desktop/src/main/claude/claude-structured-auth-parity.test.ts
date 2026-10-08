@@ -1,8 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { AgentSessionRecord } from '../../shared/agent-session-record'
 import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
 import { CLAUDE_AUTH_ENV_CONFLICT_MESSAGE } from '../claude-accounts/environment'
-import type { AgentSessionRecordStore } from '../runtime/agent-session-record-store'
 import { createClaudeStructuredLaunchResolver } from './claude-structured-launch-resolution'
 
 const SESSION_ID = 'orca-session-auth'
@@ -30,7 +29,8 @@ function resolverFor(options: {
   overlay?: Record<string, string>
 }): ReturnType<typeof createClaudeStructuredLaunchResolver> {
   return createClaudeStructuredLaunchResolver({
-    store: { getRecord: () => record() } as unknown as AgentSessionRecordStore,
+    resolveLaunchArgs: () => [],
+    store: { getRecord: () => record(), pinLaunchDirectory: vi.fn() },
     resolveWorkspacePath: async (id) => `/repos/${id}`,
     resolveCommand: () => '/usr/local/bin/claude',
     resolveAuthPolicy: () => ({ stripAuthEnv: options.stripAuthEnv }),
@@ -50,11 +50,10 @@ function withAmbientAuth<T>(value: string, run: () => Promise<T>): Promise<T> {
   })
 }
 
-// Why a stripping policy still exists: the WSL system lane strips; the host lane never does.
 describe('claude structured auth parity with the terminal preflight', () => {
   // Task 1 — the terminal preflight refuses this at spawn-env.ts:25 and
   // runtime/spawn-preflight.ts:139; the structured path used to let the override win.
-  it('refuses an explicit Anthropic auth override while the policy strips', async () => {
+  it('refuses an explicit Anthropic auth override while a managed account is pinned', async () => {
     await expect(
       resolverFor({ stripAuthEnv: true, overlay: { ANTHROPIC_API_KEY: 'sk-ant-CONFIGURED' } })({
         identity: IDENTITY
@@ -65,7 +64,7 @@ describe('claude structured auth parity with the terminal preflight', () => {
     })
   })
 
-  it('refuses an auth-like ANTHROPIC_CUSTOM_HEADERS override while the policy strips', async () => {
+  it('refuses an auth-like ANTHROPIC_CUSTOM_HEADERS override while a managed account is pinned', async () => {
     await expect(
       resolverFor({
         stripAuthEnv: true,
@@ -77,7 +76,7 @@ describe('claude structured auth parity with the terminal preflight', () => {
     })
   })
 
-  it('still admits a non-auth env overlay under a stripping policy', async () => {
+  it('still admits a non-auth env overlay under a managed account', async () => {
     const launch = await resolverFor({
       stripAuthEnv: true,
       overlay: { ANTHROPIC_BASE_URL: 'https://gateway.example.test' }
@@ -88,7 +87,7 @@ describe('claude structured auth parity with the terminal preflight', () => {
 
   // Task 2 — legacy computes stripAuthEnv at runtime-auth-preparation.ts:72, so a
   // system-auth user's own shell key is their sign-in and must survive.
-  it('passes an ambient Anthropic key through on the user own login', async () => {
+  it('passes an ambient Anthropic key through when no managed account is active', async () => {
     await withAmbientAuth('sk-ant-SHELL', async () => {
       const launch = await resolverFor({ stripAuthEnv: false })({ identity: IDENTITY })
 
@@ -96,7 +95,7 @@ describe('claude structured auth parity with the terminal preflight', () => {
     })
   })
 
-  it('lets an explicit overlay override the ambient key on the user own login', async () => {
+  it('lets an explicit overlay override the ambient key when no managed account is active', async () => {
     await withAmbientAuth('sk-ant-SHELL', async () => {
       const launch = await resolverFor({
         stripAuthEnv: false,
@@ -107,7 +106,7 @@ describe('claude structured auth parity with the terminal preflight', () => {
     })
   })
 
-  it('still strips the ambient Anthropic key when the policy strips', async () => {
+  it('still strips the ambient Anthropic key when a managed account is pinned', async () => {
     await withAmbientAuth('sk-ant-SHELL', async () => {
       const launch = await resolverFor({ stripAuthEnv: true })({ identity: IDENTITY })
 

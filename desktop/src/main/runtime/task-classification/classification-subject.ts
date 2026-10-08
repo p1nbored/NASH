@@ -16,7 +16,7 @@ export type ClassificationSubject = {
   /** The table the run launched with; a TaskSpec the primary keeps names it, since nothing is looked up. */
   readonly runTable: { readonly version: number; readonly sha256: string }
   readonly liveRunPrimary: LiveRunPrimary | null
-  /** The English TaskSpec fields Clef may see; the deliverable language never enters them. */
+  /** The TaskSpec fields passed to Clef. */
   readonly taskSpec: ClefStateInput
 }
 
@@ -52,7 +52,15 @@ export function loadClassificationSubject(
     runTable: { version: run.routingTableVersion, sha256: run.routingTableSha256 },
     // Why running only: an unverifiable owner is no evidence that the session's login is live (D-020).
     liveRunPrimary:
-      primary?.state === 'running' ? { runId: run.runId, ownerId: primary.ownerId } : null,
+      primary?.state === 'running'
+        ? {
+            runId: run.runId,
+            ownerId: primary.ownerId,
+            agent: run.coordinatorAgent,
+            model: run.coordinatorModel,
+            effort: run.coordinatorEffort
+          }
+        : null,
     taskSpec: {
       objective: task.spec,
       expectedOutputs: spec.expectedOutputs,

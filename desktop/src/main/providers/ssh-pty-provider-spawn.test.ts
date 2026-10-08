@@ -460,6 +460,7 @@ describe('spawn', () => {
         PATH: '/home/user/.nash-relay/bin:/usr/bin',
         ORCA_TERMINAL_HANDLE: 'term_ssh',
         [POWERLEVEL10K_WIZARD_DISABLE_ENV]: 'true',
+        ORCA_CLI_BIN_DIR: '/home/user/.nash-relay/bin',
         ORCA_REMOTE_CLI_BIN_DIR: '/home/user/.nash-relay/bin',
         ORCA_RELAY_DIR: '/home/user/.nash-relay/relay-v1',
         ORCA_RELAY_NODE_PATH: '/usr/bin/node',
@@ -490,6 +491,7 @@ describe('spawn', () => {
       env: {
         ORCA_TERMINAL_HANDLE: 'term_ssh',
         [POWERLEVEL10K_WIZARD_DISABLE_ENV]: 'true',
+        ORCA_CLI_BIN_DIR: '/home/user/.nash-relay/bin',
         ORCA_REMOTE_CLI_BIN_DIR: '/home/user/.nash-relay/bin',
         ORCA_RELAY_DIR: '/home/user/.nash-relay/relay-v1',
         ORCA_RELAY_NODE_PATH: '/usr/bin/node',

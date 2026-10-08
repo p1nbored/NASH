@@ -70,9 +70,9 @@ export function seedRunWithRunningOwner(owner: OrchestrationDb): { ownerId: stri
     workspaceId: 'fixture-repo::/fixture/repo',
     workspaceBinding: FIXTURE_HASH_A,
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     routingTableVersion: 1,
     routingTableSha256: FIXTURE_HASH_B,
+    coordinatorAgent: 'claude',
     coordinatorModel: 'claude-opus-5-5',
     coordinatorEffort: 'max',
     timestamp: fixtureTime()
@@ -101,9 +101,9 @@ export function seedRunWithRunningOwner(owner: OrchestrationDb): { ownerId: stri
 export function insertRawRun(db: Database.Database, runId: string, requestId: string): void {
   db.prepare(
     `INSERT INTO workflow_runs (run_id, request_id, workspace_id, workspace_binding, status, revision,
-      requested_access, deliverable_language, routing_table_version, routing_table_sha256,
+      requested_access, routing_table_version, routing_table_sha256,
       coordinator_model, coordinator_effort, created_at, updated_at)
-      VALUES (?, ?, 'fixture-repo::/fixture/repo', ?, 'active', 1, 'read_only', NULL, 1, ?,
+      VALUES (?, ?, 'fixture-repo::/fixture/repo', ?, 'active', 1, 'read_only', 1, ?,
       'claude-opus-5-5', 'max', ?, ?)`
   ).run(runId, requestId, FIXTURE_HASH_A, FIXTURE_HASH_B, fixtureTime(), fixtureTime())
 }

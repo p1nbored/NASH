@@ -31,15 +31,8 @@ export const DOT_COMMAND_SPECS: CommandSpec[] = [
     hidden: true,
     summary: 'Submit an English requirement; it starts a run without a confirmation step',
     usage:
-      'orca dot submit --workspace <ref> --objective-file <path|-> [--idempotency-key <uuid>] [--access read_only|workspace_write] [--language <tag>] [--json]',
-    allowedFlags: [
-      ...GLOBAL_FLAGS,
-      'workspace',
-      'objective-file',
-      'idempotency-key',
-      'access',
-      'language'
-    ],
+      'orca dot submit --workspace <ref> --objective-file <path|-> [--idempotency-key <uuid>] [--access read_only|workspace_write] [--json]',
+    allowedFlags: [...GLOBAL_FLAGS, 'workspace', 'objective-file', 'idempotency-key', 'access'],
     notes: [...NOTES, 'Reuse the printed idempotency key to retry without submitting twice.']
   },
   {

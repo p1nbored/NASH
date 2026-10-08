@@ -65,7 +65,6 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
         state: 'received',
         workspaceRef: ref,
         requestedAccess: 'read_only',
-        deliverableLanguage: null,
         replyCorrelationId: null,
         workbenchRequestId: null,
         failureCode: null,
@@ -78,7 +77,7 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
 
     it('hands the door caller everything it needs and nothing else', () => {
       const { record, intake } = store.submit(
-        submitInput(ref, { requestedAccess: 'workspace_write', deliverableLanguage: 'zh-Hans' })
+        submitInput(ref, { requestedAccess: 'workspace_write' })
       )
       expect(intake).toEqual({
         dotRequestId: record.dotRequestId,
@@ -87,7 +86,6 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
         workspaceBinding: FIXTURE_BINDING,
         objective: FIXTURE_OBJECTIVE,
         requestedAccess: 'workspace_write',
-        deliverableLanguage: 'zh-Hans',
         workbenchIdempotencyKey: rawRequestColumn(
           owner.db,
           record.dotRequestId,
@@ -155,16 +153,14 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
       })
     })
 
-    it('stores the language tag, reply correlation id and the claimed client as given', () => {
+    it('stores the reply correlation id and the claimed client as given', () => {
       const { record } = store.submit(
         submitInput(ref, {
-          deliverableLanguage: 'zh-Hant-TW',
           replyCorrelationId: 'conv_1:msg/2',
           client: { name: 'dot-local', version: '0.1.0' }
         })
       )
       expect(record).toMatchObject({
-        deliverableLanguage: 'zh-Hant-TW',
         replyCorrelationId: 'conv_1:msg/2'
       })
       expect(rawRequestColumn(owner.db, record.dotRequestId, 'client_name')).toBe('dot-local')
@@ -303,8 +299,6 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
         ['a NUL character', { objective: 'a\0b' }],
         ['a lone surrogate', { objective: 'a\ud800b' }],
         ['an objective over 12,000 characters', { objective: 'a'.repeat(12_001) }],
-        ['a language tag that is not canonical', { deliverableLanguage: 'zh-hant-tw' }],
-        ['an invalid language tag', { deliverableLanguage: 'en_US' }],
         ['a key that is not a uuid', { idempotencyKey: 'key-1' }],
         ['a malformed workspace reference', { workspaceRef: 'repo::/x' }],
         ['a short binding', { workspaceBinding: 'abc' }],
@@ -425,7 +419,6 @@ describe('dot ingress request store: submit, idempotency and reads', () => {
       ['objective', { objective: `${FIXTURE_OBJECTIVE} Also check the tests.` }],
       ['objective by one combining mark', { objective: `${FIXTURE_OBJECTIVE}\u0301` }],
       ['requested access', { requestedAccess: 'workspace_write' as const }],
-      ['deliverable language', { deliverableLanguage: 'de' }],
       ['reply correlation id', { replyCorrelationId: 'conv-2' }]
     ])(
       'refuses the same key with a different %s as dot_idempotency_conflict',

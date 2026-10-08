@@ -1,5 +1,6 @@
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
+import { isMacInstallRequested } from '../updater-mac-install'
 import type { UpdateCheckOptions } from '../../shared/update-status-types'
 import type { ReleaseChannel } from '../../shared/release-channel'
 import { UpdaterScheduling } from './updater-scheduling'
@@ -7,7 +8,13 @@ import { UpdaterScheduling } from './updater-scheduling'
 /** Handles checks initiated from the desktop menu and modifier-key variants. */
 export abstract class UpdaterMenuChecks extends UpdaterScheduling {
   protected checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
-    // Why also the feed check: with no release feed nothing may launch, so a manual check answers like an unpackaged build.
+    if (
+      this.pendingQuitAndInstallTimer ||
+      this.quitAndInstallInProgress ||
+      isMacInstallRequested()
+    ) {
+      return
+    }
     if (!app.isPackaged || is.dev || this.isUpdateFeedDisabled()) {
       this.sendStatus({ state: 'not-available', userInitiated: true })
       return
@@ -61,6 +68,13 @@ export abstract class UpdaterMenuChecks extends UpdaterScheduling {
     const attemptId = this.beginUpdateCheckAttempt()
     const autoUpdater = this.getAutoUpdater()
     const launch = (): Promise<unknown> | undefined => {
+      if (
+        this.pendingQuitAndInstallTimer ||
+        this.quitAndInstallInProgress ||
+        isMacInstallRequested()
+      ) {
+        return undefined
+      }
       if (!this.isActiveUpdateCheckAttempt(attemptId)) {
         return undefined
       }

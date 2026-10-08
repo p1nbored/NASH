@@ -1,14 +1,7 @@
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 
-/**
- * Tell the user their `zcode` cannot open a session, before they stare at a dead pane.
- *
- * ZCode's desktop bundle answers `--version`, runs `-p`, and passes `zcode doctor`, so Orca
- * detects it, launches it, and installs hooks against it — all successfully. Only the
- * interactive session fails, leaving a bare Node stack trace that reads as a broken Orca
- * integration. The capability probe in main answers the question; this reports it.
- */
+/** Explain a missing ZCode terminal UI before the user waits on a dead pane. */
 export async function warnIfZCodeCannotOpenSession(): Promise<void> {
   // Why swallow: this is advisory. A probe that could not run must never interrupt a launch.
   const capability = await window.api.preflight.zcodeInteractiveCapability().catch(() => 'unknown')
@@ -25,7 +18,7 @@ export async function warnIfZCodeCannotOpenSession(): Promise<void> {
       id: 'zcode-missing-tui',
       description: translate(
         'auto.components.terminal.pane.zcode.missing.tui.description',
-        "NASH's hooks installed correctly — the zcode on your PATH just cannot open a session. The ZCode desktop app bundles the agent runtime without its terminal UI. Install a zcode that ships the TUI, then run zcode outside NASH to confirm."
+        'This ZCode installation cannot open terminal sessions. Install a build with a terminal UI, then run zcode outside NASH to verify it.'
       ),
       duration: 20_000
     }

@@ -75,6 +75,7 @@ export type CoordinatorResolution =
   | {
       readonly ok: true
       readonly table: RouteTableRef
+      readonly agent: 'claude' | 'codex'
       readonly coordinator: { readonly model: string; readonly reasoningLevel: string }
       readonly availability: RouteAvailabilityResult
     }
@@ -206,7 +207,11 @@ export function createRouteResolver(deps: {
       if (row === undefined) {
         return { ok: false, reason: 'unknown_task_type' }
       }
-      const availability = await evaluateOne(subjectForRoute(row, active.table.coordinator), input)
+      const primary = input.liveRunPrimary
+      const coordinator = primary
+        ? { agent: primary.agent, model: primary.model, reasoning_level: primary.effort }
+        : active.table.coordinator
+      const availability = await evaluateOne(subjectForRoute(row, coordinator), input)
       return {
         ok: true,
         route: {
@@ -232,6 +237,7 @@ export function createRouteResolver(deps: {
       return {
         ok: true,
         table: tableRefOf(active),
+        agent: coordinator.agent,
         coordinator: { model: coordinator.model, reasoningLevel: coordinator.reasoning_level },
         availability: await evaluateOne(subjectForCoordinator(coordinator), options)
       }

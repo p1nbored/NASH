@@ -6,6 +6,7 @@ import {
 } from '../orchestration/db/primary-session-store'
 import { getWorkflowRunStore, type WorkflowRunRecord } from '../orchestration/db/workflow-run-store'
 import type { PrimarySessionLaunchPlan } from './primary-session-launch-plan'
+import type { PrimarySessionAgent } from './primary-session-types'
 import type { PrimaryLaunchAdmission } from './primary-session-ledger'
 import { moveOwner, moveWorkflowRun } from './primary-session-moves'
 import {
@@ -38,7 +39,11 @@ export type LaunchSettlementDeps = {
     'closeTerminal' | 'getTerminalProcessIncarnation' | 'getOrchestrationDispatchAuthority'
   >
   readonly clock: { now(): number }
-  deliverAfterStart(args: { handle: string; text: string }): Promise<boolean>
+  deliverAfterStart(args: {
+    handle: string
+    agent: PrimarySessionAgent
+    text: string
+  }): Promise<boolean>
   stopUndelivered(owner: PrimarySessionRecord): Promise<'stopped' | 'stop_unconfirmed'>
   readonly exitWatches?: { watch(owner: PrimarySessionRecord): void }
 }
@@ -180,7 +185,11 @@ export function createLaunchSettlement(deps: LaunchSettlementDeps) {
     })
     if (
       plan.prompt.delivery === 'after_start_paste' &&
-      !(await deps.deliverAfterStart({ handle: outcome.handle, text: plan.prompt.text }))
+      !(await deps.deliverAfterStart({
+        handle: outcome.handle,
+        agent: launching.run.coordinatorAgent,
+        text: plan.prompt.text
+      }))
     ) {
       return promptUndelivered(launching, owner)
     }

@@ -1,8 +1,8 @@
 import {
   DOT_DECISION_SUMMARY_MAX_CHARS,
-  DOT_INGRESS_ARTIFACT_MAX
+  DOT_INGRESS_ARTIFACT_MAX,
+  DOT_INGRESS_CONTRACT_VERSION
 } from '../dot-ingress/dot-ingress-limits'
-import { DOT_INGRESS_CONTRACT_VERSION_THREE } from '../dot-ingress/dot-ingress-versions'
 
 // Protocol constants of the hosted mailbox. Unlike dot-remote-defaults.ts these are not user
 // decisions; RG9 keeps short polling until a Sites probe proves a held request.
@@ -15,7 +15,7 @@ import { DOT_INGRESS_CONTRACT_VERSION_THREE } from '../dot-ingress/dot-ingress-v
 export const DOT_REMOTE_CONTRACT_VERSION = 4 as const
 
 /** The dot ingress contract inbox payloads follow; the MCP layer injects it into every one. */
-export const DOT_REMOTE_PAYLOAD_CONTRACT_VERSION = DOT_INGRESS_CONTRACT_VERSION_THREE
+export const DOT_REMOTE_PAYLOAD_CONTRACT_VERSION = DOT_INGRESS_CONTRACT_VERSION
 
 export const DOT_REMOTE_LEASE_SECONDS = 60
 export const DOT_REMOTE_MAX_ITEMS_PER_LEASE = 10

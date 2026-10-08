@@ -1,3 +1,4 @@
+import { isNativeTaskAttempt } from '../../../../workflow-run/app-run-policy'
 import {
   AUTOPILOT_REPORT_SUMMARY_MAX_CHARS,
   TaskReportParams,
@@ -10,7 +11,6 @@ import {
   getAppAttemptSettlement,
   type AppAttemptView
 } from '../../../../orchestration/db/app-attempt-settlement'
-import { getExecutorProcessStore } from '../../../../orchestration/db/executor-process-store'
 import { defineMethod, type RpcContext } from '../../../core'
 import { recordReceiptBeforeNudge } from '../messaging/mutation-replay-nudge'
 import { resolveAutopilotPrimaryCaller } from './autopilot-primary-caller'
@@ -51,10 +51,10 @@ function assertCurrentInSessionAttempt(owner: OrchestrationDb, params: TaskRepor
       { currentAttemptId: current?.id ?? null }
     )
   }
-  if (getExecutorProcessStore(owner).get(params.attemptId)) {
+  if (isNativeTaskAttempt(owner, params.attemptId)) {
     throw autopilotRefusal(
       AUTOPILOT_TASK_API_ERROR_CODES.reportNotInSession,
-      `Attempt ${params.attemptId} runs as an app process; the app records its result. Read it with task-show.`
+      `Attempt ${params.attemptId} runs outside this session; its worker records the result. Read it with task-show.`
     )
   }
 }

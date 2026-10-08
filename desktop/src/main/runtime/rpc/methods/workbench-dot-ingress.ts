@@ -80,7 +80,6 @@ function requestsResult(
       workspaceId,
       objective,
       requestedAccess: record.requestedAccess,
-      deliverableLanguage: record.deliverableLanguage,
       claimedClient,
       failureCode: record.failureCode,
       createdAt: record.createdAt,

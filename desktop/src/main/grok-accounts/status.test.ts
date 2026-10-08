@@ -2,9 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getGrokAccountStatus } from './status'
 import { isGrokAccessTokenFresh, readGrokAuthSession } from '../rate-limits/grok-auth'
 
-// Why: these cases cover Orca's inherited meters, which NASH keeps off (usage-meters-policy.ts).
-vi.mock('../rate-limits/usage-meters-policy', () => ({ USAGE_METER_SOURCE: 'orca-inherited' }))
-
 vi.mock('../rate-limits/grok-auth', () => ({
   isGrokAccessTokenFresh: vi.fn(),
   readGrokAuthSession: vi.fn()

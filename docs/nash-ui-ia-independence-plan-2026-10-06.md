@@ -1,5 +1,8 @@
 # UI, settings, dot, agy, Orca compatibility and NASH independence: issues and plan
 
+Current execution note (2026-10-08): latest Orca `61de2d8e` is integrated in `C:\Programs\NASH\desktop`. The primary CLI is selectable between Claude Code and Codex; classification/routing and native invocation/context remain. Task communication stays English, with no forced artifact language. NASH old-version schema/protocol/executor/checklist compatibility is removed; the user explicitly approved and completed the previously blocked groups (D-043). The original issue inventory below is historical; current differences and verification are in [the checkpoint](nash-checkpoint-2026-10-06.md).
+
+
 Date: 2026-10-06. Source: the user's request of 2026-10-06 ("Record these issues and prepare an implementation plan. I approve the plan and you can execute."). Investigations were read-only; file references are relative to `desktop/src/` unless stated.
 
 ## 1. Issues
@@ -70,4 +73,29 @@ D-037 to D-039 record the agy adapter, the navigation changes and the plugin cat
 
 ## 5. Delivery status (2026-10-08 UTC)
 
-P0-P9 are implemented; P10 source checks and private Site deployment are complete. See [delivery and verification](nash-delivery-2026-10-08.md) for exact evidence, the inherited full-suite failures, and the remaining offline-desktop/live-provider checks.
+Implementation packages and the private Site deployment are in place, but end-to-end acceptance is incomplete. The [requirement audit](nash-checkpoint-2026-10-06.md#requirement-audit-2026-10-08-utc) distinguishes implementation from actual verification, records typography/localization corrections, and lists every CLI integration and remaining live check.
+
+## 2026-10-07 — 原生执行恢复（用户已要求直接实施）
+
+目标：保持主 agent（Claude Code 或 Codex）→ Clef 分类 → 已记录路由与可用性复核 → 执行这条链路；Codex/AGY 新任务改用 Orca 原生 worker 启动、上下文投递、消息和停止。保留当前会话内任务，删除旧 executor 历史的读取、停止和恢复兼容；此前受审批拦截的剩余项已按 D-043 删除。
+
+1. 在路由复核之后接入原生 startLocalWorker；只有原生 worker 创建 dispatch。
+2. 把 TaskSpec 的输出、验收条件与约束送入原生前言，不改变原目标及分类 hash。
+3. 区分原生 worker 与会话内/旧 headless attempt，接通原生报告、完成、取消；不把启动就绪当作完成。
+4. 在原生启动中传递本次任务的访问上限；Codex 使用 read-only/workspace-write，AGY 保留既有 sandbox 语义；不修改全局设置或放宽为 bypass。
+5. 回归分类、路由、原生生命周期和旧历史，独立审查并运行类型/构建检查。
+6. 与原始 Orca 快照 8105599b 比较，输出分类说明和覆盖每个变更文件的完整表。
+
+2026-10-08 实施结果：以上步骤已按 D-041 接通，相关 1,395 项测试及类型/质量/构建检查通过；完整文件清单见 nash-orca-change-table.csv。独立模型复核仍保留既有 headless 实现，真实 provider 任务未在本轮执行。
+
+## 2026-10-08 — 进一步复用 Orca 原生一次性调用
+
+目标：主 agent（Claude Code 或 Codex）→ Clef → 路由 → native worker 保持；独立复核的 NASH 自建进程执行器改为薄适配，复用 Orca 的 CLI 配方、账户环境、命令解析、核心 runProcess 和 Codex home lock。Orca 的一次性调用本身也是 headless；不为改变展示形式增加 worker/Dispatch。
+
+- [ ] 在现有 reviewer-runner.ts 中组装原生能力，将 codex-reviewer.ts / claude-reviewer.ts 缩为薄入口，不新增源码文件。
+- [ ] 复用账户准备、只读参数、runProcess 的超时/信号/进程树终止，以及 runCodexProcessWithHomeLock 的退出屏障；不再忽略用户配置、规则或自定义账户目录。
+- [ ] 保留路由选择和复核 verdict/schema/独立模型判断；Claude 使用原生 plan 权限和真实工作目录，纠正旧“无工具”上下文假设。
+- [ ] 新原生任务仍按 Orca worker report 完成；不在这次调用器复用中重新引入一套接管原生报告/依赖推进的自动验收框架。需要验收时由主 agent 在既有任务/工作流中安排；旧显式复核路径继续可用。
+- [ ] 用现有测试覆盖账户环境、参数、输出、取消、Codex锁，独立审查后运行类型/质量/构建，更新状态表及完整 CSV。
+
+边界：不安装缺失 CLI，不切换真实账户；不把未执行的真实 provider 场景记为通过。

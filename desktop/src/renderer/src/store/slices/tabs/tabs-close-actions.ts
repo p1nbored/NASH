@@ -15,6 +15,7 @@ import {
 } from '@/lib/structured-agent-session-launch-registry'
 import { structuredAgentSessionTabId } from '../../../../../shared/structured-agent-session-projection'
 import { clearWebSessionFocusIntentIfMatches } from '@/runtime/web-session-focus-intent'
+import { ownsGlobalSelection } from '../../global-selection-owner'
 import {
   structuredAgentSessionFocusOwner,
   structuredAgentSessionTargetForTab
@@ -73,6 +74,7 @@ export function createTabsCloseActions(
           console.warn('[structured-agent-session] close found no owning host', tab.entityId)
         }
         get().clearNativeChatLaunchDraft(structuredAgentSessionTabId(tab.entityId))
+        // The unsent draft stays: it belongs to the conversation, which can be reopened from history.
       }
       // Why: on closing the active tab, walk the MRU stack to the previously-active tab; pickNextActiveTab falls back to the neighbor.
       const nextActiveTabId =
@@ -170,7 +172,7 @@ export function createTabsCloseActions(
                 }
               }
             : {}),
-          ...(!shouldDeactivateWorktree && current.activeWorktreeId === worktreeId
+          ...(!shouldDeactivateWorktree && ownsGlobalSelection(current, worktreeId)
             ? buildActiveSurfacePatch(
                 {
                   ...current,

@@ -62,7 +62,6 @@ export type AutopilotParts = {
   primary: PrimarySessionRuntime | null
   gate: LaunchGate | null
   execution: TaskExecutionRuntime | null
-  unregisterStopPort: (() => void) | null
   validation: ValidationScheduler | null
   unregisterValidationBacklog: (() => void) | null
   uninstallRelay: (() => void) | null
@@ -93,7 +92,6 @@ export function emptyAutopilotParts(): AutopilotParts {
     primary: null,
     gate: null,
     execution: null,
-    unregisterStopPort: null,
     validation: null,
     unregisterValidationBacklog: null,
     uninstallRelay: null,

@@ -21,7 +21,7 @@ import { DOT_INGRESS_RPC_METHODS } from './dot-ingress'
 
 const HELLO = 'dotIngress.hello'
 
-function helloRequest(params: unknown = { contractVersion: 1 }): RpcRequest {
+function helloRequest(params: unknown = { contractVersion: 3 }): RpcRequest {
   return { id: 'req-1', authToken: '', method: HELLO, params }
 }
 
@@ -54,25 +54,25 @@ describe('dotIngress.hello', () => {
       return
     }
     expect(DotHelloResultSchema.parse(response.result)).toEqual({
-      contractVersion: 1,
-      supportedContractVersions: [1],
+      contractVersion: 3,
+      supportedContractVersions: [3],
+      methods: [...DOT_INGRESS_METHOD_NAMES],
       limits: {
         maxObjectiveChars: WORKBENCH_OBJECTIVE_MAX_LENGTH,
         maxProseChars: DOT_INGRESS_PROSE_MAX_CHARS,
         listMaxLimit: WORKBENCH_LIST_MAX_LIMIT,
         maxSubmissionsPerMinute: DOT_INGRESS_DEFAULT_RATE_PER_MINUTE,
         maxSubmissionsPerUtcDay: DOT_INGRESS_DEFAULT_RATE_PER_UTC_DAY,
-        maxDecisionSummaryChars: DOT_DECISION_SUMMARY_MAX_CHARS
+        maxDecisionSummaryChars: DOT_DECISION_SUMMARY_MAX_CHARS,
+        maxMessageChars: 4000,
+        maxValidationTitleChars: 200,
+        maxValidationSummaryChars: 500
       },
       capabilities: {
-        submit: true,
-        status: true,
-        list: true,
-        cancel: true,
-        decisions: true,
         startsWithoutConfirmation: true,
         results: false,
-        artifacts: false
+        artifacts: false,
+        validationDecisions: true
       }
     })
   })
@@ -114,7 +114,7 @@ describe('dotIngress.hello', () => {
 
   it('accepts the claimed client descriptor and stores nothing from it', async () => {
     const response = await dispatcher.dispatch(
-      helloRequest({ contractVersion: 1, client: { name: 'dot-fixture', version: '1.2.3' } }),
+      helloRequest({ contractVersion: 3, client: { name: 'dot-fixture', version: '1.2.3' } }),
       { dotIngressCaller: issueDotIngressCaller() }
     )
 
@@ -125,10 +125,10 @@ describe('dotIngress.hello', () => {
   })
 
   it.each([
-    ['an unknown field', { contractVersion: 1, approved: true }],
+    ['an unknown field', { contractVersion: 3, approved: true }],
     ['a contract version that is not a number', { contractVersion: '1' }],
     ['no contract version', {}],
-    ['a client name with a path', { contractVersion: 1, client: { name: 'C:\\x', version: '1' } }]
+    ['a client name with a path', { contractVersion: 3, client: { name: 'C:\\x', version: '1' } }]
   ])('refuses %s as an invalid argument before touching the database', async (_name, params) => {
     const response = await dispatcher.dispatch(helloRequest(params), {
       dotIngressCaller: issueDotIngressCaller()
@@ -160,7 +160,7 @@ describe('dotIngress.hello', () => {
       for (const refused of refusedContexts) {
         // The handler answers in the call's contract version, so its refusal arrives as a rejection.
         await expect(
-          (async () => handler({ contractVersion: 1 }, refused))()
+          (async () => handler({ contractVersion: 3 }, refused))()
         ).rejects.toMatchObject({
           code: 'dot_ingress_forbidden'
         })

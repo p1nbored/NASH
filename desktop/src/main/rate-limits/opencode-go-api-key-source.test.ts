@@ -162,7 +162,9 @@ describe('resolveOpenCodeGoApiKey', () => {
   })
 
   it('reads auth.json from XDG_DATA_HOME, which OpenCode uses on every platform', () => {
-    expect(getOpenCodeAuthFilePath({ XDG_DATA_HOME: '/data' })).toBe('/data/opencode/auth.json')
+    expect(getOpenCodeAuthFilePath({ XDG_DATA_HOME: '/data' })).toBe(
+      join('/data', 'opencode', 'auth.json')
+    )
     // OpenCode's global-roots.ts falls back to os.homedir() + .local/share even on Windows.
     expect(getOpenCodeAuthFilePath({}, '/home/person')).toBe(
       join('/home/person', '.local', 'share', 'opencode', 'auth.json')

@@ -119,15 +119,13 @@ export function createDotHandlers(deps: DotCliDeps): Record<string, CommandHandl
     'dot submit': async (ctx) => {
       const workspaceRef = getRequiredStringFlag(ctx.flags, 'workspace')
       const requestedAccess = accessFlag(ctx)
-      const deliverableLanguage = getOptionalStringFlag(ctx.flags, 'language')
       const objective = await readTextInput(deps, ctx, 'objective-file')
       const idempotencyKey = getOptionalStringFlag(ctx.flags, 'idempotency-key') ?? deps.newId()
       const result = await client().submit({
         workspaceRef,
         objective,
         idempotencyKey,
-        ...(requestedAccess ? { requestedAccess } : {}),
-        ...(deliverableLanguage ? { deliverableLanguage } : {})
+        ...(requestedAccess ? { requestedAccess } : {})
       })
       const text = `${formatDotRequest(result.request)}${result.duplicate ? ' (submitted before)' : ''}`
       output(

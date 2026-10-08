@@ -12,6 +12,7 @@ import { ORCHESTRATION_PERMISSION_COMMAND_SPECS } from './orchestration-permissi
 import { DOT_COMMAND_SPECS } from './dot'
 import { COMPUTER_COMMAND_SPECS } from './computer'
 import { ENVIRONMENT_COMMAND_SPECS } from './environment'
+import { MANAGED_SERVER_COMMAND_SPECS } from './managed-server'
 import { AGENT_HOOK_COMMAND_SPECS } from './agent-hooks'
 import { DIAGNOSTICS_COMMAND_SPECS } from './diagnostics'
 import { EMULATOR_COMMAND_SPECS } from './emulator'
@@ -41,6 +42,7 @@ export const COMMAND_SPECS: CommandSpec[] = [
   ...DIAGNOSTICS_COMMAND_SPECS,
   ...INTROSPECTION_COMMAND_SPECS,
   ...ENVIRONMENT_COMMAND_SPECS,
+  ...MANAGED_SERVER_COMMAND_SPECS,
   ...LINEAR_COMMAND_SPECS,
   ...VM_COMMAND_SPECS,
   ...EMULATOR_COMMAND_SPECS,

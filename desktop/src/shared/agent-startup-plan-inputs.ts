@@ -48,15 +48,29 @@ export function resolveAgentStartupPlanInputs(args: {
   sessionOptions?: Record<string, SessionOptionValue> | undefined
 }): AgentStartupPlanInputs {
   const { agent, settings, platform, isRemote, sessionOptions } = args
+  const taskAccess = sessionOptions?.taskAccess
+  const taskArgs =
+    taskAccess === 'read_only' || taskAccess === 'workspace_write'
+      ? agent === 'codex'
+        ? `--sandbox ${taskAccess === 'read_only' ? 'read-only' : 'workspace-write'} --ask-for-approval on-request`
+        : agent === 'antigravity'
+          ? taskAccess === 'read_only'
+            ? '--sandbox'
+            : ''
+          : agent === 'claude'
+            ? `--permission-mode ${taskAccess === 'read_only' ? 'plan' : 'acceptEdits'}`
+            : undefined
+      : undefined
   return {
     agent,
     cmdOverrides: settings.agentCmdOverrides ?? {},
     // A per-launch override wins over the Settings default; `null` is "no arguments", so this
     // tests for absence rather than falsiness.
     agentArgs:
-      args.agentArgs !== undefined
+      taskArgs ??
+      (args.agentArgs !== undefined
         ? args.agentArgs
-        : resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs),
+        : resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs)),
     agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
     platform,
     shell: resolveLocalWindowsAgentStartupShell({

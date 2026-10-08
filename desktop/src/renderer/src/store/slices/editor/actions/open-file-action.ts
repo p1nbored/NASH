@@ -18,7 +18,7 @@ export function createOpenFileAction(
       const editorItemContentType: 'editor' | 'diff' | 'conflict-review' | 'check-details' =
         file.mode === 'conflict-review'
           ? 'conflict-review'
-          : file.mode === 'check-details' || file.mode === 'task-window'
+          : file.mode === 'check-details'
             ? 'check-details'
             : file.mode === 'diff'
               ? 'diff'

@@ -57,8 +57,7 @@ function decisionsOf(deps: DotIngressServiceDeps): ValidationDecisionService {
   return createValidationDecisionService({
     owner: deps.db,
     now: deps.now,
-    announce: (message) => deps.announce(message),
-    ...(deps.readWorktreeChanges ? { readWorktreeChanges: deps.readWorktreeChanges } : {})
+    announce: (message) => deps.announce(message)
   })
 }
 

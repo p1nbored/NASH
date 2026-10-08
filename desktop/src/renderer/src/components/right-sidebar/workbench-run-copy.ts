@@ -108,7 +108,7 @@ export function primarySessionLabel(primary: PrimarySessionView | null): string 
 }
 
 const LIVE_ACTIVITY = {
-  working: () => translate('workbench.runs.live.working', 'Claude is working'),
+  working: () => translate('workbench.runs.live.working', 'The primary is working'),
   dialog_open: () =>
     translate('workbench.runs.live.dialogOpen', 'A permission or question dialog is open'),
   idle: () => translate('workbench.runs.live.idle', 'Waiting for input'),
@@ -137,7 +137,7 @@ export function liveActivityLabel(live: PrimarySessionLiveView | null): string |
     case 'agent_absent':
       return translate(
         'workbench.runs.live.agentAbsent',
-        'Claude Code is not running in the terminal'
+        'The primary CLI is not running in the terminal'
       )
     case 'unverifiable':
       return LIVE_UNVERIFIABLE[live.reason]()
@@ -183,7 +183,7 @@ const END_REASONS = new Map<string, () => string>([
   ['dot_canceled', () => translate('workbench.runs.end.dotCanceled', 'Canceled by dot')],
   [
     'primary_exited',
-    () => translate('workbench.runs.end.primaryExited', 'The Claude Code session exited')
+    () => translate('workbench.runs.end.primaryExited', 'The primary session exited')
   ],
   ['launch_refused', () => translate('workbench.runs.end.launchRefused', 'The launch was refused')],
   [

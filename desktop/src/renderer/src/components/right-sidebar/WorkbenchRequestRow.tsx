@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
 import type { WorkbenchRequest } from '../../../../shared/workbench-request'
 import type { WorkflowRunView } from '../../../../shared/workflow-run/workflow-run-view'
-import { isRunEnded, type WorkbenchRuns } from './use-workbench-runs'
+import type { WorkbenchRuns } from './use-workbench-runs'
 import WorkbenchCopyDetails from './WorkbenchCopyDetails'
 import { errorDetails, type WorkbenchDetail } from './workbench-details'
 import { launchBlockerMessage } from './workbench-error-copy'
@@ -46,9 +46,11 @@ export function requestDetails(
 // Why Stop run here: a blocked request can still hold an unverifiable run; cancel alone leaves it (D3).
 function canStopRun(request: WorkbenchRequest, run: WorkflowRunView | null): boolean {
   return (
-    request.status === 'ROUTING_BLOCKED' &&
+    (request.status === 'ROUTING_BLOCKED' ||
+      run?.status === 'failed' ||
+      run?.status === 'canceled') &&
     request.workflowRunId !== null &&
-    !(run && isRunEnded(run))
+    run?.status !== 'completed'
   )
 }
 

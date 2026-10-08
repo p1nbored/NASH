@@ -13,6 +13,7 @@ export type {
   InactiveAccountUsage,
   RateLimitRuntimeTarget
 } from '../../../shared/rate-limit-types'
+export type { InactiveClaudeAccountInfo } from '../claude-fetcher'
 export type { ClaudeStatusLineRateLimits } from '../../../shared/claude-statusline-rate-limits'
 export type { NetworkProxySettings } from '../../../shared/network-proxy'
 export type { ClaudeRuntimeAuthPreparation } from '../../claude-accounts/runtime-auth-service'
@@ -47,7 +48,7 @@ export type OpenCodeGoRateLimitConfig = {
 }
 
 export type OpenCodeGoResolvedConfig = OpenCodeGoRateLimitConfig & {
-  /** Explicit Orca override; empty means fall back to OpenCode's own store and env. */
+  /** Explicit NASH override; empty means fall back to OpenCode's own store and env. */
   apiKey: string
   /** Set when the saved override exists but cannot be decrypted. */
   apiKeyError: string | null

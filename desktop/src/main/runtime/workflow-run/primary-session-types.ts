@@ -1,9 +1,11 @@
 import { CLAUDE_SESSION_FLAG_LEVELS } from '../../../shared/routing-table/routing-table-taxonomy'
+import { modelPinViolation } from '../../../shared/routing-table/model-pin-policy'
 
 /** Shared types, refusal codes and input checks for the pure primary-session launch helpers. */
 
 export const PRIMARY_SESSION_ACCESS_VALUES = ['read_only', 'workspace_write'] as const
 export type PrimarySessionAccess = (typeof PRIMARY_SESSION_ACCESS_VALUES)[number]
+export type PrimarySessionAgent = 'claude' | 'codex'
 
 /** The only two Claude Code permission modes the app may start a session in. */
 export const PRIMARY_PERMISSION_MODES = ['manual', 'acceptEdits'] as const
@@ -115,6 +117,28 @@ export function parseClaudeModelChoice(
     return primarySessionRefused(
       'autopilot_session_model_invalid',
       `The effort must be one of ${levels.join(', ')}.`
+    )
+  }
+  return primarySessionOk({ model, effort })
+}
+
+/** Availability already checked the provider's catalog; retain its exact model and effort. */
+export function parsePrimaryModelChoice(
+  agent: PrimarySessionAgent,
+  model: unknown,
+  effort: unknown
+): PrimarySessionResult<ClaudeModelChoice> {
+  if (agent === 'claude') {
+    return parseClaudeModelChoice(model, effort)
+  }
+  if (
+    typeof model !== 'string' ||
+    modelPinViolation(model) !== null ||
+    !isEffortIn(CLAUDE_EFFORT_LEVELS, effort)
+  ) {
+    return primarySessionRefused(
+      'autopilot_session_model_invalid',
+      'The coordinator needs an exact model and a resolved effort supported by its provider.'
     )
   }
   return primarySessionOk({ model, effort })

@@ -7,7 +7,7 @@ import { moveWorkflowRun } from '../workflow-run/primary-session-moves'
 import type { PrimarySessionRuntime } from '../workflow-run/primary-session-runtime'
 import type { PrimarySessionStopResult } from '../workflow-run/primary-session-stop'
 
-export type RunStopPort = Pick<PrimarySessionRuntime, 'stopPrimarySession'>
+export type RunStopPort = Pick<PrimarySessionRuntime, 'stopPrimarySession' | 'stopRunWorkers'>
 
 export type RunStopOutcome = {
   readonly run: WorkflowRunRecord
@@ -63,11 +63,13 @@ export async function stopWorkflowRunForCancel(
     )
   }
   if (TERMINAL.has(run.status)) {
+    await control().stopRunWorkers?.(runId)
     return { run, changed: false }
   }
   if (getPrimarySessionStore(owner).findLiveByRun(runId)) {
     requireStopped(await control().stopPrimarySession(runId, reason))
   }
+  await control().stopRunWorkers?.(runId)
   const ended = moveWorkflowRun(owner, runId, 'canceled', reason, new Date().toISOString()) ?? run
   return { run: ended, changed: ended.status === 'canceled' }
 }

@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { translate } from '@/i18n/i18n'
 import { UsageRosterPanel } from './UsageRosterPanel'
-import { getUsageProviderAccountsSectionId } from './usage-provider-settings-target'
 import {
   STATUS_BAR_CONTEXT_MENU_EXEMPT_PROPS,
   shouldOpenStatusBarContextMenu
@@ -23,12 +22,13 @@ import { CaffeinateStatusSegment } from './CaffeinateStatusSegment'
 import { RemoteServerUpdateStatusSegment } from './RemoteServerUpdateStatusSegment'
 import { TOGGLE_FLOATING_TERMINAL_EVENT } from '@/lib/floating-terminal'
 import { FloatingTerminalIconContextMenu } from '@/components/floating-terminal/FloatingTerminalIconContextMenu'
+import { ClaudeSwitcherMenu } from './ClaudeSwitcherMenu'
 import { CodexSwitcherMenu } from './CodexSwitcherMenu'
-import { ProviderDetailsMenu, CLOSE_ALL_CONTEXT_MENUS_EVENT } from './ProviderDetailsMenu'
+import { ProviderDetailsMenu } from './ProviderDetailsMenu'
+import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
 import { ProviderSegment, UsageOverflowChip, getUsageTone } from './StatusBarProviderSegment'
 import { useStatusBarController } from './use-status-bar-controller'
 import { StatusBarVisibilityMenu } from './StatusBarVisibilityMenu'
-import { usageRowMenuKind } from './status-bar-usage-row-menu'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 
 const PetStatusSegment = lazyWithRetry(() =>
@@ -61,6 +61,7 @@ export function StatusBarSurface({
     anyFetching,
     anyVisible,
     barRef,
+    canSignInFromUsageRow,
     collapseUsage,
     collapsedUsageProviders,
     compact,
@@ -189,13 +190,25 @@ export function StatusBarSurface({
                     onRefresh={handleRefresh}
                     onOpenProvider={handleOpenProviderAccounts}
                     onSignIn={handleOpenProviderAccounts}
-                    canSignIn={(provider) => getUsageProviderAccountsSectionId(provider) !== null}
+                    canSignIn={canSignInFromUsageRow}
                     onManageAccounts={handleManageAccounts}
                     onUsageDetails={handleUsageDetails}
                     renderRow={(p, rowNode) => {
-                      // Every provider drills into its detail panel; Codex additionally gets
-                      // its account switcher and runtime toggle.
-                      if (usageRowMenuKind(p.provider) === 'codex-switcher') {
+                      // Every provider drills into its detail panel (parity with the
+                      // per-provider dropdowns on main); Claude/Codex additionally get
+                      // the account switcher + runtime toggle + Codex reset credits.
+                      if (p.provider === 'claude') {
+                        return (
+                          <ClaudeSwitcherMenu
+                            claude={p}
+                            compact={compact}
+                            iconOnly={false}
+                            asSubmenu
+                            triggerContent={rowNode}
+                          />
+                        )
+                      }
+                      if (p.provider === 'codex') {
                         return (
                           <CodexSwitcherMenu
                             codex={p}
@@ -296,7 +309,7 @@ export function StatusBarSurface({
                   >
                     <PanelsTopLeft className="size-3.5" />
                     {showFloatingWorkspaceAttentionDot ? (
-                      // Why: amber = Orca's "needs attention" convention; ring matches the fill so the dot reads on the icon.
+                      // Why: amber = NASH's "needs attention" convention; ring matches the fill so the dot reads on the icon.
                       <span
                         aria-hidden
                         data-floating-terminal-attention

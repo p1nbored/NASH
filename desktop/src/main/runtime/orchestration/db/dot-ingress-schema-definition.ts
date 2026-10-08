@@ -10,6 +10,7 @@ import {
   DOT_SUBMISSION_FAILURES
 } from '../../../../shared/dot-ingress/dot-ingress-limits'
 import { DOT_REQUEST_STATES } from '../../../../shared/dot-ingress/dot-ingress-status-text'
+import { DOT_WORKSPACE_ACCESS_DEFINITION } from './dot-ingress-workspace-access'
 import { sqlStringList } from './autopilot-run-schema-definition'
 
 export type DotIngressSchemaDefinition = { readonly name: string; readonly sql: string }
@@ -58,6 +59,7 @@ export const DOT_INGRESS_SCHEMA_DEFINITIONS = [
       updated_at TEXT NOT NULL
     )`
   },
+  { name: 'dot_ingress_workspace_access', sql: DOT_WORKSPACE_ACCESS_DEFINITION },
   {
     name: 'dot_ingress_requests',
     sql: `CREATE TABLE dot_ingress_requests (
@@ -75,7 +77,6 @@ export const DOT_INGRESS_SCHEMA_DEFINITIONS = [
       span_count INTEGER NOT NULL CHECK (span_count BETWEEN 0 AND 32),
       scan_rules TEXT NOT NULL CHECK (json_valid(scan_rules) AND substr(scan_rules, 1, 1) = '[' AND length(scan_rules) <= 2048),
       requested_access TEXT NOT NULL CHECK (requested_access IN (${sqlStringList(DOT_REQUEST_ACCESS_LEVELS)})),
-      deliverable_language TEXT CHECK (deliverable_language IS NULL OR length(deliverable_language) BETWEEN 2 AND 35),
       reply_correlation_id TEXT CHECK (reply_correlation_id IS NULL OR length(reply_correlation_id) BETWEEN 1 AND 128),
       client_name TEXT CHECK (client_name IS NULL OR length(client_name) BETWEEN 1 AND 64),
       client_version TEXT CHECK (client_version IS NULL OR length(client_version) BETWEEN 1 AND 32),

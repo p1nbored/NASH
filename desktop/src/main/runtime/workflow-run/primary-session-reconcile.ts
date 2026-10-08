@@ -38,13 +38,13 @@ export type PrimarySessionReconcileReport = {
 }
 
 /** A starting owner: adopt what Orca's ledger proves started, close what it proves failed, else unknown. */
-function reconcileStarting(
+async function reconcileStarting(
   deps: PrimarySessionReconcileDeps,
   owner: PrimarySessionRecord,
   report: PrimarySessionReconcileReport,
   timestamp: string
-): void {
-  const row = deps.ledger.read(owner.launchOperationId)
+): Promise<void> {
+  const row = await deps.ledger.read(owner.launchOperationId)
   if (row.kind === 'failed') {
     moveOwner(deps.db, owner.ownerId, 'stopped', 'launch_failed_no_effects', timestamp)
     report.failedLaunches += 1
@@ -169,11 +169,9 @@ export async function reconcilePrimarySessions(
   }
   const sessions = getPrimarySessionStore(deps.db)
   for (const owner of sessions.listLive(RECONCILE_LIMIT)) {
-    if (owner.state === 'starting') {
-      reconcileStarting(deps, owner, report, timestamp)
-    } else {
-      await reconcileLive(deps, owner, report, timestamp)
-    }
+    await (owner.state === 'starting'
+      ? reconcileStarting(deps, owner, report, timestamp)
+      : reconcileLive(deps, owner, report, timestamp))
   }
   reconcileLaunchingRuns(deps, timestamp)
   report.endedRuns = endRunsOfExitedOwners(deps, timestamp)

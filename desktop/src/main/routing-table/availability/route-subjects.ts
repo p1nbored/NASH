@@ -13,20 +13,24 @@ import type { RouteSubject } from './route-availability-types'
 export function subjectForRoute(route: Route, coordinator: Coordinator): RouteSubject {
   const inheritsModel = route.model === INHERIT
   const inheritsLevel = route.reasoning_level === INHERIT
-  return {
-    target: route.execution_target,
+  const fields = {
     model: inheritsModel ? coordinator.model : route.model,
     reasoningLevel:
       route.reasoning_level === INHERIT ? coordinator.reasoning_level : route.reasoning_level,
     requirement: route.reasoning_requirement,
     inheritsCoordinator: inheritsModel && inheritsLevel
   }
+  const target = route.execution_target
+  return target === 'claude_primary' || target === 'claude_workflow' || target === 'claude_subagent'
+    ? { ...fields, target, primaryAgent: coordinator.agent }
+    : { ...fields, target }
 }
 
 /** The primary session's own launch configuration, which `inherit` rows resolve to. */
 export function subjectForCoordinator(coordinator: Coordinator): RouteSubject {
   return {
     target: 'claude_primary',
+    primaryAgent: coordinator.agent,
     model: coordinator.model,
     reasoningLevel: coordinator.reasoning_level,
     requirement: 'required',

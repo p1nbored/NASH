@@ -41,7 +41,7 @@ export type CodexManagedAccountSummary = {
 }
 
 /** Live, read-only identity of the user's real ~/.codex used by the
- *  system-default (activeAccountId:null) Codex account. Orca reads this to
+ *  system-default (activeAccountId:null) Codex account. NASH reads this to
  *  display and attribute the system default; it never writes ~/.codex. */
 export type CodexSystemDefaultIdentity = {
   /** True when ~/.codex/auth.json exists (signed in via a token file). */
@@ -69,7 +69,21 @@ export type CodexManagedAccountRuntimeSelection = {
   wsl: Record<string, string | null>
 }
 
-/** Wire shape only: Claude account switching is gone, so hosts publish an empty Claude roster. */
+export type ClaudeManagedAccount = {
+  id: string
+  email: string
+  managedAuthPath: string
+  managedAuthRuntime?: 'host' | 'wsl'
+  wslDistro?: string | null
+  wslLinuxAuthPath?: string | null
+  authMethod: 'subscription-oauth' | 'unknown'
+  organizationUuid?: string | null
+  organizationName?: string | null
+  createdAt: number
+  updatedAt: number
+  lastAuthenticatedAt: number
+}
+
 export type ClaudeManagedAccountSummary = {
   id: string
   email: string
@@ -81,12 +95,33 @@ export type ClaudeManagedAccountSummary = {
   createdAt: number
   updatedAt: number
   lastAuthenticatedAt: number
+  /** Its folder holds no login yet, e.g. an account saved by an older NASH; it needs a sign-in. */
+  needsSignIn?: true
+}
+
+/** A sign-in to a new account folder, or to a saved account's own when `accountId` is given. */
+export type ClaudeSignInRequest = {
+  accountId?: string
+  runtime?: 'host' | 'wsl'
+  wslDistro?: string | null
+}
+
+/** A sign-in in progress: `configDir` is the CLAUDE_CONFIG_DIR `claude auth login` runs against. */
+export type ClaudeAccountSignIn = {
+  accountId: string
+  configDir: string
+  runtime?: 'host' | 'wsl'
+  wslDistro?: string | null
 }
 
 export type ClaudeRateLimitAccountsState = {
   accounts: ClaudeManagedAccountSummary[]
   activeAccountId: string | null
   activeAccountIdsByRuntime?: ClaudeManagedAccountRuntimeSelection
+  /** The login System default holds, when the host can read it and accounts exist. */
+  systemDefaultEmail?: string
+  /** An older NASH's copy-based switching once wrote an account's login into System default. */
+  systemDefaultMayBeCopied?: boolean
 }
 
 export type ClaudeManagedAccountRuntimeSelection = {

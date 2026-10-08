@@ -67,9 +67,9 @@ describe('primary session store', () => {
       workspaceId: 'fixture-repo::/fixture/repo',
       workspaceBinding: FIXTURE_HASH_A,
       requestedAccess: 'read_only',
-      deliverableLanguage: null,
       routingTableVersion: 1,
       routingTableSha256: FIXTURE_HASH_B,
+      coordinatorAgent: 'claude',
       coordinatorModel: 'claude-opus-5-5',
       coordinatorEffort: 'max',
       timestamp: fixtureTime()
@@ -291,9 +291,9 @@ describe('primary session store', () => {
         workspaceId: 'fixture-repo::/fixture/repo',
         workspaceBinding: FIXTURE_HASH_A,
         requestedAccess: 'read_only',
-        deliverableLanguage: null,
         routingTableVersion: 1,
         routingTableSha256: FIXTURE_HASH_B,
+        coordinatorAgent: 'claude',
         coordinatorModel: 'claude-opus-5-5',
         coordinatorEffort: 'max',
         timestamp: fixtureTime(1)

@@ -68,7 +68,6 @@ export function submitInput(
     workspaceBinding: FIXTURE_BINDING,
     objective: FIXTURE_OBJECTIVE,
     requestedAccess: 'read_only',
-    deliverableLanguage: null,
     idempotencyKey: fixtureUuid(1),
     replyCorrelationId: null,
     client: null,

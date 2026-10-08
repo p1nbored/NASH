@@ -10,6 +10,7 @@ import {
 const pending = {
   decisionId: '5b8f6f2a-48b6-4d10-9f4b-0c5d1a0a3a11',
   dotRequestId: 'd059ca24-0f93-4c06-b317-dc2a95d6920b',
+  dotMayAllow: true,
   toolName: 'Bash',
   agentId: null,
   summary: 'Bash: git status',
@@ -116,11 +117,11 @@ describe('DotDecisionViewSchema', () => {
 describe('dot decision results', () => {
   it('lists at most 100 decisions', () => {
     expect(
-      DotDecisionsListResultSchema.safeParse({ contractVersion: 1, decisions: [pending] }).success
+      DotDecisionsListResultSchema.safeParse({ contractVersion: 3, decisions: [pending] }).success
     ).toBe(true)
     expect(
       DotDecisionsListResultSchema.safeParse({
-        contractVersion: 1,
+        contractVersion: 3,
         decisions: Array.from({ length: 101 }, () => pending)
       }).success
     ).toBe(false)
@@ -135,13 +136,13 @@ describe('dot decision results', () => {
     }
     for (const outcome of ['decided', 'already_decided']) {
       expect(
-        DotDecisionAnswerResultSchema.safeParse({ contractVersion: 1, outcome, decision: decided })
+        DotDecisionAnswerResultSchema.safeParse({ contractVersion: 3, outcome, decision: decided })
           .success
       ).toBe(true)
     }
     expect(
       DotDecisionAnswerResultSchema.safeParse({
-        contractVersion: 1,
+        contractVersion: 3,
         outcome: 'not_found',
         decision: decided
       }).success

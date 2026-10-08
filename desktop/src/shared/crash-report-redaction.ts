@@ -43,10 +43,11 @@ export function sanitizeCrashReportString(
   for (const pattern of PATH_PATTERNS) {
     sanitized = sanitized.replace(pattern, '[redacted-path]')
   }
-  return redactSecretShapes(sanitized, maxLength)
+  sanitized = redactSecretShapes(sanitized)
+  return sanitized.length > maxLength ? `${sanitized.slice(0, maxLength)}...` : sanitized
 }
 
-export function redactSecretShapes(value: string, maxLength = 500): string {
+export function redactSecretShapes(value: string): string {
   let sanitized = value
   sanitized = sanitized.replace(CREDENTIAL_URL_PATTERN, '[redacted-credential]@')
   sanitized = sanitized.replace(SECRET_ASSIGNMENT_PATTERN, (_match, key: string) => {
@@ -55,16 +56,7 @@ export function redactSecretShapes(value: string, maxLength = 500): string {
   for (const pattern of SECRET_PATTERNS) {
     sanitized = sanitized.replace(pattern, '[redacted-secret]')
   }
-  return sanitized.length > maxLength ? `${sanitized.slice(0, maxLength)}...` : sanitized
-}
-
-/** Preserve diagnostic rows while bounding untrusted messages within them. */
-export function sanitizeCopiedDiagnostics(value: string): string {
-  return redactSecretShapes(value, Number.POSITIVE_INFINITY)
-    .split(/\r?\n|\r/)
-    .map((line) => redactSecretShapes(line))
-    .join('\n')
-    .slice(0, 10_000)
+  return sanitized
 }
 
 export function sanitizeCrashReportDetails(

@@ -31,7 +31,6 @@ export function submittedView(runState = 'active') {
     sequence: 1,
     revision: 1,
     workspaceRef: WORKSPACE.workspaceRef,
-    deliverableLanguage: null,
     reply: null,
     createdAt: at(1),
     updatedAt: at(1),

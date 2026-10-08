@@ -8,9 +8,16 @@ import {
 } from './dot-ingress-limits'
 import {
   DotReplyMetadataSchema,
+  DotRequestAccessSchema,
   DotRequestIdSchema,
   DotWorkspaceRefSchema
 } from './dot-ingress-params'
+import { DOT_MESSAGE_TEXT_MAX_CHARS } from './dot-ingress-message'
+import {
+  DOT_VALIDATION_SUMMARY_MAX_CHARS,
+  DOT_VALIDATION_TITLE_MAX_CHARS
+} from './dot-ingress-validation'
+import { DOT_INGRESS_METHOD_NAMES } from './dot-ingress-versions'
 import { DOT_REQUEST_STATUS_TEXT } from './dot-ingress-status-text'
 
 // No dot-facing view has an objective: results become cloud context and the dot already holds its own text.
@@ -60,7 +67,7 @@ export const DotArtifactRefSchema = z
   })
   .strict()
 
-/** Reserved for an English run summary; null in v1 until decision N-10 is made. */
+/** Reserved for an English run summary; null until content release is enabled. */
 export const DotResultSchema = z.null()
 
 const requestFields = {
@@ -69,7 +76,7 @@ const requestFields = {
   sequence: WorkbenchPositiveIntegerSchema,
   revision: WorkbenchPositiveIntegerSchema,
   workspaceRef: DotWorkspaceRefSchema,
-  deliverableLanguage: DeliverableLanguageSchema.nullable(),
+  requestedAccess: DotRequestAccessSchema,
   reply: DotReplyMetadataSchema.nullable(),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
@@ -114,7 +121,7 @@ export function hasInvisibleLabelCharacter(label: string): boolean {
 
 /**
  * Label is user-chosen display text: capped, single-line, free of path separators and of
- * invisible characters. The last check is a refinement, so the frozen JSON Schemas stay unchanged.
+ * invisible characters. The last check is a refinement, so invisible text is rejected before publication.
  */
 export const DotWorkspaceLabelSchema = z
   .string()
@@ -125,7 +132,11 @@ export const DotWorkspaceLabelSchema = z
     message: DOT_WORKSPACE_LABEL_INVISIBLE_MESSAGE
   })
 export const DotWorkspaceViewSchema = z
-  .object({ workspaceRef: DotWorkspaceRefSchema, label: DotWorkspaceLabelSchema })
+  .object({
+    workspaceRef: DotWorkspaceRefSchema,
+    label: DotWorkspaceLabelSchema,
+    maxAccess: DotRequestAccessSchema
+  })
   .strict()
 
 export const DotSubmitResultSchema = z
@@ -167,7 +178,12 @@ export const DotWorkspacesResultSchema = z
 export const DotHelloResultSchema = z
   .object({
     contractVersion: ContractVersionSchema,
-    supportedContractVersions: z.tuple([z.literal(1)]),
+    supportedContractVersions: z.tuple([z.literal(DOT_INGRESS_CONTRACT_VERSION)]),
+    methods: z
+      .array(z.enum(DOT_INGRESS_METHOD_NAMES))
+      .min(1)
+      .max(DOT_INGRESS_METHOD_NAMES.length)
+      .refine((names) => new Set(names).size === names.length, 'Method names must be unique'),
     limits: z
       .object({
         maxObjectiveChars: z.number().int().positive(),
@@ -176,20 +192,19 @@ export const DotHelloResultSchema = z
         /** The user's current caps, which the user can change. */
         maxSubmissionsPerMinute: z.number().int().positive(),
         maxSubmissionsPerUtcDay: z.number().int().positive(),
-        maxDecisionSummaryChars: z.number().int().positive()
+        maxDecisionSummaryChars: z.number().int().positive(),
+        maxMessageChars: z.literal(DOT_MESSAGE_TEXT_MAX_CHARS),
+        maxValidationTitleChars: z.literal(DOT_VALIDATION_TITLE_MAX_CHARS),
+        maxValidationSummaryChars: z.literal(DOT_VALIDATION_SUMMARY_MAX_CHARS)
       })
       .strict(),
     capabilities: z
       .object({
-        submit: z.literal(true),
-        status: z.literal(true),
-        list: z.literal(true),
-        cancel: z.literal(true),
-        decisions: z.literal(true),
         /** A valid request starts without any confirmation step in the app. */
         startsWithoutConfirmation: z.literal(true),
         results: z.literal(false),
-        artifacts: z.literal(false)
+        artifacts: z.literal(false),
+        validationDecisions: z.literal(true)
       })
       .strict()
   })

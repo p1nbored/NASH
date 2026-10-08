@@ -14,7 +14,7 @@ import {
 } from './dot-ingress.test-fixture'
 
 // The per-workspace access ceiling (default read_only, set when the user enables a workspace for dot).
-// Absent means read_only, so the table is created only once a user raises a ceiling.
+// The current schema always includes the access table.
 
 function tableExists(owner: OrchestrationDb): boolean {
   return (
@@ -41,12 +41,12 @@ describe('dot ingress workspace access ceiling', () => {
     })
   }
 
-  it('defaults to read_only and creates nothing for a default ceiling', () => {
+  it('stores a read_only ceiling by default', () => {
     const { workspace } = enable()
     expect(getDotIngressSettingsStore(owner).getWorkspaceMaxAccess(workspace.workspaceRef)).toBe(
       'read_only'
     )
-    expect(tableExists(owner)).toBe(false)
+    expect(tableExists(owner)).toBe(true)
   })
 
   it('reads read_only for a workspace reference it never saw', () => {
@@ -117,11 +117,13 @@ describe('dot ingress workspace access ceiling', () => {
   })
 
   it('rolls the enable back when the ceiling cannot be stored', () => {
+    const store = getDotIngressSettingsStore(owner)
+    owner.db.exec('DROP TABLE dot_ingress_workspace_access')
     owner.db.exec('CREATE TABLE dot_ingress_workspace_access (workspace_ref TEXT)')
     expect(errorCodeOf(() => enable({ maxAccess: 'workspace_write' }))).toBe(
       'dot_recovery_required'
     )
-    expect(getDotIngressSettingsStore(owner).listWorkspaces()).toEqual([])
+    expect(store.listWorkspaces()).toEqual([])
   })
 
   it('refuses a malformed reference on read', () => {

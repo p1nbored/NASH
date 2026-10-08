@@ -176,3 +176,14 @@ describe('narrowStructuredLaunchSeedOptions', () => {
     expect(narrowStructuredLaunchSeedOptions(values as never)).toBeUndefined()
   })
 })
+
+it('keeps a routed task access ceiling in native structured seed options', () => {
+  expect(
+    narrowStructuredLaunchSeedOptions({
+      model: 'fixture-model',
+      effort: 'max',
+      taskAccess: 'read_only'
+    })
+  ).toEqual({ model: 'fixture-model', effort: 'max', taskAccess: 'read_only' })
+  expect(narrowStructuredLaunchSeedOptions({ taskAccess: 'danger-full-access' })).toBeUndefined()
+})

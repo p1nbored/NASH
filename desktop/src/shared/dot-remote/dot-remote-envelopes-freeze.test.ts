@@ -4,7 +4,7 @@ import { DOT_REMOTE_ENDPOINTS, buildDotRemoteEndpointTable } from './dot-remote-
 import { DOT_REMOTE_ENVELOPE_FAMILIES } from './dot-remote-envelope-families'
 import { closedObjectViolations, propertyNames } from './dot-remote-json-schema-walk.test-fixture'
 
-// Hosted envelope freeze (RG2, RG6): generated like the v1 and v2 contract goldens. Codex builds the
+// Hosted envelope freeze (RG2, RG6): generated like the current ingress contract golden. Codex builds the
 // Site from these files and never hand-writes a schema; a change here is a deliberate contract edit.
 
 const FAMILIES = Object.entries(DOT_REMOTE_ENVELOPE_FAMILIES)

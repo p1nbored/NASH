@@ -1,7 +1,6 @@
 import type { ExecutionTarget } from '../../../shared/routing-table/routing-table-taxonomy'
 import { isCliCommandName } from '../../../shared/workflow-run/autopilot-cli-commands'
 import type { OrchestrationDb } from '../orchestration/db'
-import type { MessageRow } from '../orchestration/types'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { AppAttemptStartInput } from '../orchestration/db/app-attempt-input'
 import {
@@ -10,18 +9,15 @@ import {
 } from '../orchestration/db/app-attempt-settlement'
 import { getTaskSpecStore, type TaskSpecRecord } from '../orchestration/db/task-spec-store'
 import { getWorkflowRunStore, type WorkflowRunRecord } from '../orchestration/db/workflow-run-store'
-import type { ExecutorRegistry } from './executor-registry'
 import { startInSessionAttempt } from './in-session-task-executor'
-import { launchProcessAttempt } from './process-attempt-launch'
-import type { ProcessTaskExecutor, TaskExecutorKind } from './process-executor-contract'
-import { processInstruction, type InSessionTarget } from './task-start-instruction'
+import type { InSessionTarget } from './task-start-instruction'
 import {
   recheckTaskRoute,
   type CheckedRoute,
   type DelegatedRoute,
   type RouteRecheckPort
 } from './task-start-route'
-import type { ProcessAttemptPorts, TaskExecutionLogEvent } from './task-execution-ports'
+import type { AttemptSettlementPorts, TaskExecutionLogEvent } from './task-execution-ports'
 
 /** What D1's task-start passes after it attested the caller as the run's primary. */
 export type TaskStartInput = Pick<
@@ -38,6 +34,7 @@ export type TaskStartView = {
   /** False for a task the classification kept with the primary (U29): it runs the attempt itself. */
   readonly delegated: boolean
   readonly runsIn: 'session' | 'process'
+  readonly nativeWorker?: true
   readonly taskStatus: string
   readonly workerState: string
   /** English: who runs the attempt and how its result comes back. */
@@ -53,21 +50,15 @@ export type TaskStart = {
 export type TaskStartService = { startTask(input: TaskStartInput): Promise<TaskStart> }
 
 export type TaskStartDeps = {
+  readonly startWorker: (input: TaskStartInput, route: DelegatedRoute) => Promise<TaskStart>
   readonly owner: OrchestrationDb
   readonly routes: RouteRecheckPort
-  readonly executors: Readonly<Record<TaskExecutorKind, ProcessTaskExecutor>>
-  readonly registry: ExecutorRegistry
   readonly now: () => number
   readonly cliCommand: string
-  readonly announce: (message: MessageRow) => void
   readonly log: (event: TaskExecutionLogEvent) => void
 }
 
 const SETTLED: Promise<void> = Promise.resolve()
-
-function processKindOf(target: ExecutionTarget): TaskExecutorKind | null {
-  return target === 'codex_cli' || target === 'agy_cli' ? target : null
-}
 
 function liveRun(
   owner: OrchestrationDb,
@@ -87,30 +78,12 @@ function liveRun(
   return { spec, run }
 }
 
-/** The objective Orca holds for the task; a process never starts once the task row is gone. */
-function requireObjective(owner: OrchestrationDb, taskId: string): string {
-  const task = owner.getTask(taskId)
-  if (!task) {
-    throw new OrchestrationError('autopilot_task_not_found', 'The task was not found.')
-  }
-  return task.spec
-}
-
 // Why: Orca restarts a failed or blocked task only from its latest attempt, which the primary never names.
 function retryOfFor(owner: OrchestrationDb, taskId: string): string | undefined {
   const status = owner.getTask(taskId)?.status
   return status === 'failed' || status === 'blocked'
     ? owner.getDispatchContext(taskId)?.id
     : undefined
-}
-
-function stricterAccess(
-  spec: TaskSpecRecord,
-  run: WorkflowRunRecord
-): TaskSpecRecord['accessNeed'] {
-  return spec.accessNeed === 'read_only' || run.requestedAccess === 'read_only'
-    ? 'read_only'
-    : 'workspace_write'
 }
 
 /** Where the attempt goes: a delegated route's target, or the primary itself for a task it keeps. */
@@ -154,7 +127,7 @@ type Started = {
 }
 
 function startInSession(
-  ports: ProcessAttemptPorts,
+  ports: AttemptSettlementPorts,
   started: Started,
   route: CheckedRoute
 ): TaskStart {
@@ -172,60 +145,13 @@ function startInSession(
   }
 }
 
-async function startProcess(
-  ports: ProcessAttemptPorts,
-  executor: ProcessTaskExecutor,
-  started: Started & { readonly objective: string },
-  route: DelegatedRoute
-): Promise<TaskStart> {
-  const { spec, run, dispatchId } = started
-  const launch = await launchProcessAttempt(
-    ports,
-    executor,
-    {
-      dispatchId,
-      runId: run.runId,
-      taskId: spec.taskId,
-      workspaceId: run.workspaceId,
-      access: stricterAccess(spec, run),
-      cli: { model: route.availability.cli.model, effort: route.availability.cli.effort },
-      prompt: {
-        taskId: spec.taskId,
-        dispatchId,
-        objective: started.objective,
-        expectedOutputs: spec.expectedOutputs,
-        acceptanceCriteria: spec.acceptanceCriteria,
-        constraints: spec.constraints
-      }
-    },
-    route.subject
-  )
-  const instruction = processInstruction({
-    taskId: spec.taskId,
-    dispatchId,
-    cliCommand: ports.cliCommand,
-    kind: executor.kind,
-    // A start that never ran says nothing about where it would have written.
-    placement: launch.placement ?? { mode: 'run_workspace' }
-  })
-  return {
-    view: viewOf(launch.view, placementOf(route), 'process', instruction),
-    settled: launch.settled
-  }
-}
-
-/**
- * The primary's explicit `task-start` (U19): re-check the route, open Orca's attempt through the app's
- * settlement, then declare an in-session worker (a delegated Claude route, or a task the primary
- * keeps, U29) or launch the Codex or agy child.
- */
 export function createTaskStartService(deps: TaskStartDeps): TaskStartService {
   if (!isCliCommandName(deps.cliCommand)) {
     throw new RangeError('The CLI command name must be one bare word.')
   }
   const settlement = getAppAttemptSettlement(deps.owner)
   const timestamp = (): string => new Date(deps.now()).toISOString()
-  const ports: ProcessAttemptPorts = { ...deps, settlement, timestamp }
+  const ports: AttemptSettlementPorts = { ...deps, settlement, timestamp }
 
   async function startTask(input: TaskStartInput): Promise<TaskStart> {
     const { spec, run } = liveRun(deps.owner, input.taskId)
@@ -238,20 +164,26 @@ export function createTaskStartService(deps: TaskStartDeps): TaskStartService {
         workflowName: spec.workflowName
       }
     )
-    const kind = route.kind === 'delegated' ? processKindOf(route.target) : null
-    // Why before the start: a refusal here leaves no attempt open.
-    const objective = kind === null ? null : requireObjective(deps.owner, spec.taskId)
+    if (
+      route.kind === 'delegated' &&
+      (route.target === 'codex_cli' ||
+        route.target === 'agy_cli' ||
+        (route.target === 'claude_subagent' && run.coordinatorAgent === 'codex'))
+    ) {
+      return deps.startWorker(
+        { ...input, retryOf: input.retryOf ?? retryOfFor(deps.owner, input.taskId) },
+        route
+      )
+    }
     const attempt = settlement.start({
       ...input,
       retryOf: input.retryOf ?? retryOfFor(deps.owner, input.taskId),
       routeId: route.routeId,
-      executor: kind ?? 'in_session',
+      executor: 'in_session',
       timestamp: timestamp()
     })
     const started = { spec, run, dispatchId: attempt.dispatchId }
-    return route.kind === 'delegated' && kind !== null && objective !== null
-      ? startProcess(ports, deps.executors[kind], { ...started, objective }, route)
-      : startInSession(ports, started, route)
+    return startInSession(ports, started, route)
   }
 
   return { startTask }

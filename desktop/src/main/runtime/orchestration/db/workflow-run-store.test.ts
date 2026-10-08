@@ -18,9 +18,9 @@ const runInput = (overrides: Partial<WorkflowRunCreate> = {}): WorkflowRunCreate
   workspaceId: 'fixture-repo::/fixture/repo',
   workspaceBinding: FIXTURE_HASH_A,
   requestedAccess: 'read_only',
-  deliverableLanguage: null,
   routingTableVersion: 1,
   routingTableSha256: FIXTURE_HASH_B,
+  coordinatorAgent: 'claude',
   coordinatorModel: 'claude-opus-5-5',
   coordinatorEffort: 'max',
   timestamp: fixtureTime(),
@@ -41,14 +41,14 @@ describe('workflow run store', () => {
   it('is one store per database and creates the schema on first use', () => {
     expect(getWorkflowRunStore(owner)).toBe(store)
     expect(owner.db.prepare('SELECT version FROM autopilot_runtime_schema').get()).toEqual({
-      version: 1
+      version: 2
     })
   })
 
   describe('create', () => {
     it('records a launching run at revision 1 without touching Orca runs', () => {
       const orcaBefore = orcaRunCount()
-      const result = store.create(runInput({ deliverableLanguage: 'zh-Hans' }))
+      const result = store.create(runInput())
       expect(result.duplicate).toBe(false)
       expect(result.run).toEqual({
         runId: 'run_fixture01',
@@ -58,7 +58,7 @@ describe('workflow run store', () => {
         status: 'launching',
         revision: 1,
         requestedAccess: 'read_only',
-        deliverableLanguage: 'zh-Hans',
+        coordinatorAgent: 'claude',
         routingTableVersion: 1,
         routingTableSha256: FIXTURE_HASH_B,
         coordinatorModel: 'claude-opus-5-5',
@@ -71,6 +71,17 @@ describe('workflow run store', () => {
       expect(orcaRunCount()).toBe(orcaBefore)
       expect(store.get('run_fixture01')).toEqual(result.run)
       expect(store.getByRequestId('request_fixture01')).toEqual(result.run)
+    })
+
+    it('pins Codex for a new run', () => {
+      const result = store.create(
+        runInput({
+          coordinatorAgent: 'codex',
+          coordinatorModel: 'gpt-6.1-sol'
+        })
+      )
+      expect(result.run).toMatchObject({ coordinatorAgent: 'codex' })
+      expect(store.get(result.run.runId)?.coordinatorAgent).toBe('codex')
     })
 
     it('returns the existing run for a repeated request instead of starting another', () => {
@@ -92,7 +103,8 @@ describe('workflow run store', () => {
       ['a run id with spaces', { runId: 'run fixture' }],
       ['a binding that is empty', { workspaceBinding: '' }],
       ['an unknown access level', { requestedAccess: 'admin' }],
-      ['a language tag that is too short', { deliverableLanguage: 'z' }],
+      ['a missing primary agent', { coordinatorAgent: undefined }],
+      ['an unknown primary agent', { coordinatorAgent: 'antigravity' }],
       ['a table version of zero', { routingTableVersion: 0 }],
       ['a table hash that is not sha256 hex', { routingTableSha256: 'not-a-hash' }],
       ['an upper-case table hash', { routingTableSha256: 'A'.repeat(64) }],

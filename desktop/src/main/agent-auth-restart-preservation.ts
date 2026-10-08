@@ -7,7 +7,6 @@ type CodexRuntimeAuthSync = Pick<CodexRuntimeHomeService, 'syncForCurrentSelecti
   Partial<Pick<CodexRuntimeHomeService, 'syncActiveWslSelectionsBeforeRestart'>>
 type ShutdownStore = Pick<Store, 'flushPendingOrThrowAsync'>
 
-// Why no Claude step: Claude runs on the user's own login, so there is no Claude auth to preserve.
 type AuthPreservationStep = 'Codex auth preservation' | 'Store persistence'
 
 export type AgentAuthRestartPreservationOptions = {

@@ -10,7 +10,7 @@ const workspaceUnavailable = (): string =>
   translate('workbench.error.workspaceUnavailable', 'This workspace is not available here.')
 const runGone = (): string => translate('workbench.error.runGone', 'This run no longer exists.')
 const sessionNotRunning = (): string =>
-  translate('workbench.error.sessionNotRunning', 'The Claude Code session is not running.')
+  translate('workbench.error.sessionNotRunning', 'The primary session is not running.')
 const attemptGone = (): string =>
   translate('workbench.error.attemptGone', 'This attempt no longer exists.')
 const invalidInput = (): string =>

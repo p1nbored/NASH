@@ -65,10 +65,9 @@ export function buildCapabilitySettingsSections({
         'auto.hooks.useSettingsNavigationMetadata.f70ac54d38',
         'AI Provider Accounts'
       ),
-      // Why: Claude Code always uses your own login (D-030) and usage comes from the CLIs (D-029).
       description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.accountsDescription',
-        'Optional. Switch between saved accounts for Codex, Antigravity and other CLIs, and check their usage.'
+        'auto.hooks.useSettingsNavigationMetadata.b1c2f8b0ac',
+        'Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.'
       ),
       icon: UserCog,
       searchEntries: getAccountsPaneSearchEntries(),

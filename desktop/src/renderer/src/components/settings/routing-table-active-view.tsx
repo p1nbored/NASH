@@ -22,6 +22,7 @@ import { CoordinatorChoiceEditor, RouteChoiceEditor } from './routing-table-inli
 import {
   executionTargetLabel,
   inheritsCoordinator,
+  primaryAgentLabel,
   reasoningLevelLabel,
   reviewerTargetLabel,
   routeEffortLabel,
@@ -213,7 +214,7 @@ function RoutingTableTaskListEditor({
 
   const coordinatorLabel = translate(
     'auto.components.settings.routingTable.inline.coordinator',
-    'Coordinator'
+    'Primary'
   )
   return (
     <div className="space-y-group">
@@ -228,7 +229,7 @@ function RoutingTableTaskListEditor({
           label={coordinatorLabel}
           summary={
             <ChoiceSummary
-              agent={executionTargetLabel('claude_primary')}
+              agent={primaryAgentLabel(table.coordinator.agent)}
               model={table.coordinator.model}
               effort={reasoningLevelLabel(table.coordinator.reasoning_level)}
             />

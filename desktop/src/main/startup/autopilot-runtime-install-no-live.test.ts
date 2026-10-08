@@ -68,6 +68,7 @@ function recordingHostPorts(touched: string[]): AutopilotHostPorts {
     throw new Error(`FIXTURE_ONLY: ${name} must not run while the app starts.`)
   }
   return {
+    reviewer: { resolveInvocation: refuse('reviewer.resolveInvocation') },
     agents: {
       detectInstalled: refuse('agents.detectInstalled'),
       disabled: refuse('agents.disabled')

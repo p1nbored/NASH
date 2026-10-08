@@ -187,7 +187,7 @@ safety floor, use that command's `--help`, and never guess newer flags.
 
 | Action gate                                                                                                   | Bundled reference                         |
 | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Expanded DAG waves, launch model/effort, same-terminal reuse, or review ownership                             | `references/supervised-waves.md`          |
+| Expanded DAG waves, launch model/effort, same-terminal reuse, or review ownership                             | `references/coordinator-loop.md`          |
 | You are a dispatched worker and the live preamble does not answer your question, or `check` returned an error | `references/worker-contract.md`           |
 | New worktree, exact workspace, SSH, WSL, or connected-server placement                                        | `references/placement-and-remote.md`      |
 | Inbox replay, follow-up messages, group addresses, or decision gates                                          | `references/messaging-and-gates.md`       |

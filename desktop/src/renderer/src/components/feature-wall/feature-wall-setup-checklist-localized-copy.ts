@@ -12,11 +12,11 @@ const getLocalizedFeatureWallSetupChecklistCopyById = createLocalizedCatalog(
     'claude-code': {
       name: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.claudeCodeName',
-        'Set up Claude Code'
+        'Set up a primary agent'
       ),
       description: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.claudeCodeDescription',
-        'NASH runs every task through a Claude Code session. Install Claude Code and sign in once from a terminal.'
+        'Install Claude Code or Codex for the primary session, then sign in from a terminal.'
       )
     },
     clef: {

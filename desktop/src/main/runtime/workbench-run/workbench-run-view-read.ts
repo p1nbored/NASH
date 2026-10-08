@@ -88,9 +88,12 @@ export function workflowRunView(
     status: run.status,
     revision: run.revision,
     requestedAccess: run.requestedAccess,
-    deliverableLanguage: run.deliverableLanguage,
     routingTable: { version: run.routingTableVersion, sha256: run.routingTableSha256 },
-    coordinator: { model: run.coordinatorModel, effort: run.coordinatorEffort },
+    coordinator: {
+      agent: run.coordinatorAgent,
+      model: run.coordinatorModel,
+      effort: run.coordinatorEffort
+    },
     endReason: run.endReason,
     createdAt: run.createdAt,
     updatedAt: run.updatedAt,

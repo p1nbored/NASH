@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import {
   CONCRETE_REASONING_LEVELS,
-  EXECUTION_TARGETS,
   REASONING_REQUIREMENTS,
   type ExecutionTarget
 } from '../../../shared/routing-table/routing-table-taxonomy'
@@ -17,6 +16,7 @@ import type { OrchestrationDb } from '../orchestration/db'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import { JsonObjectSchema, type JsonObject } from '../orchestration/db/autopilot-json-column'
 import { parseAutopilotInput } from '../orchestration/db/autopilot-store-input'
+import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { getTaskClassificationStore } from '../orchestration/db/task-classification-store'
 import { getTaskRouteStore, type TaskRouteRecord } from '../orchestration/db/task-route-store'
@@ -49,16 +49,23 @@ const IN_SESSION: readonly ExecutionTarget[] = [
 
 const PROCESS_TARGETS: readonly ExecutionTarget[] = ['codex_cli', 'agy_cli']
 
+const SubjectFields = {
+  model: z.string().min(1).max(128),
+  reasoningLevel: z.enum(CONCRETE_REASONING_LEVELS),
+  requirement: z.enum(REASONING_REQUIREMENTS),
+  inheritsCoordinator: z.boolean()
+}
 const StoredSubjectSchema = z.object({
-  subject: z
-    .object({
-      target: z.enum(EXECUTION_TARGETS),
-      model: z.string().min(1).max(128),
-      reasoningLevel: z.enum(CONCRETE_REASONING_LEVELS),
-      requirement: z.enum(REASONING_REQUIREMENTS),
-      inheritsCoordinator: z.boolean()
-    })
-    .strict()
+  subject: z.discriminatedUnion('target', [
+    z
+      .object({
+        ...SubjectFields,
+        target: z.enum(['claude_primary', 'claude_subagent', 'claude_workflow']),
+        primaryAgent: z.enum(['claude', 'codex'])
+      })
+      .strict(),
+    z.object({ ...SubjectFields, target: z.enum(['codex_cli', 'agy_cli']) }).strict()
+  ])
 })
 
 function refuse(code: string, message: string, data?: unknown): never {
@@ -105,7 +112,16 @@ function targetedRoute(route: TaskRouteRecord): TargetedRoute {
 // Why: D-020 lets an in-session route inherit the login of the run's own primary only while it is live.
 function liveRunPrimary(owner: OrchestrationDb, runId: string): LiveRunPrimary | null {
   const session = getPrimarySessionStore(owner).findLiveByRun(runId)
-  return session?.state === 'running' ? { runId, ownerId: session.ownerId } : null
+  const run = getWorkflowRunStore(owner).get(runId)
+  return session?.state === 'running' && run !== null
+    ? {
+        runId,
+        ownerId: session.ownerId,
+        agent: run.coordinatorAgent,
+        model: run.coordinatorModel,
+        effort: run.coordinatorEffort
+      }
+    : null
 }
 
 function toJsonObject(value: unknown, what: string): JsonObject {
@@ -210,7 +226,25 @@ export async function recheckTaskRoute(
   if (stored.status === 'not_delegated') {
     return { kind: 'kept_by_primary', routeId: stored.routeId }
   }
-  const { route, subject, taskType } = storedRoute(deps.owner, stored, input)
+  const { route, subject: recordedSubject, taskType } = storedRoute(deps.owner, stored, input)
+  const run = getWorkflowRunStore(deps.owner).get(input.runId)
+  if (run === null) {
+    return refuse('autopilot_run_not_found', 'The run was not found.')
+  }
+  const inherited = route.target === 'claude_primary' || route.target === 'claude_workflow'
+  const subject: RouteSubject =
+    recordedSubject.target === 'claude_primary' ||
+    recordedSubject.target === 'claude_workflow' ||
+    recordedSubject.target === 'claude_subagent'
+      ? {
+          ...recordedSubject,
+          primaryAgent: run.coordinatorAgent,
+          ...(inherited && route.model === null ? { model: run.coordinatorModel } : {}),
+          ...(inherited && route.policyLevel === 'inherit'
+            ? { reasoningLevel: run.coordinatorEffort }
+            : {})
+        }
+      : recordedSubject
   const result = await deps.routes.recheck(subject, {
     workspace: { workspaceId: input.workspaceId },
     liveRunPrimary: IN_SESSION.includes(route.target)

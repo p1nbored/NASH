@@ -6,7 +6,11 @@ import {
 } from '../../../shared/routing-table/routing-table-schema'
 import { subjectForCoordinator, subjectForReviewer, subjectForRoute } from './route-subjects'
 
-const COORDINATOR: Coordinator = { model: 'claude-opus-5-5', reasoning_level: 'max' }
+const COORDINATOR: Coordinator = {
+  agent: 'claude',
+  model: 'claude-opus-5-5',
+  reasoning_level: 'max'
+}
 
 function route(fields: Record<string, unknown>) {
   return RouteSchema.parse({ task_type: 'software_engineering', ...fields })
@@ -22,6 +26,7 @@ describe('subjectForRoute', () => {
     })
     expect(subjectForRoute(row, COORDINATOR)).toEqual({
       target: 'claude_primary',
+      primaryAgent: 'claude',
       model: 'claude-opus-5-5',
       reasoningLevel: 'max',
       requirement: 'required',
@@ -38,6 +43,7 @@ describe('subjectForRoute', () => {
     })
     expect(subjectForRoute(row, COORDINATOR)).toMatchObject({
       target: 'claude_workflow',
+      primaryAgent: 'claude',
       model: 'claude-opus-5-5',
       reasoningLevel: 'max',
       inheritsCoordinator: true
@@ -52,6 +58,7 @@ describe('subjectForRoute', () => {
     })
     expect(subjectForRoute(row, COORDINATOR)).toEqual({
       target: 'claude_subagent',
+      primaryAgent: 'claude',
       model: 'claude-sonnet-5-5',
       reasoningLevel: 'high',
       requirement: 'required',
@@ -92,6 +99,7 @@ describe('subjectForCoordinator and subjectForReviewer', () => {
   it('checks the coordinator as the primary session with its own concrete values', () => {
     expect(subjectForCoordinator(COORDINATOR)).toEqual({
       target: 'claude_primary',
+      primaryAgent: 'claude',
       model: 'claude-opus-5-5',
       reasoningLevel: 'max',
       requirement: 'required',
@@ -112,4 +120,40 @@ describe('subjectForCoordinator and subjectForReviewer', () => {
       inheritsCoordinator: false
     })
   })
+})
+
+it('keeps legacy target ids while pinning Codex for primary and inherited workflow routes', () => {
+  const coordinator = {
+    agent: 'codex' as const,
+    model: 'gpt-6.1-sol',
+    reasoning_level: 'max' as const
+  }
+  expect(subjectForCoordinator(coordinator)).toMatchObject({
+    target: 'claude_primary',
+    primaryAgent: 'codex',
+    model: 'gpt-6.1-sol'
+  })
+  const workflow = route({
+    task_type: 'configured_project_workflow',
+    execution_target: 'claude_workflow',
+    model: 'inherit',
+    reasoning_level: 'inherit'
+  })
+  expect(subjectForRoute(workflow, coordinator)).toMatchObject({
+    target: 'claude_workflow',
+    primaryAgent: 'codex',
+    model: 'gpt-6.1-sol',
+    inheritsCoordinator: true
+  })
+})
+
+it('does not change independent CLI route identity when the primary CLI changes', () => {
+  const row = route({
+    execution_target: 'codex_cli',
+    model: 'gpt-6.1-sol',
+    reasoning_level: 'high'
+  })
+  expect(
+    subjectForRoute(row, { agent: 'codex', model: 'gpt-6.1-sol', reasoning_level: 'max' })
+  ).toEqual(subjectForRoute(row, COORDINATOR))
 })

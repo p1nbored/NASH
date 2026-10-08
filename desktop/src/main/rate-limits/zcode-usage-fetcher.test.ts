@@ -290,7 +290,7 @@ describe('fetchZcodeRateLimits', () => {
     expect(result.usageMetadata?.failureKind).toBe('parse')
   })
 
-  it('prefers the Orca-saved plan credential over the ZCode CLI config', async () => {
+  it('prefers the NASH-saved plan credential over the ZCode CLI config', async () => {
     writeConfig()
     vi.mocked(fetch).mockResolvedValue(
       new Response(

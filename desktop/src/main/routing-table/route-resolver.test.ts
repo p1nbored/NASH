@@ -163,7 +163,13 @@ describe('resolveRoute', () => {
   })
 
   describe('with a live primary session', () => {
-    const LIVE = { runId: 'run-1', ownerId: 'owner-1' }
+    const LIVE = {
+      runId: 'run-1',
+      ownerId: 'owner-1',
+      agent: 'claude' as const,
+      model: 'claude-opus-5-5',
+      effort: 'max' as const
+    }
     const deferred = () =>
       headroomOf({
         claude: limitsOf('claude', {
@@ -432,7 +438,7 @@ describe('evaluateTable', () => {
   it('reports an unsupported coordinator level of a table that is not active yet', async () => {
     const { resolver } = setup()
     const candidate = parsedTestTable({
-      coordinator: { model: 'claude-haiku-4-5-20251001', reasoning_level: 'high' }
+      coordinator: { agent: 'claude', model: 'claude-haiku-4-5-20251001', reasoning_level: 'high' }
     })
     const view = await resolver.evaluateTable(candidate, { freshness: 'dispatch', workspace: GIT })
     expect(view.coordinator).toMatchObject({
@@ -476,5 +482,50 @@ describe('recheck and latch', () => {
     h.clock.nowMs += 5 * 60_000
     const released = await resolver.recheck(subject, { freshness: 'recheck', workspace: GIT })
     expect(released.status).toBe('available')
+  })
+})
+
+it('keeps inherited routes on the live run primary when the table switches CLI, model and effort', async () => {
+  let table = parsedTestTable()
+  const h = createEvaluatorHarness()
+  const resolver = createRouteResolver({
+    activeTable: () => ({ ok: true, table, version: 1, sha256: 'a'.repeat(64), source: 'user' }),
+    evaluator: h.evaluator
+  })
+  const primary = {
+    runId: 'run-original',
+    ownerId: 'owner-original',
+    agent: 'claude' as const,
+    model: 'claude-opus-5-5',
+    effort: 'max' as const
+  }
+  table = parsedTestTable({
+    coordinator: { agent: 'codex', model: 'gpt-6.1-sol', reasoning_level: 'high' }
+  })
+  for (const taskType of ['coordinator_reasoning', 'configured_project_workflow']) {
+    const resolved = await resolver.resolveRoute({
+      taskType,
+      workspace: GIT,
+      liveRunPrimary: primary
+    })
+    expect(resolved.ok && resolved.route.availability).toMatchObject({
+      status: 'available',
+      subject: { primaryAgent: 'claude', model: 'claude-opus-5-5', reasoningLevel: 'max' }
+    })
+  }
+  const delegated = await resolver.resolveRoute({
+    taskType: 'software_engineering',
+    workspace: GIT,
+    liveRunPrimary: primary
+  })
+  expect(delegated.ok && delegated.route.availability.subject).toMatchObject({
+    target: 'claude_subagent',
+    model: 'claude-sonnet-5-5',
+    reasoningLevel: 'max'
+  })
+  expect(await resolver.resolveCoordinator({ workspace: GIT })).toMatchObject({
+    ok: true,
+    agent: 'codex',
+    coordinator: { model: 'gpt-6.1-sol', reasoningLevel: 'high' }
   })
 })

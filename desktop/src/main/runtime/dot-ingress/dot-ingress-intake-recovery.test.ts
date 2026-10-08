@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DotStatusResultSchema } from '../../../shared/dot-ingress/dot-ingress-request'
-import { DotStatusResultV2Schema } from '../../../shared/dot-ingress/dot-ingress-v2'
+
 import { getDotIngressSettingsStore } from '../orchestration/db/dot-ingress-settings-store'
 import { getDotIngressStore } from '../orchestration/db/dot-ingress-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
@@ -176,17 +176,15 @@ describe('dot intake recovery: revoking dot stops requests the Workbench has not
     expect(harness.door.submits).toHaveLength(1)
   })
 
-  it('shows a refused request as failed with no run, in contract versions 1 and 2', async () => {
+  it('shows a refused request as failed with no run, in the current contract', async () => {
     const { record } = await receivedWriteRequest()
     revoke(harness, 'global_off')
     await recoverDotIntake(harness.deps)
     const settled = getDotIngressStore(harness.owner).get(record.dotRequestId)
 
-    const v1 = DotStatusResultSchema.parse(statusResult(harness.owner, 1, settled))
-    const v2 = DotStatusResultV2Schema.parse(statusResult(harness.owner, 2, settled))
+    const result = DotStatusResultSchema.parse(statusResult(harness.owner, settled))
 
-    expect(v1.request).toMatchObject({ state: 'failed', run: null })
-    expect(v2.request).toMatchObject({
+    expect(result.request).toMatchObject({
       state: 'failed',
       run: null,
       requestedAccess: 'workspace_write'
@@ -232,12 +230,10 @@ describe('dot intake recovery: a request the Workbench already accepted is only 
       expect(linked.state).toBe('submitted')
       expect(linked.workbenchRequestId).not.toBeNull()
       // Revoking dot stops future work only: the accepted run is reported as it is, never as canceled.
-      for (const version of [1, 2] as const) {
-        expect(statusResult(harness.owner, version, linked).request).toMatchObject({
-          state: 'submitted',
-          run: { state: 'active', blocker: null }
-        })
-      }
+      expect(statusResult(harness.owner, linked).request).toMatchObject({
+        state: 'submitted',
+        run: { state: 'active', blocker: null }
+      })
     }
   )
 })

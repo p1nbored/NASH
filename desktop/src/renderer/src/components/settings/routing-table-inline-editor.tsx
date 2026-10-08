@@ -17,6 +17,7 @@ import {
   usesCoordinator
 } from './routing-table-inline-edit'
 import { executionTargetLabel, reasoningLevelLabel } from './routing-table-labels'
+import { PrimaryCliSelect } from './routing-table-route-rows'
 
 function pick<T extends string>(options: readonly T[], value: string): T | undefined {
   return options.find((option) => option === value)
@@ -182,7 +183,7 @@ export function RouteChoiceEditor(
             disabled={row.target === 'claude_primary'}
             label={translate(
               'auto.components.settings.routingTable.labels.sameAsCoordinator',
-              'Same as coordinator'
+              'Same as primary'
             )}
             onChange={(checked) =>
               props.onEdit(editForSameAsCoordinator(checked, props.coordinator))
@@ -235,7 +236,7 @@ export function RouteChoiceEditor(
   )
 }
 
-/** The coordinator's model and effort; it always runs in the Claude primary session. */
+/** The primary session's CLI, model and effort. */
 export function CoordinatorChoiceEditor(
   props: EditorCallbacks & {
     coordinator: EditorDraft['coordinator']
@@ -246,12 +247,13 @@ export function CoordinatorChoiceEditor(
   return (
     <div className="space-y-row pt-row">
       <div className="flex flex-wrap items-center gap-row">
+        <PrimaryCliSelect coordinator={coordinator} onChange={props.onChange} />
         <ModelInput
           value={coordinator.model}
           invalid={props.error !== null}
           label={translate(
             'auto.components.settings.routingTable.editor.coordinatorModel',
-            'Coordinator model'
+            'Primary model'
           )}
           onChange={(model) => props.onChange({ ...coordinator, model })}
         />
@@ -260,7 +262,7 @@ export function CoordinatorChoiceEditor(
           options={CONCRETE_REASONING_LEVELS}
           label={translate(
             'auto.components.settings.routingTable.inline.coordinatorEffort',
-            'Coordinator effort'
+            'Primary effort'
           )}
           onChange={(reasoningLevel) => props.onChange({ ...coordinator, reasoningLevel })}
         />

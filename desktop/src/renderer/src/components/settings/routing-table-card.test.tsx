@@ -1,14 +1,26 @@
 // @vitest-environment happy-dom
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
+import { useRoutingTable } from './use-routing-table'
+import { RoutingTableTaskList } from './routing-table-active-view'
 import { RoutingTableCard } from './routing-table-card'
 import {
   FIXTURE_SHA_V3,
   FIXTURE_SHA_V4,
   fixtureListResult,
-  fixtureProposal
+  fixtureProposal,
+  fixtureTable
 } from './routing-table-view.test-fixture'
 
 const rpc = vi.hoisted(() =>
@@ -87,10 +99,10 @@ describe('RoutingTableCard', () => {
     expect(engineering.textContent).toContain('Claude subagent')
     expect(engineering.textContent).toContain('claude-sonnet-5-5')
     expect(engineering.textContent).toContain('Max')
-    expect(taskRow('Configured project workflow').textContent).toContain('Same as coordinator')
+    expect(taskRow('Configured project workflow').textContent).toContain('Same as primary')
     expect(taskRow('Fast writing or alternative draft').textContent).toContain('when supported')
-    expect(taskRow('Coordinator').textContent).toContain('Claude primary session')
-    expect(screen.queryByRole('listitem', { name: 'Coordinator reasoning' })).toBeNull()
+    expect(taskRow('Primary').textContent).toContain('Claude Code')
+    expect(screen.queryByRole('listitem', { name: 'Primary reasoning' })).toBeNull()
     const reviewers = screen.getByRole('list', { name: 'Reviewers' })
     expect(
       within(reviewers)
@@ -330,13 +342,71 @@ describe('RoutingTableCard', () => {
     answer({ 'workbench.routingTable.list': fixtureListResult({ proposals: [] }) })
     await renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Coordinator' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Primary' }))
     await act(async () => {
-      fireEvent.click(within(taskRow('Coordinator')).getByRole('button', { name: 'Save' }))
+      fireEvent.click(within(taskRow('Primary')).getByRole('button', { name: 'Save' }))
     })
 
-    expect(screen.queryByLabelText('Coordinator model')).toBeNull()
+    expect(screen.queryByLabelText('Primary model')).toBeNull()
     expect(callsTo('workbench.routingTable.import')).toHaveLength(0)
+  })
+
+  it('requires a new model when switching the primary CLI and saves through a versioned proposal', async () => {
+    answer({
+      'workbench.routingTable.list': fixtureListResult({ proposals: [] }),
+      'workbench.routingTable.import': {
+        ok: true,
+        version: null,
+        sha256: null,
+        proposalId: 'proposal-0002'
+      },
+      'workbench.routingTable.accept': {
+        ok: true,
+        version: 4,
+        sha256: FIXTURE_SHA_V4,
+        proposalId: 'proposal-0002'
+      }
+    })
+    await renderCard()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Primary' }))
+    const row = taskRow('Primary')
+    fireEvent.click(within(row).getByRole('combobox', { name: 'Primary CLI' }))
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Claude Code',
+      'Codex'
+    ])
+    fireEvent.click(screen.getByRole('option', { name: 'Codex' }))
+    const model = within(row).getByLabelText('Primary model')
+    expect(model).toHaveProperty('value', '')
+    await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
+    expect(within(row).getByRole('alert').textContent).toContain('selected CLI')
+    expect(callsTo('workbench.routingTable.import')).toHaveLength(0)
+    fireEvent.change(model, { target: { value: 'gpt-6-astra' } })
+    await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
+    expect(callsTo('workbench.routingTable.import')).toEqual([
+      {
+        proposal: expect.objectContaining({
+          base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
+          coordinator: { agent: 'codex', model: 'gpt-6-astra', reasoning_level: 'max' },
+          changes: []
+        })
+      }
+    ])
+    expect(callsTo('workbench.routingTable.accept')).toEqual([{ proposalId: 'proposal-0002' }])
+  })
+
+  it('shows the saved primary CLI and its model', () => {
+    render(
+      <RoutingTableTaskList
+        table={fixtureTable({
+          coordinator: { agent: 'codex', model: 'gpt-6-astra', reasoning_level: 'high' }
+        })}
+        availability={null}
+        busy={false}
+        onSave={vi.fn().mockResolvedValue(true)}
+      />
+    )
+    expect(taskRow('Primary').textContent).toContain('Codex · gpt-6-astra · High')
   })
 
   it('imports a pasted change set and names a waiting duplicate without its id', async () => {
@@ -460,5 +530,69 @@ describe('RoutingTableCard', () => {
       expect(screen.getByRole('alert').textContent).toMatch(/not available in this build/i)
     )
     expect(screen.queryByRole('list', { name: 'Agent for each task' })).toBeNull()
+  })
+})
+
+describe('routing edits under concurrent changes and failed activation', () => {
+  afterEach(() => {
+    cleanup()
+    rpc.mockReset()
+  })
+  it.each(['refused', 'disconnected'])(
+    'rejects its imported edit if activation is %s',
+    async (mode) => {
+      rpc.mockImplementation(async (_target: unknown, method: string) => {
+        if (method === 'workbench.routingTable.list') {
+          return fixtureListResult()
+        }
+        if (method === 'workbench.routingTable.accept') {
+          if (mode === 'disconnected') {
+            throw new Error('connection lost')
+          }
+          return {
+            ok: false,
+            reason: 'proposal_superseded',
+            detail: null,
+            existingProposalId: null
+          }
+        }
+        return { ok: true, version: null, sha256: null, proposalId: 'proposal-local' }
+      })
+      const { result } = renderHook(() => useRoutingTable())
+      await act(async () => {})
+      await act(async () => {
+        expect(await result.current.applyEdit(fixtureProposal())).toBe(false)
+      })
+      expect(rpc).toHaveBeenCalledWith({ kind: 'local' }, 'workbench.routingTable.reject', {
+        proposalId: 'proposal-local'
+      })
+      expect(result.current.notice?.kind).toBe('error')
+    }
+  )
+
+  it('closes an old draft when a newer active table arrives, so it cannot overwrite concurrent edits', () => {
+    const onSave = vi.fn(async () => true)
+    const { rerender } = render(
+      <RoutingTableTaskList
+        table={fixtureTable()}
+        availability={null}
+        busy={false}
+        onSave={onSave}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Routine analysis batch' }))
+    fireEvent.change(screen.getByLabelText('Model for Routine analysis batch'), {
+      target: { value: 'gpt-6-astra' }
+    })
+    rerender(
+      <RoutingTableTaskList
+        table={fixtureTable({ table_version: 4 })}
+        availability={null}
+        busy={false}
+        onSave={onSave}
+      />
+    )
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull()
+    expect(onSave).not.toHaveBeenCalled()
   })
 })

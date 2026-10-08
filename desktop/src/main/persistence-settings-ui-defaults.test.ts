@@ -131,8 +131,6 @@ describe('Store', () => {
     expect(ui.dismissedUpdateVersion).toBeNull()
     expect(ui.lastUpdateCheckAt).toBeNull()
     expect(ui.setupGuideSidebarDismissed).toBe(false)
-    expect(ui.setupGuideBrowserMilestoneMigrated).toBe(true)
-    expect(ui.setupGuideBrowserMilestoneLegacyComplete).toBe(false)
     // Why: brand-new profiles never saw remaining-as-default.
     expect(ui.usagePercentageDisplayChangeNoticeDismissed).toBe(true)
   })
@@ -331,8 +329,6 @@ describe('Store', () => {
     expect(onboarding.outcome).toBe('completed')
     expect(onboarding.lastCompletedStep).toBe(ONBOARDING_FINAL_STEP)
     expect(store.getUI().setupGuideSidebarDismissed).toBe(true)
-    expect(store.getUI().setupGuideBrowserMilestoneMigrated).toBe(false)
-    expect(store.getUI().setupGuideBrowserMilestoneLegacyComplete).toBe(false)
   })
 
   it('persists the existing-user onboarding backfill back to disk', async () => {

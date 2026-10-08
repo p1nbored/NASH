@@ -150,22 +150,19 @@ describe('submit: RECEIVED, then the workflow run is started (D-018: no confirma
       workspaceId: FIXTURE_ONLY_WORKSPACE.workspaceId,
       workspaceBinding: expect.stringMatching(/^[0-9a-f]{64}$/),
       objective: 'Inspect this change.',
-      requestedAccess: 'read_only',
-      deliverableLanguage: null
+      requestedAccess: 'read_only'
     })
   })
 
-  it('starts the run with the stored access and canonical deliverable language', async () => {
+  it('starts the run with access and no output-language constraint', async () => {
     const { target, startWorkflowRun } = setup()
     const { request } = submitWorkbenchRequest(target, {
       ...params(),
-      requestedAccess: 'workspace_write',
-      deliverableLanguage: 'zh-hant-tw'
+      requestedAccess: 'workspace_write'
     })
     await waitForWorkbenchLaunch(request.requestId)
     expect(startWorkflowRun.mock.calls[0]?.[0]).toMatchObject({
-      requestedAccess: 'workspace_write',
-      deliverableLanguage: 'zh-Hant-TW'
+      requestedAccess: 'workspace_write'
     })
   })
 

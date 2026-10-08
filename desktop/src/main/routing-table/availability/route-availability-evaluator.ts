@@ -7,7 +7,6 @@ import {
   AGENT_MODEL_CATALOG_FAILURE_TTL_MS,
   AGENT_MODEL_CATALOG_FRESH_MS
 } from '../../native-chat/agent-model-catalog/agent-model-catalog-store'
-import type { UsageMeterSource } from '../../rate-limits/usage-meters-policy'
 import type { RateLimitHeadroomState } from './route-provider-headroom'
 import { createBoundedRateLimitRead } from './route-rate-limit-refresh'
 import { checkAgyRoute } from './agy-route-checks'
@@ -17,7 +16,7 @@ import type { ModelListing } from './model-listing'
 import { limitsForProvider } from './route-auth-quota-checks'
 import type { RouteAvailabilityStore } from './route-availability-store'
 import {
-  providerForTarget,
+  providerForSubject,
   routeKeyOf,
   type EvaluateFreshness,
   type LatchKind,
@@ -50,8 +49,6 @@ export type AvailabilityPorts = {
     read(): RateLimitHeadroomState | null
     /** The service's refresh; its result is ignored because the state is always read afterwards. */
     refresh(): Promise<unknown>
-    /** 'cli-native' (NASH): read as the CLIs left it, never refreshed. Absent means Orca's meters. */
-    readonly usageSource?: UsageMeterSource
   }
   /** `resolveCodexExecutable`, bound the way the runner resolves it; throws when codex cannot launch. */
   readonly resolveCodexExecutable: () => CodexExecutable
@@ -141,7 +138,6 @@ export function createRouteAvailabilityEvaluator(deps: {
   waits?: Partial<EvaluatorWaits>
 }): RouteAvailabilityEvaluator {
   const { ports, store } = deps
-  const usageSource = ports.rateLimits.usageSource ?? 'orca-inherited'
   const waits: EvaluatorWaits = { ...DEFAULT_EVALUATOR_WAITS, ...deps.waits }
   const listingsInFlight = new Map<RouteProvider, Promise<ModelListing>>()
   let detectionInFlight: Promise<DetectionObservation> | null = null
@@ -242,8 +238,7 @@ export function createRouteAvailabilityEvaluator(deps: {
     signal: AbortSignal
   ): Promise<RateLimitHeadroomState | null> {
     try {
-      // Why no refresh on CLI readings: the CLIs report on Orca's own cadence, not per dispatch.
-      if (freshness === 'cached' || usageSource === 'cli-native') {
+      if (freshness === 'cached') {
         return ports.rateLimits.read()
       }
       return await (freshness === 'recheck' ? readLimitsAtRecheck : readLimitsAtDispatch)(signal)
@@ -259,7 +254,7 @@ export function createRouteAvailabilityEvaluator(deps: {
         return []
       }
       const { freshness } = options
-      const providers = [...new Set(subjects.map((subject) => providerForTarget(subject.target)))]
+      const providers = [...new Set(subjects.map((subject) => providerForSubject(subject)))]
       const [detection, rateLimits, listed] = await Promise.all([
         obtainDetection(freshness),
         obtainRateLimits(freshness, options.signal ?? NEVER_ABORTED),
@@ -277,11 +272,10 @@ export function createRouteAvailabilityEvaluator(deps: {
         ? readCodexExecutable(ports.resolveCodexExecutable)
         : CODEX_NOT_READ
       return subjects.map((subject) => {
-        const provider = providerForTarget(subject.target)
+        const provider = providerForSubject(subject)
         const listing: ModelListing = listings.get(provider) ?? { ok: false, observedAtMs: nowMs }
         const observations: RouteObservations = {
           nowMs,
-          usageSource,
           detection: detection.reading,
           listing,
           rateLimits,

@@ -17,13 +17,13 @@ const LABEL_OR_SMALLER = [
 
 // Why: group headings must outrank the 14px semibold setting labels beneath them (D12 hierarchy).
 describe('settings typography hierarchy', () => {
-  it('sets subsection headings in the display serif one step above setting labels', () => {
+  it('sets subsection headings in UI sans one step above setting labels', () => {
     const markup = renderToStaticMarkup(<SettingsSubsectionHeader title="Navigation" />)
     const classes = /<h3 class="([^"]*)"/.exec(markup)?.[1].split(/\s+/) ?? []
-    expect(classes).toEqual(expect.arrayContaining(['font-display', 'font-normal']))
+    expect(classes).toEqual(expect.arrayContaining(['font-sans', 'font-semibold']))
     expect(classes.filter((name) => HEADING_STEPS.includes(name))).toHaveLength(1)
     expect(classes.some((name) => LABEL_OR_SMALLER.includes(name))).toBe(false)
-    expect(classes).not.toContain('font-semibold')
+    expect(classes).not.toContain('font-display')
   })
 
   // Why: a bg-muted pill vanished on the light sidebar (1.01:1); an outline reads in both themes.

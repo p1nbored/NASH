@@ -5,10 +5,11 @@ import {
   mkdtempSync,
   readFileSync,
   realpathSync,
+  symlinkSync,
   writeFileSync
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { removeTreeSync } from '../../src/shared/windows-transient-lock-removal.ts'
 import {
@@ -82,26 +83,45 @@ describe('windows-process-tree node-gyp rebuild', () => {
     ).toBe(300_000)
   })
 
-  it('copies node-addon-api headers into the patched include dir', () => {
-    const packageDir = mkdtempSync(join(tmpdir(), 'orca-windows-process-tree-headers-'))
-    try {
-      const nodeAddonApiDir = join(packageDir, 'node_modules', 'node-addon-api')
-      mkdirSync(nodeAddonApiDir, { recursive: true })
-      writeFileSync(join(packageDir, 'package.json'), '{"dependencies":{"node-addon-api":"*"}}\n')
-      writeFileSync(join(nodeAddonApiDir, 'package.json'), '{"name":"node-addon-api"}\n')
-      for (const header of WINDOWS_PROCESS_TREE_NODE_ADDON_API_HEADERS) {
-        writeFileSync(join(nodeAddonApiDir, header), `// ${header}\n`)
-      }
+  it.each(['physical', 'linked'])(
+    'copies node-addon-api headers from the %s package directory into the physical include dir',
+    (layout) => {
+      const root = mkdtempSync(join(tmpdir(), 'orca-windows-process-tree-headers-'))
+      try {
+        const storeModules = join(root, '.pnpm', 'windows-process-tree', 'node_modules')
+        const physicalPackageDir = join(storeModules, '@vscode', 'windows-process-tree')
+        const nodeAddonApiDir = join(storeModules, 'node-addon-api')
+        mkdirSync(physicalPackageDir, { recursive: true })
+        mkdirSync(nodeAddonApiDir, { recursive: true })
+        writeFileSync(
+          join(physicalPackageDir, 'package.json'),
+          '{"dependencies":{"node-addon-api":"*"}}\n'
+        )
+        writeFileSync(join(nodeAddonApiDir, 'package.json'), '{"name":"node-addon-api"}\n')
+        for (const header of WINDOWS_PROCESS_TREE_NODE_ADDON_API_HEADERS) {
+          writeFileSync(join(nodeAddonApiDir, header), `// ${header}\n`)
+        }
+        let packageDir = physicalPackageDir
+        if (layout === 'linked') {
+          packageDir = join(root, 'node_modules', '@vscode', 'windows-process-tree')
+          mkdirSync(dirname(packageDir), { recursive: true })
+          symlinkSync(
+            physicalPackageDir,
+            packageDir,
+            process.platform === 'win32' ? 'junction' : 'dir'
+          )
+        }
 
-      const stagedDir = stageWindowsProcessTreeNodeAddonApiHeaders(packageDir)
-      expect(stagedDir).toBe(join(packageDir, 'deps', 'node-addon-api'))
-      for (const header of WINDOWS_PROCESS_TREE_NODE_ADDON_API_HEADERS) {
-        expect(readFileSync(join(stagedDir, header), 'utf8')).toBe(`// ${header}\n`)
+        const stagedDir = stageWindowsProcessTreeNodeAddonApiHeaders(packageDir)
+        expect(stagedDir).toBe(join(realpathSync(physicalPackageDir), 'deps', 'node-addon-api'))
+        for (const header of WINDOWS_PROCESS_TREE_NODE_ADDON_API_HEADERS) {
+          expect(readFileSync(join(stagedDir, header), 'utf8')).toBe(`// ${header}\n`)
+        }
+      } finally {
+        removeTreeSync(root)
       }
-    } finally {
-      removeTreeSync(packageDir)
     }
-  })
+  )
 })
 
 describe('inspecting a compiled windows-process-tree addon', () => {

@@ -26,7 +26,6 @@ describe('modelPinViolation (ARCH 7.5)', () => {
     'gemini-4',
     'gemini-4-pro',
     'Gemini_4',
-    'gemini 4',
     'gemini4',
     'gemini.4-flash',
     'models/gemini-4.0',
@@ -34,8 +33,8 @@ describe('modelPinViolation (ARCH 7.5)', () => {
     'argon',
     'gemini-argon',
     'Gemini-Argon-1'
-  ])('rejects the Gemini 4 family member %s', (model) => {
-    expect(modelPinViolation(model)).toBe('model_family_excluded')
+  ])('accepts exact Gemini 4 slugs without a family ban: %s', (model) => {
+    expect(modelPinViolation(model)).toBeNull()
   })
 
   it.each([
@@ -107,7 +106,7 @@ describe('modelPinViolation (ARCH 7.5)', () => {
   )
 
   it('lets the schema refuse every violation, not just malformed ids', () => {
-    for (const model of ['gemini-4', 'opus', 'latest', 'gpt-6-sol']) {
+    for (const model of ['bad model', 'opus', 'latest', 'gpt-6-sol']) {
       expect(PinnedModelIdSchema.safeParse(model).success).toBe(false)
     }
   })

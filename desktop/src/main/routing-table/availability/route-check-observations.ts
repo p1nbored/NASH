@@ -1,5 +1,4 @@
 import type { WorkspaceLaunchKind } from '../../../shared/workspace-launch-kind'
-import type { UsageMeterSource } from '../../rate-limits/usage-meters-policy'
 import type { RateLimitHeadroomState } from './route-provider-headroom'
 import type { ModelListing } from './model-listing'
 import type { CheckOutcome, LiveRunPrimary } from './route-availability-types'
@@ -20,8 +19,6 @@ export type CodexExecutableReading =
 /** Everything one evaluation observed, read once and shared by every route checked in it. */
 export type RouteObservations = {
   readonly nowMs: number
-  /** 'cli-native' in NASH: auth passes as not metered and only a fresh CLI reading decides quota. */
-  readonly usageSource: UsageMeterSource
   readonly detection: AgentDetectionReading
   /** The listing of the provider being checked. */
   readonly listing: ModelListing

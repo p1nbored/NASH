@@ -7,7 +7,6 @@ import type { TaskValidationRecord } from './task-validation-record'
 // The store's own check that a pass stands on the evidence its policy promises, whatever the caller.
 
 /** Mirrors the validators' default checks (D-027), so a pass can never claim less than they run. */
-const DEFAULT_PROCESS_CHECK_KINDS: readonly string[] = ['executor_completed', 'secret_scan_clean']
 const SESSION_REPORT_CHECK_KINDS: readonly string[] = ['session_report']
 const SESSION_REPORT_CLAIM = 'session_report_claim'
 /** Only these in-session targets pass on the primary's report; restriction 27 stays for the rest. */
@@ -35,19 +34,13 @@ function routeTargetOf(db: Database.Database, routeId: string): string | null {
   return typeof row?.target === 'string' ? row.target : null
 }
 
-/** D-027 default: the process check for a process attempt, the report claim for a subagent or workflow. */
+/** D-027 default: the report claim for a subagent or workflow. */
 function assertDefaultPass(
   db: Database.Database,
-  attempt: Pick<LoadedAttempt, 'kind' | 'routeId'>,
+  attempt: Pick<LoadedAttempt, 'routeId'>,
   kinds: readonly string[],
   verdict: PassVerdict
 ): void {
-  if (attempt.kind === 'process') {
-    if (!sameKinds(kinds, DEFAULT_PROCESS_CHECK_KINDS)) {
-      throw insufficient('A pass without machine checks must stand on the process check.')
-    }
-    return
-  }
   const target = routeTargetOf(db, attempt.routeId)
   if (!target || !REPORT_PASSES_TARGETS.includes(target)) {
     throw insufficient('A task the primary session did itself cannot pass on its own report.')
@@ -68,7 +61,7 @@ export function assertPassIsSufficient(
   context: {
     readonly spec: TaskSpecRecord
     readonly validation: TaskValidationRecord
-    readonly attempt: Pick<LoadedAttempt, 'kind' | 'routeId'>
+    readonly attempt: Pick<LoadedAttempt, 'routeId'>
   },
   verdict: PassVerdict
 ): void {

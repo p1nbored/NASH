@@ -68,7 +68,7 @@ export const DotRemoteRequestListOutputSchema = z
   })
   .strict()
 
-/** Open prompts only: pending and before their deadline; the limit is the v2 list limit. */
+/** Open prompts only: pending and before their deadline; the limit is the ingress list limit. */
 export const DotRemotePromptListOutputSchema = z
   .object({ decisions: z.array(DotRemotePromptOpenedDataSchema).max(WORKBENCH_LIST_MAX_LIMIT) })
   .strict()

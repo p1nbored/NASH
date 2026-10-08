@@ -1,5 +1,7 @@
 # NASH architecture
 
+> Current execution boundary (D-041, 2026-10-08): primary → Clef → route recheck is unchanged; new Codex/AGY tasks use Orca native worker/context/mailbox/stop. The older headless task design below is historical; its records remain readable, while independent reviewers and in-session validation still use their existing paths. See the [current comparison](nash-checkpoint-2026-10-06.md) and [decision](decision-log.md).
+
 - Date: 2026-10-05. Status: describes the D-016 alignment as built in `desktop`, the NASH app (an Orca fork).
 - Authority: the user's [architecture direction](architecture-direction.md) and decisions D-013 to D-022 in the [decision log](decision-log.md). Where this document and a decision differ, the decision wins.
 - Replaces the 2026-10-02 M0 draft. That draft is archived byte-exact at `C:/Programs/autopilot-archive/2026-10-04/removed-code/d016-alignment/docs/architecture.md` (sha256 `35a77252dcae42a074a410d59086c86277e67bd842be0e7af2760a9bcfd7a6d1`).
@@ -183,7 +185,7 @@ Clef answers two questions per TaskSpec, `task_type` (10 types plus `needs_clari
 - JSON parsed whole with zod. A file that fails any check is refused, never partly applied. Its identity is the canonical-JSON sha256.
 - The bundled default is `main/routing-table/default-routing-table.json`. It is active from first start until the user accepts another version (U4).
 - Rows are total and in taxonomy order (taxonomy version 2). A table of another taxonomy cannot activate.
-- Models must be pinned ids: aliases, selectors, `latest`/`auto` and every Gemini 4 id or label are refused. Only `claude_primary` and `claude_workflow` rows may use `inherit`.
+- Models must be pinned ids: aliases, selectors and `latest`/`auto` are refused; provider model listings determine model availability (D-040 removes the Gemini 4 family ban). Only `claude_primary` and `claude_workflow` rows may use `inherit`.
 - Accepting a proposal writes `versions/v<N>.json`, then the index. A stale base marks the proposal superseded. Identical content is de-duplicated. Revert creates a new version.
 - Agents and app updates may propose; only the desktop user may accept, reject or revert (Settings > Integrations > Task routing). A new bundled default arrives as a proposal, never as an overlay.
 - On every read each version's hash is re-checked. A mismatch blocks routing with `routing_table_integrity_failed`; the bundled table is never used as a fallback. This detects same-user edits; it does not prevent them.
@@ -271,7 +273,7 @@ The reviewer for a model review is the first entry whose model differs from the 
 
 ### 8.2 agy CLI
 
-- Runs through `runAgyExec`. The argv is `--print=<prompt> [--sandbox] --model <id> [--effort <level>]`, built from typed input; the builder takes `--sandbox` as an explicit true or false input (D-025). The prompt is bound to `--print=`, so a prompt that starts with a dash stays a value. There is no refused-flag list and no re-check of the finished argv (D-027 restrictions 23 and 26). Gemini 4 ids and labels, aliases and agy's own default model are still refused (model rules, kept).
+- Runs through `runAgyExec`. The argv is `--print=<prompt> [--sandbox] --model <id> [--effort <level>]`, built from typed input; the builder takes `--sandbox` as an explicit true or false input (D-025). The prompt is bound to `--print=`, so a prompt that starts with a dash stays a value. There is no refused-flag list and no re-check of the finished argv (D-027 restrictions 23 and 26). Aliases and agy's own default model are refused; Gemini family names are not denied (D-040), and the provider listing determines availability.
 - No prompt cap of its own (D-027; it was 12,000 UTF-16 units). The prompt rides argv, so the bound is the command line the OS can start, measured with the spawn pipeline's own resolution and quoting: 32,766 UTF-16 units on Windows (8,191 when an unresolved `.cmd` or `.bat` launcher goes through cmd.exe) and 128 KiB per argument on POSIX (`agy-exec-command-line.ts`). A longer prompt is refused before anything starts: the runner fails with `invalid_request` and a `prompt_too_large` detail giving the length and the ceiling; the task executor answers `prompt_too_long`.
 - The answer is written owner-only to the run directory and kept up to 64 MiB (D-027; the default was 4 MiB under a 16 MiB ceiling). A run past it is stopped and fails, and validation reads the answer up to the same bound.
 - No fixed timeout (D-027; it was 10 minutes, set for the unverified G8 trust-prompt behaviour). A run ends when agy ends or is stopped; an explicitly configured timeout still applies.

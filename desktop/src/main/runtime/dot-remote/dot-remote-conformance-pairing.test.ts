@@ -3,8 +3,11 @@
 // fake Site. Every token and credential is a synthetic vector value.
 import { afterEach, describe, expect, it } from 'vitest'
 import type { DotRemoteEndpointStep } from '../../../shared/dot-remote/dot-remote-vector-kit.test-fixture'
-import { buildDotRemoteConformanceVectors } from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
-import type { DotRemoteVector } from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
+import {
+  buildDotRemoteConformanceVectors,
+  type DotRemoteVector
+} from '../../../shared/dot-remote/dot-remote-vectors.test-fixture'
+
 import { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import { createDotRemoteAgent, type DotRemoteAgentDeps } from './dot-remote-agent'
 import { failureAction } from './dot-remote-failure'

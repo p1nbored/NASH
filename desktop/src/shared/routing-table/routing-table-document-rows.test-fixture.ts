@@ -82,7 +82,7 @@ export function buildTestRoutingTable(overrides: TestTableInput = {}): TestTable
     source: 'bundled',
     based_on: null,
     created_at: '2026-10-04T00:00:00Z',
-    coordinator: { model: 'claude-opus-5-5', reasoning_level: 'max' },
+    coordinator: { agent: 'claude', model: 'claude-opus-5-5', reasoning_level: 'max' },
     routes: DOCUMENT_ROUTE_ROWS.map((row) =>
       row.task_type === 'fast_writing_or_alternative_draft'
         ? { ...row, reasoning_requirement: 'if_supported' }

@@ -34,6 +34,7 @@ vi.mock('@/runtime/runtime-rpc-client', async () => {
   return { callRuntimeRpc: rpc, RuntimeRpcCallError: actual.RuntimeRpcCallError }
 })
 vi.mock('@/i18n/i18n', () => ({
+  i18n: { language: 'en' },
   translate: (_key: string, fallback: string) => fallback,
   getIntlLocale: () => 'en-US'
 }))
@@ -86,7 +87,7 @@ describe('WorkbenchPanel', () => {
   })
 
   // Why: matches settings-typography-hierarchy.test.tsx so section heads outrank 14px labels.
-  it('sets every section heading in the display serif one step above field labels', () => {
+  it('sets compact section headings in the shared sans heading style', () => {
     render(<WorkbenchPanel />)
     const headings = screen.getAllByRole('heading', { level: 2 })
     expect(headings.map((heading) => heading.textContent)).toEqual([
@@ -98,9 +99,9 @@ describe('WorkbenchPanel', () => {
     ])
     for (const heading of headings) {
       expect([...heading.classList]).toEqual(
-        expect.arrayContaining(['font-display', 'text-base', 'font-normal'])
+        expect.arrayContaining(['font-sans', 'text-heading', 'font-semibold'])
       )
-      expect(heading.classList).not.toContain('font-semibold')
+      expect(heading.classList).not.toContain('font-display')
     }
   })
 

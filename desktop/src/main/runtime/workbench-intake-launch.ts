@@ -124,8 +124,7 @@ function startInput(
       workspaceId: received.workspaceId,
       workspaceBinding: workbenchWorkspaceBinding(received.workspaceId, target.workspace),
       objective: received.objective,
-      requestedAccess: settings.requestedAccess,
-      deliverableLanguage: settings.deliverableLanguage
+      requestedAccess: settings.requestedAccess
     }
   } catch (error) {
     return launchBlocker('launch_refused', errorCodeOf(error), 'The request cannot start.')

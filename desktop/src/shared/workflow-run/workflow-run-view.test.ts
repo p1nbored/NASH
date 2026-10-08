@@ -19,9 +19,8 @@ const RUN: WorkflowRunView = {
   status: 'active',
   revision: 2,
   requestedAccess: 'read_only',
-  deliverableLanguage: null,
   routingTable: { version: 1, sha256: 'b'.repeat(64) },
-  coordinator: { model: 'claude-opus-5-5', effort: 'max' },
+  coordinator: { agent: 'claude', model: 'claude-opus-5-5', effort: 'max' },
   endReason: null,
   createdAt: '2026-10-05T00:00:00.000Z',
   updatedAt: '2026-10-05T00:00:01.000Z',
@@ -44,6 +43,11 @@ const RUN: WorkflowRunView = {
 describe('WorkflowRunViewSchema', () => {
   it('accepts a launched run with its primary session', () => {
     expect(WorkflowRunViewSchema.parse(RUN)).toEqual(RUN)
+  })
+
+  it('requires the run coordinator agent', () => {
+    const coordinator = { model: RUN.coordinator.model, effort: RUN.coordinator.effort }
+    expect(WorkflowRunViewSchema.safeParse({ ...RUN, coordinator }).success).toBe(false)
   })
 
   it('accepts a run with no owner record and a stored-only primary', () => {
@@ -71,13 +75,16 @@ describe('WorkflowRunViewSchema', () => {
     ['origin', { origin: 'mobile' }],
     ['access', { requestedAccess: 'admin' }],
     ['end reason', { endReason: 'Free text with spaces' }],
-    ['coordinator effort', { coordinator: { model: 'claude-opus-5-5', effort: 'extreme' } }]
+    [
+      'coordinator effort',
+      { coordinator: { agent: 'claude', model: 'claude-opus-5-5', effort: 'extreme' } }
+    ]
   ])('refuses an unknown %s', (_name, change) => {
     expect(WorkflowRunViewSchema.safeParse({ ...RUN, ...change }).success).toBe(false)
   })
 
   it.each(['ultra', 'none', 'minimal'])('shows a coordinator effort of %s (D-027)', (effort) => {
-    const run = { ...RUN, coordinator: { model: 'claude-opus-5-5', effort } }
+    const run = { ...RUN, coordinator: { agent: 'claude', model: 'claude-opus-5-5', effort } }
     expect(WorkflowRunViewSchema.safeParse(run).success).toBe(true)
   })
 

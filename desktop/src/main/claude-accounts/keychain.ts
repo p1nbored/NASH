@@ -1,34 +1,19 @@
 import { createHash } from 'node:crypto'
-import { lstatSync, realpathSync } from 'node:fs'
+import { lstatSync, realpathSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { readKeychainPassword } from '../macos-keychain/generic-password'
 
 const ACTIVE_CLAUDE_SERVICE = 'Claude Code-credentials'
-
-// Why reads only: Claude runs on the user's own login, so NASH never writes or deletes a Keychain item.
-export async function readActiveClaudeKeychainCredentials(
-  configDir?: string
-): Promise<string | null> {
-  for (const service of getActiveClaudeServices(configDir)) {
-    const credentials = await readKeychainPassword(service, getKeychainUser())
-    if (credentials) {
-      return credentials
-    }
-  }
-  return null
-}
-
 export async function readActiveClaudeKeychainCredentialsStrict(
   configDir?: string
 ): Promise<string | null> {
   if (!configDir) {
-    return readKeychainPassword(getActiveClaudeService(), getKeychainUser())
+    return readKeychainPassword(claudeKeychainService(), getKeychainUser())
   }
-  // Why: macOS tmp is /var → /private/var. Claude hashes the realpath; a
-  // mkdtemp login dir would miss the Keychain item if we only hashed the raw path.
+  // Keep both lexical and canonical profile aliases scoped; never try System Default.
   for (const dir of claudeConfigDirKeychainAliases(configDir)) {
-    const credentials = await readKeychainPassword(getActiveClaudeService(dir), getKeychainUser())
+    const credentials = await readKeychainPassword(claudeKeychainService(dir), getKeychainUser())
     if (credentials) {
       return credentials
     }
@@ -51,7 +36,7 @@ function getKeychainUser(): string {
   return KEYCHAIN_ACCOUNT_PATTERN.test(user) ? user : CLAUDE_CODE_FALLBACK_USER
 }
 
-function getActiveClaudeService(configDir?: string): string {
+export function claudeKeychainService(configDir?: string): string {
   if (!configDir) {
     return ACTIVE_CLAUDE_SERVICE
   }
@@ -67,6 +52,10 @@ export function claudeConfigDirKeychainAliases(configDir: string): string[] {
   let existingPath = configDir
   while (true) {
     try {
+      // Windows reports ENOENT below a file; only directories can own missing descendants.
+      if (missingSegments.length > 0 && !statSync(existingPath).isDirectory()) {
+        break
+      }
       const canonical = join(realpathSync(existingPath), ...missingSegments)
       if (canonical !== configDir) {
         aliases.push(canonical)
@@ -107,10 +96,16 @@ export function claudeConfigDirKeychainAliases(configDir: string): string[] {
   return aliases
 }
 
-function getActiveClaudeServices(configDir?: string): string[] {
-  if (!configDir) {
-    return [ACTIVE_CLAUDE_SERVICE]
+/** Every spelling of a folder Claude may have hashed into its Keychain item name (superset U/profiles.ts). */
+export function claudeConfigDirSpellings(configDir: string, userHome: string): string[] {
+  const spellings = new Set<string>()
+  for (const dir of claudeConfigDirKeychainAliases(configDir)) {
+    const trimmed = dir.replace(/[\\/]+$/, '')
+    const rest = trimmed.startsWith(`${userHome}/`) ? trimmed.slice(userHome.length) : null
+    for (const spelling of [trimmed, ...(rest ? [`~${rest}`, `$HOME${rest}`] : [])]) {
+      spellings.add(spelling)
+      spellings.add(`${spelling}/`)
+    }
   }
-  const scoped = claudeConfigDirKeychainAliases(configDir).map((dir) => getActiveClaudeService(dir))
-  return [...new Set([...scoped, ACTIVE_CLAUDE_SERVICE])]
+  return [...spellings]
 }

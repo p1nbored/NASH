@@ -1,3 +1,4 @@
+import { normalizeNativeChatAppearanceSettings } from '../../../shared/native-chat-appearance-settings'
 import { getDefaultVoiceSettings } from '../../../shared/constants'
 import { normalizePRBotAuthorOverrides } from '../../../shared/pr-bot-author-overrides'
 import { normalizeTerminalQuickCommands } from '../../../shared/terminal-quick-commands'
@@ -9,7 +10,6 @@ import { projectSourceControlAiToLegacyCommitMessageAi } from '../../../shared/s
 import { normalizeUiLanguage } from '../../../shared/ui-language'
 import { normalizeNativeChatShellEnvironmentVariables } from '../../../shared/native-chat-shell-environment'
 import { stripRetiredGlobalSettings } from '../applying-settings/terminal-settings-migrations'
-import { warnAboutRetiredClaudeAccounts } from '../applying-settings/retired-claude-account-settings'
 import { readLegacySidekickFlag } from '../applying-settings/onboarding-normalization'
 import { normalizeMachineName } from '../../../shared/machine-name'
 import type { PersistedState } from '../../../shared/persisted-state-types'
@@ -54,7 +54,6 @@ export function normalizeLoadedGlobalSettings(
     normalizedNotifications,
     normalizedSourceControlGroupOrder
   } = profile
-  warnAboutRetiredClaudeAccounts(parsed.settings)
 
   return {
     ...defaults.settings,
@@ -62,6 +61,9 @@ export function normalizeLoadedGlobalSettings(
     // old default indistinguishable from a real opt-in. Preserve stored `true`; only
     // the default changed.
     ...stripRetiredGlobalSettings(parsed.settings),
+    nativeChatAppearance: normalizeNativeChatAppearanceSettings(
+      parsed.settings?.nativeChatAppearance
+    ),
     worktreeVisibilityDefaults: migratedExternalVisibility.defaults,
     prBotAuthorOverrides: normalizePRBotAuthorOverrides(parsed.settings?.prBotAuthorOverrides),
     // Why: v1.3.42 renamed the sidekick setting to pet; carry the old flag forward once so enabled users don't lose it.

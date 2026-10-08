@@ -6,7 +6,6 @@ import { STALE_THRESHOLD_MS } from '../../rate-limits/service/service-types'
 import { providerHeadroomFrom, type RateLimitHeadroomState } from './route-provider-headroom'
 import type { CheckOutcome, LiveRunPrimary, RouteProvider } from './route-availability-types'
 import type { RouteObservations } from './route-check-observations'
-import { cliQuotaCheckOf } from './route-cli-quota-check'
 
 /** The rate-limit reading behind a route's provider; agy is Orca's `antigravity`. */
 export function limitsForProvider(
@@ -112,24 +111,12 @@ export function quotaCheckOf(
   }
 }
 
-/** The evidence of an auth or quota pass that nothing read: NASH reads no login or vendor meter. */
-export const UNMETERED_EVIDENCE = { metered: false } as const
-
-/**
- * A route's auth and quota outcomes. On CLI readings (NASH) no login is read, so auth passes as not
- * metered and only a CLI-reported failure (a latch) blocks it; quota follows a fresh CLI reading.
- */
+/** Authentication and quota use the host's native provider readings. */
 export function authQuotaChecksOf(
   provider: RouteProvider,
-  observations: Pick<RouteObservations, 'usageSource' | 'rateLimits' | 'nowMs'>,
+  observations: Pick<RouteObservations, 'rateLimits' | 'nowMs'>,
   livePrimary: LiveRunPrimary | null = null
 ): readonly [CheckOutcome, CheckOutcome] {
-  if (observations.usageSource === 'cli-native') {
-    return [
-      { check: 'auth', result: 'pass', evidence: UNMETERED_EVIDENCE },
-      cliQuotaCheckOf(provider, observations.rateLimits, observations.nowMs)
-    ]
-  }
   const { rateLimits, nowMs } = observations
   return [
     authCheckOf(limitsForProvider(rateLimits, provider), nowMs, livePrimary),

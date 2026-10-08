@@ -156,9 +156,15 @@ describe('quotaCheckOf', () => {
 
 describe('authQuotaChecksOf', () => {
   const exhausted = { usedPercent: 100, windowMinutes: 300, resetsAt: null, resetDescription: null }
-  const live = { runId: 'run-1', ownerId: 'owner-1' }
+  const live = {
+    runId: 'run-1',
+    ownerId: 'owner-1',
+    agent: 'claude' as const,
+    model: 'claude-opus-5-5',
+    effort: 'max' as const
+  }
 
-  it('passes both as not metered on CLI readings when no reading came from the CLI', () => {
+  it('uses a native authentication failure and exhausted quota', () => {
     const state = headroomOf({
       codex: limitsOf('codex', {
         status: 'error',
@@ -166,24 +172,17 @@ describe('authQuotaChecksOf', () => {
         usageMetadata: { failureKind: 'stale-token' }
       })
     })
-    for (const rateLimits of [state, null]) {
-      expect(
-        authQuotaChecksOf('codex', { usageSource: 'cli-native', rateLimits, nowMs: NOW_MS })
-      ).toEqual([
-        { check: 'auth', result: 'pass', evidence: { metered: false } },
-        { check: 'quota', result: 'pass', evidence: { metered: false } }
-      ])
-    }
+    expect(authQuotaChecksOf('codex', { rateLimits: state, nowMs: NOW_MS })).toMatchObject([
+      { check: 'auth', result: 'fail', reason: 'auth_failed' },
+      { check: 'quota', result: 'fail', reason: 'quota_exhausted' }
+    ])
   })
 
   it("reads the login and the quota as before on Orca's inherited meters", () => {
     const state = headroomOf({ claude: failed('deferred-by-live-session') })
-    expect(
-      authQuotaChecksOf(
-        'claude',
-        { usageSource: 'orca-inherited', rateLimits: state, nowMs: NOW_MS },
-        live
-      )
-    ).toEqual([authCheckOf(state.claude, NOW_MS, live), quotaCheckOf('claude', state, NOW_MS)])
+    expect(authQuotaChecksOf('claude', { rateLimits: state, nowMs: NOW_MS }, live)).toEqual([
+      authCheckOf(state.claude, NOW_MS, live),
+      quotaCheckOf('claude', state, NOW_MS)
+    ])
   })
 })

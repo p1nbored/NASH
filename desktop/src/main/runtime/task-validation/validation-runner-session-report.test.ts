@@ -86,18 +86,18 @@ describe('validation runner: in-session attempts', () => {
     expect(world.state.reviewRequests).toEqual([])
   })
 
-  it('keeps executor_completed inconclusive for an in-session attempt: a claim is not proof', async () => {
+  it('keeps an unknown machine check inconclusive instead of treating the claim as proof', async () => {
     world.inSessionClaim({
-      spec: { machineChecks: [{ kind: 'executor_completed' }] },
+      spec: { machineChecks: [{ kind: 'unknown_check' }] },
       report: REPORT
     })
     const [report] = await world.runner.validatePending()
     expect(report).toMatchObject({ verdict: 'inconclusive' })
     expect(settledValidation(report)?.checks).toContainEqual(
       expect.objectContaining({
-        kind: 'executor_completed',
+        kind: 'unknown_check',
         status: 'inconclusive',
-        note: 'An in-session attempt has no process evidence to check.'
+        note: 'The check kind `unknown_check` is not one the validators know.'
       })
     )
   })

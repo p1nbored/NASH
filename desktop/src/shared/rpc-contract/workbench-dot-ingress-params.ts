@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DeliverableLanguageSchema } from '../deliverable-language'
 import {
   DOT_DEFAULT_REQUEST_ACCESS,
   DOT_SUBMISSION_FAILURES
@@ -96,7 +95,6 @@ export const WorkbenchDotIngressRequestViewSchema = z
     workspaceId: WorkbenchWorkspaceIdSchema,
     objective: WorkbenchObjectiveSchema,
     requestedAccess: DotRequestAccessSchema,
-    deliverableLanguage: DeliverableLanguageSchema.nullable(),
     claimedClient: DotClientDescriptorSchema.nullable(),
     failureCode: z.enum(DOT_SUBMISSION_FAILURES).nullable(),
     createdAt: TimestampSchema,

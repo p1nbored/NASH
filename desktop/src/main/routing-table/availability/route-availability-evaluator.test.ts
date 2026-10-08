@@ -416,3 +416,17 @@ describe('latches', () => {
     expect(result?.status).toBe('unavailable')
   })
 })
+
+it.each(['claude_primary', 'claude_workflow'] as const)(
+  'checks actual Codex availability for legacy %s target',
+  async (target) => {
+    const h = createEvaluatorHarness({ detected: async () => ['codex'] })
+    const subject = subjectOf(target, 'gpt-6.1-sol', 'max', 'required', false, 'codex')
+    const [result] = await h.evaluator.evaluate([subject], DISPATCH)
+    expect(result).toMatchObject({
+      status: 'available',
+      cli: { target, model: 'gpt-6.1-sol', effortDelivery: 'codex_config_override' }
+    })
+    expect(h.calls).toMatchObject({ claude: 0, codex: 1, executable: 1 })
+  }
+)

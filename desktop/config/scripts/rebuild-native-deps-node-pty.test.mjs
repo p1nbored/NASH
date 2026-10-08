@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, symlinkSync } from 'node:fs'
 import { removeTreeSync } from '../../src/shared/windows-transient-lock-removal.ts'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -243,29 +243,43 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
     }
   })
 
-  it('restores the ConPTY runtime payload after a Windows Electron rebuild', () => {
-    const projectDir = mkTempProject()
+  it.each(['physical', 'linked'])(
+    'restores the ConPTY runtime payload after a Windows Electron rebuild from the %s package',
+    (layout) => {
+      const projectDir = mkTempProject()
 
-    try {
-      writeFakeUsableElectronPackage(projectDir, { platform: 'win32' })
-      writeFakeElectronRebuild(projectDir)
-      writeFakeNodePtyConptyPayload(projectDir, 'x64')
+      try {
+        writeFakeUsableElectronPackage(projectDir, { platform: 'win32' })
+        writeFakeElectronRebuild(projectDir)
+        const payloadRoot = layout === 'linked' ? join(projectDir, '.pnpm', 'node-pty') : projectDir
+        writeFakeNodePtyConptyPayload(payloadRoot, 'x64')
+        const physicalNodePtyDir = join(payloadRoot, 'node_modules', 'node-pty')
+        if (layout === 'linked') {
+          symlinkSync(
+            physicalNodePtyDir,
+            join(projectDir, 'node_modules', 'node-pty'),
+            process.platform === 'win32' ? 'junction' : 'dir'
+          )
+        }
 
-      const result = runRebuildScript(
-        projectDir,
-        { npm_config_platform: 'win32', npm_config_arch: 'x64' },
-        ['--platform=win32', '--arch=x64', '--force']
-      )
+        const result = runRebuildScript(
+          projectDir,
+          { npm_config_platform: 'win32', npm_config_arch: 'x64' },
+          ['--platform=win32', '--arch=x64', '--force']
+        )
 
-      expect(result.status, result.stderr).toBe(0)
-      expect(result.stdout).toContain('Restored node-pty ConPTY runtime files for win10-x64')
-      const runtimeDir = join(projectDir, 'node_modules', 'node-pty', 'build', 'Release', 'conpty')
-      expect(readFileSync(join(runtimeDir, 'conpty.dll'), 'utf8')).toBe('conpty.dll x64')
-      expect(readFileSync(join(runtimeDir, 'OpenConsole.exe'), 'utf8')).toBe('OpenConsole.exe x64')
-    } finally {
-      removeTreeSync(projectDir)
+        expect(result.status, result.stderr).toBe(0)
+        expect(result.stdout).toContain('Restored node-pty ConPTY runtime files for win10-x64')
+        const runtimeDir = join(physicalNodePtyDir, 'build', 'Release', 'conpty')
+        expect(readFileSync(join(runtimeDir, 'conpty.dll'), 'utf8')).toBe('conpty.dll x64')
+        expect(readFileSync(join(runtimeDir, 'OpenConsole.exe'), 'utf8')).toBe(
+          'OpenConsole.exe x64'
+        )
+      } finally {
+        removeTreeSync(projectDir)
+      }
     }
-  })
+  )
 
   it.skipIf(process.platform !== 'win32')(
     'does not rebuild a healthy node-pty when another Windows addon fails its probe',

@@ -73,7 +73,7 @@ describe('routing table source hygiene', () => {
   })
 
   it('keeps the model pin policy and English check as the only copies', () => {
-    const copies = files.filter((path) => /GEMINI_4_FAMILY|ENGLISH_TEXT\s*=/.test(codeOf(path)))
+    const copies = files.filter((path) => /MODEL_ID_SYNTAX|ENGLISH_TEXT\s*=/.test(codeOf(path)))
     expect(copies.sort()).toEqual([
       'shared/english-text.ts',
       'shared/routing-table/model-pin-policy.ts'
