@@ -1,7 +1,6 @@
 import type { TerminalThemeMap } from './types'
 
-// Frozen D12 Paper terminal pair, recorded as decision D-009 in
-// docs/decision-log.md. Every ANSI text color clears
+// Frozen D12 Paper terminal pair; see DESIGN.md. Every ANSI text color clears
 // 4.5:1 against its background; Charcoal is the default in both app themes.
 // Freeze adjustments: Charcoal selection lightened to clear 2:1 against CLI
 // instruction blocks with white text; Paper white/brightWhite darkened so CLI

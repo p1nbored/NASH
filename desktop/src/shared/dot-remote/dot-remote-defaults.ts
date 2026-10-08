@@ -1,6 +1,6 @@
 import { DOT_REQUEST_ACCESS_LEVELS, type DotRequestAccess } from '../dot-ingress/dot-ingress-limits'
 
-// Plan section 10 (docs/dot-mcp-remote-plan.md): the values marked DEFAULT are the recommended
+// Current policy (docs/dot-mcp.md): the values marked DEFAULT are the recommended
 // defaults and are AWAITING USER CONFIRMATION; the one marked DECIDED was settled by the user.
 // Changing any of them is a deliberate contract edit that regenerates the goldens.
 
@@ -34,7 +34,7 @@ export const DOT_REMOTE_DEFAULTS_AWAITING_CONFIRMATION = {
   deviceCredentialLifetimeDays: DOT_REMOTE_DEVICE_CREDENTIAL_LIFETIME_DAYS
 } as const
 
-/** The plan section 10 decisions the user settled; the manifest carries them as policy.decided. */
+/** Settled decisions are carried by the manifest as policy.decided. */
 export const DOT_REMOTE_DECIDED_POLICY = {
   submitAccessCap: DOT_REMOTE_SUBMIT_ACCESS_CAP
 } as const
