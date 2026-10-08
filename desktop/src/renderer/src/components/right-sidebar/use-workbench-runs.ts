@@ -70,13 +70,7 @@ function emptyRuns(scopeKey: string): RunsState {
 }
 
 function runsError(error: unknown): WorkbenchError {
-  return toWorkbenchError(error, {
-    invalidResponse: translate(
-      'workbench.runs.invalidResponse',
-      'The run store returned an invalid response.'
-    ),
-    failed: translate('workbench.runs.failed', 'The run operation failed.')
-  })
+  return toWorkbenchError(error)
 }
 
 function runMismatch(): WorkbenchResponseError {

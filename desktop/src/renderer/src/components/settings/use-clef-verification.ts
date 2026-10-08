@@ -26,6 +26,8 @@ export type ClefVerificationModel = {
   error: string | null
   verify: () => Promise<void>
   pin: (reportSha256: string) => Promise<void>
+  /** Reads the status again, for example after the credentials changed. */
+  refresh: () => Promise<void>
 }
 
 /**
@@ -122,5 +124,16 @@ export function useClefVerification(): ClefVerificationModel {
     [load, mountedRef]
   )
 
-  return { status, statusError, loading, running, result, pinned, error, verify, pin }
+  return {
+    status,
+    statusError,
+    loading,
+    running,
+    result,
+    pinned,
+    error,
+    verify,
+    pin,
+    refresh: load
+  }
 }

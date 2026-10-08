@@ -4,6 +4,7 @@ import { translate } from '@/i18n/i18n'
 import type { WorkbenchValidationCheckPendingResult } from '../../../../shared/rpc-contract/workbench-validation-params'
 import { useWorkbenchValidationCheck } from './use-workbench-validation-check'
 import WorkbenchCallout from './WorkbenchCallout'
+import { errorDetails } from './workbench-details'
 
 function PassCounts({
   result
@@ -12,7 +13,7 @@ function PassCounts({
 }): React.JSX.Element {
   if (result.checked === 0) {
     return (
-      <p role="status" className="text-xs text-muted-foreground">
+      <p role="status" className="text-meta text-muted-foreground">
         {translate(
           'workbench.validation.nothingWaiting',
           'No task results were waiting for validation.'
@@ -30,7 +31,7 @@ function PassCounts({
     { key: 'skipped', label: translate('workbench.validation.skipped', 'Skipped') }
   ] as const
   return (
-    <div role="status" className="space-y-1 text-xs text-muted-foreground">
+    <div role="status" className="space-y-0.5 text-meta text-muted-foreground">
       <p>
         {translate('workbench.validation.checked', 'Results checked: {{total}}', {
           total: result.checked
@@ -53,12 +54,9 @@ function PassCounts({
 export default function WorkbenchValidationCheck(): React.JSX.Element {
   const validation = useWorkbenchValidationCheck()
   return (
-    <section
-      aria-labelledby="workbench-validation"
-      className="space-y-2 border-t border-border pt-3"
-    >
+    <section aria-labelledby="workbench-validation" className="space-y-1 pt-1">
       <div className="flex min-h-6 items-center justify-between gap-2">
-        <h3 id="workbench-validation" className="text-xs font-medium text-muted-foreground">
+        <h3 id="workbench-validation" className="text-meta font-medium text-muted-foreground">
           {translate('workbench.validation.title', 'Task validation')}
         </h3>
         {/* Why one label: only the icon swaps while checking, so the button keeps its width. */}
@@ -78,20 +76,21 @@ export default function WorkbenchValidationCheck(): React.JSX.Element {
           {translate('workbench.validation.check', 'Check now')}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-meta text-muted-foreground">
         {translate(
-          'workbench.validation.help',
-          'Results are checked as each task reports. Check now also checks results still waiting, such as those an earlier session left. A model review runs only for a task whose TaskSpec asks for one.'
+          'workbench.validation.helpShort',
+          'Each result is checked when its task reports. Check now also checks results still waiting.'
         )}
       </p>
       {validation.result && <PassCounts result={validation.result} />}
       {validation.error && (
         <WorkbenchCallout
           role="alert"
+          tone="error"
           label={translate('workbench.validation.errorTitle', 'Validation not checked')}
+          details={{ subject: 'validation check', entries: errorDetails(validation.error) }}
         >
           <p className="break-words">{validation.error.message}</p>
-          <p className="break-words font-mono">{validation.error.code}</p>
         </WorkbenchCallout>
       )}
     </section>

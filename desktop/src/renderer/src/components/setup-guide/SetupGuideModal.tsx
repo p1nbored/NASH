@@ -51,16 +51,10 @@ function SetupGuideModalContent({
   const setSetupGuideSidebarDismissed = useAppStore((s) => s.setSetupGuideSidebarDismissed)
   const setupSteps = useMemo(() => getFeatureWallSetupSteps(), [])
   const [userSelectedStep, setUserSelectedStep] = useState(false)
-  const [orchestrationSkillInstalled, setOrchestrationSkillInstalled] = useState(false)
-  const [browserUseSkillInstalled, setBrowserUseSkillInstalled] = useState(false)
   // Why: keep progress inputs live through the close-animation linger; dropping
   // them mid-fade flips completed rows back to "not done yet" on screen.
   const progressInputsActive = open || lingering
-  const progress = useSetupGuideProgress(
-    progressInputsActive,
-    orchestrationSkillInstalled,
-    browserUseSkillInstalled
-  )
+  const progress = useSetupGuideProgress(progressInputsActive)
   const [activeStepId, setActiveStepId] = useState<FeatureWallSetupStepId>(() =>
     getFirstIncompleteFeatureWallSetupStepId(progress.stepDone)
   )
@@ -168,8 +162,6 @@ function SetupGuideModalContent({
             activeStep={activeStep}
             progress={progress}
             onSelectStep={handleSelectStep}
-            onOrchestrationSkillInstalledChange={setOrchestrationSkillInstalled}
-            onBrowserUseSkillInstalledChange={setBrowserUseSkillInstalled}
           />
         </div>
       </DialogContent>

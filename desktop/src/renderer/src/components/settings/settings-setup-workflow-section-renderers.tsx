@@ -10,12 +10,19 @@ import { ShareSkillsSettingsPane } from './ShareSkillsSettingsPane'
 import { SettingsSection } from './SettingsSection'
 import { translate } from '@/i18n/i18n'
 import type { SettingsRenderContext } from './settings-render-context'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../shared/nash-build-flags'
+
+// Why: Orca Account and Mobile are hidden in NASH builds (D-038). Sections render whenever they are
+// active, so a stale deep link must not be able to open them either.
+function showOrcaAccountAndMobile(context: SettingsRenderContext): boolean {
+  return context.model.showDesktopOnlySettings && ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED
+}
 
 export function renderOrcaAccountSettingsSection(
   context: SettingsRenderContext
 ): React.JSX.Element | null {
-  const { model, navigation, view } = context
-  return model.showDesktopOnlySettings ? (
+  const { navigation, view } = context
+  return showOrcaAccountAndMobile(context) ? (
     <SettingsSection
       id="orca-account"
       title={translate('auto.components.settings.orcaAccount.title', 'Orca Cloud Account')}
@@ -100,8 +107,8 @@ export function renderIntegrationsSettingsSection(
 export function renderMobileSettingsSection(
   context: SettingsRenderContext
 ): React.JSX.Element | null {
-  const { model, navigation, view } = context
-  return model.showDesktopOnlySettings ? (
+  const { navigation, view } = context
+  return showOrcaAccountAndMobile(context) ? (
     <SettingsSection
       id="mobile"
       title={translate('auto.components.settings.Settings.c40dadaac8', 'Mobile')}

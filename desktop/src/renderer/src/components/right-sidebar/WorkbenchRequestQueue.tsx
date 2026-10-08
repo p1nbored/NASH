@@ -5,6 +5,7 @@ import { translate } from '@/i18n/i18n'
 import type { WorkbenchRequest } from '../../../../shared/workbench-request'
 import { useWorkbenchRequestQueue } from './use-workbench-request-queue'
 import WorkbenchCallout from './WorkbenchCallout'
+import { errorDetails } from './workbench-details'
 import WorkbenchRequestIntake from './WorkbenchRequestIntake'
 import WorkbenchRequestRow, { type WorkbenchRequestRuns } from './WorkbenchRequestRow'
 import WorkbenchSectionHeader from './WorkbenchSectionHeader'
@@ -30,12 +31,18 @@ function QueueError({ queue }: { queue: Queue }): React.JSX.Element | null {
   return (
     <WorkbenchCallout
       role="alert"
-      label={translate('workbench.requests.errorTitle', 'Request store error')}
+      tone="error"
+      label={translate('workbench.requests.updateFailedTitle', 'Requests could not be updated')}
+      details={{
+        subject: 'requests',
+        entries: [['workspace_id', queue.scope.workspaceId], ...errorDetails(queue.error)]
+      }}
     >
       <p className="break-words">{queue.error.message}</p>
-      <p className="break-words font-mono">{queue.error.code}</p>
       {queue.list && (
-        <p>{translate('workbench.requests.stale', 'Displayed requests may be out of date.')}</p>
+        <p className="text-muted-foreground">
+          {translate('workbench.requests.stale', 'Displayed requests may be out of date.')}
+        </p>
       )}
     </WorkbenchCallout>
   )
@@ -59,7 +66,7 @@ function QueueRequests({
   return (
     <>
       {queue.olderPage && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
           {translate(
             'workbench.requests.olderPage',
             'Showing an older page. Refresh returns to the latest requests.'
@@ -67,19 +74,17 @@ function QueueRequests({
         </p>
       )}
       {queue.receipt && (
-        <p role="status" className="break-words text-xs text-muted-foreground">
-          {translate('workbench.requests.receipt', 'Registration receipt: {{requestId}}', {
-            requestId: queue.receipt.requestId
-          })}
+        <p role="status" className="text-meta text-muted-foreground">
+          {translate('workbench.requests.registered', 'Request registered.')}
         </p>
       )}
       {queue.list && pageRequests.length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          {translate('workbench.requests.empty', 'No registered requests on this page.')}
+        <p className="text-meta text-muted-foreground">
+          {translate('workbench.requests.noneYet', 'No requests yet.')}
         </p>
       )}
       {rows.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border">
           {rows.map((request) => (
             <WorkbenchRequestRow
               key={request.requestId}
@@ -94,7 +99,7 @@ function QueueRequests({
       {queue.list?.nextBeforeSequence != null && (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="xs"
           disabled={queue.busy}
           onClick={() => void queue.loadOlder()}
@@ -112,7 +117,7 @@ function ScopeUnavailable({ queue }: { queue: Queue }): React.JSX.Element {
     queue.scope.executionHostId &&
     queue.scope.executionHostId !== 'local'
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-meta text-muted-foreground">
       {remote
         ? translate(
             'workbench.requests.remoteUnavailable',
@@ -143,7 +148,7 @@ export default function WorkbenchRequestQueue({
     void runs?.refresh()
   }
   return (
-    <section aria-labelledby="workbench-requests" className="space-y-3">
+    <section aria-labelledby="workbench-requests" className="space-y-2">
       <WorkbenchSectionHeader
         id="workbench-requests"
         title={translate('workbench.requests.title', 'Local requests')}
@@ -161,12 +166,6 @@ export default function WorkbenchRequestQueue({
           </Button>
         )}
       </WorkbenchSectionHeader>
-      <p className="text-xs text-muted-foreground">
-        {translate(
-          'workbench.requests.runNote',
-          'Each registered request starts a run with one Claude Code session in this workspace.'
-        )}
-      </p>
       {queue.scope.available ? (
         <>
           <QueueError queue={queue} />

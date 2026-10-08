@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { Loader2, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
@@ -6,31 +6,32 @@ import { useAppStore } from '../../store'
 import type { ProviderRateLimits } from '../../../../shared/rate-limit-types'
 import { normalizeUsagePercentageDisplay } from '../../../../shared/usage-percentage-display'
 import { ProviderIcon, ProviderPanel, getProviderDisplayName } from '../status-bar/tooltip'
+import { SettingsSubsectionHeader } from './SettingsFormControls'
 
 type CliProvider = 'claude' | 'codex' | 'antigravity'
 
 function noReadingHint(provider: CliProvider): string {
   if (provider === 'claude') {
     return translate(
-      'auto.components.settings.cliUsageReadings.claudeHint',
-      'Claude Code reports usage through its status line while a Claude session started in NASH runs.'
+      'auto.components.settings.cliUsageReadings.claudeHintPlain',
+      'Appears while a Claude session started in NASH runs.'
     )
   }
   if (provider === 'codex') {
     return translate(
-      'auto.components.settings.cliUsageReadings.codexHint',
-      'Refresh usage asks codex app-server.'
+      'auto.components.settings.cliUsageReadings.codexHintPlain',
+      'Use Refresh usage to read it.'
     )
   }
   return translate(
-    'auto.components.settings.cliUsageReadings.agyHint',
-    'Refresh usage runs agy /usage while the agy meter is on in the status bar.'
+    'auto.components.settings.cliUsageReadings.agyHintPlain',
+    'Use Refresh usage while the agy meter is on in the status bar.'
   )
 }
 
 function NoReading({ provider }: { provider: CliProvider }): React.JSX.Element {
   return (
-    <div className="space-y-1 text-xs">
+    <div className="space-y-1 text-meta">
       <div className="flex items-center gap-1.5 font-medium">
         <ProviderIcon provider={provider} />
         {getProviderDisplayName(provider)}
@@ -75,22 +76,28 @@ export function CliUsageReadingsSection(): React.JSX.Element {
     <section
       id="accounts-cli-usage"
       data-testid="cli-usage-readings"
-      className="space-y-4 scroll-mt-6"
+      className="space-y-group scroll-mt-6"
     >
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold">
-          {translate('auto.components.settings.cliUsageReadings.title', 'Usage from the CLIs')}
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          {translate(
-            'auto.components.settings.cliUsageReadings.body',
-            "NASH reads usage only from each CLI: Claude Code's status line, codex app-server and agy /usage. It reads no sign-in and asks no vendor for usage."
-          )}
-        </p>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <SettingsSubsectionHeader
+        title={translate('auto.components.settings.cliUsageReadings.title', 'Usage from the CLIs')}
+        description={translate(
+          'auto.components.settings.cliUsageReadings.bodyPlain',
+          'Each reading comes from the CLI itself, never from a sign-in.'
+        )}
+        action={
+          <Button variant="outline" size="sm" disabled={refreshing} onClick={() => void refresh()}>
+            {refreshing ? (
+              <Loader2 aria-hidden="true" className="animate-spin" />
+            ) : (
+              <RefreshCw aria-hidden="true" />
+            )}
+            {translate('auto.components.settings.cliUsageReadings.refresh', 'Refresh usage')}
+          </Button>
+        }
+      />
+      <div className="grid gap-group sm:grid-cols-3">
         {readings.map(([provider, limits]) => (
-          <div key={provider} className="rounded-md border border-border p-3">
+          <div key={provider} className="min-w-0">
             {limits ? (
               <ProviderPanel p={limits} usagePercentageDisplay={display} showResetCredits={false} />
             ) : (
@@ -98,20 +105,6 @@ export function CliUsageReadingsSection(): React.JSX.Element {
             )}
           </div>
         ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" disabled={refreshing} onClick={() => void refresh()}>
-          {translate('auto.components.settings.cliUsageReadings.refresh', 'Refresh usage')}
-        </Button>
-        {refreshing ? (
-          <Loader2
-            className="size-4 animate-spin"
-            aria-label={translate(
-              'auto.components.settings.cliUsageReadings.refreshing',
-              'Refreshing usage'
-            )}
-          />
-        ) : null}
       </div>
     </section>
   )

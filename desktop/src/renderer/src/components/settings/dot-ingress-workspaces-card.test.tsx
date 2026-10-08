@@ -90,13 +90,7 @@ function seedStore(): void {
 async function renderSection(): Promise<HTMLElement> {
   render(<DotIngressSection />)
   await act(async () => {})
-  const shell = screen
-    .getByText('Workspaces for dot', { selector: 'p' })
-    .closest('[data-settings-section]')
-  if (!(shell instanceof HTMLElement)) {
-    throw new Error('workspaces card is missing')
-  }
-  return shell
+  return screen.getByRole('region', { name: 'Workspaces' })
 }
 
 function row(shell: HTMLElement, label: string): HTMLElement {
@@ -141,7 +135,7 @@ describe('DotIngressSection workspaces', () => {
     const off = row(shell, 'field-notes: main')
     expect(within(off).queryAllByRole('radio')).toHaveLength(0)
     expect(within(off).getByText('Off')).toBeTruthy()
-    expect(shell.textContent).toMatch(/start at read only/)
+    expect(shell.textContent).toMatch(/Workspaces start read only/)
   })
 
   it('asks once, stating what workspace write allows, before raising the access', async () => {
@@ -159,6 +153,9 @@ describe('DotIngressSection workspaces', () => {
     )
     expect(dialog.textContent).toMatch(/file edits allowed/)
     expect(dialog.textContent).toMatch(/approve command prompts/)
+    // Why: D-034 holds remote dot to the same maximum, so the confirmation names both paths.
+    expect(dialog.textContent).toMatch(/here or through your GPT Site/)
+    expect(dialog.textContent).toMatch(/runs that already started keep their access/)
     expect(callsTo(ENABLE)).toHaveLength(0)
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))

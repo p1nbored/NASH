@@ -1,25 +1,27 @@
 import { translate } from '@/i18n/i18n'
 import type { WorkbenchRequestStatus } from '../../../../shared/workbench-request'
-import type { WorkbenchChipCopy } from './workbench-run-copy'
-import WorkbenchStateChip from './WorkbenchStateChip'
+import WorkbenchStateChip, { type WorkbenchChipCopy } from './WorkbenchStateChip'
 
 // Why run wording: the view statuses keep their routing-era names (D-016 plan 1.2) but mean launch states.
-function chipFor(status: WorkbenchRequestStatus): WorkbenchChipCopy {
+export function requestStatusChip(status: WorkbenchRequestStatus): WorkbenchChipCopy {
   switch (status) {
     case 'ROUTING_BLOCKED':
       return {
-        label: translate('workbench.requests.status.launchBlocked', 'Launch blocked'),
-        tone: 'warning'
+        kind: 'blocked',
+        label: translate('workbench.requests.status.launchBlocked', 'Launch blocked')
       }
     case 'ROUTING':
-      return { label: translate('workbench.requests.status.starting', 'Starting'), tone: 'neutral' }
+      return {
+        kind: 'progress',
+        label: translate('workbench.requests.status.starting', 'Starting')
+      }
     case 'ROUTED':
       return {
-        label: translate('workbench.requests.status.runStarted', 'Run started'),
-        tone: 'neutral'
+        kind: 'done',
+        label: translate('workbench.requests.status.runStarted', 'Run started')
       }
     case 'CANCELED':
-      return { label: translate('workbench.requests.status.canceled', 'Canceled'), tone: 'muted' }
+      return { kind: 'ended', label: translate('workbench.requests.status.canceled', 'Canceled') }
   }
 }
 
@@ -28,5 +30,5 @@ export default function WorkbenchRequestStateChip({
 }: {
   status: WorkbenchRequestStatus
 }): React.JSX.Element {
-  return <WorkbenchStateChip status={status} {...chipFor(status)} />
+  return <WorkbenchStateChip {...requestStatusChip(status)} />
 }

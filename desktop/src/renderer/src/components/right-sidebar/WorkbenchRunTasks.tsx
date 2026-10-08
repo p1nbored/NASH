@@ -5,20 +5,22 @@ import { useAppStore } from '@/store'
 import type { WorkbenchRunTask } from '../../../../shared/rpc-contract/workbench-task-window-params'
 import type { WorkflowRunView } from '../../../../shared/workflow-run/workflow-run-view'
 import {
+  attemptStateKind,
   attemptStateLabel,
   elapsedBetween,
   taskExecutorLabel
 } from '../task-window/task-window-copy'
 import { isTaskWindowExecutor, taskWindowTitle } from '../task-window/task-window-tab'
 import { useWorkbenchRunTasks } from './use-workbench-run-tasks'
+import WorkbenchCallout from './WorkbenchCallout'
+import { errorDetails } from './workbench-details'
 import { findRunTerminalTabId, showRunTerminal } from './workbench-run-terminal'
+import WorkbenchStateChip from './WorkbenchStateChip'
 
 function taskSummary(task: WorkbenchRunTask, readAt: number): string {
   const latest = task.attempts.at(-1) ?? null
   const elapsed = latest ? elapsedBetween(latest.startedAt, latest.settledAt, readAt) : null
-  return [taskExecutorLabel(task.executorKind), attemptStateLabel(latest?.state ?? null), elapsed]
-    .filter(Boolean)
-    .join(' · ')
+  return [taskExecutorLabel(task.executorKind), elapsed].filter(Boolean).join(' · ')
 }
 
 function isSessionTask(kind: string): boolean {
@@ -42,7 +44,7 @@ function TaskAction({
     return (
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="xs"
         aria-label={translate('workbench.tasks.openWindowLabel', 'Open task window for {{title}}', {
           title
@@ -63,11 +65,12 @@ function TaskAction({
       </Button>
     )
   }
+  // Why the primary's terminal: Claude subagents and workflows run inside the main session (D-024).
   if (isSessionTask(kind) && tabId) {
     return (
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="xs"
         aria-label={translate('workbench.tasks.showTerminalLabel', 'Show terminal for {{title}}', {
           title
@@ -94,38 +97,47 @@ export default function WorkbenchRunTasks({
   }
   const heading = translate('workbench.tasks.title', 'Tasks')
   return (
-    <section aria-label={heading} className="space-y-1">
-      <h4 className="text-xs font-medium text-muted-foreground">{heading}</h4>
+    <section aria-label={heading} className="space-y-1 pt-0.5">
+      <h4 className="text-meta font-medium text-muted-foreground">{heading}</h4>
       {error && (
-        <p className="break-words text-xs text-muted-foreground">
-          {translate('workbench.tasks.readFailed', 'Tasks could not be read: {{message}}', {
+        <WorkbenchCallout
+          tone="error"
+          label={translate('workbench.tasks.readFailed', 'Tasks could not be read: {{message}}', {
             message: error.message
           })}
-        </p>
+          details={{
+            subject: 'run tasks',
+            entries: [['run_id', run.runId], ...errorDetails(error)]
+          }}
+        />
       )}
       {tasks?.length === 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
           {translate('workbench.tasks.empty', 'No tasks yet.')}
         </p>
       )}
       {tasks && tasks.length > 0 && (
-        <ul aria-label={heading} className="divide-y divide-border">
-          {tasks.map((task) => (
-            <li key={task.taskId} className="space-y-1 py-1.5">
-              <div className="flex min-w-0 items-start gap-2">
-                <p className="min-w-0 flex-1 break-words text-[13px] text-foreground">
-                  {taskWindowTitle(task.title)}
-                </p>
+        <ul aria-label={heading} className="space-y-1.5">
+          {tasks.map((task) => {
+            const state = task.attempts.at(-1)?.state ?? null
+            return (
+              <li key={task.taskId} className="flex min-w-0 items-start gap-2">
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <p className="break-words text-body text-foreground">
+                    {taskWindowTitle(task.title)}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-meta text-muted-foreground">
+                    <WorkbenchStateChip
+                      kind={attemptStateKind(state)}
+                      label={attemptStateLabel(state)}
+                    />
+                    <span>{taskSummary(task, readAt)}</span>
+                  </div>
+                </div>
                 <TaskAction run={run} task={task} />
-              </div>
-              <p className="text-xs text-muted-foreground">{taskSummary(task, readAt)}</p>
-              {isSessionTask(task.executorKind) && (
-                <p className="text-xs text-muted-foreground">
-                  {translate('workbench.tasks.inSession', 'Runs in the main session.')}
-                </p>
-              )}
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>

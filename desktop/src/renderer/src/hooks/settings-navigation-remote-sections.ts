@@ -59,8 +59,14 @@ export function buildRemoteSettingsSections(
         'Remote NASH Servers'
       ),
       description: isWebClient
-        ? 'Connect this browser to a saved NASH server.'
-        : 'Pair remote NASH runtimes for persistent sessions, richer remote state, and web or mobile handoff.',
+        ? translate(
+            'auto.hooks.useSettingsNavigationMetadata.serversWebDescription',
+            'Connect this browser to a saved NASH server.'
+          )
+        : translate(
+            'auto.hooks.useSettingsNavigationMetadata.serversDescription',
+            'Pair NASH on other machines to keep sessions running there.'
+          ),
       icon: Server,
       searchEntries: [runtimeEnvironmentsSearchEntry],
       group: 'remote',

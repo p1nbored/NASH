@@ -41,13 +41,13 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('WorkbenchValidationCheck', () => {
-  it('explains when a check may start a model review, and checks nothing until asked', () => {
+  it('says briefly what Check now adds, without internal terms, and checks nothing until asked', () => {
     render(<WorkbenchValidationCheck />)
     const section = screen.getByRole('region', { name: 'Task validation' })
-    expect(section.textContent).toContain('Results are checked as each task reports.')
     expect(section.textContent).toContain(
-      'A model review runs only for a task whose TaskSpec asks for one.'
+      'Each result is checked when its task reports. Check now also checks results still waiting.'
     )
+    expect(section.textContent).not.toContain('TaskSpec')
     expect(checkButton()).toBeDefined()
     expect(rpc).not.toHaveBeenCalled()
   })
@@ -94,7 +94,7 @@ describe('WorkbenchValidationCheck', () => {
     )
   })
 
-  it('explains a refusal because a pass is already running, with its code', async () => {
+  it('explains a refusal because a pass is already running, with its code in details only', async () => {
     rpc.mockRejectedValueOnce(
       refusal('workbench_validation_pass_running', 'A pass is running (server text).')
     )
@@ -106,7 +106,8 @@ describe('WorkbenchValidationCheck', () => {
     expect(alert.textContent).toContain(
       'A validation pass is already running. Check again when it finishes.'
     )
-    expect(alert.textContent).toContain('workbench_validation_pass_running')
+    expect(alert.textContent).not.toContain('workbench_validation_pass_running')
+    expect(within(alert).getByRole('button', { name: 'Copy details' })).toBeDefined()
     expect(screen.queryByRole('status')).toBeNull()
   })
 
@@ -126,8 +127,8 @@ describe('WorkbenchValidationCheck', () => {
     fireEvent.click(checkButton())
     await settle()
     const alert = screen.getByRole('alert')
-    expect(alert.textContent).toContain('Validation returned an invalid response.')
-    expect(alert.textContent).toContain('invalid_response')
+    expect(alert.textContent).toContain('The app returned an unexpected response.')
+    expect(alert.textContent).not.toContain('invalid_response')
   })
 
   it('clears an earlier refusal when the next check succeeds', async () => {

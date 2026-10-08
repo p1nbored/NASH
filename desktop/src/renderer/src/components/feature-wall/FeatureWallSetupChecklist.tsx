@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { Check } from 'lucide-react'
 import type {
   FeatureWallSetupStep,
@@ -8,23 +8,17 @@ import { getFeatureWallSetupStepsForSection } from '../../../../shared/feature-w
 import { cn } from '@/lib/utils'
 import type { FeatureWallSetupProgress } from './feature-wall-setup-progress'
 import { FullDiskAccessSetupPrompt } from './FullDiskAccessSetupPrompt'
-import { AgentCapabilitiesSetupAction } from './AgentCapabilitiesSetupAction'
+import { SetupScriptAction, WorkspacesAction } from './FeatureWallSetupWorkflowActions'
 import {
-  AddReposAction,
-  SetupScriptAction,
-  WorkspacesAction
-} from './FeatureWallSetupWorkflowActions'
+  ClaudeCodeSetupAction,
+  ClefSetupAction,
+  DotSetupAction,
+  WorkbenchRunSetupAction
+} from './feature-wall-setup-nash-actions'
 import { ConnectIntegrationsList } from './ConnectIntegrationsList'
-import { BrowserAction } from './FeatureWallBrowserAction'
-import {
-  SetupBrowserVisual,
-  SetupMultipleReposVisual,
-  SetupWorkspacesVisual
-} from './FeatureWallSetupStepVisuals'
-import { AgentStep } from '../onboarding/AgentStep'
+import { SetupWorkspacesVisual } from './FeatureWallSetupStepVisuals'
 import { NotificationStep } from '../onboarding/NotificationStep'
 import { useAppStore } from '@/store'
-import type { TuiAgent } from '../../../../shared/tui-agent'
 import { getProviderRuntimeContextKey } from '@/lib/provider-runtime-context'
 import { translate } from '@/i18n/i18n'
 
@@ -36,8 +30,6 @@ type FeatureWallSetupChecklistProps = {
   activeStep: FeatureWallSetupStep | null
   progress: FeatureWallSetupProgress
   onSelectStep: (id: FeatureWallSetupStepId) => void
-  onOrchestrationSkillInstalledChange: (installed: boolean) => void
-  onBrowserUseSkillInstalledChange: (installed: boolean) => void
   /** Modal keeps a compact rail; embedded (settings pane) gets more column breathing room. */
   layout?: FeatureWallSetupChecklistLayout
 }
@@ -133,11 +125,17 @@ function SelectedStepAction(props: FeatureWallSetupChecklistProps): React.JSX.El
     return null
   }
   const activeDone = props.progress.stepDone[activeStep.id]
-  if (activeStep.id === 'default-agent') {
-    return <DefaultAgentAction />
+  if (activeStep.id === 'claude-code') {
+    return <ClaudeCodeSetupAction done={activeDone} />
   }
-  if (activeStep.id === 'add-two-repos') {
-    return <AddReposAction />
+  if (activeStep.id === 'clef') {
+    return <ClefSetupAction />
+  }
+  if (activeStep.id === 'dot') {
+    return <DotSetupAction />
+  }
+  if (activeStep.id === 'workbench-run') {
+    return <WorkbenchRunSetupAction done={activeDone} />
   }
   if (activeStep.id === 'notifications') {
     return <NotificationAction />
@@ -145,19 +143,8 @@ function SelectedStepAction(props: FeatureWallSetupChecklistProps): React.JSX.El
   if (activeStep.id === 'two-worktrees') {
     return <WorkspacesAction done={activeDone} />
   }
-  if (activeStep.id === 'browser') {
-    return <BrowserAction done={activeDone} />
-  }
   if (activeStep.id === 'task-sources') {
     return <TaskSourcesAction />
-  }
-  if (activeStep.id === 'agent-capabilities') {
-    return (
-      <AgentCapabilitiesSetupAction
-        onOrchestrationSkillInstalledChange={props.onOrchestrationSkillInstalledChange}
-        onBrowserUseSkillInstalledChange={props.onBrowserUseSkillInstalledChange}
-      />
-    )
   }
   if (activeStep.id === 'setup-script') {
     return <SetupScriptAction />
@@ -167,8 +154,8 @@ function SelectedStepAction(props: FeatureWallSetupChecklistProps): React.JSX.El
 
 // Full-width content below the caption/visual grid.
 function SelectedStepFooter(props: { stepId: FeatureWallSetupStepId }): React.JSX.Element | null {
-  // Why: Full Disk Access matters for projects in protected folders, so it sits with adding projects.
-  if (props.stepId === 'add-two-repos') {
+  // Why: agents NASH starts need Full Disk Access on macOS for projects in protected folders.
+  if (props.stepId === 'claude-code') {
     return <FullDiskAccessSetupPrompt />
   }
   return null
@@ -178,47 +165,7 @@ function SelectedStepVisual(props: { stepId: FeatureWallSetupStepId }): React.JS
   if (props.stepId === 'two-worktrees') {
     return <SetupWorkspacesVisual />
   }
-  if (props.stepId === 'add-two-repos') {
-    return <SetupMultipleReposVisual />
-  }
-  if (props.stepId === 'browser') {
-    return <SetupBrowserVisual />
-  }
   return null
-}
-
-function DefaultAgentAction(): React.JSX.Element {
-  const settings = useAppStore((s) => s.settings)
-  const updateSettings = useAppStore((s) => s.updateSettings)
-  const refreshDetectedAgents = useAppStore((s) => s.refreshDetectedAgents)
-  const detectedAgentIds = useAppStore((s) => s.detectedAgentIds)
-  const isDetectingAgents = useAppStore((s) => s.isDetectingAgents || s.isRefreshingAgents)
-  const selectedAgent =
-    settings?.defaultTuiAgent && settings.defaultTuiAgent !== 'blank'
-      ? settings.defaultTuiAgent
-      : null
-  const detectedSet = useMemo(() => new Set(detectedAgentIds ?? []), [detectedAgentIds])
-  const handleSelectAgent = useCallback(
-    (agent: TuiAgent) => {
-      void updateSettings({ defaultTuiAgent: agent })
-    },
-    [updateSettings]
-  )
-
-  useEffect(() => {
-    void refreshDetectedAgents()
-  }, [refreshDetectedAgents])
-
-  return (
-    <div className="max-w-3xl">
-      <AgentStep
-        selectedAgent={selectedAgent}
-        onSelect={handleSelectAgent}
-        detectedSet={detectedSet}
-        isDetecting={isDetectingAgents}
-      />
-    </div>
-  )
 }
 
 function NotificationAction(): React.JSX.Element {
@@ -264,10 +211,7 @@ export function FeatureWallSetupChecklist(
   const activeDone = activeStep ? progress.stepDone[activeStep.id] : false
   // Only steps with a visual constrain the caption to a narrow column so the
   // illustration can sit beside it; captionless steps let the copy run full width.
-  const hasStepVisual =
-    activeStep?.id === 'two-worktrees' ||
-    activeStep?.id === 'browser' ||
-    activeStep?.id === 'add-two-repos'
+  const hasStepVisual = activeStep?.id === 'two-worktrees'
   const setupSteps = getFeatureWallSetupStepsForSection('setup')
   const parallelWorkSteps = getFeatureWallSetupStepsForSection('parallel-work')
   const visualBreakpoint = isEmbedded ? 'xl' : 'sm'

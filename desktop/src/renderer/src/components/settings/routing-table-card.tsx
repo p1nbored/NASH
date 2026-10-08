@@ -1,168 +1,106 @@
-import { useState } from 'react'
-import { FileJson, PencilLine, RefreshCw, Waypoints } from 'lucide-react'
+import { useId, useState } from 'react'
 import { translate } from '@/i18n/i18n'
+import type {
+  ProposalChanges,
+  RoutingTableProposal
+} from '../../../../shared/routing-table/routing-table-proposal-schema'
 import type { WorkbenchRoutingTableListResult } from '../../../../shared/workbench-routing-table-view'
 import { Button } from '../ui/button'
-import {
-  IntegrationCardDetails,
-  IntegrationCardShell,
-  type IntegrationCardStatusTone
-} from './integration-card-shell'
-import { RoutingTableActiveView } from './routing-table-active-view'
+import { RoutingTableTaskList } from './routing-table-active-view'
+import { RoutingTableAdvanced } from './routing-table-advanced'
 import { RouteCheckButton } from './routing-table-availability'
 import { RoutingTableImportDialog } from './routing-table-import-dialog'
-import { routingTableRefusalMessage } from './routing-table-messages'
-import { RoutingTableProposals } from './routing-table-proposals'
-import { RoutingTableRouteEditor, type RouteEditorMode } from './routing-table-route-editor'
-import { RoutingTableRevertDialog, RoutingTableVersions } from './routing-table-versions'
+import { settingsEditSubmission } from './routing-table-inline-edit'
+import { routingTableRefusalDetails, routingTableRefusalMessage } from './routing-table-messages'
+import { RoutingTableRouteEditor } from './routing-table-route-editor'
+import { RoutingTableRevertDialog } from './routing-table-versions'
 import { RoutingWarningCallout } from './routing-warning-callout'
+import { CopyDetailsButton } from './settings-copy-details-button'
+import { SettingsStatusLabel } from './settings-status-label'
+import { SettingsSubsectionHeader } from './SettingsFormControls'
 import { useRoutingTable, type RoutingTableModel } from './use-routing-table'
 
 export const ROUTING_TABLE_SECTION_ID = 'integrations-routing-table'
 
-function cardStatus(model: RoutingTableModel): { label: string; tone: IntegrationCardStatusTone } {
-  const { list } = model
-  if (list === null) {
-    return {
-      label: translate('auto.components.settings.routingTable.card.unavailable', 'Unavailable'),
-      tone: 'attention'
-    }
+function headerStatus(model: RoutingTableModel): string | null {
+  if (model.loading) {
+    return null
   }
-  if (!list.active.ok) {
-    return {
-      label: translate('auto.components.settings.routingTable.card.blocked', 'Blocked'),
-      tone: 'attention'
-    }
+  if (model.list === null) {
+    return translate('auto.components.settings.routingTable.card.unavailable', 'Unavailable')
   }
-  const pending = list.proposals.filter((entry) => entry.decision === null).length
-  return pending > 0
-    ? {
-        label: translate(
-          'auto.components.settings.routingTable.card.toReview',
-          '{{count}} to review',
-          { count: pending }
-        ),
-        tone: 'attention'
-      }
-    : {
-        label: translate(
-          'auto.components.settings.routingTable.card.active',
-          'Version {{version}} active',
-          {
-            version: list.active.version
-          }
-        ),
-        tone: 'neutral'
-      }
+  return model.list.active.ok
+    ? null
+    : translate('auto.components.settings.routingTable.card.blocked', 'Blocked')
 }
 
-function TableBody(props: {
-  model: RoutingTableModel
-  list: WorkbenchRoutingTableListResult
-  onEditRoutes: () => void
-  onImport: () => void
-  onEditProposal: (mode: RouteEditorMode) => void
-  onRevert: (version: number) => void
-}): React.JSX.Element {
-  const { model, list } = props
-  const active = list.active.ok ? list.active : null
-  const unreadable = list.unreadableProposalIds.length
+/** A short message in the text, its codes behind "Copy details". */
+function ErrorLine(props: { message: string; details?: string | null }): React.JSX.Element {
   return (
-    <>
-      {list.active.ok ? null : (
-        <RoutingWarningCallout
-          label={translate(
-            'auto.components.settings.routingTable.card.blockedTitle',
-            'Routing is blocked'
-          )}
-        >
-          <p>{routingTableRefusalMessage(list.active)}</p>
-        </RoutingWarningCallout>
-      )}
-      {active ? <RoutingTableActiveView active={active} availability={model.availability} /> : null}
-      {active !== null && model.availability !== null ? (
-        <p className="text-[11px] text-muted-foreground">
-          {translate(
-            'auto.components.settings.routingTable.availability.hint',
-            'Availability shows readings from the last 10 minutes. Check routes asks each CLI again.'
-          )}{' '}
-          {translate(
-            'auto.components.settings.routingTable.availability.cliUsageHint',
-            "NASH reads usage only from the CLIs: Claude Code's status line, codex app-server and agy /usage. A route is blocked when a fresh reading shows a used-up limit, or after its CLI reports a sign-in or usage-limit failure."
-          )}
-        </p>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={active === null || model.busy}
-          onClick={props.onEditRoutes}
-        >
-          <PencilLine aria-hidden="true" />
-          {translate('auto.components.settings.routingTable.card.editRoutes', 'Edit routes')}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={active === null || model.busy}
-          onClick={props.onImport}
-        >
-          <FileJson aria-hidden="true" />
-          {translate('auto.components.settings.routingTable.card.import', 'Import')}
-        </Button>
-        {active !== null && model.availability !== null ? (
-          <RouteCheckButton
-            checking={model.checking}
-            disabled={model.loading || model.busy}
-            onCheck={() => void model.checkRoutes()}
-          />
-        ) : null}
-      </div>
-      {unreadable > 0 ? (
-        <p className="text-xs text-status-warning">
-          {translate(
-            'auto.components.settings.routingTable.card.unreadable',
-            'Unreadable proposal files: {{count}}. They are not shown and cannot be decided here.',
-            { count: unreadable }
-          )}
-        </p>
-      ) : null}
-      <RoutingTableProposals
-        list={list}
-        active={active?.table ?? null}
-        actions={{
-          busy: model.busy,
-          onAccept: (proposalId) => void model.accept(proposalId),
-          onReject: (proposalId) => void model.reject(proposalId),
-          onEdit: (proposal) => props.onEditProposal({ kind: 'modify', proposal })
-        }}
-      />
-      {list.versions.length > 0 ? (
-        <RoutingTableVersions
-          versions={list.versions}
-          activeVersion={list.activeVersion}
-          busy={model.busy}
-          onRevert={props.onRevert}
-        />
-      ) : null}
-    </>
+    <div className="flex flex-wrap items-center gap-x-row">
+      <p role="alert" className="text-meta text-destructive">
+        {props.message}
+      </p>
+      {props.details ? <CopyDetailsButton details={props.details} /> : null}
+    </div>
   )
 }
 
-/** The user-owned, versioned Routing Table (D-016): read it, review proposals, change or revert it. */
+function PendingNotice(props: { count: number; onReview: () => void }): React.JSX.Element {
+  return (
+    <div className="flex flex-wrap items-center gap-row">
+      <SettingsStatusLabel
+        tone="warning"
+        label={translate(
+          'auto.components.settings.routingTable.card.pendingNotice',
+          'Suggested changes to review: {{count}}',
+          { count: props.count }
+        )}
+      />
+      <Button variant="outline" size="xs" onClick={props.onReview}>
+        {translate('auto.components.settings.routingTable.card.review', 'Review')}
+      </Button>
+    </div>
+  )
+}
+
+function Blocked({ list }: { list: WorkbenchRoutingTableListResult }): React.JSX.Element | null {
+  if (list.active.ok) {
+    return null
+  }
+  const refusal = list.active
+  return (
+    <RoutingWarningCallout
+      label={translate(
+        'auto.components.settings.routingTable.card.blockedTitle',
+        'Routing is blocked'
+      )}
+    >
+      <p>{routingTableRefusalMessage(refusal)}</p>
+      <CopyDetailsButton details={() => routingTableRefusalDetails(refusal)} />
+    </RoutingWarningCallout>
+  )
+}
+
+/**
+ * Task routing (D-016, D-035): each kind of task with its agent, model and effort, edited in place.
+ * Versions, suggested changes, history and import wait in a closed Advanced section.
+ */
 export function RoutingTableCard(): React.JSX.Element {
   const model = useRoutingTable()
-  const [editor, setEditor] = useState<RouteEditorMode | null>(null)
+  const headingId = useId()
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [modifying, setModifying] = useState<RoutingTableProposal | null>(null)
   const [importing, setImporting] = useState(false)
   const [revertVersion, setRevertVersion] = useState<number | null>(null)
-  const pill = cardStatus(model)
   const { list } = model
   const active = list?.active.ok ? list.active : null
   const activeRef = active ? { version: active.version, sha256: active.sha256 } : null
-  const dialogOpen = editor !== null || importing
-  const refusal = model.notice?.kind === 'error' ? model.notice.message : null
+  const dialogOpen = modifying !== null || importing
+  const refusal = model.notice?.kind === 'error' ? model.notice : null
   const success = model.notice?.kind === 'success' ? model.notice.message : ''
+  const pending = list?.proposals.filter((entry) => entry.decision === null).length ?? 0
+  const status = headerStatus(model)
 
   const openDialog = (open: () => void): void => {
     model.clearNotice()
@@ -172,72 +110,82 @@ export function RoutingTableCard(): React.JSX.Element {
     setRevertVersion(null)
     void model.revert(version)
   }
+  const saveEdit = async (changes: ProposalChanges): Promise<boolean> => {
+    const submission = activeRef === null ? null : settingsEditSubmission(changes, activeRef)
+    return submission === null ? false : model.applyEdit(submission)
+  }
 
   return (
-    <IntegrationCardShell
-      icon={<Waypoints className="size-5" />}
-      name={translate('auto.components.settings.routingTable.card.name', 'Routing Table')}
-      description={translate(
-        'auto.components.settings.routingTable.card.description',
-        'Chooses the executor, model and reasoning level for each task type Clef reports. Changes take effect only when you accept them.'
-      )}
-      checking={model.loading}
-      statusLabel={pill.label}
-      statusTone={pill.tone}
-      settingsSectionId={ROUTING_TABLE_SECTION_ID}
-      actions={
-        <Button
-          variant="ghost"
-          size="xs"
-          disabled={model.loading || model.busy}
-          onClick={() => void model.refresh()}
-        >
-          <RefreshCw aria-hidden="true" />
-          {translate('auto.components.settings.routingTable.card.refresh', 'Refresh')}
-        </Button>
-      }
+    <section
+      aria-labelledby={headingId}
+      data-settings-section={ROUTING_TABLE_SECTION_ID}
+      className="space-y-group"
     >
-      {model.loading ? null : (
-        <IntegrationCardDetails className="space-y-4">
-          <div
-            role="status"
-            aria-live="polite"
-            className="text-xs text-muted-foreground empty:hidden"
-          >
-            {success}
+      <SettingsSubsectionHeader
+        title={
+          <span id={headingId}>
+            {translate('auto.components.settings.routingTable.card.title', 'Agents for each task')}
+          </span>
+        }
+        action={
+          <div className="flex items-center gap-row">
+            {status === null ? null : <SettingsStatusLabel tone="warning" label={status} />}
+            {active !== null && model.availability !== null ? (
+              <RouteCheckButton
+                checking={model.checking}
+                disabled={model.loading || model.busy}
+                onCheck={() => void model.checkRoutes()}
+              />
+            ) : null}
           </div>
-          {refusal !== null && !dialogOpen ? (
-            <p role="alert" className="text-xs text-destructive">
-              {refusal}
-            </p>
+        }
+      />
+      <div
+        role="status"
+        aria-live="polite"
+        className="text-meta text-muted-foreground empty:hidden"
+      >
+        {success}
+      </div>
+      {refusal !== null && !dialogOpen ? (
+        <ErrorLine message={refusal.message} details={refusal.details} />
+      ) : null}
+      {model.loadError === null ? null : (
+        <ErrorLine message={model.loadError} details={model.loadErrorDetails} />
+      )}
+      {list === null ? null : (
+        <>
+          <Blocked list={list} />
+          {pending > 0 && !advancedOpen ? (
+            <PendingNotice count={pending} onReview={() => setAdvancedOpen(true)} />
           ) : null}
-          {model.loadError === null ? null : (
-            <p role="alert" className="text-xs text-destructive">
-              {model.loadError}
-            </p>
-          )}
-          {list === null ? null : (
-            <TableBody
-              model={model}
-              list={list}
-              onEditRoutes={() => openDialog(() => setEditor({ kind: 'propose' }))}
-              onImport={() => openDialog(() => setImporting(true))}
-              onEditProposal={(mode) => openDialog(() => setEditor(mode))}
-              onRevert={setRevertVersion}
+          {active === null ? null : (
+            <RoutingTableTaskList
+              table={active.table}
+              availability={model.availability}
+              busy={model.busy}
+              onSave={saveEdit}
             />
           )}
-        </IntegrationCardDetails>
+          <RoutingTableAdvanced
+            model={model}
+            list={list}
+            open={advancedOpen}
+            onOpenChange={setAdvancedOpen}
+            onEditProposal={(proposal) => openDialog(() => setModifying(proposal))}
+            onImport={() => openDialog(() => setImporting(true))}
+            onRevert={setRevertVersion}
+          />
+        </>
       )}
-      {editor !== null && active !== null && activeRef !== null ? (
+      {modifying !== null && active !== null ? (
         <RoutingTableRouteEditor
-          mode={editor}
+          proposal={modifying}
           active={active.table}
-          activeRef={activeRef}
           busy={model.busy}
-          refusal={refusal}
+          refusal={refusal?.message ?? null}
           onAccept={model.accept}
-          onPropose={model.importChangeSet}
-          onClose={() => setEditor(null)}
+          onClose={() => setModifying(null)}
         />
       ) : null}
       {importing ? (
@@ -255,6 +203,6 @@ export function RoutingTableCard(): React.JSX.Element {
         onCancel={() => setRevertVersion(null)}
         onConfirm={confirmRevert}
       />
-    </IntegrationCardShell>
+    </section>
   )
 }

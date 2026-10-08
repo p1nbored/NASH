@@ -1,4 +1,5 @@
 import { getIntlLocale, translate } from '@/i18n/i18n'
+import type { WorkbenchChipKind } from '../right-sidebar/WorkbenchStateChip'
 
 // Why string inputs: the host may name an executor or state this build does not know yet.
 
@@ -44,14 +45,52 @@ export function attemptStateLabel(state: string | null): string {
   }
 }
 
-/** Failed and unconfirmed states get the warning tint; the label still carries the meaning. */
-export function isAttemptStateWarning(state: string | null): boolean {
-  return (
-    state === 'failed' ||
-    state === 'blocked' ||
-    state === 'stop_unknown' ||
-    state === 'start_unknown'
-  )
+const ATTEMPT_KINDS = new Map<string, WorkbenchChipKind>([
+  ['starting', 'progress'],
+  ['running', 'running'],
+  ['completed', 'done'],
+  ['failed', 'failed'],
+  ['blocked', 'blocked'],
+  ['stopped', 'ended'],
+  // Why disconnected: NASH lost track of the process, which is not evidence that it ended.
+  ['stop_unknown', 'disconnected'],
+  ['start_unknown', 'disconnected']
+])
+
+/** The chip kind of an attempt state; no attempt yet is pending, and an unknown state is unknown. */
+export function attemptStateKind(state: string | null): WorkbenchChipKind {
+  return state === null ? 'progress' : (ATTEMPT_KINDS.get(state) ?? 'unknown')
+}
+
+/** A CLI step's own status (`started`, `in_progress`, `completed`, `failed`), in words. */
+export function stepStatusLabel(status: string): string | null {
+  switch (status) {
+    case 'started':
+    case 'in_progress':
+      return translate('workbench.taskWindow.command.running', 'Running')
+    case 'completed':
+      return translate('workbench.taskWindow.command.completed', 'Completed')
+    case 'failed':
+      return translate('workbench.taskWindow.command.failed', 'Failed')
+    default:
+      return null
+  }
+}
+
+/** A Codex item type that has no row of its own; unknown types read as a generic step. */
+export function toolStepLabel(itemType: string): string {
+  switch (itemType) {
+    case 'web_search':
+      return translate('workbench.taskWindow.tool.webSearch', 'Web search')
+    case 'mcp_tool_call':
+      return translate('workbench.taskWindow.tool.mcpToolCall', 'MCP tool call')
+    case 'reasoning':
+      return translate('workbench.taskWindow.tool.reasoning', 'Reasoning')
+    case 'todo_list':
+      return translate('workbench.taskWindow.tool.todoList', 'Plan updated')
+    default:
+      return translate('workbench.taskWindow.tool.other', 'Tool step')
+  }
 }
 
 /** D-025: a write attempt has its own worktree in a git workspace and writes in place in a folder. */

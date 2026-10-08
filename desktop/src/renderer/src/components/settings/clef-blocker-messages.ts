@@ -29,8 +29,8 @@ function reasonText(reason: RouteBlockerReason): string {
       )
     case 'no_eligible_profile':
       return translate(
-        'auto.components.settings.clef.verification.blockers.noEligibleProfile',
-        'No eligible profile'
+        'auto.components.settings.clef.verification.blockers.noEligibleAgent',
+        'No agent could take the task'
       )
     case 'launch_blocked':
       return translate(

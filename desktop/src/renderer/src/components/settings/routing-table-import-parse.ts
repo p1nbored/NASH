@@ -9,7 +9,7 @@ export type ActiveVersionRef = { readonly version: number; readonly sha256: stri
 
 export type ImportParse =
   | { readonly ok: true; readonly submission: ProposalSubmission }
-  | { readonly ok: false; readonly message: string }
+  | { readonly ok: false; readonly message: string; readonly details?: string }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -41,8 +41,8 @@ export function parseImportedChangeSet(
     return {
       ok: false,
       message: translate(
-        'auto.components.settings.routingTable.import.noActive',
-        'There is no active version to base the change on, so nothing can be imported.'
+        'auto.components.settings.routingTable.import.noActivePlain',
+        'Task routing is not available, so nothing can be imported.'
       )
     }
   }
@@ -51,8 +51,8 @@ export function parseImportedChangeSet(
     return {
       ok: false,
       message: translate(
-        'auto.components.settings.routingTable.import.notJson',
-        'The change set is not valid JSON object text.'
+        'auto.components.settings.routingTable.import.notJsonPlain',
+        'This is not valid JSON. Paste the whole change set.'
       )
     }
   }
@@ -80,10 +80,10 @@ export function parseImportedChangeSet(
     return {
       ok: false,
       message: translate(
-        'auto.components.settings.routingTable.import.invalidAt',
-        'The change set is not valid at "{{path}}". Check target, model and reasoning values.',
-        { path }
-      )
+        'auto.components.settings.routingTable.import.invalidPlain',
+        'This change set has a value that cannot be used. Check each agent, model and effort.'
+      ),
+      details: `invalid_at: ${path}`
     }
   }
   return { ok: true, submission: parsed.data }

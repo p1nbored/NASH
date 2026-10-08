@@ -25,10 +25,10 @@ export function RoutingTableVersions(props: {
   const newestFirst = [...props.versions].sort((a, b) => b.version - a.version)
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-foreground">
+      <p className="text-meta font-medium text-foreground">
         {translate('auto.components.settings.routingTable.versions.title', 'Version history')}
       </p>
-      <ul className="space-y-0.5 text-xs">
+      <ul className="space-y-0.5 text-meta">
         {newestFirst.map((entry) => (
           <li key={entry.version} className="flex min-h-7 flex-wrap items-center gap-x-2">
             <span className="text-foreground">

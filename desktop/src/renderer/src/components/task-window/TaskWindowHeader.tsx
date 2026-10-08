@@ -12,13 +12,16 @@ import { translate } from '@/i18n/i18n'
 import { activateAndRevealWorktree } from '@/lib/worktree-activation'
 import { useAppStore } from '@/store'
 import type { WorkbenchRunTaskAttempt } from '../../../../shared/rpc-contract/workbench-task-window-params'
+import WorkbenchCallout from '../right-sidebar/WorkbenchCallout'
+import WorkbenchCopyDetails from '../right-sidebar/WorkbenchCopyDetails'
+import type { WorkbenchDetail } from '../right-sidebar/workbench-details'
 import WorkbenchStateChip from '../right-sidebar/WorkbenchStateChip'
 import type { WorkbenchError } from '../right-sidebar/workbench-rpc-error'
 import { formatWorkbenchRequestTime } from '../right-sidebar/workbench-request-time'
 import {
+  attemptStateKind,
   attemptStateLabel,
   elapsedBetween,
-  isAttemptStateWarning,
   sandboxLabel
 } from './task-window-copy'
 import type { TranscriptRecord, TranscriptWorktree } from './task-window-records'
@@ -55,20 +58,18 @@ function Field({
   )
 }
 
+// Why only the branch: the user merges or opens it; the base commit and path are in "Copy details".
 function WorktreeLine({ worktree }: { worktree: TranscriptWorktree }): React.JSX.Element {
   const worktreeId = useAppStore((s) => findWorktreeIdByPath(s.worktreesByRepo, worktree.path))
   return (
-    <dl className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+    <dl className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-muted-foreground">
       <Field label={translate('workbench.taskWindow.branch', 'Branch')}>
         <span className="font-mono">{worktree.branch}</span>
-      </Field>
-      <Field label={translate('workbench.taskWindow.baseCommit', 'Base commit')}>
-        <span className="font-mono">{worktree.baseCommit.slice(0, 12)}</span>
       </Field>
       {worktreeId && (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="xs"
           onClick={() => activateAndRevealWorktree(worktreeId)}
         >
@@ -116,6 +117,7 @@ export default function TaskWindowHeader({
   live,
   truncated,
   attemptsError,
+  details,
   onSelectAttempt
 }: {
   state: OpenTaskWindowState
@@ -125,6 +127,7 @@ export default function TaskWindowHeader({
   live: boolean
   truncated: boolean
   attemptsError: WorkbenchError | null
+  details: readonly WorkbenchDetail[]
   onSelectAttempt: (dispatchId: string) => void
 }): React.JSX.Element {
   const status = end?.state ?? attempt?.state ?? null
@@ -133,15 +136,10 @@ export default function TaskWindowHeader({
   const now = useNow(live && settledAt === null)
   const elapsed = startedAt ? elapsedBetween(startedAt, settledAt, now) : null
   const worktree = start?.worktree ?? attempt?.worktree ?? null
-  const tone = isAttemptStateWarning(status)
-    ? 'warning'
-    : status === 'completed' || status === 'stopped'
-      ? 'muted'
-      : 'neutral'
   return (
-    <header className="border-b border-border px-5 py-4">
-      <div className="flex min-w-0 items-start gap-3">
-        <h1 className="min-w-0 flex-1 truncate text-base font-medium text-foreground">
+    <header className="border-b border-border px-5 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <h1 className="min-w-0 flex-1 truncate text-heading font-medium text-foreground">
           {getTaskWindowTabLabel(state)}
         </h1>
         <div className="flex shrink-0 items-center gap-2">
@@ -152,14 +150,11 @@ export default function TaskWindowHeader({
               onSelect={onSelectAttempt}
             />
           )}
-          <WorkbenchStateChip
-            status={status ?? 'none'}
-            label={attemptStateLabel(status)}
-            tone={tone}
-          />
+          <WorkbenchStateChip kind={attemptStateKind(status)} label={attemptStateLabel(status)} />
+          <WorkbenchCopyDetails subject="task window" entries={details} />
         </div>
       </div>
-      <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+      <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-meta text-muted-foreground">
         <Field label={translate('workbench.taskWindow.model', 'Model')}>
           {start?.model ? (
             <span className="font-mono">{start.model}</span>
@@ -186,15 +181,17 @@ export default function TaskWindowHeader({
       </dl>
       {worktree && <WorktreeLine worktree={worktree} />}
       {truncated && (
-        <p className="mt-2 rounded-md border border-status-warning-border bg-status-warning-background px-2 py-1 text-xs text-foreground">
-          {translate(
-            'workbench.taskWindow.truncatedNotice',
-            'This transcript reached its size limit, so it ends before the attempt did.'
-          )}
-        </p>
+        <div className="mt-2">
+          <WorkbenchCallout
+            label={translate(
+              'workbench.taskWindow.truncatedNotice',
+              'This transcript reached its size limit, so it ends before the attempt did.'
+            )}
+          />
+        </div>
       )}
       {attemptsError && (
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-meta text-muted-foreground">
           {translate(
             'workbench.taskWindow.attemptsStale',
             'The attempt list could not be refreshed: {{message}}',

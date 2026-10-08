@@ -20,14 +20,14 @@ const contentProbe = vi.hoisted(() => ({
 const progress: FeatureWallSetupProgress = {
   ready: true,
   stepDone: {
-    'default-agent': false,
-    'add-two-repos': false,
-    notifications: false,
-    'two-worktrees': false,
-    browser: false,
+    'claude-code': false,
+    clef: false,
+    dot: false,
     'task-sources': false,
-    'agent-capabilities': false,
-    'setup-script': false
+    notifications: false,
+    'setup-script': false,
+    'workbench-run': false,
+    'two-worktrees': false
   },
   coreDoneCount: 0,
   coreTotal: FEATURE_WALL_SETUP_STEPS.length

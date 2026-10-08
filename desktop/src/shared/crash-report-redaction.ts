@@ -16,12 +16,13 @@ const SECRET_PATTERNS = [
   /\bsk-[A-Za-z0-9_-]{20,}\b/g,
   /\bxox[baprs]-[A-Za-z0-9-]{10,}/g,
   /\bAKIA[0-9A-Z]{16}\b/g,
-  /\bBearer\s+[A-Za-z0-9._~+/-]{20,}/gi,
+  /\bBearer\s+[A-Za-z0-9._~+/-]+/gi,
+  /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g
 ]
 const CREDENTIAL_URL_PATTERN = /\b[A-Za-z0-9._%+-]+:[A-Za-z0-9._%+-]+@(?=[^/\s]+)/g
 const SECRET_ASSIGNMENT_PATTERN =
-  /\b(token|access[_-]?token|refresh[_-]?token|api[_-]?key|client[_-]?secret|secret|password|account[_-]?key)\s*[:=]\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^&\s,;]+)/gi
+  /\b((?:[A-Za-z][A-Za-z0-9_]*[_-])?(?:token|access[_-]?token|refresh[_-]?token|api[_-]?key|client[_-]?secret|secret|password|account[_-]?key))["']?\s*[:=]\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^&\s,;]+)/gi
 
 // Quoted paths retain spaces; unquoted paths stop at whitespace to preserve prose.
 const PATH_PATTERNS = [
@@ -42,6 +43,11 @@ export function sanitizeCrashReportString(
   for (const pattern of PATH_PATTERNS) {
     sanitized = sanitized.replace(pattern, '[redacted-path]')
   }
+  return redactSecretShapes(sanitized, maxLength)
+}
+
+export function redactSecretShapes(value: string, maxLength = 500): string {
+  let sanitized = value
   sanitized = sanitized.replace(CREDENTIAL_URL_PATTERN, '[redacted-credential]@')
   sanitized = sanitized.replace(SECRET_ASSIGNMENT_PATTERN, (_match, key: string) => {
     return `${key}=[redacted]`
@@ -50,6 +56,15 @@ export function sanitizeCrashReportString(
     sanitized = sanitized.replace(pattern, '[redacted-secret]')
   }
   return sanitized.length > maxLength ? `${sanitized.slice(0, maxLength)}...` : sanitized
+}
+
+/** Preserve diagnostic rows while bounding untrusted messages within them. */
+export function sanitizeCopiedDiagnostics(value: string): string {
+  return redactSecretShapes(value, Number.POSITIVE_INFINITY)
+    .split(/\r?\n|\r/)
+    .map((line) => redactSecretShapes(line))
+    .join('\n')
+    .slice(0, 10_000)
 }
 
 export function sanitizeCrashReportDetails(

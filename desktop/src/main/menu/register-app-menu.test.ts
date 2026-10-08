@@ -5,14 +5,34 @@ const {
   setApplicationMenuMock,
   getFocusedWindowMock,
   getFocusedWebContentsMock,
-  sendActionToFirstResponderMock
-} = vi.hoisted(() => ({
-  buildFromTemplateMock: vi.fn(),
-  setApplicationMenuMock: vi.fn(),
-  getFocusedWindowMock: vi.fn(),
-  getFocusedWebContentsMock: vi.fn(),
-  sendActionToFirstResponderMock: vi.fn()
+  sendActionToFirstResponderMock,
+  buildState
+} = vi.hoisted(() => {
+  const buildState: { updateFeed: unknown; orcaAccountAndMobileUi: boolean } = {
+    updateFeed: null,
+    orcaAccountAndMobileUi: false
+  }
+  return {
+    buildFromTemplateMock: vi.fn(),
+    setApplicationMenuMock: vi.fn(),
+    getFocusedWindowMock: vi.fn(),
+    getFocusedWebContentsMock: vi.fn(),
+    sendActionToFirstResponderMock: vi.fn(),
+    buildState
+  }
+})
+
+vi.mock('../../shared/app-update-feed', () => ({
+  getAppUpdateFeed: () => buildState.updateFeed
 }))
+
+vi.mock('../../shared/nash-build-flags', () => ({
+  get ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED() {
+    return buildState.orcaAccountAndMobileUi
+  }
+}))
+
+const TEST_UPDATE_FEED = { owner: 'example', repo: 'nash-releases', whatsNew: null }
 
 vi.mock('electron', () => ({
   BrowserWindow: {
@@ -116,6 +136,8 @@ describe('registerAppMenu', () => {
     getFocusedWebContentsMock.mockReset()
     sendActionToFirstResponderMock.mockReset()
     buildFromTemplateMock.mockImplementation((template) => ({ template }))
+    buildState.updateFeed = null
+    buildState.orcaAccountAndMobileUi = false
   })
 
   afterEach(() => {
@@ -188,7 +210,17 @@ describe('registerAppMenu', () => {
     expect(options.onBeforeReload).toHaveBeenCalledWith({ ignoreCache: true, webContentsId: 102 })
   })
 
+  it('hides every Check for Updates entry while the build has no update feed (D-026)', () => {
+    registerAppMenu(buildMenuOptions())
+
+    const labels = getTemplate().flatMap((menu) =>
+      Array.isArray(menu.submenu) ? menu.submenu.map((item) => item.label) : []
+    )
+    expect(labels).not.toContain('Check for Updates...')
+  })
+
   it('routes Check for Updates modifier clicks to prerelease and perf checks', () => {
+    buildState.updateFeed = TEST_UPDATE_FEED
     const options = buildMenuOptions()
     registerAppMenu(options)
 
@@ -417,12 +449,15 @@ describe('registerAppMenu', () => {
 
     const helpLabels = getSubmenu(template, 'Help').map((item) => item.label)
     expect(helpLabels).toEqual(
-      expect.arrayContaining([
-        'Report Crash...',
-        'Getting Started with NASH',
-        'Explore NASH',
-        'Check for Updates...'
-      ])
+      expect.arrayContaining(['Report Crash...', 'Getting Started with NASH', 'Explore NASH'])
+    )
+    expect(helpLabels).not.toContain('Check for Updates...')
+
+    buildFromTemplateMock.mockClear()
+    buildState.updateFeed = TEST_UPDATE_FEED
+    registerAppMenu(buildMenuOptions())
+    expect(getSubmenu(getTemplate(), 'Help').map((item) => item.label)).toContain(
+      'Check for Updates...'
     )
   })
 
@@ -432,7 +467,8 @@ describe('registerAppMenu', () => {
     const template = getTemplate()
     const appSubmenu = getSubmenu(template, 'NASH')
     const appLabels = appSubmenu.map((item) => item.label)
-    expect(appLabels).toEqual(expect.arrayContaining(['Check for Updates...', 'Settings']))
+    expect(appLabels).toContain('Settings')
+    expect(appLabels).not.toContain('Check for Updates...')
     // Why: on macOS File should NOT duplicate Settings/Exit — those live in
     // the system app menu. Without global Export, there is no File item left.
     expect(template.find((item) => item.label === 'File')).toBeUndefined()
@@ -492,7 +528,16 @@ describe('registerAppMenu', () => {
     expect(options.onOpenCrashReport).toHaveBeenCalledWith(targetWindow)
   })
 
+  it('omits the Orca Mobile button toggle while Orca Mobile is hidden (D-038)', () => {
+    registerAppMenu(buildMenuOptions())
+
+    const appearanceSubmenu = getSubmenu(getSubmenu(getTemplate(), 'View'), 'Appearance')
+    expect(appearanceSubmenu.map((item) => item.label)).not.toContain('Show Orca Mobile Button')
+    expect(appearanceSubmenu.map((item) => item.label)).toContain('Show Automations Button')
+  })
+
   it('exposes an Appearance submenu under View with checkbox items reflecting state', () => {
+    buildState.orcaAccountAndMobileUi = true
     const options = buildMenuOptions()
     options.getAppearanceState.mockReturnValue({
       showTasksButton: false,
@@ -531,6 +576,7 @@ describe('registerAppMenu', () => {
   })
 
   it('routes Appearance checkbox clicks through onToggleAppearance', () => {
+    buildState.orcaAccountAndMobileUi = true
     const options = buildMenuOptions()
     registerAppMenu(options)
 

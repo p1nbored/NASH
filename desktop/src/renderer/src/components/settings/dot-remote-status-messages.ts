@@ -4,8 +4,8 @@ import type {
   WorkbenchDotRemotePairingView,
   WorkbenchDotRemoteStatusView
 } from '../../../../shared/rpc-contract/workbench-dot-remote-params'
-import type { IntegrationCardStatusTone } from './integration-card-shell'
 import { formatRoutingTime } from './routing-table-time'
+import type { SettingsStatusTone } from './settings-status-label'
 
 // Plain English for the remote access status the app reports. "Connected" means the app reaches the
 // Site's mailbox; nothing here claims that dot itself is connected (STYLEGUIDE: no overclaiming).
@@ -14,33 +14,41 @@ type Status = WorkbenchDotRemoteStatusView
 type Protection = Status['serviceToken']
 type SyncFailure = NonNullable<Status['syncFailure']>
 
-/** The pill and warning label while polls keep failing on this computer. */
+/** The status and warning label while polls keep failing on this computer. */
 export function dotRemoteSyncFailingLabel(): string {
   return translate('auto.components.settings.dotRemote.pill.syncFailing', 'Sync failing')
 }
 
-/** How many polls failed in a row, since when and the last code; never an error message. */
+/** How many polls failed in a row and since when; the last code goes to the details. */
 export function dotRemoteSyncFailureMessage(failure: SyncFailure): string {
   return translate(
-    'auto.components.settings.dotRemote.status.syncFailing',
-    '{{failures}} sync attempts in a row failed on this computer, the first at {{time}}. The app keeps trying. Code: {{code}}',
+    'auto.components.settings.dotRemote.status.syncFailingPlain',
+    '{{failures}} sync attempts in a row failed on this computer, the first at {{time}}. The app keeps trying.',
     {
       failures: failure.consecutiveFailures,
-      time: formatRoutingTime(failure.since),
-      code: failure.lastCode
+      time: formatRoutingTime(failure.since)
     }
   )
 }
 
+/** The failing sync's code and timing for "Copy details"; never shown on screen. */
+export function dotRemoteSyncFailureDetails(failure: SyncFailure): string {
+  return [
+    `last_code: ${failure.lastCode}`,
+    `consecutive_failures: ${failure.consecutiveFailures}`,
+    `since: ${failure.since}`
+  ].join('\n')
+}
+
 export function dotRemotePill(status: Status | null): {
   label: string
-  tone: IntegrationCardStatusTone
+  tone: SettingsStatusTone
 } {
   switch (status?.state) {
     case undefined:
       return {
         label: translate('auto.components.settings.dotRemote.pill.unavailable', 'Unavailable'),
-        tone: 'attention'
+        tone: 'warning'
       }
     case 'off':
       return {
@@ -50,7 +58,7 @@ export function dotRemotePill(status: Status | null): {
     case 'unpaired':
       return {
         label: translate('auto.components.settings.dotRemote.pill.unpaired', 'Not paired'),
-        tone: 'attention'
+        tone: 'warning'
       }
     case 'pairing':
       return {
@@ -60,25 +68,25 @@ export function dotRemotePill(status: Status | null): {
     case 'connected':
       // Why: a store failure on this computer leaves the mailbox reading connected while nothing syncs.
       return status.syncFailure
-        ? { label: dotRemoteSyncFailingLabel(), tone: 'attention' }
+        ? { label: dotRemoteSyncFailingLabel(), tone: 'warning' }
         : {
             label: translate('auto.components.settings.dotRemote.pill.connected', 'Connected'),
-            tone: 'connected'
+            tone: 'success'
           }
     case 'offline':
       return {
         label: translate('auto.components.settings.dotRemote.pill.offline', 'Offline'),
-        tone: 'attention'
+        tone: 'warning'
       }
     case 'reconnect_needed':
       return {
         label: translate('auto.components.settings.dotRemote.pill.reconnect', 'Reconnect needed'),
-        tone: 'attention'
+        tone: 'warning'
       }
     case 'pair_again':
       return {
         label: translate('auto.components.settings.dotRemote.pill.pairAgain', 'Pair again'),
-        tone: 'attention'
+        tone: 'warning'
       }
   }
 }
@@ -185,7 +193,7 @@ export function dotRemoteReconnectMessage(reason: DotRemoteReconnectReason): str
   }
 }
 
-/** "Token saved" for a sealed token; a reason for a token the app will not use; null when absent. */
+/** "Token saved" for a stored token; a reason for a token the app will not use; null when absent. */
 export function dotRemoteTokenProtectionMessage(protection: Protection): string | null {
   switch (protection) {
     case 'absent':
@@ -194,13 +202,13 @@ export function dotRemoteTokenProtectionMessage(protection: Protection): string 
       return translate('auto.components.settings.dotRemote.token.saved', 'Token saved')
     case 'plaintext_refused':
       return translate(
-        'auto.components.settings.dotRemote.token.plaintextRefused',
-        'A stored token was not sealed, so the app will not use it. Paste the token again.'
+        'auto.components.settings.dotRemote.token.plaintextRefusedPlain',
+        'A stored token was not protected, so the app will not use it. Paste the token again.'
       )
     case 'sealing_unavailable':
       return translate(
-        'auto.components.settings.dotRemote.token.sealingUnavailable',
-        'This computer cannot seal the token, so it cannot be stored and remote access cannot connect.'
+        'auto.components.settings.dotRemote.token.sealingUnavailablePlain',
+        'This computer cannot store the token safely, so remote access cannot connect.'
       )
   }
 }

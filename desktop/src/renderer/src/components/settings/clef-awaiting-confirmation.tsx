@@ -40,7 +40,7 @@ export function ClefAwaitingConfirmation({
     <div
       role="note"
       aria-labelledby={labelId}
-      className="flex items-start gap-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2 text-xs text-foreground"
+      className="flex items-start gap-row text-meta text-foreground"
     >
       <Info aria-hidden="true" className="mt-px size-3.5 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1 space-y-1">
@@ -76,8 +76,8 @@ export function ClefAwaitingConfirmation({
         </ul>
         <p className="text-muted-foreground">
           {translate(
-            'auto.components.settings.clef.verification.pending.effect',
-            'These are defaults. Changing any of them changes the question bundle, so a pinned profile stops applying and Verify runs again.'
+            'auto.components.settings.clef.verification.pending.effectPlain',
+            'These are defaults. Changing one means verifying Clef again.'
           )}
         </p>
       </div>

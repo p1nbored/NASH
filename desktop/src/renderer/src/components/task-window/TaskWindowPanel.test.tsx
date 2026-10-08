@@ -127,15 +127,92 @@ describe('TaskWindowPanel', () => {
     expect(within(log).getByText('pnpm test receipt')).toBeDefined()
     expect(within(log).getByText('The parser rejects receipts without a signature.')).toBeDefined()
     expect(within(log).getByText('contracts/receipt.ts')).toBeDefined()
-    expect(within(log).getByText('web_search · completed')).toBeDefined()
+    expect(within(log).getByText('Web search · Completed')).toBeDefined()
     expect(within(log).getByText(/1,200 input · 300 cached · 450 output tokens/)).toBeDefined()
     expect(within(log).getByText('FIXTURE_ONLY deprecation warning')).toBeDefined()
     expect(within(log).getByText('Reconnecting to the model.')).toBeDefined()
     expect(within(log).getByText(/4 records were dropped/)).toBeDefined()
-    expect(within(log).getByText('Unrecognized record: reasoning_digest')).toBeDefined()
+    expect(within(log).getByText('A record this version cannot show.')).toBeDefined()
+    expect(log.textContent).not.toContain('reasoning_digest')
     expect(within(log).getByText('Unreadable line')).toBeDefined()
     expect(within(log).getByText(/Ended · Completed · exit code 0/)).toBeDefined()
     expect(within(log).queryByText('never shown')).toBeNull()
+  })
+
+  it('shows the branch of a writing attempt and keeps IDs and the base commit for Copy details', async () => {
+    const write = vi.fn(async (_text: string) => undefined)
+    Object.defineProperty(window, 'api', {
+      configurable: true,
+      value: { ui: { writeClipboardText: write } }
+    })
+    const start = rec('start', {
+      executor: 'codex',
+      model: 'gpt-6.1-sol',
+      effort: 'high',
+      sandbox: 'write',
+      cwd: 'C:/fixture/worktrees/nash-task-1',
+      worktree: {
+        branch: 'nash-task-1',
+        path: 'C:/fixture/worktrees/nash-task-1',
+        baseCommit: '0123456789abcdef0123456789abcdef01234567'
+      }
+    })
+    const end = rec('end', { state: 'failed', exitCode: 1, reasonCode: 'nonzero_exit' })
+    serve(() => readResult(start + end, 0, { live: false, ended: true }))
+    try {
+      render(<TaskWindowPanel fileId="tab-1" state={windowState()} />)
+      await flush()
+      const header = screen.getByRole('banner')
+      expect(within(header).getByText('nash-task-1')).toBeDefined()
+      expect(within(header).getByText('Writes in its own worktree')).toBeDefined()
+      const chip = within(header).getByText('Failed').closest('[data-kind]')
+      expect(chip?.getAttribute('data-kind')).toBe('failed')
+      expect(document.body.textContent).not.toContain('0123456789ab')
+      expect(document.body.textContent).not.toContain('nonzero_exit')
+      expect(document.body.textContent).not.toContain('ctx_fixture01')
+      await act(async () => {
+        fireEvent.click(within(header).getByRole('button', { name: 'Copy details' }))
+      })
+      const copied = write.mock.calls.at(-1)?.[0] ?? ''
+      expect(copied.split('\n')).toEqual(
+        expect.arrayContaining([
+          'NASH Workbench: task window',
+          'attempt_id: ctx_fixture01',
+          'base_commit: 0123456789abcdef0123456789abcdef01234567',
+          'worktree_path: C:/fixture/worktrees/nash-task-1',
+          'end_reason: nonzero_exit',
+          'exit_code: 1'
+        ])
+      )
+    } finally {
+      Reflect.deleteProperty(window, 'api')
+    }
+  })
+
+  it('words a refused transcript read without its code and stops reading', async () => {
+    const { RuntimeRpcCallError } = await vi.importActual<typeof RpcResult>(
+      '@/runtime/runtime-rpc-result'
+    )
+    rpc.mockImplementation(async (_target, method) => {
+      if (method === 'workbench.runs.tasks') {
+        return { tasks: [] }
+      }
+      throw new RuntimeRpcCallError({
+        id: 'r',
+        ok: false,
+        error: {
+          code: 'workbench_transcript_refused',
+          message: 'The transcript could not be confirmed as this attempt’s own file.'
+        }
+      })
+    })
+    render(<TaskWindowPanel fileId="tab-1" state={windowState()} />)
+    await flush()
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe('The transcript file could not be verified, so it was not read.')
+    expect(within(alert).getByRole('button', { name: 'Copy details' })).toBeDefined()
+    await flush(10_000)
+    expect(readCalls()).toHaveLength(1)
   })
 
   it('keeps command output collapsed until asked', async () => {

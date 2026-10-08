@@ -60,12 +60,14 @@ describe('parseImportedChangeSet', () => {
     expect(notJson).toEqual({ ok: false, message: expect.stringMatching(/not valid JSON/i) })
     expect(noReason).toEqual({ ok: false, message: expect.stringMatching(/reason/i) })
     expect(badRow.ok).toBe(false)
-    expect(!badRow.ok && badRow.message).toMatch(/changes 1/)
+    expect(!badRow.ok && badRow.message).toMatch(/agent, model and effort/)
+    expect(!badRow.ok && badRow.message).not.toMatch(/changes 1/)
+    expect(!badRow.ok && badRow.details).toBe('invalid_at: changes 1 model')
   })
 
-  it('needs an active version to base the change on', () => {
+  it('needs routing in use to base the change on', () => {
     const result = parseImportedChangeSet(JSON.stringify({ changes: [ROW] }), 'Reason.', null)
 
-    expect(result).toEqual({ ok: false, message: expect.stringMatching(/no active version/i) })
+    expect(result).toEqual({ ok: false, message: expect.stringMatching(/not available/i) })
   })
 })

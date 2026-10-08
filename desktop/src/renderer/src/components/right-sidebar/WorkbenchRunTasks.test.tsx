@@ -91,7 +91,7 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('WorkbenchRunTasks', () => {
-  it('lists each task with its executor, state and elapsed time', async () => {
+  it('lists each task with its state chip, executor and elapsed time', async () => {
     render(<WorkbenchRunTasks run={runView(1)} />)
     await settle()
 
@@ -99,11 +99,59 @@ describe('WorkbenchRunTasks', () => {
     const list = screen.getByRole('list', { name: 'Tasks' })
     const [codex, agy, subagent, unknown] = within(list).getAllByRole('listitem')
     expect(within(codex).getByText('Review the parser')).toBeDefined()
-    expect(within(codex).getByText('Codex · Completed · 2m 10s')).toBeDefined()
+    expect(
+      within(codex).getByText('Completed').closest('[data-kind]')?.getAttribute('data-kind')
+    ).toBe('done')
+    expect(within(codex).getByText('Codex · 2m 10s')).toBeDefined()
     expect(within(agy).getByText('Untitled task')).toBeDefined()
-    expect(within(agy).getByText('agy · Not started')).toBeDefined()
-    expect(within(subagent).getByText('Claude subagent · Not started')).toBeDefined()
-    expect(within(unknown).getByText('Other executor · Not started')).toBeDefined()
+    expect(within(agy).getByText('Not started')).toBeDefined()
+    expect(within(agy).getByText('agy')).toBeDefined()
+    expect(within(subagent).getByText('Claude subagent')).toBeDefined()
+    expect(within(unknown).getByText('Other executor')).toBeDefined()
+    for (const id of ['task_codex', 'ctx_first', 'ctx_second', 'robot_cli']) {
+      expect(list.textContent).not.toContain(id)
+    }
+  })
+
+  it('marks a failed attempt with its own icon and label, never as success', async () => {
+    rpc.mockResolvedValue({
+      tasks: [
+        task({
+          attempts: [
+            {
+              dispatchId: 'ctx_only',
+              state: 'failed',
+              startedAt: '2026-10-05T18:00:00.000Z',
+              settledAt: '2026-10-05T18:00:40.000Z',
+              hasTranscript: true,
+              worktree: null
+            }
+          ]
+        }),
+        task({
+          taskId: 'task_odd',
+          title: 'Odd state',
+          attempts: [
+            {
+              dispatchId: 'ctx_odd',
+              state: 'paused_by_host',
+              startedAt: '2026-10-05T18:00:00.000Z',
+              settledAt: null,
+              hasTranscript: false,
+              worktree: null
+            }
+          ]
+        })
+      ]
+    })
+    render(<WorkbenchRunTasks run={runView(1)} />)
+    await settle()
+    const failed = screen.getByText('Failed').closest('[data-kind]')
+    expect(failed?.getAttribute('data-kind')).toBe('failed')
+    expect(failed?.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    const odd = screen.getByText('State unknown').closest('[data-kind]')
+    expect(odd?.getAttribute('data-kind')).toBe('unknown')
+    expect(odd?.getAttribute('data-tone')).not.toBe('success')
   })
 
   it('opens the task window on the newest attempt of a Codex task', async () => {
@@ -124,7 +172,7 @@ describe('WorkbenchRunTasks', () => {
     expect(screen.getAllByRole('button', { name: /Open task window/ })).toHaveLength(1)
   })
 
-  it('says a Claude subagent task runs in the main session and shows its terminal', async () => {
+  it('shows the main session terminal for a Claude subagent task', async () => {
     const { rerender } = render(
       <WorkbenchRunTasks run={runView(1, { primary: primarySession({ paneKey: null }) })} />
     )
@@ -137,7 +185,6 @@ describe('WorkbenchRunTasks', () => {
     if (!row) {
       throw new Error('row')
     }
-    expect(within(row).getByText('Runs in the main session.')).toBeDefined()
     fireEvent.click(within(row).getByRole('button', { name: 'Show terminal for Draft the notes' }))
     expect(activateTab).toHaveBeenCalledWith('tab-primary', null)
   })
@@ -171,8 +218,14 @@ describe('WorkbenchRunTasks', () => {
     render(<WorkbenchRunTasks run={runView(1)} />)
     await settle()
 
-    expect(screen.getByText('Tasks could not be read: Unknown method.')).toBeDefined()
+    expect(
+      screen.getByText(
+        'Tasks could not be read: This version of the app does not support this action.'
+      )
+    ).toBeDefined()
+    expect(screen.queryByText(/method_not_found|Unknown method/)).toBeNull()
     expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Copy details' })).toBeDefined()
   })
 
   it('says when a run has no tasks yet', async () => {

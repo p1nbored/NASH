@@ -34,13 +34,10 @@ export function resetAttemptTranscriptCache(): void {
 }
 
 function readFailure(error: unknown) {
-  return toWorkbenchError(error, {
-    invalidResponse: translate(
-      'workbench.taskWindow.invalidResponse',
-      'The transcript read returned an invalid response.'
-    ),
-    failed: translate('workbench.taskWindow.readFailed', 'The transcript could not be read.')
-  })
+  return toWorkbenchError(
+    error,
+    translate('workbench.taskWindow.readFailed', 'The transcript could not be read.')
+  )
 }
 
 /**

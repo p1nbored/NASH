@@ -12,7 +12,7 @@ export function DotIngressRefusalLine({
     return null
   }
   return (
-    <p role="alert" className="text-xs text-destructive">
+    <p role="alert" className="text-meta text-destructive">
       {model.refusal.message}
     </p>
   )

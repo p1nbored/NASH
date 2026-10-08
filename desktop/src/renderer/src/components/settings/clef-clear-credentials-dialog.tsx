@@ -32,8 +32,8 @@ export function ClefClearCredentialsDialog({
           </DialogTitle>
           <DialogDescription>
             {translate(
-              'auto.components.settings.clef.clear.description',
-              'This removes the saved API token and account ID from this computer. Workbench requests cannot be routed with Clef until you save new credentials.'
+              'auto.components.settings.clef.clear.descriptionPlain',
+              'This removes the saved API token and account ID from this computer. Clef cannot sort tasks until you save new ones.'
             )}
           </DialogDescription>
         </DialogHeader>

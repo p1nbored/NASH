@@ -11,8 +11,9 @@ import {
 } from '../ui/dialog'
 
 /**
- * The one confirmation before dot may ask for write access in a workspace (D-018 rail). It states
- * what the ceiling allows: runs start in acceptEdits and dot may allow command prompts (RG7).
+ * The one confirmation before dot may ask for write access in a workspace (D-018 rail). The maximum
+ * applies to local and remote dot alike (D-034): runs start in acceptEdits and dot may allow command
+ * prompts (RG7).
  */
 export function DotIngressAccessDialog({
   label,
@@ -42,12 +43,12 @@ export function DotIngressAccessDialog({
           </DialogTitle>
           <DialogDescription>
             {translate(
-              'auto.components.settings.dotIngress.access.description',
-              'A task from dot that asks for write access will start with file edits allowed in this workspace, without asking you. dot can also approve command prompts, such as Bash and PowerShell, for those tasks.'
+              'auto.components.settings.dotIngress.access.descriptionBothPaths',
+              'A task from dot that asks for write access, here or through your GPT Site, will start with file edits allowed in this workspace, without asking you. dot can also approve command prompts, such as Bash and PowerShell, for those tasks.'
             )}
           </DialogDescription>
         </DialogHeader>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
           {translate(
             'auto.components.settings.dotIngress.access.reversible',
             'Switching back to read only stops new write tasks; runs that already started keep their access.'

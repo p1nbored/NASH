@@ -6,7 +6,9 @@ import {
   type KeybindingOverrides
 } from '../../shared/keybindings'
 import type { UpdateCheckOptions } from '../../shared/update-status-types'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../shared/nash-build-flags'
 import { translateMain } from '../i18n/main-i18n'
+import { createCheckForUpdatesMenuItems } from './app-menu-update-check'
 import { createAppMenuSelectionItem } from './app-menu-selection-item'
 import { createAppWindowMenu } from './app-menu-window'
 
@@ -89,30 +91,7 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
     webContents.reload()
   }
 
-  // Why: modifier-click update checks are hidden power-user affordances.
-  // Extracted so the macOS app-menu entry and Windows/Linux Help entry share
-  // identical RC/perf channel routing.
-  const checkForUpdatesClick: Electron.MenuItemConstructorOptions['click'] = (
-    _menuItem,
-    _window,
-    event
-  ) => {
-    const modifierClick = !event.triggeredByAccelerator
-    const localBuild = isMac && modifierClick && event.altKey === true
-    const includePerfPrerelease =
-      !localBuild && modifierClick && (isMac ? event.metaKey === true : event.ctrlKey === true)
-    const includePrerelease = !localBuild && modifierClick && event.shiftKey === true
-    onCheckForUpdates({
-      includePrerelease,
-      includePerfPrerelease,
-      ...(localBuild ? { localBuild: true } : {})
-    })
-  }
-
-  const checkForUpdatesItem: Electron.MenuItemConstructorOptions = {
-    label: translateMain('menu.checkForUpdates', 'Check for Updates...'),
-    click: checkForUpdatesClick
-  }
+  const checkForUpdatesItems = createCheckForUpdatesMenuItems({ isMac, onCheckForUpdates })
 
   const settingsBindings = getEffectiveKeybindingsForAction(
     'app.settings',
@@ -151,7 +130,7 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
     label: options.appMenuLabel ?? app.name,
     submenu: [
       { role: 'about' },
-      checkForUpdatesItem,
+      ...checkForUpdatesItems,
       settingsItem,
       { type: 'separator' },
       { role: 'services' },
@@ -263,12 +242,17 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
         checked: appearance.showAutomationsButton,
         click: () => onToggleAppearance('showAutomationsButton')
       },
-      {
-        label: translateMain('menu.showMobileButton', 'Show Orca Mobile Button'),
-        type: 'checkbox',
-        checked: appearance.showMobileButton,
-        click: () => onToggleAppearance('showMobileButton')
-      },
+      // Why: Orca Mobile is hidden in NASH builds (D-038), so its sidebar toggle is too.
+      ...(ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED
+        ? ([
+            {
+              label: translateMain('menu.showMobileButton', 'Show Orca Mobile Button'),
+              type: 'checkbox',
+              checked: appearance.showMobileButton,
+              click: () => onToggleAppearance('showMobileButton')
+            }
+          ] satisfies Electron.MenuItemConstructorOptions[])
+        : []),
       {
         label: translateMain('menu.showTitlebarAppName', 'Show Titlebar App Name'),
         type: 'checkbox',
@@ -333,7 +317,7 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
         : ([
             { type: 'separator' },
             { role: 'about' },
-            checkForUpdatesItem
+            ...checkForUpdatesItems
           ] satisfies Electron.MenuItemConstructorOptions[]))
     ]
   }

@@ -20,8 +20,8 @@ export function renderServersSettingsSection(context: SettingsRenderContext): Re
               'Connect this browser to a saved NASH server.'
             )
           : translate(
-              'auto.components.settings.Settings.b5ee17826b',
-              'Pair remote NASH runtimes for persistent sessions, richer remote state, and web or mobile handoff.'
+              'auto.hooks.useSettingsNavigationMetadata.serversDescription',
+              'Pair NASH on other machines to keep sessions running there.'
             )
       }
       searchEntries={navigation.getSectionSearchEntries('servers')}

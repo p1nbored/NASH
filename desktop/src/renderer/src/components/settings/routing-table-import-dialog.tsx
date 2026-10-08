@@ -14,26 +14,28 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Textarea } from '../ui/textarea'
 import { parseImportedChangeSet, type ActiveVersionRef } from './routing-table-import-parse'
+import { CopyDetailsButton } from './settings-copy-details-button'
 
 const EXAMPLE =
   '{\n  "changes": [\n    {\n      "task_type": "software_engineering",\n      "execution_target": "codex_cli",\n      "model": "gpt-6-astra",\n      "reasoning_level": "max"\n    }\n  ]\n}'
 
-/** Paste a change set (or an exported proposal); it is stored as your pending proposal. */
+/** Paste a change set (or an exported suggestion); it is stored as your suggested change. */
 export function RoutingTableImportDialog(props: {
   activeRef: ActiveVersionRef | null
   busy: boolean
-  refusal: string | null
+  /** The last refusal from the table; its codes stay behind "Copy details". */
+  refusal: { message: string; details?: string } | null
   onImport: (submission: ProposalSubmission) => Promise<boolean>
   onClose: () => void
 }): React.JSX.Element {
   const [text, setText] = useState('')
   const [reason, setReason] = useState('')
-  const [problem, setProblem] = useState<string | null>(null)
+  const [problem, setProblem] = useState<{ message: string; details?: string } | null>(null)
 
   const submit = async (): Promise<void> => {
     const parsed = parseImportedChangeSet(text, reason, props.activeRef)
     if (!parsed.ok) {
-      setProblem(parsed.message)
+      setProblem({ message: parsed.message, details: parsed.details })
       return
     }
     setProblem(null)
@@ -42,7 +44,7 @@ export function RoutingTableImportDialog(props: {
     }
   }
 
-  const message = problem ?? props.refusal
+  const shown = problem ?? props.refusal
   return (
     <Dialog open onOpenChange={(open) => (open ? undefined : props.onClose())}>
       <DialogContent className="sm:max-w-xl">
@@ -52,8 +54,8 @@ export function RoutingTableImportDialog(props: {
           </DialogTitle>
           <DialogDescription>
             {translate(
-              'auto.components.settings.routingTable.import.body',
-              'Paste JSON with "changes" (whole rows) and, if needed, "coordinator" or "validation". It is stored as your proposal on the active version; accepting it is a separate step.'
+              'auto.components.settings.routingTable.import.bodyPlain',
+              'It is added to Suggested changes, where you can review and accept it.'
             )}
           </DialogDescription>
         </DialogHeader>
@@ -87,17 +89,20 @@ export function RoutingTableImportDialog(props: {
             onChange={(event) => setReason(event.target.value)}
           />
         </div>
-        {message === null ? null : (
-          <p role="alert" className="text-xs text-destructive">
-            {message}
-          </p>
+        {shown === null ? null : (
+          <div className="flex flex-wrap items-center gap-row">
+            <p role="alert" className="text-meta text-destructive">
+              {shown.message}
+            </p>
+            {shown.details === undefined ? null : <CopyDetailsButton details={shown.details} />}
+          </div>
         )}
         <DialogFooter>
           <Button variant="outline" onClick={props.onClose}>
             {translate('auto.components.settings.routingTable.import.cancel', 'Cancel')}
           </Button>
           <Button disabled={props.busy} onClick={() => void submit()}>
-            {translate('auto.components.settings.routingTable.import.submit', 'Import as proposal')}
+            {translate('auto.components.settings.routingTable.import.submitPlain', 'Import')}
           </Button>
         </DialogFooter>
       </DialogContent>

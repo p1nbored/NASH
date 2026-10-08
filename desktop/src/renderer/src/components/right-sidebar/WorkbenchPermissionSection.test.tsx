@@ -19,6 +19,12 @@ import {
 } from './workbench-run-test-fixture'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import { WORKBENCH_PERMISSION_POLL_MS } from './use-workbench-permission-prompts'
+import {
+  copyDetailsText,
+  installClipboard,
+  removeClipboard,
+  type ClipboardWrite
+} from './workbench-clipboard-test-fixture'
 import WorkbenchPermissionSection from './WorkbenchPermissionSection'
 
 const { activateTab } = vi.hoisted(() => ({
@@ -35,14 +41,17 @@ function callsTo(method: string): unknown[] {
 }
 
 const SUMMARY = 'Bash: rm -rf ./build && echo "done"  # cwd C:/fixtures/autopilot'
+let clipboard: ClipboardWrite
 
 beforeEach(() => {
   resetQueueFixture()
   activateTab.mockReset()
   storeState.tabsByWorktree = { 'local-workspace': [{ id: 'tab-primary' }] }
+  clipboard = installClipboard()
 })
 afterEach(() => {
   cleanup()
+  removeClipboard()
   vi.useRealTimers()
 })
 
@@ -61,12 +70,34 @@ describe('WorkbenchPermissionSection', () => {
     const exact = getDefaultNormalizer({ trim: false, collapseWhitespace: false })
     expect(within(row).getByText(SUMMARY, { normalizer: exact }).textContent).toBe(SUMMARY)
     expect(within(row).getByText('Waiting for an answer')).toBeDefined()
-    expect(within(row).getByText('agent-7')).toBeDefined()
-    expect(within(row).getByText('run-1')).toBeDefined()
-    expect(within(row).queryByText('Desktop only')).toBeNull()
+    expect(within(row).getByText('From a subagent')).toBeDefined()
     for (const name of ['Allow Bash', 'Deny Bash']) {
       expect(within(row).getByRole('button', { name }).dataset.variant).toBe('outline')
     }
+  })
+
+  it('keeps run, prompt and subagent IDs out of the row and in Copy details', async () => {
+    routeRpc({
+      'workbench.permission.list': () => ({
+        decisions: [permissionView({ agentId: 'agent-7' })]
+      })
+    })
+    render(<WorkbenchPermissionSection />)
+    const row = await screen.findByRole('listitem')
+    for (const id of ['agent-7', 'run-1', 'decision-1']) {
+      expect(row.textContent).not.toContain(id)
+    }
+    const copied = await copyDetailsText(row, clipboard)
+    expect(copied.split('\n')).toEqual(
+      expect.arrayContaining([
+        'NASH Workbench: permission prompt',
+        'decision_id: decision-1',
+        'run_id: run-1',
+        'subagent_id: agent-7',
+        'tool: Bash',
+        'status: pending'
+      ])
+    )
   })
 
   it('marks a desktop-only prompt as not sent to dot and names its run', async () => {
@@ -79,7 +110,6 @@ describe('WorkbenchPermissionSection', () => {
     })
     render(<WorkbenchPermissionSection findRun={() => runView(1)} />)
     const row = await screen.findByRole('listitem')
-    expect(within(row).getByText('Desktop only')).toBeDefined()
     expect(
       within(row).getByText('Not sent to dot. Answer it here or in the terminal.')
     ).toBeDefined()
@@ -145,7 +175,7 @@ describe('WorkbenchPermissionSection', () => {
     const row = screen.getByRole('listitem')
     expect(within(row).getByText('Answer in the terminal')).toBeDefined()
     expect(within(row).queryByRole('button', { name: 'Allow Bash' })).toBeNull()
-    fireEvent.click(within(row).getByRole('button', { name: 'Show terminal for run-1' }))
+    fireEvent.click(within(row).getByRole('button', { name: 'Show terminal' }))
     expect(activateTab).toHaveBeenCalledExactlyOnceWith('tab-primary', null)
   })
 
@@ -175,10 +205,15 @@ describe('WorkbenchPermissionSection', () => {
     render(<WorkbenchPermissionSection />)
     const row = await screen.findByRole('listitem')
     expect(within(row).getByText('Answer it in the terminal.')).toBeDefined()
-    expect(within(row).queryByRole('button')).toBeNull()
+    expect(
+      within(row)
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+    ).toEqual([''])
+    expect(within(row).getByRole('button', { name: 'Copy details' })).toBeDefined()
   })
 
-  it('shows an empty state, polls for new prompts and reports listing errors with their code', async () => {
+  it('shows an empty state, polls, and words a listing error without its code', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     routeRpc({ 'workbench.permission.list': () => ({ decisions: [] }) })
     const { unmount } = render(<WorkbenchPermissionSection />)
@@ -198,9 +233,13 @@ describe('WorkbenchPermissionSection', () => {
     await act(async () => {
       vi.advanceTimersByTime(WORKBENCH_PERMISSION_POLL_MS)
     })
-    const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('The permission relay is not running.')
-    expect(alert.textContent).toContain('autopilot_permission_relay_unavailable')
+    const alert = await screen.findByRole('alert', { name: 'Permission prompts unavailable' })
+    expect(alert.textContent).toContain('Permission prompts are not available right now.')
+    expect(alert.textContent).not.toContain('autopilot_permission_relay_unavailable')
+    expect(alert.textContent).not.toContain('relay')
+    const copied = await copyDetailsText(alert, clipboard)
+    expect(copied).toContain('error_code: autopilot_permission_relay_unavailable')
+    expect(copied).toContain('error_message: The permission relay is not running.')
     unmount()
     await act(async () => {
       vi.advanceTimersByTime(WORKBENCH_PERMISSION_POLL_MS * 2)

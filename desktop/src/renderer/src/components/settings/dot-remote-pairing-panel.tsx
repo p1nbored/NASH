@@ -29,8 +29,8 @@ function startBlocker(status: Status): string | null {
   }
   if (status.origin === null || status.serviceToken !== 'sealed') {
     return translate(
-      'auto.components.settings.dotRemote.pairing.needsConnection',
-      'Save the Site origin and access token to pair.'
+      'auto.components.settings.dotRemote.pairing.needsConnectionPlain',
+      'Save the Site address and access token to pair.'
     )
   }
   return null
@@ -71,22 +71,22 @@ function PairingCode({
       aria-labelledby={labelId}
       // Why focusable: Start pairing gives way to the code, so focus lands here to read it next.
       tabIndex={-1}
-      className="space-y-2 rounded-md border border-border/60 px-3 py-2.5 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+      className="space-y-row rounded-lg bg-muted p-group outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <p id={labelId} className="text-xs text-muted-foreground">
+      <p id={labelId} className="text-meta text-muted-foreground">
         {translate('auto.components.settings.dotRemote.pairing.codeLabel', 'Pairing code')}
       </p>
-      <p className="select-text font-mono text-2xl font-semibold tracking-widest text-foreground">
+      <p className="select-text font-mono text-display font-semibold tracking-widest text-foreground">
         {userCode}
       </p>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-meta text-muted-foreground">
         {translate(
           'auto.components.settings.dotRemote.pairing.instructions',
           'Open the pairing page on your Site while signed in as its owner, check that it shows this code, and approve it.'
         )}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <code className="min-w-0 select-text break-all font-mono text-xs text-foreground">
+        <code className="min-w-0 select-text break-all font-mono text-meta text-foreground">
           {pageUrl}
         </code>
         <Button variant="outline" size="xs" onClick={() => void window.api.shell.openUrl(pageUrl)}>
@@ -94,7 +94,7 @@ function PairingCode({
           {translate('auto.components.settings.dotRemote.pairing.openPage', 'Open pairing page')}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-meta text-muted-foreground">
         {secondsLeft > 0
           ? translate(
               'auto.components.settings.dotRemote.pairing.expiresIn',
@@ -133,27 +133,15 @@ export function DotRemotePairingPanel({
   const busy = model.busy !== null
   const focus = useDotRemotePairingFocus(busy)
   return (
-    <section
-      ref={focus.sectionRef}
-      aria-labelledby={headingId}
-      className="space-y-3 border-t border-border/60 pt-3"
-    >
-      <div className="space-y-0.5">
-        <h4
-          ref={focus.headingRef}
-          id={headingId}
-          tabIndex={-1}
-          className="rounded-sm text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {translate('auto.components.settings.dotRemote.pairing.title', 'Pairing')}
-        </h4>
-        <p className="text-xs text-muted-foreground">
-          {translate(
-            'auto.components.settings.dotRemote.pairing.description',
-            "The Site's owner approves this computer on the Site; until the pairing ends, the Site holds tasks from dot until this computer collects them."
-          )}
-        </p>
-      </div>
+    <section ref={focus.sectionRef} aria-labelledby={headingId} className="space-y-row">
+      <h4
+        ref={focus.headingRef}
+        id={headingId}
+        tabIndex={-1}
+        className="rounded-sm text-body font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {translate('auto.components.settings.dotRemote.pairing.title', 'Pairing')}
+      </h4>
       {waiting !== null &&
       waiting.userCode !== null &&
       waiting.expiresAt !== null &&
@@ -165,9 +153,9 @@ export function DotRemotePairingPanel({
           origin={status.origin}
         />
       ) : null}
-      {pairedLine === null ? null : <p className="text-xs text-muted-foreground">{pairedLine}</p>}
+      {pairedLine === null ? null : <p className="text-meta text-muted-foreground">{pairedLine}</p>}
       {/* Why always mounted: screen readers announce text added to a live region, not a new one. */}
-      <div aria-live="polite" className="space-y-1 text-xs text-foreground empty:hidden">
+      <div aria-live="polite" className="space-y-1 text-meta text-foreground empty:hidden">
         {ended === null ? null : <p>{ended}</p>}
         {model.siteNotTold ? (
           <p>
@@ -210,7 +198,7 @@ export function DotRemotePairingPanel({
           </Button>
         )}
         {showStart && blocker !== null ? (
-          <span className="text-xs text-muted-foreground">{blocker}</span>
+          <span className="text-meta text-muted-foreground">{blocker}</span>
         ) : null}
       </div>
       <DotRemoteRefusalLine model={model} scope="pairing" />

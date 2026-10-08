@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getDefaultUIState } from '../../../../shared/constants'
+import { getDefaultUIState, getDefaultSettings } from '../../../../shared/constants'
 import type { PersistedUIState } from '../../../../shared/persisted-ui-state-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { AppState } from '../types'
@@ -175,15 +175,24 @@ describe('createUISlice hydratePersistedUI', () => {
     expect(store.getState().activeView).toBe('activity')
   })
 
-  it('restores a default-on view (mobile) even when its nav button is hidden', () => {
+  it('restores the terminal instead of the Mobile page while Orca Mobile is hidden (D-038)', () => {
     const store = createUIStore()
     store.setState({
-      settings: { showMobileButton: false } as AppState['settings']
+      settings: { ...getDefaultSettings('/fixture-home'), showMobileButton: true }
     })
 
     store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'mobile' }), 'startup')
 
-    expect(store.getState().activeView).toBe('mobile')
+    expect(store.getState().activeView).toBe('terminal')
+  })
+
+  it('never opens the Mobile page while Orca Mobile is hidden (D-038)', () => {
+    const store = createUIStore()
+    store.getState().hydratePersistedUI(makePersistedUI({ activeView: 'tasks' }), 'startup')
+
+    store.getState().openMobilePage()
+
+    expect(store.getState().activeView).toBe('tasks')
   })
 
   it('does not overwrite the current view on a later cross-window sync hydration', () => {

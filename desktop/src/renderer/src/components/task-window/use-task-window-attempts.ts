@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react'
-import { translate } from '@/i18n/i18n'
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import { useAppStore } from '@/store'
 import { WorkbenchRunTasksResultSchema } from '../../../../shared/rpc-contract/workbench-task-window-params'
@@ -35,15 +34,7 @@ export function useTaskWindowAttempts(
       }
       setError(null)
     } catch (failure) {
-      setError(
-        toWorkbenchError(failure, {
-          invalidResponse: translate(
-            'workbench.tasks.invalidResponse',
-            'The task list returned an invalid response.'
-          ),
-          failed: translate('workbench.tasks.failed', 'The task list could not be read.')
-        })
-      )
+      setError(toWorkbenchError(failure))
     } finally {
       inFlightRef.current = false
     }

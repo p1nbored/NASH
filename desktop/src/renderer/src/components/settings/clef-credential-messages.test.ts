@@ -13,9 +13,9 @@ describe('clefRefusalMessage', () => {
     }
   })
 
-  it('says plainly when sealing stopped the token from being saved', () => {
+  it('says plainly when the computer could not store the token safely', () => {
     expect(clefRefusalMessage('sealing_unavailable')).toBe(
-      'Sealing is unavailable on this system, so the token was not saved.'
+      'This computer cannot store the token safely, so it was not saved.'
     )
   })
 })

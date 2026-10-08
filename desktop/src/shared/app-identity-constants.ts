@@ -18,7 +18,10 @@ export const APP_IDENTITY = {
   documentProgIdPrefix: 'NASH',
   // Deep-link scheme the OS routes to this app; the builder registers it and the app answers only it.
   urlScheme: 'nash',
-  // null = updates disabled: nothing checks, downloads or publishes until NASH has its own release repository.
-  // To enable, set { owner, repo, whatsNew } (see AppUpdateFeed in app-update-feed.ts) here and in the JSON twin.
+  // GitHub repository that NASH issues and source links point to (D-036). It is not an update feed.
+  releaseRepository: { owner: 'p1nbored', repo: 'NASH' },
+  // null = updates disabled (D-026): the release repository is private, so its releases cannot be read
+  // without signing in. To enable, set { owner, repo, whatsNew } (see AppUpdateFeed in app-update-feed.ts)
+  // here and in the JSON twin.
   updateFeed: null
 } as const

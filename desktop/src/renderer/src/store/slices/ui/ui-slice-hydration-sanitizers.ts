@@ -17,6 +17,7 @@ import {
 } from '../../../../../shared/execution-host'
 import { persistedUIValuesEqual } from '../../../../../shared/persisted-ui-equality'
 import { DEFAULT_STATUS_BAR_ITEMS } from '../../../../../shared/constants'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../../shared/nash-build-flags'
 import type { UISlice } from './ui-slice-contract'
 
 const MIN_SIDEBAR_WIDTH = 220
@@ -175,6 +176,10 @@ export function sanitizeWorkspaceCleanupDismissals(
 export function sanitizeHydratedActiveView(value: PersistedUIState['activeView']): TopLevelView {
   // Why: older data (pre-activeView) or a view a different build doesn't have falls back to terminal rather than rendering nothing.
   if (!isTopLevelView(value)) {
+    return 'terminal'
+  }
+  // Why: the Mobile page is hidden in NASH builds (D-038); restoring it would show an empty page.
+  if (value === 'mobile' && !ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED) {
     return 'terminal'
   }
   return value

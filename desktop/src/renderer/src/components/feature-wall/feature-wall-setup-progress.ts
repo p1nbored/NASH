@@ -1,5 +1,3 @@
-import type { FeatureInteractionState } from '../../../../shared/feature-interactions'
-import { hasFeatureInteraction } from '../../../../shared/feature-interactions'
 import {
   FEATURE_WALL_SETUP_STEPS,
   type FeatureWallSetupStepId
@@ -10,16 +8,17 @@ import type { Worktree } from '../../../../shared/worktree/types'
 export type FeatureWallSetupProgressInput = {
   ready?: boolean
   settings: GlobalSettings | null
-  featureInteractions: FeatureInteractionState
   hasConnectedTaskSource: boolean
-  browserUseSkillInstalled: boolean
-  computerUseSkillInstalled: boolean
-  computerUsePermissionsReady: boolean
-  computerUseUnavailable?: boolean
-  orchestrationSkillInstalled: boolean
-  gitRepoCount: number
   worktreesByRepo: Record<string, Worktree[]>
   hasSetupScript: boolean
+  /** Claude Code is on this computer's PATH (agent detection). */
+  claudeCodeDetected: boolean
+  /** Clef credentials are stored and its profile verified (routing status). */
+  clefConnected: boolean
+  /** The local dot interface is on, or a GPT Site is paired. */
+  dotConnected: boolean
+  /** At least one Workbench run exists. */
+  hasWorkbenchRun: boolean
 }
 
 export type FeatureWallSetupProgress = {
@@ -42,6 +41,7 @@ function countAvailableNonMainWorktrees(worktreesByRepo: Record<string, Worktree
   )
 }
 
+// Why kept: the agent capability setup card still reads it, though the checklist no longer has the step (D-038).
 export type AgentCapabilitiesState = {
   browserUseSkillInstalled: boolean
   computerUseSkillInstalled: boolean
@@ -62,24 +62,16 @@ export function isAgentCapabilitiesDone(state: AgentCapabilitiesState): boolean 
 export function getFeatureWallSetupProgress(
   input: FeatureWallSetupProgressInput
 ): FeatureWallSetupProgress {
-  const agentCapabilitiesDone = isAgentCapabilitiesDone({
-    ...input,
-    computerUseReady: input.computerUsePermissionsReady,
-    computerUseUnavailable: input.computerUseUnavailable === true
-  })
   const stepDone: Record<FeatureWallSetupStepId, boolean> = {
-    'default-agent':
-      Boolean(input.settings?.defaultTuiAgent) && input.settings?.defaultTuiAgent !== 'blank',
-    'add-two-repos': input.gitRepoCount >= 2,
+    'claude-code': input.claudeCodeDetected,
+    clef: input.clefConnected,
+    dot: input.dotConnected,
+    'workbench-run': input.hasWorkbenchRun,
     notifications:
       input.settings?.notifications.enabled === true &&
       input.settings.notifications.agentTaskComplete === true,
     'two-worktrees': countAvailableNonMainWorktrees(input.worktreesByRepo) >= 1,
-    // Why: the 'browser' interaction fires when a non-blank page is viewed, so
-    // opening any real page in Orca's browser durably completes this milestone.
-    browser: hasFeatureInteraction(input.featureInteractions, 'browser'),
     'task-sources': input.hasConnectedTaskSource,
-    'agent-capabilities': agentCapabilitiesDone,
     'setup-script': input.hasSetupScript
   }
   return {

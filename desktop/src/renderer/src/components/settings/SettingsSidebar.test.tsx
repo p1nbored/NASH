@@ -29,7 +29,7 @@ function makeSetupGuideProgress(
     ready: true,
     doneCount: 5,
     total: 8,
-    firstIncompleteStepId: 'agent-capabilities',
+    firstIncompleteStepId: 'clef',
     ...overrides
   }
 }

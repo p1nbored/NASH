@@ -3,192 +3,158 @@ import { translate } from '@/i18n/i18n'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import type { RoutingTableRefusalView } from '../../../../shared/workbench-routing-table-view'
 
-function integrityPart(detail: string | null): string {
-  switch (detail) {
-    case 'index_missing':
-      return translate(
-        'auto.components.settings.routingTable.refusals.indexMissing',
-        'the version index is missing'
-      )
-    case 'index_unreadable':
-      return translate(
-        'auto.components.settings.routingTable.refusals.indexUnreadable',
-        'the version index cannot be read'
-      )
-    case 'index_invalid':
-      return translate(
-        'auto.components.settings.routingTable.refusals.indexInvalid',
-        'the version index is not valid'
-      )
-    case 'version_missing':
-      return translate(
-        'auto.components.settings.routingTable.refusals.versionMissing',
-        'the active version file is missing'
-      )
-    case 'version_unreadable':
-      return translate(
-        'auto.components.settings.routingTable.refusals.versionUnreadable',
-        'the active version file cannot be read'
-      )
-    case 'version_invalid':
-      return translate(
-        'auto.components.settings.routingTable.refusals.versionInvalid',
-        'the active version file is not valid'
-      )
-    case 'version_hash_mismatch':
-      return translate(
-        'auto.components.settings.routingTable.refusals.versionHashMismatch',
-        'the active version file does not match its recorded hash'
-      )
-    case null:
-    default:
-      return translate(
-        'auto.components.settings.routingTable.refusals.integrityUnknown',
-        'a stored file failed its check'
-      )
-  }
-}
-
 function duplicateMessage(existingProposalId: string | null): string {
   return existingProposalId === null
     ? translate(
-        'auto.components.settings.routingTable.refusals.duplicateActive',
-        'The active table already has exactly this content, so nothing was stored.'
+        'auto.components.settings.routingTable.refusals.duplicateActivePlain',
+        'These choices are already in use, so nothing was saved.'
       )
     : translate(
-        'auto.components.settings.routingTable.refusals.duplicatePending',
-        'The same change is already waiting as proposal {{proposalId}}. Review that one instead.',
-        { proposalId: existingProposalId }
+        'auto.components.settings.routingTable.refusals.duplicatePendingPlain',
+        'The same change is already waiting under Suggested changes. Review it there.'
       )
 }
 
-/** Plain English for every refusal the table store can return; an unknown code stays visible. */
+/** Plain English for every refusal the table store can return; codes and ids go to the details. */
 export function routingTableRefusalMessage(refusal: RoutingTableRefusalView): string {
   switch (refusal.reason) {
     case 'routing_table_integrity_failed':
       return translate(
-        'auto.components.settings.routingTable.refusals.integrityFailed',
-        'The stored Routing Table is damaged: {{part}}. Nothing routes until it is repaired; no default table is used instead.',
-        { part: integrityPart(refusal.detail) }
+        'auto.components.settings.routingTable.refusals.integrityFailedPlain',
+        'The saved task routing could not be read, so no task is routed. No default is used instead.'
       )
     case 'routing_table_taxonomy_mismatch':
       return translate(
-        'auto.components.settings.routingTable.refusals.taxonomyMismatch',
-        'The active table was written for a different list of task types, so it cannot be used. Import a table for the current task types.'
+        'auto.components.settings.routingTable.refusals.taxonomyMismatchPlain',
+        'The saved task routing was made for a different list of tasks, so it cannot be used. Import routing for the current tasks under Advanced.'
       )
     case 'routing_table_not_installed':
       return translate(
-        'auto.components.settings.routingTable.refusals.notInstalled',
-        'No Routing Table is installed yet. The app installs its default table when it starts.'
+        'auto.components.settings.routingTable.refusals.notInstalledPlain',
+        'Task routing is not set up yet. Restart the app to install the defaults.'
       )
     case 'invalid_table':
       return translate(
-        'auto.components.settings.routingTable.refusals.invalidTable',
-        'The resulting table would not be valid, so it was not activated.'
+        'auto.components.settings.routingTable.refusals.invalidTablePlain',
+        'This change would leave task routing invalid, so it was not saved.'
       )
     case 'version_conflict':
       return translate(
-        'auto.components.settings.routingTable.refusals.versionConflict',
-        'The table changed while this was being saved. Refresh and try again.'
+        'auto.components.settings.routingTable.refusals.versionConflictPlain',
+        'Task routing changed while this was being saved. Try again.'
       )
     case 'forbidden_caller':
       return translate(
-        'auto.components.settings.routingTable.refusals.forbiddenCaller',
-        'Only you, from this desktop app, can change the Routing Table.'
+        'auto.components.settings.routingTable.refusals.forbiddenCallerPlain',
+        'Task routing can only be changed in this app.'
       )
     case 'proposal_unknown':
       return translate(
-        'auto.components.settings.routingTable.refusals.proposalUnknown',
-        'This proposal no longer exists. Refresh the list.'
+        'auto.components.settings.routingTable.refusals.proposalUnknownPlain',
+        'This suggested change no longer exists.'
       )
     case 'proposal_invalid':
       return translate(
-        'auto.components.settings.routingTable.refusals.proposalInvalid',
-        'This proposal file is not valid, so it cannot be accepted.'
+        'auto.components.settings.routingTable.refusals.proposalInvalidPlain',
+        'This suggested change cannot be read, so it cannot be accepted.'
       )
     case 'already_decided':
       return translate(
-        'auto.components.settings.routingTable.refusals.alreadyDecided',
-        'This proposal was already decided.'
+        'auto.components.settings.routingTable.refusals.alreadyDecidedPlain',
+        'This suggested change was already decided.'
       )
     case 'proposal_superseded':
       return translate(
-        'auto.components.settings.routingTable.refusals.proposalSuperseded',
-        'This proposal was based on an older version, so it was recorded as superseded and the active table did not change.'
+        'auto.components.settings.routingTable.refusals.proposalSupersededPlain',
+        'This suggested change was made for older choices, so it was set aside and nothing changed.'
       )
     case 'no_change':
       return translate(
-        'auto.components.settings.routingTable.refusals.noChange',
-        'This would leave the active table as it is, so no new version was created.'
+        'auto.components.settings.routingTable.refusals.noChangePlain',
+        'This leaves every choice as it is, so nothing changed.'
       )
     case 'forbidden_proposer':
       return translate(
-        'auto.components.settings.routingTable.refusals.forbiddenProposer',
-        'This kind of proposal cannot be submitted from the desktop.'
+        'auto.components.settings.routingTable.refusals.forbiddenProposerPlain',
+        'This kind of change cannot be submitted here.'
       )
     case 'invalid_proposal':
       return translate(
-        'auto.components.settings.routingTable.refusals.invalidProposal',
-        'The change set is not valid, so it was not stored.'
+        'auto.components.settings.routingTable.refusals.invalidProposalPlain',
+        'This change is not valid, so it was not saved.'
       )
     case 'base_not_active':
       return translate(
-        'auto.components.settings.routingTable.refusals.baseNotActive',
-        'The change set is based on a version that is no longer active. Refresh and base it on the active version.'
+        'auto.components.settings.routingTable.refusals.baseNotActivePlain',
+        'Task routing changed after this was prepared. Try again.'
       )
     case 'too_many_pending':
       return translate(
-        'auto.components.settings.routingTable.refusals.tooManyPending',
-        'Too many proposals are waiting. Accept or reject some of them first.'
+        'auto.components.settings.routingTable.refusals.tooManyPendingPlain',
+        'Too many suggested changes are waiting. Accept or reject some under Advanced first.'
       )
     case 'duplicate_content':
       return duplicateMessage(refusal.existingProposalId)
     case 'version_unknown':
       return translate(
-        'auto.components.settings.routingTable.refusals.versionUnknown',
-        'That version does not exist. Refresh the list.'
+        'auto.components.settings.routingTable.refusals.versionUnknownPlain',
+        'That earlier version no longer exists.'
       )
     default:
       return translate(
-        'auto.components.settings.routingTable.refusals.unknown',
-        'The Routing Table refused this ({{reason}}).',
-        {
-          reason: refusal.reason
-        }
+        'auto.components.settings.routingTable.refusals.unknownPlain',
+        'Task routing refused this change.'
       )
   }
+}
+
+/** The refusal's codes and ids for "Copy details"; never shown on screen. */
+export function routingTableRefusalDetails(refusal: RoutingTableRefusalView): string {
+  return [
+    `reason: ${refusal.reason}`,
+    `detail: ${refusal.detail ?? '-'}`,
+    `existing_proposal: ${refusal.existingProposalId ?? '-'}`
+  ].join('\n')
 }
 
 /** For a call that did not return a result; never repeats the raw error text. */
 export function routingTableCallErrorMessage(error: unknown): string {
   if (error instanceof ZodError) {
     return translate(
-      'auto.components.settings.routingTable.refusals.invalidResponse',
-      'The app returned a Routing Table answer this screen cannot read.'
+      'auto.components.settings.routingTable.refusals.invalidResponsePlain',
+      'The answer from the app could not be read here.'
     )
   }
   const code = error instanceof RuntimeRpcCallError ? error.code : null
   switch (code) {
     case 'method_not_found':
       return translate(
-        'auto.components.settings.routingTable.refusals.notConnected',
-        'The Routing Table is not connected in this build yet, so it cannot be shown or changed.'
+        'auto.components.settings.routingTable.refusals.notConnectedPlain',
+        'Task routing is not available in this build.'
       )
     case 'workbench_routing_table_unavailable':
       return translate(
-        'auto.components.settings.routingTable.refusals.unavailable',
-        'The Routing Table is not available in this session. Restart the app to install it.'
+        'auto.components.settings.routingTable.refusals.unavailablePlain',
+        'Task routing is not available right now. Restart the app.'
       )
     case 'workbench_forbidden':
       return translate(
-        'auto.components.settings.routingTable.refusals.untrustedCaller',
-        'Only the desktop app on this computer can read or change the Routing Table.'
+        'auto.components.settings.routingTable.refusals.untrustedCallerPlain',
+        'Task routing can only be read or changed in the desktop app on this computer.'
       )
     case null:
     default:
       return translate(
-        'auto.components.settings.routingTable.refusals.callFailed',
-        'The Routing Table request did not complete. Refresh to see the current state.'
+        'auto.components.settings.routingTable.refusals.callFailedPlain',
+        'The request did not complete. Try again.'
       )
   }
+}
+
+/** The failed call's code for "Copy details"; the raw message could quote what was sent. */
+export function routingTableCallErrorDetails(error: unknown): string {
+  if (error instanceof ZodError) {
+    return 'error: unreadable_response'
+  }
+  return `error: ${error instanceof RuntimeRpcCallError ? error.code : 'call_failed'}`
 }

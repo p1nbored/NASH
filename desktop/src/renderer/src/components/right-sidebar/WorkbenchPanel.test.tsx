@@ -67,17 +67,18 @@ describe('WorkbenchPanel', () => {
 
     expect(screen.getByText('Select a workspace from the workspace list.')).toBeDefined()
     expect(screen.getByText('Select a known local workspace to see its runs.')).toBeDefined()
-    expect(screen.getAllByText('Not connected')).toHaveLength(2)
+    // Why removed (D-038): RSI is not part of the Workbench; its entries live in the left navigation.
+    expect(screen.queryByText('Not connected')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'RSI Lab' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Improvements' })).toBeNull()
     expect(screen.queryByText('Not configured')).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Managed workflow' })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Runs' })).toBeDefined()
     expect(screen.getByRole('heading', { name: 'Permission prompts' })).toBeDefined()
     // Why removed (D-016): Clef only classifies; routes live in the Routing Table and each run shows its coordinator.
     expect(screen.queryByRole('heading', { name: 'Routing / model / surface' })).toBeNull()
-    expect(screen.getByRole('heading', { name: 'RSI Lab' })).toBeDefined()
-    expect(screen.getByRole('heading', { name: 'Improvements' })).toBeDefined()
     expect(container.textContent).not.toContain('Clef routing')
-    expect(container.textContent).toContain('promotion evidence are not connected')
+    expect(container.textContent).not.toContain('promotion evidence')
     expect(container.querySelector('button, a, input, form')).toBeNull()
     expect(lookup).not.toHaveBeenCalled()
     unmount()
@@ -93,9 +94,7 @@ describe('WorkbenchPanel', () => {
       'Permission prompts',
       'Waiting for your decision',
       'Runs',
-      'Local requests',
-      'RSI Lab',
-      'Improvements'
+      'Local requests'
     ])
     for (const heading of headings) {
       expect([...heading.classList]).toEqual(
@@ -121,11 +120,11 @@ describe('WorkbenchPanel', () => {
     const { container, rerender } = render(<WorkbenchPanel />)
     expect(lookup).toHaveBeenCalledWith('repo::/work/app', 'ssh:build-host')
     expect(screen.getByText('Remote app')).toBeDefined()
-    const identity = screen.getByText('repo::/work/app')
-    expect(identity.querySelectorAll('wbr')).toHaveLength(2)
-    expect(identity.textContent).toBe('repo::/work/app')
+    // Why: the workspace ID and execution host are internal; only "Copy details" carries them.
+    expect(container.textContent).not.toContain('repo::/work/app')
+    expect(container.textContent).not.toContain('ssh:build-host')
     expect(screen.getByText('/work/app').querySelectorAll('wbr')).toHaveLength(2)
-    expect(screen.getByText('ssh:build-host').querySelectorAll('wbr')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Copy details' })).toBeDefined()
     expect(container.querySelector('.break-all')).toBeNull()
 
     storeState.activeWorkspaceKey = 'folder:notes'
@@ -135,7 +134,7 @@ describe('WorkbenchPanel', () => {
 
     expect(lookup).toHaveBeenLastCalledWith('folder:notes', 'runtime:notes-host')
     expect(screen.getByText('Notes folder')).toBeDefined()
-    expect(screen.getByText('folder:notes')).toBeDefined()
+    expect(container.textContent).not.toContain('folder:notes')
     expect(screen.getByText('/srv/notes')).toBeDefined()
     expect(screen.queryByText('Remote app')).toBeNull()
     expect(screen.queryByText('/work/app')).toBeNull()
@@ -147,17 +146,15 @@ describe('WorkbenchPanel', () => {
     ])
   })
 
-  it('keeps unresolved workspace identity visible without inventing a path or local host', () => {
+  it('keeps an unresolved workspace identity for Copy details without inventing a path or host', () => {
     storeState.activeWorktreeId = 'repo::/catalog-missing'
     lookup.mockReturnValue(undefined)
 
-    render(<WorkbenchPanel />)
+    const { container } = render(<WorkbenchPanel />)
 
-    expect(screen.getByText('repo::/catalog-missing')).toBeDefined()
-    expect(
-      screen.getByText('Workspace details are unavailable in the current catalog.')
-    ).toBeDefined()
-    expect(screen.getAllByText('Not resolved')).toHaveLength(2)
+    expect(container.textContent).not.toContain('repo::/catalog-missing')
+    expect(screen.getByText('Workspace details are unavailable.')).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Copy details' })).toBeDefined()
     expect(screen.queryByText('local')).toBeNull()
     expect(lookup).toHaveBeenCalledWith('repo::/catalog-missing', undefined)
     expect(apiAccess).not.toHaveBeenCalled()
@@ -172,9 +169,11 @@ describe('WorkbenchPanel', () => {
 
     render(<WorkbenchPanel />)
 
-    expect(screen.getByText('local')).toBeDefined()
-    expect(screen.queryByText('Not resolved')).toBeNull()
-    expect(await screen.findAllByText('Request store unavailable')).toHaveLength(4)
+    expect(screen.getByText('Local app')).toBeDefined()
+    expect(screen.queryByText('local')).toBeNull()
+    // Why generic: a raw runtime error is never shown; "Copy details" carries its text.
+    expect(await screen.findAllByText('Something went wrong.')).toHaveLength(4)
+    expect(screen.queryByText('Request store unavailable')).toBeNull()
     expect(rpc).toHaveBeenCalledTimes(4)
     expect(rpc).toHaveBeenCalledWith({ kind: 'local' }, 'workbench.requests.list', {
       workspaceId: 'repo::/work/local',

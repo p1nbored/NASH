@@ -62,9 +62,9 @@ describe('remote access status messages', () => {
       expectPlainEnglish(dotRemoteStateDetail(status))
     }
     expect(labels.size).toBe(DOT_REMOTE_CONNECTION_STATES.length)
-    expect(dotRemotePill(null)).toEqual({ label: 'Unavailable', tone: 'attention' })
+    expect(dotRemotePill(null)).toEqual({ label: 'Unavailable', tone: 'warning' })
     expect(dotRemotePill(fixtureRemoteStatus({ state: 'connected', enabled: true })).tone).toBe(
-      'connected'
+      'success'
     )
   })
 

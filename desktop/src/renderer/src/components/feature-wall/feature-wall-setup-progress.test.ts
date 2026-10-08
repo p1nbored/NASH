@@ -15,15 +15,13 @@ function makeInput(
 ): FeatureWallSetupProgressInput {
   return {
     settings: null,
-    featureInteractions: {},
     hasConnectedTaskSource: false,
-    browserUseSkillInstalled: false,
-    computerUseSkillInstalled: false,
-    computerUsePermissionsReady: false,
-    orchestrationSkillInstalled: false,
-    gitRepoCount: 0,
     worktreesByRepo: {},
     hasSetupScript: false,
+    claudeCodeDetected: false,
+    clefConnected: false,
+    dotConnected: false,
+    hasWorkbenchRun: false,
     ...overrides
   }
 }
@@ -41,42 +39,64 @@ function makeWorktree(
 }
 
 describe('getFeatureWallSetupProgress', () => {
-  it('tracks Add 2 projects from durable git repo count', () => {
-    expect(getFeatureWallSetupProgress(makeInput({ gitRepoCount: 1 })).stepDone).toMatchObject({
-      'add-two-repos': false
+  it('completes each NASH step from its own signal (D-038)', () => {
+    expect(getFeatureWallSetupProgress(makeInput()).stepDone).toMatchObject({
+      'claude-code': false,
+      clef: false,
+      dot: false,
+      'workbench-run': false
     })
 
-    const progress = getFeatureWallSetupProgress(makeInput({ gitRepoCount: 2 }))
+    const progress = getFeatureWallSetupProgress(
+      makeInput({
+        claudeCodeDetected: true,
+        clefConnected: true,
+        dotConnected: true,
+        hasWorkbenchRun: true
+      })
+    )
 
-    expect(progress.stepDone['add-two-repos']).toBe(true)
+    expect(progress.stepDone).toMatchObject({
+      'claude-code': true,
+      clef: true,
+      dot: true,
+      'workbench-run': true
+    })
     expect(progress.coreTotal).toBe(8)
+  })
+
+  it('drops the Orca steps that do not fit NASH', () => {
+    const ids = getFeatureWallSetupSteps().map((step) => step.id)
+    for (const retired of ['default-agent', 'agent-capabilities', 'add-two-repos', 'browser']) {
+      expect(ids).not.toContain(retired)
+    }
   })
 
   it('preserves the durable setup step definition order', () => {
     expect(getFeatureWallSetupSteps().map((step) => step.id)).toEqual([
-      'two-worktrees',
-      'browser',
-      'notifications',
-      'default-agent',
-      'agent-capabilities',
+      'claude-code',
+      'clef',
+      'dot',
       'task-sources',
+      'notifications',
       'setup-script',
-      'add-two-repos'
+      'workbench-run',
+      'two-worktrees'
     ])
   })
 
   it('groups setup guide steps into Parallel work and Setup sections', () => {
     expect(getFeatureWallSetupStepsForSection('parallel-work').map((step) => step.id)).toEqual([
-      'two-worktrees',
-      'browser'
+      'workbench-run',
+      'two-worktrees'
     ])
     expect(getFeatureWallSetupStepsForSection('setup').map((step) => step.id)).toEqual([
-      'notifications',
-      'default-agent',
-      'agent-capabilities',
+      'claude-code',
+      'clef',
+      'dot',
       'task-sources',
-      'setup-script',
-      'add-two-repos'
+      'notifications',
+      'setup-script'
     ])
   })
 
@@ -97,30 +117,21 @@ describe('getFeatureWallSetupProgress', () => {
     const progress = getFeatureWallSetupProgress(
       makeInput({
         settings: {
-          defaultTuiAgent: 'claude',
           notifications: { enabled: true, agentTaskComplete: true }
         } as never,
         hasConnectedTaskSource: true,
         hasSetupScript: true,
-        gitRepoCount: 2,
-        browserUseSkillInstalled: true,
-        computerUseSkillInstalled: true,
-        computerUsePermissionsReady: true,
-        orchestrationSkillInstalled: true
+        claudeCodeDetected: true,
+        clefConnected: true,
+        dotConnected: true
       })
     )
 
-    expect(getFirstIncompleteFeatureWallSetupStepId(progress.stepDone)).toBe('two-worktrees')
+    expect(getFirstIncompleteFeatureWallSetupStepId(progress.stepDone)).toBe('workbench-run')
   })
 
   it('does not include the removed split-terminal step in active progress', () => {
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        featureInteractions: {
-          'terminal-pane-split': { firstInteractedAt: 1_700_000_000_000, interactionCount: 1 }
-        }
-      })
-    )
+    const progress = getFeatureWallSetupProgress(makeInput())
 
     expect(Object.hasOwn(progress.stepDone, 'split-terminal')).toBe(false)
     expect(progress.coreTotal).toBe(8)
@@ -130,22 +141,17 @@ describe('getFeatureWallSetupProgress', () => {
     const progress = getFeatureWallSetupProgress(
       makeInput({
         settings: {
-          defaultTuiAgent: 'claude',
           notifications: { enabled: true, agentTaskComplete: true }
         } as never,
-        featureInteractions: {
-          browser: { firstInteractedAt: 1_700_000_000_000, interactionCount: 1 }
-        },
         worktreesByRepo: {
           'repo-1': [makeWorktree('main', { isMainWorktree: true }), makeWorktree('worktree-1')]
         },
         hasConnectedTaskSource: true,
         hasSetupScript: true,
-        gitRepoCount: 2,
-        browserUseSkillInstalled: true,
-        computerUseSkillInstalled: true,
-        computerUsePermissionsReady: true,
-        orchestrationSkillInstalled: true
+        claudeCodeDetected: true,
+        clefConnected: true,
+        dotConnected: true,
+        hasWorkbenchRun: true
       })
     )
 
@@ -203,22 +209,6 @@ describe('getFeatureWallSetupProgress', () => {
     expect(progress.stepDone['two-worktrees']).toBe(true)
   })
 
-  it('marks the browser step complete once a non-blank page has been viewed', () => {
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        featureInteractions: {
-          browser: { firstInteractedAt: 1_700_000_000_000, interactionCount: 1 }
-        }
-      })
-    )
-
-    expect(progress.stepDone.browser).toBe(true)
-  })
-
-  it('does not mark the browser step complete without a viewed page', () => {
-    expect(getFeatureWallSetupProgress(makeInput()).stepDone.browser).toBe(false)
-  })
-
   it('marks task sources complete for any supported connected provider', () => {
     const progress = getFeatureWallSetupProgress(makeInput({ hasConnectedTaskSource: true }))
 
@@ -229,79 +219,5 @@ describe('getFeatureWallSetupProgress', () => {
     const progress = getFeatureWallSetupProgress(makeInput({ hasConnectedTaskSource: false }))
 
     expect(progress.stepDone['task-sources']).toBe(false)
-  })
-
-  it('does not mark agent capabilities complete from setup-start interactions alone', () => {
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        featureInteractions: {
-          'agent-browser-setup': { firstInteractedAt: 1_700_000_000_000, interactionCount: 1 },
-          'computer-use-setup': { firstInteractedAt: 1_700_000_000_001, interactionCount: 1 },
-          'agent-orchestration-setup': {
-            firstInteractedAt: 1_700_000_000_002,
-            interactionCount: 1
-          }
-        }
-      })
-    )
-
-    expect(progress.stepDone['agent-capabilities']).toBe(false)
-  })
-
-  it('marks agent capabilities complete only when required skills and permissions are ready', () => {
-    expect(
-      getFeatureWallSetupProgress(
-        makeInput({
-          browserUseSkillInstalled: true,
-          computerUseSkillInstalled: true,
-          computerUsePermissionsReady: false,
-          orchestrationSkillInstalled: true
-        })
-      ).stepDone['agent-capabilities']
-    ).toBe(false)
-
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        browserUseSkillInstalled: true,
-        computerUseSkillInstalled: true,
-        computerUsePermissionsReady: true,
-        orchestrationSkillInstalled: true
-      })
-    )
-
-    expect(progress.stepDone['agent-capabilities']).toBe(true)
-  })
-
-  it('does not block agent capabilities on unavailable Computer Use access', () => {
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        browserUseSkillInstalled: true,
-        computerUseSkillInstalled: true,
-        computerUsePermissionsReady: false,
-        computerUseUnavailable: true,
-        orchestrationSkillInstalled: true
-      })
-    )
-
-    expect(progress.stepDone['agent-capabilities']).toBe(true)
-  })
-
-  it('marks the Orca CLI setup row complete when installed skills are ready and Computer Use is unavailable', () => {
-    const progress = getFeatureWallSetupProgress(
-      makeInput({
-        browserUseSkillInstalled: true,
-        computerUseSkillInstalled: true,
-        computerUsePermissionsReady: false,
-        computerUseUnavailable: true,
-        orchestrationSkillInstalled: true
-      })
-    )
-
-    expect(progress.stepDone).toMatchObject({
-      'agent-capabilities': true
-    })
-    expect(getFirstIncompleteFeatureWallSetupStepId(progress.stepDone)).not.toBe(
-      'agent-capabilities'
-    )
   })
 })

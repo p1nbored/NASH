@@ -4,6 +4,22 @@ import type { ClefProfileProblem } from '../../../../shared/clef/clef-verificati
 
 export type ClefStatusMessage = { label: string; detail: string }
 
+/** Ready is the one good state; not configured is neutral; anything else needs the user. */
+export function clefRoutingTone(
+  status: RoutingStatus
+): 'success' | 'neutral' | 'warning' | 'error' {
+  switch (status) {
+    case 'ready':
+      return 'success'
+    case 'not_configured':
+      return 'neutral'
+    case 'sealing_unavailable':
+      return 'error'
+    default:
+      return 'warning'
+  }
+}
+
 /** The Clef gate's status as a short label and one sentence on what to do about it. */
 export function clefRoutingStatusMessage(status: RoutingStatus): ClefStatusMessage {
   switch (status) {
@@ -21,12 +37,12 @@ export function clefRoutingStatusMessage(status: RoutingStatus): ClefStatusMessa
     case 'sealing_unavailable':
       return {
         label: translate(
-          'auto.components.settings.clef.verification.status.sealingUnavailable',
-          'Sealing unavailable'
+          'auto.components.settings.clef.verification.status.sealingUnavailablePlain',
+          'Cannot store credentials'
         ),
         detail: translate(
-          'auto.components.settings.clef.verification.status.sealingUnavailableDetail',
-          'This system cannot seal credentials, so Clef cannot be used.'
+          'auto.components.settings.clef.verification.status.sealingUnavailableDetailPlain',
+          'This computer cannot store credentials safely, so Clef cannot be used.'
         )
       }
     case 'contract_unverified':
@@ -36,19 +52,19 @@ export function clefRoutingStatusMessage(status: RoutingStatus): ClefStatusMessa
           'Waiting for verification'
         ),
         detail: translate(
-          'auto.components.settings.clef.verification.status.contractUnverifiedDetail',
-          "Run Verify to check Clef's answer format for the current question bundle."
+          'auto.components.settings.clef.verification.status.contractUnverifiedDetailPlain',
+          'Run Verify to check that Clef answers in the expected format.'
         )
       }
     case 'identity_unpinned':
       return {
         label: translate(
-          'auto.components.settings.clef.verification.status.identityUnpinned',
-          'Response model not pinned'
+          'auto.components.settings.clef.verification.status.identityUnpinnedPlain',
+          'Model not confirmed'
         ),
         detail: translate(
-          'auto.components.settings.clef.verification.status.identityUnpinnedDetail',
-          'The answer format is verified, but no response model is pinned. Verify again and pin a report that names the model.'
+          'auto.components.settings.clef.verification.status.identityUnpinnedDetailPlain',
+          'Verify again, then use a result that names the model that answered.'
         )
       }
     case 'ready':
@@ -161,8 +177,8 @@ export function clefProfileProblemMessage(problem: ClefProfileProblem): string {
       )
     case 'pin_invalid':
       return translate(
-        'auto.components.settings.clef.verification.problems.pinInvalid',
-        'The report does not make a valid profile.'
+        'auto.components.settings.clef.verification.problems.resultIncomplete',
+        'The result is not complete enough to use.'
       )
   }
 }

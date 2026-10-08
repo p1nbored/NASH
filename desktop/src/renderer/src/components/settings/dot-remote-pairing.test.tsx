@@ -162,7 +162,7 @@ describe('DotRemoteAccessCard: pairing and revocation', () => {
     })
     await renderCard()
     expect(startButton().hasAttribute('disabled')).toBe(true)
-    expect(card().textContent).toMatch(/Save the Site origin and access token to pair/)
+    expect(card().textContent).toMatch(/Save the Site address and access token to pair/)
   })
 
   it('shows the code in large text, the approval page and a countdown, then polls until approved', async () => {
@@ -187,7 +187,7 @@ describe('DotRemoteAccessCard: pairing and revocation', () => {
     await click(startButton())
     expect(callsTo('workbench.dotRemote.pairing.start')).toEqual([undefined])
     const code = within(codeGroup()).getByText(FIXTURE_REMOTE_USER_CODE)
-    expect(code.className).toMatch(/text-2xl/)
+    expect(code.className).toMatch(/text-display/)
     expect(card().textContent).toContain(PAIRING_PAGE)
     expect(card().textContent).toMatch(/Expires in 10:00/)
 

@@ -14,8 +14,8 @@ function verifierMessage(code: string): string | null {
       )
     case 'workbench_clef_credentials_unsealed':
       return translate(
-        'auto.components.settings.clef.verification.errors.credentialsUnsealed',
-        'The saved credentials are not sealed by the system, so they are not used. Clear them and save again.'
+        'auto.components.settings.clef.verification.errors.credentialsUnprotected',
+        'The saved credentials are not protected, so they are not used. Clear them and save again.'
       )
     case 'workbench_clef_auth_failed':
       return translate(
@@ -51,18 +51,18 @@ function pinMessage(code: string): string | null {
   switch (code) {
     case 'workbench_clef_report_unconfirmed':
       return translate(
-        'auto.components.settings.clef.verification.errors.reportUnconfirmed',
-        'That report is no longer the latest one. Run Verify again before pinning.'
+        'auto.components.settings.clef.verification.errors.resultUnconfirmed',
+        'That result is no longer the latest one. Run Verify again before using it.'
       )
     case 'workbench_clef_report_not_pinnable':
       return translate(
-        'auto.components.settings.clef.verification.errors.reportNotPinnable',
-        'That report cannot be pinned.'
+        'auto.components.settings.clef.verification.errors.resultNotUsable',
+        'That result cannot be used.'
       )
     case 'workbench_clef_profile_write_failed':
       return translate(
-        'auto.components.settings.clef.verification.errors.profileWriteFailed',
-        'The profile could not be saved. Pin again.'
+        'auto.components.settings.clef.verification.errors.resultWriteFailed',
+        'The result could not be saved. Try again.'
       )
     default:
       return null

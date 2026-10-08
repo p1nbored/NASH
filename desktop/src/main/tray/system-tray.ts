@@ -1,5 +1,6 @@
 import { Menu, Tray, nativeImage, nativeTheme, type NativeImage } from 'electron'
 import { APP_IDENTITY } from '../../shared/app-identity-constants'
+import { getAppUpdateFeed } from '../../shared/app-update-feed'
 import menuBarIconPath from '../../../resources/tray/orca-menu-barTemplate.png?asset&asarUnpack'
 import menuBarIconRetinaPath from '../../../resources/tray/orca-menu-barTemplate@2x.png?asset&asarUnpack'
 import { deferAppKitSceneMutation } from '../appkit-scene-mutation'
@@ -260,7 +261,7 @@ export function createSystemTray(opts: SystemTrayOptions): Tray | null {
           // once; the disabled header ties this one to its worktree/branch.
           { label: baseTooltip(), enabled: false },
           { type: 'separator' }
-        ] as Electron.MenuItemConstructorOptions[])
+        ] satisfies Electron.MenuItemConstructorOptions[])
       : []),
     {
       label: translateMain('tray.openOrca', 'Open NASH'),
@@ -274,12 +275,17 @@ export function createSystemTray(opts: SystemTrayOptions): Tray | null {
             label: translateMain('menu.settings', 'Settings'),
             click: safeMenuAction(() => opts.onOpenSettings())
           },
-          {
-            label: translateMain('menu.checkForUpdates', 'Check for Updates...'),
-            click: safeMenuAction(() => opts.onCheckForUpdates())
-          },
+          // Why: without a release feed (D-026) the check can only fail, so the item is hidden.
+          ...(getAppUpdateFeed() === null
+            ? []
+            : [
+                {
+                  label: translateMain('menu.checkForUpdates', 'Check for Updates...'),
+                  click: safeMenuAction(() => opts.onCheckForUpdates())
+                }
+              ]),
           { type: 'separator' }
-        ] as Electron.MenuItemConstructorOptions[])
+        ] satisfies Electron.MenuItemConstructorOptions[])
       : []),
     { label: translateMain('tray.quit', 'Quit'), click: safeMenuAction(() => opts.onQuit()) }
   ])

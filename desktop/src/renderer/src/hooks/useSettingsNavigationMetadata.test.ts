@@ -36,14 +36,70 @@ describe('settings navigation metadata', () => {
       'agents',
       'accounts',
       'orchestration',
+      'task-routing',
       'computer-use',
       'voice',
-      'orca-account',
       'setup-guide',
       'general',
       'integrations',
-      'mobile'
+      'dot'
     ])
+  })
+
+  it('gives dot its own Set Up category after Integrations (D-038)', () => {
+    const sections = buildSettingsNavigationMetadata({
+      isMac: false,
+      isWindows: false,
+      isWebClient: false,
+      repos: [repo]
+    })
+    const dot = sections.find((section) => section.id === 'dot')
+    const integrations = sections.find((section) => section.id === 'integrations')
+
+    expect(dot?.group).toBe('setup')
+    expect(dot?.title).toBe('Dot')
+    expect(dot?.searchEntries.map((entry) => entry.title)).toEqual(
+      expect.arrayContaining(['Tasks from dot', 'Remote access'])
+    )
+    expect(integrations?.searchEntries.map((entry) => entry.title)).not.toContain('Tasks from dot')
+  })
+
+  it('puts Task routing in AI Capabilities right after Orchestration', () => {
+    const sections = buildSettingsNavigationMetadata({
+      isMac: false,
+      isWindows: false,
+      isWebClient: false,
+      repos: [repo]
+    })
+    const taskRouting = sections.find((section) => section.id === 'task-routing')
+    const integrations = sections.find((section) => section.id === 'integrations')
+
+    expect(taskRouting?.group).toBe('capabilities')
+    expect(taskRouting?.title).toBe('Task routing')
+    expect(taskRouting?.searchEntries.map((entry) => entry.title)).toEqual([
+      'Clef',
+      'Agents for each task'
+    ])
+    expect(integrations?.searchEntries.map((entry) => entry.title)).not.toContain(
+      'Agents for each task'
+    )
+    expect(ids().indexOf('task-routing')).toBe(ids().indexOf('orchestration') + 1)
+  })
+
+  it('keeps category descriptions free of retired providers and switching claims', () => {
+    const sections = buildSettingsNavigationMetadata({
+      isMac: false,
+      isWindows: false,
+      isWebClient: false,
+      repos: [repo]
+    })
+    const accounts = sections.find((section) => section.id === 'accounts')
+    const stats = sections.find((section) => section.id === 'stats')
+    const servers = sections.find((section) => section.id === 'servers')
+
+    expect(accounts?.description).not.toMatch(/Claude|Grok|Gemini|MiniMax/)
+    expect(stats?.description).not.toMatch(/Grok/)
+    expect(servers?.description).not.toMatch(/mobile/i)
   })
 
   it('owns nested worker depth under Orchestration on desktop', () => {
@@ -62,12 +118,12 @@ describe('settings navigation metadata', () => {
     )
   })
 
-  it('adds the Linear capability section right after Orchestration only when connected', () => {
+  it('adds the Linear capability section right after Task routing only when connected', () => {
     expect(ids()).not.toContain('linear')
 
     const connectedIds = ids({ isLinearConnected: true })
     expect(connectedIds).toContain('linear')
-    expect(connectedIds.indexOf('linear')).toBe(connectedIds.indexOf('orchestration') + 1)
+    expect(connectedIds.indexOf('linear')).toBe(connectedIds.indexOf('task-routing') + 1)
 
     const linearSection = buildSettingsNavigationMetadata({
       isMac: false,
@@ -83,15 +139,10 @@ describe('settings navigation metadata', () => {
     expect(ids({ isWebClient: true, isLinearConnected: true })).toContain('linear')
   })
 
-  it('places Mobile under Set Up instead of its own sidebar group', () => {
-    const sections = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: false,
-      repos: [repo]
-    })
-
-    expect(sections.find((section) => section.id === 'mobile')?.group).toBe('setup')
+  it('hides Mobile and the Orca account while their build flag is off (D-038)', () => {
+    expect(ids()).not.toContain('mobile')
+    expect(ids()).not.toContain('orca-account')
+    expect(ids()).toContain('mobile-emulator')
   })
 
   it('places Automations, Artifacts, and Share Skills first under Workflows', () => {
@@ -120,20 +171,6 @@ describe('settings navigation metadata', () => {
     expect(workflowIds.slice(0, 3)).toEqual(['automations', 'artifacts', 'share-skills'])
   })
 
-  it('places the Orca account in Set Up on desktop only', () => {
-    const desktopSections = buildSettingsNavigationMetadata({
-      isMac: false,
-      isWindows: false,
-      isWebClient: false,
-      repos: [repo]
-    })
-    const account = desktopSections.find((section) => section.id === 'orca-account')
-
-    expect(account?.group).toBe('setup')
-    expect(account?.searchEntries[0]?.title).toBe('Orca cloud account')
-    expect(ids({ isWebClient: true })).not.toContain('orca-account')
-  })
-
   it('puts web-safe AI capability panes at the top while hiding desktop-only panes', () => {
     expect(ids({ isWebClient: true }).slice(0, 6)).toEqual([
       'agents',
@@ -160,6 +197,8 @@ describe('settings navigation metadata', () => {
     expect(webIds).not.toContain('computer-use')
     expect(webIds).not.toContain('voice')
     expect(webIds).not.toContain('advanced')
+    expect(webIds).not.toContain('dot')
+    expect(webIds).not.toContain('task-routing')
     expect(webIds).toContain('servers')
     expect(webIds).toContain('repo-repo-1')
     const floatingWorkspace = webSections.find((section) => section.id === 'floating-workspace')

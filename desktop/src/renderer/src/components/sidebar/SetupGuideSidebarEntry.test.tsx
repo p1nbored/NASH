@@ -48,14 +48,14 @@ function makeProgress(overrides: Partial<FeatureWallSetupProgress> = {}): Featur
   return {
     ready: true,
     stepDone: {
-      'default-agent': false,
-      'add-two-repos': false,
-      notifications: false,
-      'two-worktrees': false,
-      browser: false,
+      'claude-code': false,
+      clef: false,
+      dot: false,
       'task-sources': false,
-      'agent-capabilities': false,
-      'setup-script': false
+      notifications: false,
+      'setup-script': false,
+      'workbench-run': false,
+      'two-worktrees': false
     },
     coreDoneCount: 0,
     coreTotal: 8,
@@ -68,14 +68,14 @@ function makeAllDoneProgress(
 ): FeatureWallSetupProgress {
   return makeProgress({
     stepDone: {
-      'default-agent': true,
-      'add-two-repos': true,
-      notifications: true,
-      'two-worktrees': true,
-      browser: true,
+      'claude-code': true,
+      clef: true,
+      dot: true,
       'task-sources': true,
-      'agent-capabilities': true,
-      'setup-script': true
+      notifications: true,
+      'setup-script': true,
+      'workbench-run': true,
+      'two-worktrees': true
     },
     coreDoneCount: 8,
     coreTotal: 8,
@@ -83,11 +83,11 @@ function makeAllDoneProgress(
   })
 }
 
-function makeOnlyBrowserIncompleteProgress(): FeatureWallSetupProgress {
+function makeOnlyOneMilestoneIncompleteProgress(): FeatureWallSetupProgress {
   return makeAllDoneProgress({
     stepDone: {
       ...makeAllDoneProgress().stepDone,
-      browser: false
+      'workbench-run': false
     },
     coreDoneCount: 7,
     coreTotal: 8
@@ -150,14 +150,14 @@ describe('SetupGuideSidebarEntry', () => {
     expect(renderToStaticMarkup(<SetupGuideSidebarEntry />)).not.toContain('Onboarding checklist')
   })
 
-  it('renders for fresh active users when only the browser step is incomplete', () => {
-    mocks.useSetupGuideProgress.mockReturnValue(makeOnlyBrowserIncompleteProgress())
+  it('renders for fresh active users when only one milestone is incomplete', () => {
+    mocks.useSetupGuideProgress.mockReturnValue(makeOnlyOneMilestoneIncompleteProgress())
 
     expect(renderToStaticMarkup(<SetupGuideSidebarEntry />)).toContain('Onboarding checklist')
   })
 
-  it('does not render when the sidebar entry was dismissed with only browser incomplete', () => {
-    mocks.useSetupGuideProgress.mockReturnValue(makeOnlyBrowserIncompleteProgress())
+  it('does not render when the sidebar entry was dismissed with only one milestone incomplete', () => {
+    mocks.useSetupGuideProgress.mockReturnValue(makeOnlyOneMilestoneIncompleteProgress())
     setupGuideSidebarDismissed = true
 
     expect(renderToStaticMarkup(<SetupGuideSidebarEntry />)).not.toContain('Onboarding checklist')

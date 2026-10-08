@@ -37,12 +37,12 @@ export default function TaskWindowCommandRow({ row }: { row: CommandRow }): Reac
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex min-w-0 items-start gap-2">
           <SquareTerminal className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <code className="min-w-0 flex-1 whitespace-pre-wrap break-words font-mono text-xs text-foreground">
+          <code className="min-w-0 flex-1 whitespace-pre-wrap break-words font-mono text-meta text-foreground">
             {row.command}
           </code>
           <span
             data-status={row.status}
-            className="shrink-0 text-xs text-muted-foreground data-[status=failed]:text-destructive"
+            className="shrink-0 text-meta text-muted-foreground data-[status=failed]:text-destructive"
           >
             {commandStatus(row)}
           </span>
@@ -64,7 +64,7 @@ export default function TaskWindowCommandRow({ row }: { row: CommandRow }): Reac
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <pre className="ml-5 mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-background p-2 font-mono text-xs text-foreground scrollbar-sleek">
+              <pre className="ml-5 mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md bg-background p-2 font-mono text-meta text-foreground scrollbar-sleek">
                 {output}
               </pre>
             </CollapsibleContent>

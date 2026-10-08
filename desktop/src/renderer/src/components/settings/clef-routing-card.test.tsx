@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { WorkbenchRoutingStatusView } from '../../../../shared/clef/workbench-routing-status-view'
 import { ClefRoutingCard } from './clef-routing-card'
+import { fixtureStatus } from './clef-verification.test-fixture'
+import type { ClefVerificationModel } from './use-clef-verification'
 
 // FIXTURE_ONLY: fake values shaped like real Clef credentials; never real secrets.
 const FIXTURE_ONLY_TOKEN = 'FAKE_CLEF_TOKEN_FIXTURE_ONLY_0000000000'
@@ -16,8 +19,26 @@ const UNAVAILABLE = {
 }
 
 const api = vi.hoisted(() => ({ status: vi.fn(), save: vi.fn(), clear: vi.fn() }))
+const verification = vi.hoisted(() => {
+  const state: { status: WorkbenchRoutingStatusView | null } = { status: null }
+  return { ...state, refresh: vi.fn(async () => {}) }
+})
 
-// Why mocked: the section reads the runtime RPC; clef-verification-section.test.tsx covers it.
+// Why mocked: the verification RPC has its own tests (clef-verification-section.test.tsx).
+vi.mock('./use-clef-verification', () => ({
+  useClefVerification: (): ClefVerificationModel => ({
+    status: verification.status,
+    statusError: null,
+    loading: false,
+    running: null,
+    result: null,
+    pinned: null,
+    error: null,
+    verify: vi.fn(async () => {}),
+    pin: vi.fn(async () => {}),
+    refresh: verification.refresh
+  })
+}))
 vi.mock('./clef-verification-section', () => ({
   ClefVerificationSection: () => <section aria-label="Verification section" />
 }))
@@ -53,9 +74,18 @@ async function submitCredentials(): Promise<void> {
   })
 }
 
+function statusLabel(text: string): HTMLElement {
+  const label = screen.getByText(text, { selector: 'span' }).closest('[data-status-tone]')
+  if (!(label instanceof HTMLElement)) {
+    throw new Error(`no status label ${text}`)
+  }
+  return label
+}
+
 describe('ClefRoutingCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    verification.status = null
     Object.assign(window, { api: { clefCredentials: api } })
   })
 
@@ -63,49 +93,52 @@ describe('ClefRoutingCard', () => {
     cleanup()
   })
 
-  it('reports missing credentials without claiming a connection', async () => {
-    await renderCard(ABSENT)
+  it('reports missing credentials in one line without claiming a connection', async () => {
+    const container = await renderCard(ABSENT)
 
-    expect(screen.getByText('Not configured')).toBeTruthy()
-    const status = screen.getByRole('list', { name: 'Credential status' })
-    expect(within(status).getByText('No API token or account ID saved')).toBeTruthy()
-    expect(within(status).getByText('Nothing stored')).toBeTruthy()
-    expect(status.textContent).not.toMatch(/connected/i)
-    expect(screen.queryByText(/^connected$/i)).toBeNull()
+    expect(statusLabel('Not set up').querySelector('svg')).not.toBeNull()
+    expect(container.textContent).not.toMatch(/connected/i)
+    expect(tokenInput()).toBeTruthy()
   })
 
-  it('labels each protection state with text and an icon, never colour alone', async () => {
-    await renderCard(SEALED)
-    const status = screen.getByRole('list', { name: 'Credential status' })
-    const sealed = within(status).getByText('Sealed with the OS credential store')
-    expect(sealed.closest('li')?.querySelector('svg')).not.toBeNull()
-    expect(screen.getByText('Credentials saved')).toBeTruthy()
-    cleanup()
-
+  it('shows each credential problem with a label and an icon, never colour alone', async () => {
     await renderCard({ ...SEALED, protection: 'plaintext_refused' })
-    expect(screen.getByText('Not sealed')).toBeTruthy()
-    const refused = screen.getByRole('list', { name: 'Credential status' })
-    expect(
-      within(refused)
-        .getByText(/^Not sealed:/)
-        .closest('li')
-        ?.querySelector('svg')
-    ).not.toBeNull()
+    expect(statusLabel('Not protected').getAttribute('data-status-tone')).toBe('warning')
+    const problem = screen.getByText(/not protected, so NASH does not use them/)
+    expect(problem.closest('[data-status-tone]')?.querySelector('svg')).not.toBeNull()
     cleanup()
 
     await renderCard(UNAVAILABLE)
-    expect(screen.getByText('Sealing unavailable')).toBeTruthy()
-    const unavailable = screen.getByRole('list', { name: 'Credential status' })
-    expect(within(unavailable).getByText(/^Sealing unavailable on this system/)).toBeTruthy()
+    expect(statusLabel('Cannot store credentials').getAttribute('data-status-tone')).toBe('error')
+    expect(screen.getByText(/cannot store credentials safely/)).toBeTruthy()
+    cleanup()
+
+    await renderCard({ ...SEALED, accountPresent: false })
+    expect(statusLabel('Incomplete')).toBeTruthy()
+    expect(screen.getByText('API token saved; account ID missing')).toBeTruthy()
   })
 
-  it('says the status could not be read instead of showing "nothing stored"', async () => {
+  it('shows saved credentials as one row, and the Clef status once it is read', async () => {
+    verification.status = fixtureStatus({ status: 'ready' })
+    await renderCard(SEALED)
+
+    expect(statusLabel('Ready').getAttribute('data-status-tone')).toBe('success')
+    expect(screen.getByText(/Saved on this computer/)).toBeTruthy()
+    expect(screen.queryByLabelText('API token')).toBeNull()
+    cleanup()
+
+    verification.status = null
+    await renderCard(SEALED)
+    expect(statusLabel('Credentials saved')).toBeTruthy()
+  })
+
+  it('says the status could not be read instead of showing nothing stored', async () => {
     api.status.mockRejectedValue(new Error('ipc failed'))
     render(<ClefRoutingCard />)
     await act(async () => {})
 
-    expect(screen.getByText('Status unavailable')).toBeTruthy()
-    expect(screen.queryByText('Nothing stored')).toBeNull()
+    expect(statusLabel('Status unavailable')).toBeTruthy()
+    expect(screen.getByText(/Could not read whether Clef credentials are stored/)).toBeTruthy()
   })
 
   it('masks both fields by default with autocomplete and spellcheck off', async () => {
@@ -124,7 +157,7 @@ describe('ClefRoutingCard', () => {
     expect(accountInput().type).toBe('password')
   })
 
-  it('sends the values once, then empties the inputs and never renders the token', async () => {
+  it('sends the values once, then never renders the token and reads the Clef status again', async () => {
     api.save.mockResolvedValue({ ok: true, status: SEALED })
     const container = await renderCard()
     fireEvent.click(screen.getByRole('button', { name: 'Show API token' }))
@@ -136,13 +169,22 @@ describe('ClefRoutingCard', () => {
       token: FIXTURE_ONLY_TOKEN,
       accountId: FIXTURE_ONLY_ACCOUNT_ID
     })
-    expect(tokenInput().value).toBe('')
-    expect(accountInput().value).toBe('')
-    expect(tokenInput().type).toBe('password')
     expect(container.innerHTML).not.toContain(FIXTURE_ONLY_TOKEN)
     expect(document.body.innerHTML).not.toContain(FIXTURE_ONLY_ACCOUNT_ID)
     expect(screen.getByRole('status').textContent).toMatch(/never be shown again/)
-    expect(screen.getByText('Credentials saved')).toBeTruthy()
+    expect(statusLabel('Credentials saved')).toBeTruthy()
+    expect(verification.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('replaces saved credentials through the same form, or keeps them on Cancel', async () => {
+    await renderCard(SEALED)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replace' }))
+    expect(tokenInput().value).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByLabelText('API token')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Replace' })).toBeTruthy()
   })
 
   it('explains a refusal in plain English and still empties the inputs', async () => {
@@ -152,7 +194,7 @@ describe('ClefRoutingCard', () => {
     await submitCredentials()
 
     expect(screen.getByRole('alert').textContent).toBe(
-      'Sealing is unavailable on this system, so the token was not saved.'
+      'This computer cannot store the token safely, so it was not saved.'
     )
     expect(tokenInput().value).toBe('')
     expect(accountInput().value).toBe('')
@@ -207,8 +249,9 @@ describe('ClefRoutingCard', () => {
 
     expect(api.clear).toHaveBeenCalledTimes(1)
     expect(confirmSpy).not.toHaveBeenCalled()
-    expect(screen.getByText('Not configured')).toBeTruthy()
+    expect(statusLabel('Not set up')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Clear credentials' })).toBeNull()
+    expect(verification.refresh).toHaveBeenCalledTimes(1)
   })
 
   it('offers no clear action when nothing is stored', async () => {
@@ -216,23 +259,29 @@ describe('ClefRoutingCard', () => {
     expect(screen.queryByRole('button', { name: 'Clear credentials' })).toBeNull()
   })
 
-  it('mounts the verification section under the credentials', async () => {
+  it('keeps storage notes and versions out of the text', async () => {
+    verification.status = fixtureStatus()
     const container = await renderCard(SEALED)
 
+    expect(container.textContent).toMatch(/sorts each task/)
+    expect(container.textContent).not.toMatch(/sealed|keyring|Keychain|data protection|rotate/i)
+    expect(container.textContent).not.toMatch(/Question set|taxonomy|bundle/i)
     const section = screen.getByRole('region', { name: 'Verification section' })
-    const form = screen.getByRole('button', { name: 'Save credentials' })
-    // Why document order: the section follows the credential form inside the card.
-    expect(form.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(container.textContent).toMatch(/classifies/)
+    const replace = screen.getByRole('button', { name: 'Replace' })
+    // Why document order: verification follows the credentials.
+    expect(replace.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('builds every control from the shared primitives that draw a solid focus indicator', async () => {
-    const container = await renderCard(SEALED)
+    verification.status = fixtureStatus()
+    const container = await renderCard(ABSENT)
 
     const controls = container.querySelectorAll('button, input')
     expect(controls.length).toBeGreaterThan(0)
     for (const control of controls) {
-      expect(control.getAttribute('data-slot'), control.outerHTML).toMatch(/^(button|input)$/)
+      expect(control.getAttribute('data-slot'), control.outerHTML).toMatch(
+        /^(button|input|collapsible-trigger)$/
+      )
       expect(control.className).toMatch(/focus-visible:border-ring/)
     }
   })

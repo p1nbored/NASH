@@ -11,16 +11,23 @@ import {
   WorkbenchRoutingTableCheckResultSchema,
   WorkbenchRoutingTableDecisionResultSchema,
   WorkbenchRoutingTableListResultSchema,
+  type RoutingTableRefusalView,
   type WorkbenchRoutingTableCheckResult,
   type WorkbenchRoutingTableDecisionResult,
   type WorkbenchRoutingTableListResult
 } from '../../../../shared/workbench-routing-table-view'
 import { routeCheckErrorMessage, routeCheckSummary } from './routing-table-availability-messages'
-import { routingTableCallErrorMessage, routingTableRefusalMessage } from './routing-table-messages'
+import {
+  routingTableCallErrorDetails,
+  routingTableCallErrorMessage,
+  routingTableRefusalDetails,
+  routingTableRefusalMessage
+} from './routing-table-messages'
 
 const LOCAL = { kind: 'local' } as const
 
-export type RoutingTableNotice = { kind: 'success' | 'error'; message: string }
+/** `details` holds the codes behind an error for "Copy details"; it is never rendered. */
+export type RoutingTableNotice = { kind: 'success' | 'error'; message: string; details?: string }
 
 export type RoutingTableModel = {
   /** Null while loading or when the table could not be read; `loadError` then says why. */
@@ -28,6 +35,7 @@ export type RoutingTableModel = {
   /** The active table's route availability: the last check for this version, else the list's. */
   availability: RoutingTableAvailabilityView | null
   loadError: string | null
+  loadErrorDetails: string | null
   loading: boolean
   busy: boolean
   checking: boolean
@@ -37,6 +45,8 @@ export type RoutingTableModel = {
   accept: (proposalId: string, modification?: ProposalChanges) => Promise<boolean>
   reject: (proposalId: string) => Promise<boolean>
   importChangeSet: (proposal: ProposalSubmission) => Promise<boolean>
+  /** Saves an edit made in place: stored as the user's own change, then accepted in one step. */
+  applyEdit: (proposal: ProposalSubmission) => Promise<boolean>
   revert: (version: number) => Promise<boolean>
   /** The user's "Check now"; may run each CLI's model listing in main. */
   checkRoutes: () => Promise<void>
@@ -44,6 +54,7 @@ export type RoutingTableModel = {
 
 type Decided = Extract<WorkbenchRoutingTableDecisionResult, { ok: true }>
 type Checked = Extract<WorkbenchRoutingTableCheckResult, { ok: true }>
+type LoadError = { message: string; details: string }
 
 /** A check names the version it read; it only applies while that exact version is still active. */
 function availabilityFor(
@@ -74,12 +85,52 @@ function activated(result: Decided): string {
   )
 }
 
+function refusalNotice(refusal: RoutingTableRefusalView): RoutingTableNotice {
+  return {
+    kind: 'error',
+    message: routingTableRefusalMessage(refusal),
+    details: routingTableRefusalDetails(refusal)
+  }
+}
+
+function callErrorNotice(error: unknown, message: string): RoutingTableNotice {
+  return { kind: 'error', message, details: routingTableCallErrorDetails(error) }
+}
+
+/** One decision: store the edit as the user's own change, then accept exactly that change. */
+async function importThenAccept(proposal: ProposalSubmission): Promise<unknown> {
+  const imported = WorkbenchRoutingTableDecisionResultSchema.parse(
+    await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.import', { proposal })
+  )
+  if (!imported.ok) {
+    return imported
+  }
+  if (imported.proposalId === null) {
+    throw new Error('import answered without a proposal id')
+  }
+  const params = { proposalId: imported.proposalId }
+  const discard = (): Promise<unknown> =>
+    callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.reject', params).catch(() => undefined)
+  try {
+    const accepted = WorkbenchRoutingTableDecisionResultSchema.parse(
+      await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.accept', params)
+    )
+    if (!accepted.ok) {
+      await discard()
+    }
+    return accepted
+  } catch (error) {
+    await discard()
+    throw error
+  }
+}
+
 /** Desktop-only Routing Table reads and decisions (D-016: the user activates every change). */
 export function useRoutingTable(): RoutingTableModel {
   const mountedRef = useMountedRef()
   const requestRef = useRef(0)
   const [list, setList] = useState<WorkbenchRoutingTableListResult | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<LoadError | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -96,12 +147,15 @@ export function useRoutingTable(): RoutingTableModel {
   const refresh = useCallback(async (): Promise<void> => {
     const request = ++requestRef.current
     let next: WorkbenchRoutingTableListResult | null = null
-    let error: string | null = null
+    let error: LoadError | null = null
     try {
       const raw = await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.list', {})
       next = WorkbenchRoutingTableListResultSchema.parse(raw)
     } catch (caught) {
-      error = routingTableCallErrorMessage(caught)
+      error = {
+        message: routingTableCallErrorMessage(caught),
+        details: routingTableCallErrorDetails(caught)
+      }
     }
     // Why the counter: a slow read must not overwrite the result of a newer decision.
     if (mountedRef.current && request === requestRef.current) {
@@ -124,12 +178,12 @@ export function useRoutingTable(): RoutingTableModel {
     setChecking(true)
     setNotice(null)
     let result: WorkbenchRoutingTableCheckResult | null = null
-    let failure: string | null = null
+    let failure: RoutingTableNotice | null = null
     try {
       const raw = await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.checkRoutes', {})
       result = WorkbenchRoutingTableCheckResultSchema.parse(raw)
     } catch (caught) {
-      failure = routeCheckErrorMessage(caught)
+      failure = callErrorNotice(caught, routeCheckErrorMessage(caught))
     }
     checkingRef.current = false
     if (!mountedRef.current) {
@@ -147,8 +201,7 @@ export function useRoutingTable(): RoutingTableModel {
       }
       return
     }
-    const message = result === null ? failure : routingTableRefusalMessage(result)
-    setNotice({ kind: 'error', message: message ?? '' })
+    setNotice(result === null ? failure : refusalNotice(result))
     if (result !== null) {
       // Why: a refusal means the table could not be read as shown, so show what main reads now.
       await refresh()
@@ -168,11 +221,11 @@ export function useRoutingTable(): RoutingTableModel {
       setBusy(true)
       setNotice(null)
       let result: WorkbenchRoutingTableDecisionResult | null = null
-      let failure: string | null = null
+      let failure: RoutingTableNotice | null = null
       try {
         result = WorkbenchRoutingTableDecisionResultSchema.parse(await call())
       } catch (caught) {
-        failure = routingTableCallErrorMessage(caught)
+        failure = callErrorNotice(caught, routingTableCallErrorMessage(caught))
       }
       decidingRef.current = false
       if (!mountedRef.current) {
@@ -182,8 +235,7 @@ export function useRoutingTable(): RoutingTableModel {
       if (result?.ok === true) {
         setNotice({ kind: 'success', message: success(result) })
       } else {
-        const message = result === null ? failure : routingTableRefusalMessage(result)
-        setNotice({ kind: 'error', message: message ?? '' })
+        setNotice(result === null ? failure : refusalNotice(result))
       }
       await refresh()
       return result?.ok === true
@@ -208,7 +260,10 @@ export function useRoutingTable(): RoutingTableModel {
       decide({
         call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.reject', { proposalId }),
         success: () =>
-          translate('auto.components.settings.routingTable.notices.rejected', 'Proposal rejected.')
+          translate(
+            'auto.components.settings.routingTable.notices.rejectedPlain',
+            'Suggested change rejected.'
+          )
       }),
     [decide]
   )
@@ -218,9 +273,17 @@ export function useRoutingTable(): RoutingTableModel {
         call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.import', { proposal }),
         success: () =>
           translate(
-            'auto.components.settings.routingTable.notices.imported',
-            'Saved as a pending proposal. Review it below and accept it to activate it.'
+            'auto.components.settings.routingTable.notices.importedPlain',
+            'Added to Suggested changes. Accept it there to use it.'
           )
+      }),
+    [decide]
+  )
+  const applyEdit = useCallback(
+    (proposal: ProposalSubmission) =>
+      decide({
+        call: () => importThenAccept(proposal),
+        success: () => translate('auto.components.settings.routingTable.notices.saved', 'Saved.')
       }),
     [decide]
   )
@@ -243,7 +306,8 @@ export function useRoutingTable(): RoutingTableModel {
   return {
     list,
     availability: availabilityFor(list, checked),
-    loadError,
+    loadError: loadError?.message ?? null,
+    loadErrorDetails: loadError?.details ?? null,
     loading,
     // Why: a decision during a check would make its result describe a version no longer active.
     busy: busy || checking,
@@ -254,6 +318,7 @@ export function useRoutingTable(): RoutingTableModel {
     accept,
     reject,
     importChangeSet,
+    applyEdit,
     revert,
     checkRoutes
   }

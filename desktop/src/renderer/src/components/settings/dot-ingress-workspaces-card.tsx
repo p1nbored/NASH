@@ -1,17 +1,14 @@
 import { useId, useState } from 'react'
-import { FolderLock, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import { Button } from '../ui/button'
 import { SkillInstallWorkspaceCombobox } from '../skills/SkillInstallWorkspaceCombobox'
-import {
-  IntegrationCardDetails,
-  IntegrationCardShell,
-  type IntegrationCardStatusTone
-} from './integration-card-shell'
 import { DotIngressAccessDialog } from './dot-ingress-access-dialog'
 import { DotIngressRefusalLine } from './dot-ingress-refusal-line'
 import { DotIngressWorkspaceRow, type DotWorkspaceEntry } from './dot-ingress-workspace-row'
 import type { DotWorkspaceCandidate } from './dot-workspace-candidates'
+import { SettingsGroup } from './settings-group'
+import type { SettingsStatusTone } from './settings-status-label'
 import type { DotIngressModel } from './use-dot-ingress-settings'
 import { useDotWorkspaceCandidates } from './use-dot-workspace-candidates'
 
@@ -19,14 +16,17 @@ export const DOT_WORKSPACES_SECTION_ID = 'integrations-dot-workspaces'
 
 const NO_WORKSPACES: readonly DotWorkspaceEntry[] = []
 
-function workspacesPill(model: DotIngressModel): {
+function workspacesStatus(model: DotIngressModel): {
   label: string
-  tone: IntegrationCardStatusTone
-} {
+  tone: SettingsStatusTone
+} | null {
+  if (model.loading) {
+    return null
+  }
   if (model.settings === null) {
     return {
       label: translate('auto.components.settings.dotIngress.unavailable', 'Unavailable'),
-      tone: 'attention'
+      tone: 'warning'
     }
   }
   const count = model.settings.workspaces.filter((entry) => entry.enabled).length
@@ -123,7 +123,7 @@ function WorkspaceList({
 }): React.JSX.Element {
   if (workspaces.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-meta text-muted-foreground">
         {translate(
           'auto.components.settings.dotIngress.workspaces.empty',
           'No workspace is enabled for dot, so dot cannot start any task.'
@@ -137,7 +137,7 @@ function WorkspaceList({
         'auto.components.settings.dotIngress.workspaces.name',
         'Workspaces for dot'
       )}
-      className="divide-y divide-border/60"
+      className="divide-y divide-border/50"
     >
       {workspaces.map((workspace) => (
         <DotIngressWorkspaceRow
@@ -161,12 +161,12 @@ function WorkspaceList({
   )
 }
 
-/** Rail 1 (D-018): dot may start tasks only in workspaces enabled here, up to each one's ceiling. */
+/** Rail 1 (D-018, D-034): dot may start tasks only in workspaces enabled here, up to each one's maximum. */
 export function DotIngressWorkspacesCard({ model }: { model: DotIngressModel }): React.JSX.Element {
   const [pendingWrite, setPendingWrite] = useState<DotWorkspaceEntry | null>(null)
   const workspaces = model.settings?.workspaces ?? NO_WORKSPACES
   const candidates = useDotWorkspaceCandidates(workspaces)
-  const pill = workspacesPill(model)
+
   const confirmWrite = (): void => {
     if (pendingWrite !== null) {
       void model.allowWorkspaceWrite(target(pendingWrite))
@@ -174,36 +174,33 @@ export function DotIngressWorkspacesCard({ model }: { model: DotIngressModel }):
     setPendingWrite(null)
   }
   return (
-    <IntegrationCardShell
-      icon={<FolderLock className="size-5" />}
-      name={translate('auto.components.settings.dotIngress.workspaces.name', 'Workspaces for dot')}
+    <SettingsGroup
+      id={DOT_WORKSPACES_SECTION_ID}
+      title={translate('auto.components.settings.dotIngress.workspaces.title', 'Workspaces')}
       description={translate(
-        'auto.components.settings.dotIngress.workspaces.description',
-        'dot can start tasks only in the workspaces enabled here. It sees the name shown here, not the folder location.'
+        'auto.components.settings.dotIngress.workspaces.descriptionPlain',
+        'dot sees each workspace by the name shown here, not by its folder.'
       )}
-      checking={model.loading}
-      statusLabel={pill.label}
-      statusTone={pill.tone}
-      settingsSectionId={DOT_WORKSPACES_SECTION_ID}
+      status={workspacesStatus(model)}
     >
       {model.loading || model.settings === null ? null : (
-        <IntegrationCardDetails className="space-y-3">
+        <div className="space-y-row">
           <WorkspaceList model={model} workspaces={workspaces} onRaise={setPendingWrite} />
           <AddWorkspace model={model} candidates={candidates} />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-caption text-muted-foreground">
             {translate(
-              'auto.components.settings.dotIngress.workspaces.readOnlyNote',
-              'New and re-enabled workspaces start at read only. Raising one to workspace write asks you to confirm.'
+              'auto.components.settings.dotIngress.workspaces.readOnlyNotePlain',
+              'Workspaces start read only. Allowing write asks you to confirm.'
             )}
           </p>
           <DotIngressRefusalLine model={model} scope="workspaces" />
-        </IntegrationCardDetails>
+        </div>
       )}
       <DotIngressAccessDialog
         label={pendingWrite?.label ?? null}
         onCancel={() => setPendingWrite(null)}
         onConfirm={confirmWrite}
       />
-    </IntegrationCardShell>
+    </SettingsGroup>
   )
 }

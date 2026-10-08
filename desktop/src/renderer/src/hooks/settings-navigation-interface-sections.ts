@@ -79,8 +79,8 @@ export function buildInterfaceSettingsSections({
       id: 'stats',
       title: translate('auto.hooks.useSettingsNavigationMetadata.d72a58b5b9', 'Stats & Usage'),
       description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.b351014180',
-        'NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage.'
+        'auto.hooks.useSettingsNavigationMetadata.statsDescription',
+        'NASH activity and token usage by agent.'
       ),
       icon: BarChart3,
       searchEntries: getStatsPaneSearchEntries(),

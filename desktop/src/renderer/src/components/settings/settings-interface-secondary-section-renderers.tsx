@@ -102,8 +102,8 @@ export function renderStatsSettingsSection(context: SettingsRenderContext): Reac
       id="stats"
       title={translate('auto.components.settings.Settings.954a8f5aef', 'Stats & Usage')}
       description={translate(
-        'auto.components.settings.Settings.8acf3f22e0',
-        'NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage.'
+        'auto.hooks.useSettingsNavigationMetadata.statsDescription',
+        'NASH activity and token usage by agent.'
       )}
       searchEntries={navigation.getSectionSearchEntries('stats')}
     >

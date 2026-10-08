@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { translate } from '@/i18n/i18n'
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import {
   WorkbenchRunTasksResultSchema,
@@ -55,13 +54,7 @@ export function useWorkbenchRunTasks(run: WorkflowRunView): WorkbenchRunTasksSta
           runId,
           tasks: null,
           readAt: Date.now(),
-          error: toWorkbenchError(error, {
-            invalidResponse: translate(
-              'workbench.tasks.invalidResponse',
-              'The task list returned an invalid response.'
-            ),
-            failed: translate('workbench.tasks.failed', 'The task list could not be read.')
-          })
+          error: toWorkbenchError(error)
         })
       }
     })()

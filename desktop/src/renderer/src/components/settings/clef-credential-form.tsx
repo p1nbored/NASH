@@ -54,7 +54,7 @@ function ClefSecretField(props: SecretFieldProps): React.JSX.Element {
           {translate('auto.components.settings.clef.form.show', 'Show')}
         </Button>
       </div>
-      <p id={descriptionId} className="text-xs text-muted-foreground">
+      <p id={descriptionId} className="text-meta text-muted-foreground">
         {props.description}
       </p>
     </div>
@@ -67,10 +67,16 @@ function ClefSecretField(props: SecretFieldProps): React.JSX.Element {
  */
 export function ClefCredentialForm({
   busy,
-  onSave
+  onSave,
+  onCancel,
+  extraAction
 }: {
   busy: boolean
   onSave: (input: ClefCredentialSaveInput) => Promise<void>
+  /** Shown while replacing saved credentials, to keep them as they are. */
+  onCancel?: () => void
+  /** A secondary action beside Save, such as clearing what is stored. */
+  extraAction?: React.ReactNode
 }): React.JSX.Element {
   const baseId = useId()
   const tokenId = `${baseId}-clef-token`
@@ -106,15 +112,15 @@ export function ClefCredentialForm({
       autoComplete="off"
       onSubmit={handleSubmit}
       aria-label={translate('auto.components.settings.clef.form.label', 'Clef credentials')}
-      className="space-y-3"
+      className="space-y-group"
     >
       <ClefSecretField
         id={tokenId}
         label={translate('auto.components.settings.clef.form.tokenLabel', 'API token')}
         toggleLabel={translate('auto.components.settings.clef.form.showToken', 'Show API token')}
         description={translate(
-          'auto.components.settings.clef.form.tokenDescription',
-          'A Cloudflare API token with Workers AI access.'
+          'auto.components.settings.clef.form.tokenDescriptionPlain',
+          'From your Cloudflare dashboard, with access to Workers AI.'
         )}
         value={token}
         visible={tokenVisible}
@@ -128,8 +134,8 @@ export function ClefCredentialForm({
         label={translate('auto.components.settings.clef.form.accountLabel', 'Account ID')}
         toggleLabel={translate('auto.components.settings.clef.form.showAccount', 'Show account ID')}
         description={translate(
-          'auto.components.settings.clef.form.accountDescription',
-          'The 32-character Cloudflare account ID, in lowercase.'
+          'auto.components.settings.clef.form.accountDescriptionPlain',
+          'Your 32-character Cloudflare account ID.'
         )}
         value={account}
         visible={accountVisible}
@@ -139,14 +145,22 @@ export function ClefCredentialForm({
         onToggleVisible={() => setAccountVisible((visible) => !visible)}
       />
       {missingFields ? (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-meta text-destructive">
           {clefMissingFieldsMessage()}
         </p>
       ) : null}
-      <Button type="submit" disabled={busy}>
-        {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : null}
-        {translate('auto.components.settings.clef.form.save', 'Save credentials')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-row">
+        <Button type="submit" size="sm" disabled={busy}>
+          {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : null}
+          {translate('auto.components.settings.clef.form.save', 'Save credentials')}
+        </Button>
+        {onCancel === undefined ? null : (
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={onCancel}>
+            {translate('auto.components.settings.clef.form.cancel', 'Cancel')}
+          </Button>
+        )}
+        {extraAction}
+      </div>
     </form>
   )
 }

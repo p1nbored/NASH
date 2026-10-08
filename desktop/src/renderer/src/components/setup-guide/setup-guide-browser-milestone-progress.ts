@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useAppStore } from '@/store'
 import {
   FEATURE_WALL_SETUP_STEPS,
+  ORCA_LEGACY_SETUP_STEP_IDS,
   type FeatureWallSetupStepId
 } from '../../../../shared/feature-wall-setup-steps'
 import type { FeatureWallSetupProgress } from '../feature-wall/feature-wall-setup-progress'
@@ -53,10 +54,11 @@ export function shouldMarkBrowserMilestoneLegacyComplete(input: {
     return true
   }
   // Why: browser migration preserves the old pre-browser checklist, which
-  // included the now-removed split-terminal milestone.
+  // included the now-removed split-terminal milestone. Only Orca's steps count;
+  // the NASH steps (D-038) were never part of that checklist.
   return (
     input.historicalSplitTerminalDone &&
-    FEATURE_WALL_SETUP_STEPS.every((step) => step.id === 'browser' || input.stepDone[step.id])
+    ORCA_LEGACY_SETUP_STEP_IDS.every((id) => input.stepDone[id])
   )
 }
 
@@ -67,15 +69,18 @@ export function getSetupGuideBrowserMilestoneAwareProgress(
   if (!browserMilestoneLegacyComplete) {
     return progress
   }
-  const stepDone = Object.fromEntries(
-    FEATURE_WALL_SETUP_STEPS.map((step) => [step.id, true])
-  ) as Record<FeatureWallSetupStepId, boolean>
   // Why: profiles that finished or dismissed the pre-browser checklist keep
   // that prior checklist contract after the browser milestone is introduced.
+  // The NASH steps (D-038) still complete only from their own signals.
+  const legacyStepIds: ReadonlySet<FeatureWallSetupStepId> = new Set(ORCA_LEGACY_SETUP_STEP_IDS)
+  const stepDone = { ...progress.stepDone }
+  for (const step of FEATURE_WALL_SETUP_STEPS) {
+    stepDone[step.id] = legacyStepIds.has(step.id) || progress.stepDone[step.id]
+  }
   return {
     ...progress,
     stepDone,
-    coreDoneCount: FEATURE_WALL_SETUP_STEPS.length,
+    coreDoneCount: FEATURE_WALL_SETUP_STEPS.filter((step) => stepDone[step.id]).length,
     coreTotal: FEATURE_WALL_SETUP_STEPS.length
   }
 }

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./source-control-integration-cards', () => ({
@@ -22,51 +22,54 @@ vi.mock('./clef-routing-card', () => ({
 vi.mock('./routing-table-card', () => ({
   RoutingTableCard: () => <div>Routing Table card</div>
 }))
-vi.mock('./dot-ingress-section', () => ({ DotIngressSection: () => null }))
 
 import { IntegrationsPane } from './IntegrationsPane'
 import { getIntegrationsPaneSearchEntries } from './integrations-search'
+import { TaskRoutingPane } from './TaskRoutingPane'
+import { getTaskRoutingSearchEntries } from './task-routing-search'
 
-describe('IntegrationsPane task routing group', () => {
+describe('Task routing category', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('adds a Task routing group with the Clef card after the existing groups', () => {
+  it('keeps Integrations to source hosts and task trackers', () => {
     render(<IntegrationsPane />)
 
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
-    expect(headings).toEqual(['Review providers', 'Task providers', 'Task routing'])
-    const group = screen.getByRole('heading', { name: 'Task routing' }).closest('section')
-    if (!(group instanceof HTMLElement)) {
-      throw new Error('Task routing section is missing')
-    }
-    expect(within(group).getByText('Clef routing card')).toBeTruthy()
+    expect(headings).toEqual(['Review providers', 'Task providers'])
+    expect(screen.queryByText('Clef routing card')).toBeNull()
+    expect(screen.queryByText('Routing Table card')).toBeNull()
   })
 
-  it('shows the Routing Table before the Clef classifier in the Task routing group', () => {
-    render(<IntegrationsPane />)
+  it('shows the Routing Table before the Clef classifier', () => {
+    const { container } = render(<TaskRoutingPane />)
 
-    const group = screen.getByRole('heading', { name: 'Task routing' }).closest('section')
-    const text = group?.textContent ?? ''
+    const text = container.textContent ?? ''
     expect(text.indexOf('Routing Table card')).toBeGreaterThan(-1)
     expect(text.indexOf('Routing Table card')).toBeLessThan(text.indexOf('Clef routing card'))
-    expect(text).toMatch(/Clef classifies/)
   })
 
-  it('lets settings search find the Routing Table', () => {
-    const entry = getIntegrationsPaneSearchEntries().find((item) => item.title === 'Routing Table')
+  it('lets settings search find the per-task agents under Task routing only', () => {
+    const entry = getTaskRoutingSearchEntries().find(
+      (item) => item.title === 'Agents for each task'
+    )
     expect(entry).toBeDefined()
     expect(entry?.keywords).toEqual(
-      expect.arrayContaining(['routing table', 'model', 'reasoning', 'proposal'])
+      expect.arrayContaining(['routing table', 'model', 'effort', 'proposal'])
+    )
+    expect(entry?.description).not.toMatch(/executor/)
+    expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain(
+      'Agents for each task'
     )
   })
 
-  it('lets settings search find the Clef routing credentials', () => {
-    const entry = getIntegrationsPaneSearchEntries().find((item) => item.title === 'Clef routing')
+  it('lets settings search find the Clef routing credentials under Task routing only', () => {
+    const entry = getTaskRoutingSearchEntries().find((item) => item.title === 'Clef')
     expect(entry).toBeDefined()
     expect(entry?.keywords).toEqual(
       expect.arrayContaining(['clef', 'routing', 'cloudflare', 'api token', 'account id'])
     )
+    expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain('Clef')
   })
 })

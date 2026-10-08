@@ -1,5 +1,6 @@
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
 import { isSettingsNavigationTarget } from '../../../lib/settings-navigation-types'
+import { normalizeSettingsNavigationTarget } from '../../../lib/settings-navigation-target-normalization'
 
 export function createUiSettingsActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
@@ -25,7 +26,11 @@ export function createUiSettingsActions(set: UISliceSet, get: UISliceGet): Parti
         }
         return
       }
-      set({ settingsNavigationTarget: target })
+      // Why: hidden panes fall back to Settings' default section; moved anchors land in their new category.
+      const normalized = normalizeSettingsNavigationTarget(target)
+      if (normalized) {
+        set({ settingsNavigationTarget: normalized })
+      }
     },
     clearSettingsTarget: () => set({ settingsNavigationTarget: null }),
     settingsProjectHostSelection: {},

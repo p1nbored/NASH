@@ -2,6 +2,7 @@ import { translate } from '@/i18n/i18n'
 import type { WorkflowRunView } from '../../../../shared/workflow-run/workflow-run-view'
 import { useWorkbenchPermissionPrompts } from './use-workbench-permission-prompts'
 import WorkbenchCallout from './WorkbenchCallout'
+import { errorDetails } from './workbench-details'
 import WorkbenchPermissionRow from './WorkbenchPermissionRow'
 import WorkbenchSectionHeader from './WorkbenchSectionHeader'
 
@@ -14,13 +15,13 @@ export default function WorkbenchPermissionSection({
   const prompts = useWorkbenchPermissionPrompts()
   const waiting = prompts.rows.filter((row) => row.view.status === 'pending').length
   return (
-    <section aria-labelledby="workbench-permissions" className="space-y-3">
+    <section aria-labelledby="workbench-permissions" className="space-y-2">
       <WorkbenchSectionHeader
         id="workbench-permissions"
         title={translate('workbench.permissions.title', 'Permission prompts')}
       >
         {waiting > 0 && (
-          <span className="text-xs tabular-nums text-muted-foreground">
+          <span className="text-meta tabular-nums text-muted-foreground">
             {translate('workbench.permissions.waiting', '{{waiting}} waiting', { waiting })}
           </span>
         )}
@@ -28,24 +29,25 @@ export default function WorkbenchPermissionSection({
       {prompts.error && (
         <WorkbenchCallout
           role="alert"
+          tone="error"
           label={translate('workbench.permissions.errorTitle', 'Permission prompts unavailable')}
+          details={{ subject: 'permission prompts', entries: errorDetails(prompts.error) }}
         >
           <p className="break-words">{prompts.error.message}</p>
-          <p className="break-words font-mono">{prompts.error.code}</p>
           {prompts.rows.length > 0 && (
-            <p>
+            <p className="text-muted-foreground">
               {translate('workbench.permissions.stale', 'Displayed prompts may be out of date.')}
             </p>
           )}
         </WorkbenchCallout>
       )}
       {prompts.loaded && prompts.rows.length === 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
           {translate('workbench.permissions.empty', 'No permission prompts are waiting.')}
         </p>
       )}
       {prompts.rows.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border">
           {prompts.rows.map((row) => (
             <WorkbenchPermissionRow
               key={row.view.decisionId}

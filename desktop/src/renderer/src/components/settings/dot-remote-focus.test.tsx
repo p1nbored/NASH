@@ -107,7 +107,7 @@ const saveButton = (): HTMLElement =>
 const codeGroup = (): HTMLElement => within(card()).getByRole('group', { name: 'Pairing code' })
 
 function fillConnection(origin: string): void {
-  fireEvent.change(within(card()).getByLabelText('Site origin'), { target: { value: origin } })
+  fireEvent.change(within(card()).getByLabelText('Site address'), { target: { value: origin } })
   fireEvent.change(within(card()).getByLabelText('Site access token'), {
     target: { value: FIXTURE_REMOTE_TOKEN }
   })

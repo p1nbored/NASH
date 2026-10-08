@@ -1,46 +1,28 @@
 import { ListChecks, Loader2 } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
-import { cn } from '@/lib/utils'
 import type { RouteAvailabilityView } from '../../../../shared/workbench-route-availability-view'
 import { Button } from '../ui/button'
 import {
   routeAvailabilityLabel,
   type RouteAvailabilityTone
 } from './routing-table-availability-messages'
+import { SettingsStatusLabel, type SettingsStatusTone } from './settings-status-label'
 
-const TONE_CLASSES: Record<RouteAvailabilityTone, string> = {
-  available: 'border-status-success-border bg-status-success-background text-status-success',
-  unavailable: 'border-status-warning-border bg-status-warning-background text-status-warning',
-  unverified: 'border-border bg-background text-muted-foreground'
+const TONES: Record<RouteAvailabilityTone, SettingsStatusTone> = {
+  available: 'success',
+  unavailable: 'warning',
+  unverified: 'neutral'
 }
 
-/** A route's status as a small label, with its reasons in plain English beside or beneath it. */
+/** A route's status as a small icon and label; its reasons are shown by the row beneath its choice. */
 export function RouteAvailabilityStatus(props: {
   availability: RouteAvailabilityView
-  layout?: 'stacked' | 'inline'
 }): React.JSX.Element {
-  const { label, detail, tone } = routeAvailabilityLabel(props.availability)
-  return (
-    <span
-      className={cn(
-        'inline-flex items-start gap-1',
-        props.layout === 'inline' ? 'flex-wrap items-baseline' : 'flex-col'
-      )}
-    >
-      <span
-        className={cn(
-          'rounded-full border px-1.5 py-px text-[10px] font-medium whitespace-nowrap',
-          TONE_CLASSES[tone]
-        )}
-      >
-        {label}
-      </span>
-      {detail ? <span className="text-[11px] text-muted-foreground">{detail}</span> : null}
-    </span>
-  )
+  const { label, tone } = routeAvailabilityLabel(props.availability)
+  return <SettingsStatusLabel tone={TONES[tone]} label={label} />
 }
 
-/** The user's "Check now": reads each CLI again, so it runs only when clicked. */
+/** The user's "Check availability": asks each CLI again, so it runs only when clicked. */
 export function RouteCheckButton(props: {
   checking: boolean
   disabled: boolean
@@ -59,11 +41,11 @@ export function RouteCheckButton(props: {
         <ListChecks aria-hidden="true" />
       )}
       {props.checking
-        ? translate(
-            'auto.components.settings.routingTable.availability.checking',
-            'Checking routes…'
-          )
-        : translate('auto.components.settings.routingTable.availability.check', 'Check routes')}
+        ? translate('auto.components.settings.routingTable.availability.checkingPlain', 'Checking…')
+        : translate(
+            'auto.components.settings.routingTable.availability.checkPlain',
+            'Check availability'
+          )}
     </Button>
   )
 }

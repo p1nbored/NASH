@@ -41,8 +41,8 @@ export function clefRefusalMessage(
       )
     case 'sealing_unavailable':
       return translate(
-        'auto.components.settings.clef.credentials.sealingUnavailable',
-        'Sealing is unavailable on this system, so the token was not saved.'
+        'auto.components.settings.clef.credentials.sealingUnavailablePlain',
+        'This computer cannot store the token safely, so it was not saved.'
       )
     case 'write_failed':
       return translate(
@@ -80,8 +80,8 @@ export function clefMissingFieldsMessage(): string {
 
 export function clefSavedMessage(): string {
   return translate(
-    'auto.components.settings.clef.credentials.saved',
-    'Saved and sealed. The token will never be shown again.'
+    'auto.components.settings.clef.credentials.savedPlain',
+    'Saved. The token will never be shown again.'
   )
 }
 

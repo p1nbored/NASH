@@ -4,30 +4,88 @@ import type {
   PrimarySessionView,
   WorkflowRunView
 } from '../../../../shared/workflow-run/workflow-run-view'
-import type { WorkbenchChipTone } from './WorkbenchStateChip'
+import type { WorkbenchChipCopy } from './WorkbenchStateChip'
 
-export type WorkbenchChipCopy = { label: string; tone: WorkbenchChipTone }
+const unverifiable = (): string =>
+  translate('workbench.runs.status.unverifiable', 'Cannot be verified')
 
 export function runStatusChip(status: WorkflowRunView['status']): WorkbenchChipCopy {
   switch (status) {
     case 'launching':
-      return { label: translate('workbench.runs.status.launching', 'Launching'), tone: 'neutral' }
+      return { kind: 'progress', label: translate('workbench.runs.status.launching', 'Launching') }
     case 'active':
-      return { label: translate('workbench.runs.status.active', 'Active'), tone: 'neutral' }
+      return { kind: 'running', label: translate('workbench.runs.status.active', 'Active') }
     case 'completing':
-      return { label: translate('workbench.runs.status.completing', 'Completing'), tone: 'neutral' }
-    case 'completed':
-      return { label: translate('workbench.runs.status.completed', 'Completed'), tone: 'muted' }
-    case 'failed':
-      return { label: translate('workbench.runs.status.failed', 'Failed'), tone: 'warning' }
-    case 'canceled':
-      return { label: translate('workbench.runs.status.canceled', 'Canceled'), tone: 'muted' }
-    case 'unverifiable':
       return {
-        label: translate('workbench.runs.status.unverifiable', 'Cannot be verified'),
-        tone: 'warning'
+        kind: 'progress',
+        label: translate('workbench.runs.status.completing', 'Completing')
+      }
+    case 'completed':
+      return { kind: 'done', label: translate('workbench.runs.status.completed', 'Completed') }
+    case 'failed':
+      return { kind: 'failed', label: translate('workbench.runs.status.failed', 'Failed') }
+    case 'canceled':
+      return { kind: 'ended', label: translate('workbench.runs.status.canceled', 'Canceled') }
+    case 'unverifiable':
+      return { kind: 'disconnected', label: unverifiable() }
+  }
+}
+
+type LiveActivity = Extract<PrimarySessionLiveView, { kind: 'live' }>['activity']
+
+function activityChip(activity: LiveActivity): WorkbenchChipCopy {
+  switch (activity) {
+    case 'working':
+      return { kind: 'running', label: translate('workbench.runs.state.working', 'Working') }
+    case 'dialog_open':
+      return {
+        kind: 'permission',
+        label: translate('workbench.runs.state.dialogOpen', 'Needs an answer')
+      }
+    case 'idle':
+      return { kind: 'waiting', label: translate('workbench.runs.live.idle', 'Waiting for input') }
+    case 'unknown':
+      return {
+        kind: 'unknown',
+        label: translate('workbench.runs.live.unknown', 'Activity unknown')
       }
   }
+}
+
+function liveChip(live: PrimarySessionLiveView): WorkbenchChipCopy {
+  switch (live.kind) {
+    case 'live':
+      return activityChip(live.activity)
+    case 'agent_absent':
+      return {
+        kind: 'disconnected',
+        label: translate('workbench.runs.state.agentAbsent', 'Not running')
+      }
+    case 'unverifiable':
+      return { kind: 'disconnected', label: unverifiable() }
+    case 'starting':
+      return { kind: 'progress', label: translate('workbench.runs.session.starting', 'Starting') }
+    case 'ended':
+      return {
+        kind: 'ended',
+        label:
+          live.state === 'stopped'
+            ? translate('workbench.runs.session.stopped', 'Stopped')
+            : translate('workbench.runs.session.exited', 'Exited')
+      }
+  }
+}
+
+/** An active run shows what its session is doing now; any other run shows its own status. */
+export function runStateChip(run: WorkflowRunView, liveUnread: boolean): WorkbenchChipCopy {
+  if (run.status !== 'active') {
+    return runStatusChip(run.status)
+  }
+  if (liveUnread) {
+    return { kind: 'disconnected', label: unverifiable() }
+  }
+  const live = run.primary?.live ?? null
+  return live ? liveChip(live) : runStatusChip(run.status)
 }
 
 export function primarySessionLabel(primary: PrimarySessionView | null): string {
@@ -45,7 +103,7 @@ export function primarySessionLabel(primary: PrimarySessionView | null): string 
     case 'exited':
       return translate('workbench.runs.session.exited', 'Exited')
     case 'unverifiable':
-      return translate('workbench.runs.session.unverifiable', 'Cannot be verified')
+      return unverifiable()
   }
 }
 
@@ -92,6 +150,34 @@ export function liveActivityLabel(live: PrimarySessionLiveView | null): string |
   }
 }
 
+const QUIET_SESSION_STATES: ReadonlySet<string> = new Set(['starting', 'running'])
+
+/**
+ * The one line that explains a run's chip when it needs explaining: a dialog, a lost or absent
+ * terminal, or a session that is not running while the run is still open. Null otherwise.
+ */
+export function runSessionNote(run: WorkflowRunView, liveUnread: boolean): string | null {
+  if (run.status === 'completed' || run.status === 'failed' || run.status === 'canceled') {
+    return null
+  }
+  if (liveUnread) {
+    return translate('workbench.runs.live.unread', 'Activity could not be read')
+  }
+  const live = run.primary?.live ?? null
+  if (live && live.kind !== 'live' && live.kind !== 'starting') {
+    return liveActivityLabel(live)
+  }
+  if (live?.kind === 'live' && live.activity === 'dialog_open') {
+    return liveActivityLabel(live)
+  }
+  if (run.primary && QUIET_SESSION_STATES.has(run.primary.state)) {
+    return null
+  }
+  return translate('workbench.runs.sessionNote', 'Session: {{state}}', {
+    state: primarySessionLabel(run.primary)
+  })
+}
+
 const END_REASONS = new Map<string, () => string>([
   ['user_canceled', () => translate('workbench.runs.end.userCanceled', 'Stopped in the app')],
   ['dot_canceled', () => translate('workbench.runs.end.dotCanceled', 'Canceled by dot')],
@@ -119,9 +205,9 @@ const END_REASONS = new Map<string, () => string>([
   ]
 ])
 
-/** Known end reasons in words; an unknown code stays literal rather than guessed at. */
-export function runEndReasonLabel(code: string): string {
-  return END_REASONS.get(code)?.() ?? code
+/** Known end reasons in words; an unknown code is left to "Copy details" rather than shown. */
+export function runEndReasonLabel(code: string): string | null {
+  return END_REASONS.get(code)?.() ?? null
 }
 
 export function runOriginLabel(origin: WorkflowRunView['origin']): string {

@@ -62,7 +62,7 @@ function reviewersText(policy: ValidationPolicy | null): string {
 function RouteChangeItem({ change }: { change: RouteChange }): React.JSX.Element {
   const before =
     change.before === null
-      ? translate('auto.components.settings.routingTable.proposals.noRow', 'no active row')
+      ? translate('auto.components.settings.routingTable.proposals.noRowPlain', 'not set')
       : routeSummary(change.before)
   return (
     <li className="space-y-0.5">
@@ -72,8 +72,8 @@ function RouteChangeItem({ change }: { change: RouteChange }): React.JSX.Element
       ) : (
         <span className="block text-muted-foreground">
           {translate(
-            'auto.components.settings.routingTable.proposals.notesOnly',
-            'Same route; only its notes or sources change.'
+            'auto.components.settings.routingTable.proposals.notesOnlyPlain',
+            'Same choice; only its notes change.'
           )}
         </span>
       )}
@@ -87,7 +87,7 @@ function ProposalDiffList(props: {
 }): React.JSX.Element {
   const diff = diffProposal(props.active, props.proposal)
   return (
-    <ul className="space-y-2 text-xs">
+    <ul className="space-y-row text-meta">
       {diff.routes.map((change) => (
         <RouteChangeItem key={change.taskType} change={change} />
       ))}
@@ -108,10 +108,7 @@ function ProposalDiffList(props: {
       {diff.validation ? (
         <li className="space-y-0.5">
           <span className="block font-medium text-foreground">
-            {translate(
-              'auto.components.settings.routingTable.proposals.reviewers',
-              'Validation reviewers'
-            )}
+            {translate('auto.components.settings.routingTable.inline.reviewersTitle', 'Reviewers')}
           </span>
           <BeforeAfter
             before={reviewersText(diff.validation.before)}
@@ -134,86 +131,77 @@ function PendingProposal(props: {
   const { actions } = props
   const evidence = proposal.evidence.map((source) => source.name).join(', ')
   return (
-    <div
-      role="group"
-      aria-labelledby={labelId}
-      className="space-y-2 rounded-md border border-border/60 p-3"
-    >
-      <div className="space-y-0.5">
-        <p id={labelId} className="text-xs font-medium text-foreground">
-          {translate(
-            'auto.components.settings.routingTable.proposals.title',
-            '{{proposer}} proposal {{id}}',
-            {
-              proposer: proposerLabel(proposal.proposer),
-              id: proposal.proposal_id
-            }
-          )}
-        </p>
-        <p className="text-[11px] text-muted-foreground">
-          {translate(
-            'auto.components.settings.routingTable.proposals.meta',
-            '{{time}} · based on version {{version}}',
-            {
-              time: formatRoutingTime(proposal.created_at),
-              version: proposal.base.table_version
-            }
-          )}
-        </p>
-      </div>
-      <p className="text-xs text-foreground">{proposal.rationale}</p>
-      {evidence ? (
-        <p className="text-[11px] text-muted-foreground">
-          {translate(
-            'auto.components.settings.routingTable.proposals.evidence',
-            'Sources: {{sources}}',
-            { sources: evidence }
-          )}
-        </p>
-      ) : null}
-      <ProposalDiffList active={props.active} proposal={proposal} />
-      {stale ? (
-        <RoutingWarningCallout
-          label={translate(
-            'auto.components.settings.routingTable.proposals.staleTitle',
-            'Made for an older version'
-          )}
-        >
-          <p>
+    <li className="py-row">
+      <div role="group" aria-labelledby={labelId} className="space-y-row">
+        <div>
+          <p id={labelId} className="text-body text-foreground">
+            {proposerLabel(proposal.proposer)}
+          </p>
+          <p className="text-caption text-muted-foreground">
             {translate(
-              'auto.components.settings.routingTable.proposals.staleBody',
-              'Version {{active}} is active now, so accepting would only record this as superseded. Reject it, or make the change again with Edit routes.',
-              { active: props.activeVersion ?? '?' }
+              'auto.components.settings.routingTable.proposals.metaPlain',
+              '{{time}} · based on version {{version}}',
+              {
+                time: formatRoutingTime(proposal.created_at),
+                version: proposal.base.table_version
+              }
             )}
           </p>
-        </RoutingWarningCallout>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          disabled={actions.busy || stale}
-          onClick={() => actions.onAccept(proposal.proposal_id)}
-        >
-          {translate('auto.components.settings.routingTable.proposals.accept', 'Accept')}
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={actions.busy || stale}
-          onClick={() => actions.onEdit(proposal)}
-        >
-          {translate('auto.components.settings.routingTable.proposals.edit', 'Edit and accept')}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={actions.busy}
-          onClick={() => actions.onReject(proposal.proposal_id)}
-        >
-          {translate('auto.components.settings.routingTable.proposals.reject', 'Reject')}
-        </Button>
+        </div>
+        <p className="text-meta text-foreground">{proposal.rationale}</p>
+        {evidence ? (
+          <p className="text-caption text-muted-foreground">
+            {translate(
+              'auto.components.settings.routingTable.proposals.evidence',
+              'Sources: {{sources}}',
+              { sources: evidence }
+            )}
+          </p>
+        ) : null}
+        <ProposalDiffList active={props.active} proposal={proposal} />
+        {stale ? (
+          <RoutingWarningCallout
+            label={translate(
+              'auto.components.settings.routingTable.proposals.staleTitle',
+              'Made for an older version'
+            )}
+          >
+            <p>
+              {translate(
+                'auto.components.settings.routingTable.proposals.staleBodyPlain',
+                'Version {{active}} is in use now, so this can no longer be accepted. Reject it, or make the change again in the list above.',
+                { active: props.activeVersion ?? '?' }
+              )}
+            </p>
+          </RoutingWarningCallout>
+        ) : null}
+        <div className="flex flex-wrap gap-row">
+          <Button
+            size="sm"
+            disabled={actions.busy || stale}
+            onClick={() => actions.onAccept(proposal.proposal_id)}
+          >
+            {translate('auto.components.settings.routingTable.proposals.accept', 'Accept')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={actions.busy || stale}
+            onClick={() => actions.onEdit(proposal)}
+          >
+            {translate('auto.components.settings.routingTable.proposals.edit', 'Edit and accept')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={actions.busy}
+            onClick={() => actions.onReject(proposal.proposal_id)}
+          >
+            {translate('auto.components.settings.routingTable.proposals.reject', 'Reject')}
+          </Button>
+        </div>
       </div>
-    </div>
+    </li>
   )
 }
 
@@ -227,18 +215,17 @@ function DecidedProposals({ entries }: { entries: readonly ProposalEntry[] }): R
             className="transition-transform group-data-[state=open]:rotate-90"
           />
           {translate(
-            'auto.components.settings.routingTable.proposals.history',
-            'Decided proposals ({{count}})',
+            'auto.components.settings.routingTable.proposals.historyPlain',
+            'Decided ({{count}})',
             { count: entries.length }
           )}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <ul className="mt-1 space-y-1 pl-6 text-xs">
+        <ul className="mt-1 space-y-1 pl-6 text-meta">
           {entries.map(({ proposal, decision }) => (
             <li key={proposal.proposal_id} className="text-muted-foreground">
-              <span className="text-foreground">{proposerLabel(proposal.proposer)}</span>{' '}
-              <span className="font-mono text-[11px]">{proposal.proposal_id}</span>
+              <span className="text-foreground">{proposerLabel(proposal.proposer)}</span>
               {decision
                 ? ` · ${proposalDecisionLabel(decision.decision)} · ${formatRoutingTime(decision.decided_at)}`
                 : null}
@@ -250,39 +237,42 @@ function DecidedProposals({ entries }: { entries: readonly ProposalEntry[] }): R
   )
 }
 
-/** Pending proposals first, each with its reason and a before and after reading; decided ones folded. */
+/** Suggested changes waiting first, each with its reason and a before and after; decided ones folded. */
 export function RoutingTableProposals(props: {
   list: WorkbenchRoutingTableListResult
   active: RoutingTable | null
   actions: ProposalActions
 }): React.JSX.Element {
+  const headingId = useId()
   const pending = props.list.proposals.filter((entry) => entry.decision === null)
   const decided = props.list.proposals.filter((entry) => entry.decision !== null)
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-foreground">
+    <div className="space-y-1">
+      <p id={headingId} className="text-meta font-medium text-foreground">
         {translate(
-          'auto.components.settings.routingTable.proposals.pendingTitle',
-          'Proposals to review'
+          'auto.components.settings.routingTable.proposals.pendingTitlePlain',
+          'Suggested changes'
         )}
       </p>
       {pending.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
           {translate(
-            'auto.components.settings.routingTable.proposals.noneWaiting',
-            'Nothing is waiting. App updates and agents propose changes here; nothing changes until you accept one.'
+            'auto.components.settings.routingTable.proposals.noneWaitingPlain',
+            'None waiting. Nothing changes until you accept a suggestion.'
           )}
         </p>
       ) : (
-        pending.map((entry) => (
-          <PendingProposal
-            key={entry.proposal.proposal_id}
-            entry={entry}
-            active={props.active}
-            activeVersion={props.list.activeVersion}
-            actions={props.actions}
-          />
-        ))
+        <ul aria-labelledby={headingId} className="divide-y divide-border/50">
+          {pending.map((entry) => (
+            <PendingProposal
+              key={entry.proposal.proposal_id}
+              entry={entry}
+              active={props.active}
+              activeVersion={props.list.activeVersion}
+              actions={props.actions}
+            />
+          ))}
+        </ul>
       )}
       {decided.length > 0 ? <DecidedProposals entries={decided} /> : null}
     </div>

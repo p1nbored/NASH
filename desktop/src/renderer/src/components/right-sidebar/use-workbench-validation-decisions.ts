@@ -51,31 +51,9 @@ const INITIAL: DecisionsState = {
   decideErrors: new Map()
 }
 
+// Why no local copy: the conflict and not-found refusals are worded in workbench-error-copy.
 function decisionsError(error: unknown): WorkbenchError {
-  const shown = toWorkbenchError(error, {
-    invalidResponse: translate(
-      'workbench.decisions.invalidResponse',
-      'The decision list returned an invalid response.'
-    ),
-    failed: translate('workbench.decisions.failed', 'The decision call failed.')
-  })
-  switch (shown.code) {
-    case 'autopilot_validation_conflict':
-      return {
-        ...shown,
-        message: translate('workbench.decisions.conflict', 'This result was already decided.')
-      }
-    case 'autopilot_validation_not_found':
-      return {
-        ...shown,
-        message: translate(
-          'workbench.decisions.notFound',
-          'This result is no longer waiting for a decision.'
-        )
-      }
-    default:
-      return shown
-  }
+  return toWorkbenchError(error)
 }
 
 /** Waiting results first (oldest first), then this session's decided ones that left the list. */

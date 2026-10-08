@@ -10,7 +10,12 @@ import {
   PROPOSAL_DECISIONS,
   ROUTING_TABLE_PROPOSERS
 } from '../../../../shared/routing-table/routing-table-proposal-schema'
-import { routingTableCallErrorMessage, routingTableRefusalMessage } from './routing-table-messages'
+import {
+  routingTableCallErrorDetails,
+  routingTableCallErrorMessage,
+  routingTableRefusalDetails,
+  routingTableRefusalMessage
+} from './routing-table-messages'
 import {
   executionTargetLabel,
   proposalDecisionLabel,
@@ -72,33 +77,42 @@ describe('routingTableRefusalMessage', () => {
     expect(new Set(messages).size).toBe(messages.length)
   })
 
-  it('names the damaged part of the store and says no default table replaces it', () => {
+  it('says a damaged store routes nothing, in one plain message, and keeps the part in details', () => {
     const messages = INTEGRITY_DETAILS.map((detail) =>
       routingTableRefusalMessage(refusal('routing_table_integrity_failed', detail))
     )
 
-    expect(new Set(messages).size).toBe(INTEGRITY_DETAILS.length)
-    for (const message of messages) {
-      expect(message).not.toMatch(SNAKE_CASE_CODE)
-      expect(message).toMatch(/no default table is used/i)
+    expect(new Set(messages).size).toBe(1)
+    expect(messages[0]).toMatch(/no default is used/i)
+    expect(messages[0]).not.toMatch(/index|hash|file/i)
+    for (const detail of INTEGRITY_DETAILS) {
+      expect(
+        routingTableRefusalDetails(refusal('routing_table_integrity_failed', detail))
+      ).toContain(`detail: ${detail}`)
     }
   })
 
-  it('points at the waiting duplicate, or says the active table already has the content', () => {
-    expect(
-      routingTableRefusalMessage(refusal('duplicate_content', null, 'proposal-0042'))
-    ).toContain('proposal-0042')
-    expect(routingTableRefusalMessage(refusal('duplicate_content'))).toMatch(/active table/i)
+  it('points at a waiting duplicate without its id, which stays in the details', () => {
+    const waiting = refusal('duplicate_content', null, 'proposal-0042')
+    expect(routingTableRefusalMessage(waiting)).not.toContain('proposal-0042')
+    expect(routingTableRefusalMessage(waiting)).toMatch(/Suggested changes/)
+    expect(routingTableRefusalDetails(waiting)).toContain('proposal-0042')
+    expect(routingTableRefusalMessage(refusal('duplicate_content'))).toMatch(/already in use/i)
   })
 
-  it('keeps an unknown reason visible as its code rather than hiding it', () => {
-    expect(routingTableRefusalMessage(refusal('brand_new_reason'))).toContain('brand_new_reason')
+  it('keeps an unknown reason out of the text and in the details', () => {
+    expect(routingTableRefusalMessage(refusal('brand_new_reason'))).not.toContain(
+      'brand_new_reason'
+    )
+    expect(routingTableRefusalDetails(refusal('brand_new_reason'))).toContain('brand_new_reason')
   })
 })
 
 describe('routingTableCallErrorMessage', () => {
-  it('says the Routing Table is not connected when the method is not registered', () => {
-    expect(routingTableCallErrorMessage(rpcError('method_not_found'))).toMatch(/not connected/i)
+  it('says task routing is not available when the method is not registered', () => {
+    expect(routingTableCallErrorMessage(rpcError('method_not_found'))).toMatch(
+      /not available in this build/i
+    )
   })
 
   it('explains an uninstalled table and an untrusted caller', () => {
@@ -109,9 +123,11 @@ describe('routingTableCallErrorMessage', () => {
   })
 
   it('never repeats the raw error text, which could quote what was sent', () => {
-    const message = routingTableCallErrorMessage(rpcError('runtime_error', 'secret-ish detail'))
-    expect(message).not.toContain('secret-ish detail')
+    const error = rpcError('runtime_error', 'secret-ish detail')
+    expect(routingTableCallErrorMessage(error)).not.toContain('secret-ish detail')
+    expect(routingTableCallErrorDetails(error)).toBe('error: runtime_error')
     expect(routingTableCallErrorMessage(new Error('boom detail'))).not.toContain('boom detail')
+    expect(routingTableCallErrorDetails(new Error('boom detail'))).not.toContain('boom detail')
   })
 })
 

@@ -6,23 +6,27 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SidebarSettingsHelpMenu } from './SidebarSettingsHelpMenu'
 
-const mocks = vi.hoisted(() => ({
-  openModal: vi.fn(),
-  openSettingsPage: vi.fn(),
-  openSettingsTarget: vi.fn(),
-  appRestart: vi.fn(),
-  updaterCheck: vi.fn(),
-  shellOpenUrl: vi.fn(),
-  useShortcutKeyDetails: vi.fn(),
-  /** Counts evaluations of the feedback chunk; a dynamic import evaluates it exactly once. */
-  feedbackChunkLoads: 0,
-  setupProgress: {
-    ready: true,
-    coreDoneCount: 2,
-    coreTotal: 5,
-    stepDone: {}
+const mocks = vi.hoisted(() => {
+  const feed: { updateFeed: unknown } = { updateFeed: null }
+  return {
+    openModal: vi.fn(),
+    openSettingsPage: vi.fn(),
+    openSettingsTarget: vi.fn(),
+    appRestart: vi.fn(),
+    updaterCheck: vi.fn(),
+    shellOpenUrl: vi.fn(),
+    useShortcutKeyDetails: vi.fn(),
+    /** Counts evaluations of the feedback chunk; a dynamic import evaluates it exactly once. */
+    feedbackChunkLoads: 0,
+    ...feed,
+    setupProgress: {
+      ready: true,
+      coreDoneCount: 2,
+      coreTotal: 5,
+      stepDone: {}
+    }
   }
-}))
+})
 
 let updateStatus = { state: 'idle' } as const
 const roots: Root[] = []
@@ -35,6 +39,10 @@ vi.mock('@/store', () => ({
       openSettingsTarget: mocks.openSettingsTarget,
       updateStatus
     })
+}))
+
+vi.mock('../../../../shared/app-update-feed', () => ({
+  getAppUpdateFeed: () => mocks.updateFeed
 }))
 
 vi.mock('@/hooks/useShortcutLabel', () => ({
@@ -176,6 +184,7 @@ describe('SidebarSettingsHelpMenu', () => {
     installWindowApi()
     mocks.useShortcutKeyDetails.mockReturnValue({ keys: ['⌘', ','], doubleTap: false })
     updateStatus = { state: 'idle' }
+    mocks.updateFeed = null
     mocks.setupProgress = {
       ready: true,
       coreDoneCount: 2,
@@ -246,45 +255,42 @@ describe('SidebarSettingsHelpMenu', () => {
     expect(html).toContain('Restart NASH')
   })
 
-  it('renders Docs link', () => {
+  it('links only to the NASH repository, never to Orca, Discord or X (D-036)', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Docs')
+    expect(html).toContain('Report an issue')
+    expect(html).toContain('Source')
+    for (const removed of ['Docs', 'Changelog', 'Discord', '>X<', 'GitHub']) {
+      expect(html).not.toContain(removed)
+    }
   })
 
-  it('renders Changelog link', () => {
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Changelog')
-  })
-
-  it('renders GitHub link', () => {
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('GitHub')
-  })
-
-  it('renders Discord link', () => {
-    const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('Discord')
-    expect(html).toContain('viewBox="0 0 20 20"')
-    expect(html).toContain('M16.0742 4.45014C14.9244 3.92097 13.7106 3.54556 12.4638 3.3335')
-  })
-
-  it('opens Discord invite through the shell bridge', async () => {
+  it('opens a new NASH issue through the shell bridge', async () => {
     const container = await renderMenu()
-    const discordButton = findMenuItem(container, 'Discord')
 
     await act(async () => {
-      discordButton.click()
+      findMenuItem(container, 'Report an issue').click()
     })
 
-    expect(mocks.shellOpenUrl).toHaveBeenCalledWith('https://discord.gg/fzjDKHxv8Q')
+    expect(mocks.shellOpenUrl).toHaveBeenCalledWith('https://github.com/p1nbored/NASH/issues/new')
   })
 
-  it('renders X link', () => {
+  it('opens the NASH source repository through the shell bridge', async () => {
+    const container = await renderMenu()
+
+    await act(async () => {
+      findMenuItem(container, 'Source').click()
+    })
+
+    expect(mocks.shellOpenUrl).toHaveBeenCalledWith('https://github.com/p1nbored/NASH')
+  })
+
+  it('hides Check for Updates while the build has no update feed (D-026)', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).toContain('>X<')
+    expect(html).not.toContain('Check for Updates')
   })
 
-  it('renders Check for Updates menu item', () => {
+  it('renders Check for Updates menu item when the build has an update feed', () => {
+    mocks.updateFeed = { owner: 'example', repo: 'nash-releases', whatsNew: null }
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
     expect(html).toContain('Check for Updates')
     expect(html).toMatch(/(⇧\+click|Shift\+click) checks the latest RC/)
@@ -292,6 +298,7 @@ describe('SidebarSettingsHelpMenu', () => {
   })
 
   it('passes update-check modifier options through the updater bridge', async () => {
+    mocks.updateFeed = { owner: 'example', repo: 'nash-releases', whatsNew: null }
     const container = await renderMenu()
     const checkButton = findMenuItem(container, 'Check for Updates')
     const primaryModifier = navigator.userAgent.includes('Mac')

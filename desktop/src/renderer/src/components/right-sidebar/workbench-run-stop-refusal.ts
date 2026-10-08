@@ -35,11 +35,16 @@ function stopRefusalMessage(stopCode: string | null): string | null {
   }
 }
 
-/** D3: a refused stop names its cause in `data.stopCode`; the message then says what to do next. */
+/**
+ * D3: a refused stop names its cause in `data.stopCode`; the message then says what to do next,
+ * and the stop code goes to "Copy details" as the error's reason.
+ */
 export function withStopRefusalMessage(error: unknown, shown: WorkbenchError): WorkbenchError {
   if (!(error instanceof RuntimeRpcCallError) || error.code !== STOP_REFUSED) {
     return shown
   }
-  const message = stopRefusalMessage(stopCodeOf(error))
-  return message === null ? shown : { ...shown, message }
+  const stopCode = stopCodeOf(error)
+  const message = stopRefusalMessage(stopCode)
+  const reasoned = stopCode === null ? shown : { ...shown, reason: stopCode }
+  return message === null ? reasoned : { ...reasoned, message }
 }

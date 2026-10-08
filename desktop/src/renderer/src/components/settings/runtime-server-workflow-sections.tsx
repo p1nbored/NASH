@@ -116,8 +116,8 @@ export function RuntimeServerShareSection({
         </div>
         <p className="text-xs text-muted-foreground">
           {translate(
-            'auto.components.settings.RuntimeEnvironmentsPane.advertiseThisAppHelp',
-            'Create access links for browsers, mobile clients, or another NASH client to connect back to this running app.'
+            'auto.components.settings.RuntimeEnvironmentsPane.advertiseThisAppHelpDesktop',
+            'Create access links so a browser or another NASH client can connect to this app.'
           )}
         </p>
       </div>

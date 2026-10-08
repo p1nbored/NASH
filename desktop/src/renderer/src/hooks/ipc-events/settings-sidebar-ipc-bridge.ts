@@ -5,6 +5,8 @@ import { subscribeToUnpairedDeviceAuthNotification } from '../unpaired-device-au
 import { translate } from '@/i18n/i18n'
 import { toast } from 'sonner'
 import { useAppStore } from '../../store'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../shared/nash-build-flags'
+import { getUnpairedDeviceToastRecovery } from './unpaired-device-toast-recovery'
 
 function getShortcutPlatform(): NodeJS.Platform {
   if (navigator.userAgent.includes('Mac')) {
@@ -61,6 +63,7 @@ export function registerSettingsAndSidebarIpcBridge(unsubs: (() => void)[]): voi
   // "phone won't connect" with no clue on either end; main throttles to once per session.
   unsubs.push(
     subscribeToUnpairedDeviceAuthNotification(window.api.mobile, () => {
+      const recovery = getUnpairedDeviceToastRecovery(ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED)
       toast.warning(
         translate(
           'auto.hooks.useIpcEvents.ef223fbb6b',
@@ -68,17 +71,14 @@ export function registerSettingsAndSidebarIpcBridge(unsubs: (() => void)[]): voi
         ),
         {
           id: 'unpaired-device-auth-failure',
-          description: translate(
-            'auto.hooks.useIpcEvents.11992d0337',
-            'If this was your phone or another NASH client, re-pair it from Settings → Mobile.'
-          ),
+          description: recovery.description,
           // Why: main emits this recovery path once per session, so it must remain visible until acted on or dismissed.
           duration: Infinity,
           action: {
-            label: translate('auto.hooks.useIpcEvents.6573cfe955', 'Open Mobile Settings'),
+            label: recovery.actionLabel,
             onClick: () => {
               const store = useAppStore.getState()
-              store.openSettingsTarget({ pane: 'mobile', repoId: null })
+              store.openSettingsTarget({ pane: recovery.pane, repoId: null })
               store.openSettingsPage()
             }
           }

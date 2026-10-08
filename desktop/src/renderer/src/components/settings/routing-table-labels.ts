@@ -161,18 +161,32 @@ export function tableSourceLabel(source: 'bundled' | 'user'): string {
     : translate('auto.components.settings.routingTable.labels.sourceUser', 'Your table')
 }
 
+export function sameAsCoordinatorLabel(): string {
+  return translate(
+    'auto.components.settings.routingTable.labels.sameAsCoordinator',
+    'Same as coordinator'
+  )
+}
+
+/** A route that runs with the coordinator's own model and effort. */
+export function inheritsCoordinator(route: Pick<Route, 'model' | 'reasoning_level'>): boolean {
+  return route.model === 'inherit' && route.reasoning_level === 'inherit'
+}
+
+/** The effort a route asks for, for example "Max (when supported)". */
+export function routeEffortLabel(
+  route: Pick<Route, 'reasoning_level' | 'reasoning_requirement'>
+): string {
+  const level = reasoningLevelLabel(route.reasoning_level)
+  return route.reasoning_requirement === 'if_supported'
+    ? `${level} ${translate('auto.components.settings.routingTable.labels.whenSupported', '(when supported)')}`
+    : level
+}
+
 /** One line per route policy, for example "Codex CLI · gpt-6-astra · Max". */
 export function routeSummary(route: Route): string {
-  if (route.model === 'inherit' && route.reasoning_level === 'inherit') {
-    return `${executionTargetLabel(route.execution_target)} · ${translate(
-      'auto.components.settings.routingTable.labels.inheritsCoordinator',
-      'Inherits coordinator'
-    )}`
+  if (inheritsCoordinator(route)) {
+    return `${executionTargetLabel(route.execution_target)} · ${sameAsCoordinatorLabel()}`
   }
-  const level = reasoningLevelLabel(route.reasoning_level)
-  const requirement =
-    route.reasoning_requirement === 'if_supported'
-      ? ` ${translate('auto.components.settings.routingTable.labels.whenSupported', '(when supported)')}`
-      : ''
-  return `${executionTargetLabel(route.execution_target)} · ${route.model} · ${level}${requirement}`
+  return `${executionTargetLabel(route.execution_target)} · ${route.model} · ${routeEffortLabel(route)}`
 }

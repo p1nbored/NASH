@@ -13,18 +13,18 @@ export function dotRemoteOriginProblemMessage(reason: DotRemoteOriginProblem): s
   switch (reason) {
     case 'empty':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originEmpty',
-        'Enter the Site origin, such as https://example.com.'
+        'auto.components.settings.dotRemote.refusals.originEmptyPlain',
+        'Enter the Site address, such as https://example.com.'
       )
     case 'too_long':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originTooLong',
-        'The Site origin is too long.'
+        'auto.components.settings.dotRemote.refusals.originTooLongPlain',
+        'The Site address is too long.'
       )
     case 'spaces':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originSpaces',
-        'The Site origin cannot contain spaces.'
+        'auto.components.settings.dotRemote.refusals.originSpacesPlain',
+        'The Site address cannot contain spaces.'
       )
     case 'not_a_url':
       return translate(
@@ -33,18 +33,18 @@ export function dotRemoteOriginProblemMessage(reason: DotRemoteOriginProblem): s
       )
     case 'not_https':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originNotHttps',
-        'The Site origin must start with https://.'
+        'auto.components.settings.dotRemote.refusals.originNotHttpsPlain',
+        'The Site address must start with https://.'
       )
     case 'sign_in_details':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originSignIn',
-        'Remove the sign-in details from the Site origin; the access token goes in its own field.'
+        'auto.components.settings.dotRemote.refusals.originSignInPlain',
+        'Remove the sign-in details from the Site address; the access token goes in its own field.'
       )
     case 'path':
       return translate(
-        'auto.components.settings.dotRemote.refusals.originPath',
-        'Enter only the origin, with nothing after the host name, such as https://example.com.'
+        'auto.components.settings.dotRemote.refusals.originPathPlain',
+        'Enter only the Site address, with nothing after the host name, such as https://example.com.'
       )
   }
 }
@@ -105,20 +105,20 @@ function remoteCodeMessage(code: string, data: unknown): string | null {
       )
     case CODES.notConfigured:
       return translate(
-        'auto.components.settings.dotRemote.refusals.notConfigured',
-        'Save the Site origin and its access token first.'
+        'auto.components.settings.dotRemote.refusals.notConfiguredPlain',
+        'Save the Site address and its access token first.'
       )
     case CODES.originInvalid:
       return translate(
-        'auto.components.settings.dotRemote.refusals.originInvalid',
-        'The app refused the Site origin. Use an https origin such as https://example.com, with nothing after the host name.'
+        'auto.components.settings.dotRemote.refusals.originInvalidPlain',
+        'The app refused the Site address. Use an https address such as https://example.com, with nothing after the host name.'
       )
     case CODES.tokenInvalid:
       return tokenRefusalMessage(data)
     case CODES.sealingUnavailable:
       return translate(
-        'auto.components.settings.dotRemote.refusals.sealingUnavailable',
-        'This computer cannot seal the token, so nothing was stored.'
+        'auto.components.settings.dotRemote.refusals.sealingUnavailablePlain',
+        'This computer cannot store the token safely, so nothing was stored.'
       )
     case CODES.credentialWriteFailed:
       return translate(
@@ -127,8 +127,8 @@ function remoteCodeMessage(code: string, data: unknown): string | null {
       )
     case CODES.siteUnreachable:
       return translate(
-        'auto.components.settings.dotRemote.refusals.siteUnreachable',
-        'The Site could not be reached. Check the origin and your connection, then try again.'
+        'auto.components.settings.dotRemote.refusals.siteUnreachablePlain',
+        'The Site could not be reached. Check the address and your connection, then try again.'
       )
     case CODES.reconnectNeeded:
       return translate(

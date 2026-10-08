@@ -5,8 +5,8 @@ export const getStatsPaneSearchEntries = createLocalizedCatalog(() => [
   {
     title: translate('auto.components.stats.stats.search.cb2430ae6a', 'Stats & Usage'),
     description: translate(
-      'auto.components.stats.stats.search.26bb901fcd',
-      'NASH stats plus Claude, Codex, OpenCode, Muse token analytics and Grok subscription usage.'
+      'auto.components.stats.stats.search.nashActivityDescription',
+      'NASH activity and token usage by agent.'
     ),
     keywords: [
       translate('auto.components.stats.stats.search.372debfac0', 'stats'),

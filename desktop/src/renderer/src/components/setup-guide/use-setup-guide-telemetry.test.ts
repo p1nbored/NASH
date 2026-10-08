@@ -25,19 +25,19 @@ afterEach(() => {
 
 describe('setup guide step completion telemetry', () => {
   it('uses setup-first ordering for setup-guide open first-incomplete telemetry', () => {
-    expect(getSetupGuideTelemetryFirstIncompleteStepId(createProgress({}))).toBe('notifications')
+    expect(getSetupGuideTelemetryFirstIncompleteStepId(createProgress({}))).toBe('claude-code')
     expect(
       getSetupGuideTelemetryFirstIncompleteStepId(
         createProgress({
-          notifications: true,
-          'default-agent': true,
-          'agent-capabilities': true,
+          'claude-code': true,
+          clef: true,
+          dot: true,
           'task-sources': true,
-          'setup-script': true,
-          'add-two-repos': true
+          notifications: true,
+          'setup-script': true
         })
       )
-    ).toBe('two-worktrees')
+    ).toBe('workbench-run')
     expect(
       getSetupGuideTelemetryFirstIncompleteStepId(
         createProgress(
@@ -70,12 +70,12 @@ describe('setup guide step completion telemetry', () => {
 
     recordSetupGuideStepCompletionTelemetry({
       state,
-      progress: createProgress({ browser: true, 'two-worktrees': true }),
+      progress: createProgress({ 'workbench-run': true, 'two-worktrees': true }),
       setupGuideVisible: false
     })
 
     expect(trackMock).not.toHaveBeenCalled()
-    expect([...readEmittedSetupGuideStepIds()].sort()).toEqual(['browser', 'two-worktrees'])
+    expect([...readEmittedSetupGuideStepIds()].sort()).toEqual(['two-worktrees', 'workbench-run'])
   })
 
   it('emits visible setup-guide completions during the startup baseline window', () => {

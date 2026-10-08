@@ -12,12 +12,13 @@ import {
 const rpc = vi.hoisted(() =>
   vi.fn<(target: unknown, method: string, params?: unknown) => Promise<unknown>>()
 )
+const clipboard = vi.hoisted(() => vi.fn<(text: string) => Promise<void>>())
 
 vi.mock('@/runtime/runtime-rpc-client', async () => {
   const actual = await vi.importActual<typeof RpcResult>('@/runtime/runtime-rpc-result')
   return { callRuntimeRpc: rpc, RuntimeRpcCallError: actual.RuntimeRpcCallError }
 })
-// Why: the remote card has its own tests and RPC group; here only its place in the section counts.
+// Why: the remote group has its own tests and RPC group; here only its place in the section counts.
 vi.mock('./dot-remote-access-card', () => ({
   DotRemoteAccessCard: () => <div>Remote access card</div>
 }))
@@ -49,20 +50,17 @@ async function renderSection(): Promise<void> {
   await act(async () => {})
 }
 
-function card(name: string): HTMLElement {
-  const title = screen.getByText(name, { selector: 'p' })
-  const shell = title.closest('[data-settings-section]')
-  if (!(shell instanceof HTMLElement)) {
-    throw new Error(`card ${name} is missing`)
-  }
-  return shell
-}
-
-const interfaceCard = (): HTMLElement => card('Local dot interface')
+const group = (name: string): HTMLElement => screen.getByRole('region', { name })
+const interfaceGroup = (): HTMLElement => group('Tasks from dot')
+const statusLabel = (shell: HTMLElement, label: string): HTMLElement =>
+  within(shell).getByText(label, { selector: '[data-status-tone] > span' })
 
 describe('DotIngressSection', () => {
   beforeEach(() => {
     rpc.mockReset()
+    clipboard.mockReset()
+    clipboard.mockResolvedValue(undefined)
+    Object.assign(window, { api: { ui: { writeClipboardText: clipboard } } })
   })
 
   afterEach(() => {
@@ -80,27 +78,38 @@ describe('DotIngressSection', () => {
     )
   })
 
-  it('says that dot tasks start without confirmation and are limited by these settings', async () => {
+  it('says that dot tasks start without confirmation and are bounded by these settings', async () => {
     answer({ 'workbench.dotIngress.settings.get': fixtureDotSettings() })
     await renderSection()
 
-    const section = screen.getByRole('heading', { name: 'Tasks from dot' }).closest('section')
-    expect(section?.textContent).toMatch(/starts without asking you first/)
-    expect(section?.textContent).toMatch(/limited by the interface switch/)
+    const text = interfaceGroup().textContent
+    expect(text).toMatch(/starts without asking you/)
+    expect(text).toMatch(/only the workspaces enabled below, within your limits/)
   })
 
-  it('shows an off interface as not listening', async () => {
+  it('shows plain groups with headings and no "endpoint" wording', async () => {
+    answer({ 'workbench.dotIngress.settings.get': fixtureListeningDotSettings() })
+    await renderSection()
+
+    const section = document.querySelector('[data-settings-section="integrations-dot"]')
+    expect(section?.textContent).not.toMatch(/endpoint/i)
+    for (const name of ['Tasks from dot', 'Workspaces', 'Limits']) {
+      expect(screen.getByRole('heading', { name })).toBeTruthy()
+    }
+  })
+
+  it('shows an off switch as off, with an icon and a label', async () => {
     answer({ 'workbench.dotIngress.settings.get': fixtureDotSettings() })
     await renderSection()
 
-    const shell = interfaceCard()
+    const shell = interfaceGroup()
     const toggle = within(shell).getByRole('switch', { name: 'Accept tasks from dot' })
     expect(toggle.getAttribute('aria-checked')).toBe('false')
-    expect(within(shell).getByText('Not listening', { selector: 'span' })).toBeTruthy()
-    expect(within(shell).getByRole('status').textContent).toMatch(/The switch is off/)
+    expect(statusLabel(shell, 'Off').parentElement?.querySelector('svg')).not.toBeNull()
+    expect(within(shell).getByRole('status').textContent).toBe('')
   })
 
-  it('turns the interface on and shows the status the app reports back', async () => {
+  it('turns tasks from dot on and shows the status the app reports back', async () => {
     answer({
       'workbench.dotIngress.settings.get': fixtureDotSettings(),
       'workbench.dotIngress.settings.setEnabled': fixtureListeningDotSettings()
@@ -109,19 +118,19 @@ describe('DotIngressSection', () => {
 
     await act(async () => {
       fireEvent.click(
-        within(interfaceCard()).getByRole('switch', { name: 'Accept tasks from dot' })
+        within(interfaceGroup()).getByRole('switch', { name: 'Accept tasks from dot' })
       )
     })
 
     expect(callsTo('workbench.dotIngress.settings.setEnabled')).toEqual([{ enabled: true }])
-    const shell = interfaceCard()
-    expect(within(shell).getByText('Listening', { selector: 'span' })).toBeTruthy()
+    const shell = interfaceGroup()
+    expect(statusLabel(shell, 'Ready')).toBeTruthy()
     expect(within(shell).getByRole('status').textContent).toMatch(
       /cannot tell whether dot is connected/
     )
   })
 
-  it('explains a listening failure in plain English', async () => {
+  it('explains a failure in plain English and keeps its code behind Copy details', async () => {
     answer({
       'workbench.dotIngress.settings.get': fixtureDotSettings(),
       'workbench.dotIngress.settings.setEnabled': fixtureDotSettings({
@@ -133,23 +142,27 @@ describe('DotIngressSection', () => {
 
     await act(async () => {
       fireEvent.click(
-        within(interfaceCard()).getByRole('switch', { name: 'Accept tasks from dot' })
+        within(interfaceGroup()).getByRole('switch', { name: 'Accept tasks from dot' })
       )
     })
 
-    const shell = interfaceCard()
+    const shell = interfaceGroup()
     const alert = within(shell).getByRole('alert')
-    expect(alert.textContent).toMatch(/could not restrict access/)
+    expect(alert.textContent).toMatch(/could not protect the connection details/)
     expect(shell.textContent).not.toContain('metadata_not_secured')
-    expect(within(shell).getByText('Not listening', { selector: 'span' })).toBeTruthy()
+    expect(statusLabel(shell, 'Not ready')).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(within(alert).getByRole('button', { name: 'Copy details' }))
+    })
+    expect(clipboard).toHaveBeenCalledWith('failure: metadata_not_secured')
   })
 
-  it('says when the switch is on but no endpoint is open in this session', async () => {
+  it('says when the switch is on but tasks from dot are not ready in this session', async () => {
     answer({ 'workbench.dotIngress.settings.get': fixtureDotSettings({ enabled: true }) })
     await renderSection()
 
-    expect(within(interfaceCard()).getByRole('status').textContent).toMatch(
-      /not open in this session/
+    expect(within(interfaceGroup()).getByRole('status').textContent).toMatch(
+      /not ready in this session/
     )
   })
 
@@ -162,11 +175,11 @@ describe('DotIngressSection', () => {
 
     await act(async () => {
       fireEvent.click(
-        within(interfaceCard()).getByRole('switch', { name: 'Accept tasks from dot' })
+        within(interfaceGroup()).getByRole('switch', { name: 'Accept tasks from dot' })
       )
     })
 
-    const alert = within(interfaceCard()).getByRole('alert')
+    const alert = within(interfaceGroup()).getByRole('alert')
     expect(alert.textContent).toMatch(/not available in this session/)
     expect(alert.textContent).not.toContain('raw')
     expect(callsTo('workbench.dotIngress.settings.get')).toHaveLength(2)
@@ -188,11 +201,11 @@ describe('DotIngressSection', () => {
 
     await act(async () => {
       fireEvent.click(
-        within(interfaceCard()).getByRole('switch', { name: 'Accept tasks from dot' })
+        within(interfaceGroup()).getByRole('switch', { name: 'Accept tasks from dot' })
       )
     })
 
-    const shell = interfaceCard()
+    const shell = interfaceGroup()
     expect(within(shell).getByRole('switch', { name: 'Accept tasks from dot' })).toBeTruthy()
     expect(
       within(shell)
@@ -204,7 +217,7 @@ describe('DotIngressSection', () => {
     ])
   })
 
-  it('checks the endpoint again on Refresh', async () => {
+  it('checks again on Refresh', async () => {
     let reads = 0
     rpc.mockImplementation(async (_target, method) => {
       if (method !== 'workbench.dotIngress.settings.get') {
@@ -214,32 +227,32 @@ describe('DotIngressSection', () => {
       return reads === 1 ? fixtureDotSettings({ enabled: true }) : fixtureListeningDotSettings()
     })
     await renderSection()
-    expect(within(interfaceCard()).getByText('Not listening', { selector: 'span' })).toBeTruthy()
+    expect(statusLabel(interfaceGroup(), 'Not ready')).toBeTruthy()
 
     await act(async () => {
-      fireEvent.click(within(interfaceCard()).getByRole('button', { name: 'Refresh' }))
+      fireEvent.click(within(interfaceGroup()).getByRole('button', { name: 'Refresh' }))
     })
 
-    expect(within(interfaceCard()).getByText('Listening', { selector: 'span' })).toBeTruthy()
+    expect(statusLabel(interfaceGroup(), 'Ready')).toBeTruthy()
   })
 
   it('reports an unregistered settings method as not connected and offers no controls', async () => {
     answer({ 'workbench.dotIngress.settings.get': refuse('method_not_found') })
     await renderSection()
 
-    expect(within(interfaceCard()).getByRole('alert').textContent).toMatch(
+    expect(within(interfaceGroup()).getByRole('alert').textContent).toMatch(
       /not connected in this build/
     )
     expect(screen.queryAllByRole('switch')).toHaveLength(0)
-    expect(within(card('Workspaces for dot')).getByText('Unavailable')).toBeTruthy()
-    expect(within(card('Submission limits')).getByText('Unavailable')).toBeTruthy()
+    expect(statusLabel(group('Workspaces'), 'Unavailable')).toBeTruthy()
+    expect(statusLabel(group('Limits'), 'Unavailable')).toBeTruthy()
   })
 
-  it('ends with the remote access card in place of the placeholder', async () => {
+  it('ends with the remote access group', async () => {
     answer({ 'workbench.dotIngress.settings.get': fixtureDotSettings() })
     await renderSection()
 
-    const section = screen.getByRole('heading', { name: 'Tasks from dot' }).closest('section')
+    const section = document.querySelector('[data-settings-section="integrations-dot"]')
     expect(section?.textContent).toMatch(/Remote access card$/)
     expect(screen.queryByText('Coming soon')).toBeNull()
   })

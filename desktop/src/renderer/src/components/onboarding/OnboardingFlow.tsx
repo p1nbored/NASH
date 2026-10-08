@@ -13,7 +13,7 @@ import { useOnboardingFlow } from './use-onboarding-flow'
 import { OnboardingSkipConfirmationDialog } from './OnboardingSkipConfirmationDialog'
 import { OnboardingFooter } from './OnboardingFooter'
 import { shouldRequestOnboardingSkipConfirmation } from './onboarding-dismiss-target'
-import logo from '../../../../../resources/logo.svg'
+import logo from '../../../../../resources/icon.png'
 import { translate } from '@/i18n/i18n'
 
 const stepCopy = {
@@ -25,9 +25,10 @@ const stepCopy = {
       )
     },
     get subtitle() {
+      // Why: NASH runs its own tasks through Claude Code; this choice only sets terminals you open.
       return translate(
-        'auto.components.onboarding.OnboardingFlow.322fc50a18',
-        "NASH works with every CLI agent. Choose the one you'll reach for most. Switch any time."
+        'auto.components.onboarding.OnboardingFlow.agentSubtitleNash',
+        'Choose the agent for terminals you open yourself. NASH runs its tasks through Claude Code. Switch any time.'
       )
     }
   },
@@ -226,12 +227,7 @@ export default function OnboardingFlow({
         >
           <div className="relative flex h-full min-h-0 flex-col px-6 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-9">
             <div className="flex items-center gap-3 text-base font-semibold tracking-tight">
-              <img
-                src={logo}
-                alt=""
-                aria-hidden="true"
-                className="h-7 w-auto shrink-0 invert dark:invert-0"
-              />
+              <img src={logo} alt="" aria-hidden="true" className="h-7 w-auto shrink-0" />
               <span>
                 {translate('auto.components.onboarding.OnboardingFlow.a249f81538', 'NASH')}
               </span>

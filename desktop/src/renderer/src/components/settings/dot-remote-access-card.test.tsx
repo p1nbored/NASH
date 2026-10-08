@@ -29,6 +29,7 @@ vi.mock('@/runtime/runtime-rpc-client', async () => {
 })
 
 const toastSuccess = vi.hoisted(() => vi.fn())
+const clipboard = vi.hoisted(() => vi.fn<(text: string) => Promise<void>>())
 vi.mock('sonner', () => ({ toast: { success: toastSuccess } }))
 
 /** Each method answers its value, or a deferred one; a refusal value is thrown. */
@@ -79,7 +80,7 @@ const pill = (label: string): HTMLElement => within(card()).getByText(label, { s
 const remoteSwitch = (): HTMLElement =>
   within(card()).getByRole('switch', { name: 'Allow remote access' })
 const originInput = (): HTMLInputElement => {
-  const input = within(card()).getByLabelText('Site origin')
+  const input = within(card()).getByLabelText('Site address')
   if (!(input instanceof HTMLInputElement)) {
     throw new Error('origin field is missing')
   }
@@ -105,6 +106,9 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
   beforeEach(() => {
     rpc.mockReset()
     toastSuccess.mockClear()
+    clipboard.mockReset()
+    clipboard.mockResolvedValue(undefined)
+    Object.assign(window, { api: { ui: { writeClipboardText: clipboard } } })
   })
 
   afterEach(() => {
@@ -121,7 +125,7 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
     )
   })
 
-  it('explains the mailbox, the outbound-only HTTPS polling and the read-only tasks', async () => {
+  it('explains the mailbox, the outbound-only HTTPS polling and the workspace maximum', async () => {
     answer({ 'workbench.dotRemote.status': fixtureRemoteStatus() })
     const shell = await renderCard()
 
@@ -129,7 +133,9 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
     expect(text).toMatch(/mailbox on your GPT Site/)
     expect(text).toMatch(/over HTTPS/)
     expect(text).toMatch(/opens no inbound port/)
-    expect(text).toMatch(/read only/)
+    // Why: D-034 lets remote tasks write, held to each workspace's maximum.
+    expect(text).toMatch(/at most the access you allow for each workspace/)
+    expect(text).not.toMatch(/run read only|origin/i)
   })
 
   it('is off by default and says so', async () => {
@@ -200,8 +206,12 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
     expect(pill('Sync failing')).toBeTruthy()
     const warning = within(shell).getByRole('alert', { name: 'Sync failing' })
     expect(warning.textContent).toMatch(/4 sync attempts in a row failed on this computer/)
-    expect(warning.textContent).toContain('SQLITE_BUSY')
+    expect(warning.textContent).not.toContain('SQLITE_BUSY')
     expect(warning.querySelector('svg')).not.toBeNull()
+    await act(async () => {
+      fireEvent.click(within(warning).getByRole('button', { name: 'Copy details' }))
+    })
+    expect(clipboard.mock.calls[0]?.[0]).toContain('last_code: SQLITE_BUSY')
   })
 
   it('shows no sync warning while syncs complete', async () => {
@@ -241,7 +251,8 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
     })
     const shell = await renderCard()
 
-    expect(shell.textContent).toMatch(/local dot interface is not listening/)
+    expect(shell.textContent).toMatch(/Tasks from dot are off or not ready on this computer/)
+    expect(shell.textContent).not.toMatch(/endpoint|listening/)
     expect(shell.textContent).toMatch(/Updates waiting to be sent: 3/)
   })
 
@@ -344,13 +355,13 @@ describe('DotRemoteAccessCard: status, switch and connection', () => {
     expect(callsTo('workbench.dotRemote.status')).toHaveLength(2)
   })
 
-  it('explains a token this computer cannot seal', async () => {
+  it('explains a token this computer cannot store safely', async () => {
     answer({
       'workbench.dotRemote.status': fixtureRemoteStatus({ serviceToken: 'sealing_unavailable' })
     })
     const shell = await renderCard()
 
-    expect(shell.textContent).toMatch(/cannot seal/)
+    expect(shell.textContent).toMatch(/cannot store the token safely/)
     expect(within(shell).queryByText('Token saved')).toBeNull()
   })
 

@@ -42,8 +42,8 @@ export function routeReasonText(reason: RouteAvailabilityReason): string {
       )
     case 'auth_failed':
       return translate(
-        'auto.components.settings.routingTable.availability.reasons.authFailed',
-        'Sign-in failed. Sign in to the CLI again, then use Check routes.'
+        'auto.components.settings.routingTable.availability.reasons.authFailedPlain',
+        'Sign-in failed. Sign in to the CLI again, then check availability.'
       )
     case 'not_entitled':
       return translate(
@@ -52,13 +52,13 @@ export function routeReasonText(reason: RouteAvailabilityReason): string {
       )
     case 'quota_exhausted':
       return translate(
-        'auto.components.settings.routingTable.availability.reasons.quotaExhausted',
-        'The usage limit is reached. The block lifts when a new usage reading shows the limit reset, or use Check routes after it resets.'
+        'auto.components.settings.routingTable.availability.reasons.quotaExhaustedPlain',
+        'The usage limit is reached. This lifts when a new usage reading shows the limit reset, or check availability after it resets.'
       )
     case 'availability_record_damaged':
       return translate(
-        'auto.components.settings.routingTable.availability.reasons.recordDamaged',
-        'The saved availability record was damaged. Use Check routes to read every route again.'
+        'auto.components.settings.routingTable.availability.reasons.recordDamagedPlain',
+        'The last availability check could not be read. Check availability again.'
       )
     case 'workspace_not_git':
       return translate(
@@ -67,8 +67,8 @@ export function routeReasonText(reason: RouteAvailabilityReason): string {
       )
     case 'not_checked':
       return translate(
-        'auto.components.settings.routingTable.availability.reasons.notChecked',
-        'Not checked recently. Use Check routes.'
+        'auto.components.settings.routingTable.availability.reasons.notCheckedPlain',
+        'Not checked recently.'
       )
     case 'cli_unobserved':
       return translate(
@@ -141,8 +141,8 @@ export function routeCheckSummary(availability: RoutingTableAvailabilityView): s
   const count = (status: RouteAvailabilityTone): number =>
     all.filter((entry) => entry.status === status).length
   return translate(
-    'auto.components.settings.routingTable.availability.summary',
-    'Routes checked: {{available}} available, {{unavailable}} unavailable, {{unverified}} not verified.',
+    'auto.components.settings.routingTable.availability.summaryPlain',
+    'Checked: {{available}} available, {{unavailable}} unavailable, {{unverified}} not verified.',
     {
       available: count('available'),
       unavailable: count('unavailable'),
@@ -158,8 +158,8 @@ export function routeCheckErrorMessage(error: unknown): string {
     error.code === 'workbench_route_availability_unavailable'
   ) {
     return translate(
-      'auto.components.settings.routingTable.availability.checksUnavailable',
-      'Route checks are not available in this session. Restart the app to install them.'
+      'auto.components.settings.routingTable.availability.checksUnavailablePlain',
+      'Availability checks are not available right now. Restart the app.'
     )
   }
   return routingTableCallErrorMessage(error)

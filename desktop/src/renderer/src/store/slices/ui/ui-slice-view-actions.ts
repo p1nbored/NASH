@@ -1,5 +1,6 @@
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
 import { rewindHistoryIndexPastView } from '../worktree-nav-history'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../../shared/nash-build-flags'
 
 export function createUiViewActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
@@ -92,12 +93,17 @@ export function createUiViewActions(set: UISliceSet, get: UISliceGet): Partial<U
         activeView: state.previousViewBeforeArtifacts,
         worktreeNavHistoryIndex: rewindHistoryIndexPastView(state, 'artifacts')
       })),
-    openMobilePage: () =>
+    openMobilePage: () => {
+      // Why: the Mobile page is hidden in NASH builds (D-038); its code stays for a later build.
+      if (!ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED) {
+        return
+      }
       set((state) => ({
         activeView: 'mobile',
         previousViewBeforeMobile:
           state.activeView === 'mobile' ? state.previousViewBeforeMobile : state.activeView
-      })),
+      }))
+    },
     closeMobilePage: () =>
       set((state) => ({
         activeView: state.previousViewBeforeMobile

@@ -9,6 +9,12 @@ import {
   routeRpc as routeRpcCalls,
   type RpcHandler
 } from './workbench-run-test-fixture'
+import {
+  copyDetailsText,
+  installClipboard,
+  removeClipboard,
+  type ClipboardWrite
+} from './workbench-clipboard-test-fixture'
 import { WORKBENCH_DECISION_POLL_MS } from './use-workbench-validation-decisions'
 import { WORKBENCH_RUN_POLL_MS } from './use-workbench-runs'
 import WorkbenchValidationDecisionSection from './WorkbenchValidationDecisionSection'
@@ -43,10 +49,17 @@ function routeRpc(handlers: Record<string, RpcHandler>): void {
 const callsTo = (method: string): unknown[] => callsToRpc(rpc, method)
 const LIST = 'workbench.validation.listDecisions'
 const DECIDE = 'workbench.validation.decide'
+const WAIVE = 'Waive Write the release notes.'
+const REJECT = 'Reject Write the release notes.'
+let clipboard: ClipboardWrite
 
-beforeEach(() => resetQueueFixture())
+beforeEach(() => {
+  resetQueueFixture()
+  clipboard = installClipboard()
+})
 afterEach(() => {
   cleanup()
+  removeClipboard()
   vi.useRealTimers()
 })
 
@@ -67,17 +80,36 @@ describe('WorkbenchValidationDecisionSection', () => {
     render(<WorkbenchValidationDecisionSection />)
     const row = await screen.findByRole('listitem')
     expect(within(row).getByText('Write the release notes.')).toBeDefined()
-    expect(within(row).getByText('run-1')).toBeDefined()
     expect(within(row).getByText('Codex · gpt-6.1-sol')).toBeDefined()
     expect(
       within(row).getByText('The attempt worktree is gone, so the artifact could not be checked.')
     ).toBeDefined()
     expect(within(row).getByText('nash-task-1')).toBeDefined()
-    expect(within(row).getByText('C:/fixture/workspaces/nash-task-1')).toBeDefined()
-    expect(within(row).getByText('0123456789ab')).toBeDefined()
-    for (const name of ['Waive task-1', 'Reject task-1']) {
+    for (const name of [WAIVE, REJECT]) {
       expect(within(row).getByRole('button', { name }).dataset.variant).toBe('outline')
     }
+  })
+
+  it('moves the run, task, worktree path and base commit to Copy details', async () => {
+    routeRpc({ [LIST]: () => ({ decisions: [decisionView()], hasMore: false }) })
+    render(<WorkbenchValidationDecisionSection />)
+    const row = await screen.findByRole('listitem')
+    for (const hidden of ['run-1', 'ctx-1', 'validation-1', 'C:/fixture', '0123456789ab']) {
+      expect(row.textContent).not.toContain(hidden)
+    }
+    // Why a pattern: the visible branch name nash-task-1 contains the task id.
+    expect(row.textContent).not.toMatch(/(^|[^-])task-1/)
+    const copied = await copyDetailsText(row, clipboard)
+    expect(copied.split('\n')).toEqual(
+      expect.arrayContaining([
+        'NASH Workbench: validation decision',
+        'validation_id: validation-1',
+        'run_id: run-1',
+        'task_id: task-1',
+        'worktree_path: C:/fixture/workspaces/nash-task-1',
+        'base_commit: 0123456789abcdef0123456789abcdef01234567'
+      ])
+    )
   })
 
   it('asks for a short confirmation, then waives once and shows the outcome', async () => {
@@ -88,7 +120,7 @@ describe('WorkbenchValidationDecisionSection', () => {
       [DECIDE]: () => decided.promise
     })
     render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Waive task-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: WAIVE }))
     expect(callsTo(DECIDE)).toEqual([])
     expect(
       screen.getByText(
@@ -122,7 +154,7 @@ describe('WorkbenchValidationDecisionSection', () => {
       [LIST]: () => ({ decisions: [decisionView({ processMayRun: true })], hasMore: false })
     })
     render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Waive task-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: WAIVE }))
     expect(
       screen.getByText(
         'Accept this result as done? The task completes, but a process of this attempt may still be running. The main Claude session is told to wait until it has ended before merging or keeping its changes.'
@@ -130,7 +162,7 @@ describe('WorkbenchValidationDecisionSection', () => {
     ).toBeDefined()
     expect(screen.queryByText(/is told to merge branch/)).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Reject task-1' }))
+    fireEvent.click(screen.getByRole('button', { name: REJECT }))
     expect(
       screen.getByText('Reject this result? The task fails, and its branch is left for inspection.')
     ).toBeDefined()
@@ -140,13 +172,13 @@ describe('WorkbenchValidationDecisionSection', () => {
   it('backs out of a rejection without deciding anything', async () => {
     routeRpc({ [LIST]: () => ({ decisions: [decisionView()], hasMore: false }) })
     render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Reject task-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: REJECT }))
     expect(
       screen.getByText('Reject this result? The task fails, and its branch is left for inspection.')
     ).toBeDefined()
     expect(screen.getByRole('button', { name: 'Cancel' }).dataset.variant).toBe('ghost')
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(screen.getByRole('button', { name: 'Reject task-1' })).toBeDefined()
+    expect(screen.getByRole('button', { name: REJECT })).toBeDefined()
     expect(callsTo(DECIDE)).toEqual([])
   })
 
@@ -158,6 +190,7 @@ describe('WorkbenchValidationDecisionSection', () => {
           decisionView({
             validationId: 'validation-2',
             taskId: 'task-2',
+            title: 'Summarize the changes.',
             placement: 'in_session',
             executorKind: 'claude_primary',
             model: null,
@@ -168,18 +201,18 @@ describe('WorkbenchValidationDecisionSection', () => {
       })
     })
     render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Reject task-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: REJECT }))
     expect(
       screen.getByText(
         'Reject this result? The task fails; its changes stay in the workspace folder until you decide what to keep.'
       )
     ).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: 'Waive task-2' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Waive Summarize the changes.' }))
     expect(screen.getByText('Accept this result as done? The task completes.')).toBeDefined()
     expect(screen.getByText('Main Claude session')).toBeDefined()
   })
 
-  it('reports a decision someone else already made with its code', async () => {
+  it('words a decision someone else already made and keeps its code for details', async () => {
     routeRpc({
       [LIST]: () => ({ decisions: [decisionView()], hasMore: false }),
       [DECIDE]: () => {
@@ -194,15 +227,17 @@ describe('WorkbenchValidationDecisionSection', () => {
       }
     })
     render(<WorkbenchValidationDecisionSection />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Reject task-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: REJECT }))
     fireEvent.click(screen.getByRole('button', { name: 'Reject' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain('Decision not recorded')
     expect(alert.textContent).toContain('This result was already decided.')
-    expect(alert.textContent).toContain('autopilot_validation_conflict')
+    expect(alert.textContent).not.toContain('autopilot_validation_conflict')
+    const copied = await copyDetailsText(screen.getByRole('listitem'), clipboard)
+    expect(copied).toContain('decision_error_code: autopilot_validation_conflict')
   })
 
-  it('refreshes on the run list cadence and reports a listing error with its code', async () => {
+  it('refreshes on the run list cadence and words a listing error', async () => {
     expect(WORKBENCH_DECISION_POLL_MS).toBe(WORKBENCH_RUN_POLL_MS)
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     routeRpc({ [LIST]: () => ({ decisions: [], hasMore: false }) })
@@ -222,7 +257,10 @@ describe('WorkbenchValidationDecisionSection', () => {
     })
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain('Decisions unavailable')
-    expect(alert.textContent).toContain('autopilot_recovery_required')
+    expect(alert.textContent).toContain(
+      'The stored records could not be read. Restart the app and try again.'
+    )
+    expect(alert.textContent).not.toContain('autopilot_recovery_required')
     unmount()
     await act(async () => {
       vi.advanceTimersByTime(WORKBENCH_DECISION_POLL_MS * 2)

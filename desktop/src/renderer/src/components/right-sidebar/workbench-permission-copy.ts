@@ -3,7 +3,7 @@ import type {
   WorkbenchPermissionAnswerResult,
   WorkbenchPermissionDecisionView
 } from '../../../../shared/rpc-contract/permission-relay-params'
-import type { WorkbenchChipCopy } from './workbench-run-copy'
+import type { WorkbenchChipCopy } from './WorkbenchStateChip'
 
 type Decider = NonNullable<WorkbenchPermissionDecisionView['decidedBy']>
 
@@ -22,28 +22,25 @@ function byDecider(decidedBy: Decider | null): string {
 export function permissionStatusChip(view: WorkbenchPermissionDecisionView): WorkbenchChipCopy {
   switch (view.status) {
     case 'pending':
-      return view.answerable
-        ? {
-            label: translate('workbench.permissions.status.waiting', 'Waiting for an answer'),
-            tone: 'warning'
-          }
-        : {
-            label: translate('workbench.permissions.status.terminalOnly', 'Answer in the terminal'),
-            tone: 'warning'
-          }
+      return {
+        kind: 'permission',
+        label: view.answerable
+          ? translate('workbench.permissions.status.waiting', 'Waiting for an answer')
+          : translate('workbench.permissions.status.terminalOnly', 'Answer in the terminal')
+      }
     case 'allowed':
-      return { label: translate('workbench.permissions.status.allowed', 'Allowed'), tone: 'muted' }
+      return { kind: 'done', label: translate('workbench.permissions.status.allowed', 'Allowed') }
     case 'denied':
-      return { label: translate('workbench.permissions.status.denied', 'Denied'), tone: 'muted' }
+      return { kind: 'ended', label: translate('workbench.permissions.status.denied', 'Denied') }
     case 'expired':
-      return { label: translate('workbench.permissions.status.expired', 'Expired'), tone: 'muted' }
+      return { kind: 'ended', label: translate('workbench.permissions.status.expired', 'Expired') }
     case 'answered_in_terminal':
       return {
+        kind: 'ended',
         label: translate(
           'workbench.permissions.status.answeredInTerminal',
           'Answered in the terminal'
-        ),
-        tone: 'muted'
+        )
       }
   }
 }

@@ -533,8 +533,11 @@ describe('Store', () => {
 
     expect(store.getSettings().appIcon).toBe('classic')
 
-    expect(store.updateSettings({ appIcon: 'watercolor' }).appIcon).toBe('watercolor')
-    expect(store.updateSettings({ appIcon: 'blue' }).appIcon).toBe('blue')
+    // Orca's former icon variants normalize to the NASH icon, the only one NASH ships.
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Deliberately exercise an old persisted icon value that the current type no longer accepts.
+    expect(store.updateSettings({ appIcon: 'watercolor' as never }).appIcon).toBe('classic')
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Deliberately exercise an old persisted icon value that the current type no longer accepts.
+    expect(store.updateSettings({ appIcon: 'blue' as never }).appIcon).toBe('classic')
     expect(store.updateSettings({ appIcon: 'not-real' as never }).appIcon).toBe('classic')
   })
 

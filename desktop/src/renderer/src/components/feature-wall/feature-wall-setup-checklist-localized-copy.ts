@@ -9,6 +9,46 @@ type LocalizedFeatureWallSetupChecklistCopy = Pick<FeatureWallSetupStep, 'name' 
 
 const getLocalizedFeatureWallSetupChecklistCopyById = createLocalizedCatalog(
   (): Record<FeatureWallSetupStepId, LocalizedFeatureWallSetupChecklistCopy> => ({
+    'claude-code': {
+      name: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.claudeCodeName',
+        'Set up Claude Code'
+      ),
+      description: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.claudeCodeDescription',
+        'NASH runs every task through a Claude Code session. Install Claude Code and sign in once from a terminal.'
+      )
+    },
+    clef: {
+      name: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.clefName',
+        'Connect Clef'
+      ),
+      description: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.clefDescription',
+        'Clef sorts each task by kind so NASH can pick its agent and model. Add your Clef details, then verify them.'
+      )
+    },
+    dot: {
+      name: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.dotName',
+        'Connect dot'
+      ),
+      description: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.dotDescription',
+        'Send tasks to NASH from ChatGPT dot. Turn on the local interface or pair your GPT Site.'
+      )
+    },
+    'workbench-run': {
+      name: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.workbenchRunName',
+        'Start your first run'
+      ),
+      description: translate(
+        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.workbenchRunDescription',
+        'Ask NASH for something from the Workbench, then follow the run, its tasks and any prompts there.'
+      )
+    },
     'two-worktrees': {
       name: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.workOnTwoTasks',
@@ -19,16 +59,6 @@ const getLocalizedFeatureWallSetupChecklistCopyById = createLocalizedCatalog(
         'Work in 2 different worktrees at once. Each one is isolated (even in the same project). Perfect for working on 2 features at once.'
       )
     },
-    browser: {
-      name: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.908898c3ee',
-        "Use NASH's browser"
-      ),
-      description: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.43781563c3',
-        'Browse your web app without leaving NASH. Grab any element and send its exact source and styles to an agent with one click.'
-      )
-    },
     notifications: {
       name: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.29aa2c2077',
@@ -37,26 +67,6 @@ const getLocalizedFeatureWallSetupChecklistCopyById = createLocalizedCatalog(
       description: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.71bd9a8c95',
         'Know the moment an agent finishes, needs attention, or gets blocked.'
-      )
-    },
-    'default-agent': {
-      name: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.46db810da8',
-        'Choose your default agent'
-      ),
-      description: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.b8e5bae17f',
-        'Start new work faster with your preferred agent already selected.'
-      )
-    },
-    'agent-capabilities': {
-      name: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.agentSkillsName',
-        'Give agents NASH skills'
-      ),
-      description: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.agentSkillsDescription',
-        "Install the skills agents use to drive NASH's browser, control your computer, and coordinate multi-step work."
       )
     },
     'task-sources': {
@@ -77,16 +87,6 @@ const getLocalizedFeatureWallSetupChecklistCopyById = createLocalizedCatalog(
       description: translate(
         'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.56049b74c2',
         'Run install and setup commands automatically so every new worktree is ready for agents.'
-      )
-    },
-    'add-two-repos': {
-      name: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.2cf795433b',
-        'Start work in multiple repos'
-      ),
-      description: translate(
-        'auto.components.feature.wall.feature.wall.setup.checklist.localized.copy.42525ba8a4',
-        'Bring your key repos into NASH so you can start agent work without hunting for folders.'
       )
     }
   })

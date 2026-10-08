@@ -17,8 +17,11 @@ const {
   themeState,
   tintedMacImage,
   tintTemplateMock,
-  trayInstances
+  trayInstances,
+  updateFeedState
 } = vi.hoisted(() => {
+  const trayInstances: FakeTray[] = []
+  const updateFeedState: { feed: unknown } = { feed: null }
   const makeImage = (name: string) => ({
     name,
     addRepresentation: vi.fn(),
@@ -65,7 +68,8 @@ const {
     themeState,
     tintedMacImage,
     tintTemplateMock: vi.fn(() => tintedMacImage),
-    trayInstances: [] as FakeTray[]
+    trayInstances,
+    updateFeedState
   }
 })
 
@@ -109,6 +113,12 @@ vi.mock('./tray-attention-icon', () => ({
 vi.mock('./tray-dev-badge', () => ({
   stampTrayDevBadge: stampDevBadgeMock
 }))
+
+vi.mock('../../shared/app-update-feed', () => ({
+  getAppUpdateFeed: () => updateFeedState.feed
+}))
+
+const TEST_UPDATE_FEED = { owner: 'example', repo: 'nash-releases', whatsNew: null }
 
 type TrayModule = typeof SystemTrayModule
 type MenuItem = { label?: string; type?: string; click?: () => void }
@@ -183,6 +193,7 @@ beforeEach(() => {
   nativeThemeMock.on.mockClear()
   nativeThemeMock.removeListener.mockClear()
   themeState.updatedListener = null
+  updateFeedState.feed = null
 })
 
 afterEach(() => {
@@ -215,6 +226,7 @@ describe('createSystemTray', () => {
 
   it('creates a macOS template status item with the full native menu', async () => {
     setPlatform('darwin')
+    updateFeedState.feed = TEST_UPDATE_FEED
     const { createSystemTray } = await loadModule()
     const options = createOptions()
 
@@ -249,6 +261,21 @@ describe('createSystemTray', () => {
         ?.click?.()
       expect(callback).toHaveBeenCalledOnce()
     }
+  })
+
+  it('hides Check for Updates on macOS while the build has no update feed (D-026)', async () => {
+    setPlatform('darwin')
+    const { createSystemTray } = await loadModule()
+
+    createSystemTray(createOptions())
+
+    expect(builtMenuItems().map((item) => item.label)).toEqual([
+      'Open NASH',
+      undefined,
+      'Settings',
+      undefined,
+      'Quit'
+    ])
   })
 
   it('does not create a blank macOS item when the template asset fails to load', async () => {

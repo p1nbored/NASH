@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  BookOpen,
+  Bug,
   CircleHelp,
   ExternalLink,
   Github,
@@ -10,11 +10,10 @@ import {
   RefreshCw,
   RotateCw,
   School,
-  ScrollText,
   Settings
 } from 'lucide-react'
 import { toast } from 'sonner'
-import logo from '../../../../../resources/logo.svg'
+import logo from '../../../../../resources/icon.png'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -36,6 +35,8 @@ import type * as SidebarFeedbackDialogModule from './SidebarFeedbackDialog'
 import { translate } from '@/i18n/i18n'
 import { getUpdateCheckClickOptions, getUpdateCheckHint } from '@/lib/update-check-click-options'
 import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
+import { getAppUpdateFeed } from '../../../../shared/app-update-feed'
+import { getNewIssueUrl, getReleaseRepositoryUrl } from '../../../../shared/app-release-repository'
 
 // Why lazy: the feedback form is only reachable from this menu's own item, so it does not
 // belong on the renderer boot graph. Shared with the menu-open warm below so both hit the
@@ -48,11 +49,6 @@ const SidebarFeedbackDialog = lazyWithRetry(
   { reloadKey: 'sidebar-feedback-dialog' }
 )
 
-const DOCS_URL = 'https://www.onorca.dev/docs'
-const CHANGELOG_URL = 'https://onorca.dev/changelog'
-const GITHUB_URL = 'https://github.com/stablyai/orca'
-const DISCORD_URL = 'https://discord.gg/fzjDKHxv8Q'
-const X_URL = 'https://x.com/orca_build'
 const NO_UPDATE_CHECK_MODIFIERS = {
   altKey: false,
   ctrlKey: false,
@@ -62,22 +58,6 @@ const NO_UPDATE_CHECK_MODIFIERS = {
 
 function openExternalUrl(url: string): void {
   void window.api.shell.openUrl(url)
-}
-
-function DiscordIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-3.5 fill-current">
-      <path d="M16.0742 4.45014C14.9244 3.92097 13.7106 3.54556 12.4638 3.3335C12.2932 3.64011 12.1388 3.95557 12.0013 4.27856C10.6732 4.07738 9.32261 4.07738 7.99451 4.27856C7.85694 3.9556 7.70257 3.64014 7.53203 3.3335C6.28441 3.54735 5.06981 3.92365 3.91889 4.45291C1.63401 7.85128 1.01462 11.1652 1.32431 14.4322C2.6624 15.426 4.16009 16.1819 5.7523 16.6668C6.11082 16.1821 6.42806 15.6678 6.70066 15.1295C6.18289 14.9351 5.68315 14.6953 5.20723 14.4128C5.33249 14.3215 5.45499 14.2274 5.57336 14.136C6.95819 14.7907 8.46965 15.1302 9.99997 15.1302C11.5303 15.1302 13.0418 14.7907 14.4266 14.136C14.5463 14.2343 14.6688 14.3284 14.7927 14.4128C14.3159 14.6957 13.8152 14.9361 13.2965 15.1309C13.5688 15.669 13.8861 16.1828 14.2449 16.6668C15.8385 16.1838 17.3373 15.4283 18.6756 14.4335C19.039 10.645 18.0549 7.36145 16.0742 4.45014ZM7.09294 12.423C6.22992 12.423 5.51693 11.6357 5.51693 10.6671C5.51693 9.69852 6.20514 8.90427 7.09019 8.90427C7.97524 8.90427 8.68272 9.69852 8.66758 10.6671C8.65244 11.6357 7.97248 12.423 7.09294 12.423ZM12.907 12.423C12.0426 12.423 11.3324 11.6357 11.3324 10.6671C11.3324 9.69852 12.0206 8.90427 12.907 8.90427C13.7934 8.90427 14.4954 9.69852 14.4803 10.6671C14.4651 11.6357 13.7865 12.423 12.907 12.423Z" />
-    </svg>
-  )
-}
-
-function XIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 fill-current">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  )
 }
 
 function ExternalMenuItem({
@@ -103,7 +83,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const openSettingsPage = useAppStore((s) => s.openSettingsPage)
   const openSettingsTarget = useAppStore((s) => s.openSettingsTarget)
   const updateStatus = useAppStore((s) => s.updateStatus)
-  const setupProgress = useSetupGuideProgress(true, false, false)
+  const setupProgress = useSetupGuideProgress(true)
 
   const settingsShortcut = useShortcutKeyDetails('app.settings')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -115,6 +95,8 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const updateCheckModifiersRef = React.useRef(NO_UPDATE_CHECK_MODIFIERS)
   const mountedRef = useMountedRef()
   const updateCheckHint = getUpdateCheckHint()
+  // Why: without a release feed (D-026) a check can only fail, so the item is hidden.
+  const updateChecksAvailable = getAppUpdateFeed() !== null
 
   const showMilestones =
     setupProgress.ready && setupProgress.coreDoneCount < setupProgress.coreTotal
@@ -266,12 +248,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
             ) : null}
             {showMilestones ? (
               <DropdownMenuItem onSelect={openMilestones}>
-                <img
-                  src={logo}
-                  alt=""
-                  aria-hidden="true"
-                  className="size-3.5 object-contain invert opacity-55 dark:invert-0"
-                />
+                <img src={logo} alt="" aria-hidden="true" className="size-3.5 object-contain" />
                 {translate(
                   'auto.components.sidebar.SidebarSettingsHelpMenu.f8a2c91d4e',
                   'Milestones'
@@ -295,59 +272,45 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
                 'Onboarding'
               )}
             </DropdownMenuItem>
-            <ExternalMenuItem
-              label={translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.cdc87f897e',
-                'Docs'
-              )}
-              url={DOCS_URL}
-              icon={<BookOpen className="size-3.5" />}
-            />
-            <ExternalMenuItem
-              label={translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.5f83d86d92',
-                'Changelog'
-              )}
-              url={CHANGELOG_URL}
-              icon={<ScrollText className="size-3.5" />}
-            />
             <DropdownMenuSeparator />
+            {/* Why: issues and source trace to the NASH repository (D-036), not to Orca's channels. */}
             <ExternalMenuItem
               label={translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.5687ab246a',
-                'GitHub'
+                'auto.components.sidebar.SidebarSettingsHelpMenu.reportIssue',
+                'Report an issue'
               )}
-              url={GITHUB_URL}
+              url={getNewIssueUrl()}
+              icon={<Bug className="size-3.5" />}
+            />
+            <ExternalMenuItem
+              label={translate('auto.components.sidebar.SidebarSettingsHelpMenu.source', 'Source')}
+              url={getReleaseRepositoryUrl()}
               icon={<Github className="size-3.5" />}
             />
-            <DropdownMenuItem onSelect={() => openExternalUrl(DISCORD_URL)}>
-              <DiscordIcon />
-              {translate('auto.components.sidebar.SidebarSettingsHelpMenu.eb9884e55b', 'Discord')}
-              <ExternalLink className="ml-auto size-3 text-muted-foreground" />
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openExternalUrl(X_URL)}>
-              <XIcon />
-              {translate('auto.components.sidebar.SidebarSettingsHelpMenu.c4f8e1b72a', 'X')}
-              <ExternalLink className="ml-auto size-3 text-muted-foreground" />
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={updateStatus.state === 'checking' || updateStatus.state === 'downloading'}
-              onPointerDown={handleCheckForUpdatesPointerDown}
-              onSelect={handleCheckForUpdates}
-              title={updateCheckHint}
-            >
-              {updateStatus.state === 'checking' ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-3.5" />
-              )}
-              {translate(
-                'auto.components.sidebar.SidebarSettingsHelpMenu.29c56f30ee',
-                'Check for Updates'
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {updateChecksAvailable ? (
+              <>
+                <DropdownMenuItem
+                  disabled={
+                    updateStatus.state === 'checking' || updateStatus.state === 'downloading'
+                  }
+                  onPointerDown={handleCheckForUpdatesPointerDown}
+                  onSelect={handleCheckForUpdates}
+                  title={updateCheckHint}
+                >
+                  {updateStatus.state === 'checking' ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-3.5" />
+                  )}
+                  {translate(
+                    'auto.components.sidebar.SidebarSettingsHelpMenu.29c56f30ee',
+                    'Check for Updates'
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            ) : null}
             <DropdownMenuItem onSelect={handleRestartOrca} disabled={isRestartingOrca}>
               <RotateCw className="size-3.5" />
               {translate(

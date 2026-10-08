@@ -30,7 +30,7 @@ function TokenProtection({
   }
   if (status.serviceToken === 'sealed') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <span className="inline-flex items-center gap-1 text-meta text-muted-foreground">
         <Check aria-hidden="true" className="size-3.5" />
         {message}
       </span>
@@ -134,26 +134,17 @@ export function DotRemoteConnectionForm({
   }
 
   return (
-    <section
-      ref={sectionRef}
-      aria-labelledby={headingId}
-      className="space-y-3 border-t border-border/60 pt-3"
-    >
-      <div className="space-y-0.5">
-        <h4 id={headingId} className="text-sm font-medium text-foreground">
-          {translate('auto.components.settings.dotRemote.connection.title', 'Connection')}
-        </h4>
-        <p className="text-xs text-muted-foreground">
-          {translate(
-            'auto.components.settings.dotRemote.connection.description',
-            'Saving needs both values. Changing the origin ends the current pairing.'
-          )}
-        </p>
-      </div>
-      <form noValidate autoComplete="off" onSubmit={handleSubmit} className="space-y-3">
+    <section ref={sectionRef} aria-labelledby={headingId} className="space-y-row">
+      <h4 id={headingId} className="text-body font-medium text-foreground">
+        {translate('auto.components.settings.dotRemote.connection.title', 'Connection')}
+      </h4>
+      <form noValidate autoComplete="off" onSubmit={handleSubmit} className="space-y-group">
         <div className="space-y-1.5">
           <Label htmlFor={originId}>
-            {translate('auto.components.settings.dotRemote.connection.originLabel', 'Site origin')}
+            {translate(
+              'auto.components.settings.dotRemote.connection.addressLabel',
+              'Site address'
+            )}
           </Label>
           <Input
             ref={originRef}
@@ -177,10 +168,10 @@ export function DotRemoteConnectionForm({
             aria-invalid={problem?.field === 'origin' || undefined}
             aria-describedby={describedBy('origin', `${originId}-help`)}
           />
-          <p id={`${originId}-help`} className="text-xs text-muted-foreground">
+          <p id={`${originId}-help`} className="text-meta text-muted-foreground">
             {translate(
-              'auto.components.settings.dotRemote.connection.originHelp',
-              'The https address of your GPT Site, with nothing after the host name.'
+              'auto.components.settings.dotRemote.connection.addressHelp',
+              'Changing it ends the current pairing.'
             )}
           </p>
         </div>
@@ -216,16 +207,16 @@ export function DotRemoteConnectionForm({
             aria-invalid={problem?.field === 'token' || undefined}
             aria-describedby={describedBy('token', `${tokenId}-help`)}
           />
-          <p id={`${tokenId}-help`} className="text-xs text-muted-foreground">
+          <p id={`${tokenId}-help`} className="text-meta text-muted-foreground">
             {translate(
-              'auto.components.settings.dotRemote.connection.tokenHelp',
-              "Copy it from your Site's settings, under service access. The app seals it on this computer and never shows it again."
+              'auto.components.settings.dotRemote.connection.tokenHelpPlain',
+              "From your Site's settings, under service access. It is never shown again."
             )}
           </p>
           {tokenSaved ? null : <TokenProtection status={status} />}
         </div>
         {problem === null ? null : (
-          <p id={problemId} role="alert" className="text-xs text-destructive">
+          <p id={problemId} role="alert" className="text-meta text-destructive">
             {problem.message}
           </p>
         )}

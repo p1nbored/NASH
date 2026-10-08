@@ -7,23 +7,47 @@ import { translate } from '@/i18n/i18n'
 import { WORKBENCH_RUN_MESSAGE_MAX_UNITS } from '../../../../shared/rpc-contract/workbench-run-params'
 import type { RunMessageAttempt, WorkbenchRuns } from './use-workbench-runs'
 import WorkbenchCallout from './WorkbenchCallout'
+import { errorDetails, type WorkbenchDetail } from './workbench-details'
 import { describeRunMessageResult } from './workbench-run-message-copy'
 
 type MessageInput = { text: string; idempotencyKey: string }
+type SentAttempt = { attempt: RunMessageAttempt; idempotencyKey: string }
 
-function MessageOutcome({ attempt }: { attempt: RunMessageAttempt }): React.JSX.Element {
+function messageDetails(runId: string, sent: SentAttempt): WorkbenchDetail[] {
+  const base: WorkbenchDetail[] = [
+    ['run_id', runId],
+    ['idempotency_key', sent.idempotencyKey]
+  ]
+  if (!sent.attempt.ok) {
+    return [...base, ...errorDetails(sent.attempt.error)]
+  }
+  const { result } = sent.attempt
+  return [
+    ...base,
+    ['outcome', result.outcome],
+    ['reason', result.reason],
+    ['message_id', result.messageId],
+    ['state', result.state],
+    ['duplicate', String(result.duplicate)]
+  ]
+}
+
+function MessageOutcome({ runId, sent }: { runId: string; sent: SentAttempt }): React.JSX.Element {
+  const { attempt } = sent
+  const details = { subject: 'run message', entries: messageDetails(runId, sent) }
   if (!attempt.ok) {
     return (
       <WorkbenchCallout
         role="alert"
+        tone="error"
         label={translate('workbench.runs.message.failedTitle', 'Message not confirmed')}
+        details={details}
       >
         <p className="break-words">{attempt.error.message}</p>
-        <p className="break-words font-mono">{attempt.error.code}</p>
-        <p>
+        <p className="text-muted-foreground">
           {translate(
-            'workbench.runs.message.retryHint',
-            'Sending again reuses the same message ID, so it is not delivered twice.'
+            'workbench.runs.message.retryHintShort',
+            'Sending it again will not deliver it twice.'
           )}
         </p>
       </WorkbenchCallout>
@@ -35,13 +59,14 @@ function MessageOutcome({ attempt }: { attempt: RunMessageAttempt }): React.JSX.
       <WorkbenchCallout
         role="alert"
         label={translate('workbench.runs.message.refusedTitle', 'Message not sent')}
+        details={details}
       >
         <p className="break-words">{copy.detail ?? copy.text}</p>
       </WorkbenchCallout>
     )
   }
   return (
-    <p role="status" className="break-words text-xs text-foreground">
+    <p role="status" className="break-words text-meta text-foreground">
       {copy.text}
     </p>
   )
@@ -57,7 +82,7 @@ export default function WorkbenchRunMessage({
 }): React.JSX.Element {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
-  const [attempt, setAttempt] = useState<RunMessageAttempt | null>(null)
+  const [sent, setSent] = useState<SentAttempt | null>(null)
   const retryRef = useRef<MessageInput | null>(null)
   const fieldId = useId()
   const helpId = useId()
@@ -73,12 +98,12 @@ export default function WorkbenchRunMessage({
     setSending(true)
     const result = await sendMessage(runId, input)
     setSending(false)
-    setAttempt(result)
+    setSent({ attempt: result, idempotencyKey: input.idempotencyKey })
     if (!result.ok) {
       return
     }
     retryRef.current = null
-    // Why keep refused text: the user edits it (for example into English) rather than retyping it.
+    // Why keep refused text: the user edits it rather than retyping it.
     if (result.result.outcome !== 'refused') {
       setText('')
     }
@@ -86,7 +111,7 @@ export default function WorkbenchRunMessage({
 
   return (
     <form
-      className="space-y-2"
+      className="space-y-1.5 pt-1"
       onSubmit={(event) => {
         event.preventDefault()
         void submit()
@@ -105,17 +130,17 @@ export default function WorkbenchRunMessage({
         rows={2}
       />
       <div className="flex items-start justify-between gap-3">
-        <p id={helpId} className="text-xs text-muted-foreground">
+        <p id={helpId} className="text-meta text-muted-foreground">
           {translate(
-            'workbench.runs.message.help',
-            'English only. Typed into the Claude Code session; held while a dialog is open.'
+            'workbench.runs.message.helpShort',
+            'Typed into the Claude Code session; held while a dialog is open.'
           )}
         </p>
         <Button type="submit" variant="secondary" size="sm" disabled={sending || empty}>
           {translate('workbench.runs.message.send', 'Send message')}
         </Button>
       </div>
-      {attempt && <MessageOutcome attempt={attempt} />}
+      {sent && <MessageOutcome runId={runId} sent={sent} />}
     </form>
   )
 }

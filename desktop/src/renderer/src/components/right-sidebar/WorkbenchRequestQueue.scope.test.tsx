@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   deferred,
@@ -7,19 +7,47 @@ import {
   lookup,
   publishScope,
   request,
+  requestObjective,
+  requestRow,
   resetQueueFixture,
   rpc,
   storeState,
-  uuid
+  uuid,
+  waitForIntake
 } from './workbench-request-test-fixture'
+import {
+  copyDetailsText,
+  installClipboard,
+  removeClipboard,
+  type ClipboardWrite
+} from './workbench-clipboard-test-fixture'
 import WorkbenchRequestQueue from './WorkbenchRequestQueue'
 
-beforeEach(resetQueueFixture)
-afterEach(cleanup)
+const UNEXPECTED = 'The app returned an unexpected response.'
+let clipboard: ClipboardWrite
+
+beforeEach(() => {
+  resetQueueFixture()
+  clipboard = installClipboard()
+})
+afterEach(() => {
+  cleanup()
+  removeClipboard()
+})
 
 async function openQueue(): Promise<void> {
   render(<WorkbenchRequestQueue />)
-  await screen.findByText('Request intake available')
+  await waitForIntake()
+}
+
+function cancelButton(sequence: number): HTMLElement {
+  return within(requestRow(requestObjective(sequence))).getByRole('button', {
+    name: 'Cancel request'
+  })
+}
+
+function startRun(): HTMLElement {
+  return screen.getByRole('button', { name: 'Start run' })
 }
 
 describe('Workbench request response and scope guards', () => {
@@ -41,27 +69,25 @@ describe('Workbench request response and scope guards', () => {
     expect(rpc).not.toHaveBeenCalled()
   })
 
-  it('renders request IDs with separator-only wrapping and exact copied text', async () => {
+  it('keeps a request ID out of the row and copies it exactly', async () => {
     const requestId = 'fixture:2026/10/request-7'
     rpc.mockResolvedValueOnce(listResult([{ ...request(7), requestId }]))
     await openQueue()
-    const identifier = screen.getByText(requestId)
-    expect(identifier.querySelectorAll('wbr')).toHaveLength(3)
-    expect(identifier.textContent).toBe(requestId)
+    const row = requestRow(requestObjective(7))
+    expect(row.textContent).not.toContain(requestId)
     expect(document.querySelector('.break-all')).toBeNull()
-    expect(screen.getByRole('button', { name: `Cancel request ${requestId}` })).toBeDefined()
+    expect(await copyDetailsText(row, clipboard)).toContain(`request_id: ${requestId}`)
+    expect(cancelButton(7)).toBeDefined()
   })
 
   it('leads with the queue and its states, then the demoted intake form', async () => {
     rpc.mockResolvedValueOnce(listResult([request()]))
     await openQueue()
-    const note = screen.getByText(
-      'Each registered request starts a run with one Claude Code session in this workspace.'
-    )
     const list = screen.getByRole('list')
     const objective = screen.getByLabelText('Objective')
-    expect(note.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const help = screen.getByText('Starts a run with a Claude Code session in this workspace.')
     expect(list.compareDocumentPosition(objective) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(objective.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('rechecks canonical scope before a submit event even before React is notified', async () => {
@@ -71,7 +97,7 @@ describe('Workbench request response and scope guards', () => {
     })
     storeState.activeWorkspaceKey = 'worktree:elsewhere'
     storeState.activeWorktreeId = 'elsewhere'
-    fireEvent.click(screen.getByRole('button', { name: 'Register request' }))
+    fireEvent.click(startRun())
     expect(rpc).toHaveBeenCalledTimes(1)
     expect(uuid).not.toHaveBeenCalled()
   })
@@ -80,30 +106,32 @@ describe('Workbench request response and scope guards', () => {
     rpc.mockResolvedValueOnce(listResult([request()]))
     await openQueue()
     storeState.activeWorkspaceExecutionHostId = 'ssh:remote'
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel request request-1' }))
+    fireEvent.click(cancelButton(1))
     expect(rpc).toHaveBeenCalledTimes(1)
   })
 
   it('rejects cross-workspace records rather than displaying or enabling their cancellation', async () => {
     rpc.mockResolvedValueOnce(listResult([request(7, 'wrong-workspace')]))
     render(<WorkbenchRequestQueue />)
-    await screen.findByText('invalid_response')
-    expect(screen.queryByText('request-7')).toBeNull()
-    expect(screen.queryByText('Request intake available')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Register request' }).hasAttribute('disabled')).toBe(
-      true
-    )
+    await screen.findByText(UNEXPECTED)
+    expect(screen.queryByText(requestObjective(7))).toBeNull()
+    expect(startRun().hasAttribute('disabled')).toBe(true)
+    expect(screen.getByLabelText('Objective').hasAttribute('disabled')).toBe(true)
   })
 
-  it('keeps the original page and error when refresh fails', async () => {
+  it('keeps the original page and words the error when refresh fails', async () => {
     rpc.mockResolvedValueOnce(listResult([request(5)]))
     await openQueue()
     rpc.mockRejectedValueOnce(new Error('Request store is offline'))
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
-    await screen.findByText('Request store is offline')
-    const failure = screen.getByRole('alert', { name: 'Request store error' })
-    expect(failure.querySelector('svg.lucide-triangle-alert')).not.toBeNull()
-    expect(screen.getByText('request-5')).toBeDefined()
+    const failure = await screen.findByRole('alert', { name: 'Requests could not be updated' })
+    expect(failure.querySelector('svg.lucide-circle-alert')).not.toBeNull()
+    expect(failure.textContent).toContain('Something went wrong.')
+    expect(failure.textContent).not.toContain('Request store is offline')
+    expect(await copyDetailsText(failure, clipboard)).toContain(
+      'error_message: Request store is offline'
+    )
+    expect(screen.getByText(requestObjective(5))).toBeDefined()
     expect(screen.getByText('Displayed requests may be out of date.')).toBeDefined()
     expect(rpc).toHaveBeenCalledTimes(2)
   })
@@ -113,9 +141,9 @@ describe('Workbench request response and scope guards', () => {
     await openQueue()
     rpc.mockResolvedValueOnce(listResult([request(11)], 11))
     fireEvent.click(screen.getByRole('button', { name: 'Load older' }))
-    await screen.findByText('invalid_response')
-    expect(screen.getByText('request-10')).toBeDefined()
-    expect(screen.queryByText('request-11')).toBeNull()
+    await screen.findByText(UNEXPECTED)
+    expect(screen.getByText(requestObjective(10))).toBeDefined()
+    expect(screen.queryByText(requestObjective(11))).toBeNull()
   })
 
   it.each([
@@ -133,8 +161,8 @@ describe('Workbench request response and scope guards', () => {
   ])('rejects $label', async ({ page }) => {
     rpc.mockResolvedValueOnce(page)
     render(<WorkbenchRequestQueue />)
-    await screen.findByText('invalid_response')
-    expect(screen.queryByText('Request intake available')).toBeNull()
+    await screen.findByText(UNEXPECTED)
+    expect(screen.getByLabelText('Objective').hasAttribute('disabled')).toBe(true)
   })
 
   it('fences pending responses and clears rows when the same workspace ID is remapped', async () => {
@@ -142,7 +170,7 @@ describe('Workbench request response and scope guards', () => {
     await openQueue()
     const pending = deferred()
     rpc.mockReturnValueOnce(pending.promise)
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel request request-1' }))
+    fireEvent.click(cancelButton(1))
     lookup.mockImplementation((id: string, hostId?: string) => ({
       id,
       displayName: id,
@@ -152,8 +180,8 @@ describe('Workbench request response and scope guards', () => {
       projectId: 'new-project'
     }))
     act(publishScope)
-    expect(screen.queryByText('request-1')).toBeNull()
-    await screen.findByText('No registered requests on this page.')
+    expect(screen.queryByText(requestObjective(1))).toBeNull()
+    await screen.findByText('No requests yet.')
     await act(async () =>
       pending.resolve({ request: request(1, 'local-workspace', 'CANCELED'), changed: true })
     )
@@ -166,10 +194,10 @@ describe('Workbench request response and scope guards', () => {
     await openQueue()
     rpc.mockResolvedValueOnce(listResult([request()]))
     rpc.mockResolvedValueOnce({ request: request(2, 'local-workspace', 'CANCELED'), changed: true })
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel request request-1' }))
-    await screen.findByText('invalid_response')
+    fireEvent.click(cancelButton(1))
+    await screen.findByText(UNEXPECTED)
     expect(screen.getByText('Launch blocked')).toBeDefined()
-    expect(screen.queryByText('request-2')).toBeNull()
+    expect(screen.queryByText(requestObjective(2))).toBeNull()
   })
 
   it('does not accept a fresh record that rewrote the request before cancelling', async () => {
@@ -178,10 +206,10 @@ describe('Workbench request response and scope guards', () => {
     rpc.mockResolvedValueOnce(
       listResult([request(1, 'local-workspace', 'ROUTING_BLOCKED', 'Rewritten objective')])
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel request request-1' }))
-    await screen.findByText('invalid_response')
+    fireEvent.click(cancelButton(1))
+    await screen.findByText(UNEXPECTED)
     expect(rpc.mock.calls.map((call) => call[1])).not.toContain('workbench.requests.cancel')
-    expect(screen.getByText('Inspect the request store')).toBeDefined()
+    expect(screen.getByText(requestObjective(1))).toBeDefined()
   })
 
   it('rejects a rewritten objective receipt while retaining the original retry payload', async () => {
@@ -191,27 +219,26 @@ describe('Workbench request response and scope guards', () => {
       duplicate: false
     })
     fireEvent.change(screen.getByLabelText('Objective'), { target: { value: 'Original text' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Register request' }))
-    await screen.findByText('invalid_response')
+    fireEvent.click(startRun())
+    await screen.findByText(UNEXPECTED)
     expect(screen.getByLabelText('Objective')).toHaveProperty('value', 'Original text')
-    expect(screen.queryByText('request-2')).toBeNull()
+    expect(screen.queryByText('Rewritten text')).toBeNull()
     rpc.mockResolvedValueOnce({
       request: request(2, 'local-workspace', 'ROUTING_BLOCKED', 'Original text'),
       duplicate: true
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Register request' }))
-    await screen.findByText('request-2')
+    fireEvent.click(startRun())
+    await screen.findByText('Request registered.')
+    expect(requestRow('Original text')).toBeDefined()
     expect(uuid).toHaveBeenCalledTimes(1)
   })
 
   it('never exposes cancellation for canceled records or registers blank objectives', async () => {
     rpc.mockResolvedValueOnce(listResult([request(1, 'local-workspace', 'CANCELED')]))
     await openQueue()
-    expect(screen.queryByRole('button', { name: 'Cancel request request-1' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Cancel request' })).toBeNull()
     fireEvent.change(screen.getByLabelText('Objective'), { target: { value: ' \n ' } })
-    expect(screen.getByRole('button', { name: 'Register request' }).hasAttribute('disabled')).toBe(
-      true
-    )
+    expect(startRun().hasAttribute('disabled')).toBe(true)
     expect(rpc).toHaveBeenCalledTimes(1)
   })
 
@@ -220,10 +247,10 @@ describe('Workbench request response and scope guards', () => {
     await openQueue()
     const result = deferred()
     rpc.mockReturnValueOnce(result.promise)
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel request request-1' }))
+    fireEvent.click(cancelButton(1))
     storeState.activeWorkspaceExecutionHostId = 'runtime:other-host'
     act(publishScope)
-    expect(screen.queryByText('request-1')).toBeNull()
+    expect(screen.queryByText(requestObjective(1))).toBeNull()
     await act(async () => result.resolve(listResult([request(1, 'local-workspace', 'CANCELED')])))
     expect(screen.queryByText('Canceled')).toBeNull()
     expect(screen.getByText('Request intake is unavailable for remote workspaces.')).toBeDefined()

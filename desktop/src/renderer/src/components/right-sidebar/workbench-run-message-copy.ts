@@ -1,6 +1,5 @@
 import { translate } from '@/i18n/i18n'
 import type { RunMessageSendResult } from '../../../../shared/workflow-run/workflow-run-view'
-import type { WorkbenchChipTone } from './WorkbenchStateChip'
 
 // Why sentences, not codes: the reason codes are C3's delivery vocabulary (D-019); the code stays out of the copy.
 const QUEUED = new Map<string, () => string>([
@@ -157,14 +156,15 @@ const REFUSED = new Map<string, () => string>([
   ]
 ])
 
-function unknownReason(reason: string | null): string {
+// Why generic: an unknown reason code stays out of the UI; "Copy details" carries it.
+function unknownRefusal(reason: string | null): string {
   return reason === null
     ? translate('workbench.runs.message.noReason', 'No reason was given.')
-    : translate('workbench.runs.message.unknownReason', 'Reason: {{reason}}.', { reason })
+    : translate('workbench.runs.message.refusedGeneric', 'The session did not accept the message.')
 }
 
 /** `detail` is the refusal reason alone, for a callout whose title already says "not sent". */
-export type RunMessageCopy = { tone: WorkbenchChipTone; text: string; detail: string | null }
+export type RunMessageCopy = { tone: 'neutral' | 'warning'; text: string; detail: string | null }
 
 /** One sentence for the outcome D-019 reports; the message text itself is never echoed. */
 export function describeRunMessageResult(result: RunMessageSendResult): RunMessageCopy {
@@ -185,12 +185,15 @@ export function describeRunMessageResult(result: RunMessageSendResult): RunMessa
       tone: 'neutral',
       text:
         known?.() ??
-        `${translate('workbench.runs.message.queuedPrefix', 'Queued.')} ${unknownReason(reason)}`,
+        translate(
+          'workbench.runs.message.queuedGeneric',
+          'Queued. It is sent when the session can take it.'
+        ),
       detail: null
     }
   }
   const known = reason === null ? undefined : REFUSED.get(reason)
-  const detail = known?.() ?? unknownReason(reason)
+  const detail = known?.() ?? unknownRefusal(reason)
   return {
     tone: 'warning',
     text: `${translate('workbench.runs.message.notSentPrefix', 'Not sent.')} ${detail}`,

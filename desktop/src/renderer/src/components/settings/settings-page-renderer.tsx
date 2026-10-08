@@ -53,6 +53,10 @@ import {
   renderPluginsSettingsSection
 } from './settings-advanced-section-renderers'
 import { renderProjectSettingsSections } from './settings-project-section-renderer'
+import {
+  renderDotSettingsSection,
+  renderTaskRoutingSettingsSection
+} from './settings-nash-section-renderers'
 
 export function renderSettingsLoading(
   interactions: SettingsInteractionController
@@ -118,12 +122,14 @@ export function renderSettingsPage(context: SettingsRenderContext): React.JSX.El
                 {renderAgentsSettingsSection(context)}
                 {renderAccountsSettingsSection(context)}
                 {renderOrchestrationSettingsSection(context)}
+                {renderTaskRoutingSettingsSection(context)}
                 {renderLinearSettingsSection(context)}
                 {renderDesktopCapabilitySettingsSections(context)}
                 {renderOrcaAccountSettingsSection(context)}
                 {renderSetupGuideSettingsSection(context)}
                 {renderGeneralSettingsSection(context)}
                 {renderIntegrationsSettingsSection(context)}
+                {renderDotSettingsSection(context)}
                 {renderMobileSettingsSection(context)}
                 {renderAutomationsSettingsSection(context)}
                 {renderArtifactsSettingsSection(context)}

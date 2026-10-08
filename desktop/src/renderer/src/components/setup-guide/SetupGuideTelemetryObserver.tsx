@@ -4,7 +4,7 @@ import { useSetupGuideStepCompletionTelemetry } from './use-setup-guide-telemetr
 
 export function SetupGuideTelemetryObserver(): null {
   const setupGuideVisible = useAppStore((s) => s.activeModal === 'setup-guide')
-  const progress = useSetupGuideProgress(true, false, false)
+  const progress = useSetupGuideProgress(true)
 
   useSetupGuideStepCompletionTelemetry({
     progress,

@@ -7,7 +7,8 @@ import {
   WorkbenchObjectiveSchema
 } from '../../../../shared/workbench-request'
 
-// Why: intake follows the queue so request states lead; registration is the panel's one primary action.
+// Why: intake follows the queue so request states lead; starting a run is the panel's one primary
+// action, and it stays disabled until the request list has been read.
 export default function WorkbenchRequestIntake({
   objective,
   verified,
@@ -23,22 +24,15 @@ export default function WorkbenchRequestIntake({
 }): React.JSX.Element {
   return (
     <form
-      className="space-y-2 border-t border-border pt-3"
+      className="space-y-1.5 pt-1"
       onSubmit={(event) => {
         event.preventDefault()
         void submit()
       }}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-        <Label htmlFor="workbench-request-objective">
-          {translate('workbench.requests.objective', 'Objective')}
-        </Label>
-        <span className="text-xs text-muted-foreground">
-          {verified
-            ? translate('workbench.requests.available', 'Request intake available')
-            : translate('workbench.requests.unverified', 'Request intake not verified')}
-        </span>
-      </div>
+      <Label htmlFor="workbench-request-objective">
+        {translate('workbench.requests.objective', 'Objective')}
+      </Label>
       <Textarea
         id="workbench-request-objective"
         aria-describedby="workbench-request-objective-help"
@@ -49,10 +43,10 @@ export default function WorkbenchRequestIntake({
         rows={2}
       />
       <div className="flex items-start justify-between gap-3">
-        <p id="workbench-request-objective-help" className="text-xs text-muted-foreground">
+        <p id="workbench-request-objective-help" className="text-meta text-muted-foreground">
           {translate(
-            'workbench.requests.objectiveHelp',
-            'Write the objective in English. Your original text is stored without rewriting.'
+            'workbench.requests.intakeHelp',
+            'Starts a run with a Claude Code session in this workspace.'
           )}
         </p>
         <Button
@@ -60,7 +54,7 @@ export default function WorkbenchRequestIntake({
           size="sm"
           disabled={busy || !verified || !WorkbenchObjectiveSchema.safeParse(objective).success}
         >
-          {translate('workbench.requests.register', 'Register request')}
+          {translate('workbench.requests.startRun', 'Start run')}
         </Button>
       </div>
     </form>

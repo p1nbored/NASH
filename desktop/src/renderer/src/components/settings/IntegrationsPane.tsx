@@ -7,9 +7,6 @@ import {
 } from './source-control-integration-cards'
 import { JiraIntegrationCard, LinearIntegrationCard } from './task-tracker-integration-cards'
 import { useIntegrationProviderStatusRefresh } from './use-integration-provider-status-refresh'
-import { ClefRoutingCard } from './clef-routing-card'
-import { RoutingTableCard } from './routing-table-card'
-import { DotIngressSection } from './dot-ingress-section'
 import { translate } from '@/i18n/i18n'
 export { getIntegrationsPaneSearchEntries } from './integrations-search'
 
@@ -56,26 +53,6 @@ export function IntegrationsPane(): React.JSX.Element {
           <JiraIntegrationCard />
         </div>
       </section>
-
-      <section className="space-y-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-foreground">
-            {translate('auto.components.settings.IntegrationsPane.taskRouting', 'Task routing')}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            {translate(
-              'auto.components.settings.IntegrationsPane.taskRoutingDescription',
-              'Clef classifies each task the primary session plans; the Routing Table maps each task type to an executor, model and reasoning level.'
-            )}
-          </p>
-        </div>
-        <div className="space-y-3">
-          <RoutingTableCard />
-          <ClefRoutingCard />
-        </div>
-      </section>
-
-      <DotIngressSection />
     </div>
   )
 }

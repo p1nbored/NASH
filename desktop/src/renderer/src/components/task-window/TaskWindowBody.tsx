@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
+import WorkbenchCallout from '../right-sidebar/WorkbenchCallout'
+import type { WorkbenchDetail } from '../right-sidebar/workbench-details'
 import { transcriptRowsFrom, type TranscriptRowLog } from './task-window-row-log'
 import type { TranscriptReadState } from './task-window-transcript-state'
 import TaskWindowRecordRow from './TaskWindowRecordRow'
@@ -13,38 +15,44 @@ const ROW_WINDOW = 1000
 function TranscriptStatus({
   hasAttempt,
   transcript,
-  empty
+  empty,
+  details
 }: {
   hasAttempt: boolean
   transcript: TranscriptReadState | null
   empty: boolean
+  details: readonly WorkbenchDetail[]
 }): React.JSX.Element | null {
   if (!hasAttempt) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         {translate('workbench.taskWindow.noAttempt', 'This task has no attempt yet.')}
       </p>
     )
   }
   if (!transcript?.loaded) {
     return (
-      <p role="status" className="text-sm text-muted-foreground">
+      <p role="status" className="text-body text-muted-foreground">
         {translate('workbench.taskWindow.reading', 'Reading the transcript…')}
       </p>
     )
   }
   if (transcript.missing) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         {translate('workbench.taskWindow.missing', 'No transcript was recorded for this attempt.')}
       </p>
     )
   }
   if (transcript.error) {
     return (
-      <div role="alert" className="mb-2 space-y-0.5 text-sm text-destructive">
-        <p className="break-words">{transcript.error.message}</p>
-        <p className="break-words font-mono text-xs">{transcript.error.code}</p>
+      <div className="mb-2">
+        <WorkbenchCallout
+          role="alert"
+          tone="error"
+          label={transcript.error.message}
+          details={{ subject: 'task window', entries: details }}
+        />
       </div>
     )
   }
@@ -52,7 +60,7 @@ function TranscriptStatus({
     return null
   }
   return (
-    <p className="text-sm text-muted-foreground">
+    <p className="text-body text-muted-foreground">
       {transcript.live
         ? translate('workbench.taskWindow.waiting', 'Waiting for the first output…')
         : translate('workbench.taskWindow.empty', 'The transcript is empty.')}
@@ -64,11 +72,13 @@ function TranscriptStatus({
 export default function TaskWindowBody({
   hasAttempt,
   transcript,
-  rows
+  rows,
+  details
 }: {
   hasAttempt: boolean
   transcript: TranscriptReadState | null
   rows: TranscriptRowLog
+  details: readonly WorkbenchDetail[]
 }): React.JSX.Element {
   const [limit, setLimit] = useState(ROW_WINDOW)
   const { scrollRef, following, onScroll, jumpToLatest } = useTranscriptFollow(rows)
@@ -87,6 +97,7 @@ export default function TaskWindowBody({
           hasAttempt={hasAttempt}
           transcript={transcript}
           empty={rows.length === 0}
+          details={details}
         />
         {hidden > 0 && (
           <Button

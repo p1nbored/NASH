@@ -1,5 +1,6 @@
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
+import { taskWindowDetails } from './task-window-details'
 import { EMPTY_TRANSCRIPT_ROW_LOG } from './task-window-row-log'
 import type { OpenTaskWindowState } from './task-window-tab'
 import TaskWindowBody from './TaskWindowBody'
@@ -22,6 +23,14 @@ function TaskWindowView({
     null
   const transcript = useAttemptTranscript(attempt?.dispatchId ?? null)
   const rows = transcript?.rows ?? EMPTY_TRANSCRIPT_ROW_LOG
+  const details = taskWindowDetails({
+    state,
+    attempt,
+    start: rows.start,
+    end: rows.end,
+    attemptsError,
+    transcriptError: transcript?.error ?? null
+  })
   return (
     <div className="flex h-full min-h-0 flex-col bg-editor-surface">
       <TaskWindowHeader
@@ -32,6 +41,7 @@ function TaskWindowView({
         live={transcript?.live ?? false}
         truncated={transcript?.truncated ?? false}
         attemptsError={attemptsError}
+        details={details}
         onSelectAttempt={(dispatchId) => selectAttempt(fileId, dispatchId)}
       />
       <TaskWindowBody
@@ -39,6 +49,7 @@ function TaskWindowView({
         hasAttempt={attempt !== null}
         transcript={transcript}
         rows={rows}
+        details={details}
       />
     </div>
   )
@@ -54,7 +65,7 @@ export default function TaskWindowPanel({
 }): React.JSX.Element {
   if (!state) {
     return (
-      <div className="flex h-full items-center justify-center bg-editor-surface text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center bg-editor-surface text-body text-muted-foreground">
         {translate('workbench.taskWindow.unavailable', 'The task window details are unavailable.')}
       </div>
     )

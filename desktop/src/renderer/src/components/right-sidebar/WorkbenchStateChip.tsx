@@ -1,22 +1,85 @@
-export type WorkbenchChipTone = 'warning' | 'neutral' | 'muted'
+import {
+  Ban,
+  CircleCheck,
+  CircleDashed,
+  CircleDot,
+  CircleMinus,
+  CircleQuestionMark,
+  CircleX,
+  Hourglass,
+  ShieldAlert,
+  Unplug,
+  type LucideIcon
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
-// Why: the label carries the state; the warning tint only reinforces it, never replaces it.
-export default function WorkbenchStateChip({
-  status,
-  label,
-  tone
-}: {
-  status: string
-  label: string
-  tone: WorkbenchChipTone
-}): React.JSX.Element {
+/** What a state means to the user; each kind has its own icon, so colour never carries it alone. */
+export type WorkbenchChipKind =
+  | 'progress'
+  | 'running'
+  | 'waiting'
+  | 'permission'
+  | 'blocked'
+  | 'failed'
+  | 'disconnected'
+  | 'unknown'
+  | 'done'
+  | 'ended'
+
+export type WorkbenchChipCopy = { readonly kind: WorkbenchChipKind; readonly label: string }
+
+type ChipTone = 'warning' | 'error' | 'success' | 'plain' | 'quiet'
+
+const ICONS: Readonly<Record<WorkbenchChipKind, LucideIcon>> = {
+  progress: CircleDashed,
+  running: CircleDot,
+  waiting: Hourglass,
+  permission: ShieldAlert,
+  blocked: Ban,
+  failed: CircleX,
+  disconnected: Unplug,
+  unknown: CircleQuestionMark,
+  done: CircleCheck,
+  ended: CircleMinus
+}
+
+// Why: states that need the user (waiting, blocked, lost contact) take the warning chip and
+// failures the error chip; only a settled success gets a green icon, and unknown never does.
+const TONES: Readonly<Record<WorkbenchChipKind, ChipTone>> = {
+  progress: 'quiet',
+  running: 'plain',
+  waiting: 'warning',
+  permission: 'warning',
+  blocked: 'warning',
+  failed: 'error',
+  disconnected: 'warning',
+  unknown: 'quiet',
+  done: 'success',
+  ended: 'quiet'
+}
+
+const BADGE_VARIANTS = {
+  warning: 'warning',
+  error: 'error',
+  success: 'ghost',
+  plain: 'ghost',
+  quiet: 'ghost'
+} as const
+
+/** The Badge status chip with an icon; states that need no attention stay untinted. */
+export default function WorkbenchStateChip({ kind, label }: WorkbenchChipCopy): React.JSX.Element {
+  const Icon = ICONS[kind]
+  const tone = TONES[kind]
   return (
-    <span
-      data-status={status}
-      data-tone={tone}
-      className="inline-flex h-5 shrink-0 items-center rounded-full border border-border px-2 text-[11px] font-medium text-foreground data-[tone=muted]:text-muted-foreground data-[tone=warning]:border-status-warning-border data-[tone=warning]:bg-status-warning-background"
-    >
-      {label}
-    </span>
+    <Badge variant={BADGE_VARIANTS[tone]} data-kind={kind} data-tone={tone}>
+      <Icon
+        aria-hidden="true"
+        data-tone={tone}
+        className="data-[tone=quiet]:text-muted-foreground data-[tone=success]:text-status-success"
+      />
+      <span data-tone={tone} className="data-[tone=quiet]:text-muted-foreground">
+        {label}
+      </span>
+    </Badge>
   )
 }

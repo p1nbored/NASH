@@ -26,7 +26,18 @@ const mocks = vi.hoisted(() => ({
   agentBucketCounts: { attention: 0, working: 0, done: 0, idle: 0 },
   getAgentBucketCounts: vi.fn(),
   dismissMobileOnboardingBadge: vi.fn(),
-  setSetupGuideSidebarDismissed: vi.fn()
+  setSetupGuideSidebarDismissed: vi.fn(),
+  flags: { orcaAccountAndMobileUi: false, rsiNavigation: false }
+}))
+
+vi.mock('../../../../shared/nash-build-flags', () => ({
+  get ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED() {
+    return mocks.flags.orcaAccountAndMobileUi
+  },
+  get RSI_NAVIGATION_ENABLED() {
+    return mocks.flags.rsiNavigation
+  },
+  ORCA_STAR_PROMPT_ENABLED: false
 }))
 
 vi.mock('@/store', () => ({
@@ -213,7 +224,28 @@ describe('SidebarNav', () => {
     await i18n.changeLanguage('en')
     mocks.hasPairedMobileDevice = false
     mocks.agentBucketCounts = { attention: 0, working: 0, done: 0, idle: 0 }
+    mocks.flags.orcaAccountAndMobileUi = false
+    mocks.flags.rsiNavigation = false
     setSidebarState()
+  })
+
+  it('hides the Orca Mobile and RSI rows in NASH builds (D-038)', async () => {
+    const container = await renderSidebarNav()
+
+    expect(queryButtonByText(container, 'Orca Mobile')).toBeNull()
+    expect(container.querySelector('[data-rsi-nav-entry]')).toBeNull()
+    expect(queryButtonByText(container, 'Automations')).not.toBeNull()
+  })
+
+  it('adds the RSI rows to the left navigation only when their flag is on', async () => {
+    mocks.flags.rsiNavigation = true
+    const container = await renderSidebarNav()
+
+    expect(
+      Array.from(container.querySelectorAll('[data-rsi-nav-entry]')).map((row) =>
+        row.getAttribute('data-rsi-nav-entry')
+      )
+    ).toEqual(['rsi-lab', 'rsi-improvements'])
   })
 
   it('keeps the Agent Dashboard row unmounted while its experiment is off', async () => {
@@ -304,6 +336,7 @@ describe('SidebarNav', () => {
   })
 
   it('updates localized labels when the language changes after mount', async () => {
+    mocks.flags.orcaAccountAndMobileUi = true
     const container = await renderSidebarNav()
 
     expect(queryButtonByText(container, 'Automations')).not.toBeNull()
@@ -318,6 +351,7 @@ describe('SidebarNav', () => {
   })
 
   it('updates labels when pseudo-localization is enabled after mount', async () => {
+    mocks.flags.orcaAccountAndMobileUi = true
     const container = await renderSidebarNav()
 
     await act(async () => {
@@ -329,6 +363,7 @@ describe('SidebarNav', () => {
   })
 
   it('shows the inline hide control only once a device is paired', async () => {
+    mocks.flags.orcaAccountAndMobileUi = true
     const beforePairing = await renderSidebarNav()
     expect(queryButtonByText(beforePairing, 'Orca Mobile')).not.toBeNull()
     expect(beforePairing.querySelector('button[aria-label="Hide from sidebar"]')).toBeNull()
@@ -381,6 +416,7 @@ describe('SidebarNav', () => {
   })
 
   it('hides Mobile from its sidebar context menu', async () => {
+    mocks.flags.orcaAccountAndMobileUi = true
     const container = await renderSidebarNav()
 
     const mobileMenu = getButtonByText(container, 'Orca Mobile').closest(

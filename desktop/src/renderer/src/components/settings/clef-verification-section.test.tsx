@@ -3,10 +3,13 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
+import { ClefAwaitingConfirmation } from './clef-awaiting-confirmation'
+import { clefStatusDetails } from './clef-details'
 import { ClefVerificationSection } from './clef-verification-section'
 import {
   FIXTURE_BUNDLE_SHA,
   FIXTURE_OTHER_BUNDLE_SHA,
+  FIXTURE_PROFILE_HASH,
   FIXTURE_REPORT_SHA,
   fixtureBundle,
   fixtureCallFailed,
@@ -15,10 +18,12 @@ import {
   fixtureReported,
   fixtureStatus
 } from './clef-verification.test-fixture'
+import { useClefVerification } from './use-clef-verification'
 
 const rpc = vi.hoisted(() =>
   vi.fn<(target: unknown, method: string, params?: unknown) => Promise<unknown>>()
 )
+const clipboard = vi.hoisted(() => vi.fn<(text: string) => Promise<void>>())
 
 vi.mock('@/runtime/runtime-rpc-client', async () => {
   const actual = await vi.importActual<typeof RpcResult>('@/runtime/runtime-rpc-result')
@@ -45,10 +50,14 @@ function callsTo(method: string): unknown[] {
   return rpc.mock.calls.filter((call) => call[1] === method).map((call) => call[2])
 }
 
+function Harness(): React.JSX.Element {
+  return <ClefVerificationSection model={useClefVerification()} />
+}
+
 async function renderSection(): Promise<HTMLElement> {
-  render(<ClefVerificationSection />)
+  render(<Harness />)
   await act(async () => {})
-  return screen.getByRole('region', { name: 'Verification and response profile' })
+  return screen.getByRole('region', { name: 'Verification' })
 }
 
 async function runVerify(): Promise<void> {
@@ -57,38 +66,33 @@ async function runVerify(): Promise<void> {
   })
 }
 
+async function copiedDetails(scope: HTMLElement): Promise<string> {
+  await act(async () => {
+    fireEvent.click(within(scope).getByRole('button', { name: 'Copy details' }))
+  })
+  return clipboard.mock.calls.at(-1)?.[0] ?? ''
+}
+
 describe('ClefVerificationSection', () => {
   beforeEach(() => {
     rpc.mockReset()
+    clipboard.mockReset()
+    clipboard.mockResolvedValue(undefined)
+    Object.assign(window, { api: { ui: { writeClipboardText: clipboard } } })
   })
 
   afterEach(() => {
     cleanup()
   })
 
-  it('shows an unpinned profile and the bundle version, and no cost or budget', async () => {
+  it('says where verification stands in one line, with no versions, cost or budget', async () => {
     answer({ 'workbench.routing.status': fixtureStatus() })
     const section = await renderSection()
 
     expect(rpc).toHaveBeenCalledWith({ kind: 'local' }, 'workbench.routing.status', undefined)
-    const facts = within(section).getByRole('list', { name: 'Verification status' })
-    expect(within(facts).getByText('Not verified')).toBeTruthy()
-    expect(within(facts).getByText('Question set 2, taxonomy 2')).toBeTruthy()
-    expect(within(facts).queryByText(/Next Verify/)).toBeNull()
+    expect(section.textContent).toMatch(/Run Verify to check that Clef answers/)
+    expect(section.textContent).not.toMatch(/Question set|taxonomy|bundle|profile/i)
     expect(section.textContent).not.toMatch(MONEY)
-  })
-
-  it('shows the defaults awaiting confirmation as neutral information, not a warning', async () => {
-    answer({ 'workbench.routing.status': fixtureStatus() })
-    const section = await renderSection()
-
-    const pending = within(section).getByRole('note', { name: 'Awaiting your confirmation' })
-    expect(pending.textContent).toMatch(/0\.60 or more/)
-    expect(pending.textContent).toMatch(/0\.40 or less/)
-    expect(pending.textContent).toMatch(/0\.10/)
-    expect(pending.textContent).toMatch(/11 task-type options and the 2 delegation answers/)
-    expect(pending.className).not.toMatch(/warning|destructive/)
-    expect(within(section).queryByRole('alert')).toBeNull()
   })
 
   it('runs Verify as soon as it is clicked, with no cost confirmation', async () => {
@@ -104,7 +108,7 @@ describe('ClefVerificationSection', () => {
     expect(callsTo('workbench.clef.verify')).toEqual([{}])
   })
 
-  it('shows a pinnable report with no cost line and pins it by its hash alone', async () => {
+  it('shows a usable result in plain words, keeps its facts in the details and uses it by hash', async () => {
     answer({
       'workbench.routing.status': fixtureStatus(),
       'workbench.clef.verify': fixtureReported(),
@@ -113,20 +117,23 @@ describe('ClefVerificationSection', () => {
     const section = await renderSection()
     await runVerify()
 
-    const report = within(section).getByRole('group', { name: 'Verification report' })
-    expect(report.textContent).toMatch(/HTTP 200/)
-    expect(report.textContent).toMatch(/@cf\/cloudflare\/clef/)
-    expect(report.textContent).toMatch(/Report format 2/)
-    expect(report.textContent).not.toMatch(MONEY)
+    const result = within(section).getByRole('group', { name: 'Verify result' })
+    expect(result.textContent).toMatch(/answered in the expected format/)
+    expect(result.textContent).not.toMatch(/HTTP|@cf\/|Report format|bytes/)
+    expect(result.textContent).not.toMatch(MONEY)
+    const details = await copiedDetails(result)
+    expect(details).toMatch(/http_status: 200/)
+    expect(details).toContain(FIXTURE_REPORT_SHA)
     await act(async () => {
-      fireEvent.click(within(report).getByRole('button', { name: 'Pin profile' }))
+      fireEvent.click(within(result).getByRole('button', { name: 'Use this result' }))
     })
 
     expect(callsTo('workbench.clef.profile.pin')).toEqual([{ reportSha256: FIXTURE_REPORT_SHA }])
-    expect(within(section).getByRole('status').textContent).toMatch(/Profile pinned/)
+    expect(within(section).getByRole('status').textContent).toMatch(/Result saved/)
+    expect(section.textContent).not.toContain(FIXTURE_PROFILE_HASH.slice(0, 12))
   })
 
-  it('lists why a report cannot be pinned and offers no pin', async () => {
+  it('lists why a result cannot be used and offers no way to use it', async () => {
     answer({
       'workbench.routing.status': fixtureStatus(),
       'workbench.clef.verify': fixtureReported({
@@ -136,11 +143,11 @@ describe('ClefVerificationSection', () => {
     const section = await renderSection()
     await runVerify()
 
-    const report = within(section).getByRole('group', { name: 'Verification report' })
-    expect(within(report).getAllByRole('listitem', { name: undefined }).length).toBeGreaterThan(0)
-    expect(report.textContent).toMatch(/option IDs/i)
-    expect(report.textContent).toMatch(/token usage/i)
-    expect(within(report).queryByRole('button', { name: 'Pin profile' })).toBeNull()
+    const result = within(section).getByRole('group', { name: 'Verify result' })
+    expect(within(result).getAllByRole('listitem')).toHaveLength(2)
+    expect(result.textContent).toMatch(/option IDs/i)
+    expect(result.textContent).toMatch(/token usage/i)
+    expect(within(result).queryByRole('button', { name: 'Use this result' })).toBeNull()
   })
 
   it('explains a failed call with its blocker in plain English and no cost', async () => {
@@ -151,10 +158,11 @@ describe('ClefVerificationSection', () => {
     const section = await renderSection()
     await runVerify()
 
-    const failure = within(section).getByRole('group', { name: 'Verification call failed' })
+    const failure = within(section).getByRole('group', { name: 'Verification failed' })
     expect(failure.textContent).toMatch(/credentials or account/i)
-    expect(failure.textContent).not.toMatch(/auth_or_account/)
+    expect(failure.textContent).not.toMatch(/auth_or_account|HTTP|attempts/)
     expect(failure.textContent).not.toMatch(MONEY)
+    expect(await copiedDetails(failure)).toMatch(/blocker: .*auth_or_account/)
   })
 
   it('explains a refused Verify without repeating the raw error', async () => {
@@ -174,7 +182,7 @@ describe('ClefVerificationSection', () => {
     expect(alert.textContent).not.toContain('raw text')
   })
 
-  it('keeps Verify disabled until sealed credentials are saved, and says why', async () => {
+  it('keeps Verify disabled until the credentials are saved, and says why', async () => {
     answer({
       'workbench.routing.status': fixtureStatus({
         status: 'not_configured',
@@ -184,7 +192,7 @@ describe('ClefVerificationSection', () => {
     const section = await renderSection()
 
     expect(screen.getByRole('button', { name: 'Verify' })).toHaveProperty('disabled', true)
-    expect(within(section).getByText(/Save the API token and account ID/)).toBeTruthy()
+    expect(within(section).getByText(/Save the API token and account ID first/)).toBeTruthy()
   })
 
   it('keeps Verify disabled while Clef calls are paused', async () => {
@@ -195,7 +203,7 @@ describe('ClefVerificationSection', () => {
     expect(within(section).getByText(/Verify is paused/)).toBeTruthy()
   })
 
-  it('shows a pinned profile with its verification time when routing is ready', async () => {
+  it('says when Clef was last verified once it is ready', async () => {
     answer({
       'workbench.routing.status': fixtureStatus({
         status: 'ready',
@@ -204,29 +212,28 @@ describe('ClefVerificationSection', () => {
     })
     const section = await renderSection()
 
-    const facts = within(section).getByRole('list', { name: 'Verification status' })
-    expect(within(facts).getByText(/^Pinned/)).toBeTruthy()
-    expect(within(facts).getByText('Ready')).toBeTruthy()
-    expect(section.textContent).not.toMatch(/different bundle/i)
+    expect(section.textContent).toMatch(/Clef can classify tasks/)
+    expect(section.textContent).toMatch(/Last verified/)
+    expect(section.textContent).not.toMatch(/questions changed/i)
   })
 
-  it('says when the stored profile was verified against a different question bundle', async () => {
-    answer({
-      'workbench.routing.status': fixtureStatus({
-        profile: {
-          present: false,
-          responseModelPinned: false,
-          verifiedAt: null,
-          verifiedAgainstBundleSha256: FIXTURE_OTHER_BUNDLE_SHA
-        }
-      })
+  it('asks to verify again when the questions changed, keeping both hashes in the details', async () => {
+    const status = fixtureStatus({
+      profile: {
+        present: false,
+        responseModelPinned: false,
+        verifiedAt: null,
+        verifiedAgainstBundleSha256: FIXTURE_OTHER_BUNDLE_SHA
+      }
     })
+    answer({ 'workbench.routing.status': status })
     const section = await renderSection()
 
-    const facts = within(section).getByRole('list', { name: 'Verification status' })
-    const note = within(facts).getByText(/Profile verified against a different bundle/)
-    expect(note.textContent).toContain(FIXTURE_OTHER_BUNDLE_SHA.slice(0, 12))
-    expect(note.textContent).toContain(FIXTURE_BUNDLE_SHA.slice(0, 12))
+    expect(section.textContent).toMatch(/questions changed since the last verification/)
+    expect(section.textContent).not.toContain(FIXTURE_OTHER_BUNDLE_SHA.slice(0, 12))
+    const details = clefStatusDetails(status)
+    expect(details).toContain(FIXTURE_OTHER_BUNDLE_SHA)
+    expect(details).toContain(FIXTURE_BUNDLE_SHA)
   })
 
   it('says verification is unavailable when routing is not installed', async () => {
@@ -239,66 +246,56 @@ describe('ClefVerificationSection', () => {
     })
     const section = await renderSection()
 
-    expect(within(section).getByRole('alert').textContent).toMatch(/not available/i)
+    expect(within(section).getAllByRole('alert')[0].textContent).toMatch(/not available/i)
     expect(screen.getByRole('button', { name: 'Verify' })).toHaveProperty('disabled', true)
   })
 })
 
-describe('ClefVerificationSection bundle facts from the status view', () => {
-  beforeEach(() => {
-    rpc.mockReset()
-  })
-
+describe('Clef defaults awaiting confirmation and status details', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('reads the question set and taxonomy versions main reports', async () => {
-    answer({
-      'workbench.routing.status': fixtureStatus({
-        bundle: fixtureBundle({ questionSetVersion: 3, taxonomyVersion: 4 })
-      })
-    })
-    const section = await renderSection()
+  it('shows the defaults awaiting confirmation as neutral information, not a warning', () => {
+    render(<ClefAwaitingConfirmation bundle={fixtureBundle()} />)
 
-    const facts = within(section).getByRole('list', { name: 'Verification status' })
-    expect(within(facts).getByText('Question set 3, taxonomy 4')).toBeTruthy()
+    const pending = screen.getByRole('note', { name: 'Awaiting your confirmation' })
+    expect(pending.textContent).toMatch(/0\.60 or more/)
+    expect(pending.textContent).toMatch(/0\.40 or less/)
+    expect(pending.textContent).toMatch(/0\.10/)
+    expect(pending.textContent).toMatch(/11 task-type options and the 2 delegation answers/)
+    expect(pending.className).not.toMatch(/warning|destructive|border/)
   })
 
-  it('shows the thresholds main reports and only the values still awaiting confirmation', async () => {
-    answer({
-      'workbench.routing.status': fixtureStatus({
-        bundle: fixtureBundle({
+  it('shows only the values still awaiting confirmation', () => {
+    render(
+      <ClefAwaitingConfirmation
+        bundle={fixtureBundle({
           thresholds: { delegationTrueMin: 0.7, delegationFalseMax: 0.3, taskTypeMarginMin: 0.15 },
           awaitingUserConfirmation: ['thresholds']
-        })
-      })
-    })
-    const section = await renderSection()
+        })}
+      />
+    )
 
-    const pending = within(section).getByRole('note', { name: 'Awaiting your confirmation' })
+    const pending = screen.getByRole('note', { name: 'Awaiting your confirmation' })
     expect(pending.textContent).toMatch(/0\.70 or more/)
     expect(pending.textContent).toMatch(/0\.30 or less/)
     expect(pending.textContent).toMatch(/0\.15/)
     expect(pending.textContent).not.toMatch(/task-type options/)
   })
 
-  it('shows no pending note once every bundle value is confirmed', async () => {
-    answer({
-      'workbench.routing.status': fixtureStatus({
-        bundle: fixtureBundle({ awaitingUserConfirmation: [] })
-      })
-    })
-    const section = await renderSection()
+  it('shows no pending note once every value is confirmed', () => {
+    render(<ClefAwaitingConfirmation bundle={fixtureBundle({ awaitingUserConfirmation: [] })} />)
 
-    expect(within(section).queryByRole('note', { name: 'Awaiting your confirmation' })).toBeNull()
+    expect(screen.queryByRole('note', { name: 'Awaiting your confirmation' })).toBeNull()
   })
 
-  it('shows no bundle facts when the status cannot be read', async () => {
-    answer({ 'workbench.routing.status': new Error('FIXTURE_ONLY failure') })
-    const section = await renderSection()
+  it('keeps the question set and taxonomy versions in the copied details', () => {
+    const details = clefStatusDetails(
+      fixtureStatus({ bundle: fixtureBundle({ questionSetVersion: 3, taxonomyVersion: 4 }) })
+    )
 
-    expect(within(section).queryByText(/Question set/)).toBeNull()
-    expect(within(section).queryByRole('note', { name: 'Awaiting your confirmation' })).toBeNull()
+    expect(details).toContain('question_set_version: 3')
+    expect(details).toContain('taxonomy_version: 4')
   })
 })

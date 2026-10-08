@@ -8,6 +8,8 @@ import type {
 import IdentifierText from './IdentifierText'
 import type { ValidationDecisionRow } from './use-workbench-validation-decisions'
 import WorkbenchCallout from './WorkbenchCallout'
+import WorkbenchCopyDetails from './WorkbenchCopyDetails'
+import { errorDetails, type WorkbenchDetail } from './workbench-details'
 import {
   decisionConfirmText,
   decisionExecutorText,
@@ -21,63 +23,57 @@ type Decide = (
   decision: ValidationDecisionChoice
 ) => Promise<void>
 
-const SHORT_COMMIT_CHARS = 12
-
-function Detail({
-  term,
-  mono = false,
-  children
-}: {
-  term: string
-  mono?: boolean
-  children: React.ReactNode
-}): React.JSX.Element {
-  return (
-    <div className="flex min-w-0 gap-1">
-      <dt className="shrink-0">{term}</dt>
-      <dd
-        data-mono={mono}
-        className="min-w-0 break-words text-foreground data-[mono=true]:font-mono"
-      >
-        {children}
-      </dd>
-    </div>
-  )
+function decisionDetails(row: ValidationDecisionRow): WorkbenchDetail[] {
+  const { view, outcome } = row
+  return [
+    ['validation_id', view.validationId],
+    ['run_id', view.runId],
+    ['task_id', view.taskId],
+    ['dispatch_id', view.dispatchId],
+    ['executor', view.executorKind],
+    ['model', view.model],
+    ['placement', view.placement],
+    ['branch', view.worktree?.branch],
+    ['worktree_path', view.worktree?.path],
+    ['base_commit', view.worktree?.baseCommit],
+    ['inconclusive_at', view.inconclusiveAt],
+    ['process_may_run', view.processMayRun === undefined ? null : String(view.processMayRun)],
+    ['decision', outcome?.decision],
+    ['notice_filed', outcome ? String(outcome.noticeFiled) : null],
+    ...errorDetails(row.error, 'decision')
+  ]
 }
 
-function DecisionDetails({ view }: { view: WorkbenchValidationDecisionView }): React.JSX.Element {
-  const { worktree } = view
+// Why the branch stays visible: a waive tells the main session to merge it; the base commit and
+// worktree path are for "Copy details".
+function DecisionFacts({ view }: { view: WorkbenchValidationDecisionView }): React.JSX.Element {
   return (
-    <dl className="space-y-0.5 text-xs text-muted-foreground">
-      <Detail term={translate('workbench.decisions.run', 'Run')} mono>
-        <IdentifierText value={view.runId} />
-      </Detail>
-      <Detail term={translate('workbench.decisions.executor', 'Executor')}>
-        {decisionExecutorText(view)}
-      </Detail>
-      <Detail term={translate('workbench.decisions.since', 'Undecided since')}>
-        <time dateTime={view.inconclusiveAt}>
-          {formatWorkbenchRequestTime(view.inconclusiveAt)}
-        </time>
-      </Detail>
-      {worktree ? (
-        <>
-          <Detail term={translate('workbench.decisions.branch', 'Branch')} mono>
-            {worktree.branch}
-          </Detail>
-          <Detail term={translate('workbench.decisions.worktree', 'Worktree')} mono>
-            <IdentifierText value={worktree.path} />
-          </Detail>
-          <Detail term={translate('workbench.decisions.baseCommit', 'Base commit')} mono>
-            {worktree.baseCommit.slice(0, SHORT_COMMIT_CHARS)}
-          </Detail>
-        </>
+    <dl className="flex flex-wrap gap-x-3 gap-y-0.5 text-meta text-muted-foreground">
+      <div className="flex min-w-0 gap-1">
+        <dt className="sr-only">{translate('workbench.decisions.executor', 'Executor')}</dt>
+        <dd className="min-w-0 break-words text-foreground">{decisionExecutorText(view)}</dd>
+      </div>
+      <div className="flex gap-1">
+        <dt>{translate('workbench.decisions.since', 'Undecided since')}</dt>
+        <dd className="tabular-nums">
+          <time dateTime={view.inconclusiveAt}>
+            {formatWorkbenchRequestTime(view.inconclusiveAt)}
+          </time>
+        </dd>
+      </div>
+      {view.worktree ? (
+        <div className="flex min-w-0 gap-1">
+          <dt>{translate('workbench.decisions.branch', 'Branch')}</dt>
+          <dd className="min-w-0 break-words font-mono text-foreground">
+            <IdentifierText value={view.worktree.branch} />
+          </dd>
+        </div>
       ) : (
-        <Detail term={translate('workbench.decisions.workspace', 'Workspace')}>
-          {decisionPlacementLabel(view.placement)}
-        </Detail>
+        <div className="flex gap-1">
+          <dt>{translate('workbench.decisions.workspace', 'Workspace')}</dt>
+          <dd className="text-foreground">{decisionPlacementLabel(view.placement)}</dd>
+        </div>
       )}
-      <Detail term={translate('workbench.decisions.reason', 'Why undecided')}>{view.reason}</Detail>
     </dl>
   )
 }
@@ -106,8 +102,8 @@ function DecisionConfirm({
     }
   }
   return (
-    <div className="space-y-2">
-      <p className="break-words text-xs text-foreground">
+    <div className="space-y-1.5">
+      <p className="break-words text-meta text-foreground">
         {decisionConfirmText(row.view, decision)}
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -157,14 +153,14 @@ function DecisionActions({
       />
     )
   }
-  const task = { taskId: row.view.taskId }
+  const title = { title: row.view.title }
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
         variant="outline"
         size="xs"
-        aria-label={translate('workbench.decisions.waiveLabel', 'Waive {{taskId}}', task)}
+        aria-label={translate('workbench.decisions.waiveTitleLabel', 'Waive {{title}}', title)}
         onClick={() => setConfirming('waive')}
       >
         {translate('workbench.decisions.waive', 'Waive')}
@@ -173,7 +169,7 @@ function DecisionActions({
         type="button"
         variant="outline"
         size="xs"
-        aria-label={translate('workbench.decisions.rejectLabel', 'Reject {{taskId}}', task)}
+        aria-label={translate('workbench.decisions.rejectTitleLabel', 'Reject {{title}}', title)}
         onClick={() => setConfirming('reject')}
       >
         {translate('workbench.decisions.reject', 'Reject')}
@@ -192,22 +188,28 @@ export default function WorkbenchValidationDecisionRow({
 }): React.JSX.Element {
   const { view } = row
   return (
-    <li className="space-y-2 border-t border-border pt-3">
-      <p className="break-words text-xs font-medium text-foreground">{view.title}</p>
-      <DecisionDetails view={view} />
+    <li className="space-y-1.5 py-2 first:pt-0">
+      <div className="flex min-w-0 items-start gap-2">
+        <p className="min-w-0 flex-1 break-words text-body font-medium text-foreground">
+          {view.title}
+        </p>
+        <WorkbenchCopyDetails subject="validation decision" entries={decisionDetails(row)} />
+      </div>
+      <p className="break-words text-meta text-foreground">{view.reason}</p>
+      <DecisionFacts view={view} />
       {!row.outcome && <DecisionActions row={row} decide={decide} />}
       {row.outcome && (
-        <p role="status" className="break-words text-xs text-foreground">
+        <p role="status" className="break-words text-meta text-foreground">
           {decisionOutcomeText(row.outcome)}
         </p>
       )}
       {row.error && (
         <WorkbenchCallout
           role="alert"
+          tone="error"
           label={translate('workbench.decisions.decideErrorTitle', 'Decision not recorded')}
         >
           <p className="break-words">{row.error.message}</p>
-          <p className="break-words font-mono">{row.error.code}</p>
         </WorkbenchCallout>
       )}
     </li>

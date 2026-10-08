@@ -2,27 +2,38 @@ import { LinearIcon } from '@/components/icons/LinearIcon'
 import { getAccountsPaneSearchEntries } from '@/components/settings/accounts-search'
 import { getAgentsPaneSearchEntries } from '@/components/settings/agents-search'
 import { getComputerUsePaneSearchEntries } from '@/components/settings/computer-use-search'
+import { getDotIngressSearchEntries } from '@/components/settings/dot-ingress-search'
 import { getGeneralPaneSearchEntries } from '@/components/settings/general-search'
 import { getIntegrationsPaneSearchEntries } from '@/components/settings/integrations-search'
 import { getLinearAgentSkillPaneSearchEntries } from '@/components/settings/linear-agent-skill-search'
 import { getMobileSettingsPaneSearchEntries } from '@/components/settings/mobile-settings-search'
+import {
+  getDotSettingsDescription,
+  getDotSettingsTitle,
+  getTaskRoutingSettingsDescription,
+  getTaskRoutingSettingsTitle
+} from '@/components/settings/nash-settings-category-copy'
 import { getOrcaAccountSettingsSearchEntries } from '@/components/settings/orca-account-settings-search'
 import { OrcaLogoSettingsIcon } from '@/components/settings/orca-logo-settings-icon'
 import { getOrchestrationPaneSearchEntries } from '@/components/settings/orchestration-search'
+import { getTaskRoutingSearchEntries } from '@/components/settings/task-routing-search'
 import { getVoicePaneSearchEntries } from '@/components/settings/voice-pane-search'
 import { translate } from '@/i18n/i18n'
 import type { SettingsNavSection } from '@/lib/settings-navigation-types'
 import {
   Blocks,
   Bot,
+  CircleDot,
   CircleUserRound,
   Mic,
   MousePointerClick,
   Network,
+  Route,
   SlidersHorizontal,
   Smartphone,
   UserCog
 } from 'lucide-react'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../shared/nash-build-flags'
 import type { SettingsNavigationBuildOptions } from './settings-navigation-build-options'
 
 export function buildCapabilitySettingsSections({
@@ -54,9 +65,10 @@ export function buildCapabilitySettingsSections({
         'auto.hooks.useSettingsNavigationMetadata.f70ac54d38',
         'AI Provider Accounts'
       ),
+      // Why: Claude Code always uses your own login (D-030) and usage comes from the CLIs (D-029).
       description: translate(
-        'auto.hooks.useSettingsNavigationMetadata.b1c2f8b0ac',
-        'Optional account switching and usage setup for Claude, Codex, Gemini, OpenCode Go, MiniMax, and Grok.'
+        'auto.hooks.useSettingsNavigationMetadata.accountsDescription',
+        'Optional. Switch between saved accounts for Codex, Antigravity and other CLIs, and check their usage.'
       ),
       icon: UserCog,
       searchEntries: getAccountsPaneSearchEntries(),
@@ -76,6 +88,19 @@ export function buildCapabilitySettingsSections({
       }),
       group: 'capabilities'
     },
+    // Why: task routing reads and edits this desktop's routing store, so web clients do not get it.
+    ...(showDesktopOnlySettings
+      ? [
+          {
+            id: 'task-routing',
+            title: getTaskRoutingSettingsTitle(),
+            description: getTaskRoutingSettingsDescription(),
+            icon: Route,
+            searchEntries: getTaskRoutingSearchEntries(),
+            group: 'capabilities'
+          }
+        ]
+      : []),
     // Why: only surfaced once Linear is connected — a capability that needs a
     // linked provider before the agent skill has anything to act on.
     ...(isLinearConnected
@@ -127,8 +152,10 @@ export function buildSetupSettingsSections({
   isWebClient
 }: SettingsNavigationBuildOptions): SettingsNavSection[] {
   const showDesktopOnlySettings = !isWebClient
+  // Why: Orca Account and Mobile are hidden in NASH builds (D-038); their panes stay in the code.
+  const showOrcaAccountAndMobile = showDesktopOnlySettings && ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED
   return [
-    ...(showDesktopOnlySettings
+    ...(showOrcaAccountAndMobile
       ? [
           {
             id: 'orca-account',
@@ -198,7 +225,20 @@ export function buildSetupSettingsSections({
       searchEntries: getIntegrationsPaneSearchEntries(),
       group: 'setup'
     },
+    // Why: the dot switch and workspaces live on this desktop (D-018), so web clients do not get them.
     ...(showDesktopOnlySettings
+      ? [
+          {
+            id: 'dot',
+            title: getDotSettingsTitle(),
+            description: getDotSettingsDescription(),
+            icon: CircleDot,
+            searchEntries: getDotIngressSearchEntries(),
+            group: 'setup'
+          }
+        ]
+      : []),
+    ...(showOrcaAccountAndMobile
       ? [
           {
             id: 'mobile',

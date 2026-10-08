@@ -1,6 +1,12 @@
 import { CircleAlert, FileDiff, MessageSquare, Wrench } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
-import { attemptStateLabel, formatCount, taskExecutorLabel } from './task-window-copy'
+import {
+  attemptStateLabel,
+  formatCount,
+  stepStatusLabel,
+  taskExecutorLabel,
+  toolStepLabel
+} from './task-window-copy'
 import type { TranscriptRow, TurnUsage } from './task-window-records'
 import TaskWindowCommandRow from './TaskWindowCommandRow'
 
@@ -31,6 +37,7 @@ function turnText(row: RowOf<'turn'>): string {
   return [phase, usageText(row.usage), row.error].filter(Boolean).join(' · ')
 }
 
+// Why no code: an unknown note code is a writer internal; the line still marks that one was kept.
 function noteText(row: RowOf<'note'>): string {
   if (row.code === 'truncated') {
     return translate(
@@ -45,22 +52,37 @@ function noteText(row: RowOf<'note'>): string {
       { dropped: formatCount(row.count ?? 0) }
     )
   }
-  return translate('workbench.taskWindow.note.other', 'Note: {{code}}', { code: row.code })
+  return translate(
+    'workbench.taskWindow.note.unknown',
+    'The transcript recorded a note this version cannot show.'
+  )
 }
 
+// Why no reason code: it is a runner verdict code, kept for the header's "Copy details".
 function endText(row: RowOf<'end'>): string {
   const exit =
     row.exitCode === null
       ? null
       : translate('workbench.taskWindow.exitCode', 'exit code {{code}}', { code: row.exitCode })
   const ended = translate('workbench.taskWindow.end', 'Ended')
-  return [ended, attemptStateLabel(row.state), exit, row.reasonCode].filter(Boolean).join(' · ')
+  return [ended, attemptStateLabel(row.state), exit].filter(Boolean).join(' · ')
 }
 
 function startText(row: RowOf<'start'>): string {
   return translate('workbench.taskWindow.start', 'Started {{executor}}', {
     executor: taskExecutorLabel(row.executor ?? '')
   })
+}
+
+function fileChangeText(row: RowOf<'file_change'>): string {
+  const status = stepStatusLabel(row.status)
+  return status === null
+    ? translate('workbench.taskWindow.filesChanged', 'Files changed')
+    : translate('workbench.taskWindow.fileChange', 'Files changed · {{status}}', { status })
+}
+
+function toolText(row: RowOf<'tool'>): string {
+  return [toolStepLabel(row.itemType), stepStatusLabel(row.status)].filter(Boolean).join(' · ')
 }
 
 /** One transcript row; anything this build does not recognize stays a neutral, readable line. */
@@ -72,7 +94,7 @@ export default function TaskWindowRecordRow({ row }: { row: TranscriptRow }): Re
       return (
         <div className="flex min-w-0 gap-2 py-1.5">
           <MessageSquare className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <p className="min-w-0 whitespace-pre-wrap break-words text-[13px] text-foreground">
+          <p className="min-w-0 whitespace-pre-wrap break-words text-body text-foreground">
             {row.text}
           </p>
         </div>
@@ -82,16 +104,12 @@ export default function TaskWindowRecordRow({ row }: { row: TranscriptRow }): Re
         <div className="flex min-w-0 gap-2 py-1.5">
           <FileDiff className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0 space-y-0.5">
-            <p className="text-xs text-muted-foreground">
-              {translate('workbench.taskWindow.fileChange', 'Files changed · {{status}}', {
-                status: row.status
-              })}
-            </p>
+            <p className="text-meta text-muted-foreground">{fileChangeText(row)}</p>
             <ul className="space-y-0.5">
               {row.paths.map((path, index) => (
                 <li
                   key={`${index}:${path}`}
-                  className="break-all font-mono text-xs text-foreground"
+                  className="break-all font-mono text-meta text-foreground"
                 >
                   {path}
                 </li>
@@ -102,47 +120,48 @@ export default function TaskWindowRecordRow({ row }: { row: TranscriptRow }): Re
       )
     case 'tool':
       return (
-        <div className="flex min-w-0 items-center gap-2 py-1 text-xs text-muted-foreground">
+        <div className="flex min-w-0 items-center gap-2 py-1 text-meta text-muted-foreground">
           <Wrench className="size-3.5 shrink-0" aria-hidden />
-          <span className="break-words">{`${row.itemType} · ${row.status}`}</span>
+          <span className="break-words">{toolText(row)}</span>
         </div>
       )
     case 'output':
       return (
         <p
           data-stream={row.stream}
-          className="whitespace-pre-wrap break-words font-mono text-xs text-foreground data-[stream=stderr]:text-muted-foreground"
+          className="whitespace-pre-wrap break-words font-mono text-meta text-foreground data-[stream=stderr]:text-muted-foreground"
         >
           {/* Why a no-break space: agy keeps blank lines, and an empty paragraph has no height. */}
-          {row.text === '' ? ' ' : row.text}
+          {row.text === '' ? ' ' : row.text}
         </p>
       )
     case 'error':
       return (
-        <div className="flex min-w-0 gap-2 py-1.5 text-xs text-destructive">
-          <CircleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+        <div className="flex min-w-0 gap-2 py-1.5 text-meta text-foreground">
+          <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-status-error" aria-hidden />
           <p className="min-w-0 whitespace-pre-wrap break-words">{row.text}</p>
         </div>
       )
     case 'turn':
-      return <p className="py-1 text-xs text-muted-foreground">{turnText(row)}</p>
+      return <p className="py-1 text-meta text-muted-foreground">{turnText(row)}</p>
     case 'note':
-      return <p className="py-1 text-xs text-muted-foreground">{noteText(row)}</p>
+      return <p className="py-1 text-meta text-muted-foreground">{noteText(row)}</p>
     case 'start':
-      return <p className="py-1 text-xs text-muted-foreground">{startText(row)}</p>
+      return <p className="py-1 text-meta text-muted-foreground">{startText(row)}</p>
     case 'end':
-      return <p className="py-1.5 text-xs font-medium text-foreground">{endText(row)}</p>
+      return <p className="py-1.5 text-meta font-medium text-foreground">{endText(row)}</p>
     case 'unknown':
       return (
-        <p className="py-1 text-xs text-muted-foreground">
-          {translate('workbench.taskWindow.unknownRecord', 'Unrecognized record: {{kind}}', {
-            kind: row.recordKind
-          })}
+        <p className="py-1 text-meta text-muted-foreground">
+          {translate(
+            'workbench.taskWindow.unknownRecordShort',
+            'A record this version cannot show.'
+          )}
         </p>
       )
     case 'malformed':
       return (
-        <div className="py-1 text-xs text-muted-foreground">
+        <div className="py-1 text-meta text-muted-foreground">
           <p>{translate('workbench.taskWindow.malformed', 'Unreadable line')}</p>
           <p className="break-all font-mono">{row.text}</p>
         </div>

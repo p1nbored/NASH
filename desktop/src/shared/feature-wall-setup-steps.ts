@@ -1,12 +1,17 @@
+// The onboarding checklist (D-038): each step completes from a signal NASH already has.
+// Retained Orca steps keep their ids, so completion recorded by earlier builds still counts.
+// Retired ids: 'default-agent' (only affected manual terminals; NASH runs tasks through Claude Code),
+// 'agent-capabilities' (installed Orca's retired orchestration skill), 'add-two-repos' and 'browser'
+// (dropped to keep the list at eight; the browser stays in the Explore NASH tour).
 export type FeatureWallSetupStepId =
-  | 'default-agent'
-  | 'add-two-repos'
-  | 'notifications'
-  | 'two-worktrees'
-  | 'browser'
+  | 'claude-code'
+  | 'clef'
+  | 'dot'
   | 'task-sources'
-  | 'agent-capabilities'
+  | 'notifications'
   | 'setup-script'
+  | 'workbench-run'
+  | 'two-worktrees'
 
 export type FeatureWallSetupStep = {
   readonly id: FeatureWallSetupStepId
@@ -16,51 +21,53 @@ export type FeatureWallSetupStep = {
 }
 
 export const FEATURE_WALL_SETUP_PARALLEL_WORK_STEP_IDS = [
-  'two-worktrees',
-  'browser'
+  'workbench-run',
+  'two-worktrees'
+] as const satisfies readonly FeatureWallSetupStepId[]
+
+/** Steps Orca's checklist already had; a profile that finished that checklist keeps them done. */
+export const ORCA_LEGACY_SETUP_STEP_IDS = [
+  'task-sources',
+  'notifications',
+  'setup-script',
+  'two-worktrees'
 ] as const satisfies readonly FeatureWallSetupStepId[]
 
 export type FeatureWallSetupSectionId = 'parallel-work' | 'setup'
 
 export const FEATURE_WALL_SETUP_STEPS: readonly FeatureWallSetupStep[] = [
   {
-    id: 'two-worktrees',
-    name: 'Work on two tasks at once',
-    subtitle: 'Work on two tasks at once',
+    id: 'claude-code',
+    name: 'Set up Claude Code',
+    subtitle: 'Set up Claude Code',
     description:
-      'Work in 2 different worktrees at once. Each one is isolated (even in the same project). Perfect for working on 2 features at once.'
+      'NASH runs every task through a Claude Code session. Install Claude Code and sign in once from a terminal.'
   },
   {
-    id: 'browser',
-    name: "Use Orca's browser",
-    subtitle: "Use Orca's browser",
+    id: 'clef',
+    name: 'Connect Clef',
+    subtitle: 'Connect Clef',
     description:
-      'Browse your web app without leaving Orca. Grab any element and send its exact source and styles to an agent with one click.'
+      'Clef sorts each task by kind so NASH can pick its agent and model. Add your Clef details, then verify them.'
   },
   {
-    id: 'notifications',
-    name: 'Turn on notifications',
-    subtitle: 'Turn on notifications',
-    description: 'Know the moment an agent finishes, needs attention, or gets blocked.'
-  },
-  {
-    id: 'default-agent',
-    name: 'Choose your default agent',
-    subtitle: 'Choose your default agent',
-    description: 'Start new work faster with your preferred agent already selected.'
-  },
-  {
-    id: 'agent-capabilities',
-    name: 'Give agents Orca skills',
-    subtitle: 'Give agents Orca skills',
+    id: 'dot',
+    name: 'Connect dot',
+    subtitle: 'Connect dot',
     description:
-      "Install the skills agents use to drive Orca's browser, control your computer, and coordinate multi-step work."
+      'Send tasks to NASH from ChatGPT dot. Turn on the local interface or pair your GPT Site.'
   },
   {
     id: 'task-sources',
     name: 'Connect integrations',
     subtitle: 'Connect integrations',
     description: 'Start an agent from a task in one click and keep PR status in view.'
+  },
+  {
+    id: 'notifications',
+    name: 'Turn on notifications',
+    subtitle: 'Turn on notifications',
+    description: 'Know the moment an agent finishes, needs attention, or gets blocked.'
   },
   {
     id: 'setup-script',
@@ -70,11 +77,18 @@ export const FEATURE_WALL_SETUP_STEPS: readonly FeatureWallSetupStep[] = [
       'Run install and setup commands automatically so every new worktree is ready for agents.'
   },
   {
-    id: 'add-two-repos',
-    name: 'Start work in multiple repos',
-    subtitle: 'Start work in multiple repos',
+    id: 'workbench-run',
+    name: 'Start your first run',
+    subtitle: 'Start your first run',
     description:
-      'Bring your key repos into Orca so you can start agent work without hunting for folders.'
+      'Ask NASH for something from the Workbench, then follow the run, its tasks and any prompts there.'
+  },
+  {
+    id: 'two-worktrees',
+    name: 'Work on two tasks at once',
+    subtitle: 'Work on two tasks at once',
+    description:
+      'Work in 2 different worktrees at once. Each one is isolated (even in the same project). Perfect for working on 2 features at once.'
   }
 ] as const
 

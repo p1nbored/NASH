@@ -3,11 +3,14 @@ import {
   liveActivityLabel,
   primarySessionLabel,
   runEndReasonLabel,
+  runSessionNote,
+  runStateChip,
   runStatusChip
 } from './workbench-run-copy'
 import { describeRunMessageResult } from './workbench-run-message-copy'
 import { describeAnswerResult, permissionStatusChip } from './workbench-permission-copy'
-import { permissionView, primarySession } from './workbench-run-test-fixture'
+import { requestStatusChip } from './WorkbenchRequestStateChip'
+import { permissionView, primarySession, runView } from './workbench-run-test-fixture'
 
 vi.mock('@/i18n/i18n', () => ({
   translate: (_key: string, fallback: string, values?: Record<string, unknown>) =>
@@ -41,13 +44,75 @@ function sent(outcome: 'delivered' | 'queued' | 'refused', reason: string | null
 }
 
 describe('run labels', () => {
-  it('names every run status in words and tints only the problem states', () => {
-    expect(runStatusChip('active')).toEqual({ label: 'Active', tone: 'neutral' })
-    expect(runStatusChip('launching')).toEqual({ label: 'Launching', tone: 'neutral' })
-    expect(runStatusChip('completed')).toEqual({ label: 'Completed', tone: 'muted' })
-    expect(runStatusChip('canceled')).toEqual({ label: 'Canceled', tone: 'muted' })
-    expect(runStatusChip('failed')).toEqual({ label: 'Failed', tone: 'warning' })
-    expect(runStatusChip('unverifiable')).toEqual({ label: 'Cannot be verified', tone: 'warning' })
+  it('names every run status in words with a kind of its own', () => {
+    expect(runStatusChip('active')).toEqual({ label: 'Active', kind: 'running' })
+    expect(runStatusChip('launching')).toEqual({ label: 'Launching', kind: 'progress' })
+    expect(runStatusChip('completed')).toEqual({ label: 'Completed', kind: 'done' })
+    expect(runStatusChip('canceled')).toEqual({ label: 'Canceled', kind: 'ended' })
+    expect(runStatusChip('failed')).toEqual({ label: 'Failed', kind: 'failed' })
+    expect(runStatusChip('unverifiable')).toEqual({
+      label: 'Cannot be verified',
+      kind: 'disconnected'
+    })
+  })
+
+  it('shows what the session of an active run is doing, and never guesses an unread one', () => {
+    const live = (activity: 'working' | 'dialog_open' | 'idle' | 'unknown') =>
+      runView(1, { primary: primarySession({ live: { kind: 'live', activity } }) })
+    expect(runStateChip(live('working'), false)).toEqual({ label: 'Working', kind: 'running' })
+    expect(runStateChip(live('idle'), false)).toEqual({
+      label: 'Waiting for input',
+      kind: 'waiting'
+    })
+    expect(runStateChip(live('dialog_open'), false)).toEqual({
+      label: 'Needs an answer',
+      kind: 'permission'
+    })
+    expect(runStateChip(live('unknown'), false)).toEqual({
+      label: 'Activity unknown',
+      kind: 'unknown'
+    })
+    expect(runStateChip(live('working'), true)).toEqual({
+      label: 'Cannot be verified',
+      kind: 'disconnected'
+    })
+    const absent = runView(1, { primary: primarySession({ live: { kind: 'agent_absent' } }) })
+    expect(runStateChip(absent, false).kind).toBe('disconnected')
+    expect(runStateChip(runView(1), false)).toEqual({ label: 'Active', kind: 'running' })
+    expect(runStateChip(runView(1, { status: 'failed' }), false).kind).toBe('failed')
+  })
+
+  it('adds a session note only when the chip needs explaining', () => {
+    expect(runSessionNote(runView(1), false)).toBeNull()
+    expect(runSessionNote(runView(1), true)).toBe('Activity could not be read')
+    expect(
+      runSessionNote(
+        runView(1, {
+          primary: primarySession({ live: { kind: 'live', activity: 'dialog_open' } })
+        }),
+        false
+      )
+    ).toBe('A permission or question dialog is open')
+    expect(
+      runSessionNote(runView(1, { primary: primarySession({ state: 'exited' }) }), false)
+    ).toBe('Session: Exited')
+    expect(runSessionNote(runView(1, { primary: null }), false)).toBe('Session: Not started')
+    expect(
+      runSessionNote(
+        runView(1, { status: 'completed', primary: primarySession({ state: 'exited' }) }),
+        false
+      )
+    ).toBeNull()
+  })
+
+  it('gives each request state its own kind', () => {
+    expect(requestStatusChip('ROUTING_BLOCKED')).toEqual({
+      label: 'Launch blocked',
+      kind: 'blocked'
+    })
+    expect(requestStatusChip('ROUTING')).toEqual({ label: 'Starting', kind: 'progress' })
+    expect(requestStatusChip('ROUTED')).toEqual({ label: 'Run started', kind: 'done' })
+    expect(requestStatusChip('CANCELED')).toEqual({ label: 'Canceled', kind: 'ended' })
   })
 
   it('describes the primary session and what it is doing now', () => {
@@ -70,10 +135,10 @@ describe('run labels', () => {
     )
   })
 
-  it('explains known end reasons and keeps an unknown code literal', () => {
+  it('explains known end reasons and leaves an unknown code out of the UI', () => {
     expect(runEndReasonLabel('user_canceled')).toBe('Stopped in the app')
     expect(runEndReasonLabel('dot_canceled')).toBe('Canceled by dot')
-    expect(runEndReasonLabel('some_new_reason')).toBe('some_new_reason')
+    expect(runEndReasonLabel('some_new_reason')).toBeNull()
   })
 })
 
@@ -113,9 +178,15 @@ describe('message outcome copy', () => {
     )
   })
 
-  it('keeps an unknown reason code visible instead of guessing', () => {
+  it('words an unknown reason generically and never shows the code', () => {
     expect(describeRunMessageResult(sent('refused', 'future_reason')).text).toBe(
-      'Not sent. Reason: future_reason.'
+      'Not sent. The session did not accept the message.'
+    )
+    expect(describeRunMessageResult(sent('refused', null)).text).toBe(
+      'Not sent. No reason was given.'
+    )
+    expect(describeRunMessageResult(sent('queued', 'future_reason')).text).toBe(
+      'Queued. It is sent when the session can take it.'
     )
   })
 })
@@ -124,15 +195,18 @@ describe('permission prompt copy', () => {
   it('marks waiting prompts and prompts only the terminal can still answer', () => {
     expect(permissionStatusChip(permissionView())).toEqual({
       label: 'Waiting for an answer',
-      tone: 'warning'
+      kind: 'permission'
     })
     expect(permissionStatusChip(permissionView({ answerable: false }))).toEqual({
       label: 'Answer in the terminal',
-      tone: 'warning'
+      kind: 'permission'
     })
     expect(
       permissionStatusChip(permissionView({ status: 'answered_in_terminal', answerable: false }))
-    ).toEqual({ label: 'Answered in the terminal', tone: 'muted' })
+    ).toEqual({ label: 'Answered in the terminal', kind: 'ended' })
+    expect(
+      permissionStatusChip(permissionView({ status: 'allowed', answerable: false })).kind
+    ).toBe('done')
   })
 
   it('reports each answer outcome in words', () => {

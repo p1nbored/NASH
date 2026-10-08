@@ -9,7 +9,6 @@ import {
   shouldMarkBrowserMilestoneLegacyComplete
 } from './setup-guide-browser-milestone-progress'
 import {
-  getComputerUsePermissionSetupState,
   getCurrentSetupScriptProbeState,
   getSetupGuideProgressReady,
   getSetupScriptProbeSignature,
@@ -18,23 +17,21 @@ import {
 } from './setup-guide-progress-readiness'
 
 function makePreBrowserDoneStepState(): Partial<Record<FeatureWallSetupStepId, boolean>> {
-  return Object.fromEntries(
-    FEATURE_WALL_SETUP_STEPS.map((step) => [step.id, step.id !== 'browser'])
-  ) as Partial<Record<FeatureWallSetupStepId, boolean>>
+  return Object.fromEntries<boolean>(FEATURE_WALL_SETUP_STEPS.map((step) => [step.id, true]))
 }
 
 function makeProgress(overrides: Partial<FeatureWallSetupProgress> = {}): FeatureWallSetupProgress {
   return {
     ready: true,
     stepDone: {
-      'default-agent': false,
-      'add-two-repos': false,
-      notifications: false,
-      'two-worktrees': false,
-      browser: false,
+      'claude-code': false,
+      clef: false,
+      dot: false,
       'task-sources': false,
-      'agent-capabilities': false,
-      'setup-script': false
+      notifications: false,
+      'setup-script': false,
+      'workbench-run': false,
+      'two-worktrees': false
     },
     coreDoneCount: 0,
     coreTotal: FEATURE_WALL_SETUP_STEPS.length,
@@ -88,58 +85,54 @@ describe('browser milestone legacy setup guide progress', () => {
   it('keeps legacy-complete setup guide progress complete across all surfaces', () => {
     const progress = getSetupGuideBrowserMilestoneAwareProgress(
       makeProgress({
-        stepDone: makePreBrowserDoneStepState() as Record<FeatureWallSetupStepId, boolean>,
+        stepDone: { ...makeProgress().stepDone, ...makePreBrowserDoneStepState() },
         coreDoneCount: FEATURE_WALL_SETUP_STEPS.length - 1
       }),
       true
     )
 
     expect(progress.coreDoneCount).toBe(FEATURE_WALL_SETUP_STEPS.length)
-    expect(progress.stepDone.browser).toBe(true)
     expect(Object.values(progress.stepDone).every(Boolean)).toBe(true)
   })
 
-  it('leaves fresh setup guide progress unchanged when browser is incomplete', () => {
+  it('keeps the NASH steps on their own signals for legacy-complete profiles (D-038)', () => {
+    const progress = getSetupGuideBrowserMilestoneAwareProgress(makeProgress(), true)
+
+    expect(progress.stepDone).toMatchObject({
+      notifications: true,
+      'task-sources': true,
+      'setup-script': true,
+      'two-worktrees': true,
+      'claude-code': false,
+      clef: false,
+      dot: false,
+      'workbench-run': false
+    })
+    expect(progress.coreDoneCount).toBe(4)
+  })
+
+  it('decides legacy completion from the Orca steps only', () => {
+    expect(
+      shouldMarkBrowserMilestoneLegacyComplete({
+        stepDone: {
+          notifications: true,
+          'task-sources': true,
+          'setup-script': true,
+          'two-worktrees': true
+        },
+        historicalSplitTerminalDone: true,
+        setupGuideSidebarDismissed: false
+      })
+    ).toBe(true)
+  })
+
+  it('leaves fresh setup guide progress unchanged without legacy completion', () => {
     const original = makeProgress({
       stepDone: makePreBrowserDoneStepState() as Record<FeatureWallSetupStepId, boolean>,
       coreDoneCount: FEATURE_WALL_SETUP_STEPS.length - 1
     })
 
     expect(getSetupGuideBrowserMilestoneAwareProgress(original, false)).toBe(original)
-  })
-})
-
-describe('getComputerUsePermissionSetupState', () => {
-  it('does not treat a failed status read as unavailable setup completion', () => {
-    expect(getComputerUsePermissionSetupState(null)).toEqual({
-      ready: false,
-      unavailable: false
-    })
-  })
-
-  it('marks Computer Use ready only when permissions are granted and helper is available', () => {
-    expect(
-      getComputerUsePermissionSetupState({
-        platform: 'darwin',
-        helperAppPath: '/Applications/Orca Helper.app',
-        helperUnavailableReason: null,
-        permissions: [
-          { id: 'accessibility', status: 'granted' },
-          { id: 'screenshots', status: 'granted' }
-        ]
-      })
-    ).toEqual({ ready: true, unavailable: false })
-  })
-
-  it('marks Computer Use unavailable only for explicit helper unavailability', () => {
-    expect(
-      getComputerUsePermissionSetupState({
-        platform: 'linux',
-        helperAppPath: null,
-        helperUnavailableReason: 'unsupported-platform',
-        permissions: []
-      })
-    ).toEqual({ ready: false, unavailable: true })
   })
 })
 
@@ -150,61 +143,16 @@ describe('getSetupGuideProgressReady', () => {
     preflightStatusChecked: true,
     linearStatusChecked: true,
     jiraStatusChecked: true,
-    browserUseSkillDiscoveryLoading: false,
-    computerUseSkillDiscoveryLoading: false,
-    orchestrationSkillDiscoveryLoading: false,
     setupScriptProbeReady: true,
-    computerUseSkillInstalled: false,
-    computerUsePermissionStatusChecked: false
+    nashSignalsChecked: true
   }
 
-  it('waits for every setup-guide skill discovery scan to settle', () => {
-    expect(
-      getSetupGuideProgressReady({
-        ...readyInput,
-        browserUseSkillDiscoveryLoading: true
-      })
-    ).toBe(false)
-    expect(
-      getSetupGuideProgressReady({
-        ...readyInput,
-        computerUseSkillDiscoveryLoading: true
-      })
-    ).toBe(false)
-    expect(
-      getSetupGuideProgressReady({
-        ...readyInput,
-        orchestrationSkillDiscoveryLoading: true
-      })
-    ).toBe(false)
+  it('is ready once every probe has answered', () => {
+    expect(getSetupGuideProgressReady(readyInput)).toBe(true)
   })
 
-  it('treats checked but ungranted Computer Use permissions as settled readiness', () => {
-    expect(
-      getComputerUsePermissionSetupState({
-        platform: 'darwin',
-        helperAppPath: '/Applications/Orca Helper.app',
-        helperUnavailableReason: null,
-        permissions: [{ id: 'accessibility', status: 'not-granted' }]
-      })
-    ).toEqual({ ready: false, unavailable: false })
-    expect(
-      getSetupGuideProgressReady({
-        ...readyInput,
-        computerUseSkillInstalled: true,
-        computerUsePermissionStatusChecked: true
-      })
-    ).toBe(true)
-  })
-
-  it('waits for Computer Use permission status when the skill is installed', () => {
-    expect(
-      getSetupGuideProgressReady({
-        ...readyInput,
-        computerUseSkillInstalled: true,
-        computerUsePermissionStatusChecked: false
-      })
-    ).toBe(false)
+  it('waits for the NASH signals (Claude Code, Clef, dot, Workbench runs)', () => {
+    expect(getSetupGuideProgressReady({ ...readyInput, nashSignalsChecked: false })).toBe(false)
   })
 
   it('waits for preflight, Linear, and Jira checks', () => {

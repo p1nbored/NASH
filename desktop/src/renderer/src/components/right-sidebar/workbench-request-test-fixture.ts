@@ -1,4 +1,5 @@
-import { vi, type Mock } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { expect, vi, type Mock } from 'vitest'
 import type * as ReactModule from 'react'
 import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import {
@@ -95,11 +96,16 @@ export function publishScope(): void {
   }
 }
 
+/** The default objective of fixture request `sequence`; rows are found by it, never by their ID. */
+export function requestObjective(sequence: number): string {
+  return `Inspect request ${sequence}`
+}
+
 export function request(
   sequence = 1,
   workspaceId = 'local-workspace',
   status: WorkbenchRequestStatus = 'ROUTING_BLOCKED',
-  objective = 'Inspect the request store',
+  objective = requestObjective(sequence),
   workflowRunId: string | null = null
 ) {
   const routed = status === 'ROUTED'
@@ -137,6 +143,22 @@ export function listResult(
     capabilities: { submit: true, cancelPending: true, dispatch: false },
     blocker: 'not_configured'
   }
+}
+
+/** The request row showing `objective`. */
+export function requestRow(objective: string): HTMLElement {
+  const row = screen.getByText(objective).closest('li')
+  if (!row) {
+    throw new Error(`no request row for ${objective}`)
+  }
+  return row
+}
+
+/** Waits until the first listing has enabled the intake form. */
+export async function waitForIntake(): Promise<void> {
+  await waitFor(() =>
+    expect(screen.getByLabelText('Objective').hasAttribute('disabled')).toBe(false)
+  )
 }
 
 export function deferred() {

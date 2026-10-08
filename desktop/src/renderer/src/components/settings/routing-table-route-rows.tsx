@@ -35,7 +35,7 @@ function RouteEditorRow(props: {
   const label = taskTypeLabel(row.taskType)
   return (
     <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,0.75fr)_minmax(0,1.05fr)] items-start gap-2">
-      <span className="pt-1.5 text-xs text-foreground">{label}</span>
+      <span className="pt-1.5 text-meta text-foreground">{label}</span>
       <Select
         value={row.target}
         onValueChange={(value) => {
@@ -49,8 +49,8 @@ function RouteEditorRow(props: {
           size="sm"
           className="w-full"
           aria-label={translate(
-            'auto.components.settings.routingTable.editor.targetFor',
-            'Executor for {{task}}',
+            'auto.components.settings.routingTable.editor.agentFor',
+            'Agent for {{task}}',
             { task: label }
           )}
         >
@@ -90,8 +90,8 @@ function RouteEditorRow(props: {
           size="sm"
           className="w-full"
           aria-label={translate(
-            'auto.components.settings.routingTable.editor.levelFor',
-            'Reasoning for {{task}}',
+            'auto.components.settings.routingTable.editor.effortFor',
+            'Effort for {{task}}',
             { task: label }
           )}
         >
@@ -118,8 +118,8 @@ function RouteEditorRow(props: {
           size="sm"
           className="w-full"
           aria-label={translate(
-            'auto.components.settings.routingTable.editor.requirementFor',
-            'Reasoning requirement for {{task}}',
+            'auto.components.settings.routingTable.editor.effortRequirementFor',
+            'Effort requirement for {{task}}',
             {
               task: label
             }
@@ -148,7 +148,7 @@ function CoordinatorRow(props: {
   const label = translate('auto.components.settings.routingTable.editor.coordinator', 'Coordinator')
   return (
     <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,2.5fr)_minmax(0,1.8fr)] items-start gap-2">
-      <span className="pt-1.5 text-xs font-medium text-foreground">{label}</span>
+      <span className="pt-1.5 text-meta font-medium text-foreground">{label}</span>
       <Input
         value={coordinator.model}
         spellCheck={false}
@@ -174,8 +174,8 @@ function CoordinatorRow(props: {
           size="sm"
           className="w-full"
           aria-label={translate(
-            'auto.components.settings.routingTable.editor.coordinatorLevel',
-            'Coordinator reasoning'
+            'auto.components.settings.routingTable.inline.coordinatorEffort',
+            'Coordinator effort'
           )}
         >
           <SelectValue />
@@ -208,17 +208,13 @@ export function RoutingTableRouteRows(props: {
         invalid={errorFor('coordinator') !== null}
         onChange={(coordinator) => props.onDraftChange({ ...props.draft, coordinator })}
       />
-      <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,0.75fr)_minmax(0,1.05fr)] gap-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+      <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,0.75fr)_minmax(0,1.05fr)] gap-2 border-t border-border/60 pt-2 text-caption text-muted-foreground">
         <span>
           {translate('auto.components.settings.routingTable.editor.taskType', 'Task type')}
         </span>
-        <span>
-          {translate('auto.components.settings.routingTable.editor.executor', 'Executor')}
-        </span>
+        <span>{translate('auto.components.settings.routingTable.editor.agent', 'Agent')}</span>
         <span>{translate('auto.components.settings.routingTable.editor.model', 'Model')}</span>
-        <span>
-          {translate('auto.components.settings.routingTable.editor.reasoning', 'Reasoning')}
-        </span>
+        <span>{translate('auto.components.settings.routingTable.editor.effort', 'Effort')}</span>
         <span>
           {translate('auto.components.settings.routingTable.editor.requirement', 'Requirement')}
         </span>

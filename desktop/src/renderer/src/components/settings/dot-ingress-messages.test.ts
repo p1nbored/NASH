@@ -19,7 +19,7 @@ describe('dotIngressFailureMessage', () => {
     }
   )
 
-  it('names the closed endpoint for every metadata failure', () => {
+  it('says the connection stays closed for every metadata failure, without "endpoint"', () => {
     for (const code of [
       'metadata_invalid',
       'metadata_write_failed',
@@ -27,10 +27,13 @@ describe('dotIngressFailureMessage', () => {
     ] as const) {
       expect(dotIngressFailureMessage(code)).toMatch(/closed/)
     }
+    for (const code of WORKBENCH_DOT_INGRESS_FAILURES) {
+      expect(dotIngressFailureMessage(code)).not.toMatch(/endpoint|file/i)
+    }
   })
 
-  it('says the endpoint could not be opened for listen_failed', () => {
-    expect(dotIngressFailureMessage('listen_failed')).toMatch(/could not open/)
+  it('says the app could not get ready for listen_failed', () => {
+    expect(dotIngressFailureMessage('listen_failed')).toMatch(/could not get ready/)
   })
 })
 
@@ -43,7 +46,7 @@ describe('dotIngressCallErrorMessage', () => {
 
   it('explains the refusals a dot settings change can meet', () => {
     expect(dotIngressCallErrorMessage(callError('workbench_dot_ingress_unavailable'))).toMatch(
-      /switch was saved, but the dot interface is not available in this session/
+      /switch was saved, but tasks from dot are not available in this session/
     )
     expect(dotIngressCallErrorMessage(callError('unsupported_host'))).toMatch(
       /Only local workspaces on this computer/

@@ -15,14 +15,14 @@ function makeProgress(): FeatureWallSetupProgress {
   return {
     ready: true,
     stepDone: {
-      'default-agent': true,
-      'add-two-repos': false,
-      notifications: true,
-      'two-worktrees': true,
-      browser: false,
+      'claude-code': true,
+      clef: false,
+      dot: false,
       'task-sources': true,
-      'agent-capabilities': false,
-      'setup-script': false
+      notifications: true,
+      'setup-script': false,
+      'workbench-run': false,
+      'two-worktrees': true
     },
     coreDoneCount: 4,
     coreTotal: 8
@@ -50,14 +50,14 @@ describe('useSettingsSetupGuideProgress', () => {
     mocks.useSetupGuideProgress.mockReturnValue({
       ...makeProgress(),
       stepDone: {
-        'default-agent': true,
-        'add-two-repos': true,
-        notifications: true,
-        'two-worktrees': true,
-        browser: true,
+        'claude-code': true,
+        clef: true,
+        dot: true,
         'task-sources': true,
-        'agent-capabilities': true,
-        'setup-script': true
+        notifications: true,
+        'setup-script': true,
+        'workbench-run': true,
+        'two-worktrees': true
       },
       coreDoneCount: 8
     })
@@ -69,14 +69,14 @@ describe('useSettingsSetupGuideProgress', () => {
     mocks.useSetupGuideProgress.mockReturnValue({
       ...makeProgress(),
       stepDone: {
-        'default-agent': true,
-        'add-two-repos': true,
-        notifications: true,
-        'two-worktrees': true,
-        browser: false,
+        'claude-code': true,
+        clef: true,
+        dot: true,
         'task-sources': true,
-        'agent-capabilities': true,
-        'setup-script': true
+        notifications: true,
+        'setup-script': true,
+        'workbench-run': false,
+        'two-worktrees': true
       },
       coreDoneCount: 7
     })

@@ -23,9 +23,11 @@ import { USAGE_PERCENTAGE_DISPLAY_SETTING_ID } from './appearance-usage-percenta
 import { LeftSidebarAppearanceSetting } from './LeftSidebarAppearanceSetting'
 import {
   getLeftSidebarAppearanceEntry,
+  getShowMobileButtonEntry,
   getShowPinnedWorktreesInGroupsEntry,
   getWorkspaceCardLayoutEntry
 } from './appearance-sidebar-search'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../shared/nash-build-flags'
 import { translate } from '@/i18n/i18n'
 import { matchesSettingsSearch, normalizeSettingsSearchQuery } from './settings-search'
 
@@ -284,31 +286,36 @@ export function AppearanceWindowSidebarSection({
                     />
                   </SearchableSetting>
 
-                  <SearchableSetting
-                    title={translate(
-                      'auto.components.settings.AppearancePane.9da1020447',
-                      'Show Orca Mobile Button'
-                    )}
-                    description={sidebarEntries[2]?.description}
-                    keywords={sidebarEntries[2]?.keywords ?? ['mobile', 'phone', 'sidebar']}
-                  >
-                    <SettingsSwitchRow
-                      label={translate(
+                  {/* Why: Orca Mobile is hidden in NASH builds (D-038), so its sidebar toggle is too. */}
+                  {ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED ? (
+                    <SearchableSetting
+                      title={translate(
                         'auto.components.settings.AppearancePane.9da1020447',
                         'Show Orca Mobile Button'
                       )}
-                      // Why: clarify where the shortcut still lives after hiding it, so users
-                      // don't think the feature is gone.
-                      description={translate(
-                        'auto.components.settings.AppearancePane.61d842eca0',
-                        'Show the Orca Mobile shortcut in the sidebar. It remains available from Toolbox.'
-                      )}
-                      checked={settings.showMobileButton !== false}
-                      onChange={() =>
-                        updateSettings({ showMobileButton: !(settings.showMobileButton !== false) })
-                      }
-                    />
-                  </SearchableSetting>
+                      description={getShowMobileButtonEntry().description}
+                      keywords={getShowMobileButtonEntry().keywords}
+                    >
+                      <SettingsSwitchRow
+                        label={translate(
+                          'auto.components.settings.AppearancePane.9da1020447',
+                          'Show Orca Mobile Button'
+                        )}
+                        // Why: clarify where the shortcut still lives after hiding it, so users
+                        // don't think the feature is gone.
+                        description={translate(
+                          'auto.components.settings.AppearancePane.61d842eca0',
+                          'Show the Orca Mobile shortcut in the sidebar. It remains available from Toolbox.'
+                        )}
+                        checked={settings.showMobileButton !== false}
+                        onChange={() =>
+                          updateSettings({
+                            showMobileButton: !(settings.showMobileButton !== false)
+                          })
+                        }
+                      />
+                    </SearchableSetting>
+                  ) : null}
 
                   <SearchableSetting
                     title={getShowPinnedWorktreesInGroupsEntry().title}

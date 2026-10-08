@@ -3,7 +3,7 @@ import { translate } from '@/i18n/i18n'
 import type { SettingsSearchEntry } from './settings-search'
 import { translateSearchKeyword } from './settings-search-keywords'
 
-/** Settings search for the dot section of the Integrations pane. */
+/** Settings search for the Dot category (D-038). */
 export const getDotIngressSearchEntries = createLocalizedCatalog((): SettingsSearchEntry[] => [
   {
     title: translate('auto.components.settings.integrations.search.dotIngress', 'Tasks from dot'),
@@ -34,10 +34,10 @@ export const getDotIngressSearchEntries = createLocalizedCatalog((): SettingsSea
     ]
   },
   {
-    title: translate('auto.components.settings.dotRemote.name', 'Remote access (GPT Sites)'),
+    title: translate('auto.components.settings.dotRemote.title', 'Remote access'),
     description: translate(
-      'auto.components.settings.integrations.search.dotRemoteDescription',
-      'Let dot reach this app through a mailbox on your GPT Site: the switch, the Site origin and access token, pairing and revocation.'
+      'auto.components.settings.dot.search.remoteDescription',
+      'Let dot reach this app through your GPT Site: the switch, the Site address and access token, pairing and revocation.'
     ),
     keywords: [
       ...translateSearchKeyword(

@@ -24,7 +24,12 @@ const FINAL_ERROR_CODES: ReadonlySet<string> = new Set([
   'method_not_found'
 ])
 
-export type TranscriptError = { readonly code: string; readonly message: string }
+/** `message` is shown; `code` and `detail` (the server's own text) go only to "Copy details". */
+export type TranscriptError = {
+  readonly code: string
+  readonly message: string
+  readonly detail?: string
+}
 
 export type TranscriptReadState = {
   readonly dispatchId: string

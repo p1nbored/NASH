@@ -4,6 +4,7 @@ import type { DotRequestAccess } from '../../../../shared/dot-ingress/dot-ingres
 import type { WorkbenchDotIngressSettingsResult } from '../../../../shared/rpc-contract/workbench-dot-ingress-params'
 import { Switch } from '../ui/switch'
 import { dotWorkspacePath } from './dot-workspace-candidates'
+import { compactPath } from './settings-compact-path'
 import { SettingsSegmentedControl } from './SettingsFormControls'
 
 export type DotWorkspaceEntry = WorkbenchDotIngressSettingsResult['workspaces'][number]
@@ -43,14 +44,17 @@ export function DotIngressWorkspaceRow({
   const labelId = useId()
   const path = dotWorkspacePath(workspace.workspaceId)
   return (
-    <li aria-labelledby={labelId} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
+    <li
+      aria-labelledby={labelId}
+      className="flex flex-wrap items-center gap-x-group gap-y-row py-row"
+    >
       <div className="min-w-0 flex-1 basis-[14rem] space-y-0.5">
-        <p id={labelId} className="truncate text-sm text-foreground">
+        <p id={labelId} className="truncate text-body text-foreground">
           {workspace.label}
         </p>
         {path === null ? null : (
-          <p className="truncate font-mono text-[11px] text-muted-foreground" title={path}>
-            {path}
+          <p className="truncate font-mono text-caption text-muted-foreground" title={path}>
+            {compactPath(path)}
           </p>
         )}
       </div>
@@ -71,7 +75,7 @@ export function DotIngressWorkspaceRow({
           }}
         />
       ) : (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-meta text-muted-foreground">
           {translate('auto.components.settings.dotIngress.workspaces.off', 'Off')}
         </span>
       )}

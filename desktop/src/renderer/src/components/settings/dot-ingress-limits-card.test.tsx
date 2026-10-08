@@ -46,13 +46,7 @@ function callsTo(method: string): unknown[] {
 async function renderCard(): Promise<HTMLElement> {
   render(<DotIngressSection />)
   await act(async () => {})
-  const shell = screen
-    .getByText('Submission limits', { selector: 'p' })
-    .closest('[data-settings-section]')
-  if (!(shell instanceof HTMLElement)) {
-    throw new Error('limits card is missing')
-  }
-  return shell
+  return screen.getByRole('region', { name: 'Limits' })
 }
 
 async function commit(input: HTMLElement, value: string): Promise<void> {
@@ -71,17 +65,17 @@ describe('DotIngressSection submission limits', () => {
     cleanup()
   })
 
-  it('shows the current caps and whether they are the defaults', async () => {
+  it('shows the current caps with no defaults badge', async () => {
     answer({ 'workbench.dotIngress.settings.get': fixtureListeningDotSettings() })
     const shell = await renderCard()
 
-    expect(within(shell).getByText('Defaults')).toBeTruthy()
+    expect(within(shell).queryByText('Defaults')).toBeNull()
     expect(inputValue(within(shell).getByLabelText('Tasks per minute'))).toBe('6')
     expect(inputValue(within(shell).getByLabelText('Tasks per UTC day'))).toBe('100')
     expect(shell.textContent).toMatch(/refused and nothing starts/)
   })
 
-  it('marks changed caps as custom', async () => {
+  it('shows changed caps as they are stored', async () => {
     answer({
       'workbench.dotIngress.settings.get': fixtureListeningDotSettings({
         rateLimits: { ratePerMinute: 10, ratePerUtcDay: 250 }
@@ -89,7 +83,8 @@ describe('DotIngressSection submission limits', () => {
     })
     const shell = await renderCard()
 
-    expect(within(shell).getByText('Custom')).toBeTruthy()
+    expect(inputValue(within(shell).getByLabelText('Tasks per minute'))).toBe('10')
+    expect(inputValue(within(shell).getByLabelText('Tasks per UTC day'))).toBe('250')
   })
 
   it('saves a new per-minute cap together with the current daily cap', async () => {
@@ -102,7 +97,7 @@ describe('DotIngressSection submission limits', () => {
     await commit(within(shell).getByLabelText('Tasks per minute'), '10')
 
     expect(callsTo(SET_LIMITS)).toEqual([{ ratePerMinute: 10, ratePerUtcDay: 100 }])
-    expect(within(shell).getByText('Custom')).toBeTruthy()
+    expect(inputValue(within(shell).getByLabelText('Tasks per minute'))).toBe('10')
   })
 
   it('keeps the caps inside the range the app accepts', async () => {

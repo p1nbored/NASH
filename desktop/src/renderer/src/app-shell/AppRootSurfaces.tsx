@@ -17,6 +17,10 @@ import { ZoomOverlay } from '../components/ZoomOverlay'
 import { shouldRenderPetOverlay } from '../components/pet/pet-overlay-visibility'
 import { useAppStore } from '../store'
 import type { UpdateStatus } from '../../../shared/update-status-types'
+import {
+  ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED,
+  ORCA_STAR_PROMPT_ENABLED
+} from '../../../shared/nash-build-flags'
 import { useLazyModalMounts } from './use-lazy-modal-mounts'
 import {
   selectAppRootSurfacePetEnabled,
@@ -288,22 +292,31 @@ export function AppRootSurfaces(props: {
             </OverlayBoundary>
           </Suspense>
         ) : null}
-        <Suspense fallback={null}>
-          <OverlayBoundary boundaryId="overlay.unexpected-signout" resetKey={activeView}>
-            <UnexpectedSignoutCard />
+        {/* Why: the Orca account is hidden in NASH builds (D-038), so a sign-out has nothing to explain. */}
+        {ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED ? (
+          <Suspense fallback={null}>
+            <OverlayBoundary boundaryId="overlay.unexpected-signout" resetKey={activeView}>
+              <UnexpectedSignoutCard />
+            </OverlayBoundary>
+          </Suspense>
+        ) : null}
+        {ORCA_STAR_PROMPT_ENABLED ? (
+          <OverlayBoundary boundaryId="overlay.star-nag" resetKey={activeView}>
+            <StarNagCard />
           </OverlayBoundary>
-        </Suspense>
-        <OverlayBoundary boundaryId="overlay.star-nag" resetKey={activeView}>
-          <StarNagCard />
-        </OverlayBoundary>
+        ) : null}
       </NotificationCardStack>
       <OverlayBoundary boundaryId="overlay.native-chat-resume-on-restart" resetKey={activeView}>
         <NativeChatResumeOnRestartModal />
       </OverlayBoundary>
-      <OverlayBoundary boundaryId="overlay.star-nag-toast" resetKey={activeView}>
-        <StarNagToastHost />
-      </OverlayBoundary>
-      <StarNagAgentValueMomentObserver />
+      {ORCA_STAR_PROMPT_ENABLED ? (
+        <>
+          <OverlayBoundary boundaryId="overlay.star-nag-toast" resetKey={activeView}>
+            <StarNagToastHost />
+          </OverlayBoundary>
+          <StarNagAgentValueMomentObserver />
+        </>
+      ) : null}
       {/* Why: mount at App root to render once per session; internal cohort gate limits it to pre-telemetry users — see telemetry-plan.md §First-launch experience. */}
       <OverlayBoundary boundaryId="overlay.telemetry-first-launch" resetKey={telemetryOptedIn}>
         <TelemetryFirstLaunchSurface />

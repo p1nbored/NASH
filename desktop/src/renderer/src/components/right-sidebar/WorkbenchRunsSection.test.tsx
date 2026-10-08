@@ -18,6 +18,12 @@ import {
   runView,
   type RpcHandler
 } from './workbench-run-test-fixture'
+import {
+  copyDetailsText,
+  installClipboard,
+  removeClipboard,
+  type ClipboardWrite
+} from './workbench-clipboard-test-fixture'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import { useWorkbenchRuns, WORKBENCH_RUN_POLL_MS } from './use-workbench-runs'
 import WorkbenchRunsSection from './WorkbenchRunsSection'
@@ -40,18 +46,28 @@ function RunsHost(): React.JSX.Element {
   return <WorkbenchRunsSection runs={runs} />
 }
 
+function refuseStop(code: string, message: string, data?: unknown): () => never {
+  return () => {
+    throw new RuntimeRpcCallError({ id: 'call', ok: false, error: { code, message, data } })
+  }
+}
+
+let clipboard: ClipboardWrite
+
 beforeEach(() => {
   resetQueueFixture()
   activateTab.mockReset()
   storeState.tabsByWorktree = { 'local-workspace': [{ id: 'tab-primary' }] }
+  clipboard = installClipboard()
 })
 afterEach(() => {
   cleanup()
+  removeClipboard()
   vi.useRealTimers()
 })
 
 describe('WorkbenchRunsSection', () => {
-  it('lists the workspace runs passively with status, session state and live activity', async () => {
+  it('lists the workspace runs passively with what each session is doing now', async () => {
     const live = runView(1, {
       primary: primarySession({ live: { kind: 'live', activity: 'working' } })
     })
@@ -64,18 +80,43 @@ describe('WorkbenchRunsSection', () => {
       'workbench.runs.show': () => ({ run: live })
     })
     render(<RunsHost />)
-    await screen.findByText('Claude is working')
+    await screen.findByText('Working')
     expect(callsTo('workbench.runs.list')).toEqual([{ workspaceId: 'local-workspace', limit: 50 }])
     expect(callsTo('workbench.runs.show')).toEqual([{ runId: 'run-1' }])
     const [active, completed] = screen.getAllByRole('listitem')
-    expect(within(active).getByText('Active')).toBeDefined()
-    expect(within(active).getByText('Running')).toBeDefined()
     expect(within(active).getByText('Fixture objective 1')).toBeDefined()
+    expect(within(active).getByText('Claude Code')).toBeDefined()
     expect(within(active).getByText('claude-fixture-model')).toBeDefined()
+    expect(within(active).getByText('high effort')).toBeDefined()
+    expect(within(active).getByText('Read only')).toBeDefined()
     expect(within(completed).getByText('Completed')).toBeDefined()
-    expect(within(completed).getByText('Exited')).toBeDefined()
     expect(within(completed).queryByRole('button', { name: /Stop run/ })).toBeNull()
     expect(uuid).not.toHaveBeenCalled()
+  })
+
+  it('keeps run, request and routing internals out of the row and in Copy details', async () => {
+    routeRpc({
+      'workbench.runs.list': () => runList([runView(1)]),
+      'workbench.runs.show': () => ({ run: runView(1) })
+    })
+    render(<RunsHost />)
+    const row = await screen.findByRole('listitem')
+    await screen.findByText('Fixture objective 1')
+    for (const hidden of ['run-1', 'request-1', 'aaaaaaaa', 'tab-primary', 'local-workspace']) {
+      expect(row.textContent).not.toContain(hidden)
+    }
+    const copied = await copyDetailsText(row, clipboard)
+    expect(copied.split('\n')).toEqual(
+      expect.arrayContaining([
+        'NASH Workbench: run',
+        'run_id: run-1',
+        'request_id: request-1',
+        'workspace_id: local-workspace',
+        'coordinator_model: claude-fixture-model',
+        'routing_table_version: 1',
+        `routing_table_sha256: ${'a'.repeat(64)}`
+      ])
+    )
   })
 
   it('reveals the primary terminal tab without moving keyboard focus', async () => {
@@ -87,12 +128,14 @@ describe('WorkbenchRunsSection', () => {
       })
     })
     render(<RunsHost />)
-    const show = await screen.findByRole('button', { name: 'Show terminal for run-1' })
+    await screen.findByText('Fixture objective 2')
+    const [first, second] = screen.getAllByRole('listitem')
+    const show = within(first).getByRole('button', { name: 'Show terminal' })
     show.focus()
     fireEvent.click(show)
     expect(activateTab).toHaveBeenCalledExactlyOnceWith('tab-primary', null)
     expect(document.activeElement).toBe(show)
-    expect(screen.queryByRole('button', { name: 'Show terminal for run-2' })).toBeNull()
+    expect(within(second).queryByRole('button', { name: 'Show terminal' })).toBeNull()
   })
 
   it('says when the terminal tab is not open in this window', async () => {
@@ -120,35 +163,36 @@ describe('WorkbenchRunsSection', () => {
       })
     })
     render(<RunsHost />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Stop run run-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Stop run' }))
     await screen.findByText('Canceled')
     expect(callsTo('workbench.runs.stop')).toEqual([{ runId: 'run-1' }])
     expect(screen.getByText('Stopped in the app')).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Stop run run-1' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Stop run' })).toBeNull()
     expect(screen.queryByLabelText('Message to the session')).toBeNull()
   })
 
-  it('keeps the run and shows the server explanation when a stop is refused', async () => {
+  it('keeps the run and words an unconfirmed stop without its code', async () => {
     routeRpc({
       'workbench.runs.list': () => runList([runView(1)]),
       'workbench.runs.show': () => ({ run: runView(1) }),
-      'workbench.runs.stop': () => {
-        throw new RuntimeRpcCallError({
-          id: 'call',
-          ok: false,
-          error: {
-            code: 'workbench_run_stop_unconfirmed',
-            message: 'The session could not be confirmed stopped, so the run is still open.'
-          }
-        })
-      }
+      'workbench.runs.stop': refuseStop(
+        'workbench_run_stop_unconfirmed',
+        'The session could not be confirmed stopped, so the run is still open.'
+      )
     })
     render(<RunsHost />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Stop run run-1' }))
-    const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('could not be confirmed stopped')
-    expect(alert.textContent).toContain('workbench_run_stop_unconfirmed')
+    fireEvent.click(await screen.findByRole('button', { name: 'Stop run' }))
+    const alert = await screen.findByRole('alert', { name: 'Run not stopped' })
+    expect(alert.textContent).toContain(
+      'The stop could not be confirmed, so the run is still open. Close its terminal tab and try again.'
+    )
+    expect(alert.textContent).not.toContain('workbench_run_stop_unconfirmed')
     expect(screen.getByText('Active')).toBeDefined()
+    const copied = await copyDetailsText(screen.getByRole('listitem'), clipboard)
+    expect(copied).toContain('stop_error_code: workbench_run_stop_unconfirmed')
+    expect(copied).toContain(
+      'stop_error_message: The session could not be confirmed stopped, so the run is still open.'
+    )
   })
 
   it.each([
@@ -161,29 +205,26 @@ describe('WorkbenchRunsSection', () => {
       "The terminal could not be matched to this run's session, so nothing was stopped. Close the session's terminal tab and try again."
     ],
     ['autopilot_invalid_reason', 'The stop request was refused as invalid. Nothing was changed.'],
-    ['autopilot_owner_new_code', 'The session could not be stopped now. Nothing was changed.']
+    ['autopilot_owner_new_code', 'The run could not be stopped now. Nothing was changed.']
   ])('explains a refused stop by its stop code %s', async (stopCode, shown) => {
     routeRpc({
       'workbench.runs.list': () => runList([runView(1)]),
       'workbench.runs.show': () => ({ run: runView(1) }),
-      'workbench.runs.stop': () => {
-        throw new RuntimeRpcCallError({
-          id: 'call',
-          ok: false,
-          error: {
-            code: 'workbench_run_stop_refused',
-            message: 'The session could not be stopped now. Nothing was changed.',
-            data: { stopCode }
-          }
-        })
-      }
+      'workbench.runs.stop': refuseStop(
+        'workbench_run_stop_refused',
+        'The session could not be stopped now. Nothing was changed.',
+        { stopCode }
+      )
     })
     render(<RunsHost />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Stop run run-1' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Stop run' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain(shown)
-    expect(alert.textContent).toContain('workbench_run_stop_refused')
+    expect(alert.textContent).not.toContain('workbench_run_stop_refused')
+    expect(alert.textContent).not.toContain(stopCode)
     expect(screen.getByText('Active')).toBeDefined()
+    const copied = await copyDetailsText(screen.getByRole('listitem'), clipboard)
+    expect(copied).toContain(`stop_error_reason: ${stopCode}`)
   })
 
   it('offers the message box only while the session is running', async () => {
@@ -272,12 +313,19 @@ describe('WorkbenchRunsSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
     expect(screen.getByRole('button', { name: 'Send message' }).hasAttribute('disabled')).toBe(true)
     await act(async () => pending.reject(new Error('Connection lost')))
-    expect((await screen.findByRole('alert')).textContent).toContain('Connection lost')
+    const failed = await screen.findByRole('alert', { name: 'Message not confirmed' })
+    expect(failed.textContent).toContain('Something went wrong.')
+    expect(failed.textContent).toContain('Sending it again will not deliver it twice.')
+    expect(failed.textContent).not.toContain('Connection lost')
+    const failure = await copyDetailsText(failed, clipboard)
+    expect(failure).toContain('error_message: Connection lost')
+    expect(failure).toContain(`idempotency_key: ${FIXTURE_IDEMPOTENCY_KEY}`)
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
     const refused = await screen.findByRole('alert', { name: 'Message not sent' })
     expect(refused.textContent).toBe(
       'Message not sentWrite the message in English; put names or text in another language in quotes.'
     )
+    expect(await copyDetailsText(refused, clipboard)).toContain('reason: not_english')
     expect(keys).toEqual([FIXTURE_IDEMPOTENCY_KEY, FIXTURE_IDEMPOTENCY_KEY])
     expect(uuid).toHaveBeenCalledTimes(1)
     expect(box).toHaveProperty('value', 'Bitte prüfen.')
@@ -312,24 +360,22 @@ describe('WorkbenchRunsSection', () => {
     expect(callsTo('workbench.validation.checkPending')).toEqual([{}])
   })
 
-  it('shows an empty state and a listing error with its code', async () => {
+  it('shows an empty state and words a listing error without its code', async () => {
     routeRpc({ 'workbench.runs.list': () => runList([]) })
     const { unmount } = render(<RunsHost />)
     await screen.findByText('No runs in this workspace yet.')
     unmount()
     routeRpc({
-      'workbench.runs.list': () => {
-        throw new RuntimeRpcCallError({
-          id: 'call',
-          ok: false,
-          error: { code: 'method_not_found', message: 'Unknown method' }
-        })
-      }
+      'workbench.runs.list': refuseStop('method_not_found', 'Unknown method')
     })
     render(<RunsHost />)
-    const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('Unknown method')
-    expect(alert.textContent).toContain('method_not_found')
+    const alert = await screen.findByRole('alert', { name: 'Runs unavailable' })
+    expect(alert.textContent).toContain('This version of the app does not support this action.')
+    expect(alert.textContent).not.toContain('method_not_found')
+    expect(alert.textContent).not.toContain('Unknown method')
+    const copied = await copyDetailsText(alert, clipboard)
+    expect(copied).toContain('error_code: method_not_found')
+    expect(copied).toContain('workspace_id: local-workspace')
   })
 
   it('polls the run list while the section is open', async () => {

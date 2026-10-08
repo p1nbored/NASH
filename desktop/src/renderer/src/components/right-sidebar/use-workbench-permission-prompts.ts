@@ -48,13 +48,7 @@ const INITIAL: PromptsState = {
 }
 
 function promptsError(error: unknown): WorkbenchError {
-  return toWorkbenchError(error, {
-    invalidResponse: translate(
-      'workbench.permissions.invalidResponse',
-      'The permission relay returned an invalid response.'
-    ),
-    failed: translate('workbench.permissions.failed', 'The permission relay call failed.')
-  })
+  return toWorkbenchError(error)
 }
 
 function mismatch(): WorkbenchResponseError {

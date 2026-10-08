@@ -16,43 +16,42 @@ vi.mock('./task-tracker-integration-cards', () => ({
 vi.mock('./use-integration-provider-status-refresh', () => ({
   useIntegrationProviderStatusRefresh: () => {}
 }))
-vi.mock('./clef-routing-card', () => ({ ClefRoutingCard: () => <div>Clef routing card</div> }))
-vi.mock('./routing-table-card', () => ({ RoutingTableCard: () => <div>Routing Table card</div> }))
 vi.mock('./dot-ingress-section', () => ({
   DotIngressSection: () => <div>Dot settings section</div>
 }))
 
 import { IntegrationsPane } from './IntegrationsPane'
+import { getDotIngressSearchEntries } from './dot-ingress-search'
 import { getIntegrationsPaneSearchEntries } from './integrations-search'
 
-describe('IntegrationsPane dot settings', () => {
+describe('Dot category (D-038)', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('places the dot settings after the Task routing group', () => {
+  it('no longer renders the dot settings inside Integrations', () => {
     render(<IntegrationsPane />)
 
-    const text = document.body.textContent ?? ''
-    expect(text.indexOf('Dot settings section')).toBeGreaterThan(text.indexOf('Clef routing card'))
-    expect(screen.getByText('Dot settings section')).toBeTruthy()
+    expect(screen.queryByText('Dot settings section')).toBeNull()
   })
 
-  it('lets settings search find the dot settings', () => {
-    const entry = getIntegrationsPaneSearchEntries().find((item) => item.title === 'Tasks from dot')
+  it('lets settings search find the dot settings outside Integrations', () => {
+    const entry = getDotIngressSearchEntries().find((item) => item.title === 'Tasks from dot')
     expect(entry).toBeDefined()
     expect(entry?.keywords).toEqual(
       expect.arrayContaining(['dot', 'workspace write', 'read only', 'rate limit'])
     )
+    expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain(
+      'Tasks from dot'
+    )
   })
 
   it('lets settings search find remote access through GPT Sites', () => {
-    const entry = getIntegrationsPaneSearchEntries().find(
-      (item) => item.title === 'Remote access (GPT Sites)'
-    )
+    const entry = getDotIngressSearchEntries().find((item) => item.title === 'Remote access')
     expect(entry).toBeDefined()
     expect(entry?.keywords).toEqual(
       expect.arrayContaining(['remote access', 'GPT Sites', 'pairing', 'access token'])
     )
+    expect(entry?.description).toContain('Site address')
   })
 })

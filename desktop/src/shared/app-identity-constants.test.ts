@@ -30,6 +30,7 @@ describe('NASH app identity constants', () => {
       devCliCommandName: 'nash-dev',
       documentProgIdPrefix: 'NASH',
       urlScheme: 'nash',
+      releaseRepository: { owner: 'p1nbored', repo: 'NASH' },
       updateFeed: null
     })
   })
@@ -48,6 +49,11 @@ describe('NASH app identity constants', () => {
 
   it('has no release feed until NASH publishes its own, so no update check can run', () => {
     expect(APP_IDENTITY.updateFeed).toBeNull()
+  })
+
+  it('traces issues and source to the NASH repository, not Orca (D-036)', () => {
+    expect(APP_IDENTITY.releaseRepository).toEqual({ owner: 'p1nbored', repo: 'NASH' })
+    expect(APP_IDENTITY.releaseRepository.owner.toLowerCase()).not.toBe('stablyai')
   })
 
   it('uses a URL scheme that is a valid lowercase scheme and not the Orca one', () => {

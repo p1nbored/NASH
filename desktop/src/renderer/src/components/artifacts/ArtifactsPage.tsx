@@ -14,6 +14,7 @@ import {
   ArtifactsPageErrorBanner
 } from './ArtifactsPageStates'
 import { artifactAccountIdentity, useArtifactPagination } from './useArtifactPagination'
+import { ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED } from '../../../../shared/nash-build-flags'
 
 const LOCAL_RUNTIME = { kind: 'local' } as const
 
@@ -35,7 +36,11 @@ export default function ArtifactsPage(): React.JSX.Element {
   const signedIn = authStatus?.state === 'connected'
   const needsReconnect = authStatus?.state === 'reconnect-required'
   const openAccountSettings = (): void => {
-    openSettingsTarget({ pane: 'orca-account', repoId: null })
+    // Why: the Orca account pane is hidden in NASH builds (D-038); Artifacts settings is the nearest live pane.
+    openSettingsTarget({
+      pane: ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED ? 'orca-account' : 'artifacts',
+      repoId: null
+    })
     openSettingsPage()
   }
   const {

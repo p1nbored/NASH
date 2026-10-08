@@ -5,28 +5,28 @@ import type { WORKBENCH_DOT_INGRESS_FAILURES } from '../../../../shared/rpc-cont
 
 export type DotIngressFailure = (typeof WORKBENCH_DOT_INGRESS_FAILURES)[number]
 
-/** Why the endpoint is not listening, from the control port's coarse failure code. */
+/** Why dot cannot reach the app on this computer, from the coarse failure code (kept in details). */
 export function dotIngressFailureMessage(failure: DotIngressFailure): string {
   switch (failure) {
     case 'listen_failed':
       return translate(
-        'auto.components.settings.dotIngress.failures.listenFailed',
-        'The app could not open the local endpoint for dot. Turn the switch off and on to try again, or restart the app.'
+        'auto.components.settings.dotIngress.failures.listenFailedPlain',
+        'NASH could not get ready for tasks from dot. Turn the switch off and on, or restart the app.'
       )
     case 'metadata_invalid':
       return translate(
-        'auto.components.settings.dotIngress.failures.metadataInvalid',
-        'The app could not prepare the connection details for dot, so it closed the endpoint.'
+        'auto.components.settings.dotIngress.failures.metadataInvalidPlain',
+        'NASH could not prepare the connection for dot, so it stays closed.'
       )
     case 'metadata_write_failed':
       return translate(
-        'auto.components.settings.dotIngress.failures.metadataWriteFailed',
-        'The app could not save the connection details file for dot, so it closed the endpoint.'
+        'auto.components.settings.dotIngress.failures.metadataWriteFailedPlain',
+        'NASH could not save the connection details for dot, so it stays closed.'
       )
     case 'metadata_not_secured':
       return translate(
-        'auto.components.settings.dotIngress.failures.metadataNotSecured',
-        'The app could not restrict access to the connection details file, so it removed the file and closed the endpoint.'
+        'auto.components.settings.dotIngress.failures.metadataNotSecuredPlain',
+        'NASH could not protect the connection details for dot, so it removed them and stays closed.'
       )
   }
 }
@@ -46,8 +46,8 @@ function refusalForCode(code: string | null): string {
     // Why "saved": only the switch change can meet this code, after it has written the switch.
     case 'workbench_dot_ingress_unavailable':
       return translate(
-        'auto.components.settings.dotIngress.refusals.interfaceUnavailable',
-        'The switch was saved, but the dot interface is not available in this session, so the endpoint did not change. Restart the app and check again.'
+        'auto.components.settings.dotIngress.refusals.interfaceUnavailablePlain',
+        'The switch was saved, but tasks from dot are not available in this session. Restart the app and check again.'
       )
     case 'unsupported_host':
       return translate(

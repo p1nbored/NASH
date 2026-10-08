@@ -47,12 +47,12 @@ async function renderCard(): Promise<void> {
 }
 
 function routeRow(taskType: string): HTMLElement {
-  const routes = screen.getByRole('table', { name: 'Routes in version 3' })
-  const row = within(routes).getByText(taskType).closest('tr')
-  if (!row) {
-    throw new Error(`no row for ${taskType}`)
-  }
-  return row
+  const list = screen.getByRole('list', { name: 'Agent for each task' })
+  return within(list).getByRole('listitem', { name: taskType })
+}
+
+function openAdvanced(): void {
+  fireEvent.click(screen.getByRole('button', { name: 'Advanced' }))
 }
 
 const LISTED = fixtureListResult({
@@ -80,11 +80,14 @@ describe('RoutingTableCard route availability', () => {
     cleanup()
   })
 
-  it('shows each route with a status label and its reasons in plain English', async () => {
+  it('shows each choice with an icon and a status label, and its reasons in plain English', async () => {
     answer({ 'workbench.routingTable.list': LISTED })
     await renderCard()
 
     expect(routeRow('Software engineering').textContent).toContain('Available')
+    expect(
+      routeRow('Software engineering').querySelector('[data-status-tone="success"] svg')
+    ).not.toBeNull()
     const batch = routeRow('Routine analysis batch')
     expect(batch.textContent).toContain('Unavailable')
     expect(batch.textContent).toMatch(/model is not offered/i)
@@ -93,32 +96,26 @@ describe('RoutingTableCard route availability', () => {
       /awaiting your confirmation/i
     )
     expect(routeRow('High-quality writing').textContent).toContain('Not checked')
-    expect(screen.getByText(/Coordinator \(primary session\)/).closest('p')?.textContent).toContain(
-      'Not checked'
-    )
-    const reviewers = screen.getByRole('list', { name: 'Validation reviewers' })
+    expect(routeRow('Coordinator').textContent).toContain('Not checked')
+    const reviewers = screen.getByRole('list', { name: 'Reviewers' })
     expect(within(reviewers).getAllByText('Not checked')).toHaveLength(2)
   })
 
-  it('says usage readings come only from the CLIs and what blocks a route', async () => {
+  it('leaves out developer notes on where usage readings come from', async () => {
     answer({ 'workbench.routingTable.list': LISTED })
     await renderCard()
 
-    const hint = screen.getByText(/NASH reads usage only from the CLIs/).textContent
-    expect(hint).toMatch(/Claude Code's status line, codex app-server and agy \/usage/)
-    expect(hint).toMatch(/fresh reading shows a used-up limit/)
-    expect(hint).toMatch(/CLI reports a sign-in or usage-limit failure/)
+    expect(document.body.textContent).not.toMatch(/app-server|status line|10 minutes/)
   })
 
-  it('shows no status column when the list carries no availability', async () => {
+  it('shows no status when the list carries no availability', async () => {
     answer({ 'workbench.routingTable.list': fixtureListResult() })
     await renderCard()
 
-    const routes = screen.getByRole('table', { name: 'Routes in version 3' })
-    expect(within(routes).queryByRole('columnheader', { name: 'Status' })).toBeNull()
+    expect(routeRow('Software engineering').querySelector('[data-status-tone]')).toBeNull()
     expect(screen.queryByText('Not checked')).toBeNull()
     // Why: without installed checks there is nothing to run, so the button is not offered.
-    expect(screen.queryByRole('button', { name: 'Check routes' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Check availability' })).toBeNull()
   })
 
   it('checks the routes on request, shows that it is checking, then the result', async () => {
@@ -133,9 +130,9 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
-    const checking = screen.getByRole('button', { name: 'Checking routes…' })
+    const checking = screen.getByRole('button', { name: 'Checking…' })
     expect(checking).toHaveProperty('disabled', true)
     expect(callsTo('workbench.routingTable.checkRoutes')).toEqual([{}])
 
@@ -152,11 +149,14 @@ describe('RoutingTableCard route availability', () => {
     })
 
     expect(screen.getByRole('status').textContent).toBe(
-      'Routes checked: 12 available, 0 unavailable, 1 not verified.'
+      'Checked: 12 available, 0 unavailable, 1 not verified.'
     )
     expect(routeRow('High-quality writing').textContent).toContain('Available')
     expect(routeRow('Routine analysis batch').textContent).toMatch(/model list could not be read/i)
-    expect(screen.getByRole('button', { name: 'Check routes' })).toHaveProperty('disabled', false)
+    expect(screen.getByRole('button', { name: 'Check availability' })).toHaveProperty(
+      'disabled',
+      false
+    )
   })
 
   it('reports a check that could not run, without its raw text', async () => {
@@ -179,7 +179,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
 
     const alert = screen.getByRole('alert')
@@ -196,13 +196,14 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
 
-    for (const name of ['Refresh', 'Edit routes', 'Import']) {
+    openAdvanced()
+    for (const name of ['Refresh', 'Import…', 'Edit Software engineering', 'Edit Coordinator']) {
       expect(screen.getByRole('button', { name }), name).toHaveProperty('disabled', true)
     }
-    const proposal = screen.getByRole('group', { name: /App update proposal/ })
+    const proposal = screen.getByRole('group', { name: 'App update' })
     expect(within(proposal).getByRole('button', { name: 'Accept' })).toHaveProperty(
       'disabled',
       true
@@ -222,10 +223,11 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
 
-    expect(screen.getByRole('alert').textContent).toMatch(/does not match its recorded hash/)
+    expect(screen.getByRole('alert').textContent).toMatch(/could not be read/)
+    expect(screen.getByRole('alert').textContent).not.toMatch(/hash/)
     expect(callsTo('workbench.routingTable.list')).toHaveLength(2)
   })
 
@@ -246,12 +248,13 @@ describe('RoutingTableCard route availability', () => {
       }
     )
     await renderCard()
+    openAdvanced()
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
     })
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
     await act(async () => {
       finishList(LISTED)
@@ -276,7 +279,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check routes' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
 
     expect(routeRow('High-quality writing').textContent).toContain('Not checked')

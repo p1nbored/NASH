@@ -49,13 +49,7 @@ function emptyState(scopeKey: string): QueueState {
 }
 
 function queueError(error: unknown): QueueError {
-  return toWorkbenchError(error, {
-    invalidResponse: translate(
-      'workbench.requests.invalidResponse',
-      'The request store returned an invalid response.'
-    ),
-    failed: translate('workbench.requests.failed', 'The request-store operation failed.')
-  })
+  return toWorkbenchError(error)
 }
 
 function validPage(result: WorkbenchListResult, beforeSequence?: number): boolean {

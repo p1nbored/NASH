@@ -7,9 +7,9 @@ import { getSettingsSetupGuideProgress } from './settings-setup-guide-progress'
 
 describe('settings setup guide progress', () => {
   function makePreBrowserDoneStepState(): Partial<Record<FeatureWallSetupStepId, boolean>> {
-    return Object.fromEntries(
-      FEATURE_WALL_SETUP_STEPS.map((step) => [step.id, step.id !== 'browser'])
-    ) as Partial<Record<FeatureWallSetupStepId, boolean>>
+    return Object.fromEntries<boolean>(
+      FEATURE_WALL_SETUP_STEPS.map((step) => [step.id, step.id !== 'workbench-run'])
+    )
   }
 
   it('tracks the full setup checklist total', () => {
@@ -22,7 +22,7 @@ describe('settings setup guide progress', () => {
       ready: true,
       doneCount: 0,
       total: FEATURE_WALL_SETUP_STEPS.length,
-      firstIncompleteStepId: 'notifications'
+      firstIncompleteStepId: 'claude-code'
     })
   })
 
@@ -30,7 +30,7 @@ describe('settings setup guide progress', () => {
     const stepDone = {
       'two-worktrees': true,
       notifications: true,
-      'default-agent': true,
+      'claude-code': true,
       'task-sources': true
     } satisfies Partial<Record<FeatureWallSetupStepId, boolean>>
 
@@ -38,11 +38,11 @@ describe('settings setup guide progress', () => {
       ready: true,
       doneCount: 4,
       total: FEATURE_WALL_SETUP_STEPS.length,
-      firstIncompleteStepId: 'agent-capabilities'
+      firstIncompleteStepId: 'clef'
     })
   })
 
-  it('does not mark Settings complete for fresh users when only the browser step is incomplete', () => {
+  it('does not mark Settings complete for fresh users when only the first run is incomplete', () => {
     expect(
       getSettingsSetupGuideProgress({
         ready: true,
@@ -52,7 +52,7 @@ describe('settings setup guide progress', () => {
       ready: true,
       doneCount: FEATURE_WALL_SETUP_STEPS.length - 1,
       total: FEATURE_WALL_SETUP_STEPS.length,
-      firstIncompleteStepId: 'browser'
+      firstIncompleteStepId: 'workbench-run'
     })
   })
 

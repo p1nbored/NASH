@@ -37,10 +37,11 @@ describe('routeReasonText', () => {
   })
 
   it('says how a sign-in or usage-limit block lifts', () => {
-    expect(routeReasonText('auth_failed')).toMatch(/then use Check routes/)
+    expect(routeReasonText('auth_failed')).toMatch(/then check availability/)
     expect(routeReasonText('quota_exhausted')).toMatch(
-      /lifts when a new usage reading shows the limit reset, or use Check routes after it resets/
+      /lifts when a new usage reading shows the limit reset, or check availability after it resets/
     )
+    expect(routeReasonText('availability_record_damaged')).not.toMatch(/record|damaged/)
   })
 })
 
@@ -96,7 +97,7 @@ describe('routeCheckSummary', () => {
         { status: 'available', reasons: [], awaitingUserConfirmation: false }
       )
     )
-    expect(summary).toBe('Routes checked: 11 available, 1 unavailable, 1 not verified.')
+    expect(summary).toBe('Checked: 11 available, 1 unavailable, 1 not verified.')
   })
 })
 

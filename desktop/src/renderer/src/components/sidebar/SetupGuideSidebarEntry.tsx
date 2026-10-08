@@ -46,7 +46,7 @@ export function SetupGuideSidebarEntry(): React.JSX.Element | null {
   const setSetupGuideSidebarDismissed = useAppStore((s) => s.setSetupGuideSidebarDismissed)
   // Why: the sidebar count must be warmed before click so it matches the modal
   // count instead of changing while the lazy modal is mounting.
-  const setupProgress = useSetupGuideProgress(true, false, false)
+  const setupProgress = useSetupGuideProgress(true)
   const setupComplete = isSetupGuideSidebarComplete(setupProgress)
   const setupActive = activeModal === 'setup-guide'
   const showSetupGuideEntry = shouldShowSetupGuideEntry({
