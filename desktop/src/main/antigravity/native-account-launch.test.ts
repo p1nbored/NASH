@@ -4,10 +4,13 @@ import { prepareAntigravityAccountForLaunch } from './native-account-launch'
 import { createEncryptedAntigravityAccountStore } from './native-account-store'
 import { getAntigravityAccountService } from './native-account-host'
 
-const { prepareForLaunch } = vi.hoisted(() => ({ prepareForLaunch: vi.fn() }))
+const { prepareForLaunch, appHome } = vi.hoisted(() => ({
+  prepareForLaunch: vi.fn(),
+  appHome: { path: '/task/home' }
+}))
 vi.mock('node:fs', () => ({ existsSync: vi.fn() }))
 vi.mock('../../shared/app-environment', () => ({
-  getAppEnvironment: () => ({ getPath: () => '/task/home' })
+  getAppEnvironment: () => ({ getPath: () => appHome.path })
 }))
 vi.mock('./native-account-store', () => ({ createEncryptedAntigravityAccountStore: vi.fn() }))
 vi.mock('./native-account-host', () => ({
@@ -16,6 +19,10 @@ vi.mock('./native-account-host', () => ({
 }))
 
 beforeEach(() => {
+  vi.restoreAllMocks()
+  // The shared cases model a POSIX host, where agy finds its home through HOME.
+  vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
+  appHome.path = '/task/home'
   vi.mocked(existsSync).mockReset().mockReturnValue(true)
   vi.mocked(getAntigravityAccountService).mockClear()
   vi.mocked(createEncryptedAntigravityAccountStore).mockReturnValue({
@@ -84,6 +91,78 @@ describe('native account verification before agy launch', () => {
       prepareAntigravityAccountForLaunch({ launchAgent: 'antigravity', envToDelete: ['HOME'] })
     ).rejects.toThrow('different credential authority')
     expect(prepareForLaunch).not.toHaveBeenCalled()
+  })
+
+  describe('on Windows, where agy finds its home through USERPROFILE', () => {
+    beforeEach(() => {
+      vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
+      appHome.path = 'C:\\Users\\Task'
+    })
+
+    it('compares USERPROFILE case-insensitively and ignores a Git Bash HOME', async () => {
+      await prepareAntigravityAccountForLaunch({
+        launchAgent: 'antigravity',
+        env: { HOME: '/c/Users/task', USERPROFILE: 'c:\\users\\TASK\\' },
+        envIsComplete: true
+      })
+      expect(prepareForLaunch).toHaveBeenCalledOnce()
+    })
+
+    it('reads USERPROFILE under any key casing, as Windows does', async () => {
+      await expect(
+        prepareAntigravityAccountForLaunch({
+          launchAgent: 'antigravity',
+          env: { UserProfile: 'C:\\Users\\Other' },
+          envIsComplete: true
+        })
+      ).rejects.toThrow('different credential authority')
+      await prepareAntigravityAccountForLaunch({
+        launchAgent: 'antigravity',
+        env: { UserProfile: 'C:\\Users\\Task' },
+        envIsComplete: true
+      })
+      expect(prepareForLaunch).toHaveBeenCalledOnce()
+    })
+
+    it('blocks a launch when any USERPROFILE casing points at another profile', async () => {
+      await expect(
+        prepareAntigravityAccountForLaunch({
+          launchAgent: 'antigravity',
+          env: { USERPROFILE: 'C:\\Users\\Task', UserProfile: 'C:\\Users\\Other' }
+        })
+      ).rejects.toThrow('different credential authority')
+      expect(prepareForLaunch).not.toHaveBeenCalled()
+    })
+
+    it('blocks a launch whose USERPROFILE points at another profile', async () => {
+      await expect(
+        prepareAntigravityAccountForLaunch({
+          launchAgent: 'antigravity',
+          env: { HOME: 'C:\\Users\\Task', USERPROFILE: 'C:\\Users\\Other' },
+          envIsComplete: true
+        })
+      ).rejects.toThrow('different credential authority')
+      expect(prepareForLaunch).not.toHaveBeenCalled()
+    })
+
+    it('blocks deleting USERPROFILE but not HOME before launch', async () => {
+      await expect(
+        prepareAntigravityAccountForLaunch({
+          launchAgent: 'antigravity',
+          env: { USERPROFILE: 'C:\\Users\\Task' },
+          envIsComplete: true,
+          envToDelete: ['userprofile']
+        })
+      ).rejects.toThrow('different credential authority')
+      expect(prepareForLaunch).not.toHaveBeenCalled()
+      await prepareAntigravityAccountForLaunch({
+        launchAgent: 'antigravity',
+        env: { USERPROFILE: 'C:\\Users\\Task', HOME: '/c/Users/Task' },
+        envIsComplete: true,
+        envToDelete: ['HOME']
+      })
+      expect(prepareForLaunch).toHaveBeenCalledOnce()
+    })
   })
 
   it('does not merge removed authority detectors back into a complete launch environment', async () => {

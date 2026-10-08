@@ -1,0 +1,21 @@
+{
+  "name": "@orca/windows-credentials",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read and write one Windows generic credential by exact target name for NASH",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "binding.gyp",
+    "src"
+  ],
+  "os": [
+    "win32"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "node-addon-api": "^8.5.0"
+  }
+}

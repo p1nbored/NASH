@@ -80,7 +80,9 @@ if (ignoreModules.length > 0) {
 const NATIVE_MODULES = [
   'node-pty',
   'cpu-features',
-  ...(rebuildPlatform === 'win32' ? ['@orca/windows-registry', '@vscode/windows-process-tree'] : [])
+  ...(rebuildPlatform === 'win32'
+    ? ['@orca/windows-registry', '@orca/windows-credentials', '@vscode/windows-process-tree']
+    : [])
 ]
 const onlyModules = NATIVE_MODULES.filter((m) => !ignoreModules.includes(m))
 /** Whether this rebuild targets something other than the machine running it. */
@@ -588,6 +590,16 @@ if (failures.length > 0) {
 }
 
 function loadNativeModule(moduleName) {
+  if (moduleName === '@orca/windows-credentials') {
+    const credentials = projectRequire(moduleName)
+    // Why: the package defers loading its .node addon until the first call. The probe reads a
+    // disposable name that is never written, so no real credential is touched.
+    const result = credentials.readGenericCredential('nash-test:native-runtime-probe')
+    if (typeof result?.status !== 'string') {
+      throw new Error('readGenericCredential returned no status')
+    }
+    return
+  }
   if (moduleName === '@orca/windows-registry') {
     const registry = projectRequire(moduleName)
     // Why: the package defers loading its .node addon until the first registry call.

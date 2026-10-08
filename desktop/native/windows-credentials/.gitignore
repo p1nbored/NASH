@@ -1,0 +1,3 @@
+# Built by config/scripts/rebuild-native-deps.mjs; never committed.
+build/
+bin/

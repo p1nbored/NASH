@@ -7,8 +7,10 @@
 # dependency pnpm re-linked it on every install (including --frozen-lockfile), and that
 # virtual-store churn raced node-gyp reading the same tree, which lost @vscode/windows-process-tree's
 # binding.gyp mid-rebuild on Windows CI. A workspace link is resolved once instead.
+# native/windows-credentials follows the same rule.
 packages:
   - native/windows-registry
+  - native/windows-credentials
 
 minimumReleaseAge: 4320
 shamefullyHoist: true
@@ -48,6 +50,7 @@ allowBuilds:
   sherpa-onnx: true
   ssh2: false
   '@orca/windows-registry': false
+  '@orca/windows-credentials': false
 
 overrides:
   monaco-editor>dompurify: 3.4.16

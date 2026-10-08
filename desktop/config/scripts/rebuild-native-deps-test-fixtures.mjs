@@ -431,6 +431,15 @@ export function writeFakeWindowsRegistry(projectDir) {
   )
 }
 
+export function writeFakeWindowsCredentials(projectDir) {
+  const credentialsDir = join(projectDir, 'node_modules', '@orca', 'windows-credentials')
+  mkdirSync(credentialsDir, { recursive: true })
+  writeFileSync(
+    join(credentialsDir, 'index.js'),
+    "exports.readGenericCredential = () => ({ status: 'missing' })\n"
+  )
+}
+
 /**
  * A healthy one: the addon reports CreationTime, which is what a build of the
  * patched source does and what the probe has required since the creation-time

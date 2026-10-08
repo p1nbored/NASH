@@ -13,6 +13,7 @@ import {
   writeFakeNodePtyConptyPayload,
   writeFakeNodePtyConptySource,
   writeFakeUsableElectronPackage,
+  writeFakeWindowsCredentials,
   writeFakeWindowsProcessTree,
   writeFakeWindowsProcessTreeWithNodeAddonApi,
   writeFakeWindowsRegistry,
@@ -78,6 +79,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir, { nativeDir: '../build/Release/' })
         writeFakeWindowsRegistry(projectDir)
+        writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
@@ -275,6 +277,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeUsableElectronPackage(projectDir, { platform: 'win32' })
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir)
+        writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
@@ -295,6 +298,38 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
   )
 
   it.skipIf(process.platform !== 'win32')(
+    'rebuilds only the Windows credential addon when it alone fails its probe',
+    () => {
+      const projectDir = mkTempProject()
+
+      try {
+        const rebuildLogPath = join(projectDir, 'electron-rebuild.log')
+        writeFakeUsableElectronPackage(projectDir, { platform: 'win32' })
+        writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
+        writeFakeLoadableNodePty(projectDir)
+        writeFakeWindowsRegistry(projectDir)
+        writeFakeWindowsProcessTree(projectDir)
+        writeFakeNodePtyConptyPayload(projectDir, process.arch)
+
+        const result = runRebuildScript(projectDir, {
+          ORCA_REBUILD_TEST_LOG: rebuildLogPath,
+          npm_config_platform: 'win32',
+          npm_config_arch: process.arch
+        })
+
+        expect(result.status, result.stderr).toBe(0)
+        expect(result.stdout).toContain(
+          'Rebuilding failed native modules: @orca/windows-credentials'
+        )
+        const rebuildCall = JSON.parse(readFileSync(rebuildLogPath, 'utf8').trim())
+        expect(rebuildCall.onlyModules).toEqual(['@orca/windows-credentials'])
+      } finally {
+        removeTreeSync(projectDir)
+      }
+    }
+  )
+
+  it.skipIf(process.platform !== 'win32')(
     'rebuilds a loadable ConPTY native that lacks Orca job ownership',
     () => {
       const projectDir = mkTempProject()
@@ -305,6 +340,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir, { ownsPtyJob: false })
         writeFakeWindowsRegistry(projectDir)
+        writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
@@ -339,6 +375,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir, { cygwinBreakawayDenied: false })
         writeFakeWindowsRegistry(projectDir)
+        writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
         writeFakeNodePtyConptySource(projectDir)

@@ -17,18 +17,35 @@ writing. A missing native item falls back to the CLI-specific
 `~/.gemini/antigravity-cli/antigravity-oauth-token` file. The distinct legacy jetski fallback
 is not imported.
 
+Normal Windows agy keeps its login in Windows Credential Manager: a generic credential with
+target `gemini:antigravity` and user name `antigravity` (go-keyring's Windows layout). The blob
+is the raw UTF-8 JSON with no wrapper, and Windows caps it at 2,560 bytes. NASH reaches that one
+item through `@orca/windows-credentials` (`native/windows-credentials`), an N-API addon over
+`CredReadW`/`CredWriteW` for `CRED_TYPE_GENERIC` by exact target name. It has no enumeration
+call; its only other call deletes items in the disposable `nash-test:` namespace for the
+real-store test and refuses every other target. A missing item means agy is signed out; there
+is no file fallback on Windows. A write refuses more than 2,560 bytes before touching the item,
+compares the current item with the expected value immediately before writing, keeps the
+existing item's user name and persistence (a new item gets `antigravity` and
+`CRED_PERSIST_LOCAL_MACHINE`, as agy writes it), and reads the whole blob back. Failures carry
+only the Win32 error code, never a system message or credential bytes. PowerShell `Add-Type` is
+an EDR signal ([windows-edr-posture.md](./windows-edr-posture.md)), `cmdkey` cannot read a blob
+back and would put it on a command line, and WinRT `PasswordVault` cannot see these items, so
+none of them is used. `config/scripts/rebuild-native-deps.mjs` builds the addon against
+Electron next to `@orca/windows-registry`; Windows packages ship it under
+`node_modules/@orca/windows-credentials`.
+
 The compiled CLI bypasses keyring storage when SSH/WSL environment detectors or WSL kernel
 identity apply. A runtime running under that evidenced bypass reads/writes its own CLI file;
-it does not contact the client keychain. The file must be private and regular. A macOS
-`cache/antigravity-keyring-unavailable` marker makes authority uncertain: Orca refuses instead
-of assuming that the keychain or file wins.
+it does not contact the client keychain. The file must be private and regular. A
+`cache/antigravity-keyring-unavailable` marker makes authority uncertain on macOS and Windows:
+Orca refuses instead of assuming that the keyring or file wins.
 
-Native Windows Credential Manager, native Linux Secret Service, and operations directed from
-Windows Orca to a selected WSL distro are explicitly unsupported pending verified adapters.
-Windows file bypass is also refused until private ACL protection is verified.
-Windows' `gemini:antigravity` raw blob and 2560-byte limit are different from the Mac wrapper;
-Linux uses the login collection with `service=gemini`, `username=antigravity`. No dependency,
-PowerShell compilation, credential-home flag, or cross-host fallback is invented here.
+Native Linux Secret Service and operations directed from Windows Orca to a selected WSL distro
+are explicitly unsupported pending verified adapters. The Windows file bypass (agy under SSH on
+a Windows host) is refused until private ACL protection is verified. Linux uses the login
+collection with `service=gemini`, `username=antigravity`. No dependency, PowerShell
+compilation, credential-home flag, or cross-host fallback is invented here.
 A separate SSH relay has no Accounts RPC; use a paired owning runtime that implements it.
 
 ## Identity and snapshots
@@ -53,8 +70,12 @@ be removed; deletion checks the latest native value again before committing.
 
 A selected account is checked before new Orca PTY launches, including desktop daemon and
 headless runtime paths. An externally changed native identity blocks the launch and asks the
-user to select again. Existing sessions can retain their original credentials in memory.
-Shell commands typed manually into a running terminal are outside the Orca launch guard.
+user to select again. A launch whose environment points agy at another home is refused: the
+guard compares `HOME` on macOS and Linux and `USERPROFILE` on Windows, case-insensitively,
+because Go's `os.UserHomeDir` reads only `USERPROFILE` there (a Git Bash `HOME` is ignored).
+Existing sessions can retain their original credentials in memory. Shell commands typed
+manually into a running terminal are outside the Orca launch guard, and so are NASH's routed
+agy tasks, which start outside the PTY path.
 
 ## Sign-in and concurrency limits
 
@@ -88,3 +109,14 @@ installed agy 1.2.14 consumed that verified file credential under its SSH bypass
 `command.name=usage`, `num_turns=0`, no conversation. The real native item remained unchanged.
 This proves the Mac adapter mechanics and actual CLI file authority, not a second-account
 native-keychain switch, native Windows/Linux switching, or WSL/SSH relay deployment.
+
+Windows proof (2026-10-06): the addon was built against Electron 43.7.5 headers and run in
+Electron's own runtime (run-as-node, no app window) against a disposable `nash-test:<uuid>`
+item with synthetic accounts. The addon read an absent item as missing, wrote and read back
+exact bytes, user name and persistence, accepted a full 2,560-byte blob, refused 2,561 bytes,
+an invalid persistence and every delete outside `nash-test:`, then deleted the item. The TS
+adapter, bundled unchanged, then signed in, switched, refused a stale expected value and an
+over-limit write without changing the item, and read the deleted item as signed out.
+`gemini:antigravity` was never read or written. `native-windows-credentials.real.test.ts`
+repeats the adapter part on demand (`ORCA_REAL_AGY_NATIVE_BACKEND_TEST=1`, Windows only). This
+does not yet prove a switch between two real Google accounts that installed agy then uses.

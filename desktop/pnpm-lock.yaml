@@ -609,6 +609,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.2.18)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
     optionalDependencies:
+      '@orca/windows-credentials':
+        specifier: workspace:*
+        version: link:native/windows-credentials
       '@orca/windows-registry':
         specifier: workspace:*
         version: link:native/windows-registry
@@ -630,6 +633,12 @@ importers:
       sherpa-onnx-win-x64:
         specifier: 1.12.37
         version: 1.12.37
+
+  native/windows-credentials:
+    dependencies:
+      node-addon-api:
+        specifier: ^8.5.0
+        version: 8.9.2
 
   native/windows-registry:
     dependencies:
