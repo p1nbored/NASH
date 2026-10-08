@@ -473,6 +473,18 @@ describe('Store', () => {
     expect(store.getSettings().agentYoloDefaultsMigrated).toBe(true)
   })
 
+  it('persists Auto with native prompts and restores the selected mode on reload', async () => {
+    const store = await createStore()
+    store.updateSettings({ agentPermissionMode: 'auto' })
+    store.flush()
+    expect(store.getSettings().agentDefaultArgs?.claude).toBe('')
+    expect(store.getSettings().agentDefaultArgs?.gemini).toBe('')
+    expect(store.getSettings().agentDefaultEnv?.goose).toEqual({})
+    const reopened = await createStore()
+    expect(reopened.getSettings().agentPermissionMode).toBe('auto')
+    expect(reopened.getSettings().agentDefaultArgs?.claude).toBe('')
+  })
+
   it('does not add yolo defaults for legacy agents with command overrides', async () => {
     writeFileSync(
       join(testState.dir, 'orca-data.json'),

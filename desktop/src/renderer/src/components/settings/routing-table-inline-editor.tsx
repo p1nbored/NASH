@@ -3,7 +3,7 @@ import { translate } from '@/i18n/i18n'
 import { EXECUTION_TARGETS } from '../../../../shared/routing-table/routing-table-taxonomy'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
-import { Input } from '../ui/input'
+import { ModelSelect, useRoutingModels } from './routing-table-model-select'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import type { EditableRoute, EditorDraft, RouteEdit } from './routing-table-editor-model'
 import {
@@ -50,27 +50,6 @@ export function EffortSelect<T extends EffortLevel>(props: {
           ))}
         </SelectContent>
       </Select>
-    </div>
-  )
-}
-
-export function ModelInput(props: {
-  value: string
-  label: string
-  invalid: boolean
-  onChange: (value: string) => void
-}): React.JSX.Element {
-  return (
-    <div className="w-48">
-      <Input
-        value={props.value}
-        spellCheck={false}
-        autoComplete="off"
-        aria-invalid={props.invalid ? true : undefined}
-        aria-label={props.label}
-        className="h-8"
-        onChange={(event) => props.onChange(event.target.value)}
-      />
     </div>
   )
 }
@@ -141,12 +120,15 @@ export function RouteChoiceEditor(
   const { row, taskLabel } = props
   const same = usesCoordinator(row)
   const agent = routingCli(row.target)
-  const levels = routingEffortOptions(agent, row.model)
+  const models = useRoutingModels(agent)
+  const selectedModel = row.model === 'inherit' ? props.coordinator.model : row.model
+  const levels = routingEffortOptions(agent, selectedModel, models)
   if (row.taskType === 'configured_project_workflow') {
     return (
       <div className="space-y-row pt-row">
-        <ModelInput
-          value={row.model}
+        <ModelSelect
+          agent="claude"
+          value={selectedModel}
           invalid={props.error !== null}
           label={translate(
             'auto.components.settings.routingTable.inline.modelFor',
@@ -157,11 +139,29 @@ export function RouteChoiceEditor(
             props.onEdit({
               target: 'claude_workflow',
               model,
-              reasoningLevel: 'inherit',
+              reasoningLevel: routingEffortFor('claude', model, row.reasoningLevel, models),
               requirement: 'required'
             })
           }
         />
+        {levels.length > 0 ? (
+          <EffortSelect
+            value={
+              row.reasoningLevel === 'inherit'
+                ? props.coordinator.reasoningLevel
+                : row.reasoningLevel
+            }
+            options={levels}
+            label={translate(
+              'auto.components.settings.routingTable.inline.effortFor',
+              'Effort for {{task}}',
+              { task: taskLabel }
+            )}
+            onChange={(reasoningLevel) =>
+              props.onEdit({ model: selectedModel, reasoningLevel, requirement: 'required' })
+            }
+          />
+        ) : null}
         <EditActions {...props} />
       </div>
     )
@@ -214,7 +214,8 @@ export function RouteChoiceEditor(
         ) : null}
         {same ? null : (
           <>
-            <ModelInput
+            <ModelSelect
+              agent={agent}
               value={row.model}
               invalid={props.error !== null}
               label={translate(
@@ -225,7 +226,7 @@ export function RouteChoiceEditor(
               onChange={(model) =>
                 props.onEdit({
                   model,
-                  reasoningLevel: routingEffortFor(agent, model, row.reasoningLevel)
+                  reasoningLevel: routingEffortFor(agent, model, row.reasoningLevel, models)
                 })
               }
             />
@@ -273,12 +274,14 @@ export function CoordinatorChoiceEditor(
   }
 ): React.JSX.Element {
   const { coordinator } = props
-  const levels = routingEffortOptions(coordinator.agent, coordinator.model)
+  const models = useRoutingModels(coordinator.agent)
+  const levels = routingEffortOptions(coordinator.agent, coordinator.model, models)
   return (
     <div className="space-y-row pt-row">
       <div className="flex flex-wrap items-center gap-row">
         <PrimaryCliSelect coordinator={coordinator} onChange={props.onChange} />
-        <ModelInput
+        <ModelSelect
+          agent={coordinator.agent}
           value={coordinator.model}
           invalid={props.error !== null}
           label={translate(
@@ -289,7 +292,12 @@ export function CoordinatorChoiceEditor(
             props.onChange({
               ...coordinator,
               model,
-              reasoningLevel: routingEffortFor(coordinator.agent, model, coordinator.reasoningLevel)
+              reasoningLevel: routingEffortFor(
+                coordinator.agent,
+                model,
+                coordinator.reasoningLevel,
+                models
+              )
             })
           }
         />

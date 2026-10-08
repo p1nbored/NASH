@@ -304,7 +304,7 @@ describe('validation reviewers (D-017)', () => {
     }
   })
 
-  it.each(['inherit', 'latest', 'opus', 'bad model', 'gpt-6-sol'])(
+  it.each(['inherit', 'latest', 'opus', 'bad model'])(
     'applies the model pin policy to the reviewer model %s',
     (model) => {
       expect(

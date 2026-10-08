@@ -107,6 +107,7 @@ export type TableAvailability = {
 }
 
 export type RouteResolver = {
+  listModels: RouteAvailabilityEvaluator['listModels']
   resolveRoute(input: RouteResolveOptions & { readonly taskType: string }): Promise<RouteResolution>
   resolveCoordinator(options: RouteResolveOptions): Promise<CoordinatorResolution>
   resolveValidationReviewer(
@@ -261,6 +262,7 @@ export function createRouteResolver(deps: {
     },
 
     evaluateTable,
+    listModels: (freshness) => evaluator.listModels(freshness),
     recheck: (subject, options) => evaluateOne(subject, options),
     latch: (subject, kind) => evaluator.latch(subject, kind)
   }

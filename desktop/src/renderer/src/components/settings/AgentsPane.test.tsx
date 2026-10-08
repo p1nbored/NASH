@@ -500,12 +500,17 @@ describe('AgentsPane', () => {
     }
 
     expect(props.value).toBe('yolo')
-    expect(props.options.map((option) => option.value)).toEqual(['yolo', 'manual'])
+    expect(props.options.map((option) => option.value)).toEqual(['yolo', 'auto', 'manual'])
     props.onChange('mixed')
     expect(onChange).not.toHaveBeenCalled()
 
     props.onChange('manual')
     expect(onChange).toHaveBeenCalledWith('manual')
+  })
+
+  it('shows the saved Auto choice as selected', () => {
+    const html = renderPane({ ...getDefaultSettings('/tmp'), agentPermissionMode: 'auto' })
+    expect(html).toMatch(/aria-checked="true"[^>]*>Auto<\/button>/)
   })
 
   it('keeps catalog agent ids, labels, and commands discoverable in settings search', () => {

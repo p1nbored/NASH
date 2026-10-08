@@ -21,8 +21,6 @@ const BARE_ALIASES: ReadonlySet<string> = new Set([
   'opusplan',
   'spark'
 ])
-/** Sibling `gpt-6-sol` and retired `gpt-5.3-codex-spark` (OAIV C2, M9). */
-const REJECTED_SLUGS: ReadonlySet<string> = new Set(['gpt-6-sol', 'gpt-5.3-codex-spark'])
 
 function lastSegment(model: string): string {
   return model.slice(Math.max(model.lastIndexOf('/'), model.lastIndexOf(':')) + 1).toLowerCase()
@@ -37,7 +35,7 @@ export function modelPinViolation(model: string): ModelPinViolation | null {
   if (FLOATING_SELECTOR_TOKEN.test(model) || BARE_ALIASES.has(segment)) {
     return 'model_alias_unpinned'
   }
-  return REJECTED_SLUGS.has(segment) ? 'model_slug_rejected' : null
+  return null
 }
 
 /** A model id that can pin a launch: exact slug syntax, no alias, selector or rejected slug. */

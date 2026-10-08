@@ -68,9 +68,9 @@ describe('codex model and reasoning checks', () => {
     }
   })
 
-  it('excludes a rejected slug even though the account lists it', () => {
+  it('accepts a concrete model listed by the account without a static slug blocklist', () => {
     const { checks } = checkCodexRoute(codex('gpt-6-sol'), observationsOf(listingOf(CODEX_MODELS)))
-    expect(outcome(checks, 'model')).toMatchObject({ result: 'fail', reason: 'model_excluded' })
+    expect(outcome(checks, 'model')).toMatchObject({ result: 'pass' })
   })
 
   it('preserves an exact listed id accepted by the native launcher', () => {

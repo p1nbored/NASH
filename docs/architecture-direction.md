@@ -1,6 +1,6 @@
 # NASH architecture and current decisions
 
-Updated 2026-10-08. This is the consolidated architecture for v1.4.215. It replaces the earlier architecture, decision log and implementation plans. Historical D-number references in code describe decisions preserved in Git history; they do not override the current behavior below.
+Updated 2026-10-08. This describes the current source; published versions and verification are in [releases](releases.md). It replaces the earlier architecture, decision log and implementation plans. Historical D-number references in code describe decisions preserved in Git history; they do not override the current behavior below.
 
 ## 1. Product and ownership
 
@@ -31,6 +31,8 @@ New NASH-managed tasks pass classification and routing. Pre-existing native task
 | Critical permission | The user; Dot receives a redacted summary requesting user confirmation |
 | Inconclusive validation | Workbench or authorized Dot waive/reject flow |
 
+Settings offers Yolo, Auto and Manual. Auto enables the existing review chain for supported NASH-managed runs; Manual keeps native prompts. Switching away from Auto prevents queued agent decisions from reaching the CLI. Existing choices are not silently migrated. Custom launch arguments retain their permission behavior, and managed runs always retain their access ceilings.
+
 Claude Code, Codex and AGY have provider-specific permission adapters. A coordinator cannot approve itself or another run's workers. Review checks the actual process, pane and dispatch identity. File contents and edit bodies are not forwarded in permission summaries.
 
 Hook integration runs after local provider setup. A failed provider configuration leaves the native permission UI available and does not prevent other providers from starting. Codex trust uses the vendor's hash for the exact NASH hook; unverifiable trust remains for native approval. Existing sessions are not restarted automatically.
@@ -56,7 +58,9 @@ The [bundled table](../desktop/src/main/routing-table/default-routing-table.json
 
 The five execution targets remain `claude_primary`, `claude_subagent`, `claude_workflow`, `codex_cli` and `agy_cli`. New coordinator runs support Claude Code or Codex. An adopted coordinator keeps its existing model rather than taking the current settings.
 
-Settings supports direct edits of coordinator, task routes and reviewers. Effort choices follow the selected CLI/model. The configured Claude workflow exposes only its model. Advanced import, proposal approval/rejection, version browsing and rollback operations were removed from both UI and backend.
+Settings supports direct edits of coordinator, task routes and reviewers. Model selectors use the selected CLI's actual catalog, resolve concrete Claude aliases and deduplicate identical model IDs. **Refresh model list** refreshes those catalogs and the existing route readings; a failed listing is not replaced by static guesses. Concrete models are not blocked by an additional static slug list.
+
+Effort choices follow the selected CLI/model. The configured Claude workflow exposes its model and effort, with Claude fixed as its CLI. Advanced import, proposal approval/rejection, version browsing and rollback operations were removed from both UI and backend.
 
 Immutable internal versions, an index and hashes remain only for consistent saves and run configuration references. They do not reintroduce advanced management screens. Benchmark names in the initial table are historical provenance, not new benchmark verification.
 

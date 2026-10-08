@@ -2,6 +2,8 @@ import { normalizeNativeChatAppearanceSettings } from '../../../../shared/native
 import { normalizeAutoRenameBranchFromWorkDefaultOn } from '../../../../shared/auto-rename-branch-from-work-settings'
 import {
   getDefaultSettings,
+  getDefaultUIState,
+  getWorktreeCardModeProperties,
   normalizeAgentActivityDisplayMode,
   normalizeWorktreeCardProperties
 } from '../../../../shared/constants'
@@ -25,6 +27,25 @@ import { normalizeDisabledTuiAgents } from '../../../../shared/tui-agent-selecti
 import { normalizeUiLanguage } from '../../../../shared/ui-language'
 import { normalizeUsagePercentageDisplay } from '../../../../shared/usage-percentage-display'
 import { mergeWorkspaceCleanupUIState } from '../../../../shared/workspace-cleanup-ui-state'
+
+export function normalizeStoredWebUIState(
+  stored: Partial<PersistedUIState>,
+  settings: GlobalSettings
+): PersistedUIState {
+  const base = {
+    ...getDefaultUIState(),
+    worktreeCardProperties: getWorktreeCardModeProperties(
+      settings.compactWorktreeCards ? 'Compact' : 'Default'
+    )
+  }
+  if (typeof stored.rightSidebarOpen === 'boolean') {
+    return mergeWebUIState(base, stored)
+  }
+  return mergeWebUIState(base, {
+    ...stored,
+    rightSidebarOpen: settings.rightSidebarOpenByDefault
+  })
+}
 
 export function mergeWebUIState(
   base: PersistedUIState,

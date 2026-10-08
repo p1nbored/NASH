@@ -1,14 +1,15 @@
 # NASH operations
 
-Current for v1.4.215. See [architecture](architecture-direction.md), [Dot integration](dot-mcp.md) and [release verification](releases.md).
+Current source guide. See [architecture](architecture-direction.md), [Dot integration](dot-mcp.md) and [published releases](releases.md).
 
 ## Install and configure
 
 1. Download the Windows x64 installer from [NASH releases](https://github.com/p1nbored/NASH/releases/latest). Verify it against the release's `SHA256SUMS.txt`. Install updates manually; automatic updates are not configured.
 2. Install and sign in to the official Claude Code, Codex or AGY CLI you want to use. NASH does not bundle or patch those CLIs.
-3. In **Settings → Task routing**, choose a coordinator and the CLI/model for each task type. Reviewers are editable. Effort options depend on the CLI and model; the Claude workflow row only needs its model.
-4. Configure **Classifier** credentials and run its verification, then use the verified result. Clef is the current provider. Verification and classification make real provider calls.
-5. Open a repository or folder workspace. Submit work in **Workbench**, or enable Dot for the intended workspace.
+3. In **Settings → Agents → Agent Permissions**, choose **Auto** for coordinator/Dot review or **Manual** for native confirmation. Yolo remains the native bypass preset where supported. Auto does not mean automatic model selection.
+4. In **Settings → Task routing**, click **Refresh model list** to read the CLI catalogs, then choose a coordinator and the CLI/model for each task type. Reviewers are editable. Claude workflow offers a Claude model and its supported effort; it has no CLI selector.
+5. Configure **Classifier** credentials and run its verification, then use the verified result. Clef is the current provider. Verification and classification make real provider calls.
+6. Open a repository or folder workspace. Submit work in **Workbench**, or enable Dot for the intended workspace.
 
 Running tasks and provider verification use the user's configured accounts. Browsing a route is not proof that its model is available.
 

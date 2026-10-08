@@ -6914,8 +6914,8 @@
           "2d133152fa": "Aucun environnement par défaut",
           "agentPermissions": "Permissions des agents",
           "agentPermissionsInfo": "Infos permissions des agents",
-          "agentPermissionsTooltip": "Ne s'applique pas aux agents dont vous avez remplacé les arguments de lancement.",
-          "agentPermissionsDescription": "Choisissez si NASH lance les agents avec moins de demandes de permission ou avec des vérifications manuelles.",
+          "agentPermissionsTooltip": "Les arguments de lancement personnalisés conservent leur comportement. Auto nécessite des hooks compatibles dans une tâche gérée par NASH ; les autres lancements utilisent la confirmation manuelle native. Les limites d’accès des tâches gérées sont conservées.",
+          "agentPermissionsDescription": "Auto confie les demandes des agents au coordinateur et celles du coordinateur à Dot. Les actions critiques exigent votre confirmation. Yolo ignore les confirmations natives lorsque possible ; Manuel les conserve.",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "Manuel",
           "3f1bdf3cb4": "Le texte d'environnement est trop volumineux pour être analysé sans risque.",
@@ -6923,7 +6923,8 @@
           "codexSessionSourceInfo": "À propos de l'import de l'historique Codex",
           "codexSessionSourceTooltip": "NASH exécute Codex dans un home isolé. Pointez ceci vers votre home Codex existant pour en importer l'historique de sessions. Si vide, ~/.codex est utilisé.",
           "storedDefaultUndetected": "Enregistré par défaut, mais non détecté actuellement",
-          "noAgentsDetected": "Aucun agent détecté. Si un agent est installé, la détection a peut-être expiré."
+          "noAgentsDetected": "Aucun agent détecté. Si un agent est installé, la détection a peut-être expiré.",
+          "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
           "d5a112dc9b": "Icône suivante",
@@ -9348,7 +9349,7 @@
             "a79d266f71": "session",
             "afbf35be68": "session stable",
             "agentPermissions": "Permissions des agents",
-            "agentPermissionsDescription": "Basculer les autorisations d'agent par défaut entre Yolo et Manuelle.",
+            "agentPermissionsDescription": "Choisir les permissions par défaut : Auto, Yolo ou Manuel.",
             "agentRuntime": "Runtime des agents",
             "agentRuntimeDescription": "Choisissez si les agents sont détectés et lancés par défaut sous Windows ou dans WSL.",
             "runtime": "durée d'exécution",
@@ -12667,9 +12668,7 @@
               "notCheckedPlain": "Aucun contrôle récent."
             },
             "summaryPlain": "Contrôle effectué : {{available}} disponibles, {{unavailable}} indisponibles, {{unverified}} non vérifiés.",
-            "checksUnavailablePlain": "Les contrôles de disponibilité sont indisponibles pour le moment. Redémarrez l'application.",
-            "checkingPlain": "Vérification…",
-            "checkPlain": "Vérifier la disponibilité"
+            "checksUnavailablePlain": "Les contrôles de disponibilité sont indisponibles pour le moment. Redémarrez l'application."
           },
           "editor": {
             "geminiExcluded": "Les modèles Gemini 4 sont exclus du routage.",
@@ -12749,6 +12748,13 @@
             "onlyIfSupported": "Uniquement si le modèle le prend en charge",
             "coordinatorEffort": "Effort du coordinateur",
             "reviewersTitle": "Réviseurs"
+          },
+          "models": {
+            "refresh": "Actualiser les modèles",
+            "refreshing": "Actualisation…",
+            "refreshFirst": "Actualisez les modèles pour choisir",
+            "refreshed": "Listes de modèles actualisées.",
+            "partial": "Listes de modèles actualisées. Certains CLI n’ont pas renvoyé de liste."
           }
         },
         "dotIngress": {
@@ -14703,9 +14709,7 @@
           "69af7e9c1c": "n'est pas encore dans votre PATH. NASH le définira comme valeur par défaut et vous pourrez l'installer à tout moment.",
           "1eee1c7bd8": "Aucun agent détecté dans votre PATH. Choisissez-en un à installer plus tard, ou continuez avec un terminal vide.",
           "hideAgents": "Masquer les agents",
-          "showMoreAgents": "Afficher {{value0}} autres agents →",
-          "yoloModeLabel": "Mode Yolo",
-          "yoloPermissionsDescription": "Les agents exécutent des commandes et modifient des fichiers sans demander, et certains contournent aussi leur sandbox. À utiliser uniquement dans des projets de confiance."
+          "showMoreAgents": "Afficher {{value0}} autres agents →"
         },
         "FeatureSetupInlineTerminal": {
           "789b59936e": "Appuyez sur Entrée pour exécuter la commande et confirmez npx si demandé. Vous pouvez aussi configurer cela plus tard dans les paramètres.",

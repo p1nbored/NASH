@@ -11,6 +11,19 @@ const CodeSchema = z.string().regex(/^[a-z][a-z0-9_]{0,63}$/)
 const VersionSchema = z.number().int().min(1)
 const TABLE_SOURCES = ['bundled', 'user'] as const
 
+const RoutingModelSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  efforts: z.array(z.string())
+})
+export const RoutingModelListsSchema = z.object({
+  claude: z.array(RoutingModelSchema).nullable(),
+  codex: z.array(RoutingModelSchema).nullable(),
+  agy: z.array(RoutingModelSchema).nullable()
+})
+export type RoutingModelLists = z.infer<typeof RoutingModelListsSchema>
+export type RoutingModel = z.infer<typeof RoutingModelSchema>
+
 /** A refusal: its reason code and an integrity detail when there is one. */
 export const RoutingTableRefusalViewSchema = z
   .object({
@@ -38,7 +51,8 @@ export const WorkbenchRoutingTableListResultSchema = z
   .object({
     active: RoutingTableActiveViewSchema,
     /** The active table's routes from cached readings only; null without an active table or checks. */
-    availability: RoutingTableAvailabilityViewSchema.nullable()
+    availability: RoutingTableAvailabilityViewSchema.nullable(),
+    models: RoutingModelListsSchema.optional()
   })
   .strict()
 
@@ -49,7 +63,8 @@ export const WorkbenchRoutingTableCheckResultSchema = z.union([
       ok: z.literal(true),
       version: VersionSchema,
       sha256: Sha256HexSchema,
-      availability: RoutingTableAvailabilityViewSchema
+      availability: RoutingTableAvailabilityViewSchema,
+      models: RoutingModelListsSchema.optional()
     })
     .strict(),
   RoutingTableRefusalViewSchema

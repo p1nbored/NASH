@@ -1,7 +1,12 @@
 import { TUI_AGENT_CONFIG } from './tui-agent-config'
 import type { TuiAgent } from './tui-agent'
 
-export type AgentPermissionMode = 'yolo' | 'manual' | 'mixed'
+export type AgentPermissionMode = 'yolo' | 'auto' | 'manual' | 'mixed'
+export type SavedAgentPermissionMode = Exclude<AgentPermissionMode, 'mixed'>
+
+export function normalizeAgentPermissionMode(value: unknown): SavedAgentPermissionMode | undefined {
+  return value === 'auto' || value === 'manual' || value === 'yolo' ? value : undefined
+}
 
 export const YOLO_TUI_AGENT_ARGS: Partial<Record<TuiAgent, string>> = {
   claude: '--dangerously-skip-permissions',
@@ -122,9 +127,14 @@ export function resolveTuiAgentPermissionMode(args: {
 }
 
 export function resolveAgentPermissionModeSummary(args: {
+  agentPermissionMode?: SavedAgentPermissionMode
   agentDefaultArgs?: Partial<Record<TuiAgent, string>> | null
   agentDefaultEnv?: Partial<Record<TuiAgent, Record<string, string>>> | null
 }): AgentPermissionMode {
+  const saved = normalizeAgentPermissionMode(args.agentPermissionMode)
+  if (saved) {
+    return saved
+  }
   const modes: AgentPermissionMode[] = []
 
   for (const agent of PERMISSION_AGENT_IDS) {
@@ -145,6 +155,7 @@ export function applyAgentPermissionMode(args: {
   agentDefaultArgs?: Partial<Record<TuiAgent, string>> | null
   agentDefaultEnv?: Partial<Record<TuiAgent, Record<string, string>>> | null
 }): {
+  agentPermissionMode: SavedAgentPermissionMode
   agentDefaultArgs: Partial<Record<TuiAgent, string>>
   agentDefaultEnv: Partial<Record<TuiAgent, Record<string, string>>>
 } {
@@ -169,5 +180,5 @@ export function applyAgentPermissionMode(args: {
     }
   }
 
-  return { agentDefaultArgs: nextArgs, agentDefaultEnv: nextEnv }
+  return { agentPermissionMode: args.mode, agentDefaultArgs: nextArgs, agentDefaultEnv: nextEnv }
 }

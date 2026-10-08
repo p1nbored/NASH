@@ -14,7 +14,8 @@ import type {
 import type { RouteResolver, TableAvailability } from '../../routing-table/route-resolver'
 
 /** What the Settings screen reads from B2's resolver: a table-wide evaluation. */
-export type RoutingTableAvailabilitySource = Pick<RouteResolver, 'evaluateTable'>
+export type RoutingTableAvailabilitySource = Pick<RouteResolver, 'evaluateTable'> &
+  Partial<Pick<RouteResolver, 'listModels'>>
 
 /** A detection, model listing or user check older than this no longer counts: the route reads "not checked". */
 export const ROUTE_READING_FRESH_MS = AGENT_MODEL_CATALOG_FRESH_MS

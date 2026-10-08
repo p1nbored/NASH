@@ -1,10 +1,14 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { Check, ExternalLink } from 'lucide-react'
 import { getAgentCatalog, AgentIcon, type AgentCatalogEntry } from '@/lib/agent-catalog'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Switch } from '@/components/ui/switch'
+import { AgentPermissionsSetting } from '../settings/AgentPermissionsSetting'
+import type {
+  AgentPermissionMode,
+  SavedAgentPermissionMode
+} from '../../../../shared/tui-agent-permissions'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { translate } from '@/i18n/i18n'
 
@@ -16,8 +20,8 @@ type AgentStepProps = {
   onSelect: (agent: TuiAgent, fromCollapsedSection: boolean) => void
   detectedSet: Set<TuiAgent>
   isDetecting: boolean
-  yoloPermissions?: boolean
-  onYoloPermissionsChange?: (enabled: boolean) => void
+  permissionMode?: AgentPermissionMode
+  onPermissionModeChange?: (mode: SavedAgentPermissionMode) => void
 }
 
 export function AgentStep({
@@ -25,8 +29,8 @@ export function AgentStep({
   onSelect,
   detectedSet,
   isDetecting,
-  yoloPermissions = true,
-  onYoloPermissionsChange
+  permissionMode = 'yolo',
+  onPermissionModeChange
 }: AgentStepProps) {
   const agentCatalog = getAgentCatalog()
   const detected = agentCatalog.filter((agent) => detectedSet.has(agent.id))
@@ -142,39 +146,9 @@ export function AgentStep({
           </div>
         </div>
       </section>
-      <YoloPermissionsControl
-        yoloPermissions={yoloPermissions}
-        onYoloPermissionsChange={onYoloPermissionsChange}
-      />
-    </div>
-  )
-}
-
-function YoloPermissionsControl({
-  yoloPermissions,
-  onYoloPermissionsChange
-}: {
-  yoloPermissions: boolean
-  onYoloPermissionsChange?: (enabled: boolean) => void
-}): React.JSX.Element {
-  const switchId = useId()
-  return (
-    <div className="flex shrink-0 items-center justify-between gap-6 border-t border-border pt-4">
-      <label htmlFor={switchId} className="min-w-0 cursor-pointer space-y-0.5">
-        <span className="block text-sm font-medium text-foreground">
-          {translate('auto.components.onboarding.AgentStep.yoloModeLabel', 'Yolo mode')}
-        </span>
-        <span className="block text-xs text-muted-foreground">
-          {translate(
-            'auto.components.onboarding.AgentStep.yoloPermissionsDescription',
-            'Agents run commands and edit files without asking, and some also bypass their sandbox. Use only in projects you trust.'
-          )}
-        </span>
-      </label>
-      <Switch
-        id={switchId}
-        checked={yoloPermissions}
-        onCheckedChange={(checked) => onYoloPermissionsChange?.(checked)}
+      <AgentPermissionsSetting
+        mode={permissionMode}
+        onChange={(mode) => onPermissionModeChange?.(mode)}
       />
     </div>
   )

@@ -11,6 +11,7 @@ import {
   type RoutingTableRefusalView,
   type WorkbenchRoutingTableCheckResult,
   type WorkbenchRoutingTableDecisionResult,
+  type RoutingModelLists,
   type WorkbenchRoutingTableListResult
 } from '../../../../shared/workbench-routing-table-view'
 import { routeCheckErrorMessage, routeCheckSummary } from './routing-table-availability-messages'
@@ -31,6 +32,7 @@ export type RoutingTableModel = {
   list: WorkbenchRoutingTableListResult | null
   /** The active table's route availability: the last check for this version, else the list's. */
   availability: RoutingTableAvailabilityView | null
+  models?: RoutingModelLists
   loadError: string | null
   loadErrorDetails: string | null
   loading: boolean
@@ -147,7 +149,22 @@ export function useRoutingTable(): RoutingTableModel {
     if (result?.ok === true) {
       checkLandedAtRequestRef.current = requestRef.current
       setChecked(result)
-      setNotice({ kind: 'success', message: routeCheckSummary(result.availability) })
+      const complete =
+        result.models && Object.values(result.models).every((models) => models !== null)
+      setNotice({
+        kind: 'success',
+        message: result.models
+          ? complete
+            ? translate(
+                'auto.components.settings.routingTable.models.refreshed',
+                'Model lists refreshed.'
+              )
+            : translate(
+                'auto.components.settings.routingTable.models.partial',
+                'Model lists refreshed. Some CLIs did not return a model list.'
+              )
+          : routeCheckSummary(result.availability)
+      })
       const shown = listRef.current?.active.ok ? listRef.current.active : null
       if (shown?.version !== result.version || shown.sha256 !== result.sha256) {
         // Why: the check read a version this card is not showing, so the table changed meanwhile.
@@ -208,6 +225,7 @@ export function useRoutingTable(): RoutingTableModel {
   return {
     list,
     availability: availabilityFor(list, checked),
+    models: checked?.models ?? list?.models,
     loadError: loadError?.message ?? null,
     loadErrorDetails: loadError?.details ?? null,
     loading,

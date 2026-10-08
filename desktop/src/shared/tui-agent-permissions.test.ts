@@ -8,6 +8,29 @@ import {
 } from './tui-agent-permissions'
 
 describe('tui agent permissions', () => {
+  it('saves Auto and removes preset bypass flags while preserving custom launches', () => {
+    const result = applyAgentPermissionMode({
+      mode: 'auto',
+      agentDefaultArgs: { ...YOLO_TUI_AGENT_ARGS, codex: '--model gpt-5' },
+      agentDefaultEnv: YOLO_TUI_AGENT_ENV
+    })
+    expect(result.agentPermissionMode).toBe('auto')
+    expect(result.agentDefaultArgs.claude).toBe('')
+    expect(result.agentDefaultArgs.gemini).toBe('')
+    expect(result.agentDefaultArgs.codex).toBe('--model gpt-5')
+    expect(result.agentDefaultEnv.goose).toEqual({})
+    expect(resolveAgentPermissionModeSummary(result)).toBe('auto')
+  })
+
+  it('keeps an explicit selection distinct from custom launch arguments', () => {
+    expect(
+      resolveAgentPermissionModeSummary({
+        agentPermissionMode: 'manual',
+        agentDefaultArgs: { codex: '--model gpt-5' }
+      })
+    ).toBe('manual')
+  })
+
   it('recognizes the current default profile as yolo', () => {
     expect(
       resolveAgentPermissionModeSummary({

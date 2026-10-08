@@ -4,6 +4,10 @@ import {
   normalizeComputerAwakeMode
 } from '../../../../shared/computer-awake-mode'
 import { normalizeTerminalCursorStyleDefault } from '../../../../shared/terminal-cursor-style-settings'
+import {
+  applyAgentPermissionMode,
+  normalizeAgentPermissionMode
+} from '../../../../shared/tui-agent-permissions'
 import { mergeSettings } from './web-preference-normalization'
 import {
   getRuntimeBackedStoredSettings,
@@ -23,12 +27,25 @@ import { noopUnsubscribe } from './web-storage'
 
 export function createWebSettingsApi(): Partial<PreloadApi> {
   return {
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: satisfies checks browser methods; installWebPreloadApi supplies omitted desktop methods through withFallback.
     settings: {
       get: async () => getRuntimeBackedStoredSettings(),
       // Why: localStorage-backed settings are synchronous, so the pre-hydration kill-switch read works the same as desktop.
       getSync: () => settingsForActiveVisibilityOwner(getStoredSettings()),
       set: async (updates) => {
         const sanitizedUpdates = { ...updates }
+        const permissionMode = normalizeAgentPermissionMode(updates.agentPermissionMode)
+        if (permissionMode) {
+          const current = getStoredSettings()
+          Object.assign(
+            sanitizedUpdates,
+            applyAgentPermissionMode({
+              mode: permissionMode,
+              agentDefaultArgs: updates.agentDefaultArgs ?? current.agentDefaultArgs,
+              agentDefaultEnv: updates.agentDefaultEnv ?? current.agentDefaultEnv
+            })
+          )
+        }
         const runtimeEnvironment = requireActiveEnvironmentOrNull()
         delete sanitizedUpdates.activeRuntimeEnvironmentId
         if (
@@ -81,7 +98,10 @@ export function createWebSettingsApi(): Partial<PreloadApi> {
         const next = mergeSettings(getStoredSettings(), localUpdates, {
           preserveAutoRenameBranchFromWorkUpdate: 'autoRenameBranchFromWork' in sanitizedUpdates
         })
-        writeStoredSettings(next)
+        // The host must acknowledge a permission change before the client reports it saved.
+        if (!runtimeEnvironment || !permissionMode) {
+          writeStoredSettings(next)
+        }
         return settingsForActiveVisibilityOwner(
           await syncRuntimeBackedSettings(sanitizedUpdates, next)
         )

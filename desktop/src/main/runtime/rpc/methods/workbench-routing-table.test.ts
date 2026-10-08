@@ -146,7 +146,7 @@ describe('workbench.routingTable methods', () => {
     const listed = WorkbenchRoutingTableListResultSchema.parse(
       await WORKBENCH_ROUTING_TABLE_LIST_METHOD.handler({}, context)
     )
-    expect(Object.keys(listed).sort()).toEqual(['active', 'availability'])
+    expect(Object.keys(listed).sort()).toEqual(['active', 'availability', 'models'])
     expect(listed.active).toMatchObject({
       ok: true,
       version: 1,

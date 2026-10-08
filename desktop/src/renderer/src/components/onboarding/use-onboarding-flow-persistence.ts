@@ -9,7 +9,10 @@ import type { EventProps } from '../../../../shared/telemetry-events'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
-import { applyAgentPermissionMode } from '../../../../shared/tui-agent-permissions'
+import {
+  applyAgentPermissionMode,
+  type AgentPermissionMode
+} from '../../../../shared/tui-agent-permissions'
 import type { StepId, StepNumber } from './use-onboarding-flow-types'
 
 export async function persistStep(
@@ -135,7 +138,7 @@ export function useCloseWith({ onOnboardingChange, startTimeRef, setError }: Clo
 type PersistCurrentStepDeps = {
   currentStepId: StepId
   selectedAgent: TuiAgent | null
-  yoloPermissions: boolean
+  permissionMode: AgentPermissionMode
   theme: GlobalSettings['theme']
   settings: GlobalSettings | null
   updateSettings: (updates: Partial<GlobalSettings>) => Promise<void> | void
@@ -151,7 +154,7 @@ export type PersistCurrentStepResult = {
 export function usePersistCurrentStep({
   currentStepId,
   selectedAgent,
-  yoloPermissions,
+  permissionMode,
   theme,
   settings,
   updateSettings,
@@ -168,11 +171,13 @@ export function usePersistCurrentStep({
         const defaultTuiAgent = selectedAgentOrBlank(selectedAgent)
         await updateSettings({
           defaultTuiAgent,
-          ...applyAgentPermissionMode({
-            mode: yoloPermissions ? 'yolo' : 'manual',
-            agentDefaultArgs: settings.agentDefaultArgs,
-            agentDefaultEnv: settings.agentDefaultEnv
-          })
+          ...(permissionMode === 'mixed'
+            ? {}
+            : applyAgentPermissionMode({
+                mode: permissionMode,
+                agentDefaultArgs: settings.agentDefaultArgs,
+                agentDefaultEnv: settings.agentDefaultEnv
+              }))
         })
         const choseAgent = defaultTuiAgent !== 'blank'
         const wasAlreadyChosen = onboardingChecklist.choseAgent
@@ -229,7 +234,7 @@ export function usePersistCurrentStep({
     settings,
     theme,
     updateSettings,
-    yoloPermissions,
+    permissionMode,
     setError
   ])
 }

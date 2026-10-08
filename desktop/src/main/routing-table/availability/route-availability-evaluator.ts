@@ -74,6 +74,7 @@ export type EvaluatorWaits = {
 }
 
 export type RouteAvailabilityEvaluator = {
+  listModels(freshness: 'cached' | 'recheck'): Promise<Record<RouteProvider, ModelListing>>
   evaluate(
     subjects: readonly RouteSubject[],
     options: EvaluateOptions
@@ -249,6 +250,12 @@ export function createRouteAvailabilityEvaluator(deps: {
   }
 
   return {
+    async listModels(freshness) {
+      const [claude, codex, agy] = await Promise.all(
+        (['claude', 'codex', 'agy'] as const).map((provider) => obtainListing(provider, freshness))
+      )
+      return { claude, codex, agy }
+    },
     async evaluate(subjects, options) {
       if (subjects.length === 0) {
         return []

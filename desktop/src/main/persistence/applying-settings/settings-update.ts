@@ -1,6 +1,10 @@
 import { normalizeNativeChatAppearanceSettings } from '../../../shared/native-chat-appearance-settings'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import { normalizeDisabledTuiAgents } from '../../../shared/tui-agent-selection'
+import {
+  applyAgentPermissionMode,
+  normalizeAgentPermissionMode
+} from '../../../shared/tui-agent-permissions'
 import { resolveNestedWorkerMaxDepth } from '../../../shared/nested-worker-depth'
 import {
   normalizeTuiAgentArgsRecord,
@@ -106,6 +110,23 @@ export function updateSettings(
   if ('agentDefaultEnv' in updates) {
     sanitizedUpdates.agentDefaultEnv = normalizeTuiAgentEnvRecord(updates.agentDefaultEnv)
     sanitizedUpdates.agentYoloDefaultsMigrated = true
+  }
+  if ('agentPermissionMode' in updates) {
+    const mode = normalizeAgentPermissionMode(updates.agentPermissionMode)
+    sanitizedUpdates.agentPermissionMode = mode
+    if (mode) {
+      Object.assign(
+        sanitizedUpdates,
+        applyAgentPermissionMode({
+          mode,
+          agentDefaultArgs:
+            sanitizedUpdates.agentDefaultArgs ?? operations.state.settings.agentDefaultArgs,
+          agentDefaultEnv:
+            sanitizedUpdates.agentDefaultEnv ?? operations.state.settings.agentDefaultEnv
+        })
+      )
+      sanitizedUpdates.agentYoloDefaultsMigrated = true
+    }
   }
   if ('terminalQuickCommands' in updates) {
     sanitizedUpdates.terminalQuickCommands = normalizeTerminalQuickCommands(

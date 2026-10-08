@@ -37,21 +37,23 @@ function balanceKey(suffix: string): string {
   return `auto.components.status.bar.${suffix}`
 }
 
-describe('provider credit balance sparse target catalogs', () => {
+describe('provider credit balance localized catalogs', () => {
   it.each(Object.entries(catalogs))(
-    '%s omits copied English balance entries',
+    '%s supplies localized balance entries',
     async (locale, { catalog }) => {
       const instance = createInstance()
       await instance.init({ lng: locale, resources: { [locale]: { translation: catalog } } })
 
-      for (const [suffix] of balanceMessages) {
-        expect(instance.getResource(locale, 'translation', balanceKey(suffix))).toBeUndefined()
+      for (const [suffix, defaultValue] of balanceMessages) {
+        const value = instance.getResource(locale, 'translation', balanceKey(suffix))
+        expect(value).toEqual(expect.any(String))
+        expect(value).not.toBe(defaultValue)
       }
     }
   )
 
   it.each(Object.entries(catalogs))(
-    '%s falls back and interpolates balance copy at runtime',
+    '%s uses and interpolates its localized balance copy at runtime',
     async (locale, { catalog, compactBalanceMessage }) => {
       const instance = createInstance()
       await instance.init({
@@ -63,7 +65,10 @@ describe('provider credit balance sparse target catalogs', () => {
 
       for (const [suffix, defaultValue] of balanceMessages) {
         expect(instance.t(balanceKey(suffix), { defaultValue, value0: '12.50' })).toBe(
-          defaultValue.replace('{{value0}}', '12.50')
+          String(instance.getResource(locale, 'translation', balanceKey(suffix))).replace(
+            '{{value0}}',
+            '12.50'
+          )
         )
       }
       expect(
@@ -71,7 +76,11 @@ describe('provider credit balance sparse target catalogs', () => {
           defaultValue: '{{value0}} credits available',
           value0: 500
         })
-      ).toBe('500 credits available')
+      ).toBe(
+        String(
+          instance.getResource(locale, 'translation', balanceKey('tooltip.87b5bda4d3'))
+        ).replace('{{value0}}', '500')
+      )
       expect(
         instance.t(balanceKey('StatusBar.4fba7dc1e7'), {
           defaultValue: '{{value0}} bal',

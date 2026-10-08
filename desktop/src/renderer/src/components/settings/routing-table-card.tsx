@@ -3,6 +3,7 @@ import { translate } from '@/i18n/i18n'
 import type { RoutingTableChanges } from '../../../../shared/routing-table/routing-table-edit-schema'
 import type { WorkbenchRoutingTableListResult } from '../../../../shared/workbench-routing-table-view'
 import { RoutingTableTaskList } from './routing-table-active-view'
+import { EMPTY_ROUTING_MODELS, RoutingModelsContext } from './routing-table-model-select'
 import { RouteCheckButton } from './routing-table-availability'
 import { settingsEditSubmission } from './routing-table-inline-edit'
 import { routingTableRefusalDetails, routingTableRefusalMessage } from './routing-table-messages'
@@ -87,7 +88,7 @@ export function RoutingTableCard(): React.JSX.Element {
         action={
           <div className="flex items-center gap-row">
             {status === null ? null : <SettingsStatusLabel tone="warning" label={status} />}
-            {active !== null && model.availability !== null ? (
+            {active !== null ? (
               <RouteCheckButton
                 checking={model.checking}
                 disabled={model.loading || model.busy}
@@ -112,12 +113,14 @@ export function RoutingTableCard(): React.JSX.Element {
         <>
           <Blocked list={list} />
           {active === null ? null : (
-            <RoutingTableTaskList
-              table={active.table}
-              availability={model.availability}
-              busy={model.busy}
-              onSave={saveEdit}
-            />
+            <RoutingModelsContext.Provider value={model.models ?? EMPTY_ROUTING_MODELS}>
+              <RoutingTableTaskList
+                table={active.table}
+                availability={model.availability}
+                busy={model.busy}
+                onSave={saveEdit}
+              />
+            </RoutingModelsContext.Provider>
           )}
         </>
       )}

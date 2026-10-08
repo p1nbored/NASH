@@ -11,6 +11,7 @@ import { resolveActiveRoutingTable } from '../../routing-table/routing-table-act
 import type { RoutingTableContext } from '../../routing-table/routing-table-context'
 import type { RoutingTable } from '../../../shared/routing-table/routing-table-schema'
 import type { RoutingTableAvailabilityView } from '../../../shared/workbench-route-availability-view'
+import { routingModelLists } from './routing-table-model-lists'
 import {
   checkedTableAvailability,
   listedTableAvailability,
@@ -84,7 +85,8 @@ export async function routingTableListView(
           table: active.table
         }
       : routingTableRefusalView(active),
-    availability: routes
+    availability: routes,
+    models: await routingModelLists(availability, 'cached')
   })
 }
 
@@ -97,10 +99,15 @@ export async function routingTableCheckView(
   if (!active.ok) {
     return WorkbenchRoutingTableCheckResultSchema.parse(routingTableRefusalView(active))
   }
+  const [routes, models] = await Promise.all([
+    checkedTableAvailability(availability, active.table),
+    routingModelLists(availability, 'recheck')
+  ])
   return WorkbenchRoutingTableCheckResultSchema.parse({
     ok: true,
     version: active.version,
     sha256: active.sha256,
-    availability: await checkedTableAvailability(availability, active.table)
+    availability: routes,
+    models
   })
 }

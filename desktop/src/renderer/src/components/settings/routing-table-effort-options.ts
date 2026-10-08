@@ -1,4 +1,5 @@
 import { getAgentSessionOptionCatalog } from '../../../../shared/agent-session-option-catalog'
+import type { RoutingModel } from '../../../../shared/workbench-routing-table-view'
 import {
   CONCRETE_REASONING_LEVELS,
   type ConcreteReasoningLevel,
@@ -12,7 +13,15 @@ export function routingCli(target: ExecutionTarget | ValidationReviewerTarget): 
   return target === 'codex_cli' ? 'codex' : target === 'agy_cli' ? 'antigravity' : 'claude'
 }
 
-export function routingEffortOptions(agent: RoutingCli, model: string): ConcreteReasoningLevel[] {
+export function routingEffortOptions(
+  agent: RoutingCli,
+  model: string,
+  models?: readonly RoutingModel[] | null
+): ConcreteReasoningLevel[] {
+  const listed = models?.find((entry) => entry.id === model)
+  if (listed) {
+    return CONCRETE_REASONING_LEVELS.filter((level) => listed.efforts.includes(level))
+  }
   const catalog = getAgentSessionOptionCatalog(agent)
   const id = model.trim()
   const entry = catalog?.models.find(
@@ -34,9 +43,10 @@ export function routingEffortOptions(agent: RoutingCli, model: string): Concrete
 export function routingEffortFor(
   agent: RoutingCli,
   model: string,
-  current: ConcreteReasoningLevel | 'inherit'
+  current: ConcreteReasoningLevel | 'inherit',
+  models?: readonly RoutingModel[] | null
 ): ConcreteReasoningLevel {
-  const levels = routingEffortOptions(agent, model)
+  const levels = routingEffortOptions(agent, model, models)
   if (current !== 'inherit' && levels.includes(current)) {
     return current
   }

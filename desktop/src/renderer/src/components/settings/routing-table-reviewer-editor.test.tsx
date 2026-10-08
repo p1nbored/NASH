@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { RoutingTableChanges } from '../../../../shared/routing-table/routing-table-edit-schema'
 import { RoutingTableTaskList } from './routing-table-active-view'
-import { fixtureTable } from './routing-table-view.test-fixture'
+import {
+  fixtureTable,
+  renderRouting as render,
+  selectModel
+} from './routing-table-view.test-fixture'
 
 afterEach(cleanup)
 
@@ -24,9 +28,7 @@ describe('inline reviewer editing', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Reviewer 1' }))
     const row = reviewerRow()
-    fireEvent.change(within(row).getByLabelText('Model for Reviewer 1'), {
-      target: { value: 'gpt-6-astra' }
-    })
+    selectModel(within(row).getByLabelText('Model for Reviewer 1'), 'gpt-6-astra')
     fireEvent.click(within(row).getByRole('combobox', { name: 'Effort for Reviewer 1' }))
     fireEvent.click(screen.getByRole('option', { name: 'Max' }))
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
@@ -66,13 +68,12 @@ describe('inline reviewer editing', () => {
     fireEvent.click(screen.getByRole('option', { name: 'Claude headless review' }))
     const model = within(row).getByLabelText('Model for Reviewer 1')
     expect(model).toHaveProperty('value', '')
-    fireEvent.change(model, { target: { value: 'opus' } })
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
-    expect(within(row).getByRole('alert').textContent).toMatch(/exact model ID/i)
+    expect(within(row).getByRole('alert').textContent).toMatch(/model/i)
     expect(model.getAttribute('aria-invalid')).toBe('true')
     expect(onSave).not.toHaveBeenCalled()
 
-    fireEvent.change(model, { target: { value: 'claude-opus-5-5' } })
+    selectModel(model, 'claude-opus-5-5')
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
     expect(onSave.mock.calls[0]?.[0]).toMatchObject({
       validation: {
@@ -116,13 +117,11 @@ describe('inline reviewer editing', () => {
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Edit Reviewer 1' }))
-    fireEvent.change(screen.getByLabelText('Model for Reviewer 1'), {
-      target: { value: 'gpt-6-astra' }
-    })
+    selectModel(screen.getByLabelText('Model for Reviewer 1'), 'gpt-6-astra')
     await act(async () =>
       fireEvent.click(within(reviewerRow()).getByRole('button', { name: 'Save' }))
     )
-    expect(screen.getByLabelText('Model for Reviewer 1')).toHaveProperty('value', 'gpt-6-astra')
+    expect(screen.getByLabelText('Model for Reviewer 1').textContent).toContain('gpt-6-astra')
     expect(screen.getByRole('button', { name: 'Edit Reviewer 2' })).toHaveProperty('disabled', true)
     rerender(
       <RoutingTableTaskList

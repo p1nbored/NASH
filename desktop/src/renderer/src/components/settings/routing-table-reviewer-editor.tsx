@@ -2,12 +2,8 @@ import { translate } from '@/i18n/i18n'
 import type { ValidationReviewer } from '../../../../shared/routing-table/routing-table-schema'
 import { VALIDATION_REVIEWER_TARGETS } from '../../../../shared/routing-table/routing-table-taxonomy'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import {
-  EditActions,
-  EffortSelect,
-  ModelInput,
-  type EditorCallbacks
-} from './routing-table-inline-editor'
+import { EditActions, EffortSelect, type EditorCallbacks } from './routing-table-inline-editor'
+import { ModelSelect, useRoutingModels } from './routing-table-model-select'
 import { reviewerTargetLabel } from './routing-table-labels'
 import { routingCli, routingEffortFor, routingEffortOptions } from './routing-table-effort-options'
 
@@ -20,7 +16,8 @@ export function ReviewerChoiceEditor(
 ): React.JSX.Element {
   const { reviewer, label, onChange } = props
   const agent = routingCli(reviewer.target)
-  const levels = routingEffortOptions(agent, reviewer.model)
+  const models = useRoutingModels(agent)
+  const levels = routingEffortOptions(agent, reviewer.model, models)
   return (
     <div className="space-y-row pt-row">
       <div className="flex flex-wrap items-center gap-row">
@@ -63,7 +60,8 @@ export function ReviewerChoiceEditor(
             </SelectContent>
           </Select>
         </div>
-        <ModelInput
+        <ModelSelect
+          agent={agent}
           value={reviewer.model}
           invalid={props.error !== null}
           label={translate(
@@ -77,7 +75,7 @@ export function ReviewerChoiceEditor(
             onChange({
               ...reviewer,
               model,
-              reasoning_level: routingEffortFor(agent, model, reviewer.reasoning_level)
+              reasoning_level: routingEffortFor(agent, model, reviewer.reasoning_level, models)
             })
           }
         />

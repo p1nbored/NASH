@@ -6805,8 +6805,8 @@
           "2d133152fa": "Sin entorno predeterminado",
           "agentPermissions": "Permisos de Agents",
           "agentPermissionsInfo": "Información de permisos de Agents",
-          "agentPermissionsTooltip": "No se aplica a agents con argumentos de lanzamiento sobrescritos.",
-          "agentPermissionsDescription": "Elige si NASH lanza agents con menos prompts de permisos o con checks manuales.",
+          "agentPermissionsTooltip": "Los argumentos de inicio personalizados conservan su comportamiento. Auto requiere hooks compatibles en tareas gestionadas por NASH; otros inicios usan la confirmación manual nativa. Las tareas gestionadas conservan sus límites de acceso.",
+          "agentPermissionsDescription": "Auto encarga al coordinador revisar las solicitudes de los agentes y a Dot las del coordinador. Las acciones críticas requieren tu confirmación. Yolo omite los avisos nativos cuando se admite; Manual los mantiene.",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "Manual",
           "3f1bdf3cb4": "El texto de entorno es demasiado grande para analizarlo de forma segura.",
@@ -6818,7 +6818,8 @@
           "remoteDetectionFailed": "Couldn’t detect installed agents. Check the host connection and try again.",
           "retryDetection": "Retry",
           "storedDefaultUndetected": "Guardado como predeterminado, pero no detectado en este momento",
-          "noAgentsDetected": "No se detectaron agentes. Si hay uno instalado, es posible que la sonda haya agotado su tiempo de espera."
+          "noAgentsDetected": "No se detectaron agentes. Si hay uno instalado, es posible que la sonda haya agotado su tiempo de espera.",
+          "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
           "d5a112dc9b": "Icono siguiente",
@@ -9201,7 +9202,7 @@
             "a79d266f71": "sesión",
             "afbf35be68": "sesión estable",
             "agentPermissions": "Permisos de agentes",
-            "agentPermissionsDescription": "Cambia los permisos predeterminados de los agentes entre Yolo y Manual.",
+            "agentPermissionsDescription": "Elige los permisos predeterminados: Auto, Yolo o Manual.",
             "agentRuntime": "Runtime del agente",
             "agentRuntimeDescription": "Elige si los agentes se detectan y ejecutan en Windows o en WSL de forma predeterminada.",
             "7e15b89f6e": "servidor",
@@ -12286,7 +12287,6 @@
           },
           "availability": {
             "available": "Disponible",
-            "checkingPlain": "Comprobando…",
             "unavailable": "No disponible",
             "notChecked": "Sin comprobar",
             "unverified": "Sin verificar",
@@ -12310,8 +12310,7 @@
               "notCheckedPlain": "No se ha comprobado recientemente."
             },
             "summaryPlain": "Comprobación: {{available}} disponibles, {{unavailable}} no disponibles, {{unverified}} sin verificar.",
-            "checksUnavailablePlain": "Las comprobaciones de disponibilidad no están disponibles en este momento. Reinicia la aplicación.",
-            "checkPlain": "Comprobar disponibilidad"
+            "checksUnavailablePlain": "Las comprobaciones de disponibilidad no están disponibles en este momento. Reinicia la aplicación."
           },
           "editor": {
             "geminiExcluded": "Los modelos Gemini 4 están excluidos de la asignación.",
@@ -12391,6 +12390,13 @@
             "unavailablePlain": "La asignación de tareas no está disponible en este momento. Reinicia la aplicación.",
             "untrustedCallerPlain": "La asignación de tareas solo se puede consultar o cambiar en la aplicación de escritorio de este equipo.",
             "callFailedPlain": "La solicitud no se completó. Inténtalo de nuevo."
+          },
+          "models": {
+            "refresh": "Actualizar lista de modelos",
+            "refreshing": "Actualizando…",
+            "refreshFirst": "Actualiza la lista para elegir",
+            "refreshed": "Listas de modelos actualizadas.",
+            "partial": "Listas de modelos actualizadas. Algunas CLI no devolvieron una lista."
           }
         },
         "dotIngress": {
@@ -14598,9 +14604,7 @@
           "69af7e9c1c": "aún no está en tu PATH. NASH lo configurará como predeterminado y podrás instalarlo en cualquier momento.",
           "1eee1c7bd8": "No se detectaron agentes en tu PATH. Elige uno para instalarlo más tarde o continúa con una terminal en blanco.",
           "hideAgents": "Ocultar agentes",
-          "showMoreAgents": "Mostrar {{value0}} agentes más →",
-          "yoloModeLabel": "Modo Yolo",
-          "yoloPermissionsDescription": "Los agentes ejecutan comandos y editan archivos sin preguntar, y algunos también omiten su sandbox. Úsalo solo en proyectos de confianza."
+          "showMoreAgents": "Mostrar {{value0}} agentes más →"
         },
         "FeatureSetupInlineTerminal": {
           "789b59936e": "Pulsa Enter para ejecutar el comando y confirma npx si se te solicita. También puedes configurarlo más tarde en Configuración.",

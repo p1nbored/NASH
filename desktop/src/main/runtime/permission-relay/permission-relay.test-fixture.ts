@@ -1,6 +1,7 @@
 // FIXTURE_ONLY: every id, token and hash below is synthetic and describes no real run.
 import type { OrchestrationCompatibilityEvidence } from '../../../shared/orchestration-compatibility-evidence'
 import type { RuntimeTerminalAgentStatus } from '../../../shared/runtime-types'
+import type { AgentPermissionMode } from '../../../shared/tui-agent-permissions'
 import type { PermissionRequestInput } from '../../../shared/rpc-contract/permission-relay-params'
 import { PERMISSION_RELAY_WAIT_MS } from '../../../shared/rpc-contract/permission-relay-params'
 import { OrchestrationDb } from '../orchestration/db/orchestration-db'
@@ -10,7 +11,8 @@ import {
   type PermissionDecisionStore
 } from '../orchestration/db/permission-decision-store'
 import type { OrchestrationCompatibilityCallerAuthority } from '../runtime-terminal-contracts'
-import { PermissionRelayService, type PermissionRelayDeps } from './permission-request-service'
+import { PermissionRelayService } from './permission-request-service'
+import type { PermissionRelayDeps } from './permission-relay-types'
 
 export const FIXTURE_HANDLE = 'terminal_fixture01'
 export const FIXTURE_PANE = 'pane_fixture01:1'
@@ -61,6 +63,7 @@ export type RelayHarness = {
   newService(): PermissionRelayService
   setStatus(handle: string, status: Status): void
   setAuthority(authority: OrchestrationCompatibilityCallerAuthority | null): void
+  setPermissionMode(mode: AgentPermissionMode): void
 }
 
 /** A running app run with its primary in a fixture pane; the clock is whatever vi's fake timers say. */
@@ -71,6 +74,7 @@ export function createRelayHarness(
   const ownerId = options.seed === false ? '' : seedRunWithRunningOwner(owner).ownerId
   const statuses = new Map<string, Status>([[FIXTURE_HANDLE, 'working']])
   let authority: OrchestrationCompatibilityCallerAuthority | null = primaryAuthority()
+  let permissionMode: AgentPermissionMode = 'auto'
   const deps: PermissionRelayDeps = {
     getDb: () => owner,
     verifyCaller: (evidence) =>
@@ -83,6 +87,7 @@ export function createRelayHarness(
       return { handle, isRunningAgent: true, status }
     },
     now: () => Date.now(),
+    isAutoReviewEnabled: () => permissionMode === 'auto',
     controlPlaneCommands: ['nash'],
     appDataDirectories: options.appDataDirectories
   }
@@ -99,6 +104,9 @@ export function createRelayHarness(
     setStatus: (handle, status) => statuses.set(handle, status),
     setAuthority: (next) => {
       authority = next
+    },
+    setPermissionMode: (next) => {
+      permissionMode = next
     }
   }
 }

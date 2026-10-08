@@ -5,6 +5,21 @@ import { AgentStep } from './AgentStep'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 describe('AgentStep', () => {
+  it('retains the Auto permission choice when onboarding is reopened', () => {
+    const html = renderToStaticMarkup(
+      <TooltipProvider>
+        <AgentStep
+          selectedAgent={null}
+          onSelect={vi.fn()}
+          detectedSet={new Set()}
+          isDetecting={false}
+          permissionMode="auto"
+          onPermissionModeChange={vi.fn()}
+        />
+      </TooltipProvider>
+    )
+    expect(html).toMatch(/aria-checked="true"[^>]*>Auto<\/button>/)
+  })
   it('shows the collapsed fallback agents summary', () => {
     const html = renderToStaticMarkup(
       <TooltipProvider>
@@ -13,17 +28,16 @@ describe('AgentStep', () => {
           onSelect={vi.fn()}
           detectedSet={new Set([AGENT_CATALOG[0].id])}
           isDetecting={false}
-          yoloPermissions
-          onYoloPermissionsChange={vi.fn()}
+          permissionMode="yolo"
+          onPermissionModeChange={vi.fn()}
         />
       </TooltipProvider>
     )
 
     expect(html).toContain(`Show ${AGENT_CATALOG.length - 1} more agents →`)
     expect(html).toContain('data-agent-grid-scroll')
-    expect(html).toContain('data-slot="switch"')
-    expect(html).toContain('Yolo mode')
-    expect(html).not.toContain('role="radiogroup"')
+    expect(html).toContain('Agent Permissions')
+    expect(html).toContain('role="radiogroup"')
   })
 
   it('labels the fallback agents summary as hide when expanded', () => {
@@ -34,8 +48,8 @@ describe('AgentStep', () => {
           onSelect={vi.fn()}
           detectedSet={new Set([AGENT_CATALOG[0].id])}
           isDetecting={false}
-          yoloPermissions
-          onYoloPermissionsChange={vi.fn()}
+          permissionMode="yolo"
+          onPermissionModeChange={vi.fn()}
         />
       </TooltipProvider>
     )

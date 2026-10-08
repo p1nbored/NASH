@@ -20,7 +20,9 @@ import {
   FIXTURE_SHA_V4,
   fixtureListResult,
   fixtureEdit,
-  fixtureTable
+  fixtureTable,
+  selectModel,
+  renderRouting
 } from './routing-table-view.test-fixture'
 
 const rpc = vi.hoisted(() =>
@@ -121,9 +123,7 @@ describe('RoutingTableCard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Routine analysis batch' }))
     const row = taskRow('Routine analysis batch')
-    fireEvent.change(within(row).getByLabelText('Model for Routine analysis batch'), {
-      target: { value: 'gpt-6-astra' }
-    })
+    selectModel(within(row).getByLabelText('Model for Routine analysis batch'), 'gpt-6-astra')
     await act(async () => {
       fireEvent.click(within(row).getByRole('button', { name: 'Save' }))
     })
@@ -146,20 +146,20 @@ describe('RoutingTableCard', () => {
     expect(screen.queryByLabelText('Model for Routine analysis batch')).toBeNull()
   })
 
-  it('refuses an alias in place and sends nothing', async () => {
+  it('offers only CLI-listed model choices instead of free-form aliases', async () => {
     answer({ 'workbench.routingTable.list': fixtureListResult() })
     await renderCard()
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Software engineering' }))
     const row = taskRow('Software engineering')
     const model = within(row).getByLabelText('Model for Software engineering')
-    fireEvent.change(model, { target: { value: 'opus' } })
+    fireEvent.click(model)
+    expect(screen.queryByRole('option', { name: 'opus' })).toBeNull()
+    fireEvent.click(screen.getByRole('option', { name: 'claude-opus-5-5' }))
     await act(async () => {
-      fireEvent.click(within(row).getByRole('button', { name: 'Save' }))
+      fireEvent.click(within(row).getByRole('button', { name: 'Cancel' }))
     })
 
-    expect(within(row).getByRole('alert').textContent).toMatch(/exact model ID/i)
-    expect(model.getAttribute('aria-invalid')).toBe('true')
     expect(callsTo('workbench.routingTable.save')).toHaveLength(0)
   })
 
@@ -170,9 +170,7 @@ describe('RoutingTableCard', () => {
     })
     await renderCard()
     fireEvent.click(screen.getByRole('button', { name: 'Edit Reviewer 1' }))
-    fireEvent.change(screen.getByLabelText('Model for Reviewer 1'), {
-      target: { value: 'gpt-6-astra' }
-    })
+    selectModel(screen.getByLabelText('Model for Reviewer 1'), 'gpt-6-astra')
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })))
     expect(callsTo('workbench.routingTable.save')).toEqual([
       expect.objectContaining({
@@ -221,7 +219,7 @@ describe('RoutingTableCard', () => {
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
     expect(within(row).getByRole('alert').textContent).toContain('selected CLI')
     expect(callsTo('workbench.routingTable.save')).toHaveLength(0)
-    fireEvent.change(model, { target: { value: 'gpt-6-astra' } })
+    selectModel(model, 'gpt-6-astra')
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
     expect(callsTo('workbench.routingTable.save')).toEqual([
       expect.objectContaining({
@@ -308,7 +306,7 @@ describe('routing edits under concurrent changes and failed activation', () => {
 
   it('closes an old draft when a newer active table arrives, so it cannot overwrite concurrent edits', () => {
     const onSave = vi.fn(async () => true)
-    const { rerender } = render(
+    const { rerender } = renderRouting(
       <RoutingTableTaskList
         table={fixtureTable()}
         availability={null}
@@ -317,9 +315,7 @@ describe('routing edits under concurrent changes and failed activation', () => {
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Edit Routine analysis batch' }))
-    fireEvent.change(screen.getByLabelText('Model for Routine analysis batch'), {
-      target: { value: 'gpt-6-astra' }
-    })
+    selectModel(screen.getByLabelText('Model for Routine analysis batch'), 'gpt-6-astra')
     rerender(
       <RoutingTableTaskList
         table={fixtureTable({ table_version: 4 })}

@@ -1,4 +1,4 @@
-import { ListChecks, Loader2 } from 'lucide-react'
+import { RefreshCw, Loader2 } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import type { RouteAvailabilityView } from '../../../../shared/workbench-route-availability-view'
 import { Button } from '../ui/button'
@@ -38,14 +38,11 @@ export function RouteCheckButton(props: {
       {props.checking ? (
         <Loader2 aria-hidden="true" className="animate-spin" />
       ) : (
-        <ListChecks aria-hidden="true" />
+        <RefreshCw aria-hidden="true" />
       )}
       {props.checking
-        ? translate('auto.components.settings.routingTable.availability.checkingPlain', 'Checking…')
-        : translate(
-            'auto.components.settings.routingTable.availability.checkPlain',
-            'Check availability'
-          )}
+        ? translate('auto.components.settings.routingTable.models.refreshing', 'Refreshing…')
+        : translate('auto.components.settings.routingTable.models.refresh', 'Refresh model list')}
     </Button>
   )
 }

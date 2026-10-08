@@ -14,6 +14,7 @@ export type PermissionRelayDeps = {
   ): OrchestrationCompatibilityCallerAuthority | null
   readStatus: AgentStatusReader
   now(): number
+  isAutoReviewEnabled(): boolean
   controlPlaneCommands: readonly string[]
   appDataDirectories?: readonly string[]
   reportError?(error: unknown): void

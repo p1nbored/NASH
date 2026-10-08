@@ -47,6 +47,29 @@ async function renderCard(): Promise<void> {
   await act(async () => {})
 }
 
+it('refreshes the actual model options without offering another CLI catalog', async () => {
+  answer({
+    'workbench.routingTable.list': fixtureListResult({
+      models: { claude: null, codex: null, agy: null }
+    }),
+    'workbench.routingTable.checkRoutes': {
+      ...fixtureCheckResult(),
+      models: {
+        claude: [{ id: 'claude-fixture-model-1', label: 'CLI returned model', efforts: ['high'] }],
+        codex: [{ id: 'gpt-fixture-model-1', label: 'Other CLI model', efforts: ['high'] }],
+        agy: null
+      }
+    }
+  })
+  await renderCard()
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' })))
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Coordinator' }))
+  fireEvent.click(screen.getByRole('combobox', { name: 'Coordinator model' }))
+  expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+    'CLI returned model'
+  ])
+})
+
 function routeRow(taskType: string): HTMLElement {
   const list = screen.getByRole('list', { name: 'Agent for each task' })
   return within(list).getByRole('listitem', { name: taskType })
@@ -111,8 +134,7 @@ describe('RoutingTableCard route availability', () => {
 
     expect(routeRow('Software engineering').querySelector('[data-status-tone]')).toBeNull()
     expect(screen.queryByText('Not checked')).toBeNull()
-    // Why: without installed checks there is nothing to run, so the button is not offered.
-    expect(screen.queryByRole('button', { name: 'Check availability' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Refresh model list' })).toBeTruthy()
   })
 
   it('checks the routes on request, shows that it is checking, then the result', async () => {
@@ -127,9 +149,9 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' }))
     })
-    const checking = screen.getByRole('button', { name: 'Checking…' })
+    const checking = screen.getByRole('button', { name: 'Refreshing…' })
     expect(checking).toHaveProperty('disabled', true)
     expect(callsTo('workbench.routingTable.checkRoutes')).toEqual([{}])
 
@@ -150,7 +172,7 @@ describe('RoutingTableCard route availability', () => {
     )
     expect(routeRow('High-quality writing').textContent).toContain('Available')
     expect(routeRow('Routine analysis batch').textContent).toMatch(/model list could not be read/i)
-    expect(screen.getByRole('button', { name: 'Check availability' })).toHaveProperty(
+    expect(screen.getByRole('button', { name: 'Refresh model list' })).toHaveProperty(
       'disabled',
       false
     )
@@ -176,7 +198,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' }))
     })
 
     const alert = screen.getByRole('alert')
@@ -193,7 +215,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' }))
     })
 
     for (const name of ['Edit Software engineering', 'Edit Coordinator', 'Edit Reviewer 1']) {
@@ -213,7 +235,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' }))
     })
 
     expect(screen.getByRole('alert').textContent).toMatch(/could not be read/)
@@ -271,7 +293,7 @@ describe('RoutingTableCard route availability', () => {
     await renderCard()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh model list' }))
     })
 
     expect(routeRow('High-quality writing').textContent).toContain('Not checked')

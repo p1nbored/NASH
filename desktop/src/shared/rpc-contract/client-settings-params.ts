@@ -94,6 +94,7 @@ export const SettingsUpdate = z
       .unknown()
       .transform((value) => normalizeDisabledTuiAgents(value))
       .optional(),
+    agentPermissionMode: z.enum(['yolo', 'auto', 'manual']).optional(),
     agentDefaultArgs: z
       .unknown()
       .transform((value) => normalizeTuiAgentArgsRecord(value))

@@ -6790,8 +6790,8 @@
           "2d133152fa": "기본 환경 없음",
           "agentPermissions": "Agent 권한",
           "agentPermissionsInfo": "Agent 권한 정보",
-          "agentPermissionsTooltip": "Custom agent arguments stay unchanged when switching modes.",
-          "agentPermissionsDescription": "NASH가 agents를 실행할 때 권한 프롬프트를 줄일지, 수동 확인을 유지할지 선택합니다.",
+          "agentPermissionsTooltip": "사용자 지정 실행 인수의 권한 동작은 유지됩니다. Auto는 권한 훅을 지원하는 NASH 관리 작업에 적용되며, 다른 실행은 기본 수동 확인을 사용합니다. 관리 작업의 접근 제한은 유지됩니다.",
+          "agentPermissionsDescription": "Auto에서는 조정자가 하위 작업을, Dot이 조정자의 요청을 검토합니다. 중요한 작업은 사용자 확인이 필요합니다. Yolo는 지원되는 기본 확인을 건너뛰고 수동은 확인을 유지합니다.",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "수동",
           "3f1bdf3cb4": "환경 텍스트가 너무 커서 안전하게 파싱할 수 없습니다.",
@@ -6803,7 +6803,8 @@
           "remoteDetectionFailed": "Couldn’t detect installed agents. Check the host connection and try again.",
           "retryDetection": "Retry",
           "storedDefaultUndetected": "기본값으로 저장되었지만 지금은 감지되지 않습니다.",
-          "noAgentsDetected": "감지된 에이전트가 없습니다. 프로브가 설치된 경우 프로브 시간이 초과되었을 수 있습니다."
+          "noAgentsDetected": "감지된 에이전트가 없습니다. 프로브가 설치된 경우 프로브 시간이 초과되었을 수 있습니다.",
+          "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
           "d5a112dc9b": "다음 아이콘",
@@ -9186,7 +9187,7 @@
             "a79d266f71": "세션",
             "afbf35be68": "안정적인 세션",
             "agentPermissions": "Agent 권한",
-            "agentPermissionsDescription": "agent 권한 기본값을 Yolo와 수동 사이에서 전환합니다.",
+            "agentPermissionsDescription": "기본 권한 모드를 Auto, Yolo 또는 수동으로 선택합니다.",
             "agentRuntime": "Agent 런타임",
             "agentRuntimeDescription": "기본적으로 Windows 또는 WSL에서 agents를 감지하고 시작할지 선택합니다.",
             "runtime": "실행 시간",
@@ -12562,9 +12563,7 @@
               "notCheckedPlain": "최근에 확인하지 않았습니다."
             },
             "summaryPlain": "확인됨: 사용 가능 {{available}}, 사용 불가 {{unavailable}}, 검증 안 됨 {{unverified}}.",
-            "checksUnavailablePlain": "지금은 사용 가능 여부를 확인할 수 없습니다. 앱을 다시 시작하세요.",
-            "checkingPlain": "확인 중…",
-            "checkPlain": "사용 가능 여부 확인"
+            "checksUnavailablePlain": "지금은 사용 가능 여부를 확인할 수 없습니다. 앱을 다시 시작하세요."
           },
           "editor": {
             "geminiExcluded": "Gemini 4 모델은 라우팅에서 제외됩니다.",
@@ -12644,6 +12643,13 @@
             "onlyIfSupported": "모델이 지원하는 경우에만",
             "coordinatorEffort": "코디네이터 추론 강도",
             "reviewersTitle": "리뷰어"
+          },
+          "models": {
+            "refresh": "모델 목록 새로 고침",
+            "refreshing": "새로 고치는 중…",
+            "refreshFirst": "모델 목록을 새로 고친 후 선택",
+            "refreshed": "모델 목록을 새로 고쳤습니다.",
+            "partial": "모델 목록을 새로 고쳤습니다. 일부 CLI에서 모델 목록을 반환하지 않았습니다."
           }
         },
         "dotIngress": {
@@ -14598,9 +14604,7 @@
           "69af7e9c1c": "아직 PATH에 없습니다. NASH는 이를 기본값으로 설정하며 언제든지 설치할 수 있습니다.",
           "1eee1c7bd8": "PATH에서 agents를 찾지 못했습니다. 나중에 설치할 항목을 선택하거나 빈 terminal로 계속 진행하세요.",
           "hideAgents": "agents 숨기기",
-          "showMoreAgents": "agents {{value0}}개 더 보기→",
-          "yoloModeLabel": "Yolo 모드",
-          "yoloPermissionsDescription": "agents가 묻지 않고 명령을 실행하고 파일을 편집하며, 일부는 샌드박스도 우회합니다. 신뢰할 수 있는 프로젝트에서만 사용하세요."
+          "showMoreAgents": "agents {{value0}}개 더 보기→"
         },
         "FeatureSetupInlineTerminal": {
           "789b59936e": "Enter를 눌러 명령을 실행하고 요청 시 npx를 확인합니다. 나중에 설정에서 설정할 수도 있습니다.",

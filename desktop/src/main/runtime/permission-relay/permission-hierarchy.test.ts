@@ -98,6 +98,16 @@ describe('permission review hierarchy', () => {
     expect(h.store.get(child)?.status).toBe('pending')
   })
 
+  it('refuses a queued coordinator review after the user switches to Manual', () => {
+    const decisionId = request('child-1')
+    h.setPermissionMode('manual')
+    expect(h.service.listForPrimary(FIXTURE_EVIDENCE).decisions).toEqual([])
+    expect(() =>
+      h.service.answerFromPrimary(FIXTURE_EVIDENCE, { decisionId, decision: 'allow' })
+    ).toThrow('Automatic permission review is disabled')
+    expect(h.store.get(decisionId)?.status).toBe('pending')
+  })
+
   it('shows critical requests to dot for user escalation but refuses agent approval', () => {
     const decisionId = request('child-1', 'rm -rf /fixture/repo')
     expect(h.service.listForDot('run_fixture01', { limit: 20 }).map((d) => d.decisionId)).toEqual([

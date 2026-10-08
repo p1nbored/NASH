@@ -6981,8 +6981,8 @@
           "2d133152fa": "No default environment",
           "agentPermissions": "Agent Permissions",
           "agentPermissionsInfo": "Agent permissions info",
-          "agentPermissionsTooltip": "Doesn't apply to agents where you've overridden launch arguments.",
-          "agentPermissionsDescription": "Choose whether NASH launches agents with fewer permission prompts or with manual checks.",
+          "agentPermissionsTooltip": "Custom launch arguments keep their own permission behavior. Auto review requires supported hooks in a NASH-managed run; other launches use native manual prompts. Managed runs always keep their access limits.",
+          "agentPermissionsDescription": "Auto lets coordinators review worker requests and Dot review coordinator requests. Critical actions still need you. Yolo skips native prompts where supported; Manual keeps native prompts.",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "Manual",
           "3f1bdf3cb4": "Environment text is too large to parse safely.",
@@ -6990,7 +6990,8 @@
           "codexSessionSourceInfo": "About importing Codex history",
           "codexSessionSourceTooltip": "NASH runs Codex in an isolated home. Point this at your existing Codex home to import that session history. Empty uses ~/.codex.",
           "storedDefaultUndetected": "Saved as your default, but not detected right now",
-          "noAgentsDetected": "No agents detected. If one is installed, the probe may have timed out."
+          "noAgentsDetected": "No agents detected. If one is installed, the probe may have timed out.",
+          "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
           "d5a112dc9b": "Next icon",
@@ -9425,7 +9426,7 @@
             "a79d266f71": "session",
             "afbf35be68": "stable session",
             "agentPermissions": "Agent Permissions",
-            "agentPermissionsDescription": "Switch agent permission defaults between Yolo and Manual.",
+            "agentPermissionsDescription": "Choose Auto, Yolo or Manual permission defaults.",
             "agentRuntime": "Agent Runtime",
             "agentRuntimeDescription": "Choose whether agents are detected and launched on Windows or in WSL by default.",
             "runtime": "runtime",
@@ -12734,9 +12735,7 @@
               "notCheckedPlain": "Not checked recently."
             },
             "summaryPlain": "Checked: {{available}} available, {{unavailable}} unavailable, {{unverified}} not verified.",
-            "checksUnavailablePlain": "Availability checks are not available right now. Restart the app.",
-            "checkingPlain": "Checking…",
-            "checkPlain": "Check availability"
+            "checksUnavailablePlain": "Availability checks are not available right now. Restart the app."
           },
           "editor": {
             "geminiExcluded": "Gemini 4 models are excluded from routing.",
@@ -12816,6 +12815,13 @@
             "onlyIfSupported": "Only if the model supports it",
             "coordinatorEffort": "Coordinator effort",
             "reviewersTitle": "Reviewers"
+          },
+          "models": {
+            "refresh": "Refresh model list",
+            "refreshing": "Refreshing…",
+            "refreshFirst": "Refresh model list to choose",
+            "refreshed": "Model lists refreshed.",
+            "partial": "Model lists refreshed. Some CLIs did not return a model list."
           }
         },
         "dotIngress": {
@@ -14770,9 +14776,7 @@
           "69af7e9c1c": "isn't on your PATH yet. NASH will set it as your default and you can install it any time.",
           "1eee1c7bd8": "No agents detected on your PATH. Pick one to install later, or continue with a blank terminal.",
           "hideAgents": "Hide agents",
-          "showMoreAgents": "Show {{value0}} more agents →",
-          "yoloModeLabel": "Yolo mode",
-          "yoloPermissionsDescription": "Agents run commands and edit files without asking, and some also bypass their sandbox. Use only in projects you trust."
+          "showMoreAgents": "Show {{value0}} more agents →"
         },
         "FeatureSetupInlineTerminal": {
           "789b59936e": "Press Enter to run the command and confirm npx if asked. You can also set this up later in Settings.",

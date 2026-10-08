@@ -90,6 +90,7 @@ export function createFixtureRelay(owner: OrchestrationDb): FixtureRelay {
         : null,
     readStatus: async (handle) => ({ handle, isRunningAgent: true, status: 'working' }),
     now: () => Date.now(),
+    isAutoReviewEnabled: () => true,
     controlPlaneCommands: ['nash']
   })
   return {

@@ -93,8 +93,8 @@ describe('modelPinViolation (ARCH 7.5)', () => {
     'openai/gpt-6-sol',
     'gpt-5.3-codex-spark',
     'gpt-5.3-Codex-Spark'
-  ])('rejects the sibling or retired slug %s', (model) => {
-    expect(modelPinViolation(model)).toBe('model_slug_rejected')
+  ])('leaves concrete model availability to the CLI catalog: %s', (model) => {
+    expect(modelPinViolation(model)).toBeNull()
   })
 
   it.each(['', ' ', 'has space', '-leading-dash', 'opus[1m]', 'x'.repeat(201), 'tab\tid'])(
@@ -106,7 +106,7 @@ describe('modelPinViolation (ARCH 7.5)', () => {
   )
 
   it('lets the schema refuse every violation, not just malformed ids', () => {
-    for (const model of ['bad model', 'opus', 'latest', 'gpt-6-sol']) {
+    for (const model of ['bad model', 'opus', 'latest']) {
       expect(PinnedModelIdSchema.safeParse(model).success).toBe(false)
     }
   })

@@ -33,8 +33,7 @@ export function hasUnsupportedTuiAgentArgs(agent: TuiAgent, value: unknown): boo
 /**
  * Whether the configured arguments carry this agent's permission-bypass flag.
  *
- * The Agent Permissions toggle has no storage of its own — it writes and reads this flag inside
- * the arguments string. Read the same argv the startup path builds so quoted prompt text and
+ * Permission presets also update the launch arguments. Read the same argv the startup path builds so quoted prompt text and
  * operands after `--` cannot authorize a structured session.
  */
 export function tuiAgentArgsBypassPermissions(

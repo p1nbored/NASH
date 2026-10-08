@@ -1,15 +1,14 @@
 import type { OrchestrationCompatibilityEvidence } from '../../../shared/orchestration-compatibility-evidence'
-import {
-  PERMISSION_RELAY_WAIT_MS,
-  type PermissionRequestInput,
-  type PermissionRequestResult,
-  type PermissionWaitInput,
-  type PermissionWaitResult,
-  type WorkbenchPermissionAnswerInput,
-  type WorkbenchPermissionAnswerResult,
-  type WorkbenchPermissionDecisionView,
-  type WorkbenchPermissionListInput,
-  type WorkbenchPermissionListResult
+import type {
+  PermissionRequestInput,
+  PermissionRequestResult,
+  PermissionWaitInput,
+  PermissionWaitResult,
+  WorkbenchPermissionAnswerInput,
+  WorkbenchPermissionAnswerResult,
+  WorkbenchPermissionDecisionView,
+  WorkbenchPermissionListInput,
+  WorkbenchPermissionListResult
 } from '../../../shared/rpc-contract/permission-relay-params'
 import {
   getPermissionDecisionStore,
@@ -18,7 +17,6 @@ import {
   type PermissionDecisionStore
 } from '../orchestration/db/permission-decision-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
-import { classifyPermissionAudience, type PermissionRelayInput } from './permission-audience'
 import { requireDotMayAllow } from './permission-dot-allow'
 import {
   listDesktopPermissionViews,
@@ -31,7 +29,8 @@ import {
   listPrimaryPermissionRecords,
   requirePrimaryPermissionReview
 } from './permission-primary-review'
-import { buildPermissionSummary, isDesktopOnlyRecord } from './permission-redaction'
+import { isDesktopOnlyRecord } from './permission-redaction'
+import { preparePermissionRequestRecord, requireAutoReview } from './permission-request-record'
 import {
   PERMISSION_RELAY_ERROR_CODES as CODES,
   appRunReadersIfPresent,
@@ -42,11 +41,6 @@ import { PermissionTerminalObserver } from './permission-terminal-observer'
 import { isPermissionSourceLive } from './permission-source'
 
 import type {
-  PermissionRelayDeps,
-  PermissionRelayAnswer,
-  PermissionAnswerRequest
-} from './permission-relay-types'
-export type {
   PermissionRelayDeps,
   PermissionRelayAnswer,
   PermissionAnswerRequest
@@ -92,63 +86,23 @@ export class PermissionRelayService {
   ): PermissionRequestResult {
     const db = this.deps.getDb()
     const caller = resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence), true)
-    const relayInput: PermissionRelayInput = {
-      toolName: input.toolName,
-      agentId: input.agentId,
-      cwd: input.cwd,
-      toolInput: input.toolInput
-    }
-    const audience = classifyPermissionAudience(
-      relayInput,
-      this.deps.controlPlaneCommands,
-      this.deps.appDataDirectories
+    requireAutoReview(this.deps)
+    const prepared = preparePermissionRequestRecord(this.deps, caller, input, (record, now) =>
+      this.isAnswerable(record, now)
     )
-    if (audience === 'terminal_only') {
+    if (!prepared) {
       return { outcome: 'not_relayed', reason: 'terminal_only_tool' }
     }
-    const built = buildPermissionSummary(relayInput, audience === 'desktop_only')
-    if (!built) {
-      throw new OrchestrationError(
-        CODES.summaryRefused,
-        'The prompt could not be summarized safely, so it stays in the terminal. No effects were applied.',
-        { effectsApplied: false }
-      )
+    const { record, created } = prepared
+    if (!created) {
+      return { outcome: 'relayed', decisionId: record.decisionId, deadlineAt: record.deadlineAt }
     }
-    const now = this.deps.now()
-    const existing = getPermissionDecisionStore(db)
-      .listPending(caller.runId, 200)
-      .find(
-        (record) =>
-          record.ownerId === caller.ownerId &&
-          record.agentId === (caller.dispatchId ?? null) &&
-          record.requestSha256 === input.requestSha256 &&
-          record.toolName === input.toolName &&
-          record.summary === built.summary &&
-          this.isAnswerable(record, now)
-      )
-    if (existing) {
-      return {
-        outcome: 'relayed',
-        decisionId: existing.decisionId,
-        deadlineAt: existing.deadlineAt
-      }
-    }
-    const record = getPermissionDecisionStore(db).create({
-      runId: caller.runId,
-      ownerId: caller.ownerId,
-      agentId: caller.dispatchId ?? null,
-      toolName: input.toolName,
-      summary: built.summary,
-      requestSha256: input.requestSha256,
-      deadlineAt: iso(now + Math.min(PERMISSION_RELAY_WAIT_MS, input.waitBudgetMs)),
-      timestamp: iso(now)
-    })
     this.known.set(record.decisionId, Date.parse(record.deadlineAt))
     this.sources.set(record.decisionId, {
       handle: caller.terminalHandle,
       incarnation: caller.processIncarnation
     })
-    this.waiters.open(record.decisionId, now)
+    this.waiters.open(record.decisionId, this.deps.now())
     this.observer.watch(record.decisionId, caller.terminalHandle)
     if (caller.dispatchId) {
       this.deps.notifyPrimary?.(record)
@@ -168,7 +122,7 @@ export class PermissionRelayService {
         caller: resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence), true),
         now: this.deps.now,
         waiters: this.waiters,
-        isSourceLive: (record) => this.isSourceLive(record)
+        isSourceLive: (record) => this.deps.isAutoReviewEnabled() && this.isSourceLive(record)
       },
       input,
       signal
@@ -176,6 +130,9 @@ export class PermissionRelayService {
   }
   /** The CAS port for dot (D4) and the desktop. dot is refused on a desktop-only prompt, with no effect. */
   answer(request: PermissionAnswerRequest): PermissionRelayAnswer {
+    if (request.decidedBy !== 'desktop') {
+      requireAutoReview(this.deps)
+    }
     const store = this.storeIfPresent()
     const record = store?.get(request.decisionId)
     if (!store || !record) {
@@ -228,11 +185,13 @@ export class PermissionRelayService {
   listForPrimary(
     evidence: OrchestrationCompatibilityEvidence | undefined
   ): WorkbenchPermissionListResult {
+    const db = this.deps.getDb()
+    const caller = this.deps.verifyCaller(evidence)
+    const records = listPrimaryPermissionRecords(db, caller)
     return {
-      decisions: listPrimaryPermissionRecords(
-        this.deps.getDb(),
-        this.deps.verifyCaller(evidence)
-      ).map((record) => this.desktopView(record))
+      decisions: this.deps.isAutoReviewEnabled()
+        ? records.map((record) => this.desktopView(record))
+        : []
     }
   }
 
@@ -258,6 +217,9 @@ export class PermissionRelayService {
     runId: string,
     options: { statuses?: readonly PermissionDecisionStatus[]; limit: number }
   ): PermissionDecisionRecord[] {
+    if (!this.deps.isAutoReviewEnabled()) {
+      return []
+    }
     return listDotPermissionRecords(this.deps.getDb(), runId, options)
   }
 
@@ -304,6 +266,7 @@ export class PermissionRelayService {
 
   private isAnswerable(record: PermissionDecisionRecord, now: number): boolean {
     return (
+      this.deps.isAutoReviewEnabled() &&
       record.status === 'pending' &&
       now < Date.parse(record.deadlineAt) &&
       this.waiters.isWaiting(record.decisionId, now) &&

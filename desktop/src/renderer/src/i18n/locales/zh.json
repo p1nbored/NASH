@@ -6790,8 +6790,8 @@
           "2d133152fa": "无默认环境",
           "agentPermissions": "智能体权限",
           "agentPermissionsInfo": "智能体权限信息",
-          "agentPermissionsTooltip": "切换模式时，自定义智能体参数保持不变。",
-          "agentPermissionsDescription": "选择 NASH 是以更少的权限提示启动智能体，还是手动检查。",
+          "agentPermissionsTooltip": "自定义启动参数保留其权限行为。Auto 适用于支持权限 hooks 的 NASH 托管任务；其他启动使用原生手动确认。托管任务始终保留访问范围限制。",
+          "agentPermissionsDescription": "Auto 由协调者审核子任务、Dot 审核协调者；关键操作仍需你确认。Yolo 在支持时跳过原生提示，手动模式保留原生确认。",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "手动",
           "3f1bdf3cb4": "环境文本过长，无法安全解析。",
@@ -6803,7 +6803,8 @@
           "remoteDetectionFailed": "无法检测已安装的智能体。请检查主机连接后重试。",
           "retryDetection": "Retry",
           "storedDefaultUndetected": "已保存为默认值，但目前未检测到",
-          "noAgentsDetected": "未检测到智能体。如果安装了探测器，探测器可能会超时。"
+          "noAgentsDetected": "未检测到智能体。如果安装了探测器，探测器可能会超时。",
+          "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
           "d5a112dc9b": "下一个图标",
@@ -9186,7 +9187,7 @@
             "a79d266f71": "会话",
             "afbf35be68": "稳定会话",
             "agentPermissions": "智能体权限",
-            "agentPermissionsDescription": "在 Yolo 和手动之间切换智能体权限默认值。",
+            "agentPermissionsDescription": "选择 Auto、Yolo 或手动权限模式。",
             "agentRuntime": "智能体运行时",
             "agentRuntimeDescription": "选择默认在 Windows 还是 WSL 中检测并启动智能体。",
             "runtime": "运行时",
@@ -12562,9 +12563,7 @@
               "notCheckedPlain": "最近未检查。"
             },
             "summaryPlain": "检查结果：{{available}} 个可用，{{unavailable}} 个不可用，{{unverified}} 个未验证。",
-            "checksUnavailablePlain": "当前无法检查可用性。请重启应用。",
-            "checkingPlain": "正在检查…",
-            "checkPlain": "检查可用性"
+            "checksUnavailablePlain": "当前无法检查可用性。请重启应用。"
           },
           "editor": {
             "geminiExcluded": "Gemini 4 模型已从路由中排除。",
@@ -12644,6 +12643,13 @@
             "onlyIfSupported": "仅在模型支持时使用",
             "coordinatorEffort": "协调者推理强度",
             "reviewersTitle": "审查者"
+          },
+          "models": {
+            "refresh": "刷新模型列表",
+            "refreshing": "正在刷新…",
+            "refreshFirst": "刷新模型列表后选择",
+            "refreshed": "模型列表已刷新。",
+            "partial": "模型列表已刷新，部分 CLI 未返回模型列表。"
           }
         },
         "dotIngress": {
@@ -14598,9 +14604,7 @@
           "69af7e9c1c": "尚未加入 PATH。NASH 会将其设为默认，你可随时安装。",
           "1eee1c7bd8": "PATH 中未检测到智能体。可选择一个稍后安装，或使用空白终端继续。",
           "hideAgents": "隐藏智能体",
-          "showMoreAgents": "显示另外 {{value0}} 个智能体 →",
-          "yoloModeLabel": "Yolo 模式",
-          "yoloPermissionsDescription": "智能体会在不询问的情况下运行命令和编辑文件，部分智能体还会绕过沙箱。仅在你信任的项目中使用。"
+          "showMoreAgents": "显示另外 {{value0}} 个智能体 →"
         },
         "FeatureSetupInlineTerminal": {
           "789b59936e": "按 Enter 运行命令并在询问时确认 npx。您也可以稍后在“设置”中进行设置。",

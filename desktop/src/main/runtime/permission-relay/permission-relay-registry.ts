@@ -55,6 +55,7 @@ export function installPermissionRelay(
     verifyCaller: (evidence) => runtime.verifyOrchestrationCompatibilityCaller(evidence),
     readStatus: (handle) => runtime.getTerminalAgentStatus(handle),
     now: () => Date.now(),
+    isAutoReviewEnabled: () => runtime.getClientSettings().agentPermissionMode === 'auto',
     controlPlaneCommands: [options.cliCommand],
     appDataDirectories: relayAppDataDirectories(),
     readIncarnation: (handle) => runtime.getTerminalProcessIncarnation(handle),

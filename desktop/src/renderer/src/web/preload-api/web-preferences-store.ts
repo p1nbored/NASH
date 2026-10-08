@@ -1,12 +1,9 @@
 import type { PreloadApi } from '../../../../preload/api-types'
 import { normalizeAutoRenameBranchFromWorkDefaultOn } from '../../../../shared/auto-rename-branch-from-work-settings'
-import {
-  getDefaultSettings,
-  getDefaultUIState,
-  getWorktreeCardModeProperties
-} from '../../../../shared/constants'
+import { getDefaultSettings } from '../../../../shared/constants'
 import { normalizeWorktreeVisibilityDefaults } from '../../../../shared/external-worktree-visibility'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
+import { normalizeAgentPermissionMode } from '../../../../shared/tui-agent-permissions'
 import {
   normalizeOsc52ClipboardDefaultOn,
   osc52ClipboardDefaultOnOverridesPersistedOff
@@ -20,7 +17,7 @@ import { normalizeTerminalCursorStyleDefault } from '../../../../shared/terminal
 import { normalizeTerminalCustomThemes } from '../../../../shared/terminal-custom-themes'
 import { normalizeUiLanguage } from '../../../../shared/ui-language'
 import { readStoredWebRuntimeEnvironment } from '../web-runtime-environment'
-import { mergeSettings, mergeWebUIState } from './web-preference-normalization'
+import { mergeSettings, normalizeStoredWebUIState } from './web-preference-normalization'
 import { callRuntimeResult } from './web-runtime-calls'
 import { requireActiveEnvironmentOrNull, webRuntimeState } from './web-runtime-session'
 import { zcodePlanSiteOwner, settingsForZcodePlanSiteOwner } from './web-zcode-plan-site'
@@ -120,6 +117,9 @@ export async function getRuntimeBackedStoredSettings(): Promise<GlobalSettings> 
       15_000
     )
     const runtimeSettings: Partial<GlobalSettings> = {}
+    runtimeSettings.agentPermissionMode = normalizeAgentPermissionMode(
+      result.settings.agentPermissionMode
+    )
     const currentEnvironment = requireActiveEnvironmentOrNull()
     if (currentEnvironment?.id === requestedEnvironment.id) {
       const visibilityDefaults = normalizeWorktreeVisibilityDefaults(
@@ -205,6 +205,10 @@ export async function syncRuntimeBackedSettings(
     return localNext
   }
   const runtimeUpdates: Partial<GlobalSettings> = {}
+  const permissionMode = normalizeAgentPermissionMode(updates.agentPermissionMode)
+  if (permissionMode) {
+    runtimeUpdates.agentPermissionMode = permissionMode
+  }
   const visibilityDefaults = normalizeWorktreeVisibilityDefaults(updates.worktreeVisibilityDefaults)
   if (visibilityDefaults) {
     runtimeUpdates.worktreeVisibilityDefaults = visibilityDefaults
@@ -255,7 +259,7 @@ export async function syncRuntimeBackedSettings(
     writeStoredSettings(next)
     return next
   } catch (error) {
-    if (visibilityDefaults) {
+    if (visibilityDefaults || permissionMode) {
       throw error
     }
     // Why: unpaired/offline web clients still need local settings persistence.
@@ -293,25 +297,8 @@ export async function updateRuntimePRBotAuthorOverride(args: {
 }
 
 export function readLocalWebUIState(): PersistedUIState {
-  const defaults = getDefaultUIState()
-  // Why settings first: getStoredSettings() runs the OSC 52 migration, which writes the
-  // notice arm into UI_STORAGE_KEY. Reading before it would snapshot a pre-arm state that
-  // every caller then writes back, erasing the arm the stamp can never raise again.
+  // Read settings first so its migration can seed the stored UI notice.
   const storedSettings = getStoredSettings()
   const stored = readJson<Partial<PersistedUIState>>(UI_STORAGE_KEY, {})
-  const base = {
-    ...defaults,
-    // Why: mirror the main-process missing-property seed from legacy card layout mode when runtime ui.get is unavailable.
-    worktreeCardProperties: getWorktreeCardModeProperties(
-      storedSettings.compactWorktreeCards ? 'Compact' : 'Default'
-    )
-  }
-  if (typeof stored.rightSidebarOpen === 'boolean') {
-    return mergeWebUIState(base, stored)
-  }
-  return mergeWebUIState(base, {
-    ...stored,
-    // Why: web fallback lacks main-process normalization; migrate the retired setting only when local UI preference is absent.
-    rightSidebarOpen: storedSettings.rightSidebarOpenByDefault
-  })
+  return normalizeStoredWebUIState(stored, storedSettings)
 }
