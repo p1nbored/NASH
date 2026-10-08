@@ -23,6 +23,15 @@ import {
 } from './dot-ingress/dot-ingress-control'
 
 class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
+  /** Host-recorded launch metadata only; attaching coordination never writes to the CLI. */
+  readNativeCoordinatorLaunch(handle: string) {
+    const authority = this.getOrchestrationDispatchAuthority(handle)
+    const pty = authority ? this.ptysById.get(authority.ptyId) : null
+    return pty?.connected
+      ? { agent: this.getPtyAgent(pty.ptyId), agentArgs: pty.launchConfig?.agentArgs ?? null }
+      : null
+  }
+
   requireWorkbenchWorkspace(workspaceId: string) {
     if (!this.store) {
       throw new OrchestrationError(

@@ -317,6 +317,11 @@
               "version"
             ],
             "additionalProperties": false
+          },
+          "coordinatorRunId": {
+            "description": "Explicit existing native coordinator run to take over. Omit to start a new coordinator.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
           }
         },
         "required": [
@@ -9278,5 +9283,5 @@
       "retryable": "no"
     }
   ],
-  "manifestSha256": "4065156f3037753862e7eaa2ed075b30e39d8bc225e3fda4255690f1f2ea89af"
+  "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
 }

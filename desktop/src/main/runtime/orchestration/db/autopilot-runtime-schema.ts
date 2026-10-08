@@ -9,7 +9,7 @@ import { AUTOPILOT_MESSAGE_SCHEMA_DEFINITIONS } from './autopilot-message-schema
 import { requireIdleAutopilotConnection } from './autopilot-store-input'
 import { runLifecycleWriteTransaction } from './lifecycle-write-transaction-runner'
 
-export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 2
+export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 3
 
 /** Every current object in creation order; the exact-SQL check compares each one. */
 export const AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS: readonly AutopilotSchemaDefinition[] = [
@@ -32,7 +32,10 @@ function recoveryRequired(message: string): OrchestrationError {
 }
 
 function schemaSignature(sql: string): string {
-  return sql.replace(/\s+/g, ' ').trim()
+  return sql
+    .replace('CREATE TABLE "permission_decisions"', 'CREATE TABLE permission_decisions')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /** Exact-SQL check: whitespace-insensitive, otherwise byte-for-byte. */
@@ -65,6 +68,46 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
   }
   verifyDefinitions(db, SCHEMA_TABLE_DEFINITIONS)
   const stored = db.prepare('SELECT version FROM autopilot_runtime_schema WHERE id = 1').get()
+  if (stored?.version === 2) {
+    const previous = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) => ({
+      ...definition,
+      sql:
+        definition.name === 'permission_decisions'
+          ? definition.sql.replaceAll(", 'primary'", '')
+          : definition.sql
+    }))
+    verifyDefinitions(db, previous)
+    const sequence = db
+      .prepare("SELECT seq FROM sqlite_sequence WHERE name = 'permission_decisions'")
+      .get()?.seq
+    const permission = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.find(
+      (entry) => entry.name === 'permission_decisions'
+    )!
+    db.exec(
+      permission.sql.replace(
+        'CREATE TABLE permission_decisions',
+        'CREATE TABLE permission_decisions_next'
+      )
+    )
+    db.exec('INSERT INTO permission_decisions_next SELECT * FROM permission_decisions')
+    db.exec('DROP TABLE permission_decisions')
+    db.exec('ALTER TABLE permission_decisions_next RENAME TO permission_decisions')
+    if (typeof sequence === 'number') {
+      db.prepare(
+        "UPDATE sqlite_sequence SET seq = max(seq, ?) WHERE name = 'permission_decisions'"
+      ).run(sequence)
+    }
+    for (const definition of AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS) {
+      if (definition.name.startsWith('autopilot_permission_decision_')) {
+        db.exec(definition.sql)
+      }
+    }
+    db.prepare('UPDATE autopilot_runtime_schema SET version = ? WHERE id = 1').run(
+      AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT
+    )
+    verifyDefinitions(db, AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS)
+    return
+  }
   if (stored?.version !== AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT) {
     throw recoveryRequired('Autopilot schema version is unsupported. Nothing was written.')
   }

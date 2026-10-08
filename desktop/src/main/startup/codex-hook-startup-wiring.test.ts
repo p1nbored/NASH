@@ -7,21 +7,32 @@ const fixture = vi.hoisted(() => {
     app: { isPackaged: true, on: vi.fn() },
     settings,
     pathReady: Promise.resolve(),
-    startCodexHooks: vi.fn()
+    startCodexHooks: vi.fn(),
+    installPermissionRelayHooks: vi.fn().mockResolvedValue(undefined),
+    installManagedAgentHooks: vi.fn().mockResolvedValue([]),
+    shouldInstall: false
   }
 })
 
 vi.mock('electron', () => ({ app: fixture.app, nativeTheme: {} }))
 vi.mock('@electron-toolkit/utils', () => ({ is: { dev: false } }))
 vi.mock('../codex/codex-hook-reconcile', () => ({ startCodexHooks: fixture.startCodexHooks }))
+vi.mock('../runtime/permission-relay/permission-hook-startup', () => ({
+  installPermissionRelayHooks: fixture.installPermissionRelayHooks
+}))
+vi.mock('../runtime/orchestration/cli-command', () => ({
+  localOrchestrationCliCommand: () => 'nash'
+}))
 vi.mock('../agent-hooks/local-agent-cli-presence', () => ({
   hydrateAgentCliShellPath: () => fixture.pathReady
 }))
 // Why the real predicate: the start must read the same opt-out the rest of Orca does.
-vi.mock(
-  '../agent-hooks/managed-agent-hook-controls',
-  async () => await import('../../shared/agent-status-hooks-setting')
-)
+vi.mock('../agent-hooks/managed-agent-hook-controls', async () => ({
+  ...(await import('../../shared/agent-status-hooks-setting')),
+  installManagedAgentHooks: fixture.installManagedAgentHooks,
+  resolveStartupManagedHookAction: () => 'install',
+  shouldContinueManagedHookStartup: () => true
+}))
 vi.mock('./main-process-state', () => ({
   mainProcessState: { store: { getSettings: () => fixture.settings } }
 }))
@@ -41,11 +52,12 @@ vi.mock('../browser/browser-client-page-automation-runtime')
 vi.mock('../crash-reporting/process-gone-diagnostics')
 vi.mock('./main-window-lifecycle-flags')
 vi.mock('./gpu-lifecycle')
-vi.mock('./configure-process', () => ({ shouldInstallManagedHooks: () => false }))
+vi.mock('./configure-process', () => ({ shouldInstallManagedHooks: () => fixture.shouldInstall }))
 vi.mock('../agent-hooks/install-telemetry')
 vi.mock('./main-process-observers')
 vi.mock('./main-process-account-services')
 vi.mock('./main-process-automations')
+vi.mock('./main-process-autopilot-runtime')
 vi.mock('./main-process-plugins')
 vi.mock('../worktree-trash')
 vi.mock('./worktree-removal-records-load')
@@ -61,10 +73,42 @@ import { initializeReadyRuntimeServices } from './main-process-ready-runtime'
 
 beforeEach(() => {
   fixture.startCodexHooks.mockClear()
+  fixture.installPermissionRelayHooks.mockClear()
+  fixture.installManagedAgentHooks.mockReset().mockResolvedValue([])
+  fixture.shouldInstall = false
+  fixture.pathReady = Promise.resolve()
   fixture.settings.disabledTuiAgents = []
 })
 
 describe('Codex hook startup', () => {
+  it('installs permission gates after PATH and managed hook writes without blocking readiness', async () => {
+    fixture.shouldInstall = true
+    let releasePath: () => void = () => {}
+    let releaseHooks: (value: never[]) => void = () => {}
+    fixture.pathReady = new Promise<void>((resolve) => {
+      releasePath = resolve
+    })
+    fixture.installManagedAgentHooks.mockReturnValue(
+      new Promise<never[]>((resolve) => {
+        releaseHooks = resolve
+      })
+    )
+    await initializeReadyRuntimeServices()
+    expect(fixture.installPermissionRelayHooks).not.toHaveBeenCalled()
+    releasePath()
+    await fixture.pathReady
+    expect(fixture.installPermissionRelayHooks).not.toHaveBeenCalled()
+    releaseHooks([])
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(fixture.installPermissionRelayHooks).toHaveBeenCalledExactlyOnceWith('nash')
+  })
+
+  it('respects the existing development hook installation guard', async () => {
+    await initializeReadyRuntimeServices()
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(fixture.installPermissionRelayHooks).not.toHaveBeenCalled()
+  })
+
   it('starts once in app readiness, after the shell PATH is hydrated', async () => {
     let hydrate: () => void = () => {}
     fixture.pathReady = new Promise<void>((resolve) => {

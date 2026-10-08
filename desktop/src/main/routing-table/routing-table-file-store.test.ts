@@ -169,35 +169,6 @@ describe('version files', () => {
   })
 })
 
-describe('proposal files', () => {
-  it('lists only well-formed proposal file names', () => {
-    const { fs, store } = newStore()
-    for (const name of [
-      'proposal-0001.json',
-      'bundled-v2.json',
-      'notes.txt',
-      '.hidden.json',
-      'a.json'
-    ]) {
-      fs.files.set(join(TABLE_DIR, 'proposals', name), '{}')
-    }
-    expect(store.listProposalIds().sort()).toEqual(['bundled-v2', 'proposal-0001'])
-  })
-
-  it.each(['../index', '..\\index', 'a/b/c/d/e/f/g/h', '', 'short', 'x'.repeat(65)])(
-    'never builds a path from the id %j',
-    (id) => {
-      const { fs, store } = newStore()
-      expect(store.readProposal(id)).toEqual({ ok: false, reason: 'invalid' })
-      expect(fs.writeLog).toEqual([])
-    }
-  )
-
-  it('reports a missing proposal file', () => {
-    expect(newStore().store.readProposal('proposal-0001')).toEqual({ ok: false, reason: 'missing' })
-  })
-})
-
 describe('the node file system adapter', () => {
   const folders: string[] = []
   afterEach(() => {

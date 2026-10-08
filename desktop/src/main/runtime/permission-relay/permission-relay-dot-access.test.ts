@@ -74,14 +74,16 @@ describe('permission relay: what dot may allow depends on the run access (RG7)',
     expect([...DOT_ALLOW_READ_TOOLS]).toEqual(['Read', 'Glob'])
   })
 
-  it('never offers a Grep prompt to dot: its search reaches every file below the path', () => {
+  it('offers Grep for user escalation while refusing dot approval', () => {
     const result = harness.service.request(
       FIXTURE_EVIDENCE,
       relayRequest({ toolName: 'Grep', toolInput: { path: '/fixture/repo/src', pattern: 'x' } })
     )
     const id = result.outcome === 'relayed' ? result.decisionId : 'missing'
     void harness.service.wait(FIXTURE_EVIDENCE, { decisionId: id, waitMs: 20_000 })
-    expect(harness.service.listForDot('run_fixture01', { limit: 10 })).toEqual([])
+    expect(
+      harness.service.listForDot('run_fixture01', { limit: 10 }).map((record) => record.decisionId)
+    ).toEqual([id])
     expect(codeOf(() => harness.service.answerFromDot({ decisionId: id, decision: 'allow' }))).toBe(
       'autopilot_permission_desktop_only'
     )

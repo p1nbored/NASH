@@ -11,6 +11,7 @@ import {
   requireDotInterfaceOn
 } from './dot-ingress-refusals'
 import { findDotRequestRun } from './dot-ingress-run-link'
+import { dotCoordinatorAttachment } from '../orchestration/db/dot-coordinator-attachment'
 
 // The dot cancels only its own request: the door stops the run the request started and cancels the
 // Workbench request first, and only then is the dot row marked canceled.
@@ -95,6 +96,9 @@ export async function cancelDotRequest(
   requireDotInterfaceOn(deps.db)
   const store = getDotIngressStore(deps.db)
   const record = store.get(dotRequestId)
+  if (dotCoordinatorAttachment(deps.db, { dotRequestId })) {
+    throw dotRefusal('dot_request_not_cancelable', { reason: 'existing_coordinator' })
+  }
   if (record.state === 'canceled') {
     return { record, changed: false }
   }

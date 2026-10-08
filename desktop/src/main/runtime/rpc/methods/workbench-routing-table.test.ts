@@ -1,11 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  WorkbenchRoutingTableAcceptParams,
   WorkbenchRoutingTableCheckRoutesParams,
-  WorkbenchRoutingTableImportParams,
   WorkbenchRoutingTableListParams,
-  WorkbenchRoutingTableRejectParams,
-  WorkbenchRoutingTableRevertParams
+  WorkbenchRoutingTableSaveParams
 } from '../../../../shared/rpc-contract/workbench-run-params'
 import {
   WorkbenchRoutingTableCheckResultSchema,
@@ -19,26 +16,18 @@ import {
   resolveActiveRoutingTable
 } from '../../../routing-table/routing-table-activation'
 import {
-  listRoutingTableProposals,
-  submitRoutingTableProposal
-} from '../../../routing-table/routing-table-proposals'
-import {
   createTestRoutingTableEnvironment,
-  versionFilePath,
-  type TestRoutingTableEnvironment
+  versionFilePath
 } from '../../../routing-table/routing-table-test-context.test-fixture'
 import { issueWorkbenchDesktopCaller } from '../../workbench-caller'
 import { registerRoutingTableContext } from '../../workbench-run/routing-table-context-registry'
 import type { RpcContext } from '../core'
 import { RpcDispatcher } from '../dispatcher'
 import {
-  WORKBENCH_ROUTING_TABLE_ACCEPT_METHOD,
   WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD,
-  WORKBENCH_ROUTING_TABLE_IMPORT_METHOD,
   WORKBENCH_ROUTING_TABLE_LIST_METHOD,
-  WORKBENCH_ROUTING_TABLE_METHODS,
-  WORKBENCH_ROUTING_TABLE_REJECT_METHOD,
-  WORKBENCH_ROUTING_TABLE_REVERT_METHOD
+  WORKBENCH_ROUTING_TABLE_SAVE_METHOD,
+  WORKBENCH_ROUTING_TABLE_METHODS
 } from './workbench-routing-table'
 
 // FIXTURE_ONLY: an in-memory routing-table folder; no file on disk and no CLI.
@@ -87,65 +76,53 @@ const NOT_CHECKED = {
   awaitingUserConfirmation: false
 }
 
-function submission(base: { table_version: number; sha256: string }, proposer = 'agent') {
-  return {
-    schema_version: 1,
-    proposer,
-    base,
-    changes: [ASTRA_ROW],
-    rationale: 'A newer model leads the engineering benchmarks.',
-    evidence: [{ name: 'Artificial Analysis' }]
-  }
-}
-
-function agentProposal(
-  env: TestRoutingTableEnvironment,
-  base: { table_version: number; sha256: string }
-) {
-  const result = submitRoutingTableProposal(env.ctx, submission(base), 'agent')
-  if (!result.ok) {
-    throw new Error(`fixture proposal: ${result.reason}`)
-  }
-  return result.proposalId
-}
-
-function decisionOf(env: TestRoutingTableEnvironment, proposalId: string) {
-  return listRoutingTableProposals(env.ctx).entries.find(
-    (entry) => entry.proposal.proposal_id === proposalId
-  )?.decision
-}
-
 describe('workbench.routingTable methods', () => {
-  it('declares list, accept, reject, import, revert and checkRoutes with the shared params', () => {
-    expect(WORKBENCH_ROUTING_TABLE_METHODS.map((method) => method.name)).toEqual([
-      'workbench.routingTable.list',
-      'workbench.routingTable.accept',
-      'workbench.routingTable.reject',
-      'workbench.routingTable.import',
-      'workbench.routingTable.revert',
-      'workbench.routingTable.checkRoutes'
-    ])
-    expect(WORKBENCH_ROUTING_TABLE_LIST_METHOD.params).toBe(WorkbenchRoutingTableListParams)
-    expect(WORKBENCH_ROUTING_TABLE_ACCEPT_METHOD.params).toBe(WorkbenchRoutingTableAcceptParams)
-    expect(WORKBENCH_ROUTING_TABLE_REJECT_METHOD.params).toBe(WorkbenchRoutingTableRejectParams)
-    expect(WORKBENCH_ROUTING_TABLE_IMPORT_METHOD.params).toBe(WorkbenchRoutingTableImportParams)
-    expect(WORKBENCH_ROUTING_TABLE_REVERT_METHOD.params).toBe(WorkbenchRoutingTableRevertParams)
-    expect(WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD.params).toBe(
-      WorkbenchRoutingTableCheckRoutesParams
+  it('saves a desktop edit directly as the next version without a pending proposal', async () => {
+    const { env, runtime, context, base } = setup()
+    const dispatcher = new RpcDispatcher({ runtime, methods: WORKBENCH_ROUTING_TABLE_METHODS })
+    const response = await dispatcher.dispatch(
+      {
+        id: 'save-request',
+        authToken: 'fixture-local-token',
+        method: 'workbench.routingTable.save',
+        params: { base, changes: [ASTRA_ROW] }
+      },
+      { workbenchCaller: context.workbenchCaller }
     )
+    expect(response).toMatchObject({ ok: true, result: { ok: true, version: 2 } })
+    const active = resolveActiveRoutingTable(env.ctx)
+    expect(
+      active.ok &&
+        active.table.routes.find((row) => row.task_type === 'software_engineering')?.model
+    ).toBe('gpt-6-astra')
+    expect([...env.fs.files.keys()].some((path) => path.includes('proposals'))).toBe(false)
   })
 
-  it('accepts a table only for the trusted desktop caller', async () => {
+  it('rejects old Advanced endpoints without changing the table', async () => {
+    const { env, runtime, context } = setup()
+    const dispatcher = new RpcDispatcher({ runtime, methods: WORKBENCH_ROUTING_TABLE_METHODS })
+    for (const action of ['accept', 'reject', 'import', 'revert']) {
+      const reply = await dispatcher.dispatch(
+        {
+          id: action,
+          authToken: 'fixture-local-token',
+          method: `workbench.routingTable.${action}`,
+          params: {}
+        },
+        { workbenchCaller: context.workbenchCaller }
+      )
+      expect(reply).toMatchObject({ ok: false, error: { code: 'method_not_found' } })
+    }
+    expect(env.fs.files.has(versionFilePath(2))).toBe(false)
+  })
+
+  it('saves only for the trusted desktop caller and accepts no caller identity from the wire', async () => {
     const { env, runtime, base, h } = setup()
-    const proposalId = agentProposal(env, base)
     const dispatcher = new RpcDispatcher({ runtime, methods: WORKBENCH_ROUTING_TABLE_METHODS })
     const forged = Object.freeze({ principalId: 'local-desktop-ui', source: 'desktop_ui' as const })
     const calls: [string, unknown][] = [
       ['workbench.routingTable.list', {}],
-      ['workbench.routingTable.accept', { proposalId }],
-      ['workbench.routingTable.reject', { proposalId }],
-      ['workbench.routingTable.import', { proposal: submission(base, 'user_import') }],
-      ['workbench.routingTable.revert', { version: 1 }],
+      ['workbench.routingTable.save', { base, changes: [ASTRA_ROW] }],
       ['workbench.routingTable.checkRoutes', {}]
     ]
     for (const options of [{}, { workbenchCaller: forged }]) {
@@ -160,94 +137,77 @@ describe('workbench.routingTable methods', () => {
         })
       }
     }
-    expect(decisionOf(env, proposalId)).toBeNull()
     expect(env.fs.files.has(versionFilePath(2))).toBe(false)
-    // Why: a refused caller must not start a CLI model listing through checkRoutes either.
     expect(h.calls).toMatchObject({ detect: 0, claude: 0, codex: 0, agy: 0, refresh: 0 })
   })
 
-  it('lists the active table, its versions and the proposals', async () => {
-    const { env, context, base } = setup()
-    const proposalId = agentProposal(env, base)
+  it('lists only the active table and cached availability', async () => {
+    const { context, base } = setup()
     const listed = WorkbenchRoutingTableListResultSchema.parse(
       await WORKBENCH_ROUTING_TABLE_LIST_METHOD.handler({}, context)
     )
-    expect(listed).toMatchObject({
-      active: { ok: true, version: 1, sha256: base.sha256, source: 'bundled' },
-      activeVersion: 1,
-      versions: [{ version: 1, sha256: base.sha256, source: 'bundled', proposalId: null }],
-      proposals: [
-        { proposal: { proposal_id: proposalId, proposer: 'agent' }, decision: null, stale: false }
-      ],
-      unreadableProposalIds: []
-    })
-  })
-
-  it('accepts a proposal as the next version, then reverts to the first as a new version', () => {
-    const { env, context, base } = setup()
-    const proposalId = agentProposal(env, base)
-    const accepted = WorkbenchRoutingTableDecisionResultSchema.parse(
-      WORKBENCH_ROUTING_TABLE_ACCEPT_METHOD.handler({ proposalId }, context)
-    )
-    expect(accepted).toMatchObject({ ok: true, version: 2, proposalId })
-    expect(decisionOf(env, proposalId)).toMatchObject({
-      decision: 'accepted',
-      decided_by: 'desktop_user'
-    })
-    const reverted = WORKBENCH_ROUTING_TABLE_REVERT_METHOD.handler({ version: 1 }, context)
-    expect(reverted).toMatchObject({ ok: true, version: 3, proposalId: null })
-  })
-
-  it('records a modified acceptance', () => {
-    const { env, context, base } = setup()
-    const proposalId = agentProposal(env, base)
-    const modification = WorkbenchRoutingTableAcceptParams.parse({
-      proposalId,
-      modification: { changes: [{ ...ASTRA_ROW, model: 'gpt-6.1-sol', reasoning_level: 'high' }] }
-    }).modification
-    expect(
-      WORKBENCH_ROUTING_TABLE_ACCEPT_METHOD.handler({ proposalId, modification }, context)
-    ).toMatchObject({ ok: true, version: 2 })
-    expect(decisionOf(env, proposalId)).toMatchObject({ decision: 'accepted_modified' })
-  })
-
-  it('rejects once and reports a second decision as already decided', () => {
-    const { env, context, base } = setup()
-    const proposalId = agentProposal(env, base)
-    expect(WORKBENCH_ROUTING_TABLE_REJECT_METHOD.handler({ proposalId }, context)).toEqual({
+    expect(Object.keys(listed).sort()).toEqual(['active', 'availability'])
+    expect(listed.active).toMatchObject({
       ok: true,
-      version: null,
-      sha256: null,
-      proposalId
+      version: 1,
+      sha256: base.sha256,
+      source: 'bundled'
     })
-    expect(WORKBENCH_ROUTING_TABLE_ACCEPT_METHOD.handler({ proposalId }, context)).toEqual({
-      ok: false,
-      reason: 'already_decided',
-      detail: null,
-      existingProposalId: null
-    })
-    expect(decisionOf(env, proposalId)).toMatchObject({ decision: 'rejected' })
+    expect(WORKBENCH_ROUTING_TABLE_LIST_METHOD.params).toBe(WorkbenchRoutingTableListParams)
+    expect(WORKBENCH_ROUTING_TABLE_SAVE_METHOD.params).toBe(WorkbenchRoutingTableSaveParams)
+    expect(WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD.params).toBe(
+      WorkbenchRoutingTableCheckRoutesParams
+    )
   })
 
-  it('imports the user change set as a pending proposal and refuses another proposer', () => {
+  it('fences stale saves and leaves the newer active table intact', () => {
     const { env, context, base } = setup()
-    const imported = WORKBENCH_ROUTING_TABLE_IMPORT_METHOD.handler(
-      WorkbenchRoutingTableImportParams.parse({ proposal: submission(base, 'user_import') }),
-      context
-    )
-    expect(imported).toMatchObject({ ok: true, version: null })
-    const pending = listRoutingTableProposals(env.ctx).entries
-    expect(pending.map((entry) => [entry.proposal.proposer, entry.decision])).toEqual([
-      ['user_import', null]
-    ])
-    const posing = WORKBENCH_ROUTING_TABLE_IMPORT_METHOD.handler(
-      WorkbenchRoutingTableImportParams.parse({ proposal: submission(base, 'bundled_update') }),
-      context
-    )
-    expect(posing).toMatchObject({ ok: false, reason: 'forbidden_proposer' })
+    const edit = WorkbenchRoutingTableSaveParams.parse({ base, changes: [ASTRA_ROW] })
+    expect(
+      WorkbenchRoutingTableDecisionResultSchema.parse(
+        WORKBENCH_ROUTING_TABLE_SAVE_METHOD.handler(edit, context)
+      )
+    ).toMatchObject({ ok: true, version: 2 })
+    expect(WORKBENCH_ROUTING_TABLE_SAVE_METHOD.handler(edit, context)).toEqual({
+      ok: false,
+      reason: 'base_not_active',
+      detail: null
+    })
+    expect(resolveActiveRoutingTable(env.ctx)).toMatchObject({ ok: true, version: 2 })
+    expect(env.fs.files.has(versionFilePath(3))).toBe(false)
   })
 
-  it('reports a damaged store as a refusal with its detail, and never the bundled table', async () => {
+  it('rejects an unchanged save without writing a version', () => {
+    const { env, context, base } = setup()
+    expect(
+      WORKBENCH_ROUTING_TABLE_SAVE_METHOD.handler({ base, changes: [] }, context)
+    ).toMatchObject({ ok: false, reason: 'no_change' })
+    expect(env.fs.files.has(versionFilePath(2))).toBe(false)
+  })
+
+  it('persists a reviewer-only edit without changing the task routes', () => {
+    const { env, context, base } = setup()
+    const before = resolveActiveRoutingTable(env.ctx)
+    if (!before.ok) {
+      throw new Error('fixture install failed')
+    }
+    const validation = {
+      ...before.table.validation,
+      reviewers: before.table.validation.reviewers.map((reviewer, index) =>
+        index === 0 ? { ...reviewer, model: 'gpt-6-astra' } : reviewer
+      )
+    }
+    const result = WORKBENCH_ROUTING_TABLE_SAVE_METHOD.handler(
+      { base, changes: [], validation },
+      context
+    )
+    expect(result).toMatchObject({ ok: true, version: 2 })
+    const after = resolveActiveRoutingTable(env.ctx)
+    expect(after.ok && after.table.validation).toEqual(validation)
+    expect(after.ok && after.table.routes).toEqual(before.table.routes)
+  })
+
+  it('reports a damaged store without replacing it or starting checks', async () => {
     const { env, context, h } = setup()
     env.fs.files.set(versionFilePath(1), '{"tampered":true}')
     const listed = WorkbenchRoutingTableListResultSchema.parse(
@@ -256,17 +216,19 @@ describe('workbench.routingTable methods', () => {
     const refusal = {
       ok: false,
       reason: 'routing_table_integrity_failed',
-      detail: 'version_invalid',
-      existingProposalId: null
+      detail: 'version_invalid'
     }
     expect(listed.active).toEqual(refusal)
     expect(listed.availability).toBeNull()
-    const checked = await WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD.handler({}, context)
-    expect(WorkbenchRoutingTableCheckResultSchema.parse(checked)).toEqual(refusal)
+    expect(
+      WorkbenchRoutingTableCheckResultSchema.parse(
+        await WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD.handler({}, context)
+      )
+    ).toEqual(refusal)
     expect(h.calls).toMatchObject({ detect: 0, claude: 0, codex: 0, agy: 0, refresh: 0 })
   })
 
-  it('refuses every method until the routing table is registered', () => {
+  it('refuses reads until the routing table is registered', () => {
     const { context } = setup()
     unregister?.()
     unregister = null
@@ -317,9 +279,8 @@ describe('route availability in the Routing Table view', () => {
     expect(listed.availability).toEqual(checked.availability)
   })
 
-  it('still lists the table, versions and proposals when availability cannot be read', async () => {
-    const { env, runtime, context, base } = setup({ availability: false })
-    const proposalId = agentProposal(env, base)
+  it('still lists the table when availability cannot be read', async () => {
+    const { env, runtime, context } = setup({ availability: false })
     unregister?.()
     const failing = { evaluateTable: () => Promise.reject(new Error('FIXTURE_ONLY evaluator bug')) }
     unregister = registerRoutingTableContext(runtime, env.ctx, failing)
@@ -331,7 +292,6 @@ describe('route availability in the Routing Table view', () => {
 
     expect(listed.availability).toBeNull()
     expect(listed.active.ok).toBe(true)
-    expect(listed.proposals.map((entry) => entry.proposal.proposal_id)).toEqual([proposalId])
     expect(warn).toHaveBeenCalledTimes(1)
     expect(String(warn.mock.calls[0]?.[0])).not.toContain('FIXTURE_ONLY')
     warn.mockRestore()

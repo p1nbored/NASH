@@ -32,7 +32,7 @@ export type WorkbenchRoutingRuntimeDeps = Pick<
 
 /** What the RPC layer uses; every member reads only local state or runs the opt-in verification. */
 export type WorkbenchRoutingRuntime = {
-  /** `workbench.routing.status`: status, latch and circuit times; never a secret or a cost. */
+  /** `workbench.routing.status`: local desktop configuration and verification state. */
   routingStatusView(): WorkbenchRoutingStatusView
   /** `workbench.clef.verify`: the opt-in verification call; the ledger records its spend, no cap applies. */
   verifyClef(): Promise<ClefVerifyResult>

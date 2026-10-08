@@ -3,6 +3,9 @@ import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { OrchestrationCompatibilityCallerAuthority } from '../runtime-terminal-contracts'
 import { resolveAppRunPrimary, type AppRunPrimaryRefusal } from '../workflow-run/app-run-primary'
 import { appRunReadersFor, NO_APP_RUNS, type AppRunReaders } from '../workflow-run/app-run-readers'
+import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
+import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
+import { isEquivalentPaneKey } from '../orchestration/db/pane-key-match'
 
 export const PERMISSION_RELAY_ERROR_CODES = {
   callerRefused: 'autopilot_permission_caller_refused',
@@ -18,6 +21,8 @@ export type PermissionRelayCaller = Readonly<{
   ownerId: string
   terminalHandle: string
   paneKey: string
+  dispatchId?: string
+  processIncarnation: string | null
 }>
 
 // Why one reason for the first three: the relay has always refused a pane outside an open app run alike.
@@ -50,7 +55,8 @@ export function appRunReadersIfPresent(db: OrchestrationDb): AppRunReaders | nul
  */
 export function resolvePermissionRelayCaller(
   db: OrchestrationDb,
-  authority: OrchestrationCompatibilityCallerAuthority | null
+  authority: OrchestrationCompatibilityCallerAuthority | null,
+  allowWorker = false
 ): PermissionRelayCaller {
   if (!authority) {
     throw refused('not_attested')
@@ -61,12 +67,40 @@ export function resolvePermissionRelayCaller(
   }
   const resolved = resolveAppRunPrimary(db, readers, authority, { openRunOnly: true })
   if (!resolved.ok) {
+    if (allowWorker) {
+      const dispatch = db.getActiveDispatchForTerminal(authority.terminalHandle, authority.paneKey)
+      const worker = dispatch ? db.getWorkerDispatch(dispatch.id) : undefined
+      const primary = dispatch ? getPrimarySessionStore(db).findLiveByRun(dispatch.run_id) : null
+      const run = dispatch ? getWorkflowRunStore(db).get(dispatch.run_id) : null
+      if (
+        dispatch &&
+        worker &&
+        ['starting', 'ready'].includes(worker.state) &&
+        !dispatch.capability_revoked_at &&
+        dispatch.assignee_pane_key &&
+        isEquivalentPaneKey(dispatch.assignee_pane_key, authority.paneKey) &&
+        dispatch.process_incarnation === authority.processIncarnation &&
+        dispatch.launch_token_hash === authority.launchTokenHash &&
+        primary?.state === 'running' &&
+        run?.status === 'active'
+      ) {
+        return {
+          runId: dispatch.run_id,
+          ownerId: primary.ownerId,
+          terminalHandle: authority.terminalHandle,
+          paneKey: authority.paneKey,
+          processIncarnation: authority.processIncarnation,
+          dispatchId: dispatch.id
+        }
+      }
+    }
     throw refused(RELAY_REFUSAL_REASONS[resolved.refusal])
   }
   return Object.freeze({
     runId: resolved.primary.run.runId,
     ownerId: resolved.primary.ownerId,
     terminalHandle: authority.terminalHandle,
-    paneKey: authority.paneKey
+    paneKey: authority.paneKey,
+    processIncarnation: authority.processIncarnation
   })
 }

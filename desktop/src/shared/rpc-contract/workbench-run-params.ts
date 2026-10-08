@@ -1,9 +1,5 @@
 import { z } from 'zod'
-import {
-  ProposalChangesSchema,
-  ProposalIdSchema,
-  ProposalSubmissionSchema
-} from '../routing-table/routing-table-proposal-schema'
+import { RoutingTableEditSchema } from '../routing-table/routing-table-edit-schema'
 import { WorkbenchWorkspaceIdSchema } from '../workbench-request'
 import {
   WORKFLOW_RUN_LIST_DEFAULT_LIMIT,
@@ -46,25 +42,10 @@ export const WorkbenchRunMessageParams = z
 
 export const WorkbenchRoutingTableListParams = z.object({}).strict()
 
-/** A modification replaces the proposal's whole change set (`accepted_modified`). */
-export const WorkbenchRoutingTableAcceptParams = z
-  .object({ proposalId: ProposalIdSchema, modification: ProposalChangesSchema.optional() })
-  .strict()
-
-export const WorkbenchRoutingTableRejectParams = z.object({ proposalId: ProposalIdSchema }).strict()
-
-/** The user's own change set, stored as a pending `user_import` proposal; accepting it is separate. */
-export const WorkbenchRoutingTableImportParams = z
-  .object({ proposal: ProposalSubmissionSchema })
-  .strict()
-
-export const WorkbenchRoutingTableRevertParams = z
-  .object({ version: z.number().int().min(1) })
-  .strict()
+export const WorkbenchRoutingTableSaveParams = RoutingTableEditSchema
 
 /** "Check now": the active table only, table-wide; nothing on the wire chooses what is read. */
 export const WorkbenchRoutingTableCheckRoutesParams = z.object({}).strict()
 
 export type WorkbenchRunListInput = z.infer<typeof WorkbenchRunListParams>
 export type WorkbenchRunMessageInput = z.infer<typeof WorkbenchRunMessageParams>
-export type WorkbenchRoutingTableAcceptInput = z.infer<typeof WorkbenchRoutingTableAcceptParams>

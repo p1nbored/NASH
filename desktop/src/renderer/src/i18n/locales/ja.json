@@ -1530,7 +1530,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "NASH のロゴ",
         "ce44fad849": "依存関係が欠落している",
-        "c1cf168479": "非表示",
         "00cee697c1": "ターミナルで「gh auth login」を実行して、GitHub アカウントに接続します。",
         "9f96d018b7": "GitHub CLI が認証されていません",
         "73e1ad4282": "NASH は、GitHub CLI (gh) を使用して、PR、Issue、チェックを表示します。",
@@ -1540,9 +1539,6 @@
         "cd21242762": "プロジェクトを追加して開始します。",
         "9c00bd4adf": "開始するには、サイドバーからワークスペースを選択します。",
         "16e9e3df89": "星付き",
-        "0d0ace8861": "GitHub でスターを付ける",
-        "ec43b38ba7": "GitHub でスター済み",
-        "157bb5ecbb": "GitHub を開く",
         "preflightDismiss": "閉じる"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7362,20 +7358,12 @@
           "confirm_running_terminal_close_description": "ターミナルを閉じるときに、実行中の Agent またはコマンドを停止する前に確認してください。"
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "サポートありがとうございます!",
-          "6922c1fa2b": "GitHub 上のスター Orca",
-          "511782265b": "gh CLI を介して GitHub スターでプロジェクトをサポートします。",
-          "55a87e5fd1": "Orca をサポートする",
-          "964acc6bb4": "スター",
           "73b327e793": "再試行",
           "c9f96d4234": "エラー",
-          "397719bee5": "スターを付けています…",
           "1e29570462": "スター付け中",
           "9d181300e3": "星付き",
           "5c49f02662": "隠れた",
-          "b3f0584f5d": "読み込み中",
-          "cb65c75b11": "開いています…",
-          "f2d4f877b2": "GitHub を開く"
+          "b3f0584f5d": "読み込み中"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "リリースノート",
@@ -9797,13 +9785,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "のように",
-            "e6b01c8e30": "フィードバック",
-            "b65665703a": "サポート",
-            "06ea5a69a6": "GitHub",
-            "e4fb4516d0": "星",
-            "e0b8c8bc25": "gh CLI を介して GitHub スターでプロジェクトをサポートします。",
-            "36a72f0d9e": "GitHub 上のスター Orca",
             "c61b14be7c": "grok",
             "5d9ba08673": "copilot",
             "f472e97440": "aider",
@@ -10093,7 +10074,7 @@
             "f16e41cc72": "GitHub 連携",
             "760e2446e0": "保存された API トークンまたは環境変数を使用した Bitbucket クラウド認証。",
             "af5ae87847": "アクセストークン",
-            "clefRoutingDescription": "ワークベンチのリクエストのルーティングに使用する Clef の API トークンとアカウント ID を保存します。",
+            "clefRoutingDescription": "ワークベンチのリクエストのルーティングに使用する分類器の API トークンとアカウント ID を保存します。",
             "clef": "clef",
             "routing": "ルーティング",
             "cloudflare": "cloudflare",
@@ -10102,7 +10083,6 @@
             "routingTableKeyword": "ルーティングテーブル",
             "model": "モデル",
             "reasoning": "推論",
-            "proposal": "提案",
             "executor": "実行者",
             "dotIngress": "dot からのタスク",
             "dotIngressDescription": "ローカルの dot インターフェースのオン/オフを切り替え、dot が使用できるワークスペースとその最大アクセス権を選択し、送信制限を設定します。",
@@ -12436,8 +12416,8 @@
             "notProtectedDetail": "保存済みの認証情報が保護されていないため、NASH は使用しません。クリアしてから、もう一度保存してください。"
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef は各タスクを種類別に分類し、その種類に選ばれた Agent に割り当てます。"
+            "title": "分類器",
+            "descriptionPlain": "分類器は各タスクを種類別に分類し、その種類に選ばれた Agent に割り当てます。"
           },
           "verification": {
             "blockPaused": "検証は一時停止中です: {{reason}}。",
@@ -12529,12 +12509,6 @@
               "resultNotUsable": "その結果は使用できません。",
               "resultWriteFailed": "結果を保存できませんでした。もう一度お試しください。"
             },
-            "pending": {
-              "title": "確認待ち",
-              "thresholds": "信頼度のしきい値: タスクは {{yes}} 以上で委任、{{no}} 以下で保持と判定されます。タスクの種類は、次点を {{margin}} 上回る必要があります。",
-              "wording": "回答の文言: {{options}} 個のタスク種類の選択肢と {{answers}} 個の委任の回答。",
-              "effectPlain": "これらはデフォルト値です。変更すると、Clef をもう一度検証する必要があります。"
-            },
             "report": {
               "failedReason": "{{reason}}: {{detail}}。",
               "titlePlain": "検証結果",
@@ -12558,17 +12532,10 @@
         },
         "routingTable": {
           "card": {
-            "refresh": "更新",
             "unavailable": "利用不可",
             "blocked": "ブロック中",
             "blockedTitle": "ルーティングがブロックされています",
-            "pendingNotice": "確認待ちの変更の提案: {{count}}",
-            "review": "確認",
             "title": "タスクごとの Agent"
-          },
-          "active": {
-            "versionActive": "バージョン {{version}} が有効",
-            "created": "作成: {{time}}"
           },
           "availability": {
             "available": "利用可能",
@@ -12599,102 +12566,32 @@
             "checkingPlain": "確認中…",
             "checkPlain": "利用可否を確認"
           },
-          "proposals": {
-            "evidence": "根拠: {{sources}}",
-            "becomes": "から次に変更:",
-            "none": "なし",
-            "noReviewers": "レビュアーなし",
-            "coordinator": "メイン",
-            "staleTitle": "古いバージョン向けの提案",
-            "accept": "承認",
-            "edit": "編集して承認",
-            "reject": "却下",
-            "noRowPlain": "未設定",
-            "notesOnlyPlain": "選択は同じで、メモのみ変更されます。",
-            "metaPlain": "{{time}} · バージョン {{version}} に基づく",
-            "staleBodyPlain": "現在はバージョン {{active}} が使用されているため、この提案は承認できなくなりました。却下するか、上の一覧でもう一度変更してください。",
-            "historyPlain": "決定済み（{{count}}）",
-            "pendingTitlePlain": "変更の提案",
-            "noneWaitingPlain": "確認待ちの提案はありません。提案を承認するまで何も変更されません。"
-          },
-          "versions": {
-            "title": "バージョン履歴",
-            "version": "バージョン {{version}}",
-            "active": "（有効）",
-            "revertTo": "バージョン {{version}} に戻す",
-            "revert": "元に戻す",
-            "confirmTitle": "バージョン {{version}} に戻しますか？",
-            "confirmBody": "バージョン {{version}} の内容が、新たな有効バージョンになります。バージョン {{active}} は履歴に残るため、後で戻すことができます。",
-            "cancel": "キャンセル"
-          },
           "editor": {
-            "coordinator": "メイン",
-            "coordinatorModel": "メインモデル",
-            "taskType": "タスクの種類",
-            "model": "モデル",
-            "requirement": "要件",
-            "required": "必須",
-            "whenSupported": "対応している場合",
-            "modelFor": "{{task}} のモデル",
-            "cancel": "キャンセル",
-            "acceptModified": "変更して承認",
             "geminiExcluded": "Gemini 4 モデルはルーティングから除外されています。",
             "aliasUnpinned": "opus や latest などのエイリアスではなく、正確なモデル ID を入力してください。",
             "slugRejected": "このモデル ID は廃止済みか、拒否されています。別の正確なモデル ID を入力してください。",
             "modelInvalid": "選択した CLI の正確なモデル ID を入力してください。",
-            "onlyPrimaryInherits": "メインセッションと Claude ワークフローのみがメイン設定を継承できます。",
-            "primaryInherits": "メインセッションは常にメイン設定を使用します。モデルと推論を「継承」に設定してください。",
-            "coordinatorStays": "メインの推論は常にメインセッション内で行われます。",
+            "onlyPrimaryInherits": "コーディネーターセッションと Claude ワークフローのみがコーディネーター設定を継承できます。",
+            "primaryInherits": "コーディネーターセッションは常にコーディネーター設定を使用します。モデルと推論を「継承」に設定してください。",
+            "coordinatorStays": "コーディネーターの推論は常にコーディネーターセッション内で行われます。",
             "ifSupportedConcrete": "「対応している場合」には、[継承] ではなく具体的な推論レベルが必要です。",
             "rowInvalid": "この行は無効です。対象、モデル、推論レベルを確認してください。",
             "nothingChanged": "このままでは有効なテーブルは変更されません。先に少なくとも 1 つのルートを編集してください。",
-            "modifyTitlePlain": "承認前に編集",
-            "modifyBodyPlain": "編集内容が提案された変更を置き換えます。承認すると、編集内容が使用されます。",
-            "agentFor": "{{task}} の Agent",
-            "effortFor": "{{task}} の推論レベル",
-            "effortRequirementFor": "{{task}} の推論レベルの要件",
-            "agent": "エージェント",
-            "effort": "推論レベル",
-            "primaryCli": "メイン CLI"
-          },
-          "import": {
-            "title": "変更セットをインポート",
-            "jsonLabel": "変更セット（JSON）",
-            "reasonLabel": "変更の理由",
-            "cancel": "キャンセル",
-            "reasonMissing": "変更の理由を英語で短く入力してください。",
-            "bodyPlain": "[変更の提案] に追加され、そこで確認して承認できます。",
-            "submitPlain": "インポート",
-            "noActivePlain": "タスクルーティングを利用できないため、何もインポートできません。",
-            "notJsonPlain": "有効な JSON ではありません。変更セット全体を貼り付けてください。",
-            "invalidPlain": "この変更セットには使用できない値があります。各 Agent、モデル、推論レベルを確認してください。"
+            "primaryCli": "コーディネーター CLI",
+            "coordinatorModel": "コーディネーターのモデル"
           },
           "notices": {
-            "activated": "バージョン {{version}} が有効になりました。",
-            "reverted": "バージョン {{from}} の内容で、バージョン {{version}} が有効になりました。",
-            "rejectedPlain": "変更の提案を却下しました。",
-            "importedPlain": "[変更の提案] に追加しました。使用するには、そこで承認してください。",
             "saved": "保存しました。"
           },
           "refusals": {
-            "duplicateActivePlain": "これらの選択はすでに使用中のため、何も保存されませんでした。",
-            "duplicatePendingPlain": "同じ変更がすでに [変更の提案] で確認待ちです。そこで確認してください。",
             "integrityFailedPlain": "保存済みのタスクルーティングを読み取れなかったため、タスクはルーティングされません。代わりにデフォルトが使用されることもありません。",
-            "taxonomyMismatchPlain": "保存済みのタスクルーティングは別のタスク一覧用に作成されているため、使用できません。[詳細設定] で現在のタスク用のルーティングをインポートしてください。",
+            "taxonomyMismatchPlain": "保存されたタスクのルーティングは別のタスクリスト用に作成されているため、使用できません。",
             "notInstalledPlain": "タスクルーティングはまだ設定されていません。アプリを再起動して、デフォルトをインストールしてください。",
             "invalidTablePlain": "この変更によりタスクルーティングが無効になるため、保存されませんでした。",
             "versionConflictPlain": "保存中にタスクルーティングが変更されました。もう一度お試しください。",
             "forbiddenCallerPlain": "タスクルーティングは、このアプリでのみ変更できます。",
-            "proposalUnknownPlain": "この変更の提案はもう存在しません。",
-            "proposalInvalidPlain": "この変更の提案を読み取れないため、承認できません。",
-            "alreadyDecidedPlain": "この変更の提案はすでに決定済みです。",
-            "proposalSupersededPlain": "この変更の提案は以前の選択に対して作成されたため、保留され、何も変更されませんでした。",
             "noChangePlain": "すべての選択がそのままのため、何も変更されませんでした。",
-            "forbiddenProposerPlain": "この種類の変更はここでは送信できません。",
-            "invalidProposalPlain": "この変更は無効なため、保存されませんでした。",
             "baseNotActivePlain": "準備後にタスクルーティングが変更されました。もう一度お試しください。",
-            "tooManyPendingPlain": "確認待ちの変更の提案が多すぎます。先に [詳細設定] でいくつかを承認または却下してください。",
-            "versionUnknownPlain": "その以前のバージョンはもう存在しません。",
             "unknownPlain": "タスクルーティングがこの変更を拒否しました。",
             "invalidResponsePlain": "アプリからの応答をここでは読み取れませんでした。",
             "notConnectedPlain": "このビルドではタスクルーティングを利用できません。",
@@ -12703,7 +12600,7 @@
             "callFailedPlain": "リクエストが完了しませんでした。もう一度お試しください。"
           },
           "labels": {
-            "coordinatorReasoning": "メインの推論",
+            "coordinatorReasoning": "コーディネーターの推論",
             "complexPlanningReasoning": "複雑な計画と推論",
             "softwareEngineering": "ソフトウェアエンジニアリング",
             "scientificExperimentValidation": "科学実験の検証",
@@ -12713,7 +12610,7 @@
             "highQualityWriting": "高品質な文章作成",
             "fastWritingOrAlternativeDraft": "高速な文章作成または代替案の下書き",
             "configuredProjectWorkflow": "設定済みのプロジェクトワークフロー",
-            "claudePrimary": "メインセッション",
+            "claudePrimary": "コーディネーターセッション",
             "claudeSubagent": "Claude サブ Agent",
             "claudeWorkflow": "Claude ワークフロー",
             "codexCli": "Codex CLI",
@@ -12729,26 +12626,15 @@
             "ultra": "ウルトラ",
             "inherit": "継承",
             "whenSupported": "（対応している場合）",
-            "bundledUpdate": "アプリのアップデート",
-            "benchmarkReview": "ベンチマークレビュー",
-            "agent": "エージェント",
-            "userImport": "ユーザーによる変更",
-            "accepted": "承認済み",
-            "acceptedModified": "変更して承認済み",
-            "rejected": "却下済み",
-            "superseded": "置き換え済み",
-            "sourceBundled": "アプリのデフォルト",
-            "sourceUser": "ユーザーのテーブル",
-            "sameAsCoordinator": "メインと同じ"
+            "sameAsCoordinator": "コーディネーターと同じ"
           },
           "inline": {
             "edit": "編集",
-            "reviewersTitle": "レビュアー",
             "reviewersHelp": "自動チェックのない完了済みの作業をレビューします。",
             "noReviewers": "レビュアーがいないため、自動チェックのない作業はレビューできません。",
             "reviewer": "レビュアー {{number}}",
             "editFor": "{{task}} を編集",
-            "coordinator": "メイン",
+            "coordinator": "コーディネーター",
             "listLabel": "タスクごとの Agent",
             "save": "保存",
             "cancel": "キャンセル",
@@ -12756,13 +12642,8 @@
             "modelFor": "{{task}} のモデル",
             "effortFor": "{{task}} の推論レベル",
             "onlyIfSupported": "モデルが対応している場合のみ",
-            "coordinatorEffort": "メインの推論強度"
-          },
-          "advanced": {
-            "unreadable": "読み取れなかった変更の提案: {{count}}",
-            "importLabel": "変更セットをインポート",
-            "importDescription": "ルーティングを JSON として貼り付けます。承認するまで [変更の提案] で保留されます。",
-            "import": "インポート…"
+            "coordinatorEffort": "コーディネーターの推論強度",
+            "reviewersTitle": "レビュアー"
           }
         },
         "dotIngress": {
@@ -12974,9 +12855,6 @@
             "remoteDescription": "GPT Site 経由で dot がこのアプリにアクセスできるようにします。スイッチ、サイトのアドレスとアクセストークン、ペアリングと取り消しを設定します。"
           }
         },
-        "advancedDisclosure": {
-          "label": "詳細設定"
-        },
         "copyDetails": {
           "copied": "詳細をコピーしました。",
           "failed": "詳細をコピーできませんでした。",
@@ -12984,7 +12862,7 @@
         },
         "taskRouting": {
           "search": {
-            "agentsDescription": "タスクの種類ごとに Agent、モデル、推論レベルを選択し、変更の提案を承認または却下します。",
+            "agentsDescription": "タスクの種類ごとに Agent、モデル、推論レベルを選択します。",
             "effort": "推論レベル",
             "agent": "Agent"
           }

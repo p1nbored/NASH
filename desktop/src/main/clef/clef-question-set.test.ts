@@ -12,7 +12,6 @@ import {
 } from '../../shared/routing-table/routing-table-taxonomy'
 import { clefCanonicalSha256 } from './clef-verified-profile'
 import {
-  CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION,
   CLEF_DECISION_THRESHOLDS,
   CLEF_QUESTION_BUNDLE,
   CLEF_QUESTION_BUNDLE_SHA256,
@@ -130,17 +129,6 @@ describe('decision thresholds', () => {
       taskTypeMarginMin: 0.1
     })
     expect(Object.isFrozen(CLEF_DECISION_THRESHOLDS)).toBe(true)
-  })
-
-  it('are marked as defaults awaiting user confirmation, together with the option texts', () => {
-    expect(CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION).toEqual([
-      'thresholds',
-      'task_type_options',
-      'needs_delegation_criteria'
-    ])
-    for (const key of CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION) {
-      expect(Object.keys(CLEF_QUESTION_BUNDLE)).toContain(key)
-    }
   })
 })
 

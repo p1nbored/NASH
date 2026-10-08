@@ -433,6 +433,7 @@ import {
 import { WorkerStartParams } from './orchestration-worker-start-params'
 import { WorkerDispatchParams as WorkerDispatchParamsOfOrchestrationWorkerStopParams } from './orchestration-worker-stop-params'
 import {
+  PermissionListParams,
   PermissionRequestParams,
   PermissionWaitParams,
   WorkbenchPermissionAnswerParams,
@@ -581,12 +582,9 @@ import {
   WorkbenchSubmitParams
 } from './workbench-params'
 import {
-  WorkbenchRoutingTableAcceptParams,
   WorkbenchRoutingTableCheckRoutesParams,
-  WorkbenchRoutingTableImportParams,
   WorkbenchRoutingTableListParams,
-  WorkbenchRoutingTableRejectParams,
-  WorkbenchRoutingTableRevertParams,
+  WorkbenchRoutingTableSaveParams,
   WorkbenchRunListParams,
   WorkbenchRunMessageParams,
   WorkbenchRunShowParams,
@@ -1114,6 +1112,8 @@ export const RPC_PARAMS_BY_METHOD = {
   'orchestration.gateResolve': GateResolveParams,
   'orchestration.inbox': InboxParams,
   'orchestration.partyLocation': PartyLocationParams,
+  'orchestration.permissionAnswer': WorkbenchPermissionAnswerParams,
+  'orchestration.permissionList': PermissionListParams,
   'orchestration.permissionRequest': PermissionRequestParams,
   'orchestration.permissionWait': PermissionWaitParams,
   'orchestration.reply': ReplyParams,
@@ -1309,12 +1309,9 @@ export const RPC_PARAMS_BY_METHOD = {
   'workbench.requests.list': WorkbenchListParams,
   'workbench.requests.submit': WorkbenchSubmitParams,
   'workbench.routing.status': null,
-  'workbench.routingTable.accept': WorkbenchRoutingTableAcceptParams,
   'workbench.routingTable.checkRoutes': WorkbenchRoutingTableCheckRoutesParams,
-  'workbench.routingTable.import': WorkbenchRoutingTableImportParams,
   'workbench.routingTable.list': WorkbenchRoutingTableListParams,
-  'workbench.routingTable.reject': WorkbenchRoutingTableRejectParams,
-  'workbench.routingTable.revert': WorkbenchRoutingTableRevertParams,
+  'workbench.routingTable.save': WorkbenchRoutingTableSaveParams,
   'workbench.runs.list': WorkbenchRunListParams,
   'workbench.runs.message': WorkbenchRunMessageParams,
   'workbench.runs.show': WorkbenchRunShowParams,

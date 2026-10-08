@@ -18,7 +18,11 @@ export const AUTOPILOT_HANDLER_GROUPS: readonly HandlerGroup[] = [
   },
   {
     name: 'orchestration-permission',
-    keys: ['orchestration permission-request'],
+    keys: [
+      'orchestration permission-request',
+      'orchestration permission-list',
+      'orchestration permission-answer'
+    ],
     load: async () =>
       (await import('./handlers/orchestration/permission-request-handler.js'))
         .ORCHESTRATION_PERMISSION_HANDLERS
@@ -30,6 +34,7 @@ export const AUTOPILOT_HANDLER_GROUPS: readonly HandlerGroup[] = [
       'dot hello',
       'dot workspaces',
       'dot submit',
+      'dot attach',
       'dot status',
       'dot list',
       'dot cancel',

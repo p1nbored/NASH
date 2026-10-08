@@ -116,6 +116,13 @@ const NoInput = z.object({}).strict()
  * each workspace's maximum, which NASH publishes and enforces when it admits the item.
  */
 export const DotRemoteSubmitToolInputSchema = DotSubmitParams.omit(NO_CONTRACT_VERSION).extend({
+  coordinatorRunId: z
+    .string()
+    .regex(/^[A-Za-z0-9_.:-]{1,128}$/)
+    .optional()
+    .describe(
+      'Explicit existing native coordinator run to take over. Omit to start a new coordinator.'
+    ),
   requestedAccess: z.enum(DOT_REMOTE_ALLOWED_SUBMIT_ACCESS).default(DOT_DEFAULT_REQUEST_ACCESS)
 })
 

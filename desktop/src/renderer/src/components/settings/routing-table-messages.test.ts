@@ -7,10 +7,6 @@ import {
   VALIDATION_REVIEWER_TARGETS
 } from '../../../../shared/routing-table/routing-table-taxonomy'
 import {
-  PROPOSAL_DECISIONS,
-  ROUTING_TABLE_PROPOSERS
-} from '../../../../shared/routing-table/routing-table-proposal-schema'
-import {
   routingTableCallErrorDetails,
   routingTableCallErrorMessage,
   routingTableRefusalDetails,
@@ -18,8 +14,6 @@ import {
 } from './routing-table-messages'
 import {
   executionTargetLabel,
-  proposalDecisionLabel,
-  proposerLabel,
   reasoningLevelLabel,
   reviewerTargetLabel,
   taskTypeLabel
@@ -27,15 +21,15 @@ import {
 
 const SNAKE_CASE_CODE = /\b[a-z]+_[a-z_]+\b/
 
-function refusal(reason: string, detail: string | null = null, existing: string | null = null) {
-  return { ok: false as const, reason, detail, existingProposalId: existing }
+function refusal(reason: string, detail: string | null = null) {
+  return { ok: false as const, reason, detail }
 }
 
 function rpcError(code: string, message = 'raw main-side text'): RuntimeRpcCallError {
   return new RuntimeRpcCallError({ id: 'rpc-1', ok: false, error: { code, message } })
 }
 
-// Every reason the table store, its proposals and its activation can refuse with (A1, D3).
+// Every refusal from the table store and direct saves.
 const STORE_REASONS = [
   'routing_table_integrity_failed',
   'routing_table_taxonomy_mismatch',
@@ -43,17 +37,8 @@ const STORE_REASONS = [
   'invalid_table',
   'version_conflict',
   'forbidden_caller',
-  'proposal_unknown',
-  'proposal_invalid',
-  'already_decided',
-  'proposal_superseded',
   'no_change',
-  'forbidden_proposer',
-  'invalid_proposal',
-  'base_not_active',
-  'too_many_pending',
-  'duplicate_content',
-  'version_unknown'
+  'base_not_active'
 ]
 
 const INTEGRITY_DETAILS = [
@@ -90,14 +75,6 @@ describe('routingTableRefusalMessage', () => {
         routingTableRefusalDetails(refusal('routing_table_integrity_failed', detail))
       ).toContain(`detail: ${detail}`)
     }
-  })
-
-  it('points at a waiting duplicate without its id, which stays in the details', () => {
-    const waiting = refusal('duplicate_content', null, 'proposal-0042')
-    expect(routingTableRefusalMessage(waiting)).not.toContain('proposal-0042')
-    expect(routingTableRefusalMessage(waiting)).toMatch(/Suggested changes/)
-    expect(routingTableRefusalDetails(waiting)).toContain('proposal-0042')
-    expect(routingTableRefusalMessage(refusal('duplicate_content'))).toMatch(/already in use/i)
   })
 
   it('keeps an unknown reason out of the text and in the details', () => {
@@ -137,9 +114,7 @@ describe('routing table labels', () => {
       ...ROUTING_TASK_TYPES.map(taskTypeLabel),
       ...EXECUTION_TARGETS.map(executionTargetLabel),
       ...REASONING_LEVELS.map(reasoningLevelLabel),
-      ...VALIDATION_REVIEWER_TARGETS.map(reviewerTargetLabel),
-      ...ROUTING_TABLE_PROPOSERS.map(proposerLabel),
-      ...PROPOSAL_DECISIONS.map(proposalDecisionLabel)
+      ...VALIDATION_REVIEWER_TARGETS.map(reviewerTargetLabel)
     ]
 
     for (const label of labels) {

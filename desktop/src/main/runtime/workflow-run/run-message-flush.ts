@@ -4,6 +4,7 @@ import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
 import { clockTimestamp } from './primary-session-ports'
 import type { PrimaryAgentActivity } from './primary-session-status'
 import type { RunMessageSendResult } from './run-message-sender'
+import { runMessageSourceAllowed } from './run-message-authority'
 
 /** The primary as delivery sees it: typeable, worth waiting for (unverifiable), or gone. */
 export type LivePrimaryRead =
@@ -17,7 +18,7 @@ export type RunMessageFlushContext = {
   /** How many held messages one flush reads; the rest wait for the next pass. */
   readonly heldLimit: number
   readLivePrimary(runId: string): Promise<LivePrimaryRead>
-  send(handle: string, text: string): Promise<RunMessageSendResult>
+  send(handle: string, text: string, record: RunMessageRecord): Promise<RunMessageSendResult>
   /** Arms the run's flush timer, at most one per run. */
   arm(runId: string): void
   cancel(runId: string): void
@@ -57,7 +58,12 @@ export function settleRunMessageSend(
       return messages.settle(record.messageId, {
         to: 'refused',
         firstOutcome: 'refused',
-        reason: sent.kind === 'incomplete' ? 'delivery_incomplete' : 'terminal_unavailable',
+        reason:
+          sent.kind === 'incomplete'
+            ? 'delivery_incomplete'
+            : sent.code === 'run_not_owned_by_source'
+              ? sent.code
+              : 'terminal_unavailable',
         timestamp
       })
   }
@@ -108,7 +114,11 @@ export async function flushHeldRunMessages(
   }
   let activity = primary.activity
   for (const record of held) {
-    const sent = await context.send(primary.handle, record.text ?? '')
+    if (!runMessageSourceAllowed(context.db, record)) {
+      refuseAll(context, [record], 'run_not_owned_by_source')
+      continue
+    }
+    const sent = await context.send(primary.handle, record.text ?? '', record)
     settleRunMessageSend(context, record, sent, activity)
     if (sent.kind === 'dialog_blocked' || sent.kind === 'incomplete') {
       context.arm(runId)

@@ -11,16 +11,13 @@ import {
   type WorkbenchPermissionListInput,
   type WorkbenchPermissionListResult
 } from '../../../shared/rpc-contract/permission-relay-params'
-import type { OrchestrationDb } from '../orchestration/db'
 import {
   getPermissionDecisionStore,
-  type PermissionAnswerResult,
   type PermissionDecisionRecord,
   type PermissionDecisionStatus,
   type PermissionDecisionStore
 } from '../orchestration/db/permission-decision-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
-import type { OrchestrationCompatibilityCallerAuthority } from '../runtime-terminal-contracts'
 import { classifyPermissionAudience, type PermissionRelayInput } from './permission-audience'
 import { requireDotMayAllow } from './permission-dot-allow'
 import {
@@ -29,7 +26,11 @@ import {
   listPendingPrompts,
   toDesktopPermissionView
 } from './permission-decision-views'
-import { relayWaitOutcome } from './permission-hook-output'
+import { waitForPermissionDecision } from './permission-relay-wait'
+import {
+  listPrimaryPermissionRecords,
+  requirePrimaryPermissionReview
+} from './permission-primary-review'
 import { buildPermissionSummary, isDesktopOnlyRecord } from './permission-redaction'
 import {
   PERMISSION_RELAY_ERROR_CODES as CODES,
@@ -37,36 +38,21 @@ import {
   resolvePermissionRelayCaller
 } from './permission-relay-caller'
 import { PermissionRelayWaiters } from './permission-relay-waiters'
-import { PermissionTerminalObserver, type AgentStatusReader } from './permission-terminal-observer'
+import { PermissionTerminalObserver } from './permission-terminal-observer'
+import { isPermissionSourceLive } from './permission-source'
 
-export type PermissionRelayDeps = {
-  getDb(): OrchestrationDb
-  /** `OrcaRuntimeService.verifyOrchestrationCompatibilityCaller` over the request's pane evidence. */
-  verifyCaller(
-    evidence: OrchestrationCompatibilityEvidence | undefined
-  ): OrchestrationCompatibilityCallerAuthority | null
-  readStatus: AgentStatusReader
-  now(): number
-  /** The app's own CLI name; commands that run it are desktop-only. */
-  controlPlaneCommands: readonly string[]
-  /** The app's data folders (userData); a prompt that touches them is desktop-only. */
-  appDataDirectories?: readonly string[]
-  reportError?(error: unknown): void
-}
-
-/** `closed`: the relay wait is over or no hook waits any more; the prompt is answered in the terminal. */
-export type PermissionRelayAnswer =
-  | PermissionAnswerResult
-  | { outcome: 'closed'; record: PermissionDecisionRecord }
-
-export type PermissionAnswerRequest = {
-  decisionId: string
-  decision: 'allow' | 'deny'
-  decidedBy: 'dot' | 'desktop'
-}
+import type {
+  PermissionRelayDeps,
+  PermissionRelayAnswer,
+  PermissionAnswerRequest
+} from './permission-relay-types'
+export type {
+  PermissionRelayDeps,
+  PermissionRelayAnswer,
+  PermissionAnswerRequest
+} from './permission-relay-types'
 
 const TICK_INTERVAL_MS = 1_000
-const RECHECK_MS = 1_000
 
 const iso = (ms: number): string => new Date(ms).toISOString()
 
@@ -85,6 +71,7 @@ export class PermissionRelayService {
   private readonly waiters = new PermissionRelayWaiters()
   /** Pending prompts this service tracks, with their relay deadline in epoch ms. */
   private readonly known = new Map<string, number>()
+  private readonly sources = new Map<string, { handle: string; incarnation: string | null }>()
   private readonly observer: PermissionTerminalObserver
   private timer: ReturnType<typeof setInterval> | null = null
   private ticking = false
@@ -104,7 +91,7 @@ export class PermissionRelayService {
     input: PermissionRequestInput
   ): PermissionRequestResult {
     const db = this.deps.getDb()
-    const caller = resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence))
+    const caller = resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence), true)
     const relayInput: PermissionRelayInput = {
       toolName: input.toolName,
       agentId: input.agentId,
@@ -128,10 +115,28 @@ export class PermissionRelayService {
       )
     }
     const now = this.deps.now()
+    const existing = getPermissionDecisionStore(db)
+      .listPending(caller.runId, 200)
+      .find(
+        (record) =>
+          record.ownerId === caller.ownerId &&
+          record.agentId === (caller.dispatchId ?? null) &&
+          record.requestSha256 === input.requestSha256 &&
+          record.toolName === input.toolName &&
+          record.summary === built.summary &&
+          this.isAnswerable(record, now)
+      )
+    if (existing) {
+      return {
+        outcome: 'relayed',
+        decisionId: existing.decisionId,
+        deadlineAt: existing.deadlineAt
+      }
+    }
     const record = getPermissionDecisionStore(db).create({
       runId: caller.runId,
       ownerId: caller.ownerId,
-      agentId: input.agentId,
+      agentId: caller.dispatchId ?? null,
       toolName: input.toolName,
       summary: built.summary,
       requestSha256: input.requestSha256,
@@ -139,54 +144,36 @@ export class PermissionRelayService {
       timestamp: iso(now)
     })
     this.known.set(record.decisionId, Date.parse(record.deadlineAt))
+    this.sources.set(record.decisionId, {
+      handle: caller.terminalHandle,
+      incarnation: caller.processIncarnation
+    })
     this.waiters.open(record.decisionId, now)
     this.observer.watch(record.decisionId, caller.terminalHandle)
+    if (caller.dispatchId) {
+      this.deps.notifyPrimary?.(record)
+    }
     return { outcome: 'relayed', decisionId: record.decisionId, deadlineAt: record.deadlineAt }
   }
 
-  /** One long-poll slice for the hook that raised the prompt; never longer than `waitMs`. */
   async wait(
     evidence: OrchestrationCompatibilityEvidence | undefined,
     input: PermissionWaitInput,
     signal?: AbortSignal
   ): Promise<PermissionWaitResult> {
     const db = this.deps.getDb()
-    const caller = resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence))
-    const store = getPermissionDecisionStore(db)
-    const record = store.get(input.decisionId)
-    if (!record || record.ownerId !== caller.ownerId) {
-      throw new OrchestrationError(CODES.notFound, 'The permission prompt was not found.', {
-        effectsApplied: false
-      })
-    }
-    const sliceEnd = this.deps.now() + input.waitMs
-    const deadline = Date.parse(record.deadlineAt)
-    this.waiters.enter(input.decisionId, this.deps.now())
-    let final = false
-    try {
-      for (;;) {
-        const settled = relayWaitOutcome(store.get(input.decisionId), this.deps.now())
-        if (settled) {
-          final = true
-          return settled
-        }
-        const now = this.deps.now()
-        if (now >= sliceEnd || signal?.aborted) {
-          return { state: 'pending' }
-        }
-        const until = Math.min(sliceEnd, deadline, now + RECHECK_MS)
-        await this.waiters.waitForChange(input.decisionId, until - now, signal)
-      }
-    } finally {
-      // Why: after a final outcome no hook waits for this prompt again, so its entry can go.
-      if (final) {
-        this.waiters.forget(input.decisionId)
-      } else {
-        this.waiters.leave(input.decisionId, this.deps.now())
-      }
-    }
+    return waitForPermissionDecision(
+      {
+        db,
+        caller: resolvePermissionRelayCaller(db, this.deps.verifyCaller(evidence), true),
+        now: this.deps.now,
+        waiters: this.waiters,
+        isSourceLive: (record) => this.isSourceLive(record)
+      },
+      input,
+      signal
+    )
   }
-
   /** The CAS port for dot (D4) and the desktop. dot is refused on a desktop-only prompt, with no effect. */
   answer(request: PermissionAnswerRequest): PermissionRelayAnswer {
     const store = this.storeIfPresent()
@@ -194,10 +181,21 @@ export class PermissionRelayService {
     if (!store || !record) {
       return { outcome: 'not_found' }
     }
-    if (request.decidedBy === 'dot' && isDesktopOnlyRecord(record)) {
+    if (
+      request.decidedBy !== 'desktop' &&
+      (request.decidedBy === 'primary' || request.decision === 'allow') &&
+      isDesktopOnlyRecord(record)
+    ) {
       throw new OrchestrationError(
         CODES.desktopOnly,
         'This permission prompt can only be answered in the app. No effects were applied.',
+        { effectsApplied: false }
+      )
+    }
+    if (request.decidedBy === 'dot' && record.agentId !== null && !isDesktopOnlyRecord(record)) {
+      throw new OrchestrationError(
+        CODES.callerRefused,
+        'The primary agent reviews child permissions.',
         { effectsApplied: false }
       )
     }
@@ -227,6 +225,27 @@ export class PermissionRelayService {
     return this.answer({ ...input, decidedBy: 'dot' })
   }
 
+  listForPrimary(
+    evidence: OrchestrationCompatibilityEvidence | undefined
+  ): WorkbenchPermissionListResult {
+    return {
+      decisions: listPrimaryPermissionRecords(
+        this.deps.getDb(),
+        this.deps.verifyCaller(evidence)
+      ).map((record) => this.desktopView(record))
+    }
+  }
+
+  answerFromPrimary(
+    evidence: OrchestrationCompatibilityEvidence | undefined,
+    input: WorkbenchPermissionAnswerInput
+  ): WorkbenchPermissionAnswerResult {
+    requirePrimaryPermissionReview(this.deps.getDb(), this.deps.verifyCaller(evidence), input)
+    const result = this.answer({ ...input, decidedBy: 'primary' })
+    return result.outcome === 'not_found'
+      ? { outcome: 'not_found', decision: null }
+      : { outcome: result.outcome, decision: this.desktopView(result.record) }
+  }
   answerFromDesktop(input: WorkbenchPermissionAnswerInput): WorkbenchPermissionAnswerResult {
     const result = this.answer({ ...input, decidedBy: 'desktop' })
     return result.outcome === 'not_found'
@@ -287,7 +306,17 @@ export class PermissionRelayService {
     return (
       record.status === 'pending' &&
       now < Date.parse(record.deadlineAt) &&
-      this.waiters.isWaiting(record.decisionId, now)
+      this.waiters.isWaiting(record.decisionId, now) &&
+      this.isSourceLive(record)
+    )
+  }
+
+  private isSourceLive(record: PermissionDecisionRecord): boolean {
+    return isPermissionSourceLive(
+      this.deps.getDb(),
+      record,
+      this.sources.get(record.decisionId),
+      this.deps.readIncarnation
     )
   }
 
@@ -311,8 +340,9 @@ export class PermissionRelayService {
     if (!store) {
       return
     }
-    for (const decisionId of this.known.keys()) {
-      if (store.get(decisionId)?.status !== 'pending') {
+    for (const [decisionId, deadline] of this.known) {
+      // A hook may still consume a settled answer after the maintenance tick.
+      if (store.get(decisionId)?.status !== 'pending' && deadline <= this.deps.now()) {
         this.forget(decisionId)
       }
     }
@@ -331,6 +361,7 @@ export class PermissionRelayService {
 
   private forget(decisionId: string): void {
     this.known.delete(decisionId)
+    this.sources.delete(decisionId)
     this.waiters.forget(decisionId)
     this.observer.unwatch(decisionId)
   }

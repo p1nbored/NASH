@@ -1530,7 +1530,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "NASH 标志",
         "ce44fad849": "缺少依赖项",
-        "c1cf168479": "隐藏",
         "00cee697c1": "在终端中运行“gh auth login”以连接您的 GitHub 账户。",
         "9f96d018b7": "GitHub CLI 未经过身份验证",
         "73e1ad4282": "NASH 使用 GitHub CLI (gh) 来显示PR、议题和检查。",
@@ -1540,9 +1539,6 @@
         "cd21242762": "添加一个项目即可开始。",
         "9c00bd4adf": "从侧边栏中选择一个工作区开始。",
         "16e9e3df89": "已加星标",
-        "0d0ace8861": "在 GitHub 上加星标",
-        "ec43b38ba7": "已在 GitHub 上加星标",
-        "157bb5ecbb": "打开 GitHub",
         "preflightDismiss": "关闭"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7362,20 +7358,12 @@
           "confirm_running_terminal_close_description": "关闭终端时，在停止正在运行的智能体或命令之前询问。"
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "感谢您的支持！",
-          "6922c1fa2b": "GitHub 上的 Star Orca",
-          "511782265b": "通过 gh CLI 通过 GitHub star 支持该项目。",
-          "55a87e5fd1": "支持 Orca",
-          "964acc6bb4": "加星标",
           "73b327e793": "重试",
           "c9f96d4234": "错误",
-          "397719bee5": "正在加星标...",
           "1e29570462": "正在加星标",
           "9d181300e3": "已加星标",
           "5c49f02662": "隐",
-          "b3f0584f5d": "加载中",
-          "cb65c75b11": "正在打开...",
-          "f2d4f877b2": "打开 GitHub"
+          "b3f0584f5d": "加载中"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "发行说明",
@@ -9760,13 +9748,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "喜欢",
-            "e6b01c8e30": "反馈",
-            "b65665703a": "支持",
-            "06ea5a69a6": "GitHub",
-            "e4fb4516d0": "星星",
-            "e0b8c8bc25": "点赞 GitHub star 支持该项目（通过 gh CLI ",
-            "36a72f0d9e": "GitHub 上的 Star Orca",
             "c61b14be7c": "grok",
             "5d9ba08673": "copilot",
             "f472e97440": "助手",
@@ -10056,7 +10037,7 @@
             "f16e41cc72": "GitHub 集成",
             "760e2446e0": "使用保存的 API 令牌或环境变量进行 Bitbucket Cloud 身份验证。",
             "af5ae87847": "访问令牌",
-            "clefRoutingDescription": "保存用于路由工作台请求的 Clef API 令牌和账户 ID。",
+            "clefRoutingDescription": "保存用于路由工作台请求的分类器 API 令牌和账户 ID。",
             "clef": "clef",
             "routing": "路由",
             "cloudflare": "cloudflare",
@@ -10065,7 +10046,6 @@
             "routingTableKeyword": "路由表",
             "model": "模型",
             "reasoning": "推理",
-            "proposal": "提案",
             "executor": "执行器",
             "dotIngress": "来自 dot 的任务",
             "dotIngressDescription": "开启或关闭本地 dot 接口，选择 dot 可用的工作区及其最高权限，并设置提交限制。",
@@ -12436,8 +12416,8 @@
             "notProtectedDetail": "已保存的凭据未受保护，NASH 不会使用它们。请清除后重新保存。"
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef 按类型对任务分类，将其交给该类型所选的智能体。"
+            "title": "分类器",
+            "descriptionPlain": "分类器按类型对任务分类，将其交给该类型所选的智能体。"
           },
           "verification": {
             "blockPaused": "验证已暂停：{{reason}}。",
@@ -12529,12 +12509,6 @@
               "resultNotUsable": "无法使用该结果。",
               "resultWriteFailed": "无法保存结果。请重试。"
             },
-            "pending": {
-              "title": "等待你确认",
-              "thresholds": "置信度阈值：达到 {{yes}} 或以上时委派任务，低于或等于 {{no}} 时保留任务；任务类型的领先选项须比次选项高出 {{margin}}。",
-              "wording": "回答措辞：{{options}} 个任务类型选项和 {{answers}} 个委派回答。",
-              "effectPlain": "这些是默认值。修改任意一项后，都需要重新验证 Clef。"
-            },
             "report": {
               "failedReason": "{{reason}}：{{detail}}。",
               "titlePlain": "验证结果",
@@ -12558,17 +12532,10 @@
         },
         "routingTable": {
           "card": {
-            "refresh": "刷新",
             "unavailable": "不可用",
             "blocked": "受阻",
             "blockedTitle": "路由受阻",
-            "pendingNotice": "待审阅的建议更改：{{count}}",
-            "review": "审阅",
             "title": "各类任务使用的智能体"
-          },
-          "active": {
-            "versionActive": "版本 {{version}} 已启用",
-            "created": "创建于 {{time}}"
           },
           "availability": {
             "available": "可用",
@@ -12599,102 +12566,32 @@
             "checkingPlain": "正在检查…",
             "checkPlain": "检查可用性"
           },
-          "proposals": {
-            "evidence": "来源：{{sources}}",
-            "becomes": "更改为",
-            "none": "无",
-            "noReviewers": "无审查者",
-            "coordinator": "主代理",
-            "staleTitle": "基于旧版本提出",
-            "accept": "接受",
-            "edit": "编辑并接受",
-            "reject": "拒绝",
-            "noRowPlain": "未设置",
-            "notesOnlyPlain": "选择不变，仅修改备注。",
-            "metaPlain": "{{time}} · 基于版本 {{version}}",
-            "staleBodyPlain": "当前使用的是版本 {{active}}，此建议已无法接受。请拒绝此建议，或在上方列表中重新修改。",
-            "historyPlain": "已决定（{{count}}）",
-            "pendingTitlePlain": "建议更改",
-            "noneWaitingPlain": "没有待处理建议。在你接受建议前，不会有任何更改。"
-          },
-          "versions": {
-            "title": "版本历史",
-            "version": "版本 {{version}}",
-            "active": "（当前）",
-            "revertTo": "还原到版本 {{version}}",
-            "revert": "还原",
-            "confirmTitle": "还原到版本 {{version}}？",
-            "confirmBody": "版本 {{version}} 的内容将成为新的当前版本。版本 {{active}} 会保留在历史记录中，你可以随时切换回来。",
-            "cancel": "取消"
-          },
           "editor": {
-            "coordinator": "主代理",
-            "coordinatorModel": "主模型",
-            "taskType": "任务类型",
-            "model": "模型",
-            "requirement": "要求",
-            "required": "必须满足",
-            "whenSupported": "支持时使用",
-            "modelFor": "{{task}} 使用的模型",
-            "cancel": "取消",
-            "acceptModified": "接受修改后的建议",
             "geminiExcluded": "Gemini 4 模型已从路由中排除。",
             "aliasUnpinned": "请输入确切的模型 ID，不要使用 opus 或 latest 等别名。",
             "slugRejected": "此模型 ID 已停用或被拒绝。请输入其他确切的模型 ID。",
             "modelInvalid": "请输入所选 CLI 的确切模型 ID。",
-            "onlyPrimaryInherits": "只有主会话和 Claude 工作流可以继承主设置。",
-            "primaryInherits": "主会话始终使用主设置：请将模型和推理设为“继承”。",
-            "coordinatorStays": "主推理始终在主会话中进行。",
+            "onlyPrimaryInherits": "只有协调者会话和 Claude 工作流可以继承协调者设置。",
+            "primaryInherits": "协调者会话始终使用协调者设置：请将模型和推理设为“继承”。",
+            "coordinatorStays": "协调者推理始终在协调者会话中进行。",
             "ifSupportedConcrete": "“支持时使用”需要明确的推理级别，不能设为“继承”。",
             "rowInvalid": "此行无效。请检查目标、模型和推理级别。",
             "nothingChanged": "当前路由表没有变化。请先编辑至少一条路由。",
-            "modifyTitlePlain": "接受前编辑",
-            "modifyBodyPlain": "你的编辑将替换建议的更改。接受后立即生效。",
-            "agentFor": "{{task}} 使用的智能体",
-            "effortFor": "{{task}} 的推理强度",
-            "effortRequirementFor": "{{task}} 的推理强度要求",
-            "agent": "智能体",
-            "effort": "推理强度",
-            "primaryCli": "主 CLI"
-          },
-          "import": {
-            "title": "导入更改集",
-            "jsonLabel": "更改集（JSON）",
-            "reasonLabel": "更改原因",
-            "cancel": "取消",
-            "reasonMissing": "请用英语简要说明更改原因。",
-            "bodyPlain": "将添加到“建议更改”中，供你审阅和接受。",
-            "submitPlain": "导入",
-            "noActivePlain": "任务路由不可用，无法导入。",
-            "notJsonPlain": "这不是有效的 JSON。请粘贴完整的更改集。",
-            "invalidPlain": "此更改集包含无法使用的值。请检查每个智能体、模型和推理强度。"
+            "primaryCli": "协调者 CLI",
+            "coordinatorModel": "协调者模型"
           },
           "notices": {
-            "activated": "版本 {{version}} 现已启用。",
-            "reverted": "版本 {{version}} 现已启用，内容来自版本 {{from}}。",
-            "rejectedPlain": "已拒绝建议更改。",
-            "importedPlain": "已添加到“建议更改”。在那里接受后即可使用。",
             "saved": "已保存。"
           },
           "refusals": {
-            "duplicateActivePlain": "当前已使用这些选项，未保存任何内容。",
-            "duplicatePendingPlain": "“建议更改”中已有相同更改等待处理。请在那里审阅。",
             "integrityFailedPlain": "无法读取已保存的任务路由，因此不会路由任何任务，也不会改用默认设置。",
-            "taxonomyMismatchPlain": "已保存的任务路由适用于另一份任务列表，无法使用。请在“高级”中导入适用于当前任务的路由。",
+            "taxonomyMismatchPlain": "已保存的任务路由适用于不同的任务列表，因此无法使用。",
             "notInstalledPlain": "尚未设置任务路由。请重启应用以安装默认设置。",
             "invalidTablePlain": "此更改会导致任务路由无效，因此未保存。",
             "versionConflictPlain": "保存期间任务路由已发生变化。请重试。",
             "forbiddenCallerPlain": "只能在此应用中更改任务路由。",
-            "proposalUnknownPlain": "此建议更改已不存在。",
-            "proposalInvalidPlain": "无法读取此建议更改，因此无法接受。",
-            "alreadyDecidedPlain": "此建议更改已有决定。",
-            "proposalSupersededPlain": "此建议更改基于旧选项，已搁置，未作任何更改。",
             "noChangePlain": "所有选项都与原来相同，未作任何更改。",
-            "forbiddenProposerPlain": "无法在此处提交此类更改。",
-            "invalidProposalPlain": "此更改无效，因此未保存。",
             "baseNotActivePlain": "准备此更改后，任务路由已发生变化。请重试。",
-            "tooManyPendingPlain": "等待处理的建议更改过多。请先在“高级”中接受或拒绝一部分。",
-            "versionUnknownPlain": "该历史版本已不存在。",
             "unknownPlain": "任务路由拒绝了此更改。",
             "invalidResponsePlain": "无法在此处读取应用的响应。",
             "notConnectedPlain": "此版本无法使用任务路由。",
@@ -12703,7 +12600,7 @@
             "callFailedPlain": "请求未完成。请重试。"
           },
           "labels": {
-            "coordinatorReasoning": "主推理",
+            "coordinatorReasoning": "协调者推理",
             "complexPlanningReasoning": "复杂规划与推理",
             "softwareEngineering": "软件工程",
             "scientificExperimentValidation": "科学实验验证",
@@ -12713,7 +12610,7 @@
             "highQualityWriting": "高质量写作",
             "fastWritingOrAlternativeDraft": "快速写作或备选草稿",
             "configuredProjectWorkflow": "已配置的项目工作流",
-            "claudePrimary": "主会话",
+            "claudePrimary": "协调者会话",
             "claudeSubagent": "Claude 子智能体",
             "claudeWorkflow": "Claude 工作流",
             "codexCli": "Codex CLI",
@@ -12729,26 +12626,15 @@
             "ultra": "极高",
             "inherit": "继承",
             "whenSupported": "（支持时使用）",
-            "bundledUpdate": "应用更新",
-            "benchmarkReview": "基准评测审查",
-            "agent": "智能体",
-            "userImport": "你的更改",
-            "accepted": "已接受",
-            "acceptedModified": "已接受并修改",
-            "rejected": "已拒绝",
-            "superseded": "已被取代",
-            "sourceBundled": "应用默认设置",
-            "sourceUser": "你的路由表",
-            "sameAsCoordinator": "与主代理相同"
+            "sameAsCoordinator": "与协调者相同"
           },
           "inline": {
             "edit": "编辑",
-            "reviewersTitle": "审查者",
             "reviewersHelp": "审查已完成且没有自动检查的工作。",
             "noReviewers": "未设置审查者，无法审查没有自动检查的工作。",
             "reviewer": "审查者 {{number}}",
             "editFor": "编辑{{task}}",
-            "coordinator": "主代理",
+            "coordinator": "协调者",
             "listLabel": "各类任务使用的智能体",
             "save": "保存",
             "cancel": "取消",
@@ -12756,13 +12642,8 @@
             "modelFor": "{{task}} 使用的模型",
             "effortFor": "{{task}} 的推理强度",
             "onlyIfSupported": "仅在模型支持时使用",
-            "coordinatorEffort": "主推理强度"
-          },
-          "advanced": {
-            "unreadable": "无法读取的建议更改：{{count}}",
-            "importLabel": "导入更改集",
-            "importDescription": "以 JSON 格式粘贴路由。它将在“建议更改”中等待你接受。",
-            "import": "导入…"
+            "coordinatorEffort": "协调者推理强度",
+            "reviewersTitle": "审查者"
           }
         },
         "dotIngress": {
@@ -12974,9 +12855,6 @@
             "remoteDescription": "让 dot 通过你的 GPT Site 访问此应用：开关、Site 地址和访问令牌、配对及撤销。"
           }
         },
-        "advancedDisclosure": {
-          "label": "高级"
-        },
         "copyDetails": {
           "copied": "详情已复制。",
           "failed": "无法复制详情。",
@@ -12984,7 +12862,7 @@
         },
         "taskRouting": {
           "search": {
-            "agentsDescription": "选择各类任务使用的智能体、模型和推理强度，并接受或拒绝建议更改。",
+            "agentsDescription": "选择各类任务使用的智能体、模型和推理强度。",
             "effort": "推理强度",
             "agent": "智能体"
           }

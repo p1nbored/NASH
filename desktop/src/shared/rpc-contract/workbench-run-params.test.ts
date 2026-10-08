@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   WORKBENCH_RUN_MESSAGE_MAX_UNITS,
-  WorkbenchRoutingTableAcceptParams,
   WorkbenchRoutingTableCheckRoutesParams,
-  WorkbenchRoutingTableImportParams,
   WorkbenchRoutingTableListParams,
-  WorkbenchRoutingTableRejectParams,
-  WorkbenchRoutingTableRevertParams,
+  WorkbenchRoutingTableSaveParams,
   WorkbenchRunListParams,
   WorkbenchRunMessageParams,
   WorkbenchRunShowParams,
@@ -14,15 +11,6 @@ import {
 } from './workbench-run-params'
 
 const KEY = '8f18f989-8a86-423e-8e45-3416e01a14d2'
-const IMPORT = {
-  schema_version: 1,
-  proposer: 'user_import',
-  base: { table_version: 1, sha256: 'b'.repeat(64) },
-  changes: [],
-  rationale: 'Use a different reviewer.',
-  evidence: []
-}
-
 describe('run method params', () => {
   it('lists with a default page size and an optional workspace filter', () => {
     expect(WorkbenchRunListParams.parse({})).toEqual({ limit: 50 })
@@ -70,40 +58,15 @@ describe('routing table method params', () => {
     expect(WorkbenchRoutingTableListParams.safeParse({ all: true }).success).toBe(false)
   })
 
-  it('accepts a proposal by id, optionally with the user modification', () => {
-    expect(WorkbenchRoutingTableAcceptParams.parse({ proposalId: 'proposal-01' })).toEqual({
-      proposalId: 'proposal-01'
-    })
-    const modified = WorkbenchRoutingTableAcceptParams.parse({
-      proposalId: 'proposal-01',
-      modification: { changes: [] }
-    })
-    expect(modified.modification).toEqual({ changes: [] })
-    expect(WorkbenchRoutingTableAcceptParams.safeParse({ proposalId: 'p' }).success).toBe(false)
-  })
-
-  it('takes no caller from the wire: the desktop caller comes only from the RPC context', () => {
-    for (const schema of [WorkbenchRoutingTableAcceptParams, WorkbenchRoutingTableRejectParams]) {
-      expect(schema.safeParse({ proposalId: 'proposal-01', caller: 'desktop_user' }).success).toBe(
-        false
-      )
-    }
+  it('saves fenced changes and rejects caller fields or import metadata', () => {
+    const edit = { base: { table_version: 1, sha256: 'b'.repeat(64) }, changes: [] }
+    expect(WorkbenchRoutingTableSaveParams.parse(edit)).toEqual(edit)
     expect(
-      WorkbenchRoutingTableRevertParams.safeParse({ version: 1, caller: 'desktop_user' }).success
+      WorkbenchRoutingTableSaveParams.safeParse({ ...edit, caller: 'desktop_user' }).success
     ).toBe(false)
-  })
-
-  it('imports one proposal submission', () => {
-    expect(WorkbenchRoutingTableImportParams.parse({ proposal: IMPORT }).proposal).toMatchObject({
-      proposer: 'user_import'
-    })
-    const unknownKey = { proposal: { ...IMPORT, active: true } }
-    expect(WorkbenchRoutingTableImportParams.safeParse(unknownKey).success).toBe(false)
-  })
-
-  it('reverts to a positive version number', () => {
-    expect(WorkbenchRoutingTableRevertParams.parse({ version: 2 })).toEqual({ version: 2 })
-    expect(WorkbenchRoutingTableRevertParams.safeParse({ version: 0 }).success).toBe(false)
+    expect(
+      WorkbenchRoutingTableSaveParams.safeParse({ ...edit, proposer: 'user_import' }).success
+    ).toBe(false)
   })
 
   it('checks routes with no input: no workspace, subject or freshness comes from the wire', () => {

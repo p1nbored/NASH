@@ -140,7 +140,9 @@ export async function dispatchLeasedItem(
       ? DOT_REMOTE_SHORT_DISPATCH_TIMEOUT_MS
       : DOT_REMOTE_LONG_DISPATCH_TIMEOUT_MS
   const answer = await context.endpoint.call(
-    DOT_REMOTE_ITEM_METHODS[item.kind],
+    item.kind === 'submit' && item.payload.coordinatorRunId
+      ? 'dotIngress.requests.attach'
+      : DOT_REMOTE_ITEM_METHODS[item.kind],
     { ...item.payload },
     timeoutMs
   )

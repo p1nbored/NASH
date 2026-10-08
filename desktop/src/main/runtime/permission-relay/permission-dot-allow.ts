@@ -2,6 +2,7 @@ import type { OrchestrationDb } from '../orchestration/db'
 import type { PermissionDecisionRecord } from '../orchestration/db/permission-decision-store'
 import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
+import { isDesktopOnlyRecord } from './permission-redaction'
 
 // RG7: a read-only run denies Edit, Write and NotebookEdit, but nothing sandboxes a shell command, so
 // a command could still write. Until a verified sandbox enforces read-only commands, dot may allow
@@ -18,8 +19,15 @@ export const DOT_ALLOW_REFUSED_CODE = 'autopilot_permission_dot_allow_refused'
 /** True when dot may answer `allow`. The access is the run's recorded one, never a caller's claim. */
 export function dotMayAllow(
   db: OrchestrationDb,
-  record: Pick<PermissionDecisionRecord, 'runId' | 'toolName'>
+  record: Pick<PermissionDecisionRecord, 'runId' | 'toolName'> &
+    Partial<Pick<PermissionDecisionRecord, 'summary'>>
 ): boolean {
+  if (
+    record.summary !== undefined &&
+    isDesktopOnlyRecord({ toolName: record.toolName, summary: record.summary })
+  ) {
+    return false
+  }
   if (DOT_ALLOW_READ_TOOLS.includes(record.toolName)) {
     return true
   }

@@ -1,8 +1,8 @@
-import { randomUUID } from 'node:crypto'
 import type Database from '../../../sqlite/sync-database'
 import { OrchestrationError } from '../orchestration-error'
 import type { OrchestrationDb } from './orchestration-db'
 import { ensureAutopilotRuntimeSchema } from './autopilot-runtime-schema'
+import { insertRunMessageRow, type NewRunMessageRow } from './run-message-insert'
 import {
   AutopilotLimitSchema,
   changedRowCount,
@@ -18,13 +18,11 @@ import {
   RunMessageSettleSchema,
   toRunMessageRecord as toRecord,
   type RunMessageHeld,
-  type RunMessageOutcome,
   type RunMessageReceived,
   type RunMessageRecord,
   type RunMessageRefused,
   type RunMessageSettle,
-  type RunMessageSource,
-  type RunMessageState
+  type RunMessageSource
 } from './run-message-record'
 
 export type {
@@ -34,18 +32,6 @@ export type {
   RunMessageSource,
   RunMessageState
 } from './run-message-record'
-
-type NewRow = {
-  runId: string
-  source: RunMessageSource
-  sourceRequestId: string
-  text: string | null
-  textSha256: string
-  state: RunMessageState
-  outcome: RunMessageOutcome | null
-  reason: string | null
-  timestamp: string
-}
 
 function conflict(message: string): OrchestrationError {
   return new OrchestrationError('autopilot_message_conflict', message)
@@ -98,6 +84,15 @@ export class RunMessageStore {
       .prepare(`SELECT count(*) AS held FROM run_messages WHERE run_id = ? AND state = 'held'`)
       .get(runId)
     return Number(row?.held ?? 0)
+  }
+
+  listHeldRunIds(): string[] {
+    return this.db
+      .prepare(
+        "SELECT run_id FROM run_messages WHERE state = 'held' GROUP BY run_id ORDER BY MIN(sequence)"
+      )
+      .all()
+      .map((row) => String(row.run_id))
   }
 
   /** Messages whose first delivery never settled, oldest first; a restart finds them here. */
@@ -160,38 +155,8 @@ export class RunMessageStore {
     })
   }
 
-  private insert(row: NewRow): RunMessageRecord {
-    const messageId = `message_${randomUUID()}`
-    return runAutopilotWrite(this.db, 'autopilot_message', () => {
-      const run = this.db
-        .prepare('SELECT 1 AS found FROM workflow_runs WHERE run_id = ?')
-        .get(row.runId)
-      if (!run) {
-        throw new OrchestrationError('autopilot_run_not_found', 'The run was not found.')
-      }
-      if (this.findBySource(row.source, row.sourceRequestId)) {
-        throw conflict('That source already sent a message with this request id.')
-      }
-      this.db
-        .prepare(
-          `INSERT INTO run_messages (message_id, run_id, source, source_request_id, text, text_sha256,
-            state, outcome, reason, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .run(
-          messageId,
-          row.runId,
-          row.source,
-          row.sourceRequestId,
-          row.text,
-          row.textSha256,
-          row.state,
-          row.outcome,
-          row.reason,
-          row.timestamp,
-          row.timestamp
-        )
-      return this.requireMessage(messageId)
-    })
+  private insert(row: NewRunMessageRow): RunMessageRecord {
+    return runAutopilotWrite(this.db, 'autopilot_message', () => insertRunMessageRow(this.db, row))
   }
 
   private requireMessage(messageId: string): RunMessageRecord {

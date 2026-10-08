@@ -1,15 +1,15 @@
 {
   "pins": {
-    "dot-mcp-tool-manifest.json": "f2bee0fef261c4e70ecb6a4b5a5e519164cc7450876aa1c8f5cf7880843a9b36",
+    "dot-mcp-tool-manifest.json": "12d4bdec827814de7cb83da9169b2abb3a45b3980ae05cf5ea155c3729a6935c",
     "dot-remote-endpoints.json": "5595fc7913f71326d246e2c38f866c6155d0441e415621182a549eb0b9d2bfec",
-    "dot-remote-conformance-vectors.json": "3cdb53f7e18517ee840042b495ad2fd223ec94a311ffc026de24775a0eb1bc8d",
-    "dot-remote-inbox.schema.json": "2b3735e27e313e84116f518d200c2a7488afba1f559569b1f34fbd01b9d843bb",
-    "dot-remote-ack.schema.json": "50bbad9808c2ccc9a94f80f552149fdaae1c4705565786a998b6e24e9bdf5f63",
-    "dot-remote-receipt.schema.json": "dfe2d055b1a95d5e7e56b31f97b19b1822b2881bdc8e5d42f56ce0899c02926a",
-    "dot-remote-events.schema.json": "65dd8a9dde8a8272dc724609fd520efb07d29b832d822486cb5ffab62b0ae0b9",
+    "dot-remote-conformance-vectors.json": "da99e2ac4b66f60b55fbe72fd4e2cb9f38845fd06663930294c9054290905ece",
+    "dot-remote-inbox.schema.json": "8afe3facdcd14c4d1619cdc25f1477cdc7069b543c019dfd038f5865fc3c8311",
+    "dot-remote-ack.schema.json": "970ae7685cf92f8ef42dbdfecec2ad0cbe01aecea40d60ef301b42df95687f36",
+    "dot-remote-receipt.schema.json": "33fecd2ca0c14e7bac9e3a9d8901664045c5dffc12a7482839eafe4af997032b",
+    "dot-remote-events.schema.json": "b0e7b7cff3e4cd4fcd60313620f1e383d7a51c274ecd56d2e2551f17dd055d8e",
     "dot-remote-presence.schema.json": "b96321f254e2528503a212dde610275970d85671fd9c1ee16166786bf60e4fa7",
     "dot-remote-pairing.schema.json": "0fee187fc6feda95566194ebd295809d48e7af8af5e9693609b84ba7af462f80",
-    "dot-ingress-contract-v3.schema.json": "531a90a8fcaefff5cf6ee09fca71dc55bc9dc5f45e8d26bc53d75ac173510132"
+    "dot-ingress-contract-v3.schema.json": "f855fe0f7a22635283961746c93ec0c52570bef2b5067e952f78262e3cadc3d7"
   },
   "manifest": {
     "manifestVersion": 1,
@@ -17,7 +17,7 @@
     "contractVersion": 4,
     "contractGolden": {
       "file": "src/shared/dot-ingress/dot-ingress-contract-v3.schema.json",
-      "sha256": "531a90a8fcaefff5cf6ee09fca71dc55bc9dc5f45e8d26bc53d75ac173510132"
+      "sha256": "f855fe0f7a22635283961746c93ec0c52570bef2b5067e952f78262e3cadc3d7"
     },
     "injected": {
       "contractVersion": 3
@@ -54,7 +54,7 @@
     },
     "rules": {
       "authority": "NASH is the single authority. The Site stores inbox items and a read-only copy of what NASH reported; it never decides a request status itself.",
-      "contractVersion": "This is remote contract version 4. The MCP layer adds contractVersion 3 (injected.contractVersion, the dot ingress contract of the payloads) to every write payload and validates it against the v3 params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion 4; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online. A workspace list stored under an earlier version has no maxAccess and is not shown; nash_list_workspaces stays empty until NASH of this version publishes again.",
+      "contractVersion": "This is remote contract version 4. The MCP layer adds contractVersion 3 (injected.contractVersion, the dot ingress contract of the payloads) to every write payload and validates it against the v3 params schema of the method. Tool inputs never carry contractVersion. A heartbeat states contractVersion 4; any other version fails its schema with payload_invalid, so NASH of another contract version never shows online.",
       "payloadHash": "payloadSha256 is the lowercase hex SHA-256 of the UTF-8 bytes of the canonical JSON of the stored payload. The stored payload is the v3 params object after the MCP layer adds contractVersion 3 and applies the schema defaults, such as requestedAccess read_only. Canonical JSON sorts object keys by UTF-16 code unit at every depth, omits members whose value is undefined, keeps array order, writes no whitespace, and writes strings and numbers exactly as JSON.stringify does, so non-ASCII characters stay unescaped.",
       "deduplication": "Before it enqueues anything, the Site checks in one transaction that the key named by the tool dedupKey is unique for the owner, device and tool. The same key with the same payloadSha256 returns the original receipt in its current state; the same key with another payloadSha256 is refused with idempotency_conflict. For nash_cancel_request the key is submitItemId, and a repeat returns the current cancel answer. A refused tool call stores nothing. The Site never derives idempotencyKey or messageId from its own itemId.",
       "delivery": "Delivery is at least once. The Site leases items oldest first, only to the paired device, each lease with a new leaseNonce, the pairing generation and leaseExpiresAt 60 seconds after the lease. An item whose lease expires without an ack returns to queued. An item with dependsOnItemId is leased only after that submit was acknowledged as accepted or duplicate.",
@@ -64,7 +64,7 @@
       "events": "Events of one dotRequestId apply in increasing sourceRevision, in batch order. The Site checks the eventId first: an event whose eventId was already stored with the same content is a duplicate; with other content it is a conflict. Otherwise, an event whose sourceRevision is not above the highest applied revision of its request is stale and ignored, so a closed prompt never reopens. An event for a request without an accepted submit of this binding is unknown_request. Each result names the appliedRevision per request, from which NASH resends after a restore.",
       "remoteAccess": "A remote submission may ask for any access up to policy.decided.submitAccessCap, workspace_write; requestedAccess defaults to read_only. The real limit is the maximum the user set for each workspace in NASH, published as maxAccess in the workspace list. The Site never compares requestedAccess with maxAccess: it queues the submit, and NASH refuses one above the maximum with dot_access_above_maximum. The run keeps the access NASH admitted, which also decides dotMayAllow on its permission prompts (RG7).",
       "permissionAnswers": "An answer is accepted only for a prompt the Site holds as open and before its deadline. allow is refused with decision_allow_not_permitted when the reported view has dotMayAllow false (RG7); deny is always possible. NASH checks again and may refuse with dot_decision_deny_only.",
-      "validationDecisions": "Validation decisions are a narrow exception to the coarse run view: dot sees exactly the fields of validation_decision_pending, which the desktop masked before sending. The Site stores and returns them unchanged and never scans, masks or rewrites them. A decision is open while the newest event for its validationId is validation_decision_pending, its request is an accepted submit of this binding, and that event is less than retentionDays old. A validation_decision_settled event closes it for good; a stale, duplicate or late pending event never reopens it. The Site holds at most validationDecisionsOpenMax open decisions per binding: beyond that, only the oldest by createdAt and then validationId count as open, and the others wait until older ones close. NASH itself reports at most that many open decisions at a time, the oldest first. nash_list_validation_decisions returns open decisions only, oldest first by createdAt and then validationId, at most limit per page, with nextCursor for the rest. nash_get_request keeps the newest event per validationId, so a settled decision stays visible there until retention purges it; a request stored before contract version 3 has an empty validationDecisions list. nash_decide_validation checks deduplication on decisionId first, so a retry with the same payload returns the original receipt even after the decision closed, and the same decisionId with another payload is idempotency_conflict. A new decisionId for a decision that is not open is refused with validation_decision_not_open and stores nothing. Otherwise the Site queues one validation_decision item that depends on the accepted submit of the request named by the pending event. NASH acknowledges decided, already_decided and closed as accepted, a repeat of a decisionId it already answered as duplicate, and an unknown validation or one of a run dot did not start as refused with dot_validation_not_found. The settled event then reports waived or rejected for whichever decision won, from dot or from the app, or closed with no decision time. A pending event for a request this binding never accepted, for example after its records aged out or after NASH was paired again as a new device, is unknown_request; that decision can be made only in the app.",
+      "validationDecisions": "Validation decisions are a narrow exception to the coarse run view: dot sees exactly the fields of validation_decision_pending, which the desktop masked before sending. The Site stores and returns them unchanged and never scans, masks or rewrites them. A decision is open while the newest event for its validationId is validation_decision_pending, its request is an accepted submit of this binding, and that event is less than retentionDays old. A validation_decision_settled event closes it for good; a stale, duplicate or late pending event never reopens it. The Site holds at most validationDecisionsOpenMax open decisions per binding: beyond that, only the oldest by createdAt and then validationId count as open, and the others wait until older ones close. NASH itself reports at most that many open decisions at a time, the oldest first. nash_list_validation_decisions returns open decisions only, oldest first by createdAt and then validationId, at most limit per page, with nextCursor for the rest. nash_get_request keeps the newest event per validationId, so a settled decision stays visible there until retention purges it. nash_decide_validation checks deduplication on decisionId first, so a retry with the same payload returns the original receipt even after the decision closed, and the same decisionId with another payload is idempotency_conflict. A new decisionId for a decision that is not open is refused with validation_decision_not_open and stores nothing. Otherwise the Site queues one validation_decision item that depends on the accepted submit of the request named by the pending event. NASH acknowledges decided, already_decided and closed as accepted, a repeat of a decisionId it already answered as duplicate, and an unknown validation or one of a run dot did not start as refused with dot_validation_not_found. The settled event then reports waived or rejected for whichever decision won, from dot or from the app, or closed with no decision time. A pending event for a request this binding never accepted, for example after its records aged out or after NASH was paired again as a new device, is unknown_request; that decision can be made only in the app.",
       "identity": "Owner, device, dot identity and generation are derived on the server: the owner from the platform identity header, the device and generation from the pairing record, the dot identity from the verified identity on MCP calls. A tool call by any other owner, and an endpoint call by a session of any other device, is refused with unauthorized; a device credential resolves to its own binding only; no body field, client label or known id is authority.",
       "deviceCredential": "When the owner has approved, the issued session response also carries deviceCredential: a credential of the form <credentialId>.<secret> and expiresAt, the absolute end of the pairing, deviceCredentialLifetimeDays after approval. It appears only in that response and in refresh responses. The Site stores per credential only credentialId, a random salt and secretHash, the lowercase hex SHA-256 of the UTF-8 bytes of salt + \".\" + secret, bound to owner, device, dot identity and generation, and compares hashes in constant time. POST /nash/v1/session/refresh takes the credential only in the Nash-Device-Credential header, next to OAI-Sites-Authorization, and answers a new session and a new credential with the same expiresAt; the presented credential is superseded at once. The Site checks in this order: an unknown credential or one whose secret does not verify is device_credential_invalid and changes nothing; a revoked binding or a body generation other than the binding generation is generation_revoked; a superseded credential that verifies is reuse, so the Site revokes the binding as a revocation does and answers device_credential_reused; a refresh at or after expiresAt is pairing_expired. No session outlives expiresAt: session expiresAt and renewAfter are capped at it, and renew after it answers pairing_expired.",
       "revocation": "Revocation, by NASH (pairing.revoke) or by the owner on the Site (pairing.owner.revoke), increments the generation, ends every session, device credential and lease, refuses every waiting item with pairing_revoked, and refuses any later call that carries the old generation with generation_revoked. Requests NASH already accepted keep their real state; revocation does not cancel them. The owner can still read what was stored, while every write tool answers nash_never_paired until NASH is paired again.",
@@ -277,7 +277,7 @@
       {
         "name": "nash_submit_task",
         "title": "Submit a task to NASH",
-        "description": "Queue a task for NASH on the user's PC and return its receipt at once. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId.",
+        "description": "Queue a task for NASH on the user's PC and return its receipt at once. Keep task handoffs, workflow messages and reports returned to dot in English. Write the objective in English; put names, paths and quotations that must not be translated inside double quotes or backticks. requestedAccess is read_only (the default) or workspace_write. Ask for workspace_write only when the task must change files and nash_list_workspaces shows maxAccess workspace_write for its workspace; NASH refuses a request above the workspace's maxAccess with dot_access_above_maximum. Choose a new idempotencyKey for each task and reuse it to retry: the same key with the same content returns the same receipt, and the same key with other content is refused. Follow the receipt with nash_get_receipt; once accepted it names the dotRequestId.",
         "inputSchema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
@@ -297,10 +297,6 @@
                 "read_only",
                 "workspace_write"
               ]
-            },
-            "deliverableLanguage": {
-              "type": "string",
-              "maxLength": 35
             },
             "idempotencyKey": {
               "type": "string",
@@ -334,6 +330,11 @@
                 "version"
               ],
               "additionalProperties": false
+            },
+            "coordinatorRunId": {
+              "description": "Explicit existing native coordinator run to take over. Omit to start a new coordinator.",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
             }
           },
           "required": [
@@ -584,7 +585,7 @@
                                 },
                                 "message": {
                                   "type": "string",
-                                  "const": "Unsupported contract version. Supported versions: 1."
+                                  "const": "Unsupported contract version. Supported versions: 3."
                                 }
                               },
                               "required": [
@@ -723,29 +724,6 @@
                                 "message": {
                                   "type": "string",
                                   "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                                }
-                              },
-                              "required": [
-                                "by",
-                                "code",
-                                "message"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "by": {
-                                  "type": "string",
-                                  "const": "nash"
-                                },
-                                "code": {
-                                  "type": "string",
-                                  "const": "dot_deliverable_language_invalid"
-                                },
-                                "message": {
-                                  "type": "string",
-                                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                                 }
                               },
                               "required": [
@@ -2374,7 +2352,7 @@
                         },
                         "message": {
                           "type": "string",
-                          "const": "Unsupported contract version. Supported versions: 1."
+                          "const": "Unsupported contract version. Supported versions: 3."
                         }
                       },
                       "required": [
@@ -2513,29 +2491,6 @@
                         "message": {
                           "type": "string",
                           "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                        }
-                      },
-                      "required": [
-                        "by",
-                        "code",
-                        "message"
-                      ],
-                      "additionalProperties": false
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "by": {
-                          "type": "string",
-                          "const": "nash"
-                        },
-                        "code": {
-                          "type": "string",
-                          "const": "dot_deliverable_language_invalid"
-                        },
-                        "message": {
-                          "type": "string",
-                          "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                         }
                       },
                       "required": [
@@ -3596,38 +3551,39 @@
                 "dotRequestId": {
                   "$ref": "#/$defs/__schema0"
                 },
-                "toolName": {
+                "dotMayAllow": {
                   "$ref": "#/$defs/__schema11"
                 },
-                "agentId": {
+                "toolName": {
                   "$ref": "#/$defs/__schema12"
                 },
-                "summary": {
+                "agentId": {
                   "$ref": "#/$defs/__schema13"
+                },
+                "summary": {
+                  "$ref": "#/$defs/__schema14"
                 },
                 "status": {
                   "type": "string",
                   "const": "pending"
                 },
                 "decidedBy": {
-                  "$ref": "#/$defs/__schema14"
+                  "$ref": "#/$defs/__schema15"
                 },
                 "createdAt": {
-                  "$ref": "#/$defs/__schema15"
-                },
-                "deadlineAt": {
-                  "$ref": "#/$defs/__schema15"
-                },
-                "decidedAt": {
                   "$ref": "#/$defs/__schema16"
                 },
-                "dotMayAllow": {
+                "deadlineAt": {
+                  "$ref": "#/$defs/__schema16"
+                },
+                "decidedAt": {
                   "$ref": "#/$defs/__schema17"
                 }
               },
               "required": [
                 "decisionId",
                 "dotRequestId",
+                "dotMayAllow",
                 "toolName",
                 "agentId",
                 "summary",
@@ -3635,8 +3591,7 @@
                 "decidedBy",
                 "createdAt",
                 "deadlineAt",
-                "decidedAt",
-                "dotMayAllow"
+                "decidedAt"
               ],
               "additionalProperties": false
             },
@@ -3646,23 +3601,26 @@
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             },
             "__schema11": {
+              "type": "boolean"
+            },
+            "__schema12": {
               "type": "string",
               "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
             },
-            "__schema12": {
+            "__schema13": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/__schema11"
+                  "$ref": "#/$defs/__schema12"
                 },
                 {
                   "type": "null"
                 }
               ]
             },
-            "__schema13": {
+            "__schema14": {
               "type": "string"
             },
-            "__schema14": {
+            "__schema15": {
               "anyOf": [
                 {
                   "type": "string",
@@ -3677,23 +3635,20 @@
                 }
               ]
             },
-            "__schema15": {
+            "__schema16": {
               "type": "string",
               "format": "date-time",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
             },
-            "__schema16": {
+            "__schema17": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/__schema15"
+                  "$ref": "#/$defs/__schema16"
                 },
                 {
                   "type": "null"
                 }
               ]
-            },
-            "__schema17": {
-              "type": "boolean"
             },
             "__schema18": {
               "type": "string",
@@ -3708,14 +3663,17 @@
                 "dotRequestId": {
                   "$ref": "#/$defs/__schema0"
                 },
-                "toolName": {
+                "dotMayAllow": {
                   "$ref": "#/$defs/__schema11"
                 },
-                "agentId": {
+                "toolName": {
                   "$ref": "#/$defs/__schema12"
                 },
-                "summary": {
+                "agentId": {
                   "$ref": "#/$defs/__schema13"
+                },
+                "summary": {
+                  "$ref": "#/$defs/__schema14"
                 },
                 "status": {
                   "type": "string",
@@ -3727,24 +3685,22 @@
                   ]
                 },
                 "decidedBy": {
-                  "$ref": "#/$defs/__schema14"
+                  "$ref": "#/$defs/__schema15"
                 },
                 "createdAt": {
-                  "$ref": "#/$defs/__schema15"
-                },
-                "deadlineAt": {
-                  "$ref": "#/$defs/__schema15"
-                },
-                "decidedAt": {
                   "$ref": "#/$defs/__schema16"
                 },
-                "dotMayAllow": {
+                "deadlineAt": {
+                  "$ref": "#/$defs/__schema16"
+                },
+                "decidedAt": {
                   "$ref": "#/$defs/__schema17"
                 }
               },
               "required": [
                 "decisionId",
                 "dotRequestId",
+                "dotMayAllow",
                 "toolName",
                 "agentId",
                 "summary",
@@ -3752,8 +3708,7 @@
                 "decidedBy",
                 "createdAt",
                 "deadlineAt",
-                "decidedAt",
-                "dotMayAllow"
+                "decidedAt"
               ],
               "additionalProperties": false
             },
@@ -4419,7 +4374,7 @@
                                     },
                                     "message": {
                                       "type": "string",
-                                      "const": "Unsupported contract version. Supported versions: 1."
+                                      "const": "Unsupported contract version. Supported versions: 3."
                                     }
                                   },
                                   "required": [
@@ -4558,29 +4513,6 @@
                                     "message": {
                                       "type": "string",
                                       "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                                    }
-                                  },
-                                  "required": [
-                                    "by",
-                                    "code",
-                                    "message"
-                                  ],
-                                  "additionalProperties": false
-                                },
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "by": {
-                                      "type": "string",
-                                      "const": "nash"
-                                    },
-                                    "code": {
-                                      "type": "string",
-                                      "const": "dot_deliverable_language_invalid"
-                                    },
-                                    "message": {
-                                      "type": "string",
-                                      "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                                     }
                                   },
                                   "required": [
@@ -5651,7 +5583,7 @@
                         },
                         "message": {
                           "type": "string",
-                          "const": "Unsupported contract version. Supported versions: 1."
+                          "const": "Unsupported contract version. Supported versions: 3."
                         }
                       },
                       "required": [
@@ -5790,29 +5722,6 @@
                         "message": {
                           "type": "string",
                           "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                        }
-                      },
-                      "required": [
-                        "by",
-                        "code",
-                        "message"
-                      ],
-                      "additionalProperties": false
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "by": {
-                          "type": "string",
-                          "const": "nash"
-                        },
-                        "code": {
-                          "type": "string",
-                          "const": "dot_deliverable_language_invalid"
-                        },
-                        "message": {
-                          "type": "string",
-                          "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                         }
                       },
                       "required": [
@@ -6522,6 +6431,9 @@
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
+                "dotMayAllow": {
+                  "type": "boolean"
+                },
                 "toolName": {
                   "$ref": "#/$defs/__schema1"
                 },
@@ -6572,14 +6484,12 @@
                       "type": "null"
                     }
                   ]
-                },
-                "dotMayAllow": {
-                  "type": "boolean"
                 }
               },
               "required": [
                 "decisionId",
                 "dotRequestId",
+                "dotMayAllow",
                 "toolName",
                 "agentId",
                 "summary",
@@ -6587,8 +6497,7 @@
                 "decidedBy",
                 "createdAt",
                 "deadlineAt",
-                "decidedAt",
-                "dotMayAllow"
+                "decidedAt"
               ],
               "additionalProperties": false
             },
@@ -6882,7 +6791,7 @@
                                 },
                                 "message": {
                                   "type": "string",
-                                  "const": "Unsupported contract version. Supported versions: 1."
+                                  "const": "Unsupported contract version. Supported versions: 3."
                                 }
                               },
                               "required": [
@@ -7021,29 +6930,6 @@
                                 "message": {
                                   "type": "string",
                                   "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                                }
-                              },
-                              "required": [
-                                "by",
-                                "code",
-                                "message"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "by": {
-                                  "type": "string",
-                                  "const": "nash"
-                                },
-                                "code": {
-                                  "type": "string",
-                                  "const": "dot_deliverable_language_invalid"
-                                },
-                                "message": {
-                                  "type": "string",
-                                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                                 }
                               },
                               "required": [
@@ -7759,7 +7645,7 @@
                                 },
                                 "message": {
                                   "type": "string",
-                                  "const": "Unsupported contract version. Supported versions: 1."
+                                  "const": "Unsupported contract version. Supported versions: 3."
                                 }
                               },
                               "required": [
@@ -7898,29 +7784,6 @@
                                 "message": {
                                   "type": "string",
                                   "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                                }
-                              },
-                              "required": [
-                                "by",
-                                "code",
-                                "message"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "by": {
-                                  "type": "string",
-                                  "const": "nash"
-                                },
-                                "code": {
-                                  "type": "string",
-                                  "const": "dot_deliverable_language_invalid"
-                                },
-                                "message": {
-                                  "type": "string",
-                                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                                 }
                               },
                               "required": [
@@ -8791,7 +8654,7 @@
                                 },
                                 "message": {
                                   "type": "string",
-                                  "const": "Unsupported contract version. Supported versions: 1."
+                                  "const": "Unsupported contract version. Supported versions: 3."
                                 }
                               },
                               "required": [
@@ -8930,29 +8793,6 @@
                                 "message": {
                                   "type": "string",
                                   "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                                }
-                              },
-                              "required": [
-                                "by",
-                                "code",
-                                "message"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "by": {
-                                  "type": "string",
-                                  "const": "nash"
-                                },
-                                "code": {
-                                  "type": "string",
-                                  "const": "dot_deliverable_language_invalid"
-                                },
-                                "message": {
-                                  "type": "string",
-                                  "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                                 }
                               },
                               "required": [
@@ -9456,7 +9296,7 @@
         "retryable": "no"
       }
     ],
-    "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
+    "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
   },
   "endpointTable": {
     "tableVersion": 1,
@@ -9720,7 +9560,7 @@
   "vectors": {
     "vectorsVersion": 1,
     "contractVersion": 4,
-    "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400",
+    "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798",
     "conventions": {
       "clock": "Each step has an at time; the Site under test uses it as the current time for that step.",
       "callers": "A dot step names the platform user id the identity header carries. A nash step names the device and generation its session resolves to; a serviceOnly step sends only OAI-Sites-Authorization; a refresh step names in deviceCredential the value it sends in the Nash-Device-Credential header. Session tokens and device credentials appear only in pairing vectors, as obviously fake generated values.",
@@ -9852,7 +9692,7 @@
                   "appVersion": "1.4.0",
                   "contractVersion": 4,
                   "onlineWindowSeconds": 90,
-                  "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
+                  "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
                 }
               }
             }
@@ -9874,7 +9714,7 @@
                   "appVersion": "1.4.0",
                   "contractVersion": 4,
                   "onlineWindowSeconds": 90,
-                  "manifestSha256": "dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400"
+                  "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
                 }
               }
             }
@@ -18093,16 +17933,13 @@
             "default": "read_only",
             "$ref": "#/$defs/__schema3"
           },
-          "deliverableLanguage": {
-            "$ref": "#/$defs/__schema4"
-          },
           "idempotencyKey": {
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "reply": {
-            "$ref": "#/$defs/__schema5"
+            "$ref": "#/$defs/__schema4"
           },
           "client": {
             "$ref": "#/$defs/__schema1"
@@ -18124,7 +17961,7 @@
             "$ref": "#/$defs/__schema0"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           }
         },
         "required": [
@@ -18140,10 +17977,10 @@
             "$ref": "#/$defs/__schema0"
           },
           "limit": {
-            "$ref": "#/$defs/__schema7"
+            "$ref": "#/$defs/__schema6"
           },
           "beforeSequence": {
-            "$ref": "#/$defs/__schema8"
+            "$ref": "#/$defs/__schema7"
           }
         },
         "required": [
@@ -18159,7 +17996,7 @@
             "$ref": "#/$defs/__schema0"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           }
         },
         "required": [
@@ -18172,10 +18009,10 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema8"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "messageId": {
             "type": "string",
@@ -18203,10 +18040,10 @@
             "$ref": "#/$defs/__schema0"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "limit": {
-            "$ref": "#/$defs/__schema7"
+            "$ref": "#/$defs/__schema6"
           }
         },
         "required": [
@@ -18246,7 +18083,7 @@
             "$ref": "#/$defs/__schema10"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "limit": {
             "default": 50,
@@ -18295,34 +18132,26 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "supportedContractVersions": {
             "type": "array",
             "prefixItems": [
               {
                 "type": "number",
-                "const": 1
-              },
-              {
-                "type": "number",
-                "const": 2
-              },
-              {
-                "type": "number",
                 "const": 3
               }
             ],
             "items": false,
-            "minItems": 3,
-            "maxItems": 3
+            "minItems": 1,
+            "maxItems": 1
           },
           "methods": {
             "minItems": 1,
             "maxItems": 11,
             "type": "array",
             "items": {
-              "$ref": "#/$defs/__schema12"
+              "$ref": "#/$defs/__schema13"
             }
           },
           "limits": {
@@ -18426,13 +18255,13 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "workspaces": {
             "maxItems": 100,
             "type": "array",
             "items": {
-              "$ref": "#/$defs/__schema13"
+              "$ref": "#/$defs/__schema14"
             }
           }
         },
@@ -18446,10 +18275,10 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "request": {
-            "$ref": "#/$defs/__schema14"
+            "$ref": "#/$defs/__schema15"
           },
           "duplicate": {
             "type": "boolean"
@@ -18466,10 +18295,10 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "request": {
-            "$ref": "#/$defs/__schema14"
+            "$ref": "#/$defs/__schema15"
           }
         },
         "required": [
@@ -18482,19 +18311,19 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "requests": {
             "maxItems": 100,
             "type": "array",
             "items": {
-              "$ref": "#/$defs/__schema14"
+              "$ref": "#/$defs/__schema15"
             }
           },
           "nextBeforeSequence": {
             "anyOf": [
               {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               {
                 "type": "null"
@@ -18513,10 +18342,10 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema12"
           },
           "request": {
-            "$ref": "#/$defs/__schema14"
+            "$ref": "#/$defs/__schema15"
           },
           "changed": {
             "type": "boolean"
@@ -18533,10 +18362,10 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema8"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "messageId": {
             "$ref": "#/$defs/__schema24"
@@ -18565,13 +18394,13 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema28"
           },
           "decisions": {
             "maxItems": 100,
             "type": "array",
             "items": {
-              "$ref": "#/$defs/__schema28"
+              "$ref": "#/$defs/__schema29"
             }
           }
         },
@@ -18585,7 +18414,7 @@
         "type": "object",
         "properties": {
           "contractVersion": {
-            "$ref": "#/$defs/__schema0"
+            "$ref": "#/$defs/__schema28"
           },
           "outcome": {
             "type": "string",
@@ -18596,7 +18425,7 @@
             ]
           },
           "decision": {
-            "$ref": "#/$defs/__schema28"
+            "$ref": "#/$defs/__schema29"
           }
         },
         "required": [
@@ -18616,7 +18445,7 @@
             "maxItems": 100,
             "type": "array",
             "items": {
-              "$ref": "#/$defs/__schema31"
+              "$ref": "#/$defs/__schema38"
             }
           },
           "hasMore": {
@@ -18637,22 +18466,22 @@
             "$ref": "#/$defs/__schema10"
           },
           "decisionId": {
-            "$ref": "#/$defs/__schema37"
+            "$ref": "#/$defs/__schema44"
           },
           "validationId": {
             "$ref": "#/$defs/__schema11"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "outcome": {
-            "$ref": "#/$defs/__schema38"
+            "$ref": "#/$defs/__schema45"
           },
           "decidedAt": {
-            "$ref": "#/$defs/__schema39"
+            "$ref": "#/$defs/__schema46"
           },
           "duplicate": {
-            "$ref": "#/$defs/__schema40"
+            "$ref": "#/$defs/__schema47"
           }
         },
         "required": [
@@ -18667,13 +18496,13 @@
         "additionalProperties": false
       },
       "view.request": {
-        "$ref": "#/$defs/__schema14"
+        "$ref": "#/$defs/__schema15"
       },
       "view.decision": {
-        "$ref": "#/$defs/__schema28"
+        "$ref": "#/$defs/__schema29"
       },
       "view.validation": {
-        "$ref": "#/$defs/__schema31"
+        "$ref": "#/$defs/__schema38"
       },
       "error.code": {
         "type": "string",
@@ -18687,7 +18516,6 @@
           "dot_requirement_unclear",
           "dot_requirement_too_long",
           "dot_requirement_rejected_content",
-          "dot_deliverable_language_invalid",
           "dot_idempotency_conflict",
           "dot_request_not_found",
           "dot_request_not_cancelable",
@@ -18767,10 +18595,6 @@
         ]
       },
       "__schema4": {
-        "type": "string",
-        "maxLength": 35
-      },
-      "__schema5": {
         "type": "object",
         "properties": {
           "correlationId": {
@@ -18780,21 +18604,25 @@
         },
         "additionalProperties": false
       },
-      "__schema6": {
+      "__schema5": {
         "type": "string",
         "format": "uuid",
         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
       },
-      "__schema7": {
+      "__schema6": {
         "default": 50,
         "type": "integer",
         "minimum": 1,
         "maximum": 100
       },
-      "__schema8": {
+      "__schema7": {
         "type": "integer",
         "minimum": 1,
         "maximum": 9007199254740991
+      },
+      "__schema8": {
+        "type": "number",
+        "const": 3
       },
       "__schema9": {
         "type": "string",
@@ -18810,6 +18638,10 @@
         "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
       },
       "__schema12": {
+        "type": "number",
+        "const": 3
+      },
+      "__schema13": {
         "type": "string",
         "enum": [
           "dotIngress.hello",
@@ -18825,7 +18657,7 @@
           "dotIngress.validations.decide"
         ]
       },
-      "__schema13": {
+      "__schema14": {
         "type": "object",
         "properties": {
           "workspaceRef": {
@@ -18848,28 +18680,28 @@
         ],
         "additionalProperties": false
       },
-      "__schema14": {
+      "__schema15": {
         "oneOf": [
           {
             "type": "object",
             "properties": {
               "contractVersion": {
-                "$ref": "#/$defs/__schema0"
+                "$ref": "#/$defs/__schema12"
               },
               "dotRequestId": {
-                "$ref": "#/$defs/__schema6"
+                "$ref": "#/$defs/__schema5"
               },
               "sequence": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "revision": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "workspaceRef": {
                 "$ref": "#/$defs/__schema2"
               },
-              "deliverableLanguage": {
-                "$ref": "#/$defs/__schema15"
+              "requestedAccess": {
+                "$ref": "#/$defs/__schema3"
               },
               "reply": {
                 "$ref": "#/$defs/__schema16"
@@ -18896,9 +18728,6 @@
               },
               "run": {
                 "$ref": "#/$defs/__schema21"
-              },
-              "requestedAccess": {
-                "$ref": "#/$defs/__schema3"
               }
             },
             "required": [
@@ -18907,7 +18736,7 @@
               "sequence",
               "revision",
               "workspaceRef",
-              "deliverableLanguage",
+              "requestedAccess",
               "reply",
               "createdAt",
               "updatedAt",
@@ -18915,8 +18744,7 @@
               "artifacts",
               "state",
               "statusText",
-              "run",
-              "requestedAccess"
+              "run"
             ],
             "additionalProperties": false
           },
@@ -18924,22 +18752,22 @@
             "type": "object",
             "properties": {
               "contractVersion": {
-                "$ref": "#/$defs/__schema0"
+                "$ref": "#/$defs/__schema12"
               },
               "dotRequestId": {
-                "$ref": "#/$defs/__schema6"
+                "$ref": "#/$defs/__schema5"
               },
               "sequence": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "revision": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "workspaceRef": {
                 "$ref": "#/$defs/__schema2"
               },
-              "deliverableLanguage": {
-                "$ref": "#/$defs/__schema15"
+              "requestedAccess": {
+                "$ref": "#/$defs/__schema3"
               },
               "reply": {
                 "$ref": "#/$defs/__schema16"
@@ -18966,9 +18794,6 @@
               },
               "run": {
                 "$ref": "#/$defs/__schema21"
-              },
-              "requestedAccess": {
-                "$ref": "#/$defs/__schema3"
               }
             },
             "required": [
@@ -18977,7 +18802,7 @@
               "sequence",
               "revision",
               "workspaceRef",
-              "deliverableLanguage",
+              "requestedAccess",
               "reply",
               "createdAt",
               "updatedAt",
@@ -18985,8 +18810,7 @@
               "artifacts",
               "state",
               "statusText",
-              "run",
-              "requestedAccess"
+              "run"
             ],
             "additionalProperties": false
           },
@@ -18994,22 +18818,22 @@
             "type": "object",
             "properties": {
               "contractVersion": {
-                "$ref": "#/$defs/__schema0"
+                "$ref": "#/$defs/__schema12"
               },
               "dotRequestId": {
-                "$ref": "#/$defs/__schema6"
+                "$ref": "#/$defs/__schema5"
               },
               "sequence": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "revision": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "workspaceRef": {
                 "$ref": "#/$defs/__schema2"
               },
-              "deliverableLanguage": {
-                "$ref": "#/$defs/__schema15"
+              "requestedAccess": {
+                "$ref": "#/$defs/__schema3"
               },
               "reply": {
                 "$ref": "#/$defs/__schema16"
@@ -19036,9 +18860,6 @@
               },
               "run": {
                 "type": "null"
-              },
-              "requestedAccess": {
-                "$ref": "#/$defs/__schema3"
               }
             },
             "required": [
@@ -19047,7 +18868,7 @@
               "sequence",
               "revision",
               "workspaceRef",
-              "deliverableLanguage",
+              "requestedAccess",
               "reply",
               "createdAt",
               "updatedAt",
@@ -19055,8 +18876,7 @@
               "artifacts",
               "state",
               "statusText",
-              "run",
-              "requestedAccess"
+              "run"
             ],
             "additionalProperties": false
           },
@@ -19064,22 +18884,22 @@
             "type": "object",
             "properties": {
               "contractVersion": {
-                "$ref": "#/$defs/__schema0"
+                "$ref": "#/$defs/__schema12"
               },
               "dotRequestId": {
-                "$ref": "#/$defs/__schema6"
+                "$ref": "#/$defs/__schema5"
               },
               "sequence": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "revision": {
-                "$ref": "#/$defs/__schema8"
+                "$ref": "#/$defs/__schema7"
               },
               "workspaceRef": {
                 "$ref": "#/$defs/__schema2"
               },
-              "deliverableLanguage": {
-                "$ref": "#/$defs/__schema15"
+              "requestedAccess": {
+                "$ref": "#/$defs/__schema3"
               },
               "reply": {
                 "$ref": "#/$defs/__schema16"
@@ -19106,9 +18926,6 @@
               },
               "run": {
                 "type": "null"
-              },
-              "requestedAccess": {
-                "$ref": "#/$defs/__schema3"
               }
             },
             "required": [
@@ -19117,7 +18934,7 @@
               "sequence",
               "revision",
               "workspaceRef",
-              "deliverableLanguage",
+              "requestedAccess",
               "reply",
               "createdAt",
               "updatedAt",
@@ -19125,27 +18942,16 @@
               "artifacts",
               "state",
               "statusText",
-              "run",
-              "requestedAccess"
+              "run"
             ],
             "additionalProperties": false
-          }
-        ]
-      },
-      "__schema15": {
-        "anyOf": [
-          {
-            "$ref": "#/$defs/__schema4"
-          },
-          {
-            "type": "null"
           }
         ]
       },
       "__schema16": {
         "anyOf": [
           {
-            "$ref": "#/$defs/__schema5"
+            "$ref": "#/$defs/__schema4"
           },
           {
             "type": "null"
@@ -19203,7 +19009,8 @@
           "language": {
             "anyOf": [
               {
-                "$ref": "#/$defs/__schema4"
+                "type": "string",
+                "maxLength": 35
               },
               {
                 "type": "null"
@@ -19315,78 +19122,50 @@
         "type": "boolean"
       },
       "__schema28": {
+        "type": "number",
+        "const": 3
+      },
+      "__schema29": {
         "type": "object",
         "properties": {
           "decisionId": {
             "$ref": "#/$defs/__schema9"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
-          },
-          "toolName": {
-            "$ref": "#/$defs/__schema29"
-          },
-          "agentId": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/__schema29"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "summary": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "allowed",
-              "denied",
-              "answered_in_terminal",
-              "expired"
-            ]
-          },
-          "decidedBy": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "dot",
-                  "desktop",
-                  "terminal"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "createdAt": {
-            "$ref": "#/$defs/__schema30"
-          },
-          "deadlineAt": {
-            "$ref": "#/$defs/__schema30"
-          },
-          "decidedAt": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/__schema30"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/$defs/__schema5"
           },
           "dotMayAllow": {
-            "type": "boolean"
+            "$ref": "#/$defs/__schema30"
+          },
+          "toolName": {
+            "$ref": "#/$defs/__schema31"
+          },
+          "agentId": {
+            "$ref": "#/$defs/__schema32"
+          },
+          "summary": {
+            "$ref": "#/$defs/__schema33"
+          },
+          "status": {
+            "$ref": "#/$defs/__schema34"
+          },
+          "decidedBy": {
+            "$ref": "#/$defs/__schema35"
+          },
+          "createdAt": {
+            "$ref": "#/$defs/__schema36"
+          },
+          "deadlineAt": {
+            "$ref": "#/$defs/__schema36"
+          },
+          "decidedAt": {
+            "$ref": "#/$defs/__schema37"
           }
         },
         "required": [
           "decisionId",
           "dotRequestId",
+          "dotMayAllow",
           "toolName",
           "agentId",
           "summary",
@@ -19394,43 +19173,93 @@
           "decidedBy",
           "createdAt",
           "deadlineAt",
-          "decidedAt",
-          "dotMayAllow"
+          "decidedAt"
         ],
         "additionalProperties": false
       },
-      "__schema29": {
+      "__schema30": {
+        "type": "boolean"
+      },
+      "__schema31": {
         "type": "string",
         "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
       },
-      "__schema30": {
+      "__schema32": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/__schema31"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "__schema33": {
+        "type": "string"
+      },
+      "__schema34": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "allowed",
+          "denied",
+          "answered_in_terminal",
+          "expired"
+        ]
+      },
+      "__schema35": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "dot",
+              "desktop",
+              "terminal"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "__schema36": {
         "type": "string",
         "format": "date-time",
         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
       },
-      "__schema31": {
+      "__schema37": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/__schema36"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "__schema38": {
         "type": "object",
         "properties": {
           "validationId": {
             "$ref": "#/$defs/__schema11"
           },
           "dotRequestId": {
-            "$ref": "#/$defs/__schema6"
+            "$ref": "#/$defs/__schema5"
           },
           "title": {
-            "$ref": "#/$defs/__schema32"
+            "$ref": "#/$defs/__schema39"
           },
           "reason": {
-            "$ref": "#/$defs/__schema33"
+            "$ref": "#/$defs/__schema40"
           },
           "summary": {
-            "$ref": "#/$defs/__schema34"
+            "$ref": "#/$defs/__schema41"
           },
           "summaryWithheld": {
-            "$ref": "#/$defs/__schema35"
+            "$ref": "#/$defs/__schema42"
           },
           "createdAt": {
-            "$ref": "#/$defs/__schema36"
+            "$ref": "#/$defs/__schema43"
           }
         },
         "required": [
@@ -19444,13 +19273,13 @@
         ],
         "additionalProperties": false
       },
-      "__schema32": {
+      "__schema39": {
         "type": "string",
         "maxLength": 400,
         "pattern": "^[^\\p{Cc}\\p{Cf}\\p{Zl}\\p{Zp}]{1,200}$",
         "description": "The task title or the first line of its objective, masked"
       },
-      "__schema33": {
+      "__schema40": {
         "type": "string",
         "enum": [
           "claim_only",
@@ -19462,7 +19291,7 @@
           "other"
         ]
       },
-      "__schema34": {
+      "__schema41": {
         "anyOf": [
           {
             "type": "string",
@@ -19475,20 +19304,20 @@
           }
         ]
       },
-      "__schema35": {
+      "__schema42": {
         "type": "boolean"
       },
-      "__schema36": {
+      "__schema43": {
         "type": "string",
         "format": "date-time",
         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
       },
-      "__schema37": {
+      "__schema44": {
         "type": "string",
         "format": "uuid",
         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
       },
-      "__schema38": {
+      "__schema45": {
         "type": "string",
         "enum": [
           "decided",
@@ -19496,17 +19325,17 @@
           "closed"
         ]
       },
-      "__schema39": {
+      "__schema46": {
         "anyOf": [
           {
-            "$ref": "#/$defs/__schema36"
+            "$ref": "#/$defs/__schema43"
           },
           {
             "type": "null"
           }
         ]
       },
-      "__schema40": {
+      "__schema47": {
         "type": "boolean"
       }
     }
@@ -19677,10 +19506,6 @@
                     "workspace_write"
                   ]
                 },
-                "deliverableLanguage": {
-                  "type": "string",
-                  "maxLength": 35
-                },
                 "idempotencyKey": {
                   "type": "string",
                   "format": "uuid",
@@ -19713,6 +19538,10 @@
                     "version"
                   ],
                   "additionalProperties": false
+                },
+                "coordinatorRunId": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
                 }
               },
               "required": [
@@ -19940,7 +19769,8 @@
               "type": "object",
               "properties": {
                 "contractVersion": {
-                  "$ref": "#/$defs/__schema8"
+                  "type": "number",
+                  "const": 3
                 },
                 "dotRequestId": {
                   "$ref": "#/$defs/__schema11"
@@ -20222,7 +20052,7 @@
                         },
                         "message": {
                           "type": "string",
-                          "const": "Unsupported contract version. Supported versions: 1."
+                          "const": "Unsupported contract version. Supported versions: 3."
                         }
                       },
                       "required": [
@@ -20361,29 +20191,6 @@
                         "message": {
                           "type": "string",
                           "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                        }
-                      },
-                      "required": [
-                        "by",
-                        "code",
-                        "message"
-                      ],
-                      "additionalProperties": false
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "by": {
-                          "type": "string",
-                          "const": "nash"
-                        },
-                        "code": {
-                          "type": "string",
-                          "const": "dot_deliverable_language_invalid"
-                        },
-                        "message": {
-                          "type": "string",
-                          "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                         }
                       },
                       "required": [
@@ -22506,7 +22313,7 @@
                     },
                     "message": {
                       "type": "string",
-                      "const": "Unsupported contract version. Supported versions: 1."
+                      "const": "Unsupported contract version. Supported versions: 3."
                     }
                   },
                   "required": [
@@ -22645,29 +22452,6 @@
                     "message": {
                       "type": "string",
                       "const": "The requirement was rejected because it contains content that must not leave the machine. Remove it and resubmit."
-                    }
-                  },
-                  "required": [
-                    "by",
-                    "code",
-                    "message"
-                  ],
-                  "additionalProperties": false
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "by": {
-                      "type": "string",
-                      "const": "nash"
-                    },
-                    "code": {
-                      "type": "string",
-                      "const": "dot_deliverable_language_invalid"
-                    },
-                    "message": {
-                      "type": "string",
-                      "const": "The deliverable language must be a valid BCP 47 language tag such as en or zh-Hans."
                     }
                   },
                   "required": [
@@ -23834,38 +23618,39 @@
             "dotRequestId": {
               "$ref": "#/$defs/__schema3"
             },
-            "toolName": {
+            "dotMayAllow": {
               "$ref": "#/$defs/__schema13"
             },
-            "agentId": {
+            "toolName": {
               "$ref": "#/$defs/__schema14"
             },
-            "summary": {
+            "agentId": {
               "$ref": "#/$defs/__schema15"
+            },
+            "summary": {
+              "$ref": "#/$defs/__schema16"
             },
             "status": {
               "type": "string",
               "const": "pending"
             },
             "decidedBy": {
-              "$ref": "#/$defs/__schema16"
+              "$ref": "#/$defs/__schema17"
             },
             "createdAt": {
-              "$ref": "#/$defs/__schema17"
-            },
-            "deadlineAt": {
-              "$ref": "#/$defs/__schema17"
-            },
-            "decidedAt": {
               "$ref": "#/$defs/__schema18"
             },
-            "dotMayAllow": {
+            "deadlineAt": {
+              "$ref": "#/$defs/__schema18"
+            },
+            "decidedAt": {
               "$ref": "#/$defs/__schema19"
             }
           },
           "required": [
             "decisionId",
             "dotRequestId",
+            "dotMayAllow",
             "toolName",
             "agentId",
             "summary",
@@ -23873,8 +23658,7 @@
             "decidedBy",
             "createdAt",
             "deadlineAt",
-            "decidedAt",
-            "dotMayAllow"
+            "decidedAt"
           ],
           "additionalProperties": false
         },
@@ -23884,23 +23668,26 @@
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         },
         "__schema13": {
+          "type": "boolean"
+        },
+        "__schema14": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
         },
-        "__schema14": {
+        "__schema15": {
           "anyOf": [
             {
-              "$ref": "#/$defs/__schema13"
+              "$ref": "#/$defs/__schema14"
             },
             {
               "type": "null"
             }
           ]
         },
-        "__schema15": {
+        "__schema16": {
           "type": "string"
         },
-        "__schema16": {
+        "__schema17": {
           "anyOf": [
             {
               "type": "string",
@@ -23915,23 +23702,20 @@
             }
           ]
         },
-        "__schema17": {
+        "__schema18": {
           "type": "string",
           "format": "date-time",
           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
         },
-        "__schema18": {
+        "__schema19": {
           "anyOf": [
             {
-              "$ref": "#/$defs/__schema17"
+              "$ref": "#/$defs/__schema18"
             },
             {
               "type": "null"
             }
           ]
-        },
-        "__schema19": {
-          "type": "boolean"
         },
         "__schema20": {
           "type": "object",
@@ -23978,14 +23762,17 @@
             "dotRequestId": {
               "$ref": "#/$defs/__schema3"
             },
-            "toolName": {
+            "dotMayAllow": {
               "$ref": "#/$defs/__schema13"
             },
-            "agentId": {
+            "toolName": {
               "$ref": "#/$defs/__schema14"
             },
-            "summary": {
+            "agentId": {
               "$ref": "#/$defs/__schema15"
+            },
+            "summary": {
+              "$ref": "#/$defs/__schema16"
             },
             "status": {
               "type": "string",
@@ -23997,24 +23784,22 @@
               ]
             },
             "decidedBy": {
-              "$ref": "#/$defs/__schema16"
+              "$ref": "#/$defs/__schema17"
             },
             "createdAt": {
-              "$ref": "#/$defs/__schema17"
-            },
-            "deadlineAt": {
-              "$ref": "#/$defs/__schema17"
-            },
-            "decidedAt": {
               "$ref": "#/$defs/__schema18"
             },
-            "dotMayAllow": {
+            "deadlineAt": {
+              "$ref": "#/$defs/__schema18"
+            },
+            "decidedAt": {
               "$ref": "#/$defs/__schema19"
             }
           },
           "required": [
             "decisionId",
             "dotRequestId",
+            "dotMayAllow",
             "toolName",
             "agentId",
             "summary",
@@ -24022,8 +23807,7 @@
             "decidedBy",
             "createdAt",
             "deadlineAt",
-            "decidedAt",
-            "dotMayAllow"
+            "decidedAt"
           ],
           "additionalProperties": false
         },

@@ -20,7 +20,9 @@ const EXPECTED_ALLOW = [
   'Bash(orca orchestration task-start *)',
   'Bash(orca orchestration task-show *)',
   'Bash(orca orchestration task-report *)',
-  'Bash(orca orchestration run-complete *)'
+  'Bash(orca orchestration run-complete *)',
+  'Bash(orca orchestration permission-list *)',
+  'Bash(orca orchestration permission-answer *)'
 ]
 
 function settingsFor(access: 'read_only' | 'workspace_write', cliCommand = 'orca') {
@@ -76,13 +78,13 @@ describe('buildPrimarySessionSettings', () => {
     }
   })
 
-  it('allows only the five task commands and nothing broader', () => {
+  it('allows task commands and scoped child reviews, without a broad shell grant', () => {
     for (const access of ['read_only', 'workspace_write'] as const) {
       const allow = settingsFor(access).permissions.allow
-      expect(allow).toHaveLength(5)
+      expect(allow).toHaveLength(7)
       for (const rule of allow) {
         expect(rule).toMatch(
-          /^Bash\(orca orchestration (task-propose|task-start|task-show|task-report|run-complete) \*\)$/
+          /^Bash\(orca orchestration (task-propose|task-start|task-show|task-report|run-complete|permission-list|permission-answer) \*\)$/
         )
       }
       expect(allow.join('\n')).not.toContain('permission-request')

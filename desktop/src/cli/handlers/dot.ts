@@ -134,6 +134,21 @@ export function createDotHandlers(deps: DotCliDeps): Record<string, CommandHandl
         `${text}\nIdempotency key: ${idempotencyKey} (reuse it to retry)`
       )
     },
+    'dot attach': async (ctx) => {
+      const idempotencyKey = getOptionalStringFlag(ctx.flags, 'idempotency-key') ?? deps.newId()
+      const result = await client().attach({
+        workspaceRef: getRequiredStringFlag(ctx.flags, 'workspace'),
+        coordinatorRunId: getRequiredStringFlag(ctx.flags, 'run'),
+        objective: await readTextInput(deps, ctx, 'objective-file'),
+        idempotencyKey,
+        requestedAccess: accessFlag(ctx)
+      })
+      output(
+        ctx,
+        { idempotencyKey, result },
+        `${formatDotRequest(result.request)}\nIdempotency key: ${idempotencyKey}`
+      )
+    },
     'dot status': async (ctx) => {
       const result = await client().status(getRequiredStringFlag(ctx.flags, 'request'))
       output(ctx, result, formatDotRequest(result.request))

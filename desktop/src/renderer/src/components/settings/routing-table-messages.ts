@@ -3,18 +3,6 @@ import { translate } from '@/i18n/i18n'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import type { RoutingTableRefusalView } from '../../../../shared/workbench-routing-table-view'
 
-function duplicateMessage(existingProposalId: string | null): string {
-  return existingProposalId === null
-    ? translate(
-        'auto.components.settings.routingTable.refusals.duplicateActivePlain',
-        'These choices are already in use, so nothing was saved.'
-      )
-    : translate(
-        'auto.components.settings.routingTable.refusals.duplicatePendingPlain',
-        'The same change is already waiting under Suggested changes. Review it there.'
-      )
-}
-
 /** Plain English for every refusal the table store can return; codes and ids go to the details. */
 export function routingTableRefusalMessage(refusal: RoutingTableRefusalView): string {
   switch (refusal.reason) {
@@ -26,7 +14,7 @@ export function routingTableRefusalMessage(refusal: RoutingTableRefusalView): st
     case 'routing_table_taxonomy_mismatch':
       return translate(
         'auto.components.settings.routingTable.refusals.taxonomyMismatchPlain',
-        'The saved task routing was made for a different list of tasks, so it cannot be used. Import routing for the current tasks under Advanced.'
+        'The saved task routing was made for a different list of tasks, so it cannot be used.'
       )
     case 'routing_table_not_installed':
       return translate(
@@ -48,57 +36,15 @@ export function routingTableRefusalMessage(refusal: RoutingTableRefusalView): st
         'auto.components.settings.routingTable.refusals.forbiddenCallerPlain',
         'Task routing can only be changed in this app.'
       )
-    case 'proposal_unknown':
-      return translate(
-        'auto.components.settings.routingTable.refusals.proposalUnknownPlain',
-        'This suggested change no longer exists.'
-      )
-    case 'proposal_invalid':
-      return translate(
-        'auto.components.settings.routingTable.refusals.proposalInvalidPlain',
-        'This suggested change cannot be read, so it cannot be accepted.'
-      )
-    case 'already_decided':
-      return translate(
-        'auto.components.settings.routingTable.refusals.alreadyDecidedPlain',
-        'This suggested change was already decided.'
-      )
-    case 'proposal_superseded':
-      return translate(
-        'auto.components.settings.routingTable.refusals.proposalSupersededPlain',
-        'This suggested change was made for older choices, so it was set aside and nothing changed.'
-      )
     case 'no_change':
       return translate(
         'auto.components.settings.routingTable.refusals.noChangePlain',
         'This leaves every choice as it is, so nothing changed.'
       )
-    case 'forbidden_proposer':
-      return translate(
-        'auto.components.settings.routingTable.refusals.forbiddenProposerPlain',
-        'This kind of change cannot be submitted here.'
-      )
-    case 'invalid_proposal':
-      return translate(
-        'auto.components.settings.routingTable.refusals.invalidProposalPlain',
-        'This change is not valid, so it was not saved.'
-      )
     case 'base_not_active':
       return translate(
         'auto.components.settings.routingTable.refusals.baseNotActivePlain',
         'Task routing changed after this was prepared. Try again.'
-      )
-    case 'too_many_pending':
-      return translate(
-        'auto.components.settings.routingTable.refusals.tooManyPendingPlain',
-        'Too many suggested changes are waiting. Accept or reject some under Advanced first.'
-      )
-    case 'duplicate_content':
-      return duplicateMessage(refusal.existingProposalId)
-    case 'version_unknown':
-      return translate(
-        'auto.components.settings.routingTable.refusals.versionUnknownPlain',
-        'That earlier version no longer exists.'
       )
     default:
       return translate(
@@ -110,11 +56,7 @@ export function routingTableRefusalMessage(refusal: RoutingTableRefusalView): st
 
 /** The refusal's codes and ids for "Copy details"; never shown on screen. */
 export function routingTableRefusalDetails(refusal: RoutingTableRefusalView): string {
-  return [
-    `reason: ${refusal.reason}`,
-    `detail: ${refusal.detail ?? '-'}`,
-    `existing_proposal: ${refusal.existingProposalId ?? '-'}`
-  ].join('\n')
+  return [`reason: ${refusal.reason}`, `detail: ${refusal.detail ?? '-'}`].join('\n')
 }
 
 /** For a call that did not return a result; never repeats the raw error text. */

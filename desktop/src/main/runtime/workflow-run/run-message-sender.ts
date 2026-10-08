@@ -23,7 +23,8 @@ export async function sendRunMessageToPrimary(
   terminal: Pick<PrimaryTerminalPort, 'sendTerminalAgentPrompt'>,
   handle: string,
   text: string,
-  requestId: string
+  requestId: string,
+  assertMayWrite?: () => void
 ): Promise<RunMessageSendResult> {
   let writesStarted = 0
   let accepted = false
@@ -35,6 +36,7 @@ export async function sendRunMessageToPrimary(
       // The receipt settles once input lands; what the agent does with it is the pane's to show.
       observationTimeoutMs: 0,
       beforeWrite: () => {
+        assertMayWrite?.()
         writesStarted += 1
       },
       onInputAccepted: () => {

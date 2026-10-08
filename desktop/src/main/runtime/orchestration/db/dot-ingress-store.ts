@@ -1,3 +1,7 @@
+import {
+  attachDotCoordinatorRequest,
+  findDotAttachmentReplay
+} from './dot-coordinator-attachment-store'
 import { randomUUID } from 'node:crypto'
 import type Database from '../../../sqlite/sync-database'
 import {
@@ -107,6 +111,17 @@ export class DotIngressStore {
     return this.requireRecord(parseDotInput(DotRequestIdSchema, dotRequestId, 'request id'))
   }
 
+  attachmentReplay(input: DotIngressSubmitInput, runId: string) {
+    return findDotAttachmentReplay(this.db, input, runId, (id) => this.requireRecord(id))
+  }
+
+  attach(input: DotIngressSubmitInput, runId: string, requestId: string) {
+    return attachDotCoordinatorRequest(this.db, input, runId, requestId, {
+      read: (id) => this.requireRecord(id),
+      insert: (params, id, hash) => this.insert(params, id, hash),
+      assertObjective: (id, text) => this.requireObjectivePreserved(id, text)
+    })
+  }
   /** Newest first. */
   list(options: { limit: number; beforeSequence?: number }): {
     records: DotRequestRecord[]

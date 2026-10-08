@@ -55,21 +55,28 @@ describe('Task routing category', () => {
       (item) => item.title === 'Agents for each task'
     )
     expect(entry).toBeDefined()
-    expect(entry?.keywords).toEqual(
-      expect.arrayContaining(['routing table', 'model', 'effort', 'proposal'])
-    )
+    expect(entry?.keywords).toEqual(expect.arrayContaining(['routing table', 'model', 'effort']))
+    expect(entry?.keywords).not.toContain('proposal')
+    expect(entry?.description).not.toMatch(/suggested changes/)
     expect(entry?.description).not.toMatch(/executor/)
     expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain(
       'Agents for each task'
     )
   })
 
-  it('lets settings search find the Clef routing credentials under Task routing only', () => {
-    const entry = getTaskRoutingSearchEntries().find((item) => item.title === 'Clef')
+  it('lets settings search find the classifier credentials under Task routing only', () => {
+    const entry = getTaskRoutingSearchEntries().find((item) => item.title === 'Classifier')
     expect(entry).toBeDefined()
     expect(entry?.keywords).toEqual(
-      expect.arrayContaining(['clef', 'routing', 'cloudflare', 'api token', 'account id'])
+      expect.arrayContaining([
+        'Classifier',
+        'clef',
+        'routing',
+        'cloudflare',
+        'api token',
+        'account id'
+      ])
     )
-    expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain('Clef')
+    expect(getIntegrationsPaneSearchEntries().map((item) => item.title)).not.toContain('Classifier')
   })
 })

@@ -1,7 +1,7 @@
 import type { WorkbenchRoutingStatusView } from '../../../shared/clef/workbench-routing-status-view'
-import { getClefCallCircuit } from '../../clef/clef-call-circuit-owner'
+import { CLEF_QUESTION_BUNDLE_SHA256 } from '../../clef/clef-question-set'
 import type { ClefVerifiedProfileFileStore } from '../../clef/clef-verified-profile'
-import { readClefBundleView, readVerifiedBundleSha256 } from './clef-bundle-view'
+import { readVerifiedBundleSha256 } from './clef-bundle-view'
 import { readRoutingStatus, type RoutingStatusDeps } from './routing-status-reader'
 
 export type RoutingStatusViewDeps = RoutingStatusDeps
@@ -12,9 +12,6 @@ export type RoutingStatusViewInputs = {
   /** The profile file as stored, before the pin check: it names the bundle it was verified against. */
   readonly storedProfile: Pick<ClefVerifiedProfileFileStore, 'read'>
 }
-
-const toIsoOrNull = (epochMs: number | null): string | null =>
-  epochMs === null ? null : new Date(epochMs).toISOString()
 
 /**
  * The renderer-safe status for `workbench.routing.status`. It reads local state only (credential
@@ -28,7 +25,6 @@ export function readRoutingStatusView(
   const status = readRoutingStatus(deps)
   const credentials = deps.credentials.status()
   const profile = deps.verifiedProfile.read()
-  const circuit = getClefCallCircuit().snapshot(deps.credentials.generation())
   return {
     status,
     dispatch: inputs.dispatch,
@@ -39,19 +35,9 @@ export function readRoutingStatusView(
     },
     profile: {
       present: profile !== null,
-      responseModelPinned: profile?.profile.expectedResponseModel != null,
       verifiedAt: profile?.profile.verifiedAt ?? null,
       verifiedAgainstBundleSha256: readVerifiedBundleSha256(inputs.storedProfile)
     },
-    bundle: readClefBundleView(),
-    latches: {
-      authFailed: circuit.authFailed,
-      quotaLatchedUntil: toIsoOrNull(circuit.quotaLatchedUntil)
-    },
-    circuit: {
-      state: circuit.circuit,
-      reopensAt: toIsoOrNull(circuit.reopensAt),
-      consecutiveTransient: circuit.consecutiveTransient
-    }
+    bundle: { sha256: CLEF_QUESTION_BUNDLE_SHA256 }
   }
 }

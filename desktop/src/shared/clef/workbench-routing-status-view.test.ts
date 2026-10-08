@@ -12,19 +12,12 @@ const READY: WorkbenchRoutingStatusView = {
   credentials: { tokenPresent: true, accountPresent: true, protection: 'sealed' },
   profile: {
     present: true,
-    responseModelPinned: true,
     verifiedAt: '2026-10-04T11:00:00.000Z',
     verifiedAgainstBundleSha256: BUNDLE_SHA
   },
   bundle: {
-    questionSetVersion: 2,
-    taxonomyVersion: 2,
-    sha256: BUNDLE_SHA,
-    thresholds: { delegationTrueMin: 0.6, delegationFalseMax: 0.4, taskTypeMarginMin: 0.1 },
-    awaitingUserConfirmation: ['thresholds', 'task_type_options', 'needs_delegation_criteria']
-  },
-  latches: { authFailed: false, quotaLatchedUntil: null },
-  circuit: { state: 'closed', reopensAt: null, consecutiveTransient: 0 }
+    sha256: BUNDLE_SHA
+  }
 }
 
 describe('workbench routing status view', () => {
@@ -32,21 +25,14 @@ describe('workbench routing status view', () => {
     expect(parseWorkbenchRoutingStatusView(READY)).toEqual(READY)
   })
 
-  it('accepts active latch and circuit times', () => {
+  it('accepts a paused configuration status', () => {
     const blocked: WorkbenchRoutingStatusView = {
       ...READY,
       status: 'quota_latched',
       profile: {
         present: false,
-        responseModelPinned: false,
         verifiedAt: null,
         verifiedAgainstBundleSha256: null
-      },
-      latches: { authFailed: true, quotaLatchedUntil: '2026-10-05T00:00:00.000Z' },
-      circuit: {
-        state: 'open',
-        reopensAt: '2026-10-04T12:05:00.000Z',
-        consecutiveTransient: 3
       }
     }
     expect(parseWorkbenchRoutingStatusView(blocked)).toEqual(blocked)
@@ -56,18 +42,12 @@ describe('workbench routing status view', () => {
     expect(parseWorkbenchRoutingStatusView(value)).toBeNull()
   })
 
-  it('rejects an unknown routing status, a negative count and a malformed time', () => {
+  it('rejects an unknown routing status and a malformed verification time', () => {
     expect(parseWorkbenchRoutingStatusView({ ...READY, status: 'connected' })).toBeNull()
     expect(
       parseWorkbenchRoutingStatusView({
         ...READY,
-        circuit: { ...READY.circuit, consecutiveTransient: -1 }
-      })
-    ).toBeNull()
-    expect(
-      parseWorkbenchRoutingStatusView({
-        ...READY,
-        latches: { authFailed: false, quotaLatchedUntil: 'tomorrow' }
+        profile: { ...READY.profile, verifiedAt: 'tomorrow' }
       })
     ).toBeNull()
   })
@@ -86,17 +66,15 @@ describe('workbench routing status view', () => {
     expect(parseWorkbenchRoutingStatusView(olderBuild)).toBeNull()
   })
 
-  it('carries the question bundle facts and the bundle a stored profile was verified against', () => {
+  it('carries the hashes that determine whether a stored verification still applies', () => {
     const otherBundle = {
       ...READY,
       status: 'contract_unverified',
       profile: {
         present: false,
-        responseModelPinned: false,
         verifiedAt: null,
         verifiedAgainstBundleSha256: '5'.repeat(64)
-      },
-      bundle: { ...READY.bundle, awaitingUserConfirmation: [] }
+      }
     }
     expect(parseWorkbenchRoutingStatusView(otherBundle)).toEqual(otherBundle)
   })
@@ -105,11 +83,9 @@ describe('workbench routing status view', () => {
     const { bundle } = READY
     for (const wrong of [
       { ...bundle, sha256: 'not-a-hash' },
-      { ...bundle, questionSetVersion: 0 },
-      { ...bundle, thresholds: { ...bundle.thresholds, delegationTrueMin: 1.5 } },
-      { ...bundle, thresholds: { ...bundle.thresholds, text: 'FIXTURE_ONLY' } },
-      { ...bundle, awaitingUserConfirmation: ['budget'] },
-      { ...bundle, awaitingUserConfirmation: ['thresholds', 'thresholds'] },
+      { ...bundle, questionSetVersion: 2 },
+      { ...bundle, thresholds: { delegationTrueMin: 0.6 } },
+      { ...bundle, awaitingUserConfirmation: [] },
       { ...bundle, taskTypeOptions: { software_engineering: 'FIXTURE_ONLY' } }
     ]) {
       expect(parseWorkbenchRoutingStatusView({ ...READY, bundle: wrong })).toBeNull()
@@ -138,17 +114,10 @@ describe('workbench routing status view', () => {
       })
     ],
     [
-      'latches',
+      'bundle',
       (view: WorkbenchRoutingStatusView) => ({
         ...view,
-        latches: { ...view.latches, url: 'FIXTURE_ONLY' }
-      })
-    ],
-    [
-      'circuit',
-      (view: WorkbenchRoutingStatusView) => ({
-        ...view,
-        circuit: { ...view.circuit, probeUrl: 'FIXTURE_ONLY' }
+        bundle: { ...view.bundle, url: 'FIXTURE_ONLY' }
       })
     ]
   ])('rejects an extra field at the %s', (_label, widen) => {

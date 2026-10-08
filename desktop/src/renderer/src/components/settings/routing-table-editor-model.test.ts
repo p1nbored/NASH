@@ -5,38 +5,13 @@ import {
   withCoordinatorAgent,
   withRouteEdit
 } from './routing-table-editor-model'
-import { fixtureProposal, fixtureTable } from './routing-table-view.test-fixture'
+import { fixtureTable } from './routing-table-view.test-fixture'
 
 describe('routing table editor model', () => {
-  it('starts from the active table with a proposal applied on top', () => {
-    const draft = draftFromTable(fixtureTable(), fixtureProposal())
-
-    const engineering = draft.routes.find((row) => row.taskType === 'software_engineering')
-    expect(engineering).toMatchObject({
-      target: 'codex_cli',
-      model: 'gpt-6-astra',
-      reasoningLevel: 'max'
-    })
-    expect(draft.routes).toHaveLength(10)
-    expect(draft.coordinator).toEqual({
-      agent: 'claude',
-      model: 'claude-opus-5-5',
-      reasoningLevel: 'max'
-    })
-  })
-
-  it('turns an untouched proposal draft back into the same change set', () => {
-    const active = fixtureTable()
-    const proposal = fixtureProposal()
-
-    const result = changesFromDraft(active, draftFromTable(active, proposal))
-
-    expect(result).toEqual({ ok: true, changes: { changes: proposal.changes } })
-  })
-
   it('keeps only rows that differ from the active table, with the user row bare', () => {
     const active = fixtureTable()
-    const draft = withRouteEdit(draftFromTable(active, fixtureProposal()), 'software_engineering', {
+    const draft = withRouteEdit(draftFromTable(active), 'software_engineering', {
+      target: 'codex_cli',
       model: 'gpt-6.1-sol',
       reasoningLevel: 'high'
     })
@@ -59,22 +34,38 @@ describe('routing table editor model', () => {
     })
   })
 
-  it('carries a proposed reviewer list through unchanged', () => {
+  it('loads the active reviewers so an inline draft can edit them', () => {
     const active = fixtureTable()
-    const validation = {
-      reviewers: [
-        {
-          target: 'claude_headless' as const,
-          model: 'claude-opus-5-5',
-          reasoning_level: 'high' as const
-        }
-      ]
-    }
-    const proposal = fixtureProposal({ validation })
+    expect(draftFromTable(active).validation).toEqual(active.validation)
+  })
 
-    const result = changesFromDraft(active, draftFromTable(active, proposal))
+  it('rejects an unpinned reviewer model with the reviewer row identified', () => {
+    const active = fixtureTable()
+    const result = changesFromDraft(active, {
+      ...draftFromTable(active),
+      validation: {
+        reviewers: [{ target: 'codex_cli', model: 'latest', reasoning_level: 'high' }]
+      }
+    })
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ field: 0, message: expect.stringMatching(/exact model ID/i) }]
+    })
+  })
 
-    expect(result.ok && result.changes.validation).toEqual(validation)
+  it('trims reviewer models and omits an unchanged reviewer policy', () => {
+    const active = fixtureTable()
+    const result = changesFromDraft(active, {
+      ...draftFromTable(active),
+      validation: {
+        ...active.validation,
+        reviewers: active.validation.reviewers.map((reviewer) => ({
+          ...reviewer,
+          model: ` ${reviewer.model} `
+        }))
+      }
+    })
+    expect(result).toEqual({ ok: false, errors: [{ field: 'table', message: expect.any(String) }] })
   })
 
   it('refuses aliases but accepts an exact Gemini 4 model for availability checking', () => {
@@ -104,7 +95,7 @@ describe('routing table editor model', () => {
 
     const result = changesFromDraft(active, draft)
 
-    expect(!result.ok && result.errors[0].message).toMatch(/only the primary session/i)
+    expect(!result.ok && result.errors[0].message).toMatch(/only the coordinator session/i)
   })
 
   it('says when the draft leaves the active table unchanged', () => {
@@ -148,25 +139,5 @@ describe('routing table editor model', () => {
       model: '',
       reasoningLevel: 'max'
     })
-  })
-
-  it('preserves the primary CLI in proposed and edited coordinator configurations', () => {
-    const active = fixtureTable()
-    const coordinator = {
-      agent: 'codex' as const,
-      model: 'gpt-6-astra',
-      reasoning_level: 'high' as const
-    }
-    const draft = draftFromTable(active, { changes: [], coordinator })
-    expect(draft.coordinator).toEqual({
-      agent: 'codex',
-      model: 'gpt-6-astra',
-      reasoningLevel: 'high'
-    })
-    expect(changesFromDraft(active, draft)).toEqual({
-      ok: true,
-      changes: { coordinator, changes: [] }
-    })
-    expect(changesFromDraft({ ...active, coordinator }, draft).ok).toBe(false)
   })
 })

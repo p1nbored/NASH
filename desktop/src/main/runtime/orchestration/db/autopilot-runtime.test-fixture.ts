@@ -64,6 +64,10 @@ export function errorCodeOf(operation: () => unknown): string | null {
 
 /** A launching run whose primary session is running in a fixture pane; returns the owner id. */
 export function seedRunWithRunningOwner(owner: OrchestrationDb): { ownerId: string } {
+  owner.db
+    .prepare(`INSERT OR IGNORE INTO runs (id, objective, coordinator_handle, coordinator_pane_key, consumer_generation, legacy)
+    VALUES ('run_fixture01', 'Fixture coordinator', 'terminal_fixture01', 'pane_fixture01:1', 1, 0)`)
+    .run()
   getWorkflowRunStore(owner).create({
     runId: 'run_fixture01',
     requestId: 'request_fixture01',

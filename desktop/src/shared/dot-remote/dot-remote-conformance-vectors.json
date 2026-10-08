@@ -1,7 +1,7 @@
 {
   "vectorsVersion": 1,
   "contractVersion": 4,
-  "manifestSha256": "4065156f3037753862e7eaa2ed075b30e39d8bc225e3fda4255690f1f2ea89af",
+  "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798",
   "conventions": {
     "clock": "Each step has an at time; the Site under test uses it as the current time for that step.",
     "callers": "A dot step names the platform user id the identity header carries. A nash step names the device and generation its session resolves to; a serviceOnly step sends only OAI-Sites-Authorization; a refresh step names in deviceCredential the value it sends in the Nash-Device-Credential header. Session tokens and device credentials appear only in pairing vectors, as obviously fake generated values.",
@@ -133,7 +133,7 @@
                 "appVersion": "1.4.0",
                 "contractVersion": 4,
                 "onlineWindowSeconds": 90,
-                "manifestSha256": "4065156f3037753862e7eaa2ed075b30e39d8bc225e3fda4255690f1f2ea89af"
+                "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
               }
             }
           }
@@ -155,7 +155,7 @@
                 "appVersion": "1.4.0",
                 "contractVersion": 4,
                 "onlineWindowSeconds": 90,
-                "manifestSha256": "4065156f3037753862e7eaa2ed075b30e39d8bc225e3fda4255690f1f2ea89af"
+                "manifestSha256": "b5233673f2f23b52d084a686a31b7a354671a8db709a10dd1e50831d0f3c4798"
               }
             }
           }

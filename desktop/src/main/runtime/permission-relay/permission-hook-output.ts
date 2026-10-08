@@ -6,6 +6,7 @@ import {
 import type { PermissionDecisionRecord } from '../orchestration/db/permission-decision-store'
 
 const DENY_MESSAGES = {
+  primary: 'The primary agent denied this request.',
   dot: 'The user denied this request through dot.',
   desktop: 'The user denied this request in the desktop app.'
 } as const
@@ -26,7 +27,7 @@ export function buildPermissionHookOutput(
   }
   if (
     record.status === 'denied' &&
-    (record.decidedBy === 'dot' || record.decidedBy === 'desktop')
+    (record.decidedBy === 'dot' || record.decidedBy === 'desktop' || record.decidedBy === 'primary')
   ) {
     return PermissionHookOutputSchema.parse({
       hookSpecificOutput: {

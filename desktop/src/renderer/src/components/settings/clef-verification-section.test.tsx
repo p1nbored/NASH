@@ -3,15 +3,11 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
-import { ClefAwaitingConfirmation } from './clef-awaiting-confirmation'
-import { clefStatusDetails } from './clef-details'
 import { ClefVerificationSection } from './clef-verification-section'
 import {
-  FIXTURE_BUNDLE_SHA,
   FIXTURE_OTHER_BUNDLE_SHA,
   FIXTURE_PROFILE_HASH,
   FIXTURE_REPORT_SHA,
-  fixtureBundle,
   fixtureCallFailed,
   fixturePinResult,
   fixturePinnedProfile,
@@ -217,11 +213,10 @@ describe('ClefVerificationSection', () => {
     expect(section.textContent).not.toMatch(/questions changed/i)
   })
 
-  it('asks to verify again when the questions changed, keeping both hashes in the details', async () => {
+  it('asks to verify again when the questions changed', async () => {
     const status = fixtureStatus({
       profile: {
         present: false,
-        responseModelPinned: false,
         verifiedAt: null,
         verifiedAgainstBundleSha256: FIXTURE_OTHER_BUNDLE_SHA
       }
@@ -231,9 +226,6 @@ describe('ClefVerificationSection', () => {
 
     expect(section.textContent).toMatch(/questions changed since the last verification/)
     expect(section.textContent).not.toContain(FIXTURE_OTHER_BUNDLE_SHA.slice(0, 12))
-    const details = clefStatusDetails(status)
-    expect(details).toContain(FIXTURE_OTHER_BUNDLE_SHA)
-    expect(details).toContain(FIXTURE_BUNDLE_SHA)
   })
 
   it('says verification is unavailable when routing is not installed', async () => {
@@ -248,54 +240,5 @@ describe('ClefVerificationSection', () => {
 
     expect(within(section).getAllByRole('alert')[0].textContent).toMatch(/not available/i)
     expect(screen.getByRole('button', { name: 'Verify' })).toHaveProperty('disabled', true)
-  })
-})
-
-describe('Clef defaults awaiting confirmation and status details', () => {
-  afterEach(() => {
-    cleanup()
-  })
-
-  it('shows the defaults awaiting confirmation as neutral information, not a warning', () => {
-    render(<ClefAwaitingConfirmation bundle={fixtureBundle()} />)
-
-    const pending = screen.getByRole('note', { name: 'Awaiting your confirmation' })
-    expect(pending.textContent).toMatch(/0\.60 or more/)
-    expect(pending.textContent).toMatch(/0\.40 or less/)
-    expect(pending.textContent).toMatch(/0\.10/)
-    expect(pending.textContent).toMatch(/11 task-type options and the 2 delegation answers/)
-    expect(pending.className).not.toMatch(/warning|destructive|border/)
-  })
-
-  it('shows only the values still awaiting confirmation', () => {
-    render(
-      <ClefAwaitingConfirmation
-        bundle={fixtureBundle({
-          thresholds: { delegationTrueMin: 0.7, delegationFalseMax: 0.3, taskTypeMarginMin: 0.15 },
-          awaitingUserConfirmation: ['thresholds']
-        })}
-      />
-    )
-
-    const pending = screen.getByRole('note', { name: 'Awaiting your confirmation' })
-    expect(pending.textContent).toMatch(/0\.70 or more/)
-    expect(pending.textContent).toMatch(/0\.30 or less/)
-    expect(pending.textContent).toMatch(/0\.15/)
-    expect(pending.textContent).not.toMatch(/task-type options/)
-  })
-
-  it('shows no pending note once every value is confirmed', () => {
-    render(<ClefAwaitingConfirmation bundle={fixtureBundle({ awaitingUserConfirmation: [] })} />)
-
-    expect(screen.queryByRole('note', { name: 'Awaiting your confirmation' })).toBeNull()
-  })
-
-  it('keeps the question set and taxonomy versions in the copied details', () => {
-    const details = clefStatusDetails(
-      fixtureStatus({ bundle: fixtureBundle({ questionSetVersion: 3, taxonomyVersion: 4 }) })
-    )
-
-    expect(details).toContain('question_set_version: 3')
-    expect(details).toContain('taxonomy_version: 4')
   })
 })

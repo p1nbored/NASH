@@ -9,9 +9,9 @@ import {
   type PermissionDecisionRecord,
   type PermissionDecisionStatus
 } from '../orchestration/db/permission-decision-store'
-import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { isDesktopOnlyRecord } from './permission-redaction'
 import { appRunReadersIfPresent } from './permission-relay-caller'
+import { permissionSource } from './permission-source'
 
 const DEFAULT_LIST_LIMIT = 50
 const ADOPT_LIMIT = 100
@@ -28,7 +28,8 @@ export function toDesktopPermissionView(
     toolName: record.toolName,
     summary: record.summary,
     status: record.status,
-    decidedBy: record.decidedBy,
+    decidedBy: record.decidedBy === 'primary' ? null : record.decidedBy,
+    ...(record.decidedBy === 'primary' ? { reviewedBy: 'primary' as const } : {}),
     createdAt: record.createdAt,
     deadlineAt: record.deadlineAt,
     decidedAt: record.decidedAt,
@@ -73,7 +74,7 @@ export function listDotPermissionRecords(
   }
   return getPermissionDecisionStore(db)
     .listForRun(runId, options)
-    .filter((record) => !isDesktopOnlyRecord(record))
+    .filter((record) => record.agentId === null || isDesktopOnlyRecord(record))
 }
 
 /** Prompts still pending in open app runs, with the pane their primary session ran in. */
@@ -85,12 +86,11 @@ export function listPendingPrompts(
     return []
   }
   const store = getPermissionDecisionStore(db)
-  const sessions = getPrimarySessionStore(db)
   return readers.listOpenAppRuns().flatMap((run) =>
     store.listPending(run.runId, ADOPT_LIMIT).map((record) => ({
       decisionId: record.decisionId,
       deadlineMs: Date.parse(record.deadlineAt),
-      terminalHandle: sessions.get(record.ownerId)?.terminalHandle ?? null
+      terminalHandle: permissionSource(db, record)?.handle ?? null
     }))
   )
 }

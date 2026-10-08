@@ -10,6 +10,7 @@ import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import { WORKBENCH_STORED_STATUSES } from '../orchestration/db/workbench-request-schema-definition'
 import type { WorkflowRunStatus } from '../orchestration/db/workflow-run-transition'
 import { findDotRequestRun, hasAppTable } from './dot-ingress-run-link'
+import { dotCoordinatorAttachment } from '../orchestration/db/dot-coordinator-attachment'
 
 // U32: dot sees one coarse run state and, for a blocked launch, one coarse blocker. No task, model,
 // effort, route, terminal or progress detail is ever part of it.
@@ -84,6 +85,10 @@ export function projectDotRun(db: OrchestrationDb, record: DotRequestRecord): Do
     return null
   }
   const launch = readLaunchRow(db, record.workbenchRequestId)
+  if (dotCoordinatorAttachment(db, { dotRequestId: record.dotRequestId })) {
+    const run = findDotRequestRun(db, record)
+    return run ? { state: RUN_STATE[run.status], blocker: null } : UNVERIFIABLE
+  }
   if (!launch) {
     return UNVERIFIABLE
   }

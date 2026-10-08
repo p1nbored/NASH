@@ -70,14 +70,15 @@ describe('dot decisions: permission prompts of the runs dot started (D-017, RG7)
     const firstPrompt = fixture.raise(first.evidence, BASH)
     vi.advanceTimersByTime(1_000)
     const secondPrompt = fixture.raise(second.evidence, READ)
-    fixture.raise(second.evidence, DESKTOP_ONLY)
+    const criticalPrompt = fixture.raise(second.evidence, DESKTOP_ONLY)
     fixture.raise(foreign, BASH)
 
     const listed = listDotDecisions(harness.deps, { limit: 50 })
 
     expect(listed.map((entry) => [entry.record.decisionId, entry.dotRequestId])).toEqual([
       [firstPrompt, first.record.dotRequestId],
-      [secondPrompt, second.record.dotRequestId]
+      [secondPrompt, second.record.dotRequestId],
+      [criticalPrompt, second.record.dotRequestId]
     ])
   })
 
@@ -169,7 +170,7 @@ describe('dot decisions: permission prompts of the runs dot started (D-017, RG7)
     const run = await dotRun(1)
     const id = fixture.raise(run.evidence, DESKTOP_ONLY)
     expect(
-      refusalOf(() => answerDotDecision(harness.deps, { decisionId: id, decision: 'deny' }))?.code
+      refusalOf(() => answerDotDecision(harness.deps, { decisionId: id, decision: 'allow' }))?.code
     ).toBe('dot_decision_desktop_only')
     expect(
       refusalOf(() =>

@@ -4,14 +4,9 @@ import {
   activateRoutingTable,
   ensureActiveRoutingTable,
   listRoutingTableVersions,
-  resolveActiveRoutingTable,
-  revertRoutingTable
+  resolveActiveRoutingTable
 } from './routing-table-activation'
-import {
-  getBundledRoutingTable,
-  routingTableContentSha256,
-  routingTableSha256
-} from './routing-table-bundle'
+import { getBundledRoutingTable, routingTableSha256 } from './routing-table-bundle'
 import {
   INDEX_FILE_PATH,
   createTestRoutingTableEnvironment,
@@ -160,7 +155,7 @@ describe('integrity: a damaged store blocks routing and never falls back to the 
 
   it('does not let a damaged historical version block the active one', () => {
     const env = installed()
-    expect(activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null }).ok).toBe(true)
+    expect(activateRoutingTable(env.ctx, { table: nextTable(2) }).ok).toBe(true)
     env.fs.files.set(versionFilePath(1), 'corrupt')
     const active = resolveActiveRoutingTable(env.ctx)
     expect(active.ok && active.version).toBe(2)
@@ -191,8 +186,7 @@ describe('taxonomy', () => {
   it('refuses to activate a table of another taxonomy', () => {
     const env = installed()
     const result = activateRoutingTable(env.ctx, {
-      table: nextTable(2, { taxonomy_version: 1 }),
-      proposalId: null
+      table: nextTable(2, { taxonomy_version: 1 })
     })
     expect(result).toMatchObject({ ok: false, reason: 'routing_table_taxonomy_mismatch' })
     expect(env.fs.writeLog).toEqual([])
@@ -203,7 +197,7 @@ describe('activating a version', () => {
   it('writes the version file first, then the index, and records the hash', () => {
     const env = installed()
     const table = nextTable(2)
-    const result = activateRoutingTable(env.ctx, { table, proposalId: 'proposal-0001' })
+    const result = activateRoutingTable(env.ctx, { table })
     expect(result).toEqual({ ok: true, version: 2, sha256: routingTableSha256(table) })
     expect(env.fs.writeLog).toEqual([versionFilePath(2), INDEX_FILE_PATH])
     const index = JSON.parse(env.fs.files.get(INDEX_FILE_PATH) ?? '{}')
@@ -211,7 +205,7 @@ describe('activating a version', () => {
     expect(index.versions.map((entry: { table_version: number }) => entry.table_version)).toEqual([
       1, 2
     ])
-    expect(index.versions[1]).toMatchObject({ source: 'user', proposal_id: 'proposal-0001' })
+    expect(index.versions[1]).toMatchObject({ source: 'user', proposal_id: null })
     const active = resolveActiveRoutingTable(env.ctx)
     expect(active.ok && active.table.coordinator.reasoning_level).toBe('high')
   })
@@ -219,16 +213,14 @@ describe('activating a version', () => {
   it('keeps the earlier version files untouched', () => {
     const env = installed()
     const before = env.fs.files.get(versionFilePath(1))
-    activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })
+    activateRoutingTable(env.ctx, { table: nextTable(2) })
     expect(env.fs.files.get(versionFilePath(1))).toBe(before)
   })
 
   it('refuses a version number that is not the next one', () => {
     const env = installed()
     for (const version of [1, 3]) {
-      expect(
-        activateRoutingTable(env.ctx, { table: nextTable(version), proposalId: null })
-      ).toMatchObject({
+      expect(activateRoutingTable(env.ctx, { table: nextTable(version) })).toMatchObject({
         ok: false,
         reason: 'version_conflict'
       })
@@ -246,7 +238,7 @@ describe('activating a version', () => {
         reasoning_level: 'max' as const
       }
     }
-    expect(activateRoutingTable(env.ctx, { table: broken, proposalId: null })).toMatchObject({
+    expect(activateRoutingTable(env.ctx, { table: broken })).toMatchObject({
       ok: false,
       reason: 'invalid_table'
     })
@@ -256,7 +248,7 @@ describe('activating a version', () => {
   it('refuses to activate over a damaged store', () => {
     const env = installed()
     env.fs.files.delete(versionFilePath(1))
-    expect(activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })).toMatchObject({
+    expect(activateRoutingTable(env.ctx, { table: nextTable(2) })).toMatchObject({
       ok: false,
       reason: 'routing_table_integrity_failed'
     })
@@ -266,13 +258,13 @@ describe('activating a version', () => {
   it('stays on the old version when the index write fails, and a retry succeeds over the orphan file', () => {
     const env = installed()
     env.fs.failNextWriteMatching(/index\.json$/)
-    expect(() => activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })).toThrow(
+    expect(() => activateRoutingTable(env.ctx, { table: nextTable(2) })).toThrow(
       /simulated write failure/
     )
     const stillOld = resolveActiveRoutingTable(env.ctx)
     expect(stillOld.ok && stillOld.version).toBe(1)
     expect(env.fs.files.has(versionFilePath(2))).toBe(true)
-    const retry = activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })
+    const retry = activateRoutingTable(env.ctx, { table: nextTable(2) })
     expect(retry.ok).toBe(true)
     const now = resolveActiveRoutingTable(env.ctx)
     expect(now.ok && now.version).toBe(2)
@@ -280,91 +272,9 @@ describe('activating a version', () => {
 
   it('lists the versions with their hashes', () => {
     const env = installed()
-    activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })
+    activateRoutingTable(env.ctx, { table: nextTable(2) })
     const listed = listRoutingTableVersions(env.ctx)
     expect(listed.ok && listed.versions.map((entry) => entry.table_version)).toEqual([1, 2])
     expect(listed.ok && listed.activeVersion).toBe(2)
-  })
-})
-
-describe('reverting', () => {
-  function withTwoVersions() {
-    const env = installed()
-    activateRoutingTable(env.ctx, { table: nextTable(2), proposalId: null })
-    env.fs.writeLog.length = 0
-    return env
-  }
-
-  it('re-activates old content under a new version number', () => {
-    const env = withTwoVersions()
-    const result = revertRoutingTable(env.ctx, { version: 1, caller: 'desktop_user' })
-    expect(result).toMatchObject({ ok: true, version: 3 })
-    const active = resolveActiveRoutingTable(env.ctx)
-    expect(active.ok && active.version).toBe(3)
-    expect(active.ok && active.source).toBe('user')
-    expect(active.ok && active.table.coordinator.reasoning_level).toBe('max')
-    expect(active.ok && routingTableContentSha256(active.table)).toBe(
-      routingTableContentSha256(getBundledRoutingTable())
-    )
-    expect(active.ok && active.table.based_on?.table_version).toBe(1)
-    expect(env.fs.writeLog).toEqual([versionFilePath(3), INDEX_FILE_PATH])
-  })
-
-  it('is for the desktop user only', () => {
-    const env = withTwoVersions()
-    for (const caller of ['agent', 'app', 'dot', undefined]) {
-      expect(revertRoutingTable(env.ctx, { version: 1, caller })).toEqual({
-        ok: false,
-        reason: 'forbidden_caller'
-      })
-    }
-    expect(env.fs.writeLog).toEqual([])
-  })
-
-  it('refuses an unknown version and a revert to the content that is already active', () => {
-    const env = withTwoVersions()
-    expect(revertRoutingTable(env.ctx, { version: 9, caller: 'desktop_user' })).toMatchObject({
-      ok: false,
-      reason: 'version_unknown'
-    })
-    expect(revertRoutingTable(env.ctx, { version: 2, caller: 'desktop_user' })).toMatchObject({
-      ok: false,
-      reason: 'no_change'
-    })
-    expect(env.fs.writeLog).toEqual([])
-  })
-
-  it('refuses a damaged target version', () => {
-    const env = withTwoVersions()
-    env.fs.files.set(versionFilePath(1), 'corrupt')
-    expect(revertRoutingTable(env.ctx, { version: 1, caller: 'desktop_user' })).toMatchObject({
-      ok: false,
-      reason: 'routing_table_integrity_failed'
-    })
-  })
-
-  it('recovers routing when the active version is damaged but an earlier one is intact', () => {
-    const env = withTwoVersions()
-    env.fs.files.set(versionFilePath(2), 'corrupt')
-    expect(resolveActiveRoutingTable(env.ctx).ok).toBe(false)
-    expect(revertRoutingTable(env.ctx, { version: 1, caller: 'desktop_user' })).toMatchObject({
-      ok: true,
-      version: 3
-    })
-    expect(resolveActiveRoutingTable(env.ctx).ok).toBe(true)
-  })
-
-  it('refuses a target of another taxonomy', () => {
-    const first = withTwoVersions()
-    const classifierMovedOn = createTestRoutingTableEnvironment({
-      fs: first.fs,
-      expectedTaxonomyVersion: 3
-    })
-    expect(
-      revertRoutingTable(classifierMovedOn.ctx, { version: 1, caller: 'desktop_user' })
-    ).toMatchObject({
-      ok: false,
-      reason: 'routing_table_taxonomy_mismatch'
-    })
   })
 })

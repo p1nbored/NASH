@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import { ROUTING_TAXONOMY_VERSION } from '../../shared/routing-table/routing-table-taxonomy'
 import type { RoutingTable } from '../../shared/routing-table/routing-table-schema'
 import { getBundledRoutingTable } from './routing-table-bundle'
@@ -9,7 +8,7 @@ import {
   type RoutingTablePathPort
 } from './routing-table-file-store'
 
-/** Everything the activation and proposal functions need, built from ports so tests inject fakes. */
+/** Everything the activation and saving need, built from ports so tests inject fakes. */
 export type RoutingTableContext = {
   readonly store: RoutingTableFileStore
   readonly now: () => Date
@@ -17,7 +16,6 @@ export type RoutingTableContext = {
   readonly expectedTaxonomyVersion: number
   /** The default table this build ships. */
   readonly bundled: () => RoutingTable
-  readonly newProposalId: () => string
 }
 
 export function createRoutingTableContext(options: {
@@ -26,14 +24,12 @@ export function createRoutingTableContext(options: {
   now?: () => Date
   expectedTaxonomyVersion?: number
   bundled?: () => RoutingTable
-  newProposalId?: () => string
 }): RoutingTableContext {
   return {
     store: createRoutingTableFileStore({ paths: options.paths, fs: options.fs }),
     now: options.now ?? (() => new Date()),
     expectedTaxonomyVersion: options.expectedTaxonomyVersion ?? ROUTING_TAXONOMY_VERSION,
-    bundled: options.bundled ?? getBundledRoutingTable,
-    newProposalId: options.newProposalId ?? (() => randomUUID())
+    bundled: options.bundled ?? getBundledRoutingTable
   }
 }
 

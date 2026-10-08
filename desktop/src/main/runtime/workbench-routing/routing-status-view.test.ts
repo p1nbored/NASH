@@ -1,13 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { parseWorkbenchRoutingStatusView } from '../../../shared/clef/workbench-routing-status-view'
-import {
-  CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION,
-  CLEF_DECISION_THRESHOLDS,
-  CLEF_QUESTION_BUNDLE_SHA256,
-  CLEF_QUESTION_SET_VERSION,
-  CLEF_TAXONOMY_VERSION
-} from '../../clef/clef-question-set'
+import { CLEF_QUESTION_BUNDLE_SHA256 } from '../../clef/clef-question-set'
 import { CLEF_SCHEMA_PINS, createPinCheckedProfileSource } from '../../clef/clef-schema-pins'
 import { readRoutingStatusView } from './routing-status-view'
 import { createWorkbenchRoutingRuntime } from './workbench-routing-runtime'
@@ -36,11 +30,7 @@ function setup(options: Parameters<typeof createRuntimeHarness>[0] = {}) {
 
 const FIXTURE_INPUT_PIN = 'b'.repeat(64)
 const BUNDLE_FACTS = {
-  questionSetVersion: CLEF_QUESTION_SET_VERSION,
-  taxonomyVersion: CLEF_TAXONOMY_VERSION,
-  sha256: CLEF_QUESTION_BUNDLE_SHA256,
-  thresholds: { ...CLEF_DECISION_THRESHOLDS },
-  awaitingUserConfirmation: [...CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION]
+  sha256: CLEF_QUESTION_BUNDLE_SHA256
 }
 
 afterEach(() => {
@@ -57,24 +47,18 @@ describe('readRoutingStatusView', () => {
       credentials: { tokenPresent: true, accountPresent: true, protection: 'sealed' },
       profile: {
         present: true,
-        responseModelPinned: true,
         verifiedAt: '2026-10-04T11:00:00.000Z',
         verifiedAgainstBundleSha256: FIXTURE_INPUT_PIN
       },
-      bundle: BUNDLE_FACTS,
-      latches: { authFailed: false, quotaLatchedUntil: null },
-      circuit: { state: 'closed', reopensAt: null, consecutiveTransient: 0 }
+      bundle: BUNDLE_FACTS
     })
   })
 
-  it('reports the question bundle main sends: versions, hash, thresholds and pending values', () => {
+  it('reports the verification hash without the removed advanced diagnostics', () => {
     const { view } = setup()
     expect(view().bundle).toEqual(BUNDLE_FACTS)
-    expect(view().bundle.thresholds).toEqual({
-      delegationTrueMin: 0.6,
-      delegationFalseMax: 0.4,
-      taskTypeMarginMin: 0.1
-    })
+    expect(view()).not.toHaveProperty('circuit')
+    expect(view()).not.toHaveProperty('latches')
   })
 
   it('names the bundle a stored profile was verified against, even when it no longer applies', () => {
@@ -96,7 +80,6 @@ describe('readRoutingStatusView', () => {
     expect(result.status).toBe('contract_unverified')
     expect(result.profile).toEqual({
       present: false,
-      responseModelPinned: false,
       verifiedAt: null,
       verifiedAgainstBundleSha256: other
     })
@@ -145,7 +128,6 @@ describe('readRoutingStatusView', () => {
     expect(view().status).toBe('contract_unverified')
     expect(view().profile).toEqual({
       present: false,
-      responseModelPinned: false,
       verifiedAt: null,
       verifiedAgainstBundleSha256: null
     })
@@ -188,38 +170,29 @@ describe('readRoutingStatusView', () => {
     const { harness: h, view } = setup()
     h.circuit.record('auth_failed', h.credentials.generation())
     expect(view().status).toBe('auth_failed')
-    expect(view().latches.authFailed).toBe(true)
     h.credentials.rotate()
-    expect(view().latches.authFailed).toBe(false)
     expect(view().status).toBe('ready')
   })
 
-  it('reports a quota latch with its 00:00 UTC release time', () => {
+  it('reports a quota latch through the configuration status', () => {
     const { harness: h, view } = setup()
     h.circuit.record('quota_latched', h.credentials.generation())
     expect(view().status).toBe('quota_latched')
-    expect(view().latches.quotaLatchedUntil).toBe('2026-10-05T00:00:00.000Z')
   })
 
-  it('reports an open circuit with its reopen time, then the half-open probe', () => {
+  it('reports an open circuit through the configuration status', () => {
     const { harness: h, view } = setup()
     const generation = h.credentials.generation()
     for (let strike = 0; strike < 3; strike += 1) {
       h.circuit.record('transient_exhausted', generation)
     }
     expect(view().status).toBe('circuit_open')
-    expect(view().circuit).toEqual({
-      state: 'open',
-      reopensAt: '2026-10-04T12:05:00.000Z',
-      consecutiveTransient: 3
-    })
   })
 
   it('reports unreachable after a first transient failure', () => {
     const { harness: h, view } = setup()
     h.circuit.record('transient_exhausted', h.credentials.generation())
     expect(view().status).toBe('unreachable')
-    expect(view().circuit.consecutiveTransient).toBe(1)
   })
 
   it('never carries a credential, account id, URL or profile hash', () => {

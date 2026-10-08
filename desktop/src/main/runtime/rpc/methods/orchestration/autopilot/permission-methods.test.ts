@@ -41,7 +41,9 @@ describe('orchestration permission methods', () => {
   it('declares the hidden request and wait methods with the shared strict params', () => {
     expect(ORCHESTRATION_PERMISSION_METHODS.map((entry) => entry.name)).toEqual([
       'orchestration.permissionRequest',
-      'orchestration.permissionWait'
+      'orchestration.permissionWait',
+      'orchestration.permissionList',
+      'orchestration.permissionAnswer'
     ])
     expect(PERMISSION_REQUEST_METHOD.params).toBe(PermissionRequestParams)
     expect(PERMISSION_WAIT_METHOD.params).toBe(PermissionWaitParams)

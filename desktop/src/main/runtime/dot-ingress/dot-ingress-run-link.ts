@@ -4,6 +4,10 @@ import type { OrchestrationDb } from '../orchestration/db/orchestration-db'
 import { getWorkflowRunStore, type WorkflowRunRecord } from '../orchestration/db/workflow-run-store'
 import { readWorkflowRunOrigin } from '../workflow-run/workflow-run-origin'
 import { dotRefusal } from './dot-ingress-refusals'
+import {
+  dotCoordinatorAttachment,
+  dotCoordinatorControlEnabled
+} from '../orchestration/db/dot-coordinator-attachment'
 
 // Ownership (RG7, D-019): dot never names a run. A run is reached only from the dot request that
 // started it, and every cancel, message and permission answer first proves that origin.
@@ -44,6 +48,13 @@ export function findDotRequestRun(
   db: OrchestrationDb,
   record: DotRequestRecord
 ): WorkflowRunRecord | null {
+  const attached = dotCoordinatorAttachment(db, { dotRequestId: record.dotRequestId })
+  if (attached) {
+    if (!dotCoordinatorControlEnabled(db, attached.dotRequestId)) {
+      throw dotRefusal('dot_workspace_unknown')
+    }
+    return getWorkflowRunStore(db).get(attached.runId)
+  }
   const requestId = record.workbenchRequestId
   if (requestId === null || !hasAppTable(db, 'workflow_runs')) {
     return null
@@ -61,6 +72,12 @@ export function findDotRequestRun(
 
 /** The dot request that started the run, or null for a run of any other origin. */
 export function findDotRequestOfRun(db: OrchestrationDb, runId: string): DotRequestRecord | null {
+  const attached = dotCoordinatorAttachment(db, { runId })
+  if (attached) {
+    return dotCoordinatorControlEnabled(db, attached.dotRequestId)
+      ? getDotIngressStore(db).get(attached.dotRequestId)
+      : null
+  }
   if (!hasAppTable(db, 'workflow_runs') || !hasAppTable(db, 'dot_ingress_requests')) {
     return null
   }

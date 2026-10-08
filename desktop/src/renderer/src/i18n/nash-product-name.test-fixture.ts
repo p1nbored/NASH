@@ -41,9 +41,6 @@ export const KEPT_ORCA_CATALOG_KEYS: Readonly<Record<string, string>> = {
   'auto.components.artifacts.ArtifactPublishButton.accountTitle': ORCA_CLOUD,
   'auto.components.artifacts.artifact-publish-flow.bba20daa6d': ORCA_CLOUD,
   'auto.components.UnexpectedSignoutCard.c5b3e8a17d': ORCA_CLOUD,
-  'auto.components.settings.GeneralSupportSection.55a87e5fd1': UPSTREAM,
-  'auto.components.settings.GeneralSupportSection.6922c1fa2b': UPSTREAM,
-  'auto.components.settings.general.search.36a72f0d9e': UPSTREAM,
   'auto.components.StarNagCard.30c36231c1': UPSTREAM,
   'auto.components.star.nag.StarNagToastHost.body': UPSTREAM,
   'auto.components.sidebar.SidebarFeedbackDialog.a828fa4aee':

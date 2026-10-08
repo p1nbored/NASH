@@ -49,13 +49,10 @@ describe('clef startup ordering', () => {
     expect(importSpecifiers(read('clef/clef-env-scrub.ts'))).toEqual([])
   })
 
-  it('installs the sealed store in account services, before the runtime is created', () => {
-    const accountServices = body(
-      read('startup/main-process-account-services.ts'),
-      'initializeMainProcessAccountServices'
+  it('initializes account services before the runtime; sealed credentials are installed with IPC', () => {
+    expect(read('ipc/register-core-handlers/register-core-handlers.ts')).toContain(
+      'registerClefCredentialsHandlers(installClefCredentialStore()'
     )
-    expect(accountServices).toContain('installClefCredentialStore()')
-
     const readyRuntime = body(
       read('startup/main-process-ready-runtime.ts'),
       'initializeReadyRuntimeServices'

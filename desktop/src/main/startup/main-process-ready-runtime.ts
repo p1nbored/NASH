@@ -40,6 +40,8 @@ import { runAfterFirstWindowShown } from './first-window-deferral'
 import { logStartupMilestone } from './startup-diagnostics'
 import { refreshInstalledOpenCodeStatusPlugins } from '../opencode/opencode-status-plugin-startup-refresh'
 import { pruneDesktopOrcadArtifactCache } from '../orcad/orcad-artifact-cache-retention'
+import { installPermissionRelayHooks } from '../runtime/permission-relay/permission-hook-startup'
+import { localOrchestrationCliCommand } from '../runtime/orchestration/cli-command'
 
 // Headless serve never opens a window, so the sweep still has to run off a timer there.
 const WORKTREE_TRASH_SWEEP_FALLBACK_MS = 15_000
@@ -118,8 +120,9 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   nativeTheme.themeSource = store.getSettings().theme ?? 'system'
   // Why here, after PATH hydration: the first Codex launch usually finds Codex's hook hash ready,
   // and launches find the reconcile in flight before CLI detection ends.
+  const pathReady = app.isPackaged ? hydrateAgentCliShellPath() : Promise.resolve()
   startCodexHooks({
-    pathReady: app.isPackaged ? hydrateAgentCliShellPath() : Promise.resolve(),
+    pathReady,
     isEnabled: () => isAgentStatusHooksEnabledForAgent(store.getSettings(), 'codex'),
     resolveLaunchHome: () => {
       if (!state.codexRuntimeHome) {
@@ -135,9 +138,10 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   // Why skip rather than remove when the off switch is set: the hook files are user-global but this
   // decision reads only THIS profile's settings, so removing here deletes the hooks every other Orca
   // instance depends on (STA-5679). Skipping already keeps removed hooks from reappearing on launch.
+  let managedHookInstall: Promise<unknown> = Promise.resolve()
   if (shouldReconcileStartupManagedHooks) {
     const managedHookStore = store
-    void installManagedAgentHooks(managedHookStore.getSettings(), {
+    managedHookInstall = installManagedAgentHooks(managedHookStore.getSettings(), {
       shouldHydrateShellPath: app.isPackaged,
       onInstallError: recordManagedHookInstallFailure,
       shouldContinue: (agent) =>
@@ -145,6 +149,18 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
     }).catch((error: unknown) =>
       console.warn('[agent-hooks] failed to reconcile managed hooks on startup:', error)
     )
+  }
+  if (shouldInstallManagedHooks(is.dev)) {
+    void Promise.all([pathReady, managedHookInstall])
+      .then(() => {
+        if (!state.isQuitting) {
+          return installPermissionRelayHooks(localOrchestrationCliCommand())
+        }
+        return undefined
+      })
+      .catch(() =>
+        console.warn('[permission-relay] Hook startup deferred; native approval remains active.')
+      )
   }
   // Why: process-gone metrics only see survivors, and the gone-time host memory
   // read lands after the corpse released its pages; both need a live pre-gone

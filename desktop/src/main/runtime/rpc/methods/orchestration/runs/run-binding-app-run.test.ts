@@ -32,6 +32,7 @@ describe('run-create and run-use against app runs', () => {
       from: 'term_primary'
     })) as RunReceipt
     markRunAsAppRun(state.db, { runId: created.run.id, paneKey: PRIMARY_PANE_KEY })
+    state.db.createTask({ spec: 'Pending coordination work', runId: created.run.id })
     return { ...state, call, appRun: created.run }
   }
 

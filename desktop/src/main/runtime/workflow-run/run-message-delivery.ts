@@ -29,7 +29,9 @@ import {
 } from './run-message-scheduling'
 import { sendRunMessageToPrimary } from './run-message-sender'
 import { prepareRunMessageText, runMessageTextSha256 } from './run-message-text-checks'
-import { readWorkflowRunOrigin } from './workflow-run-origin'
+import { readWorkflowRunController as readWorkflowRunOrigin } from './workflow-run-origin'
+import { runMessageSourceAllowed } from './run-message-authority'
+import { OrchestrationError } from '../orchestration/orchestration-error'
 
 /** D-027: no hold cap or hold limit; a flush types held messages a page at a time, oldest first. */
 export const RUN_MESSAGE_FLUSH_PAGE = 50
@@ -138,8 +140,15 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
     clock,
     heldLimit: RUN_MESSAGE_FLUSH_PAGE,
     readLivePrimary,
-    send: (handle: string, text: string) =>
-      sendRunMessageToPrimary(terminal, handle, text, deps.newRequestId()),
+    send: (handle: string, text: string, record: RunMessageRecord) =>
+      sendRunMessageToPrimary(terminal, handle, text, deps.newRequestId(), () => {
+        if (!runMessageSourceAllowed(db, record)) {
+          throw new OrchestrationError(
+            'run_not_owned_by_source',
+            'Dot control of this run was revoked.'
+          )
+        }
+      }),
     arm: (runId: string) => flushTimers.arm(runId, () => scheduleFlush(runId)),
     cancel: (runId: string) => flushTimers.cancel(runId)
   }
@@ -157,6 +166,10 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
     const existing = messages.findBySource(input.source, input.sourceRequestId)
     if (existing) {
       const sameRequest = existing.runId === input.runId && existing.textSha256 === textSha256
+      if (sameRequest && existing.state === 'held') {
+        await flushHeldRunMessages(flushContext, input.runId)
+        return deliveryResultOf(messages.get(existing.messageId) ?? existing, true)
+      }
       return sameRequest ? deliveryResultOf(existing, true) : unstored('request_id_reused')
     }
     const run = getWorkflowRunStore(db).get(input.runId)
@@ -203,7 +216,7 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
       return deliveryResultOf(record)
     }
     const record = messages.recordReceived({ ...base, text })
-    const sent = await flushContext.send(primary.handle, text)
+    const sent = await flushContext.send(primary.handle, text, record)
     return deliveryResultOf(settleRunMessageSend(flushContext, record, sent, primary.activity))
   }
 
@@ -230,6 +243,9 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
           reason: 'delivery_unconfirmed',
           timestamp: now()
         })
+      }
+      for (const runId of messages.listHeldRunIds()) {
+        flushContext.arm(runId)
       }
       return interrupted.length
     },

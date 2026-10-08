@@ -3,6 +3,7 @@ import {
   PermissionRequestParams,
   type PermissionRequestInput
 } from '../../../shared/rpc-contract/permission-relay-params'
+import { permissionProviderPayload, type PermissionProvider } from './permission-provider'
 
 const IDENTIFIER = /^[A-Za-z0-9_.:-]{1,128}$/
 const CWD_MAX_CHARS = 4096
@@ -20,7 +21,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function parsePermissionHookInput(
   stdin: string,
   requestSha256: string,
-  waitBudgetMs: number
+  waitBudgetMs: number,
+  provider: PermissionProvider = 'claude'
 ): PermissionRequestInput | null {
   let payload: unknown
   try {
@@ -28,7 +30,11 @@ export function parsePermissionHookInput(
   } catch {
     return null
   }
-  if (!isRecord(payload) || payload.hook_event_name !== 'PermissionRequest') {
+  if (!isRecord(payload)) {
+    return null
+  }
+  payload = permissionProviderPayload(payload, provider)
+  if (!isRecord(payload)) {
     return null
   }
   const toolInput = isRecord(payload.tool_input) ? payload.tool_input : {}

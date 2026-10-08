@@ -1,7 +1,7 @@
 // Run, owner and permission tables of the autopilot_runtime_schema family (D-016 plan 1.2).
 // Orca ids are kept as plain text with no foreign key to an Orca table, because Orca's reset deletes those rows.
 import {
-  PERMISSION_DECISION_DECIDERS,
+  PERMISSION_DECISION_STORED_DECIDERS as PERMISSION_DECISION_DECIDERS,
   PERMISSION_DECISION_STATUSES
 } from '../../../../shared/rpc-contract/permission-decision-values'
 
@@ -145,7 +145,7 @@ export const AUTOPILOT_RUN_SCHEMA_DEFINITIONS = [
       CHECK (deadline_at > created_at),
       CHECK (
         (status = 'pending' AND decided_by IS NULL AND decided_at IS NULL)
-        OR (status IN ('allowed', 'denied') AND decided_by IN ('dot', 'desktop') AND decided_at IS NOT NULL)
+        OR (status IN ('allowed', 'denied') AND decided_by IN ('dot', 'desktop', 'primary') AND decided_at IS NOT NULL)
         OR (status = 'answered_in_terminal' AND decided_by = 'terminal' AND decided_at IS NOT NULL)
         OR (status = 'expired' AND decided_by IS NULL AND decided_at IS NOT NULL)
       )

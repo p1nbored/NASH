@@ -1,6 +1,10 @@
 import { DOT_INGRESS_PRINCIPAL_ID } from '../../../shared/dot-ingress/dot-ingress-limits'
 import type { OrchestrationDb } from '../orchestration/db'
 import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
+import {
+  dotCoordinatorAttachment,
+  dotCoordinatorControlEnabled
+} from '../orchestration/db/dot-coordinator-attachment'
 
 /** Who submitted the request a run was started for. */
 export type WorkflowRunOrigin = 'dot' | 'desktop' | 'unknown'
@@ -31,12 +35,15 @@ function intakePrincipal(db: OrchestrationDb, requestId: string): string | null 
 }
 
 function hasDotIngressLink(db: OrchestrationDb, requestId: string): boolean {
+  const excludeTakeover = tableExists(db, 'dot_coordinator_attachments')
+    ? ' AND NOT EXISTS (SELECT 1 FROM dot_coordinator_attachments a WHERE a.dot_request_id = dot_ingress_requests.dot_request_id)'
+    : ''
   return (
     tableExists(db, 'dot_ingress_requests') &&
     Boolean(
       db.db
         .prepare(
-          'SELECT 1 AS found FROM dot_ingress_requests WHERE workbench_request_id = ? LIMIT 1'
+          `SELECT 1 AS found FROM dot_ingress_requests WHERE workbench_request_id = ?${excludeTakeover} LIMIT 1`
         )
         .get(requestId)
     )
@@ -59,4 +66,16 @@ export function readWorkflowRunOrigin(db: OrchestrationDb, runId: string): Workf
   const origin: WorkflowRunOrigin =
     dotEvidence === desktopEvidence ? 'unknown' : dotEvidence ? 'dot' : 'desktop'
   return { found: true, origin, requestId: run.requestId }
+}
+
+/** Explicit takeover changes who may control the run, while retaining its original provenance. */
+export function readWorkflowRunController(
+  db: OrchestrationDb,
+  runId: string
+): WorkflowRunOriginRead {
+  const origin = readWorkflowRunOrigin(db, runId)
+  const attached = dotCoordinatorAttachment(db, { runId })
+  return origin.found && attached && dotCoordinatorControlEnabled(db, attached.dotRequestId)
+    ? { ...origin, origin: 'dot' }
+    : origin
 }

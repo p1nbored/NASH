@@ -102,6 +102,9 @@ export function createPrimarySessionStopper(deps: PrimarySessionStopperDeps) {
     owner: PrimarySessionRecord,
     reason: string
   ): Promise<PrimarySessionStopResult> {
+    if (owner.receipt?.nativeCoordinator === true) {
+      return refused('autopilot_native_coordinator_user_owned', owner)
+    }
     if (!ReasonCodeSchema.safeParse(reason).success) {
       return refused('autopilot_invalid_reason', owner)
     }

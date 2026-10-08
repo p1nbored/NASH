@@ -13,14 +13,16 @@ import {
 } from './autopilot-cli-commands'
 
 describe('autopilot CLI command vocabulary', () => {
-  it('names exactly the five agent-facing task commands under the orchestration group', () => {
+  it('names the task commands and scoped child permission review commands', () => {
     expect(AUTOPILOT_CLI_GROUP).toBe('orchestration')
     expect([...AUTOPILOT_AGENT_COMMANDS]).toEqual([
       'task-propose',
       'task-start',
       'task-show',
       'task-report',
-      'run-complete'
+      'run-complete',
+      'permission-list',
+      'permission-answer'
     ])
   })
 
@@ -47,7 +49,9 @@ describe('autopilot CLI command vocabulary', () => {
       'Bash(orca orchestration task-start *)',
       'Bash(orca orchestration task-show *)',
       'Bash(orca orchestration task-report *)',
-      'Bash(orca orchestration run-complete *)'
+      'Bash(orca orchestration run-complete *)',
+      'Bash(orca orchestration permission-list *)',
+      'Bash(orca orchestration permission-answer *)'
     ])
   })
 

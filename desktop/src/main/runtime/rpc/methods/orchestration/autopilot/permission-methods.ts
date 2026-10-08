@@ -1,6 +1,8 @@
 import {
   PermissionRequestParams,
-  PermissionWaitParams
+  PermissionWaitParams,
+  WorkbenchPermissionAnswerParams,
+  PermissionListParams
 } from '../../../../../../shared/rpc-contract/permission-relay-params'
 import { requirePermissionRelay } from '../../../../permission-relay/permission-relay-registry'
 import { defineMethod } from '../../../core'
@@ -31,4 +33,26 @@ export const PERMISSION_WAIT_METHOD = defineMethod({
     )
 })
 
-export const ORCHESTRATION_PERMISSION_METHODS = [PERMISSION_REQUEST_METHOD, PERMISSION_WAIT_METHOD]
+export const PERMISSION_LIST_METHOD = defineMethod({
+  name: 'orchestration.permissionList',
+  params: PermissionListParams,
+  handler: (_params, context) =>
+    requirePermissionRelay(context.runtime).listForPrimary(
+      context.orchestrationCompatibilityEvidence
+    )
+})
+export const PERMISSION_ANSWER_METHOD = defineMethod({
+  name: 'orchestration.permissionAnswer',
+  params: WorkbenchPermissionAnswerParams,
+  handler: (params, context) =>
+    requirePermissionRelay(context.runtime).answerFromPrimary(
+      context.orchestrationCompatibilityEvidence,
+      params
+    )
+})
+export const ORCHESTRATION_PERMISSION_METHODS = [
+  PERMISSION_REQUEST_METHOD,
+  PERMISSION_WAIT_METHOD,
+  PERMISSION_LIST_METHOD,
+  PERMISSION_ANSWER_METHOD
+]

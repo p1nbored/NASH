@@ -3,15 +3,16 @@ import { translate } from '@/i18n/i18n'
 import type { SettingsSearchEntry } from './settings-search'
 import { translateSearchKeyword } from './settings-search-keywords'
 
-/** Settings search for the Task routing category: the Clef classifier and the Routing Table. */
+/** Settings search for the Task routing category: the classifier and the Routing Table. */
 export const getTaskRoutingSearchEntries = createLocalizedCatalog((): SettingsSearchEntry[] => [
   {
-    title: translate('auto.components.settings.clef.card.title', 'Clef'),
+    title: translate('auto.components.settings.clef.card.title', 'Classifier'),
     description: translate(
       'auto.components.settings.integrations.search.clefRoutingDescription',
-      'Save the Clef API token and account ID used to route Workbench requests.'
+      'Save the classifier API token and account ID used to route Workbench requests.'
     ),
     keywords: [
+      ...translateSearchKeyword('auto.components.settings.clef.card.title', 'Classifier'),
       ...translateSearchKeyword('auto.components.settings.integrations.search.clef', 'clef', {
         englishOnly: true
       }),
@@ -43,7 +44,7 @@ export const getTaskRoutingSearchEntries = createLocalizedCatalog((): SettingsSe
     title: translate('auto.components.settings.routingTable.card.title', 'Agents for each task'),
     description: translate(
       'auto.components.settings.taskRouting.search.agentsDescription',
-      'Choose the agent, model and effort for each kind of task, and accept or reject suggested changes.'
+      'Choose the agent, model and effort for each kind of task.'
     ),
     keywords: [
       ...translateSearchKeyword(
@@ -54,10 +55,6 @@ export const getTaskRoutingSearchEntries = createLocalizedCatalog((): SettingsSe
       ...translateSearchKeyword(
         'auto.components.settings.integrations.search.reasoning',
         'reasoning'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.integrations.search.proposal',
-        'proposal'
       ),
       ...translateSearchKeyword(
         'auto.components.settings.integrations.search.executor',

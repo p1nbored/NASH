@@ -253,9 +253,13 @@ describe('run message delivery', () => {
     const fromDot = (id: string) =>
       delivery.deliver({ runId, source: 'dot', sourceRequestId: id, text: 'Hi from dot.' })
 
-    it('accepts a run whose intake principal is dot', async () => {
+    it('refuses an origin-only Dot record without current workspace control', async () => {
       recordIntakePrincipal(db, getWorkflowRunStore(db).get(runId)!.requestId, 'dot-ingress')
-      await expect(fromDot('d1')).resolves.toMatchObject({ outcome: 'delivered' })
+      await expect(fromDot('d1')).resolves.toMatchObject({
+        outcome: 'refused',
+        reason: 'run_not_owned_by_source'
+      })
+      expect(getRunMessageStore(db).findBySource('dot', 'd1')?.state).toBe('refused')
     })
 
     it.each(['local-desktop-ui', null])('refuses a run with principal %s', async (principal) => {

@@ -1530,7 +1530,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "logotipo de NASH",
         "ce44fad849": "Dependencias faltantes",
-        "c1cf168479": "Ocultar",
         "00cee697c1": "Ejecuta \"gh auth login\" en una terminal para conectar tu cuenta de GitHub.",
         "9f96d018b7": "La CLI de GitHub no está autenticada",
         "73e1ad4282": "NASH usa GitHub CLI (gh) para mostrar pull requests, issues y checks.",
@@ -1540,9 +1539,6 @@
         "cd21242762": "Agrega un proyecto para comenzar.",
         "9c00bd4adf": "Selecciona un espacio de trabajo en la barra lateral para comenzar.",
         "16e9e3df89": "con estrella",
-        "0d0ace8861": "Dar estrella en GitHub",
-        "ec43b38ba7": "Con estrella en GitHub",
-        "157bb5ecbb": "Abrir GitHub",
         "preflightDismiss": "Descartar"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7377,20 +7373,12 @@
           "confirm_running_terminal_close_description": "Pregunte antes de detener un agente o comando en ejecución al cerrar una terminal."
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "¡Gracias por el apoyo!",
-          "6922c1fa2b": "Dale una estrella a Orca en GitHub",
-          "511782265b": "Apoya el proyecto con una estrella de GitHub mediante la CLI gh.",
-          "55a87e5fd1": "Apoya a Orca",
-          "964acc6bb4": "Dar una estrella",
           "73b327e793": "Intentar otra vez",
           "c9f96d4234": "error",
-          "397719bee5": "Dando una estrella...",
           "1e29570462": "dando estrella",
           "9d181300e3": "con estrella",
           "5c49f02662": "oculto",
-          "b3f0584f5d": "cargando",
-          "cb65c75b11": "Abriendo...",
-          "f2d4f877b2": "Abrir GitHub"
+          "b3f0584f5d": "cargando"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "Notas de la versión",
@@ -9775,13 +9763,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "me gusta",
-            "e6b01c8e30": "comentarios",
-            "b65665703a": "soporte",
-            "06ea5a69a6": "github",
-            "e4fb4516d0": "estrella",
-            "e0b8c8bc25": "Apoya el proyecto con una estrella de GitHub mediante la CLI gh.",
-            "36a72f0d9e": "Dar una estrella a Orca en GitHub",
             "c61b14be7c": "grok",
             "5d9ba08673": "copiloto",
             "f472e97440": "aider",
@@ -10073,13 +10054,12 @@
             "model": "modelo",
             "reasoning": "razonamiento",
             "pairing": "vinculación",
-            "clefRoutingDescription": "Guarda el token de la API de Clef y el ID de cuenta usados para asignar las solicitudes de Workbench.",
+            "clefRoutingDescription": "Guarda el token de la API del clasificador y el ID de cuenta usados para asignar las solicitudes de Workbench.",
             "clef": "clef",
             "cloudflare": "cloudflare",
             "workbench": "workbench",
             "accountId": "id de cuenta",
             "routingTableKeyword": "tabla de asignación",
-            "proposal": "propuesta",
             "executor": "ejecutor",
             "dotIngress": "Tareas de dot",
             "dotIngressDescription": "Activa o desactiva la interfaz local de dot, elige los espacios de trabajo que dot puede usar y su acceso máximo, y establece límites de envío.",
@@ -12256,12 +12236,6 @@
               "resultNotUsable": "Ese resultado no se puede usar.",
               "resultWriteFailed": "No se pudo guardar el resultado. Inténtalo de nuevo."
             },
-            "pending": {
-              "title": "Pendiente de tu confirmación",
-              "thresholds": "Umbrales de confianza: una tarea se considera delegada con {{yes}} o más y conservada con {{no}} o menos; su tipo de tarea debe superar al segundo por {{margin}}.",
-              "wording": "Texto de las respuestas: las {{options}} opciones de tipo de tarea y las {{answers}} respuestas de delegación.",
-              "effectPlain": "Estos son valores predeterminados. Cambiar uno requiere volver a verificar Clef."
-            },
             "report": {
               "failedReason": "{{reason}}: {{detail}}.",
               "titlePlain": "Resultado de la verificación",
@@ -12299,18 +12273,15 @@
             "savedPlain": "Guardado. El token no volverá a mostrarse."
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef clasifica cada tarea por tipo para enviarla al agente elegido para ese tipo."
+            "title": "Clasificador",
+            "descriptionPlain": "El clasificador organiza cada tarea por tipo para enviarla al agente elegido para ese tipo."
           }
         },
         "routingTable": {
           "card": {
             "blocked": "Bloqueado",
-            "refresh": "Actualizar",
             "unavailable": "No disponible",
             "blockedTitle": "La asignación está bloqueada",
-            "pendingNotice": "Cambios sugeridos para revisar: {{count}}",
-            "review": "Revisar",
             "title": "Agentes para cada tarea"
           },
           "availability": {
@@ -12342,75 +12313,19 @@
             "checksUnavailablePlain": "Las comprobaciones de disponibilidad no están disponibles en este momento. Reinicia la aplicación.",
             "checkPlain": "Comprobar disponibilidad"
           },
-          "proposals": {
-            "none": "ninguno",
-            "evidence": "Fuentes: {{sources}}",
-            "becomes": "pasa a ser",
-            "noReviewers": "sin revisores",
-            "coordinator": "Principal",
-            "staleTitle": "Creado para una versión anterior",
-            "accept": "Aceptar",
-            "edit": "Editar y aceptar",
-            "reject": "Rechazar",
-            "noRowPlain": "sin configurar",
-            "notesOnlyPlain": "La misma elección; solo cambian sus notas.",
-            "metaPlain": "{{time}} · basado en la versión {{version}}",
-            "staleBodyPlain": "Ahora se usa la versión {{active}}, por lo que esto ya no se puede aceptar. Recházalo o vuelve a hacer el cambio en la lista de arriba.",
-            "historyPlain": "Decididos ({{count}})",
-            "pendingTitlePlain": "Cambios sugeridos",
-            "noneWaitingPlain": "No hay ninguno pendiente. Nada cambia hasta que aceptes una sugerencia."
-          },
-          "versions": {
-            "cancel": "Cancelar",
-            "title": "Historial de versiones",
-            "version": "Versión {{version}}",
-            "active": "(activa)",
-            "revertTo": "Volver a la versión {{version}}",
-            "revert": "Revertir",
-            "confirmTitle": "¿Volver a la versión {{version}}?",
-            "confirmBody": "El contenido de la versión {{version}} pasa a ser una nueva versión activa. La versión {{active}} permanece en el historial para que puedas volver a ella."
-          },
           "editor": {
-            "model": "Modelo",
-            "cancel": "Cancelar",
-            "agent": "Agente",
-            "effort": "Esfuerzo",
-            "coordinator": "Principal",
-            "coordinatorModel": "Modelo principal",
-            "taskType": "Tipo de tarea",
-            "requirement": "Requisito",
-            "required": "Obligatorio",
-            "whenSupported": "Cuando sea compatible",
-            "modelFor": "Modelo para {{task}}",
-            "acceptModified": "Aceptar con cambios",
             "geminiExcluded": "Los modelos Gemini 4 están excluidos de la asignación.",
             "aliasUnpinned": "Introduce un ID de modelo exacto, no un alias como opus o latest.",
             "slugRejected": "Este ID de modelo está retirado o rechazado. Introduce otro ID de modelo exacto.",
             "modelInvalid": "Introduce un ID de modelo exacto para la CLI seleccionada.",
-            "onlyPrimaryInherits": "Solo la sesión principal y los flujos de Claude pueden heredar la configuración principal.",
-            "primaryInherits": "La sesión principal siempre usa la configuración principal: establece el modelo y el razonamiento en Heredar.",
-            "coordinatorStays": "El razonamiento principal siempre permanece en la sesión principal.",
+            "onlyPrimaryInherits": "Solo la sesión del coordinador y los flujos de Claude pueden heredar la configuración del coordinador.",
+            "primaryInherits": "La sesión del coordinador siempre usa la configuración del coordinador: establece el modelo y el razonamiento en Heredar.",
+            "coordinatorStays": "El razonamiento del coordinador siempre permanece en la sesión del coordinador.",
             "ifSupportedConcrete": "«Cuando sea compatible» requiere un nivel de razonamiento concreto, no Heredar.",
             "rowInvalid": "Esta fila no es válida. Comprueba su destino, modelo y nivel de razonamiento.",
             "nothingChanged": "Esto deja la tabla activa sin cambios. Edita al menos una asignación primero.",
-            "modifyTitlePlain": "Editar antes de aceptar",
-            "modifyBodyPlain": "Tus ediciones sustituyen el cambio sugerido. Al aceptarlas, entran en uso.",
-            "agentFor": "Agente para {{task}}",
-            "effortFor": "Esfuerzo para {{task}}",
-            "effortRequirementFor": "Requisito de esfuerzo para {{task}}",
-            "primaryCli": "CLI principal"
-          },
-          "import": {
-            "cancel": "Cancelar",
-            "submitPlain": "Importar",
-            "title": "Importar un conjunto de cambios",
-            "jsonLabel": "Conjunto de cambios (JSON)",
-            "reasonLabel": "Motivo del cambio",
-            "reasonMissing": "Introduce un motivo breve en inglés para el cambio.",
-            "bodyPlain": "Se añade a Cambios sugeridos, donde puedes revisarlo y aceptarlo.",
-            "noActivePlain": "La asignación de tareas no está disponible, así que no se puede importar nada.",
-            "notJsonPlain": "Este JSON no es válido. Pega el conjunto de cambios completo.",
-            "invalidPlain": "Este conjunto de cambios contiene un valor que no se puede usar. Comprueba cada agente, modelo y esfuerzo."
+            "primaryCli": "CLI del coordinador",
+            "coordinatorModel": "Modelo del coordinador"
           },
           "labels": {
             "none": "Ninguno",
@@ -12421,8 +12336,7 @@
             "xhigh": "Muy alto",
             "max": "Máximo",
             "ultra": "Ultra",
-            "agent": "Agente",
-            "coordinatorReasoning": "Razonamiento principal",
+            "coordinatorReasoning": "Razonamiento del coordinador",
             "complexPlanningReasoning": "Planificación y razonamiento complejos",
             "softwareEngineering": "Ingeniería de software",
             "scientificExperimentValidation": "Validación de experimentos científicos",
@@ -12432,7 +12346,7 @@
             "highQualityWriting": "Redacción de alta calidad",
             "fastWritingOrAlternativeDraft": "Redacción rápida o borrador alternativo",
             "configuredProjectWorkflow": "Flujo de trabajo del proyecto configurado",
-            "claudePrimary": "Sesión principal",
+            "claudePrimary": "Sesión del coordinador",
             "claudeSubagent": "Subagente de Claude",
             "claudeWorkflow": "Flujo de trabajo de Claude",
             "codexCli": "CLI de Codex",
@@ -12440,70 +12354,37 @@
             "claudeHeadless": "Revisión de Claude sin interfaz",
             "inherit": "Heredar",
             "whenSupported": "(cuando sea compatible)",
-            "bundledUpdate": "Actualización de la aplicación",
-            "benchmarkReview": "Revisión de pruebas comparativas",
-            "userImport": "Tu cambio",
-            "accepted": "Aceptado",
-            "acceptedModified": "Aceptado con cambios",
-            "rejected": "Rechazado",
-            "superseded": "Sustituido",
-            "sourceBundled": "Valor predeterminado de la aplicación",
-            "sourceUser": "Tu tabla",
-            "sameAsCoordinator": "Igual que el principal"
+            "sameAsCoordinator": "Igual que el coordinador"
           },
           "inline": {
             "edit": "Editar",
-            "reviewersTitle": "Revisores",
             "save": "Guardar",
             "cancel": "Cancelar",
             "reviewersHelp": "Revisa el trabajo terminado que no tiene una comprobación automática.",
             "noReviewers": "No hay revisores, por lo que el trabajo sin una comprobación automática no se puede revisar.",
             "reviewer": "Revisor {{number}}",
             "editFor": "Editar {{task}}",
-            "coordinator": "Principal",
+            "coordinator": "Coordinador",
             "listLabel": "Agente para cada tarea",
             "agentFor": "Agente para {{task}}",
             "modelFor": "Modelo para {{task}}",
             "effortFor": "Esfuerzo para {{task}}",
             "onlyIfSupported": "Solo si el modelo lo admite",
-            "coordinatorEffort": "Esfuerzo principal"
-          },
-          "advanced": {
-            "import": "Importar…",
-            "unreadable": "Cambios sugeridos que no se pudieron leer: {{count}}",
-            "importLabel": "Importar un conjunto de cambios",
-            "importDescription": "Pega la asignación en formato JSON. Quedará en Cambios sugeridos hasta que la aceptes."
-          },
-          "active": {
-            "versionActive": "Versión {{version}} activa",
-            "created": "creada {{time}}"
+            "coordinatorEffort": "Esfuerzo del coordinador",
+            "reviewersTitle": "Revisores"
           },
           "notices": {
-            "activated": "La versión {{version}} ya está activa.",
-            "reverted": "La versión {{version}} ya está activa, con el contenido de la versión {{from}}.",
-            "rejectedPlain": "Cambio sugerido rechazado.",
-            "importedPlain": "Añadido a Cambios sugeridos. Acéptalo allí para usarlo.",
             "saved": "Guardado."
           },
           "refusals": {
-            "duplicateActivePlain": "Estas opciones ya están en uso, así que no se guardó nada.",
-            "duplicatePendingPlain": "El mismo cambio ya está pendiente en Cambios sugeridos. Revísalo allí.",
             "integrityFailedPlain": "No se pudo leer la asignación de tareas guardada, así que no se asigna ninguna tarea. No se usa un valor predeterminado en su lugar.",
-            "taxonomyMismatchPlain": "La asignación de tareas guardada se creó para otra lista de tareas, así que no se puede usar. Importa una asignación para las tareas actuales en Avanzado.",
+            "taxonomyMismatchPlain": "La asignación de tareas guardada se creó para una lista de tareas distinta, por lo que no se puede usar.",
             "notInstalledPlain": "La asignación de tareas aún no está configurada. Reinicia la aplicación para instalar los valores predeterminados.",
             "invalidTablePlain": "Este cambio dejaría la asignación de tareas en un estado no válido, así que no se guardó.",
             "versionConflictPlain": "La asignación de tareas cambió mientras se guardaba. Inténtalo de nuevo.",
             "forbiddenCallerPlain": "La asignación de tareas solo se puede cambiar en esta aplicación.",
-            "proposalUnknownPlain": "Este cambio sugerido ya no existe.",
-            "proposalInvalidPlain": "No se puede leer este cambio sugerido, así que no se puede aceptar.",
-            "alreadyDecidedPlain": "Ya se tomó una decisión sobre este cambio sugerido.",
-            "proposalSupersededPlain": "Este cambio sugerido se creó para opciones anteriores, así que se dejó de lado y nada cambió.",
             "noChangePlain": "Esto mantiene todas las opciones como están, así que nada cambió.",
-            "forbiddenProposerPlain": "No se puede enviar este tipo de cambio aquí.",
-            "invalidProposalPlain": "Este cambio no es válido, así que no se guardó.",
             "baseNotActivePlain": "La asignación de tareas cambió después de preparar esto. Inténtalo de nuevo.",
-            "tooManyPendingPlain": "Hay demasiados cambios sugeridos pendientes. Acepta o rechaza algunos en Avanzado primero.",
-            "versionUnknownPlain": "Esa versión anterior ya no existe.",
             "unknownPlain": "La asignación de tareas rechazó este cambio.",
             "invalidResponsePlain": "No se pudo leer aquí la respuesta de la aplicación.",
             "notConnectedPlain": "La asignación de tareas no está disponible en esta compilación.",
@@ -12712,13 +12593,10 @@
           "agyHintPlain": "Usa Actualizar consumo mientras el indicador de agy esté activado en la barra de estado.",
           "bodyPlain": "Cada lectura procede de la propia CLI, nunca de un inicio de sesión."
         },
-        "advancedDisclosure": {
-          "label": "Avanzado"
-        },
         "taskRouting": {
           "search": {
             "agent": "agente",
-            "agentsDescription": "Elige el agente, el modelo y el esfuerzo para cada tipo de tarea, y acepta o rechaza los cambios sugeridos.",
+            "agentsDescription": "Elige el agente, el modelo y el esfuerzo para cada tipo de tarea.",
             "effort": "esfuerzo"
           }
         },

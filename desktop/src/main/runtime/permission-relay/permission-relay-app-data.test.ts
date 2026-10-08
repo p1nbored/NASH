@@ -25,7 +25,7 @@ describe("permission relay: the app's own data folder stays on the desktop (M3)"
     vi.useRealTimers()
   })
 
-  it('marks a prompt under the data folder desktop-only and never lists it for dot', () => {
+  it('requires the user for an app-data prompt and offers its redacted summary to dot', () => {
     const result = harness.service.request(
       FIXTURE_EVIDENCE,
       relayRequest({ toolName: 'Read', toolInput: { file_path: `${USER_DATA}\\orchestration.db` } })
@@ -33,7 +33,10 @@ describe("permission relay: the app's own data folder stays on the desktop (M3)"
     expect(result.outcome).toBe('relayed')
     const id = result.outcome === 'relayed' ? result.decisionId : 'missing'
     expect(harness.store.get(id)?.summary.startsWith('Desktop only. ')).toBe(true)
-    expect(harness.service.listForDot('run_fixture01', { limit: 10 })).toEqual([])
+    expect(
+      harness.service.listForDot('run_fixture01', { limit: 10 }).map((record) => record.decisionId)
+    ).toEqual([id])
+    expect(() => harness.service.answerFromDot({ decisionId: id, decision: 'allow' })).toThrow()
   })
 
   it('reads the data folder from the app environment for the production wiring', () => {

@@ -59,7 +59,7 @@ export const PermissionAnswerSchema = z
   .object({
     decisionId: AutopilotIdSchema,
     decision: z.enum(['allowed', 'denied']),
-    decidedBy: z.enum(['dot', 'desktop']),
+    decidedBy: z.enum(['dot', 'desktop', 'primary']),
     timestamp: UtcTimestampSchema
   })
   .strict()

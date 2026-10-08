@@ -21,7 +21,7 @@ import { createRouteResolver, type RouteResolver } from './route-resolver'
  */
 export type RoutingTableRuntimePorts = {
   readonly now: () => number
-  /** The routing-table store and clock; the same context the activation and proposal code uses. */
+  /** The routing-table store and clock, also used by settings saves. */
   readonly routingTable: RoutingTableContext
   /**
    * Where availability keeps its latches: the same user data folder as the table. `createNodeAvailabilityFs()`

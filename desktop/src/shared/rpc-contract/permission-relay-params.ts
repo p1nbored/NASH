@@ -67,6 +67,7 @@ export const PermissionWaitParams = z
   })
   .strict()
 export type PermissionWaitInput = z.infer<typeof PermissionWaitParams>
+export const PermissionListParams = z.object({}).strict()
 
 const PermissionHookDecisionSchema = z.discriminatedUnion('behavior', [
   z.object({ behavior: z.literal('allow') }).strict(),
@@ -126,6 +127,7 @@ export const WorkbenchPermissionDecisionViewSchema = z
     summary: z.string().min(1).max(1000),
     status: z.enum(PERMISSION_DECISION_VIEW_STATUSES),
     decidedBy: z.enum(PERMISSION_DECISION_DECIDERS).nullable(),
+    reviewedBy: z.literal('primary').optional(),
     createdAt: Timestamp,
     deadlineAt: Timestamp,
     decidedAt: Timestamp.nullable(),

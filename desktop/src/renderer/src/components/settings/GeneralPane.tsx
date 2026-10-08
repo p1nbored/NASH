@@ -3,7 +3,6 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import { useAppStore } from '../../store'
 import { CliSection } from './CliSection'
 import { GeneralEditorSettingsSection } from './GeneralEditorSettingsSection'
-import { GeneralSupportSection } from './GeneralSupportSection'
 import { GeneralUpdateSettingsSection } from './GeneralUpdateSettingsSection'
 import { GeneralWorkspaceSettingsSection } from './GeneralWorkspaceSettingsSection'
 import {
@@ -11,7 +10,6 @@ import {
   getGeneralEditorSearchEntries,
   getGeneralNavigationSearchEntries,
   getGeneralPaneSearchEntries,
-  getGeneralSupportSearchEntries,
   getGeneralUpdateSearchEntries,
   getGeneralWorkspaceSearchEntries
 } from './general-search'
@@ -275,20 +273,11 @@ export function GeneralPane({
     matchesSettingsSearch(searchQuery, getGeneralUpdateSearchEntries()) ? (
       <GeneralUpdateSettingsSection key="updates" />
     ) : null
-    // Note: the Support section is rendered outside this array so it can own
-    // its own loading placeholder and its own collapsing Separator. Without
-    // that separation, a dangling divider would remain above the collapsed
-    // section.
   ]
 
   return (
     <div className="space-y-6">
       <SettingsSectionStack sections={visibleSections} spacing="section" />
-      {matchesSettingsSearch(searchQuery, getGeneralSupportSearchEntries()) ? (
-        <GeneralSupportSection
-          hasPrecedingSections={visibleSections.some((section) => section !== null)}
-        />
-      ) : null}
     </div>
   )
 }

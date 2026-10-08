@@ -2,11 +2,6 @@ import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 import {
-  ProposalIdSchema,
-  StoredProposalSchema,
-  type StoredProposal
-} from '../../shared/routing-table/routing-table-proposal-schema'
-import {
   ROUTING_TABLE_SCHEMA_VERSION,
   RoutingTableSchema,
   Sha256HexSchema,
@@ -15,16 +10,13 @@ import {
 import { writeFileAtomically } from '../codex-accounts/fs-utils'
 import { parseRoutingTableText, routingTableFileText } from './routing-table-bundle'
 
-/** Raw file access for the routing-table folder: the index, immutable versions and proposals. */
+/** Raw file access for the routing-table folder: the index, immutable versions. */
 
 export const ROUTING_TABLE_DIR_NAME = 'routing-table'
 const INDEX_FILE_NAME = 'index.json'
 const VERSIONS_DIR_NAME = 'versions'
-const PROPOSALS_DIR_NAME = 'proposals'
 // Why: the index grows by one short entry per accepted version, so this is never reached in practice.
 const MAX_INDEX_BYTES = 4 * 1024 * 1024
-const MAX_PROPOSAL_BYTES = 64 * 1024
-const PROPOSAL_FILE = /^([A-Za-z0-9_-]{8,64})\.json$/
 
 /** The app's user data folder, injected so this module never names an application folder. */
 export type RoutingTablePathPort = { readonly getUserDataPath: () => string }
@@ -72,7 +64,11 @@ const IndexEntrySchema = z
     sha256: Sha256HexSchema,
     source: z.enum(['bundled', 'user']),
     accepted_at: z.iso.datetime({ offset: true }),
-    proposal_id: ProposalIdSchema.nullable()
+    /** Read historical index entries; new saves leave this legacy field null. */
+    proposal_id: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{8,64}$/)
+      .nullable()
   })
   .strict()
 
@@ -80,7 +76,7 @@ export const RoutingTableIndexSchema = z
   .object({
     schema_version: z.literal(ROUTING_TABLE_SCHEMA_VERSION),
     active_version: z.number().int().min(1),
-    /** The newest bundled table version this install has installed or been offered as a proposal. */
+    /** Retained so existing version indexes remain readable. */
     bundled_version_seen: z.number().int().min(0),
     versions: z.array(IndexEntrySchema).min(1)
   })
@@ -119,9 +115,6 @@ export type RoutingTableFileStore = {
   writeVersion(table: RoutingTable): void
   /** True when an index or any version file exists, so first-start installation cannot overwrite them. */
   hasAnyStoredFile(): boolean
-  readProposal(proposalId: string): FileRead<StoredProposal>
-  writeProposal(stored: StoredProposal): void
-  listProposalIds(): string[]
 }
 
 function versionFileName(version: number): string {
@@ -211,34 +204,6 @@ export function createRoutingTableFileStore(options: {
         fs.listFileNames(directory()).includes(INDEX_FILE_NAME) ||
         fs.listFileNames(join(directory(), VERSIONS_DIR_NAME)).length > 0
       )
-    },
-
-    readProposal(proposalId) {
-      if (!ProposalIdSchema.safeParse(proposalId).success) {
-        return { ok: false, reason: 'invalid' }
-      }
-      const read = readJson(
-        join(directory(), PROPOSALS_DIR_NAME, `${proposalId}.json`),
-        MAX_PROPOSAL_BYTES,
-        StoredProposalSchema
-      )
-      return read.ok && read.value.proposal.proposal_id !== proposalId
-        ? { ok: false, reason: 'invalid' }
-        : read
-    },
-
-    writeProposal: (stored) =>
-      writeJson(
-        join(directory(), PROPOSALS_DIR_NAME),
-        `${stored.proposal.proposal_id}.json`,
-        StoredProposalSchema,
-        stored
-      ),
-
-    listProposalIds() {
-      return fs
-        .listFileNames(join(directory(), PROPOSALS_DIR_NAME))
-        .flatMap((name) => PROPOSAL_FILE.exec(name)?.[1] ?? [])
     }
   }
 }

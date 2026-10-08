@@ -94,10 +94,12 @@ describe('resolveAutopilotPrimaryCaller', () => {
     expect(resolve(false, context)).toThrow(expect.objectContaining(refused('session_caller')))
   })
 
-  it('refuses a database that never held an app run and creates no table', () => {
+  it('refuses native adoption without live host evidence and creates no table', () => {
     harness = createTaskApiHarness({ appRun: false })
     const before = readSchemaEntries(harness.db.db)
-    expect(resolve(true)).toThrow(expect.objectContaining(refused('not_app_run')))
+    expect(resolve(true)).toThrow(
+      expect.objectContaining({ code: 'autopilot_native_coordinator_refused' })
+    )
     expect(readSchemaEntries(harness.db.db)).toEqual(before)
   })
 

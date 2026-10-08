@@ -18,16 +18,12 @@ export const FIXTURE_PROFILE_HASH = 'c'.repeat(64)
 export const FIXTURE_BUNDLE_SHA = '6'.repeat(64)
 export const FIXTURE_OTHER_BUNDLE_SHA = '5'.repeat(64)
 
-/** The bundle main reports today: question set 2, taxonomy 2, the D-020 defaults still pending. */
+/** Public hash used to detect when a stored verification no longer applies. */
 export function fixtureBundle(
   overrides: Partial<WorkbenchRoutingStatusView['bundle']> = {}
 ): WorkbenchRoutingStatusView['bundle'] {
   return {
-    questionSetVersion: 2,
-    taxonomyVersion: 2,
     sha256: FIXTURE_BUNDLE_SHA,
-    thresholds: { delegationTrueMin: 0.6, delegationFalseMax: 0.4, taskTypeMarginMin: 0.1 },
-    awaitingUserConfirmation: ['thresholds', 'task_type_options', 'needs_delegation_criteria'],
     ...overrides
   }
 }
@@ -38,7 +34,6 @@ export function fixturePinnedProfile(
 ): WorkbenchRoutingStatusView['profile'] {
   return {
     present: true,
-    responseModelPinned: true,
     verifiedAt: '2026-10-05T10:12:00Z',
     verifiedAgainstBundleSha256
   }
@@ -53,13 +48,10 @@ export function fixtureStatus(
     credentials: { tokenPresent: true, accountPresent: true, protection: 'sealed' },
     profile: {
       present: false,
-      responseModelPinned: false,
       verifiedAt: null,
       verifiedAgainstBundleSha256: null
     },
     bundle: fixtureBundle(),
-    latches: { authFailed: false, quotaLatchedUntil: null },
-    circuit: { state: 'closed', reopensAt: null, consecutiveTransient: 0 },
     ...overrides
   })
 }

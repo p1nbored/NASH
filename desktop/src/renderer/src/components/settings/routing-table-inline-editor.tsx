@@ -1,10 +1,6 @@
 import { useId } from 'react'
 import { translate } from '@/i18n/i18n'
-import {
-  CONCRETE_REASONING_LEVELS,
-  EXECUTION_TARGETS,
-  REASONING_LEVELS
-} from '../../../../shared/routing-table/routing-table-taxonomy'
+import { EXECUTION_TARGETS } from '../../../../shared/routing-table/routing-table-taxonomy'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
@@ -17,15 +13,16 @@ import {
   usesCoordinator
 } from './routing-table-inline-edit'
 import { executionTargetLabel, reasoningLevelLabel } from './routing-table-labels'
-import { PrimaryCliSelect } from './routing-table-route-rows'
+import { PrimaryCliSelect } from './routing-table-primary-cli'
+import { routingCli, routingEffortFor, routingEffortOptions } from './routing-table-effort-options'
 
 function pick<T extends string>(options: readonly T[], value: string): T | undefined {
   return options.find((option) => option === value)
 }
 
-type EffortLevel = (typeof REASONING_LEVELS)[number]
+type EffortLevel = EditableRoute['reasoningLevel']
 
-function EffortSelect<T extends EffortLevel>(props: {
+export function EffortSelect<T extends EffortLevel>(props: {
   value: T
   options: readonly T[]
   label: string
@@ -57,7 +54,7 @@ function EffortSelect<T extends EffortLevel>(props: {
   )
 }
 
-function ModelInput(props: {
+export function ModelInput(props: {
   value: string
   label: string
   invalid: boolean
@@ -100,7 +97,7 @@ function CheckboxField(props: {
   )
 }
 
-function EditActions(props: {
+export function EditActions(props: {
   busy: boolean
   error: string | null
   onSave: () => void
@@ -125,7 +122,7 @@ function EditActions(props: {
   )
 }
 
-type EditorCallbacks = {
+export type EditorCallbacks = {
   busy: boolean
   error: string | null
   onSave: () => void
@@ -143,7 +140,32 @@ export function RouteChoiceEditor(
 ): React.JSX.Element {
   const { row, taskLabel } = props
   const same = usesCoordinator(row)
-  const levels = canInherit(row.target) ? REASONING_LEVELS : CONCRETE_REASONING_LEVELS
+  const agent = routingCli(row.target)
+  const levels = routingEffortOptions(agent, row.model)
+  if (row.taskType === 'configured_project_workflow') {
+    return (
+      <div className="space-y-row pt-row">
+        <ModelInput
+          value={row.model}
+          invalid={props.error !== null}
+          label={translate(
+            'auto.components.settings.routingTable.inline.modelFor',
+            'Model for {{task}}',
+            { task: taskLabel }
+          )}
+          onChange={(model) =>
+            props.onEdit({
+              target: 'claude_workflow',
+              model,
+              reasoningLevel: 'inherit',
+              requirement: 'required'
+            })
+          }
+        />
+        <EditActions {...props} />
+      </div>
+    )
+  }
   return (
     <div className="space-y-row pt-row">
       <div className="flex flex-wrap items-center gap-row">
@@ -183,7 +205,7 @@ export function RouteChoiceEditor(
             disabled={row.target === 'claude_primary'}
             label={translate(
               'auto.components.settings.routingTable.labels.sameAsCoordinator',
-              'Same as primary'
+              'Same as coordinator'
             )}
             onChange={(checked) =>
               props.onEdit(editForSameAsCoordinator(checked, props.coordinator))
@@ -200,18 +222,25 @@ export function RouteChoiceEditor(
                 'Model for {{task}}',
                 { task: taskLabel }
               )}
-              onChange={(model) => props.onEdit({ model })}
+              onChange={(model) =>
+                props.onEdit({
+                  model,
+                  reasoningLevel: routingEffortFor(agent, model, row.reasoningLevel)
+                })
+              }
             />
-            <EffortSelect
-              value={row.reasoningLevel}
-              options={levels}
-              label={translate(
-                'auto.components.settings.routingTable.inline.effortFor',
-                'Effort for {{task}}',
-                { task: taskLabel }
-              )}
-              onChange={(reasoningLevel) => props.onEdit({ reasoningLevel })}
-            />
+            {levels.length > 0 ? (
+              <EffortSelect
+                value={row.reasoningLevel}
+                options={levels}
+                label={translate(
+                  'auto.components.settings.routingTable.inline.effortFor',
+                  'Effort for {{task}}',
+                  { task: taskLabel }
+                )}
+                onChange={(reasoningLevel) => props.onEdit({ reasoningLevel })}
+              />
+            ) : null}
             <CheckboxField
               checked={row.requirement === 'if_supported'}
               disabled={row.reasoningLevel === 'inherit'}
@@ -244,6 +273,7 @@ export function CoordinatorChoiceEditor(
   }
 ): React.JSX.Element {
   const { coordinator } = props
+  const levels = routingEffortOptions(coordinator.agent, coordinator.model)
   return (
     <div className="space-y-row pt-row">
       <div className="flex flex-wrap items-center gap-row">
@@ -253,19 +283,27 @@ export function CoordinatorChoiceEditor(
           invalid={props.error !== null}
           label={translate(
             'auto.components.settings.routingTable.editor.coordinatorModel',
-            'Primary model'
+            'Coordinator model'
           )}
-          onChange={(model) => props.onChange({ ...coordinator, model })}
+          onChange={(model) =>
+            props.onChange({
+              ...coordinator,
+              model,
+              reasoningLevel: routingEffortFor(coordinator.agent, model, coordinator.reasoningLevel)
+            })
+          }
         />
-        <EffortSelect
-          value={coordinator.reasoningLevel}
-          options={CONCRETE_REASONING_LEVELS}
-          label={translate(
-            'auto.components.settings.routingTable.inline.coordinatorEffort',
-            'Primary effort'
-          )}
-          onChange={(reasoningLevel) => props.onChange({ ...coordinator, reasoningLevel })}
-        />
+        {levels.length > 0 ? (
+          <EffortSelect
+            value={coordinator.reasoningLevel}
+            options={levels}
+            label={translate(
+              'auto.components.settings.routingTable.inline.coordinatorEffort',
+              'Coordinator effort'
+            )}
+            onChange={(reasoningLevel) => props.onChange({ ...coordinator, reasoningLevel })}
+          />
+        ) : null}
       </div>
       <EditActions
         busy={props.busy}

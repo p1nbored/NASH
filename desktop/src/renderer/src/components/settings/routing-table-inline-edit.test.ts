@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { EditableRoute } from './routing-table-editor-model'
 import {
-  SETTINGS_EDIT_RATIONALE,
   editForSameAsCoordinator,
   editForTarget,
   settingsEditSubmission
@@ -56,7 +55,10 @@ describe('editForTarget', () => {
   })
 
   it('keeps the model and effort otherwise', () => {
-    expect(editForTarget(row(), 'codex_cli')).toEqual({ target: 'codex_cli' })
+    expect(editForTarget(row(), 'codex_cli')).toEqual({
+      target: 'codex_cli',
+      reasoningLevel: 'max'
+    })
   })
 })
 
@@ -75,7 +77,7 @@ describe('editForSameAsCoordinator', () => {
 })
 
 describe('settingsEditSubmission', () => {
-  it('stores the edit as the user change on the version shown, with an English reason', () => {
+  it('fences the edit to the version shown', () => {
     const submission = settingsEditSubmission(
       {
         changes: [
@@ -91,9 +93,6 @@ describe('settingsEditSubmission', () => {
       { version: 3, sha256: FIXTURE_SHA_V3 }
     )
 
-    expect(submission?.proposer).toBe('user_import')
     expect(submission?.base).toEqual({ table_version: 3, sha256: FIXTURE_SHA_V3 })
-    expect(submission?.rationale).toBe(SETTINGS_EDIT_RATIONALE)
-    expect(submission?.evidence).toEqual([])
   })
 })

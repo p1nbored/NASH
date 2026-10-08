@@ -34,7 +34,10 @@ import {
   type StartWorkflowRunResult,
   type WorkflowRunServiceDeps
 } from './workflow-run-service'
-import { readWorkflowRunOrigin, type WorkflowRunOriginRead } from './workflow-run-origin'
+import {
+  readWorkflowRunController as readWorkflowRunOrigin,
+  type WorkflowRunOriginRead
+} from './workflow-run-origin'
 
 /** What a launch reads from the running app to build the session arguments and settings file. */
 export type PrimarySessionLaunchSettings = {

@@ -1530,7 +1530,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "NASH 로고",
         "ce44fad849": "종속성 누락",
-        "c1cf168479": "숨기기",
         "00cee697c1": "GitHub 계정을 연결하려면 terminal에서 \"gh auth login\"을 실행하세요.",
         "9f96d018b7": "GitHub CLI가 인증되지 않았습니다.",
         "73e1ad4282": "NASH는 GitHub CLI(gh)를 사용하여 PR, 이슈 및 검사를 표시합니다.",
@@ -1540,9 +1539,6 @@
         "cd21242762": "시작하려면 프로젝트를 추가하세요.",
         "9c00bd4adf": "시작하려면 사이드바에서 워크스페이스를 선택하세요.",
         "16e9e3df89": "별표가 붙은",
-        "0d0ace8861": "GitHub에서 별표 주기",
-        "ec43b38ba7": "GitHub에 별표 표시됨",
-        "157bb5ecbb": "GitHub 열기",
         "preflightDismiss": "닫기"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7362,20 +7358,12 @@
           "confirm_running_terminal_close_description": "터미널을 닫을 때 실행 중인 에이전트나 명령을 중지하기 전에 묻습니다."
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "지원해 주셔서 감사합니다!",
-          "6922c1fa2b": "GitHub에서 Orca 스타 누르기",
-          "511782265b": "gh CLI를 통해 GitHub 스타로 프로젝트를 지원하세요.",
-          "55a87e5fd1": "Orca 지원",
-          "964acc6bb4": "스타",
           "73b327e793": "다시 시도",
           "c9f96d4234": "오류",
-          "397719bee5": "스타 표시 중...",
           "1e29570462": "스타 표시",
           "9d181300e3": "별표가 붙은",
           "5c49f02662": "숨겨진",
-          "b3f0584f5d": "로드 중",
-          "cb65c75b11": "여는 중...",
-          "f2d4f877b2": "GitHub 열기"
+          "b3f0584f5d": "로드 중"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "릴리스 노트",
@@ -9760,13 +9748,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "좋아요",
-            "e6b01c8e30": "피드백",
-            "b65665703a": "지원",
-            "06ea5a69a6": "GitHub",
-            "e4fb4516d0": "스타",
-            "e0b8c8bc25": "gh CLI를 통해 GitHub 스타로 프로젝트를 지원하세요.",
-            "36a72f0d9e": "GitHub에서 Orca에 스타 주기",
             "c61b14be7c": "그로크",
             "5d9ba08673": "Copilot",
             "f472e97440": "aider",
@@ -10056,7 +10037,7 @@
             "f16e41cc72": "GitHub 연동",
             "760e2446e0": "저장된 API 토큰 또는 환경 변수를 사용한 Bitbucket 클라우드 인증.",
             "af5ae87847": "액세스 토큰",
-            "clefRoutingDescription": "워크벤치 요청을 라우팅하는 데 사용할 Clef API 토큰과 계정 ID를 저장합니다.",
+            "clefRoutingDescription": "워크벤치 요청을 라우팅하는 데 사용할 분류기 API 토큰과 계정 ID를 저장합니다.",
             "clef": "Clef",
             "routing": "라우팅",
             "cloudflare": "Cloudflare",
@@ -10065,7 +10046,6 @@
             "routingTableKeyword": "라우팅 표",
             "model": "모델",
             "reasoning": "추론",
-            "proposal": "제안",
             "executor": "실행기",
             "dotIngress": "dot에서 받은 작업",
             "dotIngressDescription": "로컬 dot 인터페이스를 켜거나 끄고, dot이 사용할 수 있는 워크스페이스와 최대 액세스 수준을 선택하고, 제출 한도를 설정합니다.",
@@ -12436,8 +12416,8 @@
             "notProtectedDetail": "저장된 자격 증명이 보호되지 않아 NASH가 사용하지 않습니다. 지운 다음 다시 저장하세요."
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef는 각 작업을 유형별로 분류하여 해당 유형에 지정된 에이전트로 보냅니다."
+            "title": "분류기",
+            "descriptionPlain": "분류기는 각 작업을 유형별로 분류하여 해당 유형에 지정된 에이전트로 보냅니다."
           },
           "verification": {
             "blockPaused": "검증이 일시 중지됨: {{reason}}.",
@@ -12529,12 +12509,6 @@
               "resultNotUsable": "이 결과는 사용할 수 없습니다.",
               "resultWriteFailed": "결과를 저장할 수 없습니다. 다시 시도하세요."
             },
-            "pending": {
-              "title": "확인 대기 중",
-              "thresholds": "신뢰도 임계값: 작업은 {{yes}} 이상이면 위임으로, {{no}} 이하이면 직접 처리로 간주되며, 작업 유형은 차순위보다 {{margin}} 이상 앞서야 합니다.",
-              "wording": "답변 문구: 작업 유형 옵션 {{options}}, 위임 답변 {{answers}}.",
-              "effectPlain": "기본값입니다. 하나라도 변경하면 Clef를 다시 검증해야 합니다."
-            },
             "report": {
               "failedReason": "{{reason}}: {{detail}}.",
               "titlePlain": "검증 결과",
@@ -12558,17 +12532,10 @@
         },
         "routingTable": {
           "card": {
-            "refresh": "새로고침",
             "unavailable": "사용할 수 없음",
             "blocked": "차단됨",
             "blockedTitle": "라우팅이 차단됨",
-            "pendingNotice": "리뷰할 제안된 변경 사항: {{count}}",
-            "review": "리뷰",
             "title": "작업별 에이전트"
-          },
-          "active": {
-            "versionActive": "버전 {{version}} 활성",
-            "created": "{{time}}에 생성됨"
           },
           "availability": {
             "available": "사용 가능",
@@ -12599,102 +12566,32 @@
             "checkingPlain": "확인 중…",
             "checkPlain": "사용 가능 여부 확인"
           },
-          "proposals": {
-            "evidence": "출처: {{sources}}",
-            "becomes": "변경 후",
-            "none": "없음",
-            "noReviewers": "리뷰어 없음",
-            "coordinator": "주 에이전트",
-            "staleTitle": "이전 버전 기준으로 작성됨",
-            "accept": "수락",
-            "edit": "편집 후 수락",
-            "reject": "거부",
-            "noRowPlain": "설정 안 됨",
-            "notesOnlyPlain": "선택은 같고 메모만 변경됩니다.",
-            "metaPlain": "{{time}} · 버전 {{version}} 기준",
-            "staleBodyPlain": "현재 버전 {{active}}이(가) 사용 중이므로 더 이상 수락할 수 없습니다. 거부하거나 위 목록에서 다시 변경하세요.",
-            "historyPlain": "결정됨 ({{count}})",
-            "pendingTitlePlain": "제안된 변경 사항",
-            "noneWaitingPlain": "대기 중인 항목이 없습니다. 제안을 수락하기 전에는 아무것도 변경되지 않습니다."
-          },
-          "versions": {
-            "title": "버전 기록",
-            "version": "버전 {{version}}",
-            "active": "(활성)",
-            "revertTo": "버전 {{version}}(으)로 되돌리기",
-            "revert": "되돌리기",
-            "confirmTitle": "버전 {{version}}(으)로 되돌리시겠습니까?",
-            "confirmBody": "버전 {{version}}의 내용이 새 활성 버전이 됩니다. 버전 {{active}}은(는) 기록에 남으므로 다시 돌아갈 수 있습니다.",
-            "cancel": "취소"
-          },
           "editor": {
-            "coordinator": "주 에이전트",
-            "coordinatorModel": "주 모델",
-            "taskType": "작업 유형",
-            "model": "모델",
-            "requirement": "요구 사항",
-            "required": "필수",
-            "whenSupported": "지원되는 경우",
-            "modelFor": "{{task}} 모델",
-            "cancel": "취소",
-            "acceptModified": "변경 후 수락",
             "geminiExcluded": "Gemini 4 모델은 라우팅에서 제외됩니다.",
             "aliasUnpinned": "opus나 latest 같은 별칭이 아닌 정확한 모델 ID를 입력하세요.",
             "slugRejected": "이 모델 ID는 폐기되었거나 거부되었습니다. 다른 정확한 모델 ID를 입력하세요.",
             "modelInvalid": "선택한 CLI의 정확한 모델 ID를 입력하세요.",
-            "onlyPrimaryInherits": "주 세션과 Claude 워크플로만 주 설정을 상속할 수 있습니다.",
-            "primaryInherits": "주 세션은 항상 주 설정을 사용합니다. 모델과 추론을 상속으로 설정하세요.",
-            "coordinatorStays": "주 추론은 항상 주 세션에서 수행됩니다.",
+            "onlyPrimaryInherits": "코디네이터 세션과 Claude 워크플로만 코디네이터 설정을 상속할 수 있습니다.",
+            "primaryInherits": "코디네이터 세션은 항상 코디네이터 설정을 사용합니다. 모델과 추론을 상속으로 설정하세요.",
+            "coordinatorStays": "코디네이터 추론은 항상 코디네이터 세션에서 수행됩니다.",
             "ifSupportedConcrete": "\"지원되는 경우\"에는 상속이 아닌 구체적인 추론 수준이 필요합니다.",
             "rowInvalid": "이 행이 유효하지 않습니다. 대상, 모델, 추론 수준을 확인하세요.",
             "nothingChanged": "활성 표가 변경되지 않습니다. 먼저 경로를 하나 이상 편집하세요.",
-            "modifyTitlePlain": "수락하기 전에 편집",
-            "modifyBodyPlain": "편집 내용이 제안된 변경 사항을 대체합니다. 수락하면 적용됩니다.",
-            "agentFor": "{{task}} 에이전트",
-            "effortFor": "{{task}} 추론 수준",
-            "effortRequirementFor": "{{task}} 추론 수준 요구 사항",
-            "agent": "에이전트",
-            "effort": "추론 수준",
-            "primaryCli": "주 CLI"
-          },
-          "import": {
-            "title": "변경 세트 가져오기",
-            "jsonLabel": "변경 세트(JSON)",
-            "reasonLabel": "변경 사유",
-            "cancel": "취소",
-            "reasonMissing": "변경 사유를 영어로 짧게 입력하세요.",
-            "bodyPlain": "제안된 변경 사항에 추가되며, 그곳에서 리뷰하고 수락할 수 있습니다.",
-            "submitPlain": "가져오기",
-            "noActivePlain": "작업 라우팅을 사용할 수 없어 가져올 수 없습니다.",
-            "notJsonPlain": "유효한 JSON이 아닙니다. 변경 세트 전체를 붙여넣으세요.",
-            "invalidPlain": "이 변경 세트에 사용할 수 없는 값이 있습니다. 각 에이전트, 모델, 추론 수준을 확인하세요."
+            "primaryCli": "코디네이터 CLI",
+            "coordinatorModel": "코디네이터 모델"
           },
           "notices": {
-            "activated": "이제 버전 {{version}}이(가) 활성 상태입니다.",
-            "reverted": "이제 버전 {{from}}의 내용으로 버전 {{version}}이(가) 활성 상태입니다.",
-            "rejectedPlain": "제안된 변경 사항을 거부했습니다.",
-            "importedPlain": "제안된 변경 사항에 추가했습니다. 사용하려면 그곳에서 수락하세요.",
             "saved": "저장되었습니다."
           },
           "refusals": {
-            "duplicateActivePlain": "이 선택이 이미 사용 중이므로 아무것도 저장되지 않았습니다.",
-            "duplicatePendingPlain": "같은 변경이 이미 제안된 변경 사항에서 대기 중입니다. 그곳에서 리뷰하세요.",
             "integrityFailedPlain": "저장된 작업 라우팅을 읽을 수 없어 어떤 작업도 라우팅되지 않습니다. 기본값으로 대체되지도 않습니다.",
-            "taxonomyMismatchPlain": "저장된 작업 라우팅이 다른 작업 목록을 기준으로 만들어져 사용할 수 없습니다. 고급에서 현재 작업에 맞는 라우팅을 가져오세요.",
+            "taxonomyMismatchPlain": "저장된 작업 라우팅은 다른 작업 목록용으로 만들어져 사용할 수 없습니다.",
             "notInstalledPlain": "작업 라우팅이 아직 설정되지 않았습니다. 기본값을 설치하려면 앱을 다시 시작하세요.",
             "invalidTablePlain": "이 변경으로 작업 라우팅이 유효하지 않게 되므로 저장되지 않았습니다.",
             "versionConflictPlain": "저장하는 동안 작업 라우팅이 변경되었습니다. 다시 시도하세요.",
             "forbiddenCallerPlain": "작업 라우팅은 이 앱에서만 변경할 수 있습니다.",
-            "proposalUnknownPlain": "이 제안된 변경 사항은 더 이상 존재하지 않습니다.",
-            "proposalInvalidPlain": "이 제안된 변경 사항을 읽을 수 없어 수락할 수 없습니다.",
-            "alreadyDecidedPlain": "이 제안된 변경 사항은 이미 결정되었습니다.",
-            "proposalSupersededPlain": "이 제안된 변경 사항은 이전 선택을 기준으로 작성되어 보류되었으며 아무것도 변경되지 않았습니다.",
             "noChangePlain": "모든 선택이 그대로이므로 아무것도 변경되지 않았습니다.",
-            "forbiddenProposerPlain": "이런 종류의 변경은 여기에서 제출할 수 없습니다.",
-            "invalidProposalPlain": "이 변경이 유효하지 않아 저장되지 않았습니다.",
             "baseNotActivePlain": "준비한 이후 작업 라우팅이 변경되었습니다. 다시 시도하세요.",
-            "tooManyPendingPlain": "대기 중인 제안된 변경 사항이 너무 많습니다. 먼저 고급에서 일부를 수락하거나 거부하세요.",
-            "versionUnknownPlain": "해당 이전 버전은 더 이상 존재하지 않습니다.",
             "unknownPlain": "작업 라우팅이 이 변경을 거부했습니다.",
             "invalidResponsePlain": "앱의 응답을 여기에서 읽을 수 없습니다.",
             "notConnectedPlain": "이 빌드에서는 작업 라우팅을 사용할 수 없습니다.",
@@ -12703,7 +12600,7 @@
             "callFailedPlain": "요청이 완료되지 않았습니다. 다시 시도하세요."
           },
           "labels": {
-            "coordinatorReasoning": "주 추론",
+            "coordinatorReasoning": "코디네이터 추론",
             "complexPlanningReasoning": "복잡한 계획 및 추론",
             "softwareEngineering": "소프트웨어 엔지니어링",
             "scientificExperimentValidation": "과학 실험 검증",
@@ -12713,7 +12610,7 @@
             "highQualityWriting": "고품질 글쓰기",
             "fastWritingOrAlternativeDraft": "빠른 글쓰기 또는 대안 초안",
             "configuredProjectWorkflow": "구성된 프로젝트 워크플로",
-            "claudePrimary": "주 세션",
+            "claudePrimary": "코디네이터 세션",
             "claudeSubagent": "Claude 하위 에이전트",
             "claudeWorkflow": "Claude 워크플로",
             "codexCli": "Codex CLI",
@@ -12729,26 +12626,15 @@
             "ultra": "울트라",
             "inherit": "상속",
             "whenSupported": "(지원되는 경우)",
-            "bundledUpdate": "앱 업데이트",
-            "benchmarkReview": "벤치마크 리뷰",
-            "agent": "에이전트",
-            "userImport": "내 변경",
-            "accepted": "수락됨",
-            "acceptedModified": "변경 후 수락됨",
-            "rejected": "거부됨",
-            "superseded": "대체됨",
-            "sourceBundled": "앱 기본값",
-            "sourceUser": "내 표",
-            "sameAsCoordinator": "주 에이전트와 동일"
+            "sameAsCoordinator": "코디네이터와 동일"
           },
           "inline": {
             "edit": "편집",
-            "reviewersTitle": "리뷰어",
             "reviewersHelp": "자동 체크가 없는 완료된 작업을 리뷰합니다.",
             "noReviewers": "리뷰어가 없으므로 자동 체크가 없는 작업은 리뷰할 수 없습니다.",
             "reviewer": "리뷰어 {{number}}",
             "editFor": "{{task}} 편집",
-            "coordinator": "주 에이전트",
+            "coordinator": "코디네이터",
             "listLabel": "작업별 에이전트",
             "save": "저장",
             "cancel": "취소",
@@ -12756,13 +12642,8 @@
             "modelFor": "{{task}} 모델",
             "effortFor": "{{task}} 추론 수준",
             "onlyIfSupported": "모델이 지원하는 경우에만",
-            "coordinatorEffort": "주 추론 강도"
-          },
-          "advanced": {
-            "unreadable": "읽을 수 없는 제안된 변경 사항: {{count}}",
-            "importLabel": "변경 세트 가져오기",
-            "importDescription": "라우팅을 JSON으로 붙여넣으세요. 수락할 때까지 제안된 변경 사항에서 대기합니다.",
-            "import": "가져오기…"
+            "coordinatorEffort": "코디네이터 추론 강도",
+            "reviewersTitle": "리뷰어"
           }
         },
         "dotIngress": {
@@ -12974,9 +12855,6 @@
             "remoteDescription": "GPT Site를 통해 dot이 이 앱에 연결되도록 합니다: 스위치, 사이트 주소와 액세스 토큰, 페어링 및 해제."
           }
         },
-        "advancedDisclosure": {
-          "label": "고급"
-        },
         "copyDetails": {
           "copied": "세부정보를 복사했습니다.",
           "failed": "세부정보를 복사할 수 없습니다.",
@@ -12984,7 +12862,7 @@
         },
         "taskRouting": {
           "search": {
-            "agentsDescription": "작업 유형마다 에이전트, 모델, 추론 수준을 선택하고 제안된 변경 사항을 수락하거나 거부합니다.",
+            "agentsDescription": "작업 유형마다 에이전트, 모델, 추론 수준을 선택합니다.",
             "effort": "추론 수준",
             "agent": "에이전트"
           }

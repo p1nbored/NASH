@@ -21,6 +21,10 @@ export function seedLivePrimary(
   slot: number
 ): OrchestrationCompatibilityEvidence {
   const pane = paneOf(slot)
+  owner.db
+    .prepare(`INSERT OR IGNORE INTO runs (id, objective, coordinator_handle, coordinator_pane_key, consumer_generation, legacy)
+    VALUES (?, 'Fixture coordinator', ?, ?, 1, 0)`)
+    .run(runId, pane.terminalHandle, pane.paneKey)
   const sessions = getPrimarySessionStore(owner)
   const session = sessions.insertStarting({
     runId,

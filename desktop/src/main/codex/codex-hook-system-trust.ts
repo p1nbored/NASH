@@ -3,6 +3,7 @@ import {
   codexHookSourcePathsEqual,
   computeTrustKey,
   computeTrustedHash,
+  getCodexExplicitHomeHookSourcePath,
   normalizeCodexHookSourcePath,
   parseTrustKey,
   readHookTrustEntries,
@@ -75,7 +76,15 @@ function resolveTrustedSystemHookState(
   trustedHashesByEvent: ReadonlyMap<CodexEventLabel, Map<string, boolean>>
 ): TrustedSystemHookSignatureState | null {
   const expectedHash = computeTrustedHash(entry)
-  const state = trustEntries.get(computeTrustKey(entry))
+  // Why: Codex resolves home aliases and Windows short paths before reporting trust keys.
+  const state =
+    trustEntries.get(computeTrustKey(entry)) ??
+    trustEntries.get(
+      computeTrustKey({
+        ...entry,
+        sourcePath: getCodexExplicitHomeHookSourcePath(entry.sourcePath)
+      })
+    )
   if (state?.trustedHash === expectedHash) {
     return { enabled: state.enabled !== false, trustedHash: expectedHash }
   }
@@ -96,12 +105,16 @@ function getTrustedSystemHookHashesByEvent(
 ): Map<CodexEventLabel, Map<string, boolean>> {
   const trustedHashesByEvent = new Map<CodexEventLabel, Map<string, boolean>>()
   const canonicalSystemConfigPath = normalizeCodexHookSourcePath(systemConfigPath)
+  const resolvedSystemConfigPath = getCodexExplicitHomeHookSourcePath(systemConfigPath)
   for (const [key, state] of trustEntries) {
     const parsed = parseTrustKey(key)
     if (!parsed || !state.trustedHash) {
       continue
     }
-    if (!codexHookSourcePathsEqual(parsed.sourcePath, canonicalSystemConfigPath)) {
+    if (
+      !codexHookSourcePathsEqual(parsed.sourcePath, canonicalSystemConfigPath) &&
+      !codexHookSourcePathsEqual(parsed.sourcePath, resolvedSystemConfigPath)
+    ) {
       continue
     }
     let hashes = trustedHashesByEvent.get(parsed.eventLabel)

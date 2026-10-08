@@ -3,6 +3,7 @@ import type { OrcaRuntimeService } from '../orca-runtime'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import { PERMISSION_RELAY_ERROR_CODES } from './permission-relay-caller'
 import { PermissionRelayService } from './permission-request-service'
+import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 
 const relayByRuntime = new WeakMap<OrcaRuntimeService, PermissionRelayService>()
 
@@ -55,7 +56,23 @@ export function installPermissionRelay(
     readStatus: (handle) => runtime.getTerminalAgentStatus(handle),
     now: () => Date.now(),
     controlPlaneCommands: [options.cliCommand],
-    appDataDirectories: relayAppDataDirectories()
+    appDataDirectories: relayAppDataDirectories(),
+    readIncarnation: (handle) => runtime.getTerminalProcessIncarnation(handle),
+    notifyPrimary: (record) => {
+      const db = runtime.getOrchestrationDb({ passive: true })
+      const primary = getPrimarySessionStore(db).get(record.ownerId)
+      if (!primary?.terminalHandle) {
+        return
+      }
+      db.insertMessage({
+        from: 'nash-permission-relay',
+        to: primary.terminalHandle,
+        runId: record.runId,
+        subject: 'A child permission request needs review',
+        body: `Read pending requests with ${options.cliCommand} orchestration permission-list --json. Request ${record.decisionId} is waiting. Critical requests require the user through Dot.`
+      })
+      runtime.notifyMessageArrived(primary.terminalHandle)
+    }
   })
   const unregister = registerPermissionRelay(runtime, relay)
   relay.start()

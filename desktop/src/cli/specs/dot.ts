@@ -11,6 +11,25 @@ const NOTES = [
 
 export const DOT_COMMAND_SPECS: CommandSpec[] = [
   {
+    path: ['dot', 'attach'],
+    hidden: true,
+    summary: 'Let dot take over an existing native coordinator without launching a new CLI',
+    usage:
+      'orca dot attach --workspace <ref> --run <run-id> --objective-file <path|-> [--access read_only|workspace_write] [--idempotency-key <uuid>] [--json]',
+    allowedFlags: [
+      ...GLOBAL_FLAGS,
+      'workspace',
+      'run',
+      'objective-file',
+      'access',
+      'idempotency-key'
+    ],
+    notes: [
+      ...NOTES,
+      'Select an explicit existing run. Task records and the coordinator session are retained.'
+    ]
+  },
+  {
     path: ['dot', 'hello'],
     hidden: true,
     summary: 'Show the dot interface contract versions, methods and caps',

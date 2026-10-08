@@ -72,6 +72,18 @@ function promptEvent(f: ReturnType<typeof fixture>, n: number, requestId = id(3,
     } };
 }
 
+test('coordinator attachment survives generated validation, persistence and mailbox leasing', () => {
+  const f = fixture();
+  const receipt = f.submit(1, { coordinatorRunId: 'run_fixture01' });
+  assert.equal(receipt.state, 'queued');
+  f.restore();
+  const item = f.lease()[0];
+  assert.equal(item.payload.coordinatorRunId, 'run_fixture01');
+  assert.equal(item.payload.idempotencyKey, id(2, 1));
+  assert.equal(item.payloadSha256, payloadSha256(item.payload));
+  assert.equal(result<{ receiptState: string }>(f.ack(item)).receiptState, 'accepted');
+});
+
 test('refused control ack may omit a local request ID without accepting a wrong non-null ID', () => {
   const f = fixture(); admitted(f);
   const receipt = result<{ receipt: Receipt }>(f.tool('nash_send_message_to_run', {

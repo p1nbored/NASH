@@ -5,6 +5,7 @@ import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import { useClefCredentials } from './use-clef-credentials'
 import { useClefVerification } from './use-clef-verification'
 import { useRoutingTable } from './use-routing-table'
+import { fixtureEdit } from './routing-table-view.test-fixture'
 
 // TypeScript review L9: a disabled button re-renders only after the click, so a second call in the
 // same turn (Enter then click, a double click) must be refused by the hook itself.
@@ -100,23 +101,22 @@ describe('settings actions refuse a second call while one runs', () => {
     expect(credentialsApi.clear).toHaveBeenCalledTimes(1)
   })
 
-  it('Routing Table decisions: a second decision is refused while one runs', async () => {
-    const accept = holdMethod('workbench.routingTable.accept')
+  it('Routing Table saves: a second save is refused while one runs', async () => {
+    const imported = holdMethod('workbench.routingTable.save')
     const { result } = renderHook(() => useRoutingTable())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     let first: Promise<boolean> = Promise.resolve(false)
     let second: Promise<boolean> = Promise.resolve(true)
     act(() => {
-      first = result.current.accept('proposal_fixture_1')
-      second = result.current.reject('proposal_fixture_1')
+      first = result.current.applyEdit(fixtureEdit())
+      second = result.current.applyEdit(fixtureEdit())
     })
     expect(await second).toBe(false)
-    expect(callsTo('workbench.routingTable.accept')).toBe(1)
-    expect(callsTo('workbench.routingTable.reject')).toBe(0)
+    expect(callsTo('workbench.routingTable.save')).toBe(1)
 
     await act(async () => {
-      accept.settle(null)
+      imported.settle(null)
       await first
     })
   })
@@ -131,11 +131,11 @@ describe('settings actions refuse a second call while one runs', () => {
     act(() => {
       checking = result.current.checkRoutes()
       void result.current.checkRoutes()
-      decided = result.current.accept('proposal_fixture_1')
+      decided = result.current.applyEdit(fixtureEdit())
     })
     expect(await decided).toBe(false)
     expect(callsTo('workbench.routingTable.checkRoutes')).toBe(1)
-    expect(callsTo('workbench.routingTable.accept')).toBe(0)
+    expect(callsTo('workbench.routingTable.save')).toBe(0)
 
     await act(async () => {
       check.settle(null)

@@ -1635,7 +1635,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "Logo NASH",
         "ce44fad849": "Dépendances manquantes",
-        "c1cf168479": "Masquer",
         "00cee697c1": "Exécutez \"gh auth login\" dans un terminal pour connecter votre compte GitHub.",
         "9f96d018b7": "GitHub CLI n'est pas authentifiée",
         "73e1ad4282": "NASH utilise la GitHub CLI (gh) pour afficher les pull requests, les tickets et les vérifications.",
@@ -1645,9 +1644,6 @@
         "cd21242762": "Ajoutez un projet pour commencer.",
         "9c00bd4adf": "Sélectionnez un espace de travail dans la barre latérale pour commencer.",
         "16e9e3df89": "favori",
-        "0d0ace8861": "Mettre une étoile sur GitHub",
-        "ec43b38ba7": "Étoile ajoutée sur GitHub",
-        "157bb5ecbb": "Ouvrir GitHub",
         "preflightDismiss": "Ignorer"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7482,20 +7478,12 @@
           "confirm_running_terminal_close_description": "Demandez avant d'arrêter un agent ou une commande en cours d'exécution lors de la fermeture d'un terminal."
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "Merci pour votre soutien !",
-          "6922c1fa2b": "Ajouter une étoile à Orca sur GitHub",
-          "511782265b": "Soutenez le projet avec une étoile GitHub via la CLI gh.",
-          "55a87e5fd1": "Soutenir Orca",
-          "964acc6bb4": "Ajouter une étoile",
           "73b327e793": "Réessayer",
           "c9f96d4234": "error",
-          "397719bee5": "Ajout de l'étoile...",
           "1e29570462": "ajout de l'étoile",
           "9d181300e3": "favori",
           "5c49f02662": "masqué",
-          "b3f0584f5d": "chargement",
-          "cb65c75b11": "Ouverture...",
-          "f2d4f877b2": "Ouvrir GitHub"
+          "b3f0584f5d": "chargement"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "Notes de version",
@@ -9922,13 +9910,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "j'aime",
-            "e6b01c8e30": "commentaires",
-            "b65665703a": "assistance",
-            "06ea5a69a6": "github",
-            "e4fb4516d0": "étoile",
-            "e0b8c8bc25": "Soutenez le projet avec une étoile GitHub via la CLI gh.",
-            "36a72f0d9e": "Ajouter une étoile à Orca sur GitHub",
             "c61b14be7c": "grok",
             "5d9ba08673": "copilot",
             "f472e97440": "aider",
@@ -10218,7 +10199,7 @@
             "f16e41cc72": "Intégration GitHub",
             "760e2446e0": "Authentification Bitbucket Cloud avec un jeton API enregistré ou des variables d'environnement.",
             "af5ae87847": "jeton d'accès",
-            "clefRoutingDescription": "Enregistrez le jeton d'API Clef et l'identifiant de compte utilisés pour router les demandes du Workbench.",
+            "clefRoutingDescription": "Enregistrez le jeton d'API du classificateur et l'identifiant de compte utilisés pour router les demandes du Workbench.",
             "clef": "clef",
             "routing": "routage",
             "cloudflare": "cloudflare",
@@ -10227,7 +10208,6 @@
             "routingTableKeyword": "table de routage",
             "model": "modèle",
             "reasoning": "raisonnement",
-            "proposal": "proposition",
             "executor": "exécuteur",
             "dotIngress": "Tâches de dot",
             "dotIngressDescription": "Activez ou désactivez l'interface locale de dot, choisissez les espaces de travail accessibles et leur niveau d'accès maximal, et définissez les limites d'envoi.",
@@ -12541,8 +12521,8 @@
             "notProtectedDetail": "Les identifiants enregistrés ne sont pas protégés ; NASH ne les utilise donc pas. Effacez-les puis enregistrez-les à nouveau."
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef classe chaque tâche par type pour l'envoyer à l'agent choisi pour ce type."
+            "title": "Classificateur",
+            "descriptionPlain": "Le classificateur classe chaque tâche par type pour l'envoyer à l'agent choisi pour ce type."
           },
           "verification": {
             "blockPaused": "La vérification est suspendue : {{reason}}.",
@@ -12634,12 +12614,6 @@
               "resultNotUsable": "Ce résultat ne peut pas être utilisé.",
               "resultWriteFailed": "Le résultat n'a pas pu être enregistré. Réessayez."
             },
-            "pending": {
-              "title": "En attente de votre confirmation",
-              "thresholds": "Seuils de confiance : une tâche est considérée comme déléguée à partir de {{yes}} et comme conservée à {{no}} ou moins ; son type doit devancer le deuxième choix de {{margin}}.",
-              "wording": "Libellés des réponses : les {{options}} options de type de tâche et les {{answers}} réponses de délégation.",
-              "effectPlain": "Ce sont les valeurs par défaut. Toute modification nécessite une nouvelle vérification de Clef."
-            },
             "report": {
               "failedReason": "{{reason}} : {{detail}}.",
               "titlePlain": "Résultat de la vérification",
@@ -12663,17 +12637,10 @@
         },
         "routingTable": {
           "card": {
-            "refresh": "Actualiser",
             "unavailable": "Indisponible",
             "blocked": "Bloqué",
             "blockedTitle": "Le routage est bloqué",
-            "pendingNotice": "Modifications suggérées à examiner : {{count}}",
-            "review": "Examiner",
             "title": "Agents pour chaque tâche"
-          },
-          "active": {
-            "versionActive": "Version {{version}} active",
-            "created": "créée {{time}}"
           },
           "availability": {
             "available": "Disponible",
@@ -12704,102 +12671,32 @@
             "checkingPlain": "Vérification…",
             "checkPlain": "Vérifier la disponibilité"
           },
-          "proposals": {
-            "evidence": "Sources : {{sources}}",
-            "becomes": "devient",
-            "none": "aucun",
-            "noReviewers": "aucun réviseur",
-            "coordinator": "Principal",
-            "staleTitle": "Prévue pour une ancienne version",
-            "accept": "Accepter",
-            "edit": "Modifier et accepter",
-            "reject": "Rejeter",
-            "noRowPlain": "non défini",
-            "notesOnlyPlain": "Même choix ; seules ses notes changent.",
-            "metaPlain": "{{time}} · basée sur la version {{version}}",
-            "staleBodyPlain": "La version {{active}} est maintenant utilisée ; cette modification ne peut plus être acceptée. Rejetez-la ou refaites la modification dans la liste ci-dessus.",
-            "historyPlain": "Décisions prises ({{count}})",
-            "pendingTitlePlain": "Modifications suggérées",
-            "noneWaitingPlain": "Aucune en attente. Rien ne change tant que vous n'acceptez pas une suggestion."
-          },
-          "versions": {
-            "title": "Historique des versions",
-            "version": "Version {{version}}",
-            "active": "(active)",
-            "revertTo": "Revenir à la version {{version}}",
-            "revert": "Rétablir",
-            "confirmTitle": "Revenir à la version {{version}} ?",
-            "confirmBody": "Le contenu de la version {{version}} devient une nouvelle version active. La version {{active}} reste dans l'historique pour que vous puissiez y revenir.",
-            "cancel": "Annuler"
-          },
           "editor": {
-            "coordinator": "Principal",
-            "coordinatorModel": "Modèle principal",
-            "taskType": "Type de tâche",
-            "model": "Modèle",
-            "requirement": "Exigence",
-            "required": "Obligatoire",
-            "whenSupported": "Si pris en charge",
-            "modelFor": "Modèle pour {{task}}",
-            "cancel": "Annuler",
-            "acceptModified": "Accepter les modifications",
             "geminiExcluded": "Les modèles Gemini 4 sont exclus du routage.",
             "aliasUnpinned": "Saisissez un identifiant de modèle exact, et non un alias tel que opus ou latest.",
             "slugRejected": "Cet identifiant de modèle est retiré ou refusé. Saisissez un autre identifiant de modèle exact.",
             "modelInvalid": "Saisissez un identifiant de modèle exact pour le CLI sélectionné.",
-            "onlyPrimaryInherits": "Seuls la session principale et les workflows Claude peuvent hériter des paramètres principaux.",
-            "primaryInherits": "La session principale utilise toujours les paramètres principaux : choisissez Hériter pour le modèle et le raisonnement.",
-            "coordinatorStays": "Le raisonnement principal reste toujours dans la session principale.",
+            "onlyPrimaryInherits": "Seuls la session du coordinateur et les workflows Claude peuvent hériter des paramètres du coordinateur.",
+            "primaryInherits": "La session du coordinateur utilise toujours les paramètres du coordinateur : choisissez Hériter pour le modèle et le raisonnement.",
+            "coordinatorStays": "Le raisonnement du coordinateur reste toujours dans la session du coordinateur.",
             "ifSupportedConcrete": "« Si pris en charge » nécessite un niveau de raisonnement précis, et non Hériter.",
             "rowInvalid": "Cette ligne n'est pas valide. Vérifiez sa cible, son modèle et son niveau de raisonnement.",
             "nothingChanged": "La table active resterait inchangée. Modifiez d'abord au moins une règle de routage.",
-            "modifyTitlePlain": "Modifier avant d'accepter",
-            "modifyBodyPlain": "Vos modifications remplacent la suggestion. Elles prennent effet lorsque vous les acceptez.",
-            "agentFor": "Agent pour {{task}}",
-            "effortFor": "Effort pour {{task}}",
-            "effortRequirementFor": "Exigence d'effort pour {{task}}",
-            "agent": "Agent",
-            "effort": "Effort",
-            "primaryCli": "CLI principal"
-          },
-          "import": {
-            "title": "Importer un ensemble de modifications",
-            "jsonLabel": "Ensemble de modifications (JSON)",
-            "reasonLabel": "Motif de la modification",
-            "cancel": "Annuler",
-            "reasonMissing": "Saisissez un bref motif en anglais pour cette modification.",
-            "bodyPlain": "L'ensemble sera ajouté aux modifications suggérées, où vous pourrez l'examiner et l'accepter.",
-            "submitPlain": "Importer",
-            "noActivePlain": "Le routage des tâches est indisponible ; aucune importation n'est possible.",
-            "notJsonPlain": "Ce JSON n'est pas valide. Collez l'ensemble complet de modifications.",
-            "invalidPlain": "Cet ensemble de modifications contient une valeur inutilisable. Vérifiez chaque agent, modèle et effort."
+            "primaryCli": "CLI du coordinateur",
+            "coordinatorModel": "Modèle du coordinateur"
           },
           "notices": {
-            "activated": "La version {{version}} est maintenant active.",
-            "reverted": "La version {{version}} est maintenant active, avec le contenu de la version {{from}}.",
-            "rejectedPlain": "Modification suggérée rejetée.",
-            "importedPlain": "Ajouté aux modifications suggérées. Acceptez-le à cet endroit pour l'utiliser.",
             "saved": "Enregistré."
           },
           "refusals": {
-            "duplicateActivePlain": "Ces choix sont déjà utilisés ; rien n'a été enregistré.",
-            "duplicatePendingPlain": "La même modification figure déjà dans les modifications suggérées. Examinez-la à cet endroit.",
             "integrityFailedPlain": "Le routage des tâches enregistré n'a pas pu être lu ; aucune tâche n'est donc routée. Aucune valeur par défaut n'est utilisée à sa place.",
-            "taxonomyMismatchPlain": "Le routage enregistré correspond à une autre liste de tâches et ne peut pas être utilisé. Importez un routage pour les tâches actuelles dans les options avancées.",
+            "taxonomyMismatchPlain": "Le routage des tâches enregistré a été créé pour une autre liste de tâches et ne peut donc pas être utilisé.",
             "notInstalledPlain": "Le routage des tâches n'est pas encore configuré. Redémarrez l'application pour installer les valeurs par défaut.",
             "invalidTablePlain": "Cette modification rendrait le routage des tâches invalide ; elle n'a pas été enregistrée.",
             "versionConflictPlain": "Le routage des tâches a changé pendant l'enregistrement. Réessayez.",
             "forbiddenCallerPlain": "Le routage des tâches ne peut être modifié que dans cette application.",
-            "proposalUnknownPlain": "Cette modification suggérée n'existe plus.",
-            "proposalInvalidPlain": "Cette modification suggérée ne peut pas être lue ; elle ne peut donc pas être acceptée.",
-            "alreadyDecidedPlain": "Une décision a déjà été prise pour cette modification suggérée.",
-            "proposalSupersededPlain": "Cette suggestion concernait d'anciens choix ; elle a été écartée et rien n'a changé.",
             "noChangePlain": "Tous les choix resteraient identiques ; rien n'a changé.",
-            "forbiddenProposerPlain": "Ce type de modification ne peut pas être soumis ici.",
-            "invalidProposalPlain": "Cette modification n'est pas valide ; elle n'a pas été enregistrée.",
             "baseNotActivePlain": "Le routage des tâches a changé depuis la préparation de cette modification. Réessayez.",
-            "tooManyPendingPlain": "Trop de modifications suggérées sont en attente. Acceptez-en ou rejetez-en d'abord dans les options avancées.",
-            "versionUnknownPlain": "Cette ancienne version n'existe plus.",
             "unknownPlain": "Le routage des tâches a refusé cette modification.",
             "invalidResponsePlain": "La réponse de l'application n'a pas pu être lue ici.",
             "notConnectedPlain": "Le routage des tâches est indisponible dans cette version.",
@@ -12808,7 +12705,7 @@
             "callFailedPlain": "La demande n'a pas abouti. Réessayez."
           },
           "labels": {
-            "coordinatorReasoning": "Raisonnement principal",
+            "coordinatorReasoning": "Raisonnement du coordinateur",
             "complexPlanningReasoning": "Planification et raisonnement complexes",
             "softwareEngineering": "Génie logiciel",
             "scientificExperimentValidation": "Validation d'expériences scientifiques",
@@ -12818,7 +12715,7 @@
             "highQualityWriting": "Rédaction de haute qualité",
             "fastWritingOrAlternativeDraft": "Rédaction rapide ou variante de brouillon",
             "configuredProjectWorkflow": "Workflow de projet configuré",
-            "claudePrimary": "Session principale",
+            "claudePrimary": "Session du coordinateur",
             "claudeSubagent": "Sous-agent Claude",
             "claudeWorkflow": "Workflow Claude",
             "codexCli": "Codex CLI",
@@ -12834,26 +12731,15 @@
             "ultra": "Ultra",
             "inherit": "Hériter",
             "whenSupported": "(si pris en charge)",
-            "bundledUpdate": "Mise à jour de l'application",
-            "benchmarkReview": "Revue des benchmarks",
-            "agent": "Agent",
-            "userImport": "Votre modification",
-            "accepted": "Acceptée",
-            "acceptedModified": "Acceptée avec modifications",
-            "rejected": "Rejetée",
-            "superseded": "Remplacée",
-            "sourceBundled": "Valeur par défaut de l'application",
-            "sourceUser": "Votre table",
-            "sameAsCoordinator": "Identique au principal"
+            "sameAsCoordinator": "Identique au coordinateur"
           },
           "inline": {
             "edit": "Modifier",
-            "reviewersTitle": "Réviseurs",
             "reviewersHelp": "Examinent le travail terminé qui ne dispose pas de contrôle automatique.",
             "noReviewers": "Aucun réviseur : le travail sans contrôle automatique ne peut pas être examiné.",
             "reviewer": "Réviseur {{number}}",
             "editFor": "Modifier {{task}}",
-            "coordinator": "Principal",
+            "coordinator": "Coordinateur",
             "listLabel": "Agent pour chaque tâche",
             "save": "Enregistrer",
             "cancel": "Annuler",
@@ -12861,13 +12747,8 @@
             "modelFor": "Modèle pour {{task}}",
             "effortFor": "Effort pour {{task}}",
             "onlyIfSupported": "Uniquement si le modèle le prend en charge",
-            "coordinatorEffort": "Effort principal"
-          },
-          "advanced": {
-            "unreadable": "Modifications suggérées illisibles : {{count}}",
-            "importLabel": "Importer un ensemble de modifications",
-            "importDescription": "Collez le routage au format JSON. Il reste dans les modifications suggérées jusqu'à votre acceptation.",
-            "import": "Importer…"
+            "coordinatorEffort": "Effort du coordinateur",
+            "reviewersTitle": "Réviseurs"
           }
         },
         "dotIngress": {
@@ -13079,9 +12960,6 @@
             "remoteDescription": "Permettez à dot d'accéder à cette application via votre GPT Site : activation, adresse du Site et jeton d'accès, appairage et révocation."
           }
         },
-        "advancedDisclosure": {
-          "label": "Options avancées"
-        },
         "copyDetails": {
           "copied": "Détails copiés.",
           "failed": "Les détails n'ont pas pu être copiés.",
@@ -13089,7 +12967,7 @@
         },
         "taskRouting": {
           "search": {
-            "agentsDescription": "Choisissez l'agent, le modèle et l'effort pour chaque type de tâche, et acceptez ou rejetez les modifications suggérées.",
+            "agentsDescription": "Choisissez l'agent, le modèle et l'effort pour chaque type de tâche.",
             "effort": "effort",
             "agent": "agent"
           }

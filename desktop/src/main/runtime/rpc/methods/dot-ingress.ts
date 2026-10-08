@@ -18,7 +18,7 @@ import {
 import { helloResult } from '../../dot-ingress/dot-ingress-hello'
 import { submitDotRequest } from '../../dot-ingress/dot-ingress-intake'
 import { sendDotMessage } from '../../dot-ingress/dot-ingress-message-service'
-import { requireDotInterfaceOn } from '../../dot-ingress/dot-ingress-refusals'
+import { dotRefusal, requireDotInterfaceOn } from '../../dot-ingress/dot-ingress-refusals'
 import { dotIngressServiceDeps } from '../../dot-ingress/dot-ingress-runtime-deps'
 import {
   DotVersionedParamsSchema,
@@ -38,6 +38,12 @@ import { getDotIngressSettingsStore } from '../../orchestration/db/dot-ingress-s
 import { getDotIngressStore } from '../../orchestration/db/dot-ingress-store'
 import { defineMethod, type RpcContext } from '../core'
 import { DOT_INGRESS_VALIDATION_RPC_METHODS } from './dot-ingress-validations'
+import { DotAttachParams } from '../../../../shared/dot-ingress/dot-ingress-attach'
+import { attachDotCoordinator } from '../../dot-ingress/dot-ingress-attach'
+import {
+  adoptNativeCoordinator,
+  nativeCoordinatorAuthority
+} from '../../workflow-run/native-coordinator-adoption'
 
 /** The caller check runs first, before params, the database or any service is touched. */
 function dotCall(context: RpcContext) {
@@ -53,6 +59,39 @@ const params = DotVersionedParamsSchema
  * these names, and the ingress dispatcher must not see any other. Every method is unary.
  */
 export const DOT_INGRESS_RPC_METHODS = [
+  defineMethod({
+    name: 'dotIngress.requests.attach',
+    params,
+    handler: async (raw, context) => {
+      dotCall(context)
+      const input = parseDotCall(raw, DotAttachParams)
+      const deps = dotIngressServiceDeps(context.runtime)
+      const result = await attachDotCoordinator(deps, input, (workspaceId) => {
+        try {
+          const authority = nativeCoordinatorAuthority(context.runtime, input.coordinatorRunId)
+          if (
+            context.runtime.getTerminalWorktreeIdForHandle(authority.terminalHandle) !== workspaceId
+          ) {
+            throw dotRefusal('dot_workspace_unavailable')
+          }
+          return adoptNativeCoordinator(context.runtime, authority, {
+            runId: input.coordinatorRunId,
+            requestedAccess: input.requestedAccess
+          })
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            'code' in error &&
+            error.code === 'autopilot_native_coordinator_refused'
+          ) {
+            throw dotRefusal('dot_request_not_found', { reason: 'coordinator_not_available' })
+          }
+          throw error
+        }
+      })
+      return submitResult(deps.db, result)
+    }
+  }),
   defineMethod({
     name: 'dotIngress.hello',
     params,

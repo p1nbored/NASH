@@ -5,6 +5,8 @@ import type { RunRow } from '../../../../orchestration/types'
 import type { OrchestrationCompatibilityCallerAuthority } from '../../../../runtime-terminal-contracts'
 import { resolveAppRunPrimary } from '../../../../workflow-run/app-run-primary'
 import { appRunReadersFor, NO_APP_RUNS } from '../../../../workflow-run/app-run-readers'
+import { adoptNativeCoordinator } from '../../../../workflow-run/native-coordinator-adoption'
+import { getPrimarySessionStore } from '../../../../orchestration/db/primary-session-store'
 import type { RpcContext } from '../../../core'
 import { resolveRunScope } from '../runs/run-scope'
 import { AUTOPILOT_TASK_API_ERROR_CODES, autopilotRefusal } from './autopilot-task-api'
@@ -69,11 +71,16 @@ export function resolveAutopilotPrimaryCaller(
     throw refused('not_attested')
   }
   const db = runtime.getOrchestrationDb()
-  const readers = appRunReadersFor(db)
-  if (readers === NO_APP_RUNS) {
-    throw refused('not_app_run')
-  }
   const run = boundRun(runtime, context, authority)
+  let readers = appRunReadersFor(db)
+  if (
+    readers === NO_APP_RUNS ||
+    !readers.findAppRun(run.id) ||
+    !getPrimarySessionStore(db).findLiveByRun(run.id)
+  ) {
+    adoptNativeCoordinator(runtime, authority, { runId: run.id })
+    readers = appRunReadersFor(db)
+  }
   const resolved = resolveAppRunPrimary(db, readers, authority, { runId: run.id })
   if (!resolved.ok) {
     throw refused(resolved.refusal)

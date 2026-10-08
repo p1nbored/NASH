@@ -2,9 +2,9 @@
 // Nothing here reads a store or calls a runtime; every hash is an obviously synthetic value.
 import { buildTestRoutingTable } from '../../../../shared/routing-table/routing-table-document-rows.test-fixture'
 import {
-  RoutingTableProposalSchema,
-  type RoutingTableProposal
-} from '../../../../shared/routing-table/routing-table-proposal-schema'
+  RoutingTableEditSchema,
+  type RoutingTableEdit
+} from '../../../../shared/routing-table/routing-table-edit-schema'
 import {
   RoutingTableSchema,
   type RoutingTable
@@ -43,10 +43,8 @@ export function fixtureTable(overrides: Record<string, unknown> = {}): RoutingTa
   )
 }
 
-export function fixtureProposal(overrides: Record<string, unknown> = {}): RoutingTableProposal {
-  return RoutingTableProposalSchema.parse({
-    schema_version: 1,
-    proposer: 'bundled_update',
+export function fixtureEdit(overrides: Record<string, unknown> = {}): RoutingTableEdit {
+  return RoutingTableEditSchema.parse({
     base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
     changes: [
       {
@@ -56,10 +54,6 @@ export function fixtureProposal(overrides: Record<string, unknown> = {}): Routin
         reasoning_level: 'max'
       }
     ],
-    rationale: 'Newer benchmark evidence favours GPT-6 Astra for terminal-heavy engineering.',
-    evidence: [{ name: 'Artificial Analysis' }],
-    proposal_id: 'proposal-0001',
-    created_at: '2026-10-05T09:00:00Z',
     ...overrides
   })
 }
@@ -69,32 +63,6 @@ export function fixtureListResult(
 ): WorkbenchRoutingTableListResult {
   return WorkbenchRoutingTableListResultSchema.parse({
     active: { ok: true, version: 3, sha256: FIXTURE_SHA_V3, source: 'user', table: fixtureTable() },
-    activeVersion: 3,
-    versions: [
-      {
-        version: 1,
-        sha256: FIXTURE_SHA_V1,
-        source: 'bundled',
-        acceptedAt: '2026-10-04T00:00:00Z',
-        proposalId: null
-      },
-      {
-        version: 2,
-        sha256: FIXTURE_SHA_V2,
-        source: 'user',
-        acceptedAt: '2026-10-04T12:00:00Z',
-        proposalId: 'proposal-0000'
-      },
-      {
-        version: 3,
-        sha256: FIXTURE_SHA_V3,
-        source: 'user',
-        acceptedAt: '2026-10-05T08:30:00Z',
-        proposalId: null
-      }
-    ],
-    proposals: [{ proposal: fixtureProposal(), decision: null, stale: false }],
-    unreadableProposalIds: [],
     availability: null,
     ...overrides
   })

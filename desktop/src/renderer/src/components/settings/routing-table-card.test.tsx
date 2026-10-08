@@ -19,7 +19,7 @@ import {
   FIXTURE_SHA_V3,
   FIXTURE_SHA_V4,
   fixtureListResult,
-  fixtureProposal,
+  fixtureEdit,
   fixtureTable
 } from './routing-table-view.test-fixture'
 
@@ -57,14 +57,6 @@ function taskRow(name: string): HTMLElement {
   return within(list).getByRole('listitem', { name })
 }
 
-function openAdvanced(): void {
-  fireEvent.click(screen.getByRole('button', { name: 'Advanced' }))
-}
-
-function pendingProposal(): HTMLElement {
-  return screen.getByRole('group', { name: 'App update' })
-}
-
 async function copiedDetails(): Promise<string> {
   await act(async () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Copy details' })[0])
@@ -84,6 +76,15 @@ describe('RoutingTableCard', () => {
     cleanup()
   })
 
+  it('shows direct route editing without Advanced, import, history or suggested-change controls', async () => {
+    answer({ 'workbench.routingTable.list': fixtureListResult() })
+    await renderCard()
+    expect(screen.queryByRole('button', { name: 'Advanced' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Review' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Import…' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Edit Reviewer 1' })).toBeTruthy()
+  })
+
   it('reads the table through the local desktop runtime only', async () => {
     answer({ 'workbench.routingTable.list': fixtureListResult() })
     await renderCard()
@@ -99,10 +100,10 @@ describe('RoutingTableCard', () => {
     expect(engineering.textContent).toContain('Claude subagent')
     expect(engineering.textContent).toContain('claude-sonnet-5-5')
     expect(engineering.textContent).toContain('Max')
-    expect(taskRow('Configured project workflow').textContent).toContain('Same as primary')
+    expect(taskRow('Configured project workflow').textContent).toContain('Same as coordinator')
     expect(taskRow('Fast writing or alternative draft').textContent).toContain('when supported')
-    expect(taskRow('Primary').textContent).toContain('Claude Code')
-    expect(screen.queryByRole('listitem', { name: 'Primary reasoning' })).toBeNull()
+    expect(taskRow('Coordinator').textContent).toContain('Claude Code')
+    expect(screen.queryByRole('listitem', { name: 'Coordinator reasoning' })).toBeNull()
     const reviewers = screen.getByRole('list', { name: 'Reviewers' })
     expect(
       within(reviewers)
@@ -111,179 +112,10 @@ describe('RoutingTableCard', () => {
     ).toEqual([expect.stringContaining('gpt-6.1-sol'), expect.stringContaining('claude-opus-5-5')])
   })
 
-  it('keeps versions, hashes and suggestion ids out of the visible text until Advanced opens', async () => {
-    answer({ 'workbench.routingTable.list': fixtureListResult() })
-    await renderCard()
-
-    const text = document.body.textContent ?? ''
-    expect(text).not.toContain(FIXTURE_SHA_V3.slice(0, 12))
-    expect(text).not.toContain('proposal-0001')
-    expect(text).not.toMatch(/Version 3/)
-    expect(screen.queryByRole('group', { name: 'App update' })).toBeNull()
-
-    openAdvanced()
-
-    expect(screen.getByText('Version 3 active')).toBeTruthy()
-    expect(document.body.textContent).not.toContain(FIXTURE_SHA_V3.slice(0, 12))
-    expect(document.body.textContent).not.toContain('proposal-0001')
-    const details = await copiedDetails()
-    expect(details).toContain(FIXTURE_SHA_V3)
-    expect(details).toContain('proposal-0001')
-  })
-
-  it('says how many suggested changes wait and opens them for review', async () => {
-    answer({ 'workbench.routingTable.list': fixtureListResult() })
-    await renderCard()
-
-    expect(screen.getByText('Suggested changes to review: 1')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }))
-
-    const proposal = pendingProposal()
-    expect(within(proposal).getByText(/Newer benchmark evidence/)).toBeTruthy()
-    const change = within(proposal).getByRole('listitem')
-    expect(change.textContent).toContain('Software engineering')
-    expect(change.textContent).toContain('Claude subagent · claude-sonnet-5-5 · Max')
-    expect(change.textContent).toContain('Codex CLI · gpt-6-astra · Max')
-  })
-
-  it('accepts a suggested change, reports the new version and reads the table again', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult(),
-      'workbench.routingTable.accept': {
-        ok: true,
-        version: 4,
-        sha256: FIXTURE_SHA_V4,
-        proposalId: 'proposal-0001'
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    await act(async () => {
-      fireEvent.click(within(pendingProposal()).getByRole('button', { name: 'Accept' }))
-    })
-
-    expect(callsTo('workbench.routingTable.accept')).toEqual([{ proposalId: 'proposal-0001' }])
-    expect(screen.getByRole('status').textContent).toBe('Version 4 is now active.')
-    expect(callsTo('workbench.routingTable.list')).toHaveLength(2)
-  })
-
-  it('rejects a suggested change through the desktop RPC', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult(),
-      'workbench.routingTable.reject': {
-        ok: true,
-        version: null,
-        sha256: null,
-        proposalId: 'proposal-0001'
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    await act(async () => {
-      fireEvent.click(within(pendingProposal()).getByRole('button', { name: 'Reject' }))
-    })
-
-    expect(callsTo('workbench.routingTable.reject')).toEqual([{ proposalId: 'proposal-0001' }])
-    expect(screen.getByRole('status').textContent).toBe('Suggested change rejected.')
-  })
-
-  it('explains a refusal in plain English and keeps its code behind Copy details', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult(),
-      'workbench.routingTable.accept': {
-        ok: false,
-        reason: 'proposal_superseded',
-        detail: null,
-        existingProposalId: null
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    await act(async () => {
-      fireEvent.click(within(pendingProposal()).getByRole('button', { name: 'Accept' }))
-    })
-
-    const alert = screen.getByRole('alert')
-    expect(alert.textContent).toMatch(/older choices/i)
-    expect(alert.textContent).not.toContain('proposal_superseded')
-    expect(await copiedDetails()).toContain('reason: proposal_superseded')
-  })
-
-  it('accepts an edited suggestion with the edited rows as the modification', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult(),
-      'workbench.routingTable.accept': {
-        ok: true,
-        version: 4,
-        sha256: FIXTURE_SHA_V4,
-        proposalId: 'proposal-0001'
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    fireEvent.click(within(pendingProposal()).getByRole('button', { name: 'Edit and accept' }))
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog.textContent).not.toContain('proposal-0001')
-    fireEvent.change(within(dialog).getByLabelText('Model for Software engineering'), {
-      target: { value: 'gpt-6.1-sol' }
-    })
-    await act(async () => {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Accept with changes' }))
-    })
-
-    expect(callsTo('workbench.routingTable.accept')).toEqual([
-      {
-        proposalId: 'proposal-0001',
-        modification: {
-          changes: [
-            {
-              task_type: 'software_engineering',
-              execution_target: 'codex_cli',
-              model: 'gpt-6.1-sol',
-              reasoning_level: 'max',
-              reasoning_requirement: 'required'
-            }
-          ]
-        }
-      }
-    ])
-  })
-
-  it('refuses an alias in the suggestion editor and sends nothing', async () => {
-    answer({ 'workbench.routingTable.list': fixtureListResult() })
-    await renderCard()
-    openAdvanced()
-
-    fireEvent.click(within(pendingProposal()).getByRole('button', { name: 'Edit and accept' }))
-    const dialog = await screen.findByRole('dialog')
-    const model = within(dialog).getByLabelText('Model for Software engineering')
-    fireEvent.change(model, { target: { value: 'opus' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Accept with changes' }))
-
-    expect(within(dialog).getByRole('alert').textContent).toMatch(/exact model ID/i)
-    expect(model.getAttribute('aria-invalid')).toBe('true')
-    expect(callsTo('workbench.routingTable.accept')).toHaveLength(0)
-  })
-
   it('saves an edit made in place as the user change and puts it into use', async () => {
     answer({
-      'workbench.routingTable.list': fixtureListResult({ proposals: [] }),
-      'workbench.routingTable.import': {
-        ok: true,
-        version: null,
-        sha256: null,
-        proposalId: 'proposal-0002'
-      },
-      'workbench.routingTable.accept': {
-        ok: true,
-        version: 4,
-        sha256: FIXTURE_SHA_V4,
-        proposalId: 'proposal-0002'
-      }
+      'workbench.routingTable.list': fixtureListResult(),
+      'workbench.routingTable.save': { ok: true, version: 4, sha256: FIXTURE_SHA_V4 }
     })
     await renderCard()
 
@@ -296,33 +128,26 @@ describe('RoutingTableCard', () => {
       fireEvent.click(within(row).getByRole('button', { name: 'Save' }))
     })
 
-    expect(callsTo('workbench.routingTable.import')).toEqual([
+    expect(callsTo('workbench.routingTable.save')).toEqual([
       {
-        proposal: {
-          schema_version: 1,
-          proposer: 'user_import',
-          base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
-          changes: [
-            {
-              task_type: 'routine_analysis_batch',
-              execution_target: 'codex_cli',
-              model: 'gpt-6-astra',
-              reasoning_level: 'high',
-              reasoning_requirement: 'required'
-            }
-          ],
-          rationale: 'Edited in Settings.',
-          evidence: []
-        }
+        base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
+        changes: [
+          {
+            task_type: 'routine_analysis_batch',
+            execution_target: 'codex_cli',
+            model: 'gpt-6-astra',
+            reasoning_level: 'high',
+            reasoning_requirement: 'required'
+          }
+        ]
       }
     ])
-    expect(callsTo('workbench.routingTable.accept')).toEqual([{ proposalId: 'proposal-0002' }])
     expect(screen.getByRole('status').textContent).toBe('Saved.')
     expect(screen.queryByLabelText('Model for Routine analysis batch')).toBeNull()
   })
 
   it('refuses an alias in place and sends nothing', async () => {
-    answer({ 'workbench.routingTable.list': fixtureListResult({ proposals: [] }) })
+    answer({ 'workbench.routingTable.list': fixtureListResult() })
     await renderCard()
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Software engineering' }))
@@ -335,64 +160,76 @@ describe('RoutingTableCard', () => {
 
     expect(within(row).getByRole('alert').textContent).toMatch(/exact model ID/i)
     expect(model.getAttribute('aria-invalid')).toBe('true')
-    expect(callsTo('workbench.routingTable.import')).toHaveLength(0)
+    expect(callsTo('workbench.routingTable.save')).toHaveLength(0)
+  })
+
+  it('activates a reviewer edit through the same versioned save flow as task routes', async () => {
+    answer({
+      'workbench.routingTable.list': fixtureListResult(),
+      'workbench.routingTable.save': { ok: true, version: 4, sha256: FIXTURE_SHA_V4 }
+    })
+    await renderCard()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Reviewer 1' }))
+    fireEvent.change(screen.getByLabelText('Model for Reviewer 1'), {
+      target: { value: 'gpt-6-astra' }
+    })
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })))
+    expect(callsTo('workbench.routingTable.save')).toEqual([
+      expect.objectContaining({
+        base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
+        changes: [],
+        validation: {
+          reviewers: [
+            { target: 'codex_cli', model: 'gpt-6-astra', reasoning_level: 'high' },
+            { target: 'claude_headless', model: 'claude-opus-5-5', reasoning_level: 'high' }
+          ]
+        }
+      })
+    ])
+    expect(screen.getByRole('status').textContent).toBe('Saved.')
   })
 
   it('closes an unchanged edit without sending anything', async () => {
-    answer({ 'workbench.routingTable.list': fixtureListResult({ proposals: [] }) })
+    answer({ 'workbench.routingTable.list': fixtureListResult() })
     await renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Primary' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Coordinator' }))
     await act(async () => {
-      fireEvent.click(within(taskRow('Primary')).getByRole('button', { name: 'Save' }))
+      fireEvent.click(within(taskRow('Coordinator')).getByRole('button', { name: 'Save' }))
     })
 
-    expect(screen.queryByLabelText('Primary model')).toBeNull()
-    expect(callsTo('workbench.routingTable.import')).toHaveLength(0)
+    expect(screen.queryByLabelText('Coordinator model')).toBeNull()
+    expect(callsTo('workbench.routingTable.save')).toHaveLength(0)
   })
 
-  it('requires a new model when switching the primary CLI and saves through a versioned proposal', async () => {
+  it('requires a new model when switching the primary CLI and saves through a versioned save', async () => {
     answer({
-      'workbench.routingTable.list': fixtureListResult({ proposals: [] }),
-      'workbench.routingTable.import': {
-        ok: true,
-        version: null,
-        sha256: null,
-        proposalId: 'proposal-0002'
-      },
-      'workbench.routingTable.accept': {
-        ok: true,
-        version: 4,
-        sha256: FIXTURE_SHA_V4,
-        proposalId: 'proposal-0002'
-      }
+      'workbench.routingTable.list': fixtureListResult(),
+      'workbench.routingTable.save': { ok: true, version: 4, sha256: FIXTURE_SHA_V4 }
     })
     await renderCard()
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Primary' }))
-    const row = taskRow('Primary')
-    fireEvent.click(within(row).getByRole('combobox', { name: 'Primary CLI' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Coordinator' }))
+    const row = taskRow('Coordinator')
+    fireEvent.click(within(row).getByRole('combobox', { name: 'Coordinator CLI' }))
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'Claude Code',
       'Codex'
     ])
     fireEvent.click(screen.getByRole('option', { name: 'Codex' }))
-    const model = within(row).getByLabelText('Primary model')
+    const model = within(row).getByLabelText('Coordinator model')
     expect(model).toHaveProperty('value', '')
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
     expect(within(row).getByRole('alert').textContent).toContain('selected CLI')
-    expect(callsTo('workbench.routingTable.import')).toHaveLength(0)
+    expect(callsTo('workbench.routingTable.save')).toHaveLength(0)
     fireEvent.change(model, { target: { value: 'gpt-6-astra' } })
     await act(async () => fireEvent.click(within(row).getByRole('button', { name: 'Save' })))
-    expect(callsTo('workbench.routingTable.import')).toEqual([
-      {
-        proposal: expect.objectContaining({
-          base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
-          coordinator: { agent: 'codex', model: 'gpt-6-astra', reasoning_level: 'max' },
-          changes: []
-        })
-      }
+    expect(callsTo('workbench.routingTable.save')).toEqual([
+      expect.objectContaining({
+        base: { table_version: 3, sha256: FIXTURE_SHA_V3 },
+        coordinator: { agent: 'codex', model: 'gpt-6-astra', reasoning_level: 'max' },
+        changes: []
+      })
     ])
-    expect(callsTo('workbench.routingTable.accept')).toEqual([{ proposalId: 'proposal-0002' }])
   })
 
   it('shows the saved primary CLI and its model', () => {
@@ -406,86 +243,7 @@ describe('RoutingTableCard', () => {
         onSave={vi.fn().mockResolvedValue(true)}
       />
     )
-    expect(taskRow('Primary').textContent).toContain('Codex · gpt-6-astra · High')
-  })
-
-  it('imports a pasted change set and names a waiting duplicate without its id', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult({ proposals: [] }),
-      'workbench.routingTable.import': {
-        ok: false,
-        reason: 'duplicate_content',
-        detail: null,
-        existingProposalId: 'proposal-0001'
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Import…' }))
-    const dialog = await screen.findByRole('dialog')
-    fireEvent.change(within(dialog).getByLabelText('Change set (JSON)'), {
-      target: { value: JSON.stringify({ changes: [fixtureProposal().changes[0]] }) }
-    })
-    fireEvent.change(within(dialog).getByLabelText('Reason for the change'), {
-      target: { value: 'Imported.' }
-    })
-    await act(async () => {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Import' }))
-    })
-
-    expect(callsTo('workbench.routingTable.import')).toHaveLength(1)
-    const alert = screen.getByRole('alert')
-    expect(alert.textContent).toMatch(/already waiting/)
-    expect(alert.textContent).not.toContain('proposal-0001')
-    expect(await copiedDetails()).toContain('existing_proposal: proposal-0001')
-  })
-
-  it('reverts to an earlier version only after an in-page confirmation', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult(),
-      'workbench.routingTable.revert': {
-        ok: true,
-        version: 4,
-        sha256: FIXTURE_SHA_V4,
-        proposalId: null
-      }
-    })
-    await renderCard()
-    openAdvanced()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Revert to version 2' }))
-    const dialog = await screen.findByRole('dialog')
-    expect(callsTo('workbench.routingTable.revert')).toHaveLength(0)
-    await act(async () => {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Revert' }))
-    })
-
-    expect(callsTo('workbench.routingTable.revert')).toEqual([{ version: 2 }])
-    expect(screen.getByRole('status').textContent).toMatch(/Version 4 is now active/)
-  })
-
-  it('cannot accept a stale suggestion and says why', async () => {
-    answer({
-      'workbench.routingTable.list': fixtureListResult({
-        proposals: [
-          {
-            proposal: fixtureProposal({ base: { table_version: 2, sha256: '2'.repeat(64) } }),
-            decision: null,
-            stale: true
-          }
-        ]
-      })
-    })
-    await renderCard()
-    openAdvanced()
-
-    const proposal = pendingProposal()
-    expect(within(proposal).getByRole('button', { name: 'Accept' })).toHaveProperty(
-      'disabled',
-      true
-    )
-    expect(within(proposal).getByText(/based on version 2/i)).toBeTruthy()
+    expect(taskRow('Coordinator').textContent).toContain('Codex · gpt-6-astra · High')
   })
 
   it('shows a damaged store as blocked in plain words and never draws a default table', async () => {
@@ -494,13 +252,8 @@ describe('RoutingTableCard', () => {
         active: {
           ok: false,
           reason: 'routing_table_integrity_failed',
-          detail: 'version_hash_mismatch',
-          existingProposalId: null
-        },
-        activeVersion: null,
-        versions: [],
-        proposals: [],
-        unreadableProposalIds: ['proposal-0009']
+          detail: 'version_hash_mismatch'
+        }
       })
     })
     await renderCard()
@@ -511,8 +264,6 @@ describe('RoutingTableCard', () => {
     expect(blocked.textContent).not.toMatch(/hash|index/)
     expect(screen.queryByRole('list', { name: 'Agent for each task' })).toBeNull()
     expect(await copiedDetails()).toContain('detail: version_hash_mismatch')
-    openAdvanced()
-    expect(screen.getByText(/could not be read: 1/)).toBeTruthy()
   })
 
   it('says task routing is not available when this build has no such method', async () => {
@@ -538,37 +289,22 @@ describe('routing edits under concurrent changes and failed activation', () => {
     cleanup()
     rpc.mockReset()
   })
-  it.each(['refused', 'disconnected'])(
-    'rejects its imported edit if activation is %s',
-    async (mode) => {
-      rpc.mockImplementation(async (_target: unknown, method: string) => {
-        if (method === 'workbench.routingTable.list') {
-          return fixtureListResult()
-        }
-        if (method === 'workbench.routingTable.accept') {
-          if (mode === 'disconnected') {
-            throw new Error('connection lost')
-          }
-          return {
-            ok: false,
-            reason: 'proposal_superseded',
-            detail: null,
-            existingProposalId: null
-          }
-        }
-        return { ok: true, version: null, sha256: null, proposalId: 'proposal-local' }
-      })
-      const { result } = renderHook(() => useRoutingTable())
-      await act(async () => {})
-      await act(async () => {
-        expect(await result.current.applyEdit(fixtureProposal())).toBe(false)
-      })
-      expect(rpc).toHaveBeenCalledWith({ kind: 'local' }, 'workbench.routingTable.reject', {
-        proposalId: 'proposal-local'
-      })
-      expect(result.current.notice?.kind).toBe('error')
-    }
-  )
+  it.each(['refused', 'disconnected'])('reports an inline save that is %s', async (mode) => {
+    rpc.mockImplementation(async (_target: unknown, method: string) => {
+      if (method === 'workbench.routingTable.list') {
+        return fixtureListResult()
+      }
+      if (mode === 'disconnected') {
+        throw new Error('connection lost')
+      }
+      return { ok: false, reason: 'base_not_active', detail: null }
+    })
+    const { result } = renderHook(() => useRoutingTable())
+    await act(async () => {})
+    await act(async () => expect(await result.current.applyEdit(fixtureEdit())).toBe(false))
+    expect(result.current.notice?.kind).toBe('error')
+    expect(callsTo('workbench.routingTable.save')).toHaveLength(1)
+  })
 
   it('closes an old draft when a newer active table arrives, so it cannot overwrite concurrent edits', () => {
     const onSave = vi.fn(async () => true)

@@ -1,7 +1,10 @@
 import { useId, useState } from 'react'
 import { translate } from '@/i18n/i18n'
-import type { ProposalChanges } from '../../../../shared/routing-table/routing-table-proposal-schema'
-import type { RoutingTable } from '../../../../shared/routing-table/routing-table-schema'
+import type { RoutingTableChanges } from '../../../../shared/routing-table/routing-table-edit-schema'
+import type {
+  RoutingTable,
+  ValidationReviewer
+} from '../../../../shared/routing-table/routing-table-schema'
 import { COORDINATOR_TASK_TYPE } from '../../../../shared/routing-table/routing-table-taxonomy'
 import type {
   RouteAvailabilityView,
@@ -18,17 +21,23 @@ import {
   type EditorDraft
 } from './routing-table-editor-model'
 import type { InlineEditKey } from './routing-table-inline-edit'
-import { CoordinatorChoiceEditor, RouteChoiceEditor } from './routing-table-inline-editor'
+import {
+  CoordinatorChoiceEditor,
+  RouteChoiceEditor,
+  type EditorCallbacks
+} from './routing-table-inline-editor'
 import {
   executionTargetLabel,
   inheritsCoordinator,
   primaryAgentLabel,
   reasoningLevelLabel,
+  reviewerLabel,
   reviewerTargetLabel,
   routeEffortLabel,
   sameAsCoordinatorLabel,
   taskTypeLabel
 } from './routing-table-labels'
+import { ReviewerChoiceEditor } from './routing-table-reviewer-editor'
 
 type Editing = { key: InlineEditKey; draft: EditorDraft; errors: readonly DraftError[] }
 
@@ -96,10 +105,21 @@ function ChoiceRow(props: {
 
 function Reviewers({
   table,
-  availability
+  availability,
+  editFor,
+  editing,
+  editorProps,
+  onChange
 }: {
   table: RoutingTable
   availability: RoutingTableAvailabilityView | null
+  editFor: (
+    key: InlineEditKey,
+    label: string
+  ) => { label: string; disabled: boolean; onClick: () => void }
+  editing: Editing | null
+  editorProps: (index: number) => EditorCallbacks
+  onChange: (index: number, reviewer: ValidationReviewer) => void
 }): React.JSX.Element {
   const headingId = useId()
   const { reviewers } = table.validation
@@ -126,11 +146,7 @@ function Reviewers({
           {reviewers.map((reviewer, index) => (
             <ChoiceRow
               key={`${reviewer.target}:${reviewer.model}:${reviewer.reasoning_level}`}
-              label={translate(
-                'auto.components.settings.routingTable.inline.reviewer',
-                'Reviewer {{number}}',
-                { number: index + 1 }
-              )}
+              label={reviewerLabel(index)}
               summary={
                 <ChoiceSummary
                   agent={reviewerTargetLabel(reviewer.target)}
@@ -139,6 +155,17 @@ function Reviewers({
                 />
               }
               status={availability?.reviewers[index] ?? null}
+              edit={editFor(index, reviewerLabel(index))}
+              editor={
+                editing?.key === index && editing.draft.validation.reviewers[index] ? (
+                  <ReviewerChoiceEditor
+                    {...editorProps(index)}
+                    reviewer={editing.draft.validation.reviewers[index]}
+                    label={reviewerLabel(index)}
+                    onChange={(updated) => onChange(index, updated)}
+                  />
+                ) : null
+              }
             />
           ))}
         </ul>
@@ -162,7 +189,7 @@ type RoutingTableTaskListProps = {
   table: RoutingTable
   availability: RoutingTableAvailabilityView | null
   busy: boolean
-  onSave: (changes: ProposalChanges) => Promise<boolean>
+  onSave: (changes: RoutingTableChanges) => Promise<boolean>
 }
 
 export function RoutingTableTaskList(props: RoutingTableTaskListProps): React.JSX.Element {
@@ -214,7 +241,7 @@ function RoutingTableTaskListEditor({
 
   const coordinatorLabel = translate(
     'auto.components.settings.routingTable.inline.coordinator',
-    'Primary'
+    'Coordinator'
   )
   return (
     <div className="space-y-group">
@@ -293,7 +320,30 @@ function RoutingTableTaskListEditor({
             )
           })}
       </ul>
-      <Reviewers table={table} availability={availability} />
+      <Reviewers
+        table={table}
+        availability={availability}
+        editFor={editFor}
+        editing={editing}
+        editorProps={editorProps}
+        onChange={(index, updated) => {
+          if (editing === null) {
+            return
+          }
+          setEditing({
+            ...editing,
+            draft: {
+              ...editing.draft,
+              validation: {
+                ...editing.draft.validation,
+                reviewers: editing.draft.validation.reviewers.map((entry, position) =>
+                  position === index ? updated : entry
+                )
+              }
+            }
+          })
+        }}
+      />
     </div>
   )
 }

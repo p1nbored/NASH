@@ -2,10 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { translate } from '@/i18n/i18n'
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
-import type {
-  ProposalChanges,
-  ProposalSubmission
-} from '../../../../shared/routing-table/routing-table-proposal-schema'
+import type { RoutingTableEdit } from '../../../../shared/routing-table/routing-table-edit-schema'
 import type { RoutingTableAvailabilityView } from '../../../../shared/workbench-route-availability-view'
 import {
   WorkbenchRoutingTableCheckResultSchema,
@@ -41,13 +38,8 @@ export type RoutingTableModel = {
   checking: boolean
   notice: RoutingTableNotice | null
   refresh: () => Promise<void>
-  clearNotice: () => void
-  accept: (proposalId: string, modification?: ProposalChanges) => Promise<boolean>
-  reject: (proposalId: string) => Promise<boolean>
-  importChangeSet: (proposal: ProposalSubmission) => Promise<boolean>
-  /** Saves an edit made in place: stored as the user's own change, then accepted in one step. */
-  applyEdit: (proposal: ProposalSubmission) => Promise<boolean>
-  revert: (version: number) => Promise<boolean>
+  /** Saves an inline edit directly as the next active version. */
+  applyEdit: (edit: RoutingTableEdit) => Promise<boolean>
   /** The user's "Check now"; may run each CLI's model listing in main. */
   checkRoutes: () => Promise<void>
 }
@@ -75,16 +67,6 @@ function availabilityFor(
 
 type Decision = { call: () => Promise<unknown>; success: (result: Decided) => string }
 
-function activated(result: Decided): string {
-  return translate(
-    'auto.components.settings.routingTable.notices.activated',
-    'Version {{version}} is now active.',
-    {
-      version: result.version ?? '?'
-    }
-  )
-}
-
 function refusalNotice(refusal: RoutingTableRefusalView): RoutingTableNotice {
   return {
     kind: 'error',
@@ -95,34 +77,6 @@ function refusalNotice(refusal: RoutingTableRefusalView): RoutingTableNotice {
 
 function callErrorNotice(error: unknown, message: string): RoutingTableNotice {
   return { kind: 'error', message, details: routingTableCallErrorDetails(error) }
-}
-
-/** One decision: store the edit as the user's own change, then accept exactly that change. */
-async function importThenAccept(proposal: ProposalSubmission): Promise<unknown> {
-  const imported = WorkbenchRoutingTableDecisionResultSchema.parse(
-    await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.import', { proposal })
-  )
-  if (!imported.ok) {
-    return imported
-  }
-  if (imported.proposalId === null) {
-    throw new Error('import answered without a proposal id')
-  }
-  const params = { proposalId: imported.proposalId }
-  const discard = (): Promise<unknown> =>
-    callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.reject', params).catch(() => undefined)
-  try {
-    const accepted = WorkbenchRoutingTableDecisionResultSchema.parse(
-      await callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.accept', params)
-    )
-    if (!accepted.ok) {
-      await discard()
-    }
-    return accepted
-  } catch (error) {
-    await discard()
-    throw error
-  }
 }
 
 /** Desktop-only Routing Table reads and decisions (D-016: the user activates every change). */
@@ -243,66 +197,14 @@ export function useRoutingTable(): RoutingTableModel {
     [mountedRef, refresh]
   )
 
-  const accept = useCallback(
-    (proposalId: string, modification?: ProposalChanges) =>
-      decide({
-        call: () =>
-          callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.accept', {
-            proposalId,
-            ...(modification === undefined ? {} : { modification })
-          }),
-        success: activated
-      }),
-    [decide]
-  )
-  const reject = useCallback(
-    (proposalId: string) =>
-      decide({
-        call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.reject', { proposalId }),
-        success: () =>
-          translate(
-            'auto.components.settings.routingTable.notices.rejectedPlain',
-            'Suggested change rejected.'
-          )
-      }),
-    [decide]
-  )
-  const importChangeSet = useCallback(
-    (proposal: ProposalSubmission) =>
-      decide({
-        call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.import', { proposal }),
-        success: () =>
-          translate(
-            'auto.components.settings.routingTable.notices.importedPlain',
-            'Added to Suggested changes. Accept it there to use it.'
-          )
-      }),
-    [decide]
-  )
   const applyEdit = useCallback(
-    (proposal: ProposalSubmission) =>
+    (edit: RoutingTableEdit) =>
       decide({
-        call: () => importThenAccept(proposal),
+        call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.save', edit),
         success: () => translate('auto.components.settings.routingTable.notices.saved', 'Saved.')
       }),
     [decide]
   )
-  const revert = useCallback(
-    (version: number) =>
-      decide({
-        call: () => callRuntimeRpc<unknown>(LOCAL, 'workbench.routingTable.revert', { version }),
-        success: (result) =>
-          translate(
-            'auto.components.settings.routingTable.notices.reverted',
-            'Version {{version}} is now active, with the content of version {{from}}.',
-            { version: result.version ?? '?', from: version }
-          )
-      }),
-    [decide]
-  )
-
-  const clearNotice = useCallback(() => setNotice(null), [])
-
   return {
     list,
     availability: availabilityFor(list, checked),
@@ -314,12 +216,7 @@ export function useRoutingTable(): RoutingTableModel {
     checking,
     notice,
     refresh,
-    clearNotice,
-    accept,
-    reject,
-    importChangeSet,
     applyEdit,
-    revert,
     checkRoutes
   }
 }

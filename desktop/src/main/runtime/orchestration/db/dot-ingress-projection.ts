@@ -23,6 +23,7 @@ import { parseDotRow } from './dot-ingress-store-input'
 import type { DotRequestRecord } from './dot-ingress-request-row'
 import type { DotIngressSettings, DotWorkspaceEntry } from './dot-ingress-settings-store'
 import type { PermissionDecisionRecord } from './permission-decision-record'
+import { isDesktopOnlyRecord } from '../../permission-relay/permission-redaction'
 
 const NOT_STARTED: DotRunView = { state: 'not_started', blocker: null }
 const CONTROL_OR_LINE_SEPARATOR = /[\p{Cc}\p{Zl}\p{Zp}]/gu
@@ -121,7 +122,11 @@ export function toDotDecisionView(
     dotMayAllow,
     toolName: record.toolName,
     agentId: record.agentId,
-    summary: redactedSummary(record.summary),
+    summary: redactedSummary(
+      isDesktopOnlyRecord(record)
+        ? `Ask the user to approve this in NASH. ${record.summary}`
+        : record.summary
+    ),
     status: record.status,
     decidedBy: record.decidedBy,
     createdAt: record.createdAt,

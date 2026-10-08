@@ -67,6 +67,13 @@ export function createDotIngressClient(metadata: RuntimeMetadata, send: DotRpcSe
   return {
     hello: () => call('dotIngress.hello', {}, DotHelloResultSchema),
     workspaces: () => call('dotIngress.workspaces.list', {}, DotWorkspacesResultSchema),
+    attach: (input: {
+      workspaceRef: string
+      coordinatorRunId: string
+      objective: string
+      idempotencyKey: string
+      requestedAccess?: DotRequestAccess
+    }) => call('dotIngress.requests.attach', input, DotSubmitResultSchema, DOT_CLI_LONG_TIMEOUT_MS),
     submit: (input: {
       workspaceRef: string
       objective: string

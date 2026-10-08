@@ -2,9 +2,8 @@ import {
   RoutingTableSchema,
   type RoutingTable
 } from '../../shared/routing-table/routing-table-schema'
-import { routingTableContentSha256, routingTableSha256 } from './routing-table-bundle'
-import { isDesktopUserCaller, type RoutingTableContext } from './routing-table-context'
-import { deriveRoutingTable } from './routing-table-derivation'
+import { routingTableSha256 } from './routing-table-bundle'
+import type { RoutingTableContext } from './routing-table-context'
 import type { RoutingTableIndex, RoutingTableIndexEntry } from './routing-table-file-store'
 
 /** Which version is active and how it changes: version file first, then the index (crash-safe order). */
@@ -203,11 +202,10 @@ export type ActivationResult =
   | ActivationRefusal
 
 /** Version file first, then the index: a crash between them leaves the old version active. */
-export function commitNextVersion(
+function commitNextVersion(
   ctx: RoutingTableContext,
   index: RoutingTableIndex,
-  candidate: RoutingTable,
-  proposalId: string | null
+  candidate: RoutingTable
 ): ActivationResult {
   const parsed = RoutingTableSchema.safeParse(candidate)
   if (!parsed.success) {
@@ -233,7 +231,7 @@ export function commitNextVersion(
         sha256,
         source: table.source,
         accepted_at: ctx.now().toISOString(),
-        proposal_id: proposalId
+        proposal_id: null
       }
     ]
   })
@@ -243,53 +241,13 @@ export function commitNextVersion(
 /** Activates a validated table as the next version; callers have already checked who may ask. */
 export function activateRoutingTable(
   ctx: RoutingTableContext,
-  input: { table: RoutingTable; proposalId: string | null }
+  input: { table: RoutingTable }
 ): ActivationResult {
   const active = verifyActive(ctx)
   if (!active.ok) {
     return active
   }
-  return commitNextVersion(ctx, active.index, input.table, input.proposalId)
-}
-
-export type RevertResult =
-  | ActivationResult
-  | { readonly ok: false; readonly reason: 'forbidden_caller' | 'version_unknown' | 'no_change' }
-
-/** Re-activates an earlier version's content as a new version. Works even when the active one is damaged. */
-export function revertRoutingTable(
-  ctx: RoutingTableContext,
-  input: { version: number; caller: unknown }
-): RevertResult {
-  if (!isDesktopUserCaller(input.caller)) {
-    return { ok: false, reason: 'forbidden_caller' }
-  }
-  const read = readIndex(ctx)
-  if (!read.ok) {
-    return read
-  }
-  const target = verifyVersion(ctx, read.index, input.version)
-  if (!target.ok) {
-    return target
-  }
-  const mismatch = taxonomyMismatch(ctx, target.table)
-  if (mismatch) {
-    return mismatch
-  }
-  const active = verifyVersion(ctx, read.index, read.index.active_version)
-  if (
-    active.ok &&
-    routingTableContentSha256(active.table) === routingTableContentSha256(target.table)
-  ) {
-    return { ok: false, reason: 'no_change' }
-  }
-  const candidate = deriveRoutingTable(target.table, {
-    tableVersion: newestVersionNumber(read.index.versions) + 1,
-    source: 'user',
-    basedOn: { table_version: input.version, sha256: target.entry.sha256 },
-    createdAt: ctx.now().toISOString()
-  })
-  return commitNextVersion(ctx, read.index, candidate, null)
+  return commitNextVersion(ctx, active.index, input.table)
 }
 
 export type VersionListing =
@@ -301,7 +259,7 @@ export type VersionListing =
   | IntegrityFailure
   | NotInstalled
 
-/** Every accepted version with its hash, for the revert choice; reads only the index. */
+/** Stored version metadata for numbering the next save; reads only the index. */
 export function listRoutingTableVersions(ctx: RoutingTableContext): VersionListing {
   const read = readIndex(ctx)
   return read.ok

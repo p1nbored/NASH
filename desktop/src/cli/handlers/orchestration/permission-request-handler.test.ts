@@ -75,7 +75,9 @@ const RELAYED = {
 describe('orchestration permission-request hook command', () => {
   it('is exported under the hidden command key', () => {
     expect(Object.keys(ORCHESTRATION_PERMISSION_HANDLERS)).toEqual([
-      'orchestration permission-request'
+      'orchestration permission-request',
+      'orchestration permission-list',
+      'orchestration permission-answer'
     ])
   })
 

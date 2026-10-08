@@ -98,7 +98,7 @@ describe('permission relay service: request, wait and answer', () => {
       expect(record).toMatchObject({
         runId: 'run_fixture01',
         ownerId: harness.ownerId,
-        agentId: 'agent_fixture01',
+        agentId: null,
         toolName: 'Bash',
         summary: 'Bash: npm test --token [redacted]',
         requestSha256: FIXTURE_REQUEST_HASH,

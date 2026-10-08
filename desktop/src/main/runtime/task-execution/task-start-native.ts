@@ -4,6 +4,7 @@ import { workspaceKindForWorktreeId } from '../../../shared/workspace-launch-kin
 import { randomUUID } from 'node:crypto'
 import { stopOrchestrationWorker } from '../rpc/methods/orchestration/worker/worker-stop'
 import { isNativeTaskAttempt } from '../workflow-run/app-run-policy'
+import { withStructuredNativeChatDisabled } from '../workflow-run/primary-session-preflight'
 import type { OrcaRuntimeService } from '../orca-runtime'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { getTaskSpecStore } from '../orchestration/db/task-spec-store'
@@ -146,7 +147,11 @@ async function startWorker(
     existingTask: task,
     params,
     orchestrationMutation: input.mutationReceipt,
-    mode: decideWorkerStartMode({ params, settings: readWorkerStartModeSettings(runtime) }),
+    // Permission relay hooks require a terminal CLI until structured approval callbacks are bridged.
+    mode: decideWorkerStartMode({
+      params,
+      settings: withStructuredNativeChatDisabled(readWorkerStartModeSettings(runtime) ?? {})
+    }),
     taskAccess: access,
     taskBrief: brief,
     routeId: route.routeId,

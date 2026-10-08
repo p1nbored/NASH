@@ -8,16 +8,16 @@ import { ORCHESTRATION_PERMISSION_COMMAND_SPECS } from './orchestration-permissi
 
 describe('orchestration permission command spec', () => {
   it('declares exactly the hidden command the PermissionRequest hook runs', () => {
-    expect(ORCHESTRATION_PERMISSION_COMMAND_SPECS.map((spec) => spec.path)).toEqual(
-      AUTOPILOT_HIDDEN_COMMANDS.map((command) => [AUTOPILOT_CLI_GROUP, command])
-    )
+    expect(
+      ORCHESTRATION_PERMISSION_COMMAND_SPECS.filter((spec) => spec.hidden).map((spec) => spec.path)
+    ).toEqual(AUTOPILOT_HIDDEN_COMMANDS.map((command) => [AUTOPILOT_CLI_GROUP, command]))
   })
 
-  it('is hidden, takes no positional argument and no flag of its own', () => {
-    for (const spec of ORCHESTRATION_PERMISSION_COMMAND_SPECS) {
+  it('keeps the hook hidden with an explicit provider flag', () => {
+    for (const spec of ORCHESTRATION_PERMISSION_COMMAND_SPECS.filter((spec) => spec.hidden)) {
       expect(spec.hidden).toBe(true)
       expect(spec.positionalArgs ?? []).toEqual([])
-      expect([...spec.allowedFlags].sort()).toEqual([...GLOBAL_FLAGS].sort())
+      expect([...spec.allowedFlags].sort()).toEqual([...GLOBAL_FLAGS, 'provider'].sort())
       expect(spec.aliases ?? []).toEqual([])
     }
   })

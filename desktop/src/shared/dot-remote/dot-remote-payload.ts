@@ -1,13 +1,10 @@
 import { createHash } from 'node:crypto'
 import { canonicalJson } from '../canonical-json'
-import {
-  DotCancelParams,
-  DotDecisionAnswerParams,
-  DotSubmitParams
-} from '../dot-ingress/dot-ingress-params'
+import { DotCancelParams, DotDecisionAnswerParams } from '../dot-ingress/dot-ingress-params'
 import { DotMessageParams } from '../dot-ingress/dot-ingress-message'
 import { DotValidationDecideParamsV3 } from '../dot-ingress/dot-ingress-validation'
 import { DOT_REMOTE_PAYLOAD_CONTRACT_VERSION } from './dot-remote-limits'
+import { DotRemoteSubmitOrAttachParams } from '../dot-ingress/dot-ingress-attach'
 
 // RG2/RG5: an inbox payload is exactly the v3 params of its method, as stored after the MCP layer
 // adds contractVersion 3 and applies the schema defaults. Its hash is what deduplication compares.
@@ -23,7 +20,7 @@ export const DOT_REMOTE_ITEM_KINDS = [
 export type DotRemoteItemKind = (typeof DOT_REMOTE_ITEM_KINDS)[number]
 
 export const DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS = {
-  submit: DotSubmitParams,
+  submit: DotRemoteSubmitOrAttachParams,
   cancel: DotCancelParams,
   permission_answer: DotDecisionAnswerParams,
   message: DotMessageParams,

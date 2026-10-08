@@ -12,7 +12,7 @@ const LINE_COMMENT = /(^|\s)\/\/[^\n]*/g
 // Why: only these two files define the informational fields, so no other module can read them.
 const INFORMATIONAL_OWNERS = new Set([
   'shared/routing-table/routing-table-schema.ts',
-  'shared/routing-table/routing-table-proposal-schema.ts'
+  'shared/routing-table/routing-table-edit-schema.ts'
 ])
 
 function productionFiles(): string[] {
@@ -39,7 +39,7 @@ describe('routing table source hygiene', () => {
         'main/routing-table/routing-table-activation.ts',
         'main/routing-table/routing-table-bundle.ts',
         'main/routing-table/routing-table-file-store.ts',
-        'main/routing-table/routing-table-proposals.ts',
+        'main/routing-table/routing-table-save.ts',
         'shared/routing-table/routing-table-schema.ts',
         'shared/routing-table/model-pin-policy.ts'
       ])

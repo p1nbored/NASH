@@ -27,7 +27,7 @@ import {
 } from './autopilot-runtime.test-fixture'
 
 // Pins the fresh current layout; unsupported local layouts fail closed without migration.
-const SCHEMA_V2_SHA256 = '97b3d23e255d5e3511c0b93b402e2008fe8f082ae9f97f65cc34dbb747295621'
+const SCHEMA_V3_SHA256 = '295d55cc24f4b3c541e4e96415c9dc85b9abe9684ddcbb9fd762260718a867c2'
 
 function normalizedLayoutHash(): string {
   const text = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) =>
@@ -43,7 +43,7 @@ describe('autopilot runtime schema family', () => {
   })
   afterEach(() => owner.close())
 
-  it('creates the whole family at version 2 and verifies it on the next start', () => {
+  it('creates the whole family at version 3 and verifies it on the next start', () => {
     ensureAutopilotRuntimeSchema(owner.db)
     const tables = owner.db
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
@@ -65,10 +65,10 @@ describe('autopilot runtime schema family', () => {
         'workflow_runs'
       ].sort()
     )
-    expect(AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT).toBe(2)
+    expect(AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT).toBe(3)
     expect(
       owner.db.prepare('SELECT version FROM autopilot_runtime_schema WHERE id = 1').get()
-    ).toEqual({ version: 2 })
+    ).toEqual({ version: 3 })
     const entries = readSchemaEntries(owner.db)
     expect(() => ensureAutopilotRuntimeSchema(owner.db)).not.toThrow()
     expect(readSchemaEntries(owner.db)).toEqual(entries)
@@ -172,7 +172,7 @@ describe('autopilot runtime schema family', () => {
       ],
       [
         'an unsupported future version',
-        (db) => db.exec('UPDATE autopilot_runtime_schema SET version = 3 WHERE id = 1')
+        (db) => db.exec('UPDATE autopilot_runtime_schema SET version = 4 WHERE id = 1')
       ],
       [
         'a weakened permission-mode CHECK',
@@ -212,7 +212,7 @@ describe('autopilot runtime schema family', () => {
   })
 
   it('pins the current layout so an unversioned change cannot ship', () => {
-    expect(normalizedLayoutHash()).toBe(SCHEMA_V2_SHA256)
+    expect(normalizedLayoutHash()).toBe(SCHEMA_V3_SHA256)
   })
 
   describe('the Clef spend link', () => {

@@ -154,7 +154,7 @@ describe('permission audience: shell quoting, expansion and globs (M1c)', () => 
       'git diff --stat',
       'tail -f build.log',
       'pnpm run build:mac',
-      'git push origin main:main'
+      'git status --short'
     ]) {
       expect(classify('Bash', { command }), command).toBe('dot_and_desktop')
     }

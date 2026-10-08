@@ -10,6 +10,14 @@ import {
 } from '../../../shared/rpc-contract/permission-relay-params'
 import { PERMISSION_HOOK_TIMEOUT_SECONDS } from '../../../shared/workflow-run/autopilot-cli-commands'
 import { parsePermissionHookInput } from './permission-hook-input'
+import type { PermissionProvider } from './permission-provider'
+import { getOptionalStringFlag, getRequiredStringFlag } from '../../flags'
+import { printResult } from '../../format'
+import {
+  WorkbenchPermissionAnswerParams,
+  WorkbenchPermissionAnswerResultSchema,
+  WorkbenchPermissionListResultSchema
+} from '../../../shared/rpc-contract/permission-relay-params'
 
 /** One RPC call returning the method's result; it throws on a transport or method failure. */
 export type PermissionHookRpc = (
@@ -37,7 +45,8 @@ const RETRY_DELAY_MS = 500
 const ERROR_CODE = /^[a-z][a-z0-9_]{0,63}$/
 
 async function readHookStdin(
-  stdin: AsyncIterable<Uint8Array | string>
+  stdin: AsyncIterable<Uint8Array | string>,
+  completeObject = false
 ): Promise<{ text: string | null; sha256: string }> {
   const hash = createHash('sha256')
   const chunks: Buffer[] = []
@@ -48,6 +57,18 @@ async function readHookStdin(
     size += bytes.length
     if (size <= STDIN_MAX_BYTES) {
       chunks.push(bytes)
+      // agy can leave its pipe open after sending the complete hook object.
+      if (completeObject && bytes.toString('utf8').trimEnd().endsWith('}')) {
+        const text = Buffer.concat(chunks).toString('utf8')
+        try {
+          const value: unknown = JSON.parse(text)
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            return { text, sha256: hash.digest('hex') }
+          }
+        } catch {
+          // A chunk boundary may fall inside a string; continue until the object is complete.
+        }
+      }
     }
   }
   const text = size <= STDIN_MAX_BYTES ? Buffer.concat(chunks).toString('utf8') : null
@@ -96,19 +117,26 @@ async function waitForDecision(
 async function relayPermissionRequest(
   rpc: PermissionHookRpc,
   io: PermissionHookIo,
-  exitBy: number
+  exitBy: number,
+  provider: PermissionProvider,
+  onRelayed: () => void
 ): Promise<PermissionHookOutput | null> {
-  const stdin = await readHookStdin(io.stdin)
+  const stdin = await readHookStdin(io.stdin, provider === 'agy')
   // Why: the server's deadline must fall before this process gives up, or an answer could win unseen.
   const budget = Math.min(PERMISSION_RELAY_WAIT_MS, exitBy - io.now() - CALL_GRACE_MS)
   const params =
-    stdin.text === null ? null : parsePermissionHookInput(stdin.text, stdin.sha256, budget)
+    stdin.text === null
+      ? null
+      : parsePermissionHookInput(stdin.text, stdin.sha256, budget, provider)
   if (!params) {
     return null
   }
   const created = PermissionRequestResultSchema.parse(
     await rpc('orchestration.permissionRequest', params, CREATE_TIMEOUT_MS)
   )
+  if (created.outcome === 'relayed') {
+    onRelayed()
+  }
   return created.outcome === 'relayed' ? waitForDecision(rpc, io, created.decisionId, exitBy) : null
 }
 
@@ -125,18 +153,35 @@ function errorCode(error: unknown): string {
  */
 export async function runPermissionRequestHook(
   rpc: PermissionHookRpc,
-  io: PermissionHookIo
+  io: PermissionHookIo,
+  provider: PermissionProvider = 'claude'
 ): Promise<void> {
   const exitBy = io.now() + PERMISSION_HOOK_TIMEOUT_SECONDS * 1000 - EXIT_MARGIN_MS
+  let output: PermissionHookOutput | null = null
+  let relayed = false
   try {
-    const output = await relayPermissionRequest(rpc, io, exitBy)
-    if (output) {
-      io.writeStdout(`${JSON.stringify(output)}\n`)
-    }
+    output = await relayPermissionRequest(rpc, io, exitBy, provider, () => {
+      relayed = true
+    })
   } catch (error) {
     io.writeStderr(
       `Permission relay unavailable (${errorCode(error)}); the prompt stays in the terminal.\n`
     )
+  }
+  if (provider === 'agy') {
+    const decision = output?.hookSpecificOutput.decision
+    io.writeStdout(
+      `${JSON.stringify(
+        decision
+          ? {
+              decision: decision.behavior,
+              ...(decision.behavior === 'deny' ? { reason: decision.message } : {})
+            }
+          : { decision: relayed ? 'force_ask' : 'ask' }
+      )}\n`
+    )
+  } else if (output) {
+    io.writeStdout(`${JSON.stringify(output)}\n`)
   }
 }
 
@@ -160,6 +205,33 @@ function clientRpc(context: HandlerContext): PermissionHookRpc {
 }
 
 export const ORCHESTRATION_PERMISSION_HANDLERS: Record<string, CommandHandler> = {
-  'orchestration permission-request': (context) =>
-    runPermissionRequestHook(clientRpc(context), processHookIo())
+  'orchestration permission-request': (context) => {
+    const provider = getOptionalStringFlag(context.flags, 'provider') ?? 'claude'
+    if (provider !== 'claude' && provider !== 'codex' && provider !== 'agy') {
+      throw new RuntimeClientError('invalid_argument', 'Unknown permission provider.')
+    }
+    if (!process.env.ORCA_PANE_KEY || !process.env.ORCA_AGENT_LAUNCH_TOKEN) {
+      if (provider === 'agy') {
+        process.stdout.write('{"decision":"ask"}\n')
+      }
+      return Promise.resolve()
+    }
+    return runPermissionRequestHook(clientRpc(context), processHookIo(), provider)
+  },
+  'orchestration permission-list': async (context) => {
+    const response = await context.client.call('orchestration.permissionList', {})
+    const result = WorkbenchPermissionListResultSchema.parse(response.result)
+    printResult({ ...response, result }, context.json, (value) =>
+      value.decisions.map((d) => `${d.decisionId}: ${d.summary}`).join('\n')
+    )
+  },
+  'orchestration permission-answer': async (context) => {
+    const params = WorkbenchPermissionAnswerParams.parse({
+      decisionId: getRequiredStringFlag(context.flags, 'decision-id'),
+      decision: getRequiredStringFlag(context.flags, 'decision')
+    })
+    const response = await context.client.call('orchestration.permissionAnswer', params)
+    const result = WorkbenchPermissionAnswerResultSchema.parse(response.result)
+    printResult({ ...response, result }, context.json, (value) => value.outcome)
+  }
 }

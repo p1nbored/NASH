@@ -377,7 +377,7 @@ describe('resolveValidationReviewer', () => {
       based_on: { table_version: 1, sha256: 'a'.repeat(64) },
       validation: { reviewers: [] }
     })
-    expect(activateRoutingTable(env.ctx, { table, proposalId: null }).ok).toBe(true)
+    expect(activateRoutingTable(env.ctx, { table }).ok).toBe(true)
     expect(await resolver.resolveValidationReviewer({ workModel: 'gpt-6.1-sol' })).toEqual({
       ok: false,
       reason: 'no_independent_reviewer'

@@ -8,7 +8,10 @@ import type { TaskValidationRecord } from '../orchestration/db/task-validation-r
 import { getTaskValidationStore } from '../orchestration/db/task-validation-store'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { MessageRow } from '../orchestration/types'
-import { readWorkflowRunOrigin, type WorkflowRunOrigin } from '../workflow-run/workflow-run-origin'
+import {
+  readWorkflowRunController as readWorkflowRunOrigin,
+  type WorkflowRunOrigin
+} from '../workflow-run/workflow-run-origin'
 import { createValidationDecisionPort } from './task-validation-port'
 import {
   buildDecisionNotice,

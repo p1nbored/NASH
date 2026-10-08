@@ -102,12 +102,15 @@ describe('permission relay service: terminal answers, expiry and views', () => {
     expect(harness.store.get(id)?.status).toBe('pending')
   })
 
-  it('lists for dot only the prompts dot may answer', () => {
+  it('lists primary and critical prompts for dot to review or ask the user', () => {
     const plain = relayedId(harness)
-    relayedId(harness, { toolName: 'WebFetch', toolInput: {} })
-    relayedId(harness, { toolName: 'Read', toolInput: { file_path: '/fixture/repo/.env' } })
+    const web = relayedId(harness, { toolName: 'WebFetch', toolInput: {} })
+    const secret = relayedId(harness, {
+      toolName: 'Read',
+      toolInput: { file_path: '/fixture/repo/.env' }
+    })
     const forDot = harness.service.listForDot('run_fixture01', { limit: 50 })
-    expect(forDot.map((record) => record.decisionId)).toEqual([plain])
+    expect(forDot.map((record) => record.decisionId)).toEqual([plain, web, secret])
   })
 
   it('lists every prompt for the desktop, marking which are desktop only and answerable', async () => {

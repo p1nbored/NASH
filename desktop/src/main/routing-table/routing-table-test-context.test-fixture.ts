@@ -35,12 +35,10 @@ export function createTestRoutingTableEnvironment(
   const fs = options.fs ?? createMemoryRoutingTableFs()
   const { bundled } = options
   let ticks = 0
-  let ids = 0
   const ctx = createRoutingTableContext({
     paths: { getUserDataPath: () => FIXTURE_USER_DATA },
     fs,
     now: () => new Date(FIXTURE_START_MS + FIXTURE_STEP_MS * ticks++),
-    newProposalId: () => `proposal-${String(++ids).padStart(4, '0')}`,
     ...(options.expectedTaxonomyVersion === undefined
       ? {}
       : { expectedTaxonomyVersion: options.expectedTaxonomyVersion }),

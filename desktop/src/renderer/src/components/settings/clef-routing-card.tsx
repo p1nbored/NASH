@@ -2,7 +2,6 @@ import { useId, useState } from 'react'
 import { translate } from '@/i18n/i18n'
 import type { ClefCredentialSaveInput } from '../../../../shared/clef/clef-credential-contract'
 import { Button } from '../ui/button'
-import { ClefAwaitingConfirmation } from './clef-awaiting-confirmation'
 import {
   ClefClearCredentialsDialog,
   clefClearCredentialsLabel
@@ -13,10 +12,7 @@ import {
   clefCredentialsComplete,
   clefHeaderStatus
 } from './clef-credential-status'
-import { clefStatusDetails } from './clef-details'
 import { ClefVerificationSection } from './clef-verification-section'
-import { SettingsAdvancedDisclosure } from './settings-advanced-disclosure'
-import { CopyDetailsButton } from './settings-copy-details-button'
 import { SettingsStatusLabel } from './settings-status-label'
 import { SettingsRow, SettingsSubsectionHeader } from './SettingsFormControls'
 import { useClefCredentials } from './use-clef-credentials'
@@ -24,10 +20,7 @@ import { useClefVerification } from './use-clef-verification'
 
 export const CLEF_ROUTING_SECTION_ID = 'integrations-clef-routing'
 
-/**
- * Clef (D-016): sorts each task by kind so the choice above applies. One status line, the
- * credentials, and Verify; versions and hashes stay behind Advanced and "Copy details".
- */
+/** Sorts each task by kind so the agent choice above applies. */
 export function ClefRoutingCard(): React.JSX.Element {
   const headingId = useId()
   const credentials = useClefCredentials()
@@ -73,12 +66,12 @@ export function ClefRoutingCard(): React.JSX.Element {
       <SettingsSubsectionHeader
         title={
           <span id={headingId}>
-            {translate('auto.components.settings.clef.card.title', 'Clef')}
+            {translate('auto.components.settings.clef.card.title', 'Classifier')}
           </span>
         }
         description={translate(
           'auto.components.settings.clef.card.descriptionPlain',
-          'Clef sorts each task by kind, so it goes to the agent chosen for that kind.'
+          'The classifier sorts each task by kind, so it goes to the agent chosen for that kind.'
         )}
         action={
           credentials.loading ? null : (
@@ -131,16 +124,6 @@ export function ClefRoutingCard(): React.JSX.Element {
             </p>
           )}
           <ClefVerificationSection model={verification} />
-          {verification.status === null ? null : (
-            <SettingsAdvancedDisclosure>
-              <ClefAwaitingConfirmation bundle={verification.status.bundle} />
-              <CopyDetailsButton
-                details={() =>
-                  verification.status === null ? '' : clefStatusDetails(verification.status)
-                }
-              />
-            </SettingsAdvancedDisclosure>
-          )}
         </>
       )}
       <ClefClearCredentialsDialog

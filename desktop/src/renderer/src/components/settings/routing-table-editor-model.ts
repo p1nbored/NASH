@@ -1,9 +1,10 @@
 import { translate } from '@/i18n/i18n'
 import { modelPinViolation } from '../../../../shared/routing-table/model-pin-policy'
-import type { ProposalChanges } from '../../../../shared/routing-table/routing-table-proposal-schema'
+import type { RoutingTableChanges } from '../../../../shared/routing-table/routing-table-edit-schema'
 import {
   CoordinatorSchema,
   RouteSchema,
+  ValidationPolicySchema,
   type Coordinator,
   type Route,
   type RoutingTable,
@@ -14,7 +15,7 @@ import type {
   ExecutionTarget,
   RoutingTaskType
 } from '../../../../shared/routing-table/routing-table-taxonomy'
-import { activeRoute, samePolicy, type TableChangeSet } from './routing-table-diff'
+import { routingEffortFor } from './routing-table-effort-options'
 
 export type EditableRoute = {
   readonly taskType: RoutingTaskType
@@ -33,33 +34,32 @@ export type EditorDraft = {
     readonly reasoningLevel: ConcreteReasoningLevel
   }
   readonly routes: readonly EditableRoute[]
-  /** A proposed reviewer list, carried through unchanged; reviewers are not edited here. */
-  readonly validation?: ValidationPolicy
+  readonly validation: ValidationPolicy
 }
 
 export type DraftError = {
-  readonly field: RoutingTaskType | 'coordinator' | 'table'
+  /** A numeric field identifies a reviewer by its position in the ordered policy. */
+  readonly field: RoutingTaskType | 'coordinator' | 'table' | 'validation' | number
   readonly message: string
 }
 export type DraftResult =
-  | { readonly ok: true; readonly changes: ProposalChanges }
+  | { readonly ok: true; readonly changes: RoutingTableChanges }
   | { readonly ok: false; readonly errors: readonly DraftError[] }
 
 export type RouteEdit = Partial<
   Pick<EditableRoute, 'target' | 'model' | 'reasoningLevel' | 'requirement'>
 >
 
-/** The active table with a proposal's replacements applied, as editable rows. */
-export function draftFromTable(table: RoutingTable, change?: TableChangeSet): EditorDraft {
-  const coordinator = change?.coordinator ?? table.coordinator
+/** The active table as editable rows. */
+export function draftFromTable(table: RoutingTable): EditorDraft {
+  const coordinator = table.coordinator
   return {
     coordinator: {
       agent: coordinator.agent,
       model: coordinator.model,
       reasoningLevel: coordinator.reasoning_level
     },
-    routes: table.routes.map((active) => {
-      const route = change?.changes.find((row) => row.task_type === active.task_type) ?? active
+    routes: table.routes.map((route) => {
       return {
         taskType: route.task_type,
         target: route.execution_target,
@@ -69,7 +69,7 @@ export function draftFromTable(table: RoutingTable, change?: TableChangeSet): Ed
         original: route
       }
     }),
-    ...(change?.validation ? { validation: change.validation } : {})
+    validation: table.validation
   }
 }
 
@@ -78,7 +78,14 @@ export function withCoordinatorAgent(
   coordinator: EditorDraft['coordinator'],
   agent: Coordinator['agent']
 ): EditorDraft['coordinator'] {
-  return agent === coordinator.agent ? coordinator : { ...coordinator, agent, model: '' }
+  return agent === coordinator.agent
+    ? coordinator
+    : {
+        ...coordinator,
+        agent,
+        model: '',
+        reasoningLevel: routingEffortFor(agent, '', coordinator.reasoningLevel)
+      }
 }
 
 export function withRouteEdit(
@@ -118,17 +125,17 @@ function ruleMessage(message: string): string {
     case 'Only claude_primary and claude_workflow may inherit':
       return translate(
         'auto.components.settings.routingTable.editor.onlyPrimaryInherits',
-        'Only the primary session and Claude workflows can inherit the primary settings.'
+        'Only the coordinator session and Claude workflows can inherit the coordinator settings.'
       )
     case 'claude_primary uses the coordinator configuration':
       return translate(
         'auto.components.settings.routingTable.editor.primaryInherits',
-        'The primary session always uses the primary settings: set model and reasoning to Inherit.'
+        'The coordinator session always uses the coordinator settings: set model and reasoning to Inherit.'
       )
     case 'coordinator_reasoning stays in the primary session':
       return translate(
         'auto.components.settings.routingTable.editor.coordinatorStays',
-        'Primary reasoning always stays in the primary session.'
+        'Coordinator reasoning always stays in the coordinator session.'
       )
     case 'if_supported needs a concrete level':
       return translate(
@@ -141,6 +148,15 @@ function ruleMessage(message: string): string {
         'This row is not valid. Check its target, model and reasoning level.'
       )
   }
+}
+
+function samePolicy(a: Route, b: Route): boolean {
+  return (
+    a.execution_target === b.execution_target &&
+    a.model === b.model &&
+    a.reasoning_level === b.reasoning_level &&
+    a.reasoning_requirement === b.reasoning_requirement
+  )
 }
 
 function sameContent(a: Route, b: Route): boolean {
@@ -179,8 +195,8 @@ export function changesFromDraft(active: RoutingTable, draft: EditorDraft): Draf
       errors.push({ field: row.taskType, message })
       continue
     }
-    const current = activeRoute(active, row.taskType)
-    if (current === null || !sameContent(current, parsed.data)) {
+    const current = active.routes.find((route) => route.task_type === row.taskType)
+    if (current === undefined || !sameContent(current, parsed.data)) {
       changes.push(parsed.data)
     }
   }
@@ -192,14 +208,36 @@ export function changesFromDraft(active: RoutingTable, draft: EditorDraft): Draf
   if (!coordinator.success) {
     errors.push({ field: 'coordinator', message: modelProblemMessage(draft.coordinator.model) })
   }
-  if (errors.length > 0 || !coordinator.success) {
+  const validation = ValidationPolicySchema.safeParse({
+    ...draft.validation,
+    reviewers: draft.validation.reviewers.map((reviewer) => ({
+      ...reviewer,
+      model: reviewer.model.trim()
+    }))
+  })
+  if (!validation.success) {
+    for (const issue of validation.error.issues) {
+      const index = issue.path[1]
+      errors.push({
+        field: typeof index === 'number' ? index : 'validation',
+        message:
+          typeof index === 'number' && issue.path[2] === 'model'
+            ? modelProblemMessage(draft.validation.reviewers[index]?.model ?? '')
+            : ruleMessage(issue.message)
+      })
+    }
+  }
+  if (errors.length > 0 || !coordinator.success || !validation.success) {
     return { ok: false, errors }
   }
   const coordinatorChanged =
     coordinator.data.agent !== active.coordinator.agent ||
     coordinator.data.model !== active.coordinator.model ||
     coordinator.data.reasoning_level !== active.coordinator.reasoning_level
-  if (changes.length === 0 && !coordinatorChanged && draft.validation === undefined) {
+  const validationChanged =
+    validation.data.notes !== active.validation.notes ||
+    JSON.stringify(validation.data.reviewers) !== JSON.stringify(active.validation.reviewers)
+  if (changes.length === 0 && !coordinatorChanged && !validationChanged) {
     return {
       ok: false,
       errors: [
@@ -217,7 +255,7 @@ export function changesFromDraft(active: RoutingTable, draft: EditorDraft): Draf
     ok: true,
     changes: {
       ...(coordinatorChanged ? { coordinator: coordinator.data } : {}),
-      ...(draft.validation ? { validation: draft.validation } : {}),
+      ...(validationChanged ? { validation: validation.data } : {}),
       changes
     }
   }

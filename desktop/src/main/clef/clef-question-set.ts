@@ -81,7 +81,7 @@ export type ClefDecisionThresholds = {
 }
 
 /**
- * Defaults awaiting user confirmation (U11): changing one changes the bundle hash, so the pinned
+ * Changing a default changes the bundle hash, so the pinned
  * verification reads as absent and Verify must run again.
  */
 export const CLEF_DECISION_THRESHOLDS: ClefDecisionThresholds = Object.freeze({
@@ -89,13 +89,6 @@ export const CLEF_DECISION_THRESHOLDS: ClefDecisionThresholds = Object.freeze({
   delegationFalseMax: 0.4,
   taskTypeMarginMin: 0.1
 })
-
-/** Bundle values the user has not confirmed yet; the list sits outside the hash on purpose. */
-export const CLEF_BUNDLE_VALUES_AWAITING_USER_CONFIRMATION = [
-  'thresholds',
-  'task_type_options',
-  'needs_delegation_criteria'
-] as const
 
 /** The two questions in pinned send order (question_set_version 2). */
 export function buildClassifierQuestions(): ClefClassifierQuestions {

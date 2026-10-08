@@ -12,6 +12,7 @@ import {
   DotSubmitParams
 } from '../dot-ingress/dot-ingress-params'
 import { DotMessageParams } from '../dot-ingress/dot-ingress-message'
+import { DotRemoteSubmitOrAttachParams } from '../dot-ingress/dot-ingress-attach'
 import { DotValidationDecideParamsV3 } from '../dot-ingress/dot-ingress-validation'
 import { DotRemoteAckRequestSchema } from './dot-remote-ack'
 import { DotRemoteNashRefusalSchema, dotRemoteNashRefusal } from './dot-remote-errors'
@@ -92,7 +93,10 @@ describe('inbox payloads are exactly the v3 params', () => {
       'message',
       'validation_decision'
     ])
-    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.submit).toBe(DotSubmitParams)
+    expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.submit).toBe(DotRemoteSubmitOrAttachParams)
+    expect(DotSubmitParams.parse(submitPayload())).toEqual(
+      DotRemoteSubmitOrAttachParams.parse(submitPayload())
+    )
     expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.cancel).toBe(DotCancelParams)
     expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.permission_answer).toBe(DotDecisionAnswerParams)
     expect(DOT_REMOTE_ITEM_PAYLOAD_SCHEMAS.message).toBe(DotMessageParams)

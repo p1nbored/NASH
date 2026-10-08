@@ -73,7 +73,12 @@ describe('dot ingress RPC surface, contract version 3', () => {
   it('says hello with only the current contract and every registered method', async () => {
     const v3 = DotHelloResultSchema.parse(await call('dotIngress.hello', { contractVersion: 3 }))
     expect(v3.supportedContractVersions).toEqual([3])
-    expect(v3.methods).toEqual(DOT_INGRESS_RPC_METHODS.map((method) => method.name))
+    // Existing v3 clients validate this enum strictly; the takeover extension has its own method.
+    expect(v3.methods).toEqual(
+      DOT_INGRESS_RPC_METHODS.filter((method) => method.name !== 'dotIngress.requests.attach').map(
+        (method) => method.name
+      )
+    )
     expect(v3.methods).toEqual([...DOT_INGRESS_METHOD_NAMES])
     expect(v3.capabilities.validationDecisions).toBe(true)
     expect(v3.limits).toMatchObject({
@@ -151,7 +156,7 @@ describe('dot ingress RPC surface, contract version 3', () => {
       expect.objectContaining({
         validationId: task.validationId,
         dotRequestId: run.dotRequestId,
-        reason: 'checks_inconclusive',
+        reason: 'primary_did_task',
         summary: FIXTURE_REASON
       })
     ])

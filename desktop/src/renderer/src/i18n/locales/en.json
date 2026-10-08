@@ -1666,7 +1666,6 @@
         "6ca6ff404e": "NASH",
         "520304a067": "NASH logo",
         "ce44fad849": "Missing dependencies",
-        "c1cf168479": "Hide",
         "00cee697c1": "Run \"gh auth login\" in a terminal to connect your GitHub account.",
         "9f96d018b7": "GitHub CLI is not authenticated",
         "73e1ad4282": "NASH uses the GitHub CLI (gh) to show pull requests, issues, and checks.",
@@ -1676,9 +1675,6 @@
         "cd21242762": "Add a project to get started.",
         "9c00bd4adf": "Select a workspace from the sidebar to begin.",
         "16e9e3df89": "starred",
-        "0d0ace8861": "Star on GitHub",
-        "ec43b38ba7": "Starred on GitHub",
-        "157bb5ecbb": "Open GitHub",
         "preflightDismiss": "Dismiss"
       },
       "LinearIssueMarkdownDescriptionEditor": {
@@ -7549,20 +7545,12 @@
           "projectRuntimeDescription": "Default runtime for local Windows projects that do not override it."
         },
         "GeneralSupportSection": {
-          "af7d9f4396": "Thanks for the support!",
-          "6922c1fa2b": "Star Orca on GitHub",
-          "511782265b": "Support the project with a GitHub star via the gh CLI.",
-          "55a87e5fd1": "Support Orca",
-          "964acc6bb4": "Star",
           "73b327e793": "Try Again",
           "c9f96d4234": "error",
-          "397719bee5": "Starring...",
           "1e29570462": "starring",
           "9d181300e3": "starred",
           "5c49f02662": "hidden",
-          "b3f0584f5d": "loading",
-          "cb65c75b11": "Opening...",
-          "f2d4f877b2": "Open GitHub"
+          "b3f0584f5d": "loading"
         },
         "GeneralUpdateSettingsSection": {
           "8a52ca1d02": "Release notes",
@@ -9994,13 +9982,6 @@
         },
         "general": {
           "search": {
-            "bdfb6dc21b": "like",
-            "e6b01c8e30": "feedback",
-            "b65665703a": "support",
-            "06ea5a69a6": "github",
-            "e4fb4516d0": "star",
-            "e0b8c8bc25": "Support the project with a GitHub star via the gh CLI.",
-            "36a72f0d9e": "Star Orca on GitHub",
             "c61b14be7c": "grok",
             "5d9ba08673": "copilot",
             "f472e97440": "aider",
@@ -10290,7 +10271,7 @@
             "f16e41cc72": "GitHub Integration",
             "760e2446e0": "Bitbucket Cloud authentication with a saved API token or environment variables.",
             "af5ae87847": "access token",
-            "clefRoutingDescription": "Save the Clef API token and account ID used to route Workbench requests.",
+            "clefRoutingDescription": "Save the classifier API token and account ID used to route Workbench requests.",
             "clef": "clef",
             "routing": "routing",
             "cloudflare": "cloudflare",
@@ -10299,7 +10280,6 @@
             "routingTableKeyword": "routing table",
             "model": "model",
             "reasoning": "reasoning",
-            "proposal": "proposal",
             "executor": "executor",
             "dotIngress": "Tasks from dot",
             "dotIngressDescription": "Turn the local dot interface on or off, choose the workspaces dot can use and their maximum access, and set submission limits.",
@@ -12608,8 +12588,8 @@
             "notProtectedDetail": "The saved credentials are not protected, so NASH does not use them. Clear them and save again."
           },
           "card": {
-            "title": "Clef",
-            "descriptionPlain": "Clef sorts each task by kind, so it goes to the agent chosen for that kind."
+            "title": "Classifier",
+            "descriptionPlain": "The classifier sorts each task by kind, so it goes to the agent chosen for that kind."
           },
           "verification": {
             "blockPaused": "Verify is paused: {{reason}}.",
@@ -12701,12 +12681,6 @@
               "resultNotUsable": "That result cannot be used.",
               "resultWriteFailed": "The result could not be saved. Try again."
             },
-            "pending": {
-              "title": "Awaiting your confirmation",
-              "thresholds": "Confidence thresholds: a task counts as delegated at {{yes}} or more and as kept at {{no}} or less; its task type must lead the runner-up by {{margin}}.",
-              "wording": "Answer wording: the {{options}} task-type options and the {{answers}} delegation answers.",
-              "effectPlain": "These are defaults. Changing one means verifying Clef again."
-            },
             "report": {
               "failedReason": "{{reason}}: {{detail}}.",
               "titlePlain": "Verify result",
@@ -12730,17 +12704,10 @@
         },
         "routingTable": {
           "card": {
-            "refresh": "Refresh",
             "unavailable": "Unavailable",
             "blocked": "Blocked",
             "blockedTitle": "Routing is blocked",
-            "pendingNotice": "Suggested changes to review: {{count}}",
-            "review": "Review",
             "title": "Agents for each task"
-          },
-          "active": {
-            "versionActive": "Version {{version}} active",
-            "created": "created {{time}}"
           },
           "availability": {
             "available": "Available",
@@ -12771,102 +12738,32 @@
             "checkingPlain": "Checking…",
             "checkPlain": "Check availability"
           },
-          "proposals": {
-            "evidence": "Sources: {{sources}}",
-            "becomes": "becomes",
-            "none": "none",
-            "noReviewers": "no reviewers",
-            "coordinator": "Primary",
-            "staleTitle": "Made for an older version",
-            "accept": "Accept",
-            "edit": "Edit and accept",
-            "reject": "Reject",
-            "noRowPlain": "not set",
-            "notesOnlyPlain": "Same choice; only its notes change.",
-            "metaPlain": "{{time}} · based on version {{version}}",
-            "staleBodyPlain": "Version {{active}} is in use now, so this can no longer be accepted. Reject it, or make the change again in the list above.",
-            "historyPlain": "Decided ({{count}})",
-            "pendingTitlePlain": "Suggested changes",
-            "noneWaitingPlain": "None waiting. Nothing changes until you accept a suggestion."
-          },
-          "versions": {
-            "title": "Version history",
-            "version": "Version {{version}}",
-            "active": "(active)",
-            "revertTo": "Revert to version {{version}}",
-            "revert": "Revert",
-            "confirmTitle": "Revert to version {{version}}?",
-            "confirmBody": "The content of version {{version}} becomes a new active version. Version {{active}} stays in the history, so you can return to it.",
-            "cancel": "Cancel"
-          },
           "editor": {
-            "coordinator": "Primary",
-            "coordinatorModel": "Primary model",
-            "taskType": "Task type",
-            "model": "Model",
-            "requirement": "Requirement",
-            "required": "Required",
-            "whenSupported": "When supported",
-            "modelFor": "Model for {{task}}",
-            "cancel": "Cancel",
-            "acceptModified": "Accept with changes",
             "geminiExcluded": "Gemini 4 models are excluded from routing.",
             "aliasUnpinned": "Enter an exact model ID, not an alias such as opus or latest.",
             "slugRejected": "This model ID is retired or rejected. Enter another exact model ID.",
             "modelInvalid": "Enter an exact model ID for the selected CLI.",
-            "onlyPrimaryInherits": "Only the primary session and Claude workflows can inherit the primary settings.",
-            "primaryInherits": "The primary session always uses the primary settings: set model and reasoning to Inherit.",
-            "coordinatorStays": "Primary reasoning always stays in the primary session.",
+            "onlyPrimaryInherits": "Only the coordinator session and Claude workflows can inherit the coordinator settings.",
+            "primaryInherits": "The coordinator session always uses the coordinator settings: set model and reasoning to Inherit.",
+            "coordinatorStays": "Coordinator reasoning always stays in the coordinator session.",
             "ifSupportedConcrete": "\"When supported\" needs a concrete reasoning level, not Inherit.",
             "rowInvalid": "This row is not valid. Check its target, model and reasoning level.",
             "nothingChanged": "This leaves the active table unchanged. Edit at least one route first.",
-            "modifyTitlePlain": "Edit before accepting",
-            "modifyBodyPlain": "Your edits replace the suggested change. Accepting puts them into use.",
-            "agentFor": "Agent for {{task}}",
-            "effortFor": "Effort for {{task}}",
-            "effortRequirementFor": "Effort requirement for {{task}}",
-            "agent": "Agent",
-            "effort": "Effort",
-            "primaryCli": "Primary CLI"
-          },
-          "import": {
-            "title": "Import a change set",
-            "jsonLabel": "Change set (JSON)",
-            "reasonLabel": "Reason for the change",
-            "cancel": "Cancel",
-            "reasonMissing": "Enter a short English reason for the change.",
-            "bodyPlain": "It is added to Suggested changes, where you can review and accept it.",
-            "submitPlain": "Import",
-            "noActivePlain": "Task routing is not available, so nothing can be imported.",
-            "notJsonPlain": "This is not valid JSON. Paste the whole change set.",
-            "invalidPlain": "This change set has a value that cannot be used. Check each agent, model and effort."
+            "primaryCli": "Coordinator CLI",
+            "coordinatorModel": "Coordinator model"
           },
           "notices": {
-            "activated": "Version {{version}} is now active.",
-            "reverted": "Version {{version}} is now active, with the content of version {{from}}.",
-            "rejectedPlain": "Suggested change rejected.",
-            "importedPlain": "Added to Suggested changes. Accept it there to use it.",
             "saved": "Saved."
           },
           "refusals": {
-            "duplicateActivePlain": "These choices are already in use, so nothing was saved.",
-            "duplicatePendingPlain": "The same change is already waiting under Suggested changes. Review it there.",
             "integrityFailedPlain": "The saved task routing could not be read, so no task is routed. No default is used instead.",
-            "taxonomyMismatchPlain": "The saved task routing was made for a different list of tasks, so it cannot be used. Import routing for the current tasks under Advanced.",
+            "taxonomyMismatchPlain": "The saved task routing was made for a different list of tasks, so it cannot be used.",
             "notInstalledPlain": "Task routing is not set up yet. Restart the app to install the defaults.",
             "invalidTablePlain": "This change would leave task routing invalid, so it was not saved.",
             "versionConflictPlain": "Task routing changed while this was being saved. Try again.",
             "forbiddenCallerPlain": "Task routing can only be changed in this app.",
-            "proposalUnknownPlain": "This suggested change no longer exists.",
-            "proposalInvalidPlain": "This suggested change cannot be read, so it cannot be accepted.",
-            "alreadyDecidedPlain": "This suggested change was already decided.",
-            "proposalSupersededPlain": "This suggested change was made for older choices, so it was set aside and nothing changed.",
             "noChangePlain": "This leaves every choice as it is, so nothing changed.",
-            "forbiddenProposerPlain": "This kind of change cannot be submitted here.",
-            "invalidProposalPlain": "This change is not valid, so it was not saved.",
             "baseNotActivePlain": "Task routing changed after this was prepared. Try again.",
-            "tooManyPendingPlain": "Too many suggested changes are waiting. Accept or reject some under Advanced first.",
-            "versionUnknownPlain": "That earlier version no longer exists.",
             "unknownPlain": "Task routing refused this change.",
             "invalidResponsePlain": "The answer from the app could not be read here.",
             "notConnectedPlain": "Task routing is not available in this build.",
@@ -12875,7 +12772,7 @@
             "callFailedPlain": "The request did not complete. Try again."
           },
           "labels": {
-            "coordinatorReasoning": "Primary reasoning",
+            "coordinatorReasoning": "Coordinator reasoning",
             "complexPlanningReasoning": "Complex planning and reasoning",
             "softwareEngineering": "Software engineering",
             "scientificExperimentValidation": "Scientific experiment validation",
@@ -12885,7 +12782,7 @@
             "highQualityWriting": "High-quality writing",
             "fastWritingOrAlternativeDraft": "Fast writing or alternative draft",
             "configuredProjectWorkflow": "Configured project workflow",
-            "claudePrimary": "Primary session",
+            "claudePrimary": "Coordinator session",
             "claudeSubagent": "Claude subagent",
             "claudeWorkflow": "Claude workflow",
             "codexCli": "Codex CLI",
@@ -12901,26 +12798,15 @@
             "ultra": "Ultra",
             "inherit": "Inherit",
             "whenSupported": "(when supported)",
-            "bundledUpdate": "App update",
-            "benchmarkReview": "Benchmark review",
-            "agent": "Agent",
-            "userImport": "Your change",
-            "accepted": "Accepted",
-            "acceptedModified": "Accepted with changes",
-            "rejected": "Rejected",
-            "superseded": "Superseded",
-            "sourceBundled": "App default",
-            "sourceUser": "Your table",
-            "sameAsCoordinator": "Same as primary"
+            "sameAsCoordinator": "Same as coordinator"
           },
           "inline": {
             "edit": "Edit",
-            "reviewersTitle": "Reviewers",
             "reviewersHelp": "Review finished work that has no automatic check.",
             "noReviewers": "No reviewers, so work without an automatic check cannot be reviewed.",
             "reviewer": "Reviewer {{number}}",
             "editFor": "Edit {{task}}",
-            "coordinator": "Primary",
+            "coordinator": "Coordinator",
             "listLabel": "Agent for each task",
             "save": "Save",
             "cancel": "Cancel",
@@ -12928,13 +12814,8 @@
             "modelFor": "Model for {{task}}",
             "effortFor": "Effort for {{task}}",
             "onlyIfSupported": "Only if the model supports it",
-            "coordinatorEffort": "Primary effort"
-          },
-          "advanced": {
-            "unreadable": "Suggested changes that could not be read: {{count}}",
-            "importLabel": "Import a change set",
-            "importDescription": "Paste routing as JSON. It waits under Suggested changes until you accept it.",
-            "import": "Import…"
+            "coordinatorEffort": "Coordinator effort",
+            "reviewersTitle": "Reviewers"
           }
         },
         "dotIngress": {
@@ -13146,9 +13027,6 @@
             "remoteDescription": "Let dot reach this app through your GPT Site: the switch, the Site address and access token, pairing and revocation."
           }
         },
-        "advancedDisclosure": {
-          "label": "Advanced"
-        },
         "copyDetails": {
           "copied": "Details copied.",
           "failed": "The details could not be copied.",
@@ -13156,7 +13034,7 @@
         },
         "taskRouting": {
           "search": {
-            "agentsDescription": "Choose the agent, model and effort for each kind of task, and accept or reject suggested changes.",
+            "agentsDescription": "Choose the agent, model and effort for each kind of task.",
             "effort": "effort",
             "agent": "agent"
           }

@@ -274,6 +274,7 @@ describe('app-run policy', () => {
       appRunId = orcaRun(PRIMARY_PANE_KEY)
       markRunAsAppRun(db, { runId: appRunId })
       plainRunId = orcaRun(OTHER_PANE_KEY)
+      db.createTask({ spec: 'Pending coordination work', runId: appRunId })
     })
 
     it('refuses run-create from the primary pane', () => {
@@ -297,6 +298,7 @@ describe('app-run policy', () => {
         runId: split,
         paneKey: 'tab_owner:dddddddd-dddd-4ddd-8ddd-dddddddddddd'
       })
+      db.createTask({ spec: 'Pending coordination work', runId: split })
 
       expect(
         refusal(() =>
@@ -314,6 +316,7 @@ describe('app-run policy', () => {
         runId: split,
         paneKey: 'tab_owner:dddddddd-dddd-4ddd-8ddd-dddddddddddd'
       })
+      db.createTask({ spec: 'Pending coordination work', runId: split })
 
       expect(
         refusal(() =>
@@ -396,6 +399,7 @@ describe('app-run policy', () => {
         primary: 'exited',
         paneKey: 'tab_ended:12121212-1212-4212-8212-121212121212'
       })
+      db.createTask({ spec: 'Pending coordination work', runId: ended })
 
       expect(refusal(() => assertAppRunUseAllowed(db, caller(OTHER_PANE_KEY), ended))?.code).toBe(
         CODES.primaryFenced

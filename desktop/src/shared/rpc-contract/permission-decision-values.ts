@@ -9,3 +9,7 @@ export const PERMISSION_DECISION_STATUSES = [
   'answered_in_terminal'
 ] as const
 export const PERMISSION_DECISION_DECIDERS = ['dot', 'desktop', 'terminal'] as const
+export const PERMISSION_DECISION_STORED_DECIDERS = [
+  ...PERMISSION_DECISION_DECIDERS,
+  'primary'
+] as const

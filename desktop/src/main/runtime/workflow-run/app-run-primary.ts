@@ -71,6 +71,14 @@ export function resolveAppRunPrimary(
   if (!pane) {
     return refused('not_run_primary')
   }
+  const native = db.getCurrentRunForCoordinator({
+    terminalHandle: null,
+    paneKey: attested.paneKey,
+    orcaSessionId: null
+  })
+  if (native?.id !== run.runId) {
+    return refused('not_run_primary')
+  }
   if (scope.openRunOnly && TERMINAL_RUN_STATUSES.has(run.status)) {
     return refused('run_closed')
   }

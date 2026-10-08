@@ -1,7 +1,7 @@
 import { createNodeAvailabilityFs } from '../routing-table/availability/route-availability-fs'
 import { createRoutingTableContext } from '../routing-table/routing-table-context'
 import { createNodeRoutingTableFs } from '../routing-table/routing-table-file-store'
-import { proposeBundledUpdate } from '../routing-table/routing-table-proposals'
+import { ensureActiveRoutingTable } from '../routing-table/routing-table-activation'
 import { createRoutingTableRuntime } from '../routing-table/routing-table-runtime'
 import { recoverDotIntake } from '../runtime/dot-ingress/dot-ingress-intake'
 import { dotIngressServiceDeps } from '../runtime/dot-ingress/dot-ingress-runtime-deps'
@@ -37,8 +37,8 @@ export function createProductionAutopilotBuilders(
     createRoutingTable: ({ userDataPath, now }) => {
       const paths = { getUserDataPath: () => userDataPath }
       const context = createRoutingTableContext({ paths, fs: createNodeRoutingTableFs() })
-      // Why: installs the bundled table on the first start and offers a newer bundled one; a damaged store is reported, never replaced.
-      proposeBundledUpdate(context)
+      // Why: installs the bundled table on the first start; a damaged store is reported, never replaced.
+      ensureActiveRoutingTable(context)
       const runtime = createRoutingTableRuntime({
         now,
         routingTable: context,

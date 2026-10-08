@@ -35,26 +35,17 @@ const D016_METHOD_PARAMS: Readonly<Record<string, unknown>> = {
   },
   'workbench.runs.tasks': { runId },
   'workbench.routingTable.list': {},
-  'workbench.routingTable.accept': { proposalId: 'proposal-0001' },
-  'workbench.routingTable.reject': { proposalId: 'proposal-0001' },
-  'workbench.routingTable.import': {
-    proposal: {
-      schema_version: 1,
-      proposer: 'user_import',
-      base: tableBase,
-      changes: [
-        {
-          task_type: 'software_engineering',
-          execution_target: 'codex_cli',
-          model: 'gpt-6-astra',
-          reasoning_level: 'max'
-        }
-      ],
-      rationale: 'A newer model leads the engineering benchmarks.',
-      evidence: [{ name: 'Artificial Analysis' }]
-    }
+  'workbench.routingTable.save': {
+    base: tableBase,
+    changes: [
+      {
+        task_type: 'software_engineering',
+        execution_target: 'codex_cli',
+        model: 'gpt-6-astra',
+        reasoning_level: 'max'
+      }
+    ]
   },
-  'workbench.routingTable.revert': { version: 1 },
   'workbench.routingTable.checkRoutes': {},
   'workbench.permission.list': { runId, limit: 10 },
   'workbench.permission.answer': { decisionId: 'pd_0123456789ab', decision: 'allow' },

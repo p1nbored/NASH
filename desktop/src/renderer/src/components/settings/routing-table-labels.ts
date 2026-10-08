@@ -4,10 +4,6 @@ import type {
   RoutingTaskType,
   ValidationReviewerTarget
 } from '../../../../shared/routing-table/routing-table-taxonomy'
-import type {
-  ProposalDecision,
-  RoutingTableProposal
-} from '../../../../shared/routing-table/routing-table-proposal-schema'
 import type { Coordinator, Route } from '../../../../shared/routing-table/routing-table-schema'
 
 type ReasoningLevel = Route['reasoning_level']
@@ -21,7 +17,7 @@ export function taskTypeLabel(taskType: RoutingTaskType): string {
     case 'coordinator_reasoning':
       return translate(
         'auto.components.settings.routingTable.labels.coordinatorReasoning',
-        'Primary reasoning'
+        'Coordinator reasoning'
       )
     case 'complex_planning_reasoning':
       return translate(
@@ -76,7 +72,7 @@ export function executionTargetLabel(target: ExecutionTarget): string {
     case 'claude_primary':
       return translate(
         'auto.components.settings.routingTable.labels.claudePrimary',
-        'Primary session'
+        'Coordinator session'
       )
     case 'claude_subagent':
       return translate(
@@ -93,6 +89,12 @@ export function executionTargetLabel(target: ExecutionTarget): string {
     case 'agy_cli':
       return translate('auto.components.settings.routingTable.labels.agyCli', 'agy CLI')
   }
+}
+
+export function reviewerLabel(index: number): string {
+  return translate('auto.components.settings.routingTable.inline.reviewer', 'Reviewer {{number}}', {
+    number: index + 1
+  })
 }
 
 export function reviewerTargetLabel(target: ValidationReviewerTarget): string {
@@ -127,48 +129,10 @@ export function reasoningLevelLabel(level: ReasoningLevel): string {
   }
 }
 
-export function proposerLabel(proposer: RoutingTableProposal['proposer']): string {
-  switch (proposer) {
-    case 'bundled_update':
-      return translate('auto.components.settings.routingTable.labels.bundledUpdate', 'App update')
-    case 'benchmark_review':
-      return translate(
-        'auto.components.settings.routingTable.labels.benchmarkReview',
-        'Benchmark review'
-      )
-    case 'agent':
-      return translate('auto.components.settings.routingTable.labels.agent', 'Agent')
-    case 'user_import':
-      return translate('auto.components.settings.routingTable.labels.userImport', 'Your change')
-  }
-}
-
-export function proposalDecisionLabel(decision: ProposalDecision['decision']): string {
-  switch (decision) {
-    case 'accepted':
-      return translate('auto.components.settings.routingTable.labels.accepted', 'Accepted')
-    case 'accepted_modified':
-      return translate(
-        'auto.components.settings.routingTable.labels.acceptedModified',
-        'Accepted with changes'
-      )
-    case 'rejected':
-      return translate('auto.components.settings.routingTable.labels.rejected', 'Rejected')
-    case 'superseded':
-      return translate('auto.components.settings.routingTable.labels.superseded', 'Superseded')
-  }
-}
-
-export function tableSourceLabel(source: 'bundled' | 'user'): string {
-  return source === 'bundled'
-    ? translate('auto.components.settings.routingTable.labels.sourceBundled', 'App default')
-    : translate('auto.components.settings.routingTable.labels.sourceUser', 'Your table')
-}
-
 export function sameAsCoordinatorLabel(): string {
   return translate(
     'auto.components.settings.routingTable.labels.sameAsCoordinator',
-    'Same as primary'
+    'Same as coordinator'
   )
 }
 
@@ -185,12 +149,4 @@ export function routeEffortLabel(
   return route.reasoning_requirement === 'if_supported'
     ? `${level} ${translate('auto.components.settings.routingTable.labels.whenSupported', '(when supported)')}`
     : level
-}
-
-/** One line per route policy, for example "Codex CLI · gpt-6-astra · Max". */
-export function routeSummary(route: Route): string {
-  if (inheritsCoordinator(route)) {
-    return `${executionTargetLabel(route.execution_target)} · ${sameAsCoordinatorLabel()}`
-  }
-  return `${executionTargetLabel(route.execution_target)} · ${route.model} · ${routeEffortLabel(route)}`
 }

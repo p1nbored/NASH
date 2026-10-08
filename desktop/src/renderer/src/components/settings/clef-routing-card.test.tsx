@@ -263,6 +263,9 @@ describe('ClefRoutingCard', () => {
     verification.status = fixtureStatus()
     const container = await renderCard(SEALED)
 
+    expect(screen.getByRole('heading', { name: 'Classifier' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Advanced' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Copy details' })).toBeNull()
     expect(container.textContent).toMatch(/sorts each task/)
     expect(container.textContent).not.toMatch(/sealed|keyring|Keychain|data protection|rotate/i)
     expect(container.textContent).not.toMatch(/Question set|taxonomy|bundle/i)

@@ -78,6 +78,10 @@ function insertOwner(db: OrchestrationDb, seed: AppRunSeed): { ownerId: string }
 
 /** Gives an existing Orca run a workflow_runs row (and optionally an owner), the app-run marker. */
 export function markRunAsAppRun(db: OrchestrationDb, seed: AppRunSeed): void {
+  db.db
+    .prepare(`INSERT OR IGNORE INTO runs (id, objective, coordinator_handle, coordinator_pane_key, consumer_generation, legacy)
+    VALUES (?, 'Fixture coordinator', ?, ?, 1, 0)`)
+    .run(seed.runId, `terminal_${seed.runId}`, seed.paneKey ?? PRIMARY_PANE_KEY)
   const runs = getWorkflowRunStore(db)
   runs.create({
     runId: seed.runId,

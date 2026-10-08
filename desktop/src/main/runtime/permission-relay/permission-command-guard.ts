@@ -16,6 +16,43 @@ const EXECUTABLE_SUFFIX = /\.(exe|com|cmd|bat|ps1|sh|js|mjs|cjs)$/
 const TRAILING_DOTS_AND_SPACES = /[. ]+$/
 const DRIVE_PREFIX = /^[a-z]:/i
 const PARENT_SEGMENT = /(?:^|[\\/])\.\.(?:[\\/]|$)/
+const CRITICAL_COMMANDS = new Set([
+  'rm',
+  'rmdir',
+  'del',
+  'erase',
+  'remove-item',
+  'format',
+  'diskpart',
+  'sudo',
+  'su',
+  'chmod',
+  'chown',
+  'icacls',
+  'reg',
+  'shutdown',
+  'curl',
+  'wget',
+  'invoke-webrequest',
+  'invoke-restmethod'
+])
+
+function isCriticalCommand(tokens: readonly string[]): boolean {
+  const names = tokens.map(
+    (token) => rawSegmentsOf(token.toLowerCase()).at(-1)?.replace(EXECUTABLE_SUFFIX, '') ?? ''
+  )
+  if (names.some((name) => CRITICAL_COMMANDS.has(name))) {
+    return true
+  }
+  const git = names.indexOf('git')
+  if (
+    git !== -1 &&
+    names.slice(git + 1).some((name) => ['push', 'reset', 'clean'].includes(name))
+  ) {
+    return true
+  }
+  return names.some((name) => ['npm', 'pnpm', 'yarn'].includes(name)) && names.includes('publish')
+}
 
 export type CommandGuardContext = SensitivePathContext & {
   /** The app's own CLI plus `claude` and `orca`, lower case. */
@@ -52,6 +89,9 @@ export function isDesktopOnlyCommand(command: string, context: CommandGuardConte
     return true
   }
   const tokens = command.split(COMMAND_TOKEN_SEPARATORS).filter((token) => token.length > 0)
+  if (isCriticalCommand(tokens)) {
+    return true
+  }
   if (tokens.some((token) => namesControlPlane(token, context.controlPlane))) {
     return true
   }

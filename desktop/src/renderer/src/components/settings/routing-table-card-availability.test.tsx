@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, renderHook, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RpcResult from '@/runtime/runtime-rpc-result'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import { RoutingTableCard } from './routing-table-card'
+import { useRoutingTable } from './use-routing-table'
 import {
   FIXTURE_SHA_V4,
   fixtureAvailability,
@@ -51,10 +52,6 @@ function routeRow(taskType: string): HTMLElement {
   return within(list).getByRole('listitem', { name: taskType })
 }
 
-function openAdvanced(): void {
-  fireEvent.click(screen.getByRole('button', { name: 'Advanced' }))
-}
-
 const LISTED = fixtureListResult({
   availability: fixtureAvailability({
     software_engineering: { status: 'available', reasons: [], awaitingUserConfirmation: false },
@@ -96,7 +93,7 @@ describe('RoutingTableCard route availability', () => {
       /awaiting your confirmation/i
     )
     expect(routeRow('High-quality writing').textContent).toContain('Not checked')
-    expect(routeRow('Primary').textContent).toContain('Not checked')
+    expect(routeRow('Coordinator').textContent).toContain('Not checked')
     const reviewers = screen.getByRole('list', { name: 'Reviewers' })
     expect(within(reviewers).getAllByText('Not checked')).toHaveLength(2)
   })
@@ -199,15 +196,9 @@ describe('RoutingTableCard route availability', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
     })
 
-    openAdvanced()
-    for (const name of ['Refresh', 'Import…', 'Edit Software engineering', 'Edit Primary']) {
+    for (const name of ['Edit Software engineering', 'Edit Coordinator', 'Edit Reviewer 1']) {
       expect(screen.getByRole('button', { name }), name).toHaveProperty('disabled', true)
     }
-    const proposal = screen.getByRole('group', { name: 'App update' })
-    expect(within(proposal).getByRole('button', { name: 'Accept' })).toHaveProperty(
-      'disabled',
-      true
-    )
   })
 
   it('reads the table again after a refused check, and says why it was refused', async () => {
@@ -216,8 +207,7 @@ describe('RoutingTableCard route availability', () => {
       'workbench.routingTable.checkRoutes': {
         ok: false,
         reason: 'routing_table_integrity_failed',
-        detail: 'version_hash_mismatch',
-        existingProposalId: null
+        detail: 'version_hash_mismatch'
       }
     })
     await renderCard()
@@ -247,20 +237,22 @@ describe('RoutingTableCard route availability', () => {
         }
       }
     )
-    await renderCard()
-    openAdvanced()
-
+    const { result } = renderHook(() => useRoutingTable())
+    await act(async () => {})
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+      void result.current.refresh()
     })
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Check availability' }))
+      await result.current.checkRoutes()
     })
     await act(async () => {
       finishList(LISTED)
     })
 
-    expect(routeRow('High-quality writing').textContent).toContain('Available')
+    expect(
+      result.current.availability?.routes.find((row) => row.taskType === 'high_quality_writing')
+        ?.availability.status
+    ).toBe('available')
   })
 
   it('shows a refused check, and ignores a result for a version that is no longer active', async () => {

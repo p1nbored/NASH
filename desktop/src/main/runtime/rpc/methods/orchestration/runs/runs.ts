@@ -7,7 +7,8 @@ import type { OrchestrationCallerIdentity } from '../../../../orchestration/orch
 import { currentDispatchAssigneeRun } from '../messaging/recipient-routing'
 import {
   assertAppRunPrimaryMayCreateRun,
-  assertAppRunUseAllowed
+  assertAppRunUseAllowed,
+  retireUnboundCoordinatorOwners
 } from '../../../../workflow-run/app-run-policy'
 import {
   RunCreateParams,
@@ -49,6 +50,7 @@ export const ORCHESTRATION_RUN_METHODS = [
         coordinatorPaneKey: caller.paneKey,
         coordinatorOrcaSessionId: caller.orcaSessionId
       })
+      retireUnboundCoordinatorOwners(db, priorRun ? [priorRun.id] : [])
       runtime.cancelMessageWaiters(params.from)
       cancelBoundDispatchWaiters(runtime, caller, run.id)
       if (priorRun) {
@@ -107,6 +109,7 @@ export const ORCHESTRATION_RUN_METHODS = [
           `Run ${params.id} was not found or is inspect-only.`
         )
       }
+      retireUnboundCoordinatorOwners(db, priorRun ? [priorRun.id, run.id] : [run.id])
       runtime.cancelMessageWaiters(params.from)
       cancelBoundDispatchWaiters(runtime, caller, run.id)
       runtime.cancelMessageWaiters(`run:${params.id}`)

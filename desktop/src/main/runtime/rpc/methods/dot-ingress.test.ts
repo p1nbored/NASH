@@ -39,6 +39,7 @@ describe('dotIngress.hello', () => {
 
   it('registers the closed dot surface and nothing else, every method unary', () => {
     expect(DOT_INGRESS_RPC_METHODS.map((method) => method.name)).toEqual([
+      'dotIngress.requests.attach',
       ...DOT_INGRESS_METHOD_NAMES
     ])
     expect(DOT_INGRESS_RPC_METHODS.some((method) => 'stream' in method)).toBe(false)

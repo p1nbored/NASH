@@ -80,6 +80,20 @@ async function reconcileLive(
   report: PrimarySessionReconcileReport,
   timestamp: string
 ): Promise<void> {
+  if (owner.receipt?.nativeCoordinator === true) {
+    const native = deps.db.getCurrentRunForCoordinator({
+      terminalHandle: owner.terminalHandle,
+      paneKey: owner.paneKey,
+      orcaSessionId: null
+    })
+    if (
+      native?.id !== owner.runId &&
+      (owner.state === 'running' || owner.state === 'unverifiable')
+    ) {
+      moveOwner(deps.db, owner.ownerId, 'exited', 'coordinator_rebound', timestamp)
+      return
+    }
+  }
   if (owner.state === 'stopping') {
     moveOwner(deps.db, owner.ownerId, 'unverifiable', 'stop_interrupted', timestamp)
     report.unverified += 1

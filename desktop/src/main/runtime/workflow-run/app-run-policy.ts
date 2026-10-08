@@ -3,6 +3,7 @@ import { isEquivalentPaneKey } from '../orchestration/db/pane-key-match'
 import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { OrchestrationCoordinatorKey } from '../orchestration/orchestration-caller-identity'
 import { appRunReadersFor, type AppRunReaders } from './app-run-readers'
+import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 
 /**
  * Single-authority guards for runs the app owns (runs with a workflow_runs row). Orca keeps its
@@ -41,6 +42,23 @@ function taskStartHint(taskId: string | undefined): object {
   return taskId ? { nextCommandArgs: ['orchestration', 'task-start', '--task', taskId] } : {}
 }
 
+/** Attachment preserves native tasks already present; new tasks still pass classification and routing. */
+function isPreAttachmentNativeTask(db: OrchestrationDb, runId: string, taskId?: string): boolean {
+  if (!taskId) {
+    return false
+  }
+  const receipt = getPrimarySessionStore(db).latestForRun(runId)?.receipt
+  if (receipt?.nativeCoordinator !== true || typeof receipt.nativeTaskBoundary !== 'number') {
+    return false
+  }
+  return Boolean(
+    db.db
+      .prepare(`SELECT 1 FROM tasks WHERE id = ? AND run_id = ? AND rowid <= ?
+    AND NOT EXISTS (SELECT 1 FROM task_specs WHERE task_id = tasks.id)`)
+      .get(taskId, runId, receipt.nativeTaskBoundary)
+  )
+}
+
 /** task-update in an app run: no dispatched, and completed only once a validator recorded a pass. */
 export function assertAppRunTaskUpdateAllowed(
   db: OrchestrationDb,
@@ -52,6 +70,9 @@ export function assertAppRunTaskUpdateAllowed(
   }
   const view = readers ?? appRunReadersFor(db)
   if (!view.findAppRun(input.runId)) {
+    return
+  }
+  if (isPreAttachmentNativeTask(db, input.runId, input.taskId)) {
     return
   }
   if (input.status === 'dispatched') {
@@ -76,6 +97,9 @@ export function assertAppRunUsesTaskStart(
   readers?: AppRunReaders
 ): void {
   if (!(readers ?? appRunReadersFor(db)).findAppRun(input.runId)) {
+    return
+  }
+  if (isPreAttachmentNativeTask(db, input.runId, input.taskId)) {
     return
   }
   const target = input.taskId ?? '<task id>'
@@ -114,10 +138,7 @@ export function assertAppRunPrimaryMayCreateRun(
 ): void {
   const ownRun = primaryRunOf(db, readers ?? appRunReadersFor(db), caller)
   if (ownRun) {
-    throw appRunRefusal(
-      APP_RUN_POLICY_ERROR_CODES.primaryFenced,
-      `This terminal is the primary session of app run ${ownRun}; it cannot create another Run.`
-    )
+    assertCoordinatorMayLeaveRun(db, ownRun)
   }
 }
 
@@ -134,16 +155,75 @@ export function assertAppRunUseAllowed(
     return
   }
   if (ownRun) {
-    throw appRunRefusal(
-      APP_RUN_POLICY_ERROR_CODES.primaryFenced,
-      `This terminal is the primary session of app run ${ownRun}; it cannot switch to another Run.`
-    )
+    assertCoordinatorMayLeaveRun(db, ownRun)
   }
   if (view.findAppRun(runId)) {
+    assertCoordinatorMayLeaveRun(db, runId)
+  }
+}
+
+/** Rebinding may not strand an active worker, unresolved task or approval. */
+function assertCoordinatorMayLeaveRun(db: OrchestrationDb, runId: string): void {
+  const tasks = db.db
+    .prepare(
+      "SELECT 1 FROM tasks WHERE run_id = ? AND status NOT IN ('completed', 'failed', 'canceled') LIMIT 1"
+    )
+    .get(runId)
+  const attempts = db.db
+    .prepare(
+      "SELECT 1 FROM dispatch_contexts WHERE run_id = ? AND status IN ('pending', 'dispatched') LIMIT 1"
+    )
+    .get(runId)
+  const permissions = db.db
+    .prepare("SELECT 1 FROM permission_decisions WHERE run_id = ? AND status = 'pending' LIMIT 1")
+    .get(runId)
+  const owner = getPrimarySessionStore(db).findLiveByRun(runId)
+  if (
+    tasks ||
+    attempts ||
+    permissions ||
+    (owner && !['running', 'unverifiable'].includes(owner.state))
+  ) {
     throw appRunRefusal(
       APP_RUN_POLICY_ERROR_CODES.primaryFenced,
-      `Run ${runId} is an app run; only its own primary session can bind to it.`
+      `Run ${runId} still has pending work or an unconfirmed coordinator; finish or cancel it before switching.`,
+      { runId }
     )
+  }
+}
+
+/** Releases only metadata after native run binding changed; the CLI and its context keep running. */
+export function retireUnboundCoordinatorOwners(
+  db: OrchestrationDb,
+  runIds: readonly string[]
+): void {
+  const readers = appRunReadersFor(db)
+  if (readers.listLivePrimaryPanes().length === 0) {
+    return
+  }
+  const sessions = getPrimarySessionStore(db)
+  for (const runId of new Set(runIds)) {
+    const owner = sessions.findLiveByRun(runId)
+    if (!owner) {
+      continue
+    }
+    if (!owner.paneKey || !['running', 'unverifiable'].includes(owner.state)) {
+      continue
+    }
+    const native = db.getCurrentRunForCoordinator({
+      terminalHandle: owner.terminalHandle,
+      paneKey: owner.paneKey,
+      orcaSessionId: null
+    })
+    if (native?.id !== owner.runId) {
+      sessions.transition({
+        ownerId: owner.ownerId,
+        from: owner.state,
+        to: 'exited',
+        reason: 'coordinator_rebound',
+        timestamp: new Date().toISOString()
+      })
+    }
   }
 }
 
