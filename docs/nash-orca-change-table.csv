@@ -1,8 +1,7 @@
 ﻿文件,状态,相对 Orca 61de2d8e,功能分类,文件用途,新增行,删除行,工作树状态,内容定位（非逐行审查结论）
 .gitignore,A,NASH 独立仓库文件,其他仓库资源,配置/数据,55,0,已提交,其他仓库资源；.gitignore
 DESIGN.md,A,NASH 独立仓库文件,文档与计划,文档/审计,121,0,已提交,文档与计划；DESIGN.md
-README.md,A,NASH 独立仓库文件,文档与计划,文档/审计,42,0,已提交,文档与计划；README.md
-desktop/.build/windows-process-tree/x64/windows-process-tree.node,A,相对 Orca 新增,共享契约与基础能力,实现/测试,-,-,已提交,共享契约与基础能力；.build/windows-process-tree/x64/windows-process-tree.node
+README.md,A,NASH 独立仓库文件,文档与计划,文档/审计,44,0,已提交,文档与计划；README.md
 desktop/.gitattributes,M,相对 Orca 修改,其他仓库资源,配置/数据,3,0,已提交,其他仓库资源；.gitattributes
 desktop/.oxfmtrc.json,M,相对 Orca 修改,其他仓库资源,配置/数据,2,1,已提交,其他仓库资源；.oxfmtrc.json
 desktop/config/build-plugins/markdown-parser-exports.ts,M,相对 Orca 修改,共享契约与基础能力,实现/配置,2,1,已提交,共享契约与基础能力；config/build-plugins/markdown-parser-exports.ts
@@ -2748,7 +2747,7 @@ docs/dot-validation-decisions-handover-2026-10-06.md,A,NASH 独立仓库文件,�
 docs/dot-validation-decisions-sites-readiness-2026-10-06.md,A,NASH 独立仓库文件,文档与计划,文档/审计,71,0,已提交,文档与计划；docs/dot-validation-decisions-sites-readiness-2026-10-06.md
 docs/implementation-plan.md,A,NASH 独立仓库文件,文档与计划,文档/审计,139,0,已提交,文档与计划；docs/implementation-plan.md
 docs/nash-checkpoint-2026-10-05.md,A,NASH 独立仓库文件,文档与计划,文档/审计,110,0,已提交,文档与计划；docs/nash-checkpoint-2026-10-05.md
-docs/nash-checkpoint-2026-10-06.md,A,NASH 独立仓库文件,文档与计划,文档/审计,236,0,已提交,文档与计划；docs/nash-checkpoint-2026-10-06.md
+docs/nash-checkpoint-2026-10-06.md,A,NASH 独立仓库文件,文档与计划,文档/审计,242,0,已提交,文档与计划；docs/nash-checkpoint-2026-10-06.md
 docs/nash-operations.md,A,NASH 独立仓库文件,文档与计划,文档/审计,219,0,已提交,文档与计划；docs/nash-operations.md
 docs/nash-orca-change-table.csv,A,NASH 独立仓库文件,文档与计划,文档/审计,,0,已提交,文档与计划；docs/nash-orca-change-table.csv
 docs/nash-ui-ia-independence-plan-2026-10-06.md,A,NASH 独立仓库文件,文档与计划,文档/审计,101,0,已提交,文档与计划；docs/nash-ui-ia-independence-plan-2026-10-06.md

@@ -39,6 +39,12 @@
 | 引导清单 | 按 NASH 的入口与功能裁剪 | Claude Code 或 Codex 均可完成安装步骤；删除旧清单进度迁移、标记和弃用参数转接 |
 | 工作流语言 | Dot → 主 agent → 任务流程 → 返回 Dot 的消息使用英文 | 删除 `deliverableLanguage` 和固定 `zh-Hans` 约束；工件语言由任务内容决定 |
 
+### Windows release v1.4.214
+
+The Windows x64 NSIS installer is built and the actual packaged NASH executable passed isolated hidden-window startup. Native terminal ownership, packaged daemon, CLI and plugin-resource checks passed. The installer is unsigned; updates are manual while the independent update feed is unconfigured. No macOS/Linux installer or cross-platform orcad template is included in this release.
+
+Artifact: `nash-windows-setup.exe` (259,326,669 bytes). SHA-256: `b1fc1cc24ae7fbed8b2eadbcd0c51416949a2c461f4961492f6aa3cdf10b2cbb`. [Release entry](https://github.com/p1nbored/NASH/releases/tag/v1.4.214).
+
 ### 当前验证与差异文件表
 
 - 最终旧执行器删除后，Node、CLI、Web 类型检查、六语言目录和 RPC 生成目录检查通过；定向 native/report/decision/schema 测试和独立代码复核通过。 最后一次组合回归 **90 个文件 / 1,063 项全部通过**，真实进程拦截数为 0；最终 CLI/桌面构建与正式目录隔离启动通过。
@@ -47,7 +53,7 @@
 - 网站 145 项测试、类型检查、构建通过；[当前私有 Dot MCP Site](https://nash-dot-mcp.taojuguo.chatgpt.site) 已成功发布。源码提交 `6bb5cbf6fd384d06fc779c43e9376a128de17818`，版本 `appgver_3d12a2ee1c588191a9eb3a495fa78271`；remote 4 / ingress 3，manifest SHA-256 `4065156f3037753862e7eaa2ed075b30e39d8bc225e3fda4255690f1f2ea89af`。
 - 未调用付费 provider，未做 AGY 真实双账户切换，未启动真实任务；完整继承测试套件和发布安装包不在已验证范围。独立更新源、云分享服务、RSI 后端仍未完成。
 
-[完整文件级改动表（CSV）](nash-orca-change-table.csv) 已改为对照 Orca `61de2d8e`，仅列当前不同的文件：**2,926 个路径**，其中 desktop 2,723、NASH 根目录 203；新增 1,425、修改 1,497、删除 4。集合与 Git diff + NASH 根文件清单校验一致。功能分类是定位索引，不代表逐行人工审核。
+[完整文件级改动表（CSV）](nash-orca-change-table.csv) 已改为对照 Orca `61de2d8e`，仅列当前不同的文件：**2,925 个路径**，其中 desktop 2,722、NASH 根目录 203；新增 1,424、修改 1,497、删除 4。集合与 Git diff + NASH 根文件清单校验一致。功能分类是定位索引，不代表逐行人工审核。
 
 相对最新 Orca 的四处删除是旧开发更新配置、两张被用户图标替代的 Orca 图标，以及已移除的旧清单进度迁移组件。原生对照副本没有本地删除或修改。上一轮删除了 138 个旧 NASH 执行器/转录/停止端口/清单适配文件，本轮继续删除剩余旧进程记录和提示模块；Dot 与 Workbench 旧协议/迁移文件也已清理，这些删除不能与“相对 Orca 的四处删除”混为一谈。
 

@@ -2,6 +2,8 @@
 
 NASH is a desktop development workspace built from Orca (`desktop/`). Dot (ChatGPT) or the desktop submits a request, and NASH starts one primary session using Claude Code or Codex, selected in Settings → Task routing. The primary proposes TaskSpecs; Clef classifies them; the versioned routing table selects the CLI, model and effort. Execution, context delivery, messages and stopping reuse Orca's native mechanisms. In-session work uses NASH validation, while native workers retain their native completion lifecycle. Orca's runs, tasks and attempts remain the authoritative state.
 
+Windows x64 installer: [NASH releases](https://github.com/p1nbored/NASH/releases/latest). The initial installer is unsigned; automatic updates are not configured.
+
 NASH uses the official Claude Code, Codex and agy CLIs installed on this machine, the same binaries the shell finds on PATH. It does not bundle, patch or update them.
 
 ## Repository
