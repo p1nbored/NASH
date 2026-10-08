@@ -6,6 +6,7 @@
 - Status: ACCEPTED with the plan of 2026-10-06 (`docs/nash-ui-ia-independence-plan-2026-10-06.md`, P9). The user: "Check whether the current changes have broken Orca's original plugin mechanism. If compatibility can be preserved through a compatibility adapter, do not remove or deprecate the existing mechanism directly."
 - Finding: not broken. Plugin loading, install from a folder or Git, consent, content hashes, the plugin API, IPC, preload and RPC are byte-identical to Orca 995715b1. Under D-028 Orca's official marketplace is never seeded and the plugin safety list is never refreshed, so the list fails open; plugins installed in a real Orca are not visible because NASH has its own data folder (D-017).
 - Decision: a switch in Plugins settings, off by default, lets the user use Orca's plugin catalog. Turning it on adds Orca's official marketplace and refreshes the safety list through Orca's existing services; turning it off stops the refresh. No plugin code is removed. D-028 is otherwise unchanged.
+- Implementation: done (package P9, 2026-10-06; `useOrcaPluginCatalog`, adapter `src/main/startup/orca-plugin-catalog-adapter.ts`; `src/main/plugins/**` and `src/shared/plugins/**` stay identical to Orca 995715b1).
 
 ---
 
@@ -19,6 +20,7 @@
 - Workbench: the right-sidebar tab where the user starts local requests and follows NASH runs (permission prompts, validation decisions, tasks, messages, stop). It is not related to RSI.
 - Onboarding checklist: its items describe NASH as it is, and each completes from a real signal.
 - Updates: menu items that check for updates are hidden while the update feed is off (D-026).
+- Implementation: done (packages P2, P3 and P4, 2026-10-06). Build flags in `desktop/src/shared/nash-build-flags.ts`: `ORCA_ACCOUNT_AND_MOBILE_UI_ENABLED`, `RSI_NAVIGATION_ENABLED` and `ORCA_STAR_PROMPT_ENABLED`, all off. Settings has "Dot" (Set Up) and "Task routing" (AI Capabilities) categories; old links to the Integrations sections land there. The Help menu offers "Report an issue" and "Source" for github.com/p1nbored/NASH. The checklist has eight items: Claude Code, Clef, dot, integrations, notifications, setup script; milestones first run and two tasks at once. Workbench and settings screens show no internal IDs, hashes or codes; they are behind "Copy details".
 
 ---
 
@@ -29,7 +31,7 @@
 - Cause: on Windows agy keeps its login in Windows Credential Manager (generic credential `gemini:antigravity`), which Node cannot reach, so the Orca code refused Windows outright. agy has no home-folder variable, so Codex's per-account folder (`CODEX_HOME`) does not apply.
 - Decision: a native adapter reads and writes that one credential, as the macOS adapter does with agy's Keychain item. It compares before writing, reads back after, refuses more than 2,560 bytes, lists or reads no other credential, makes no network call, and never uses or logs a token. Saved accounts stay encrypted with Electron safeStorage (DPAPI). The Windows launch check compares `USERPROFILE`, case-insensitively.
 - Amends: D-023's Kept line ("NASH never reads, copies or reuses vendor credentials"), for agy account switching only, which D-030 kept and which already worked this way on macOS.
-- Implementation: plan package P5.
+- Implementation: done (package P5, 2026-10-06). The N-API addon `desktop/native/windows-credentials` is built for Electron 43.7.5 by `config/scripts/rebuild-native-deps.mjs`. Verified in Electron's runtime only against a disposable `nash-test:` credential; `gemini:antigravity` was never read or written. A switch between two real accounts that agy then uses is not verified. NASH's routed agy tasks do not run the launch identity check.
 
 ---
 
@@ -40,6 +42,7 @@
 - Repository: `C:\Programs\NASH`, remote `origin` github.com/p1nbored/NASH (private). The app lives in `desktop/` (formerly `desktop/orca/`). History: Orca's untouched files at 995715b1, then NASH as of 2026-10-06, then one commit per change. `C:\Programs\autopilot` stays as an untouched archive, with the four build briefs and the private design inputs.
 - Identity: the release repository `p1nbored/NASH` is part of the app identity, and issue and source links point there. The update feed stays off (D-026): the repository is private, so its releases cannot be read without signing in.
 - Supersedes: D-017's "The repository and its folder keep the working name autopilot", and the `desktop/orca` wrapper layout of 2026-10-04.
+- Implementation: repository created 2026-10-06. The app icon comes from the user's image (package P8); Orca's whale icon variants are gone, and saved icon choices fall back to the NASH icon.
 
 ---
 
@@ -48,6 +51,7 @@
 - Date: 2026-10-06.
 - Status: ACCEPTED. Asked how task routing should appear, the user chose per-task choices and added: "The routing table shouldn't be removed from Settings altogether; rather, it needs fewer explanations—especially leftover developer notes and the like—and a cleaner, more streamlined, and aesthetically pleasing interface".
 - Decision: Settings shows each kind of task with its agent, model and effort, editable in place. Versions, hashes, proposal ids and JSON import move into a collapsed Advanced section. Developer notes and storage-level messages leave the interface. Routing behaviour (D-016, D-020) is unchanged.
+- Implementation: done (package P3, 2026-10-06). Settings > Task routing > "Agents for each task". Saving an inline edit records it as the user's own change and accepts it in the same step, so it is still an explicit user activation; if the accept fails, the change waits under Suggested changes.
 
 ---
 
@@ -58,7 +62,7 @@
 - Cause: the remote path had its own cap, `read_only` (remote plan, section 7 amendment). It shaped the Site's tool schema and description, the Site's validator and a second desktop check. The per-workspace maximum applied to the local dot interface only and never reached the Site.
 - Decision: remote submissions may ask for `workspace_write`. Each workspace's maximum, set in NASH, stays the limit, and a request above it is refused with `dot_access_above_maximum`. dot is told each workspace's maximum so it can ask for the right access. Write runs keep D-025 (task worktrees; the primary merges), and RG7 still holds for read-only runs.
 - Who deploys: NASH changes the desktop and the Site source. The user's Codex redeploys the Site from a handover document. Until both run the new contract, dot shows NASH offline.
-- Implementation: plan package P6.
+- Implementation: done on the desktop and in the Site source (package P6, 2026-10-06). The remote contract moved to version 4 (inbox payloads stay on dot ingress v3); manifest sha256 `dc8ea10de514d86ff8058c47f9e29e524a4909e33dade15f0959dbb97aa79400`. The Site's MCP `initialize` now describes the real mailbox. The redeploy waits for the user's Codex (docs/dot-remote-write-handover-2026-10-06.md); until both sides run v4, dot shows NASH offline. Not verified live.
 
 ---
 
@@ -122,7 +126,7 @@
 - Date: 2026-10-06.
 - Status: ACCEPTED. The user approved the recommendations "Except for 2, all can be executed"; turning off Orca's five cloud services was one of them.
 - Off behind `ORCA_CLOUD_SERVICES_ENABLED = false` (not a user setting): sending feedback and crash reports to Orca; Orca Cloud sign-in, the mobile relay, and artifact and skill publishing; installing shared skills from Orca links; the official plugin marketplace seed and kill-list refresh; the push gateway. An explicit `ORCA_*` endpoint override still reaches that one service. Update checks stay off under D-026.
-- Implementation: done (package G2, 2026-10-06; architecture section 17.1).
+- Implementation: done (package G2, 2026-10-06; architecture section 17.1). Item 4, the plugin safety list and official marketplace, became a user opt-in under D-039.
 
 ---
 

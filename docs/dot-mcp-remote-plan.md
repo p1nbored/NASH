@@ -208,7 +208,7 @@ On NASH, unchanged and applied to every inbox item:
 
 Added by this plan:
 - A **remote access switch** in NASH Settings, off by default, separate from the local dot switch. Off means no polling and no events.
-- **[amendment]** Remote submissions capped at `read_only` until the user decides otherwise (section 10, decision 3).
+- **[amendment, decided 2026-10-06]** Remote submissions may ask for `workspace_write`, limited by each workspace's maximum (section 10, decision 3; D-034).
 - Sites rate-limits per client (for example 30 tool calls per minute) and caps the inbox (for example 50 waiting items).
 - Pairing can be revoked from the NASH desktop or the Sites admin; revoking also deletes the waiting inbox.
 
@@ -242,7 +242,7 @@ Joint gate **G-remote** (needs the user's authorization): one live pass per tool
 
 1. **Hop A auth**: OAuth 2.1 if dot's client supports it (recommended), otherwise a per-client bearer secret.
 2. **Deliverable contents**: summaries and artifact lists only (recommended), or file contents for workspaces you opt in, with a size cap and secret scan.
-3. **Remote write access**: remote submissions stay `read_only` for now (recommended), or allow up to each workspace's maximum.
+3. **Remote write access**: decided 2026-10-06 (D-034): allowed up to each workspace's maximum. (Options were: stay `read_only`, or allow up to each workspace's maximum.)
 4. **Submission TTL**: 30 minutes (recommended), or longer if you want tasks to wait for the PC to come online.
 5. **Retention on Sites**: 7 days (recommended) or another value.
 6. **Remote permission answers**: allowed (as D-017 says for dot), or answered on the PC only while remote is new.

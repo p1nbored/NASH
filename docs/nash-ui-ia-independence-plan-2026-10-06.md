@@ -66,3 +66,8 @@ The user answered on 2026-10-06:
 4. The build briefs stay outside the repository (D-036).
 
 D-037 to D-039 record the agy adapter, the navigation changes and the plugin catalog opt-in.
+
+
+## 5. Delivery status (2026-10-08 UTC)
+
+P0-P9 are implemented; P10 source checks and private Site deployment are complete. See [delivery and verification](nash-delivery-2026-10-08.md) for exact evidence, the inherited full-suite failures, and the remaining offline-desktop/live-provider checks.

@@ -1,5 +1,7 @@
 # NASH checkpoint, 2026-10-06 (EDT)
 
+> Historical checkpoint. Work resumed; see [the current delivery report](nash-delivery-2026-10-08.md).
+
 Work is stopped at the user's request ("stop here and i will resume later", then "set the checkpoint"). Nothing is running. The working tree was clean when this was written; the only commits are the four listed below, and nothing is pushed.
 
 Read with: `docs/nash-ui-ia-independence-plan-2026-10-06.md` (issues I-01 to I-17, findings, packages P0-P10) and `docs/decision-log.md` D-034 to D-039.

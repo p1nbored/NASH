@@ -22,7 +22,9 @@ NASH uses the official Claude Code, Codex and agy CLIs installed on this machine
 
 ## Status
 
-Built and tested with injected fakes only. Nothing has run end to end against a real Claude Code, Codex, agy, Clef or dot session yet; those live gates need the user's authorization. The remote mailbox Site is deployed owner-private with MCP enabled.
+The October 6 interface/independence plan is implemented. See [the delivery report](docs/nash-delivery-2026-10-08.md) for checks and limits. All 1,633 NASH-specific keys are translated into the five supported non-English languages. Windows credential I/O passed a disposable real-store test. The owner-private remote mailbox is deployed on contract v4; the desktop is currently offline.
+
+Real routed CLI/Clef tasks, two-account switching and release packaging remain unverified.
 
 All newly authored project files, documentation, comments and internal control messages are English; original source and user artifacts are preserved verbatim.
 
