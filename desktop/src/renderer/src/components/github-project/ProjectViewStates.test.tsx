@@ -1,10 +1,29 @@
 // @vitest-environment happy-dom
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
-import { ProjectItemsEmptyState } from './ProjectViewStates'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import * as projectTypes from '../../../../shared/github/project-types'
+import { ProjectItemsEmptyState, ProjectViewTabStrip } from './ProjectViewStates'
 
 afterEach(cleanup)
+
+it('points unsupported project view requests to NASH issues', () => {
+  const support = vi.spyOn(projectTypes, 'isRenderableProjectViewLayout').mockReturnValue(false)
+  try {
+    render(
+      <ProjectViewTabStrip
+        views={[{ id: 'view', number: 1, name: 'Future view', layout: 'TABLE_LAYOUT' }]}
+        activeViewId={null}
+        onPick={() => {}}
+      />
+    )
+    expect(screen.getByRole('button').getAttribute('title')).toContain(
+      'https://github.com/p1nbored/NASH/issues/new'
+    )
+  } finally {
+    support.mockRestore()
+  }
+})
 
 const FILTERED_COPY = "No items match this view's filter."
 const UNFILTERED_COPY = 'This view has no items yet.'

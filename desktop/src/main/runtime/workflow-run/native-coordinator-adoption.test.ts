@@ -217,6 +217,17 @@ describe('native coordinator adoption', () => {
     expect(h.db.getCurrentRunForCoordinator(key())?.id).toBe(h.runId)
   })
 
+  it('projects native coordinator rebinding before stale owner metadata is reconciled', () => {
+    const original = adopt()
+    h.db.createRun({
+      objective: 'Next native run',
+      coordinatorHandle: PRIMARY_HANDLE,
+      coordinatorPaneKey: PRIMARY_PANE
+    })
+    expect(appRunReadersFor(h.db).listLivePrimaryPanes()).toEqual([])
+    expect(getPrimarySessionStore(h.db).get(original.owner.ownerId)?.state).toBe('running')
+  })
+
   it.each(['user_canceled', 'run_completed'])(
     'does not interrupt or close an adopted CLI for %s',
     async (reason) => {

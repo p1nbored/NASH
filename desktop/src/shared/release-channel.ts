@@ -1,9 +1,5 @@
 import { compareAppVersions, isValidAppVersion } from './app-version'
-import {
-  getAppUpdateFeed,
-  getUpdateFeedRepoSlug,
-  requireAppUpdateFeed
-} from './app-update-feed'
+import { getAppUpdateFeed, getUpdateFeedRepoSlug, requireAppUpdateFeed } from './app-update-feed'
 
 export type ReleaseChannel = 'stable' | 'rc' | 'hourly' | 'daily' | 'adhoc'
 
@@ -64,6 +60,9 @@ export function isChannelSupportedOnPlatform(
 ): boolean {
   if (!hasDedicatedReleaseRepo(channel)) {
     return true
+  }
+  if (getAppUpdateFeed()?.devChannels === false) {
+    return false
   }
   return DEV_CHANNEL_PLATFORMS[channel].includes(platform)
 }

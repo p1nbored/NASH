@@ -27,7 +27,7 @@ import {
 beforeEach(() => {
   environmentMocks.resolveFooter.mockReset()
   environmentMocks.resolveFooter.mockResolvedValue(
-    ['---', 'Orca: 1.4.178-rc.2', 'OS: darwin 25.0.0 (arm64)', 'Shell: /bin/zsh'].join('\n')
+    ['---', 'NASH: 1.4.178-rc.2', 'OS: darwin 25.0.0 (arm64)', 'Shell: /bin/zsh'].join('\n')
   )
 })
 
@@ -330,7 +330,7 @@ describe('TerminalErrorToast environment footer', () => {
       })
     )
 
-    await waitFor(() => expect(view.container.textContent).toContain('Orca: 1.4.178-rc.2'))
+    await waitFor(() => expect(view.container.textContent).toContain('NASH: 1.4.178-rc.2'))
   })
 
   it('does not retain a prior async footer when the next error already has one', async () => {
@@ -340,17 +340,17 @@ describe('TerminalErrorToast environment footer', () => {
         onDismiss: vi.fn()
       })
     )
-    await waitFor(() => expect(view.container.textContent).toContain('Orca: 1.4.178-rc.2'))
+    await waitFor(() => expect(view.container.textContent).toContain('NASH: 1.4.178-rc.2'))
 
     view.rerender(
       React.createElement(TerminalErrorToast, {
-        error: 'Second failure.\n\n---\nOrca: embedded\nOS: linux 6.8 (x64)',
+        error: 'Second failure.\n\n---\nNASH: embedded\nOS: linux 6.8 (x64)',
         onDismiss: vi.fn()
       })
     )
 
-    expect(view.container.textContent).toContain('Orca: embedded')
-    expect(view.container.textContent).not.toContain('Orca: 1.4.178-rc.2')
+    expect(view.container.textContent).toContain('NASH: embedded')
+    expect(view.container.textContent).not.toContain('NASH: 1.4.178-rc.2')
   })
 
   it('omits client details for every SSH reconnect-owned error', async () => {
@@ -510,6 +510,9 @@ describe('TerminalErrorToast folder workspace path errors', () => {
     const toast = view.container.querySelector('[data-terminal-error-toast]')
     expect(toast?.textContent).toContain('NASH cannot find /Users/me/ara_company')
     expect(toast?.querySelector('a')?.textContent).toBe('file an issue')
+    expect(toast?.querySelector('a')?.getAttribute('href')).toBe(
+      'https://github.com/p1nbored/NASH/issues/new'
+    )
   })
 
   it('does not ask the user to file an issue for a folder they can fix', () => {
@@ -530,7 +533,7 @@ describe('TerminalErrorToast folder workspace path errors', () => {
 
 it('keeps an existing environment footer without asking to report an explained folder error', () => {
   const footer =
-    '---\nOrca: 1.4.178-rc.2\nOS: win32 10.0 (x64)\nShell: C:\\Windows\\System32\\cmd.exe'
+    '---\nNASH: 1.4.178-rc.2\nOS: win32 10.0 (x64)\nShell: C:\\Windows\\System32\\cmd.exe'
   const error = `folder_workspace_path_not_directory:C:\\work\\folder:file\n\n${footer}`
   const view = render(React.createElement(TerminalErrorToast, { error, onDismiss: vi.fn() }))
   expect(view.container.textContent).toContain(

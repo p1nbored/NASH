@@ -1,6 +1,43 @@
 import type { OrchestrationDb } from '../orchestration/db'
 import { isEquivalentPaneKey } from '../orchestration/db/pane-key-match'
-import type { PrimarySessionRecord } from '../orchestration/db/primary-session-store'
+import {
+  getPrimarySessionStore,
+  type PrimarySessionRecord
+} from '../orchestration/db/primary-session-store'
+
+/** Native binding owns coordinator membership; cached owner rows may lag a run switch. */
+export function isPrimaryBoundToRun(db: OrchestrationDb, owner: PrimarySessionRecord): boolean {
+  return (
+    db.getCurrentRunForCoordinator({
+      terminalHandle: owner.terminalHandle,
+      paneKey: owner.paneKey,
+      orcaSessionId: null
+    })?.id === owner.runId
+  )
+}
+
+/** Retires the metadata lease only, without claiming that the coordinator process died. */
+export function retireUnboundPrimaryOwner(
+  db: OrchestrationDb,
+  owner: PrimarySessionRecord,
+  timestamp: string
+): boolean {
+  if (
+    !owner.paneKey ||
+    (owner.state !== 'running' && owner.state !== 'unverifiable') ||
+    isPrimaryBoundToRun(db, owner)
+  ) {
+    return false
+  }
+  getPrimarySessionStore(db).transition({
+    ownerId: owner.ownerId,
+    from: owner.state,
+    to: 'exited',
+    reason: 'coordinator_rebound',
+    timestamp
+  })
+  return true
+}
 
 /**
  * B4 fences a pane that Orca still binds to an app run, even after its primary ended. Once the owner is

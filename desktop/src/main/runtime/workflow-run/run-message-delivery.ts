@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { StatusRowMutationListener } from '../../agent-hooks/server/server-types'
 import type { OrchestrationDb } from '../orchestration/db'
 import { RUN_MESSAGE_SOURCES } from '../orchestration/db/autopilot-message-schema-definition'
 import { AutopilotIdSchema } from '../orchestration/db/autopilot-store-input'
@@ -72,6 +73,9 @@ export type RunMessageDeliveryDeps = {
   /** A fresh id per terminal write, for Orca's prompt receipt. */
   readonly newRequestId: () => string
   readonly timers?: RunMessageTimers
+  readonly primaryStatusChanges?: {
+    subscribeStatusRowMutations(listener: StatusRowMutationListener): () => void
+  }
   readonly onFlushError?: (code: string) => void
 }
 
@@ -117,12 +121,36 @@ function liveRead(status: PrimarySessionStatus | null): LivePrimaryRead {
 export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessageDelivery {
   const { db, terminal, clock } = deps
   const serializer = createKeyedSerializer()
+  // Terminal-only transitions, reconnects and run cancellation need a fallback outside hook events.
   const flushTimers = createRunFlushTimers(
     deps.timers ?? SYSTEM_RUN_MESSAGE_TIMERS,
     RUN_MESSAGE_FLUSH_INTERVAL_MS
   )
   const messages = getRunMessageStore(db)
   const now = () => clockTimestamp(clock)
+  let disposed = false
+  const unsubscribeStatusChanges = deps.primaryStatusChanges?.subscribeStatusRowMutations(
+    ({ before, after }) => {
+      if (disposed) {
+        return
+      }
+      const sessions = getPrimarySessionStore(db)
+      for (const runId of messages.listHeldRunIds()) {
+        const owner = sessions.findLiveByRun(runId)
+        if (
+          owner &&
+          [before, after].some(
+            (row) =>
+              row &&
+              (row.paneKey === owner.paneKey ||
+                (row.terminalHandle && row.terminalHandle === owner.terminalHandle))
+          )
+        ) {
+          scheduleFlush(runId)
+        }
+      }
+    }
+  )
 
   async function readLivePrimary(runId: string): Promise<LivePrimaryRead> {
     const sessions = getPrimarySessionStore(db)
@@ -154,8 +182,15 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
   }
 
   function scheduleFlush(runId: string): void {
+    if (disposed) {
+      return
+    }
     void serializer
-      .run(runId, () => flushHeldRunMessages(flushContext, runId))
+      .run(runId, async () => {
+        if (!disposed) {
+          await flushHeldRunMessages(flushContext, runId)
+        }
+      })
       .catch((error) => {
         ;(deps.onFlushError ?? reportFlushError)(errorCodeOf(error))
       })
@@ -230,7 +265,7 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
     },
     flushHeld: (runId) => serializer.run(runId, () => flushHeldRunMessages(flushContext, runId)),
     notifyPrimaryStatusChanged(runId) {
-      if (messages.countHeld(runId) > 0) {
+      if (!disposed && messages.countHeld(runId) > 0) {
         scheduleFlush(runId)
       }
     },
@@ -250,7 +285,14 @@ export function createRunMessageDelivery(deps: RunMessageDeliveryDeps): RunMessa
       return interrupted.length
     },
     drain: (runId) => serializer.drain(runId),
-    dispose: () => flushTimers.dispose()
+    dispose() {
+      if (disposed) {
+        return
+      }
+      disposed = true
+      unsubscribeStatusChanges?.()
+      flushTimers.dispose()
+    }
   }
 }
 

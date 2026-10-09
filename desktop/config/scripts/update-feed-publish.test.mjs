@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 const require = createRequire(import.meta.url)
 const { resolveBuilderPublishConfig } = require('./update-feed-publish.cjs')
 
-// FIXTURE_ONLY: a stand-in release feed; the shipped identity has none.
+// FIXTURE_ONLY: a stand-in release feed with native development repositories.
 const FIXTURE_FEED = { owner: 'fixture-owner', repo: 'fixture-app', whatsNew: null }
 
 describe('electron-builder publish config', () => {
@@ -41,5 +41,13 @@ describe('electron-builder publish config', () => {
     )
 
     expect(new Set([...repos, FIXTURE_FEED.repo]).size).toBe(4)
+  })
+
+  it('does not invent development repositories when the feed does not publish those channels', () => {
+    for (const channel of ['hourly', 'daily', 'adhoc']) {
+      expect(
+        resolveBuilderPublishConfig({ ...FIXTURE_FEED, devChannels: false }, channel).repo
+      ).toBe('fixture-app')
+    }
   })
 })

@@ -11,5 +11,5 @@
   "documentProgIdPrefix": "NASH",
   "urlScheme": "nash",
   "releaseRepository": { "owner": "p1nbored", "repo": "NASH" },
-  "updateFeed": null
+  "updateFeed": { "owner": "p1nbored", "repo": "NASH", "whatsNew": null, "devChannels": false }
 }

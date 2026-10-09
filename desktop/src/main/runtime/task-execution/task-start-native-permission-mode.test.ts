@@ -27,9 +27,17 @@ afterEach(() => {
 })
 
 describe('routed worker permission transport', () => {
-  it.each([CODEX_ROUTE, SUBAGENT_ROUTE, AGY_ROUTE])(
-    'keeps $target on the terminal hook path when the user prefers structured chats',
-    async (fixture) => {
+  it.each([
+    { fixture: CODEX_ROUTE, permission: 'manual', mode: 'structured' },
+    { fixture: SUBAGENT_ROUTE, permission: 'manual', mode: 'structured' },
+    { fixture: AGY_ROUTE, permission: 'manual', mode: 'terminal' },
+    { fixture: CODEX_ROUTE, permission: 'auto', mode: 'terminal' },
+    { fixture: SUBAGENT_ROUTE, permission: 'auto', mode: 'terminal' },
+    { fixture: CODEX_ROUTE, permission: undefined, mode: 'terminal' },
+    { fixture: SUBAGENT_ROUTE, permission: 'yolo', mode: 'terminal' }
+  ])(
+    'starts $fixture.target with $permission approval policy in $mode mode',
+    async ({ fixture, permission, mode }) => {
       const env = createAppRunHarness()
       harness = env
       const creator = {
@@ -57,6 +65,7 @@ describe('routed worker permission transport', () => {
         timestamp: new Date(FIXTURE_NOW_MS + 1000).toISOString()
       })
       const settings = Object.freeze({
+        agentPermissionMode: permission,
         experimentalNativeChat: true,
         experimentalStructuredNativeChat: true,
         openAgentTabsInChatByDefault: true
@@ -92,11 +101,22 @@ describe('routed worker permission transport', () => {
 
       expect(launch).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({
-          mode: expect.objectContaining({ mode: 'terminal' }),
+          mode: expect.objectContaining({ mode }),
           taskAccess: 'read_only',
-          routeId: seeded.routeId
+          routeId: seeded.routeId,
+          params: expect.objectContaining({
+            model: fixture.model,
+            ...(fixture.effort === null ? {} : { effort: fixture.effort })
+          })
         })
       )
+      if (permission !== 'manual') {
+        expect(launch.mock.calls[0]?.[0].mode).toMatchObject({
+          preferred: 'structured',
+          reason: 'structured_sessions_unavailable',
+          detail: expect.stringContaining('terminal permission relay')
+        })
+      }
       expect(settings.experimentalStructuredNativeChat).toBe(true)
     }
   )

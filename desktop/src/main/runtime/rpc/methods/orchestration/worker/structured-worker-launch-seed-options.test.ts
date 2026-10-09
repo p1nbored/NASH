@@ -43,6 +43,15 @@ describe('a structured worker seeds the dispatch launch preferences', () => {
     expect((await createWith({ model: 'gpt-5.6-sol' })).options).toEqual({ model: 'gpt-5.6-sol' })
   })
 
+  it.each(['read_only', 'workspace_write'])(
+    'preserves %s task access alongside the routed model and effort',
+    async (taskAccess) => {
+      expect(await createWith({ model: 'gpt-6.1-sol', effort: 'max', taskAccess })).toMatchObject({
+        options: { model: 'gpt-6.1-sol', effort: 'max', taskAccess }
+      })
+    }
+  )
+
   it.each([
     ['no preferences at all', undefined],
     ['an option set that narrows to nothing', { model: '  ' }]

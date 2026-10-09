@@ -60,13 +60,21 @@ describe('electron-builder NASH identity', () => {
 })
 
 describe('electron-builder update feed and URL scheme', () => {
-  it('publishes nothing and writes no app-update.yml while NASH has no release feed (D-017)', () => {
-    expect(identity.updateFeed).toBeNull()
-    // Why null and not undefined: electron-builder auto-detects a GitHub feed from the repository when publish is unset.
-    expect(config.publish).toBeNull()
+  it('generates updater metadata for the NASH release repository', () => {
+    expect(config.publish).toEqual({
+      provider: 'github',
+      owner: 'p1nbored',
+      repo: 'NASH',
+      releaseType: 'draft'
+    })
     for (const platform of [config.mac, config.win, config.linux, config.nsis, config.dmg]) {
       expect(platform.publish).toBeUndefined()
     }
+  })
+
+  it('does not claim an upstream Windows signing identity for unsigned NASH builds', () => {
+    expect(config.win.signtoolOptions?.publisherName).toBeUndefined()
+    expect(config.win.verifyUpdateCodeSignature).toBeUndefined()
   })
 
   it('keeps every Orca release repository out of the whole config', () => {

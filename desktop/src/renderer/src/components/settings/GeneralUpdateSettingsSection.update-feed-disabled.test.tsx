@@ -34,7 +34,7 @@ afterEach(() => {
 })
 
 // Why: this build has no release feed (D-017), so main never checks and the panel must not imply it does.
-it('runs against the shipped identity, which has no feed', () => {
+it('uses an explicitly disabled feed', () => {
   expect(getAppUpdateFeed()).toBeNull()
 })
 
@@ -62,4 +62,9 @@ it('keeps the alt-click release channel switcher closed without a feed', () => {
   fireEvent.click(screen.getByText('Updates'), { altKey: true })
 
   expect(screen.queryByText('release channel switcher')).toBeNull()
+})
+
+vi.mock('../../../../shared/app-identity-constants', async (importOriginal) => {
+  const actual = await importOriginal<{ APP_IDENTITY: object }>()
+  return { ...actual, APP_IDENTITY: { ...actual.APP_IDENTITY, updateFeed: null } }
 })

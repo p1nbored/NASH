@@ -371,8 +371,15 @@
           "CrashReportDialog": {
             "56a3dfa283": "Failed to send crash report.",
             "835037edc9": "· NASH",
+            "88fea8e84e": "Don't Send",
+            "8e24fe4f75": "Crash report sent.",
+            "b082f27490": "Attach recent diagnostic logs",
             "b175e90213": "No crash report is available.",
-            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked."
+            "b2e36f53a1": "Failed to send crash report. Diagnostic ticket {{value0}} was uploaded but not linked.",
+            "b4951cd27c": "Send Report",
+            "e59f0b9427": "Sends a capped redacted log bundle with the report.",
+            "ead6fc0510": "No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.",
+            "nashNotSent": "NASH does not send crash reports. Copy the details to keep them."
           }
         }
       },
@@ -1452,6 +1459,10 @@
           "fullCoverage_one": "All 1 detected agent has the skill.",
           "fullCoverage_other": "All {{value0}} detected agents have the skill."
         },
+        "PluginsSettingsSection": {
+          "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers.",
+          "orcaCatalogLabel": "Use Orca's plugin catalog"
+        },
         "PrivacyPane": {
           "afec8b03be": "ci"
         },
@@ -1857,6 +1868,14 @@
             }
           }
         },
+        "plugins": {
+          "search": {
+            "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers.",
+            "orcaCatalogTitle": "Use Orca's plugin catalog",
+            "orcaMarketplace": "Orca marketplace",
+            "safetyList": "plugin safety list"
+          }
+        },
         "providerAccountScope": {
           "localMac": "Local Mac"
         },
@@ -2031,6 +2050,25 @@
         },
         "SetupScriptPromptCard": {
           "dcaa645da5": "ok"
+        },
+        "SidebarFeedbackDialog": {
+          "26108d3699": "Join Discord",
+          "3460258a54": "Follow on X",
+          "5b120b9634": "Submit anonymously",
+          "60b721e857": "Failed to submit feedback. Please try again.",
+          "69969ba364": "Sending…",
+          "7a46c228b8": "Thanks for the feedback.",
+          "8de03e23c5": "Submit with your typed feedback only, or connect `gh` to include GitHub identity.",
+          "9b33530b3d": "Other ways to reach us",
+          "a2fd890d9e": "Please enter feedback before submitting.",
+          "a828fa4aee": "Feedback goes to the Orca team. Share what's working, what's broken, or what should come next.",
+          "c9e5ea0791": "GitHub:",
+          "d20439c560": "Checking GitHub identity…",
+          "d245c4ef6c": "GitHub issues",
+          "f2e42e1307": "Send",
+          "imagesNotDelivered": "Feedback sent, but image delivery could not be confirmed.",
+          "imagesNotIncluded": "Feedback sent. Your screenshots could not be uploaded and were not included.",
+          "imagesRejected": "Feedback sent. Your screenshots were too large to upload and were not included."
         },
         "SidebarHeader": {
           "49f62c5665": "Workspace board",

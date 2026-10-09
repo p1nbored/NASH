@@ -20428,5 +20428,14 @@
   },
   "projectField": {
     "updateFailed": "No se pudo actualizar el campo del proyecto"
+  },
+  "crashReport": {
+    "githubDescription": "Revisa y envía un informe de fallo en GitHub. «Copiar detalles» incluye todo el texto de diagnóstico.",
+    "openGithubIssue": "Abrir una incidencia en GitHub"
+  },
+  "feedback": {
+    "githubOpenFailed": "No se pudo abrir GitHub. Tu borrador está guardado.",
+    "githubDescription": "Revisa y envía tus comentarios en GitHub Issues de NASH. Añade capturas de pantalla en el navegador. Tu borrador se conserva aquí hasta que lo reemplaces.",
+    "copyDraft": "Copiar el borrador completo"
   }
 }

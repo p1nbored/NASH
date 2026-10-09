@@ -2,13 +2,15 @@
 
 import '@testing-library/jest-dom/vitest'
 import type { ReactNode } from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CrashReportRecord } from '../../../../shared/crash-reporting'
 import { CrashReportDialogSurface } from './CrashReportDialogSurface'
 
 const viewer = vi.fn(async () => null)
 const submit = vi.fn()
+const successToast = vi.hoisted(() => vi.fn())
+vi.mock('sonner', () => ({ toast: { success: successToast, error: vi.fn() } }))
 
 vi.mock('./use-crash-report-copy', () => ({
   useCrashReportCopy: () => vi.fn(async () => {})
@@ -57,7 +59,8 @@ function renderSurface(report: CrashReportRecord | null): void {
 
 beforeEach(() => {
   viewer.mockClear()
-  submit.mockClear()
+  submit.mockReset()
+  successToast.mockClear()
   Object.defineProperty(window, 'api', {
     configurable: true,
     value: { gh: { viewer }, crashReports: { submit, dismiss: vi.fn(async () => {}) } }
@@ -67,13 +70,15 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('CrashReportDialogSurface in NASH builds (Orca cloud services off)', () => {
-  it('offers no Send button and says crash reports are not sent', () => {
+  it('offers a GitHub issue form without cloud upload or account lookup', () => {
     renderSurface(crashReport())
 
-    expect(screen.queryByRole('button', { name: /Send Report/ })).toBeNull()
+    expect(screen.getByRole('button', { name: /Open GitHub Issue/ })).toBeInTheDocument()
     expect(screen.queryByText('Attach recent diagnostic logs')).toBeNull()
     expect(
-      screen.getByText('NASH does not send crash reports. Copy the details to keep them.')
+      screen.getByText(
+        'Review and submit a crash report on GitHub. Copy Details includes the full diagnostic text.'
+      )
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Copy Details/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument()
@@ -81,11 +86,56 @@ describe('CrashReportDialogSurface in NASH builds (Orca cloud services off)', ()
     expect(submit).not.toHaveBeenCalled()
   })
 
-  it('offers no sending when no automatic report was captured', () => {
+  it('offers a GitHub issue form when no automatic report was captured', () => {
     renderSurface(null)
 
     expect(screen.getByText('No automatic crash report was captured.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Send Report/ })).toBeNull()
     expect(viewer).not.toHaveBeenCalled()
+  })
+  it('opens a draft with notes and reports browser opening rather than submission', async () => {
+    const report = crashReport()
+    submit.mockResolvedValue({ ok: true, issueOpened: true, report })
+    const onReportChange = vi.fn()
+    const onOpenChange = vi.fn()
+    render(
+      <CrashReportDialogSurface
+        open
+        report={report}
+        loading={false}
+        onReportChange={onReportChange}
+        onOpenChange={onOpenChange}
+      />
+    )
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'My notes' } })
+    fireEvent.click(screen.getByRole('button', { name: /Open GitHub Issue/ }))
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
+    expect(submit).toHaveBeenCalledWith({ reportId: report.id, notes: 'My notes' })
+    expect(onReportChange).toHaveBeenCalledWith(report)
+    expect(successToast).toHaveBeenCalledWith(
+      'GitHub issue form opened. Submit the report in your browser.'
+    )
+  })
+
+  it('keeps notes and the dialog available when opening GitHub fails', async () => {
+    submit.mockResolvedValue({ ok: false, error: 'Browser unavailable' })
+    const onOpenChange = vi.fn()
+    render(
+      <CrashReportDialogSurface
+        open
+        report={null}
+        loading={false}
+        onReportChange={vi.fn()}
+        onOpenChange={onOpenChange}
+      />
+    )
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Keep these notes' } })
+    fireEvent.click(screen.getByRole('button', { name: /Open GitHub Issue/ }))
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Open GitHub Issue/ })).toBeEnabled()
+    )
+    expect(screen.getByRole('textbox')).toHaveValue('Keep these notes')
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(successToast).not.toHaveBeenCalled()
   })
 })

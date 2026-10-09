@@ -58,7 +58,7 @@ afterEach(() => {
 
 // Why: this build has no release feed (D-017), so there are no release notes to link.
 describe('UpdateCard without a release feed', () => {
-  it('runs against the shipped identity, which has no feed', () => {
+  it('uses an explicitly disabled feed', () => {
     expect(getAppUpdateFeed()).toBeNull()
   })
 
@@ -86,4 +86,9 @@ describe('UpdateCard without a release feed', () => {
     expect(screen.queryByRole('button', { name: 'Check official releases' })).toBeNull()
     expect(openUrl).not.toHaveBeenCalled()
   })
+})
+
+vi.mock('../../../shared/app-identity-constants', async (importOriginal) => {
+  const actual = await importOriginal<{ APP_IDENTITY: object }>()
+  return { ...actual, APP_IDENTITY: { ...actual.APP_IDENTITY, updateFeed: null } }
 })

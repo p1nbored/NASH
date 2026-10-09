@@ -1,3 +1,4 @@
+import { agentHookServer } from '../agent-hooks/server'
 import { createNodeAvailabilityFs } from '../routing-table/availability/route-availability-fs'
 import { createRoutingTableContext } from '../routing-table/routing-table-context'
 import { createNodeRoutingTableFs } from '../routing-table/routing-table-file-store'
@@ -63,7 +64,13 @@ export function createProductionAutopilotBuilders(
         onFailure
       }),
     createPrimarySessions: ({ runtime, owner, routing, userDataPath }) =>
-      createOrcaPrimarySessionRuntime({ runtime, db: owner, routing, userDataPath }),
+      createOrcaPrimarySessionRuntime({
+        runtime,
+        db: owner,
+        routing,
+        userDataPath,
+        primaryStatusChanges: agentHookServer
+      }),
     createExecution: ({ runtime, owner, routing, cliCommand, now, log }) => {
       return createTaskExecutionRuntime({
         owner,

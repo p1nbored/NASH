@@ -6,7 +6,7 @@ import {
   agentStateRulesDownloadUrl
 } from './agent-state-rules-live-update'
 
-// D-017: with no NASH release feed (APP_IDENTITY.updateFeed is null) the rules download must never
+// D-017: with a release feed explicitly disabled the rules download must never
 // reach a host, in particular not a real Orca install's `agent-state-rules-*` release.
 describe('agent state rules live updates with no release feed', () => {
   it.each(['next', 'stable'] as const)('has no download address for the %s channel', (channel) => {
@@ -33,4 +33,9 @@ describe('agent state rules live updates with no release feed', () => {
       expect(fetch).not.toHaveBeenCalled()
     }
   )
+})
+
+vi.mock('../../../shared/app-identity-constants', async (importOriginal) => {
+  const actual = await importOriginal<{ APP_IDENTITY: object }>()
+  return { ...actual, APP_IDENTITY: { ...actual.APP_IDENTITY, updateFeed: null } }
 })

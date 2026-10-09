@@ -34,7 +34,6 @@ import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type * as SidebarFeedbackDialogModule from './SidebarFeedbackDialog'
 import { translate } from '@/i18n/i18n'
 import { getUpdateCheckClickOptions, getUpdateCheckHint } from '@/lib/update-check-click-options'
-import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
 import { getAppUpdateFeed } from '../../../../shared/app-update-feed'
 import { getNewIssueUrl, getReleaseRepositoryUrl } from '../../../../shared/app-release-repository'
 
@@ -104,7 +103,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
   const handleMenuOpenChange = (open: boolean): void => {
     setMenuOpen(open)
     updateCheckModifiersRef.current = NO_UPDATE_CHECK_MODIFIERS
-    if (open && ORCA_CLOUD_SERVICES_ENABLED) {
+    if (open) {
       // Warm on the precursor: reading the menu and clicking Send Feedback takes hundreds of ms,
       // so the chunk is already in the module map by the time the item is selected.
       void loadSidebarFeedbackDialog().catch(() => {})
@@ -236,16 +235,13 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {/* Why: NASH sends nothing to Orca, so the feedback form is not offered. */}
-            {ORCA_CLOUD_SERVICES_ENABLED ? (
-              <DropdownMenuItem onSelect={handleOpenFeedback}>
-                <MessageSquareText className="size-3.5" />
-                {translate(
-                  'auto.components.sidebar.SidebarSettingsHelpMenu.4cf5b868d7',
-                  'Send Feedback'
-                )}
-              </DropdownMenuItem>
-            ) : null}
+            <DropdownMenuItem onSelect={handleOpenFeedback}>
+              <MessageSquareText className="size-3.5" />
+              {translate(
+                'auto.components.sidebar.SidebarSettingsHelpMenu.4cf5b868d7',
+                'Send Feedback'
+              )}
+            </DropdownMenuItem>
             {showMilestones ? (
               <DropdownMenuItem onSelect={openMilestones}>
                 <img src={logo} alt="" aria-hidden="true" className="size-3.5 object-contain" />

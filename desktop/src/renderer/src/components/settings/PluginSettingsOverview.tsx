@@ -4,7 +4,6 @@ import { translate } from '@/i18n/i18n'
 import { PluginCatalogEmptyState } from '../plugin-catalog/PluginCatalogEmptyState'
 import { PluginDevelopmentSection } from './PluginDevelopmentSection'
 import { PluginMarketplaceBrowser } from './PluginMarketplaceBrowser'
-import { PluginOrcaCatalogSetting } from './PluginOrcaCatalogSetting'
 import { PluginSettingsRow, type PluginLogsState } from './PluginSettingsRow'
 import { SettingsRow, SettingsSwitch } from './SettingsFormControls'
 
@@ -20,8 +19,6 @@ type PluginSettingsOverviewProps = {
   logsByPlugin: Readonly<Record<string, PluginLogsState>>
   devPaths: readonly string[]
   devPathsBusy: boolean
-  orcaCatalogEnabled: boolean
-  onSetOrcaCatalog: (enabled: boolean) => Promise<void>
   onToggleFeature: () => void
   onRefresh: () => Promise<void>
   onReview: (pluginKey: string) => void
@@ -55,8 +52,6 @@ export function PluginSettingsOverview({
   logsByPlugin,
   devPaths,
   devPathsBusy,
-  orcaCatalogEnabled,
-  onSetOrcaCatalog,
   onToggleFeature,
   onRefresh,
   onReview,
@@ -89,7 +84,6 @@ export function PluginSettingsOverview({
           />
         }
       />
-      <PluginOrcaCatalogSetting enabled={orcaCatalogEnabled} onChange={onSetOrcaCatalog} />
       {settingsError ? <p className="text-xs text-destructive">{settingsError}</p> : null}
       <div className="my-4 border-t border-border/60" />
       {!featureEnabled ? (
@@ -107,8 +101,6 @@ export function PluginSettingsOverview({
       ) : (
         <>
           <PluginMarketplaceBrowser
-            // Why: the browser reads sources once on mount; reload it when Orca's catalog switches.
-            key={orcaCatalogEnabled ? 'orca-catalog-on' : 'orca-catalog-off'}
             installedPlugins={plugins}
             onInstalled={onMarketplaceInstalled}
             onRefreshInstalled={onRefresh}

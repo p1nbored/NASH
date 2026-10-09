@@ -1,5 +1,6 @@
 import os from 'node:os'
-import { app } from 'electron'
+import { app, shell } from 'electron'
+import { getNewIssueUrl } from '../../shared/app-release-repository'
 import {
   type CrashReportDiagnosticBundle,
   type CrashReportSubmitArgs,
@@ -7,19 +8,8 @@ import {
   formatCrashReportText,
   formatUncapturedCrashReportText
 } from '../../shared/crash-reporting'
-import { submitFeedback } from './feedback'
 import type { CrashReportStore } from '../crash-reporting/crash-report-store'
-import {
-  diagnosticBundleForReportOnlyRetry,
-  prepareCrashDiagnosticBundle,
-  resolveSubmittedDiagnosticBundle
-} from '../crash-reporting/crash-feedback-diagnostic-bundle'
-import {
-  getRequestedCrashReport,
-  inFlightSubmissions,
-  rememberSubmittedReportId,
-  submittedReportIds
-} from './crash-reporting-sendable-reports'
+import { getRequestedCrashReport, inFlightSubmissions } from './crash-reporting-sendable-reports'
 
 export function buildUncapturedCrashReportText(
   notes: string | undefined,
@@ -45,131 +35,29 @@ export async function submitCrashReport(
   args: CrashReportSubmitArgs
 ): Promise<CrashReportSubmitResult> {
   const report = await getRequestedCrashReport(store, args)
-  if (!report) {
-    const diagnosticUpload = prepareCrashDiagnosticBundle(args.includeDiagnosticLogs !== false)
-    const diagnosticBundle = diagnosticUpload.diagnosticBundle
-    const reportOnlyDiagnosticBundle = diagnosticBundleForReportOnlyRetry(diagnosticUpload)
-    const result = await submitFeedback({
-      feedback: buildUncapturedCrashReportText(args.notes, diagnosticBundle),
-      submissionType: 'crash',
-      submitAnonymously: args.submitAnonymously,
-      githubLogin: args.githubLogin,
-      githubEmail: args.githubEmail,
-      ...(diagnosticUpload.feedbackDiagnosticBundle
-        ? {
-            diagnosticBundle: diagnosticUpload.feedbackDiagnosticBundle,
-            feedbackWithoutDiagnosticBundle: buildUncapturedCrashReportText(
-              args.notes,
-              reportOnlyDiagnosticBundle
-            )
-          }
-        : {})
-    })
-    const submittedDiagnosticBundle = resolveSubmittedDiagnosticBundle(diagnosticUpload, result)
-    return result.ok
-      ? { ok: true, report: null, diagnosticBundle: submittedDiagnosticBundle }
-      : {
-          // Why: the transport-only attachment failure may contain raw
-          // endpoint detail; only its sanitized bundle reason crosses IPC.
-          ok: false,
-          status: result.status,
-          error: result.error,
-          report: null,
-          diagnosticBundle: submittedDiagnosticBundle
-        }
+  if (report && inFlightSubmissions.has(report.id)) {
+    return { ok: false, status: null, error: 'GitHub issue form is already opening.', report }
   }
-  const canSubmitDismissedReport = Boolean(args.reportId && report.status === 'dismissed')
-  if (
-    (!canSubmitDismissedReport && report.status !== 'pending') ||
-    submittedReportIds.has(report.id)
-  ) {
-    return {
-      ok: true,
-      report: submittedReportIds.has(report.id) ? { ...report, status: 'sent' } : report
-    }
+  if (report) {
+    inFlightSubmissions.add(report.id)
   }
-  if (inFlightSubmissions.has(report.id)) {
+  try {
+    const text = report
+      ? formatCrashReportText(report, args.notes)
+      : buildUncapturedCrashReportText(args.notes)
+    await shell.openExternal(getNewIssueUrl('Crash report', text))
+    // Opening a draft does not establish that the user submitted it.
+    return { ok: true, issueOpened: true, report }
+  } catch {
     return {
       ok: false,
       status: null,
-      error: 'Crash report submission already in progress.',
+      error: 'Could not open GitHub. Copy the details and try again.',
       report
     }
-  }
-
-  inFlightSubmissions.add(report.id)
-  try {
-    const diagnosticUpload = prepareCrashDiagnosticBundle(args.includeDiagnosticLogs !== false)
-    const diagnosticBundle = diagnosticUpload.diagnosticBundle
-    const reportOnlyDiagnosticBundle = diagnosticBundleForReportOnlyRetry(diagnosticUpload)
-    const result = await submitFeedback({
-      feedback: formatCrashReportText(report, args.notes, diagnosticBundle),
-      submissionType: 'crash',
-      submitAnonymously: args.submitAnonymously,
-      githubLogin: args.githubLogin,
-      githubEmail: args.githubEmail,
-      ...(diagnosticUpload.feedbackDiagnosticBundle
-        ? {
-            diagnosticBundle: diagnosticUpload.feedbackDiagnosticBundle,
-            feedbackWithoutDiagnosticBundle: formatCrashReportText(
-              report,
-              args.notes,
-              reportOnlyDiagnosticBundle
-            )
-          }
-        : {})
-    })
-    const submittedDiagnosticBundle = resolveSubmittedDiagnosticBundle(diagnosticUpload, result)
-    if (!result.ok) {
-      return {
-        // Why: keep the renderer contract allow-listed instead of leaking
-        // the transport's internal diagnosticBundleFailure object.
-        ok: false,
-        status: result.status,
-        error: result.error,
-        report,
-        diagnosticBundle: submittedDiagnosticBundle
-      }
-    }
-    rememberSubmittedReportId(report.id)
-    if (report.status === 'dismissed') {
-      try {
-        // Why: startup prompts are dismissed before the user can send from
-        // the still-open dialog, so successful uploads must update storage.
-        const sent = await store.markDismissedSent(report.id)
-        return {
-          ok: true,
-          report: sent ?? { ...report, status: 'sent' },
-          diagnosticBundle: submittedDiagnosticBundle
-        }
-      } catch (error) {
-        console.error('[crash-reporting] Failed to mark dismissed crash report sent:', error)
-        return {
-          ok: true,
-          report: { ...report, status: 'sent' },
-          diagnosticBundle: submittedDiagnosticBundle
-        }
-      }
-    }
-    try {
-      const sent = await store.markSent(report.id)
-      return {
-        ok: true,
-        report: sent ?? { ...report, status: 'sent' },
-        diagnosticBundle: submittedDiagnosticBundle
-      }
-    } catch (error) {
-      // Why: the upstream submission already succeeded. A local persistence
-      // failure must not present as upload failure or invite duplicate sends
-      // during this app session.
-      console.error('[crash-reporting] Failed to mark crash report sent:', error)
-      return {
-        ok: true,
-        report: { ...report, status: 'sent' },
-        diagnosticBundle: submittedDiagnosticBundle
-      }
-    }
   } finally {
-    inFlightSubmissions.delete(report.id)
+    if (report) {
+      inFlightSubmissions.delete(report.id)
+    }
   }
 }

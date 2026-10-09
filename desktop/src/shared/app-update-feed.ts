@@ -14,6 +14,8 @@ export type AppUpdateFeed = {
   readonly repo: string
   // null: the release feed exists but no what's-new service does, so changelog and nudge fetches are skipped.
   readonly whatsNew: AppUpdateWhatsNewFeed | null
+  /** False when this distribution does not publish hourly, daily or adhoc repositories. */
+  readonly devChannels?: boolean
 }
 
 export class UpdateFeedDisabledError extends Error {
@@ -37,5 +39,5 @@ export function requireAppUpdateFeed(): AppUpdateFeed {
 
 /** `owner/repo` of the main release repository, or of a dev-channel repository named `<repo>-<suffix>`. */
 export function getUpdateFeedRepoSlug(feed: AppUpdateFeed, devChannelSuffix?: string): string {
-  return `${feed.owner}/${devChannelSuffix ? `${feed.repo}-${devChannelSuffix}` : feed.repo}`
+  return `${feed.owner}/${devChannelSuffix && feed.devChannels !== false ? `${feed.repo}-${devChannelSuffix}` : feed.repo}`
 }

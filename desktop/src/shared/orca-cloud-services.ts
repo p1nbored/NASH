@@ -1,8 +1,6 @@
-// User decision 2026-10-05: NASH builds send nothing to Orca's services. Off: Send Feedback and crash
-// Send, Orca Cloud sign-in (relay, artifact and skill publishing), shared-skill install from links, the
-// plugin safety list and official marketplace (a user opt-in since D-039, `useOrcaPluginCatalog`), and
-// the Orca Mobile push gateway. Not a user setting; where an explicit ORCA_* endpoint override exists, it
-// still reaches that one service (docs/architecture.md section 17).
+// NASH disables Orca Cloud sign-in, relay, publishing, shared-skill links and mobile push.
+// The official plugin marketplace and safety feed use Orca's native plugin-system lifecycle.
+// Explicit ORCA_* endpoint overrides still reach that individual service.
 export const ORCA_CLOUD_SERVICES_ENABLED = false
 
 /** Refusal code returned when a NASH build declines an Orca cloud request. */

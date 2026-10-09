@@ -20428,5 +20428,14 @@
   },
   "projectField": {
     "updateFailed": "プロジェクトフィールドを更新できませんでした"
+  },
+  "crashReport": {
+    "githubDescription": "GitHub でクラッシュレポートを確認して送信します。「詳細をコピー」には診断テキスト全体が含まれます。",
+    "openGithubIssue": "GitHub Issue を開く"
+  },
+  "feedback": {
+    "githubOpenFailed": "GitHub を開けませんでした。下書きは保存されています。",
+    "githubDescription": "NASH の GitHub Issues でフィードバックを確認して送信します。スクリーンショットはブラウザーで追加してください。下書きは書き換えるまでここに残ります。",
+    "copyDraft": "下書き全体をコピー"
   }
 }

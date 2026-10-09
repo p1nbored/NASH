@@ -2,6 +2,7 @@ import type { OrchestrationDb } from '../orchestration/db'
 import { WORKFLOW_RUN_STATUSES } from '../orchestration/db/autopilot-run-schema-definition'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
+import { isPrimaryBoundToRun } from './primary-session-run-binding'
 import {
   WORKFLOW_RUN_TERMINAL_STATUSES,
   type WorkflowRunStatus
@@ -69,6 +70,10 @@ export function appRunReadersFor(owner: OrchestrationDb): AppRunReaders {
     listLivePrimaryPanes: () =>
       getPrimarySessionStore(owner)
         .listLive(READ_LIMIT)
+        .filter(
+          (session) =>
+            session.receipt?.nativeCoordinator !== true || isPrimaryBoundToRun(owner, session)
+        )
         .map((session) => ({ runId: session.runId, paneKey: session.paneKey })),
     // Why: Orca's reset deletes tasks but not these rows, so a pass whose task is gone is no pass.
     hasPassingValidation: (taskId) =>

@@ -1,5 +1,6 @@
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
+import { getAppUpdateFeed } from '../../shared/app-update-feed'
 import {
   DEV_CHANNEL_PLATFORM_LABEL,
   getVersionChannel,
@@ -98,7 +99,10 @@ export abstract class UpdaterBuildSelection extends UpdaterMenuChecks {
     if (!isChannelSupportedOnPlatform(channel, process.platform)) {
       this.sendStatus({
         state: 'error',
-        message: `${RELEASE_CHANNEL_LABELS[channel]} builds are produced only for ${DEV_CHANNEL_PLATFORM_LABEL}.`,
+        message:
+          getAppUpdateFeed()?.devChannels === false
+            ? `${RELEASE_CHANNEL_LABELS[channel]} builds are not published by this release feed.`
+            : `${RELEASE_CHANNEL_LABELS[channel]} builds are produced only for ${DEV_CHANNEL_PLATFORM_LABEL}.`,
         userInitiated: true
       })
       return

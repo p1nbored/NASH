@@ -20428,5 +20428,14 @@
   },
   "projectField": {
     "updateFailed": "프로젝트 필드를 업데이트하지 못했습니다"
+  },
+  "crashReport": {
+    "githubDescription": "GitHub에서 충돌 보고서를 검토하고 제출하세요. “세부 정보 복사”에는 전체 진단 텍스트가 포함됩니다.",
+    "openGithubIssue": "GitHub 이슈 열기"
+  },
+  "feedback": {
+    "githubOpenFailed": "GitHub를 열 수 없습니다. 초안은 저장되었습니다.",
+    "githubDescription": "NASH GitHub Issues에서 피드백을 검토하고 제출하세요. 스크린샷은 브라우저에서 추가하세요. 초안은 다른 내용으로 바꿀 때까지 여기에 유지됩니다.",
+    "copyDraft": "전체 초안 복사"
   }
 }

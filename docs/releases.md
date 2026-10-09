@@ -1,5 +1,18 @@
 # Releases and verification
 
+## v1.4.218 — 2026-10-09
+
+[Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.218).
+
+- Enables native stable/RC update checks against `p1nbored/NASH`, including updater metadata in the release assets.
+- Restores the official Orca plugin catalog and safety-feed lifecycle, retaining NASH names and profile directories.
+- Opens feedback and crash reports as prefilled NASH GitHub Issues. The user submits in the browser; opening a draft is not recorded as a sent report.
+- Reuses native message serialization/status events and coordinator bindings. Manual routed Claude/Codex workers honor native structured-chat preferences; Auto retains the terminal permission transport.
+
+Node, CLI and Web typechecks and changed-code quality checks passed. Focused runtime-reuse verification passed 722 tests. Update/catalog/report verification passed 397 tests, with 24 platform/environment cases skipped; plugin filesystem tests passed outside the Windows sandbox after its temporary-file rename restriction prevented the sandboxed run. Localization catalog/extraction checks passed.
+
+Assets: `nash-windows-setup.exe`, its `.blockmap`, `latest.yml`, and `SHA256SUMS.txt`. Exact asset checksums are provided in the release. The installer is unsigned. Builds before v1.4.218 require one manual upgrade because they have no enabled update feed. No macOS/Linux installer is included. Real provider CLI approval and a full installed-app update cycle remain outside the verified scope.
+
 ## v1.4.217 — 2026-10-09
 
 [Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.217).

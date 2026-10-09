@@ -20428,5 +20428,14 @@
   },
   "projectField": {
     "updateFailed": "无法更新项目字段"
+  },
+  "crashReport": {
+    "githubDescription": "在 GitHub 上检查并提交崩溃报告。“复制详细信息”包含完整的诊断文本。",
+    "openGithubIssue": "打开 GitHub Issue"
+  },
+  "feedback": {
+    "githubOpenFailed": "无法打开 GitHub。草稿已保存。",
+    "githubDescription": "在 NASH 的 GitHub Issues 中检查并提交反馈。请在浏览器中添加截图。草稿会保留在此处，直到你将其替换。",
+    "copyDraft": "复制完整草稿"
   }
 }

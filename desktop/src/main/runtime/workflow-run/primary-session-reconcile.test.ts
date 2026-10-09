@@ -116,6 +116,22 @@ describe('primary session reconcile after a restart', () => {
     expect(runOf(run.runId)).toMatchObject({ status: 'failed', endReason: 'launch_refused' })
   })
 
+  it('does not infer prompt delivery from a live owner and native binding after restart', async () => {
+    const { run } = seedPrimaryRun(db, { status: 'launching' })
+    db.bindRun({
+      runId: run.runId,
+      coordinatorHandle: FIXTURE_HANDLE,
+      coordinatorPaneKey: FIXTURE_PANE
+    })
+    await reconcile()
+    expect(runOf(run.runId)).toMatchObject({
+      status: 'unverifiable',
+      endReason: 'launch_outcome_unknown'
+    })
+    expect(ownerOf(run.runId)?.state).toBe('running')
+    expect(fake.terminal.sendTerminalAgentPrompt).not.toHaveBeenCalled()
+  })
+
   it('keeps a running owner whose pane and incarnation still match, and watches it', async () => {
     const { run, owner } = seedPrimaryRun(db)
     await reconcile()

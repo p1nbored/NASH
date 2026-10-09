@@ -4,7 +4,7 @@ Current source guide. See [architecture](architecture-direction.md), [Dot integr
 
 ## Install and configure
 
-1. Download the Windows x64 installer from [NASH releases](https://github.com/p1nbored/NASH/releases/latest). Verify it against the release's `SHA256SUMS.txt`. Install updates manually; automatic updates are not configured.
+1. Download the Windows x64 installer from [NASH releases](https://github.com/p1nbored/NASH/releases/latest). Verify it against the release's `SHA256SUMS.txt`. Builds before `v1.4.218` need one manual upgrade because their update feed was disabled.
 2. Install and sign in to the official Claude Code, Codex or AGY CLI you want to use. NASH does not bundle or patch those CLIs.
 3. In **Settings → Agents → Agent Permissions**, choose **Auto** for coordinator/Dot review or **Manual** for native confirmation. Yolo remains the native bypass preset where supported. Auto does not mean automatic model selection.
 4. In **Settings → Task routing**, click **Refresh model list** to read the CLI catalogs, then choose a coordinator and the CLI/model for each task type. Reviewers are editable. Claude workflow offers a Claude model and its supported effort; it has no CLI selector.
@@ -12,6 +12,14 @@ Current source guide. See [architecture](architecture-direction.md), [Dot integr
 6. Open a repository or folder workspace. Submit work in **Workbench**, or enable Dot for the intended workspace.
 
 Running tasks and provider verification use the user's configured accounts. Browsing a route is not proof that its model is available.
+
+## Updates, plugins and reports
+
+Update checks and downloads target `p1nbored/NASH` for stable and RC releases. Releases include the installer, blockmap and `latest.yml` update metadata; upload them together before making a release public.
+
+Enable the ordinary plugin-system setting to browse Orca's official catalog. The extra NASH catalog opt-in is gone; packaged builds also refresh the native plugin safety list. Catalog data lives in the NASH profile's `plugins-data/`, and installed plugins in its `plugins/`. This does not create a separate Orca profile or rename NASH.
+
+Feedback and crash-report actions open a NASH GitHub Issue draft. Review it and submit it in the browser; opening the draft neither uploads a report nor marks it sent. Update, catalog and reporting entry points no longer carry NASH disable restrictions. Orca Account, Mobile and other disabled cloud services remain unchanged.
 
 ## Workbench and existing coordinators
 
@@ -76,4 +84,4 @@ node config/scripts/check-changed-code-quality.mjs HEAD
 
 These entry points use installed dependencies when a package-manager shim cannot run. They do not install dependencies. Follow [desktop/AGENTS.md](../desktop/AGENTS.md), keep agent-launched windows hidden, and use disposable profiles for launch tests.
 
-The normal Windows release entry point is `pnpm build:win`. Packaging verifies native terminal ownership, daemon loading, plugin resources and CLI dependencies. Publish the resulting installer and blockmap with SHA-256 checksums only after those checks pass.
+The normal Windows release entry point is `pnpm build:win`. Packaging verifies native terminal ownership, daemon loading, plugin resources and CLI dependencies. When publishing an authorized release, include the installer, blockmap, generated update metadata (`latest.yml` for stable Windows releases) and SHA-256 checksums after those checks pass.

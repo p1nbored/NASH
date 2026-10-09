@@ -24,6 +24,7 @@ import { readPrimarySessionStatus, type PrimarySessionStatus } from './primary-s
 import { createPrimarySessionStopper, type PrimarySessionStopResult } from './primary-session-stop'
 import {
   createRunMessageDelivery,
+  type RunMessageDeliveryDeps,
   type RunMessageDeliveryInput,
   type RunMessageDeliveryResult
 } from './run-message-delivery'
@@ -64,6 +65,7 @@ export type PrimarySessionRuntimePorts = {
   entropy(): string
   newRequestId(): string
   readonly timers?: RunMessageTimers
+  readonly primaryStatusChanges?: RunMessageDeliveryDeps['primaryStatusChanges']
 }
 
 export type PrimarySessionStatusRead = {
@@ -139,6 +141,7 @@ export function composePrimarySessionRuntime(
     terminal,
     clock,
     newRequestId: ports.newRequestId,
+    primaryStatusChanges: ports.primaryStatusChanges,
     ...(ports.timers ? { timers: ports.timers } : {})
   })
 

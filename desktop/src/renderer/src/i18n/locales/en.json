@@ -20429,5 +20429,14 @@
     "unavailable": "Unable to play this media file. The file may be unavailable or use an unsupported codec.",
     "openFailed": "Could not open this file in the default app.",
     "openDefault": "Open in Default App"
+  },
+  "crashReport": {
+    "githubDescription": "Review and submit a crash report on GitHub. Copy Details includes the full diagnostic text.",
+    "openGithubIssue": "Open GitHub Issue"
+  },
+  "feedback": {
+    "githubOpenFailed": "Could not open GitHub. Your draft is saved.",
+    "githubDescription": "Review and submit your feedback in NASH GitHub Issues. Add screenshots in the browser. Your draft stays here until you replace it.",
+    "copyDraft": "Copy full draft"
   }
 }

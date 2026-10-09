@@ -24,6 +24,8 @@ export type FeedbackRequestFailure = {
 export type FeedbackSubmitResult =
   | {
       ok: true
+      /** The browser draft opened; the user still submits it on GitHub. */
+      issueOpened?: boolean
       diagnosticBundleFailure?: FeedbackRequestFailure
       /** Absent when nothing was attached; false when the text landed but the images did not. */
       imagesDelivered?: boolean

@@ -125,11 +125,6 @@ export const INLINE_ORCA_ALLOWED: readonly InlineOrcaAllowance[] = [
     reason: 'agents create worktrees through the in-session `orca` alias the bundled skill teaches'
   },
   {
-    file: 'components/crash-report/CrashReportDialogSurface.tsx',
-    text: 'the Orca team',
-    reason: 'upstream crash reports go to the Orca team (onorca.dev/v1/feedback); NASH sends none'
-  },
-  {
     file: 'store/slices/orca-profiles.ts',
     text: 'Orca profile',
     reason: `console diagnostics about ${ORCA_CLOUD}`

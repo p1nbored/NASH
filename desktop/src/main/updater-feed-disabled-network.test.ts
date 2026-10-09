@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// D-017: with no NASH release feed (APP_IDENTITY.updateFeed is null) every module that could dial an
+// D-017: with a release feed explicitly disabled every module that could dial an
 // update host must refuse before any network call. Only electron's net is faked, so a stray fetch
 // or a credential lookup for a release API shows up as a spy call.
 const { netFetchMock, requestMock } = vi.hoisted(() => ({
@@ -89,4 +89,9 @@ describe('release feed modules with no NASH feed', () => {
     // Why a specific error: an un-gated loader would fail differently (electron-updater cannot load outside Electron).
     expect(() => loadElectronAutoUpdater()).toThrow(/no release feed/i)
   })
+})
+
+vi.mock('../shared/app-identity-constants', async (importOriginal) => {
+  const actual = await importOriginal<{ APP_IDENTITY: object }>()
+  return { ...actual, APP_IDENTITY: { ...actual.APP_IDENTITY, updateFeed: null } }
 })

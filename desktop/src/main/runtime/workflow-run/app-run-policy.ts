@@ -4,6 +4,7 @@ import { OrchestrationError } from '../orchestration/orchestration-error'
 import type { OrchestrationCoordinatorKey } from '../orchestration/orchestration-caller-identity'
 import { appRunReadersFor, type AppRunReaders } from './app-run-readers'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
+import { retireUnboundPrimaryOwner } from './primary-session-run-binding'
 
 /**
  * Single-authority guards for runs the app owns (runs with a workflow_runs row). Orca keeps its
@@ -198,31 +199,13 @@ export function retireUnboundCoordinatorOwners(
   runIds: readonly string[]
 ): void {
   const readers = appRunReadersFor(db)
-  if (readers.listLivePrimaryPanes().length === 0) {
-    return
-  }
-  const sessions = getPrimarySessionStore(db)
   for (const runId of new Set(runIds)) {
-    const owner = sessions.findLiveByRun(runId)
-    if (!owner) {
+    if (!readers.findAppRun(runId)) {
       continue
     }
-    if (!owner.paneKey || !['running', 'unverifiable'].includes(owner.state)) {
-      continue
-    }
-    const native = db.getCurrentRunForCoordinator({
-      terminalHandle: owner.terminalHandle,
-      paneKey: owner.paneKey,
-      orcaSessionId: null
-    })
-    if (native?.id !== owner.runId) {
-      sessions.transition({
-        ownerId: owner.ownerId,
-        from: owner.state,
-        to: 'exited',
-        reason: 'coordinator_rebound',
-        timestamp: new Date().toISOString()
-      })
+    const owner = getPrimarySessionStore(db).findLiveByRun(runId)
+    if (owner) {
+      retireUnboundPrimaryOwner(db, owner, new Date().toISOString())
     }
   }
 }

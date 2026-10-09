@@ -105,12 +105,17 @@ export type CrashReportSubmitArgs = {
   notes?: string
   includeDiagnosticLogs?: boolean
   submitAnonymously?: boolean
-  githubLogin: string | null
-  githubEmail: string | null
+  githubLogin?: string | null
+  githubEmail?: string | null
 }
 
 export type CrashReportSubmitResult =
-  | { ok: true; report: CrashReportRecord | null; diagnosticBundle?: CrashReportDiagnosticBundle }
+  | {
+      ok: true
+      issueOpened?: true
+      report: CrashReportRecord | null
+      diagnosticBundle?: CrashReportDiagnosticBundle
+    }
   | {
       ok: false
       status: number | null

@@ -31,7 +31,7 @@ describe('NASH app identity constants', () => {
       documentProgIdPrefix: 'NASH',
       urlScheme: 'nash',
       releaseRepository: { owner: 'p1nbored', repo: 'NASH' },
-      updateFeed: null
+      updateFeed: { owner: 'p1nbored', repo: 'NASH', whatsNew: null, devChannels: false }
     })
   })
 
@@ -47,8 +47,8 @@ describe('NASH app identity constants', () => {
     }
   })
 
-  it('has no release feed until NASH publishes its own, so no update check can run', () => {
-    expect(APP_IDENTITY.updateFeed).toBeNull()
+  it('uses its own release repository for updates', () => {
+    expect(APP_IDENTITY.updateFeed).toMatchObject(APP_IDENTITY.releaseRepository)
   })
 
   it('traces issues and source to the NASH repository, not Orca (D-036)', () => {

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CrashReportRecord } from '../../shared/crash-reporting'
+import { CrashReportStore } from '../crash-reporting/crash-report-store'
+
+vi.mock('../crash-reporting/crash-report-store')
 
 const {
   handlers,
@@ -11,7 +14,8 @@ const {
   resolveDiagnosticOrcaChannelMock,
   spanEndMock,
   startSpanMock,
-  submitFeedbackMock
+  submitFeedbackMock,
+  openExternalMock
 } = vi.hoisted(() => {
   const spanEndMock = vi.fn()
   return {
@@ -32,12 +36,14 @@ const {
       interrupt: vi.fn(),
       end: spanEndMock
     })),
+    openExternalMock: vi.fn(),
     submitFeedbackMock: vi.fn()
   }
 })
 
 vi.mock('electron', () => ({
   app: { getVersion: () => '1.2.3-test' },
+  shell: { openExternal: openExternalMock },
   clipboard: { writeText: clipboardWriteTextMock },
   ipcMain: {
     removeHandler: vi.fn((channel: string) => handlers.delete(channel)),
@@ -76,7 +82,6 @@ vi.mock('../observability/tracer', () => ({
 }))
 
 import {
-  _getCrashReportingStateSizesForTests,
   _resetRendererErrorReportDedupeForTests,
   registerCrashReportingHandlers
 } from './crash-reporting'
@@ -112,6 +117,11 @@ function report(
   }
 }
 
+function registerHandlers(overrides: Partial<CrashReportStore>): void {
+  const store = Object.assign(new CrashReportStore('fixture-crash-reports.json'), overrides)
+  registerCrashReportingHandlers(store)
+}
+
 describe('registerCrashReportingHandlers', () => {
   beforeEach(() => {
     handlers.clear()
@@ -132,6 +142,8 @@ describe('registerCrashReportingHandlers', () => {
     resolveDiagnosticOrcaChannelMock.mockReturnValue('stable')
     startSpanMock.mockClear()
     spanEndMock.mockClear()
+    openExternalMock.mockReset()
+    openExternalMock.mockResolvedValue(undefined)
     submitFeedbackMock.mockReset()
     recordCrashBreadcrumbMock.mockReset()
     submitFeedbackMock.mockResolvedValue({ ok: true })
@@ -140,7 +152,7 @@ describe('registerCrashReportingHandlers', () => {
 
   it('copies the requested captured report to the clipboard', async () => {
     const latest = report()
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(async () => latest),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -148,7 +160,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => [latest]),
       record: vi.fn(),
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const result = await handlers.get('crashReports:copyLatestDiagnostics')?.(null, {
       reportId: latest.id,
@@ -165,7 +177,7 @@ describe('registerCrashReportingHandlers', () => {
   it('copies an uncaptured crash report when the caller intentionally omits reportId', async () => {
     const pending = report('pending', 'crash-late-pending')
     const listRecent = vi.fn(async () => [pending])
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(async () => null),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -173,7 +185,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent,
       record: vi.fn(),
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const result = await handlers.get('crashReports:copyLatestDiagnostics')?.(null, {
       notes: 'after opening /Users/alice/project'
@@ -190,7 +202,7 @@ describe('registerCrashReportingHandlers', () => {
 
   it('copies sanitized submission and diagnostic omission failures for a captured report', async () => {
     const pending = report('pending', 'crash-copy-failure')
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(async () => pending),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -198,7 +210,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => [pending]),
       record: vi.fn(),
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const result = await handlers.get('crashReports:copyLatestDiagnostics')?.(null, {
       reportId: pending.id,
@@ -226,7 +238,7 @@ describe('registerCrashReportingHandlers', () => {
 
   it('returns dismissed unsent reports for the manual Help menu entry', async () => {
     const dismissed = report('dismissed', 'crash-help-menu')
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(async () => dismissed),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -234,288 +246,63 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => [report('sent', 'crash-sent'), dismissed]),
       record: vi.fn(),
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     await expect(handlers.get('crashReports:getLatestPending')?.(null)).resolves.toBeNull()
     await expect(handlers.get('crashReports:getLatestReport')?.(null)).resolves.toEqual(dismissed)
   })
 
-  it('submits a pending report through feedback and marks it sent', async () => {
-    const pending = report('pending', 'crash-pending')
-    const sent = report('sent', pending.id)
-    const markSent = vi.fn(async () => sent)
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => pending),
-      dismiss: vi.fn(),
-      markSent,
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => [pending]),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      reportId: pending.id,
-      notes: 'extra /Users/alice/project',
-      submitAnonymously: false,
-      githubLogin: 'trusted-user',
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: true,
-      report: sent,
-      diagnosticBundle: {
-        status: 'attached',
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        bytes: 25,
-        spanCount: 1
-      }
-    })
-    expect(submitFeedbackMock).toHaveBeenCalledWith({
-      feedback: expect.stringContaining('Status: attached'),
-      submissionType: 'crash',
-      submitAnonymously: false,
-      githubLogin: 'trusted-user',
-      githubEmail: null,
-      diagnosticBundle: {
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        content: diagnosticBundle().payload,
-        bytes: 25,
-        spanCount: 1
-      },
-      feedbackWithoutDiagnosticBundle: expect.stringContaining('Status: not uploaded')
-    })
-    expect(markSent).toHaveBeenCalledWith(pending.id)
-  })
-
-  it('submits an uncaptured Help menu crash report with an attached diagnostic bundle', async () => {
-    const pending = report('pending', 'crash-late-pending')
-    const markSent = vi.fn()
-    const listRecent = vi.fn(async () => [pending])
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => null),
-      dismiss: vi.fn(),
-      markSent,
-      markDismissedSent: vi.fn(),
-      listRecent,
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      notes: 'blank window after opening /Users/alice/project',
-      submitAnonymously: false,
-      githubLogin: 'trusted-user',
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: true,
-      report: null,
-      diagnosticBundle: {
-        status: 'attached',
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        bytes: 25,
-        spanCount: 1
-      }
-    })
-    expect(collectDiagnosticBundleMock).toHaveBeenCalledWith(
-      expect.objectContaining({ lookbackMinutes: 3 * 24 * 60, orcaChannel: 'stable' })
-    )
-    expect(submitFeedbackMock).toHaveBeenCalledWith({
-      feedback: expect.stringContaining('Report ID: not captured'),
-      submissionType: 'crash',
-      submitAnonymously: false,
-      githubLogin: 'trusted-user',
-      githubEmail: null,
-      diagnosticBundle: {
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        content: diagnosticBundle().payload,
-        bytes: 25,
-        spanCount: 1
-      },
-      feedbackWithoutDiagnosticBundle: expect.stringContaining('Status: not uploaded')
-    })
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({ feedback: expect.stringContaining('Status: attached') })
-    )
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({ feedback: expect.stringContaining('[redacted-path]') })
-    )
-    expect(markSent).not.toHaveBeenCalled()
-    expect(listRecent).not.toHaveBeenCalled()
-  })
-
-  it('marks the report sent when transport retries successfully without diagnostic logs', async () => {
-    const pending = report('pending', 'crash-degraded')
-    const sent = report('sent', pending.id)
-    const markSent = vi.fn(async () => sent)
-    submitFeedbackMock.mockResolvedValueOnce({
-      ok: true,
-      diagnosticBundleFailure: { status: 413, error: 'status 413' }
-    })
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => pending),
-      dismiss: vi.fn(),
-      markSent,
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => [pending]),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      reportId: pending.id,
-      notes: 'manual report',
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: true,
-      report: sent,
-      diagnosticBundle: {
-        status: 'not_uploaded',
-        reason: 'diagnostic log attachment failed: status 413',
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        bytes: 25,
-        spanCount: 1
-      }
-    })
-    expect(markSent).toHaveBeenCalledWith(pending.id)
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        feedback: expect.stringContaining('Status: attached'),
-        feedbackWithoutDiagnosticBundle: expect.stringContaining('Status: not uploaded')
+  it.each(['pending', 'dismissed'] as const)(
+    'opens a GitHub draft for a %s report without marking it sent',
+    async (status) => {
+      const captured = report(status)
+      const markSent = vi.fn()
+      const markDismissedSent = vi.fn()
+      registerHandlers({
+        getById: vi.fn(async () => captured),
+        listRecent: vi.fn(async () => [captured]),
+        markSent,
+        markDismissedSent,
+        dismiss: vi.fn()
       })
-    )
-  })
+      const result = await handlers.get('crashReports:submit')?.(null, {
+        reportId: captured.id,
+        notes: 'Crash at /Users/alice/project',
+        includeDiagnosticLogs: true,
+        githubLogin: 'ignored-user',
+        githubEmail: 'ignored@example.com'
+      })
+      expect(result).toEqual({ ok: true, issueOpened: true, report: captured })
+      const url = new URL(openExternalMock.mock.calls[0][0])
+      expect(url.origin + url.pathname).toBe('https://github.com/p1nbored/NASH/issues/new')
+      expect(url.searchParams.get('body')).toContain('Crash at [redacted-path]')
+      expect(url.searchParams.get('body')).not.toContain('ignored@example.com')
+      expect(markSent).not.toHaveBeenCalled()
+      expect(markDismissedSent).not.toHaveBeenCalled()
+      expect(submitFeedbackMock).not.toHaveBeenCalled()
+      expect(collectDiagnosticBundleMock).not.toHaveBeenCalled()
+    }
+  )
 
-  it('submits the crash report without logs when the user excludes diagnostic logs', async () => {
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => null),
-      dismiss: vi.fn(),
-      markSent: vi.fn(),
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => []),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      notes: 'manual report',
-      includeDiagnosticLogs: false,
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
+  it('opens an uncaptured crash draft with notes and app details', async () => {
+    registerHandlers({ listRecent: vi.fn(async () => []) })
+    expect(await handlers.get('crashReports:submit')?.(null, { notes: 'Startup crash' })).toEqual({
       ok: true,
-      report: null,
-      diagnosticBundle: {
-        status: 'not_uploaded',
-        reason: 'diagnostic log upload skipped by user'
-      }
+      issueOpened: true,
+      report: null
     })
+    const body = new URL(openExternalMock.mock.calls[0][0]).searchParams.get('body')
+    expect(body).toContain('Report ID: not captured')
+    expect(body).toContain('Startup crash')
+    expect(body).toContain('1.2.3-test')
     expect(collectDiagnosticBundleMock).not.toHaveBeenCalled()
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        feedback: expect.stringContaining('diagnostic log upload skipped by user')
-      })
-    )
-  })
-
-  it('still submits an uncaptured crash report when the diagnostic bundle cannot be collected', async () => {
-    collectDiagnosticBundleMock.mockImplementation(() => {
-      throw new Error('collect failed')
-    })
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => null),
-      dismiss: vi.fn(),
-      markSent: vi.fn(),
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => []),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      notes: 'manual report',
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: true,
-      report: null,
-      diagnosticBundle: {
-        status: 'not_uploaded',
-        reason: 'collect failed'
-      }
-    })
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({ feedback: expect.stringContaining('Status: not uploaded') })
-    )
-  })
-
-  it('submits a dismissed startup prompt through feedback and marks it sent', async () => {
-    const dismissed = report('dismissed', 'crash-dismissed')
-    const sent = report('sent', dismissed.id)
-    const markDismissedSent = vi.fn(async () => sent)
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => dismissed),
-      dismiss: vi.fn(),
-      markSent: vi.fn(),
-      markDismissedSent,
-      listRecent: vi.fn(async () => []),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      reportId: dismissed.id,
-      notes: 'sent from startup prompt',
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: true,
-      report: sent,
-      diagnosticBundle: {
-        status: 'attached',
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        bytes: 25,
-        spanCount: 1
-      }
-    })
-    expect(submitFeedbackMock).toHaveBeenCalledWith({
-      feedback: expect.stringContaining('sent from startup prompt'),
-      submissionType: 'crash',
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null,
-      diagnosticBundle: {
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        content: diagnosticBundle().payload,
-        bytes: 25,
-        spanCount: 1
-      },
-      feedbackWithoutDiagnosticBundle: expect.stringContaining('Status: not uploaded')
-    })
-    expect(markDismissedSent).toHaveBeenCalledWith(dismissed.id)
   })
 
   it('dismisses a pending report locally without any network submission', async () => {
     const latest = report('pending', 'crash-dismiss')
     const dismissed = report('dismissed', latest.id)
     const dismiss = vi.fn(async () => dismissed)
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(async () => latest),
       dismiss,
       markSent: vi.fn(),
@@ -523,7 +310,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => [latest]),
       record: vi.fn(),
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const result = await handlers.get('crashReports:dismiss')?.(null, {
       reportId: latest.id
@@ -534,86 +321,47 @@ describe('registerCrashReportingHandlers', () => {
     expect(submitFeedbackMock).not.toHaveBeenCalled()
   })
 
-  it('keeps a pending report available if feedback submission fails', async () => {
-    const pending = report('pending', 'crash-failed')
+  it('keeps the report available and sanitizes browser launch failure', async () => {
+    const captured = report()
     const markSent = vi.fn()
-    submitFeedbackMock.mockResolvedValue({
+    openExternalMock.mockRejectedValueOnce(new Error('secret internal URL'))
+    registerHandlers({ getById: vi.fn(async () => captured), markSent })
+    expect(await handlers.get('crashReports:submit')?.(null, { reportId: captured.id })).toEqual({
       ok: false,
       status: null,
-      error: 'report-only network failed',
-      diagnosticBundleFailure: { status: 500, error: 'status 500' }
+      error: 'Could not open GitHub. Copy the details and try again.',
+      report: captured
     })
-    registerCrashReportingHandlers({
-      getById: vi.fn(async () => pending),
-      dismiss: vi.fn(),
-      markSent,
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => [pending]),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    const result = await handlers.get('crashReports:submit')?.(null, {
-      reportId: pending.id,
-      submitAnonymously: true,
-      githubLogin: null,
-      githubEmail: null
-    })
-
-    expect(result).toEqual({
-      ok: false,
-      status: null,
-      error: 'report-only network failed',
-      report: pending,
-      diagnosticBundle: {
-        status: 'not_uploaded',
-        reason: 'diagnostic log attachment failed: status 500',
-        bundleSubmissionId: 'bundleabcdefghijklmnop',
-        bytes: 25,
-        spanCount: 1
-      }
-    })
-    expect(result).not.toHaveProperty('diagnosticBundleFailure')
-    expect(submitFeedbackMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        diagnosticBundle: {
-          bundleSubmissionId: 'bundleabcdefghijklmnop',
-          content: diagnosticBundle().payload,
-          bytes: 25,
-          spanCount: 1
-        }
-      })
-    )
     expect(markSent).not.toHaveBeenCalled()
   })
 
-  it('bounds submitted report ids by evicting the oldest successful sends', async () => {
-    registerCrashReportingHandlers({
-      getById: vi.fn(async (reportId: string) => report('pending', reportId)),
-      dismiss: vi.fn(),
-      markSent: vi.fn(async (reportId: string) => report('sent', reportId)),
-      markDismissedSent: vi.fn(),
-      listRecent: vi.fn(async () => []),
-      record: vi.fn(),
-      formatDiagnosticText: vi.fn()
-    } as never)
-
-    for (let i = 0; i < 260; i += 1) {
-      await handlers.get('crashReports:submit')?.(null, {
-        reportId: `crash-${i}`,
-        submitAnonymously: true,
-        githubLogin: null,
-        githubEmail: null
-      })
-    }
-
-    expect(_getCrashReportingStateSizesForTests().submittedReportIds).toBe(256)
+  it('prevents concurrent draft opens and permits retry after browser failure', async () => {
+    const captured = report()
+    let rejectOpen: (error: Error) => void = () => {}
+    openExternalMock.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectOpen = reject
+        })
+    )
+    registerHandlers({ getById: vi.fn(async () => captured) })
+    const submit = () => handlers.get('crashReports:submit')?.(null, { reportId: captured.id })
+    const first = submit()
+    await vi.waitFor(() => expect(openExternalMock).toHaveBeenCalledOnce())
+    expect(await submit()).toMatchObject({
+      ok: false,
+      error: 'GitHub issue form is already opening.'
+    })
+    rejectOpen(new Error('launch failed'))
+    await first
+    expect(await submit()).toEqual({ ok: true, issueOpened: true, report: captured })
+    expect(openExternalMock).toHaveBeenCalledTimes(2)
   })
 
   it('records a deduped renderer error boundary report through the crash store', async () => {
     const recorded = report('pending', 'react-render')
     const recordMock = vi.fn(async () => recorded)
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -621,7 +369,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => []),
       record: recordMock,
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const args = {
       boundaryId: 'terminal.workbench',
@@ -673,7 +421,7 @@ describe('registerCrashReportingHandlers', () => {
 
   it('rejects invalid renderer error boundary surfaces', async () => {
     const recordMock = vi.fn()
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -681,7 +429,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => []),
       record: recordMock,
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     await expect(
       handlers.get('crashReports:recordRendererError')?.(null, {
@@ -697,7 +445,7 @@ describe('registerCrashReportingHandlers', () => {
   it('bounds renderer error dedupe keys by evicting the oldest unique reports', async () => {
     let recordCount = 0
     const recordMock = vi.fn(async () => report('pending', `react-render-${recordCount++}`))
-    registerCrashReportingHandlers({
+    registerHandlers({
       getById: vi.fn(),
       dismiss: vi.fn(),
       markSent: vi.fn(),
@@ -705,7 +453,7 @@ describe('registerCrashReportingHandlers', () => {
       listRecent: vi.fn(async () => []),
       record: recordMock,
       formatDiagnosticText: vi.fn()
-    } as never)
+    })
 
     const baseArgs = {
       boundaryId: 'terminal.workbench',

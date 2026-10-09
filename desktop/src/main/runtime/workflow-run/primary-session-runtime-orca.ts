@@ -12,6 +12,7 @@ import { deliverTerminalAgentLaunchPrompt } from '../rpc/methods/agent-launch-te
 import { createOrcaPrimaryLaunchLedger } from './primary-session-ledger'
 import { withStructuredNativeChatDisabled } from './primary-session-preflight'
 import { composePrimarySessionRuntime, type PrimarySessionRuntime } from './primary-session-runtime'
+import type { RunMessageDeliveryDeps } from './run-message-delivery'
 import {
   resolvePrimaryStatusLineRelayContext,
   type PrimaryStatusLineRelayContext
@@ -40,6 +41,7 @@ export type OrcaPrimarySessionRuntimeDeps = {
   readonly db: OrchestrationDb
   readonly routing: Pick<RoutingTableRuntime, 'resolver' | 'activeTable'>
   readonly userDataPath: string
+  readonly primaryStatusChanges?: RunMessageDeliveryDeps['primaryStatusChanges']
 }
 
 /**
@@ -62,6 +64,7 @@ export function createOrcaPrimarySessionRuntime(
   const primary = composePrimarySessionRuntime({
     db: deps.db,
     terminal: runtime,
+    primaryStatusChanges: deps.primaryStatusChanges,
     ledger: createOrcaPrimaryLaunchLedger(runtime),
     executeLaunch: ({ intent, surfaces, onSurfacePublished }) =>
       executeAgentLaunch({ runtime: launchModeRuntime, intent, surfaces, onSurfacePublished }),

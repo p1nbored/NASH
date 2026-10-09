@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadUpdaterModule, warmUpdaterModule } from './updater-test-module-loader'
 
-// D-017: NASH has no release feed of its own yet (APP_IDENTITY.updateFeed is null), so a packaged
+// D-017: a build explicitly configured without a release feed, so a packaged
 // build must never check, download or install, and must not reach Orca's releases or website.
 // The real changelog, nudge, prerelease-feed and release-list modules run here (only electron's net
 // is faked), so any code path that dials out is caught by the fetch spies.
@@ -142,4 +142,9 @@ describe('updater with no release feed (APP_IDENTITY.updateFeed is null)', () =>
     expect(() => checkForRemoteServerUpdate('runtime-1')).toThrow('remote_update_manual_required')
     expectNothingDialedOut()
   })
+})
+
+vi.mock('../shared/app-identity-constants', async (importOriginal) => {
+  const actual = await importOriginal<{ APP_IDENTITY: object }>()
+  return { ...actual, APP_IDENTITY: { ...actual.APP_IDENTITY, updateFeed: null } }
 })

@@ -9,6 +9,7 @@ import { SettingsSegmentedControl, SettingsSubsectionHeader } from './SettingsFo
 import { Badge } from '../ui/badge'
 import { translate } from '@/i18n/i18n'
 import { getShortcutPlatform } from '@/lib/shortcut-platform'
+import { getAppUpdateFeed } from '../../../../shared/app-update-feed'
 import {
   DEV_CHANNEL_PLATFORM_LABEL,
   RELEASE_CHANNELS,
@@ -236,7 +237,10 @@ export function ReleaseChannelSection(): React.JSX.Element {
           // Why disabled rather than hidden: a Linux/Windows dev who has heard
           // about a dev channel should see that it exists and why it is
           // unavailable, instead of silently not finding it.
-          options={RELEASE_CHANNELS.map((channel) => {
+          options={RELEASE_CHANNELS.filter(
+            (channel) =>
+              getAppUpdateFeed()?.devChannels !== false || !hasDedicatedReleaseRepo(channel)
+          ).map((channel) => {
             const supported = isChannelSupportedOnPlatform(channel, platform)
             return {
               value: channel,

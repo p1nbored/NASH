@@ -1,8 +1,7 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Clipboard, Send } from 'lucide-react'
+import { useDeferredValue, useMemo, useState } from 'react'
+import { AlertTriangle, Clipboard, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -11,24 +10,14 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import {
   formatCrashReportText,
   isReactErrorBoundaryReport,
   MAX_USER_NOTES_LENGTH,
-  type CrashReportDiagnosticBundle,
   type CrashReportRecord
 } from '../../../../shared/crash-reporting'
-import type { GitHubViewer } from '../../../../shared/github/pull-request-types'
-import { ORCA_CLOUD_SERVICES_ENABLED } from '../../../../shared/orca-cloud-services'
 import { translate } from '@/i18n/i18n'
-import {
-  CRASH_REPORT_SUBMIT_FAILURE_TOAST_ID,
-  getCrashReportCopySubmissionFailure,
-  getCrashReportSubmitFailureNotice,
-  getCrashReportSubmitWarningNotice
-} from './crash-report-submit-notice'
 import { useCrashReportCopy } from './use-crash-report-copy'
 
 function formatSummary(report: CrashReportRecord): string {
@@ -48,21 +37,6 @@ function getDialogTitle(report: CrashReportRecord | null): string {
   return report && isReactErrorBoundaryReport(report)
     ? 'NASH hit a recoverable UI error'
     : 'NASH closed unexpectedly'
-}
-
-function getDialogDescription(report: CrashReportRecord | null): string {
-  if (!ORCA_CLOUD_SERVICES_ENABLED) {
-    return translate(
-      'auto.components.crash.report.CrashReportDialog.nashNotSent',
-      'NASH does not send crash reports. Copy the details to keep them.'
-    )
-  }
-  if (!report) {
-    return 'Send a privacy-safe crash report to the Orca team. Recent redacted diagnostic logs are included when available.'
-  }
-  return report && isReactErrorBoundaryReport(report)
-    ? 'Send a privacy-safe diagnostic report to the Orca team about the failed UI surface.'
-    : 'Send a privacy-safe diagnostic report to the Orca team about what happened.'
 }
 
 function getNotesPlaceholder(report: CrashReportRecord | null): string {
@@ -91,12 +65,7 @@ export function CrashReportDialogSurface({
 }: CrashReportDialogSurfaceProps): React.JSX.Element {
   const mountedRef = useMountedRef()
   const [notes, setNotes] = useState('')
-  const [includeDiagnosticLogs, setIncludeDiagnosticLogs] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [viewer, setViewer] = useState<GitHubViewer | null>(null)
-  // Why: account lookup can resolve after the dialog closes or reopens.
-  // Sequence the request so a stale viewer is never used for submission.
-  const viewerRequestIdRef = useRef(0)
   const deferredNotes = useDeferredValue(notes)
   const diagnosticText = useMemo(
     // Why: formatting applies redaction and truncation over the full crash
@@ -106,59 +75,10 @@ export function CrashReportDialogSurface({
   )
   const copyCrashReportDetails = useCrashReportCopy(report, notes)
 
-  const clearViewer = useCallback((): void => {
-    viewerRequestIdRef.current += 1
-    setViewer(null)
-  }, [])
-
-  const loadViewerForOpenDialog = useCallback((): void => {
-    const requestId = ++viewerRequestIdRef.current
-    setViewer(null)
-    void window.api.gh
-      .viewer()
-      .then((nextViewer) => {
-        if (mountedRef.current && requestId === viewerRequestIdRef.current) {
-          setViewer(nextViewer)
-        }
-      })
-      .catch((error) => {
-        if (mountedRef.current && requestId === viewerRequestIdRef.current) {
-          setViewer(null)
-          console.error('Failed to load GitHub viewer for crash report:', error)
-        }
-      })
-  }, [mountedRef])
-
-  useEffect(() => {
-    if (!open) {
-      clearViewer()
-      return
-    }
-    setIncludeDiagnosticLogs(true)
-    // Why: the GitHub login only labels a sent report, and NASH sends none.
-    if (ORCA_CLOUD_SERVICES_ENABLED) {
-      loadViewerForOpenDialog()
-    }
-  }, [clearViewer, loadViewerForOpenDialog, open])
-
-  const showSubmitFailure = (
-    error: unknown,
-    diagnosticBundle?: CrashReportDiagnosticBundle
-  ): void => {
-    const failure = { error, ...(diagnosticBundle ? { diagnosticBundle } : {}) }
-    const notice = getCrashReportSubmitFailureNotice(failure, includeDiagnosticLogs)
-    const copyFailure = getCrashReportCopySubmissionFailure(failure)
-    toast.error(notice.title, {
-      id: CRASH_REPORT_SUBMIT_FAILURE_TOAST_ID,
-      description: notice.description,
-      duration: Infinity,
-      dismissible: true,
-      action: {
-        label: notice.actionLabel,
-        onClick: () => {
-          void copyCrashReportDetails(copyFailure)
-        }
-      }
+  const showSubmitFailure = (): void => {
+    toast.error('Could not open GitHub.', {
+      description: 'Copy the details and try again.',
+      action: { label: 'Copy Details', onClick: () => void copyCrashReportDetails() }
     })
   }
 
@@ -183,16 +103,10 @@ export function CrashReportDialogSurface({
     try {
       const result = await window.api.crashReports.submit({
         ...(report ? { reportId: report.id } : {}),
-        notes,
-        includeDiagnosticLogs,
-        // Why: crash reporting must degrade to anonymous if gh is unavailable;
-        // identity lookup is best-effort and never blocks report creation.
-        submitAnonymously: !viewer,
-        githubLogin: viewer?.login ?? null,
-        githubEmail: null
+        notes
       })
       if (!result.ok) {
-        showSubmitFailure(result.error, result.diagnosticBundle)
+        showSubmitFailure()
         console.error('Failed to submit crash report:', result.error)
         return
       }
@@ -200,22 +114,10 @@ export function CrashReportDialogSurface({
         return
       }
       onReportChange(result.report)
-      setNotes('')
-      toast.dismiss(CRASH_REPORT_SUBMIT_FAILURE_TOAST_ID)
-      const warningNotice = getCrashReportSubmitWarningNotice(result, includeDiagnosticLogs)
-      if (warningNotice) {
-        toast.warning(warningNotice.title, { description: warningNotice.description })
-      } else {
-        toast.success(
-          translate(
-            'auto.components.crash.report.CrashReportDialog.8e24fe4f75',
-            'Crash report sent.'
-          )
-        )
-      }
+      toast.success('GitHub issue form opened. Submit the report in your browser.')
       onOpenChange(false)
     } catch (error) {
-      showSubmitFailure(error)
+      showSubmitFailure()
       console.error('Failed to submit crash report:', error)
     } finally {
       if (mountedRef.current) {
@@ -232,7 +134,6 @@ export function CrashReportDialogSurface({
           return
         }
         if (!nextOpen) {
-          clearViewer()
           void dismissReportIfNeeded().finally(() => {
             if (mountedRef.current) {
               onOpenChange(false)
@@ -249,7 +150,12 @@ export function CrashReportDialogSurface({
             <AlertTriangle className="size-4 text-destructive" />
             {getDialogTitle(report)}
           </DialogTitle>
-          <DialogDescription className="text-xs">{getDialogDescription(report)}</DialogDescription>
+          <DialogDescription className="text-xs">
+            {translate(
+              'crashReport.githubDescription',
+              'Review and submit a crash report on GitHub. Copy Details includes the full diagnostic text.'
+            )}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="min-w-0 space-y-3">
@@ -282,15 +188,10 @@ export function CrashReportDialogSurface({
                     'auto.components.crash.report.CrashReportDialog.765591798d',
                     'Checking for crash reports...'
                   )
-                : ORCA_CLOUD_SERVICES_ENABLED
-                  ? translate(
-                      'auto.components.crash.report.CrashReportDialog.ead6fc0510',
-                      'No automatic crash report was captured. You can still send details and include recent diagnostic logs when available.'
-                    )
-                  : translate(
-                      'auto.components.crash.report.CrashReportDialog.nashNoReport',
-                      'No automatic crash report was captured.'
-                    )}
+                : translate(
+                    'auto.components.crash.report.CrashReportDialog.nashNoReport',
+                    'No automatic crash report was captured.'
+                  )}
             </div>
           )}
           <div className="space-y-1">
@@ -310,31 +211,6 @@ export function CrashReportDialogSurface({
               {notes.length.toLocaleString()} / {MAX_USER_NOTES_LENGTH.toLocaleString()}
             </div>
           </div>
-          {ORCA_CLOUD_SERVICES_ENABLED ? (
-            <div className="flex items-start gap-2 rounded-md border border-border/70 bg-muted/20 p-3">
-              <Checkbox
-                id="crash-report-attach-diagnostics"
-                checked={includeDiagnosticLogs}
-                onCheckedChange={(checked) => setIncludeDiagnosticLogs(checked === true)}
-                disabled={submitting}
-                className="mt-0.5"
-              />
-              <div className="space-y-1">
-                <Label htmlFor="crash-report-attach-diagnostics" className="text-xs">
-                  {translate(
-                    'auto.components.crash.report.CrashReportDialog.b082f27490',
-                    'Attach recent diagnostic logs'
-                  )}
-                </Label>
-                <div className="text-xs leading-5 text-muted-foreground">
-                  {translate(
-                    'auto.components.crash.report.CrashReportDialog.e59f0b9427',
-                    'Sends a capped redacted log bundle with the report.'
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <DialogFooter className="gap-2">
@@ -355,20 +231,12 @@ export function CrashReportDialogSurface({
             onClick={handleDismiss}
             disabled={submitting}
           >
-            {ORCA_CLOUD_SERVICES_ENABLED
-              ? translate('auto.components.crash.report.CrashReportDialog.88fea8e84e', "Don't Send")
-              : translate('auto.components.crash.report.CrashReportDialog.nashClose', 'Close')}
+            {translate('auto.components.crash.report.CrashReportDialog.nashClose', 'Close')}
           </Button>
-          {/* Why: NASH sends nothing to Orca, so there is no Send action. */}
-          {ORCA_CLOUD_SERVICES_ENABLED ? (
-            <Button type="button" size="sm" onClick={handleSubmit} disabled={loading || submitting}>
-              <Send className="size-3.5" />
-              {translate(
-                'auto.components.crash.report.CrashReportDialog.b4951cd27c',
-                'Send Report'
-              )}
-            </Button>
-          ) : null}
+          <Button type="button" size="sm" onClick={handleSubmit} disabled={loading || submitting}>
+            <ExternalLink className="size-3.5" />
+            {translate('crashReport.openGithubIssue', 'Open GitHub Issue')}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

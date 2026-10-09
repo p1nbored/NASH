@@ -25,9 +25,6 @@ vi.mock('./update-install-exit-watchdog', () => moduleFactories.updateInstallExi
 vi.mock('./updater-prerelease-feed', () => moduleFactories.updaterPrereleaseFeed())
 vi.mock('./local-builds/local-build-switch', () => moduleFactories.localBuildSwitch())
 vi.mock('./local-builds/local-build-feed-server', () => moduleFactories.localBuildFeedServer())
-vi.mock('../shared/app-identity-constants', async (importOriginal) =>
-  moduleFactories.appIdentityWithFixtureFeed(await importOriginal())
-)
 
 warmUpdaterModule()
 
@@ -52,6 +49,22 @@ describe('updater', () => {
     expect(powerMonitorOnMock).not.toHaveBeenCalled()
   })
 
+  it('refuses an unpublished NASH development channel before checking for updates', async () => {
+    const send = vi.fn()
+    const { setupAutoUpdater, checkForUpdatesFromMenu } = await loadUpdaterModule()
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the updater uses only webContents.send on this mocked window.
+    setupAutoUpdater({ webContents: { send } } as never, {
+      getLastUpdateCheckAt: () => Date.now()
+    })
+    checkForUpdatesFromMenu({ channel: 'hourly', targetTag: 'v1.4.217-hourly.202610091200' })
+    expect(send).toHaveBeenCalledWith('updater:status', {
+      state: 'error',
+      message: 'Hourly builds are not published by this release feed.',
+      userInitiated: true
+    })
+    expect(autoUpdaterMock.checkForUpdates).not.toHaveBeenCalled()
+  })
+
   it('runs a startup check immediately when the last background check is stale', async () => {
     const mainWindow = { webContents: { send: vi.fn() } }
     const setLastUpdateCheckAt = vi.fn()
@@ -61,6 +74,11 @@ describe('updater', () => {
     setupAutoUpdater(mainWindow as never, {
       getLastUpdateCheckAt: () => Date.now() - 25 * 60 * 60 * 1000,
       setLastUpdateCheckAt
+    })
+
+    expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith({
+      provider: 'generic',
+      url: 'https://github.com/p1nbored/NASH/releases/latest/download'
     })
 
     await vi.waitFor(() => {

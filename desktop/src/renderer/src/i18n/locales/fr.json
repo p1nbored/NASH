@@ -20428,5 +20428,14 @@
   },
   "projectField": {
     "updateFailed": "Échec de la mise à jour du champ du projet"
+  },
+  "crashReport": {
+    "githubDescription": "Vérifiez et envoyez un rapport de plantage sur GitHub. « Copier les détails » inclut le texte de diagnostic complet.",
+    "openGithubIssue": "Ouvrir un ticket GitHub"
+  },
+  "feedback": {
+    "githubOpenFailed": "Impossible d’ouvrir GitHub. Votre brouillon est enregistré.",
+    "githubDescription": "Vérifiez et envoyez vos commentaires dans les tickets GitHub de NASH. Ajoutez des captures d’écran dans le navigateur. Votre brouillon reste ici jusqu’à ce que vous le remplaciez.",
+    "copyDraft": "Copier le brouillon complet"
   }
 }

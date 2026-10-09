@@ -8,7 +8,10 @@ import type { PrimaryLaunchLedgerPort } from './primary-session-ledger'
 import { PRIMARY_EXIT_REASON } from './primary-session-exit-watch'
 import { moveOwner, moveWorkflowRun } from './primary-session-moves'
 import { clockTimestamp, type PrimaryTerminalPort } from './primary-session-ports'
-import { releaseEndedPrimaryBinding } from './primary-session-run-binding'
+import {
+  releaseEndedPrimaryBinding,
+  retireUnboundPrimaryOwner
+} from './primary-session-run-binding'
 import { promoteVerifiedOwner, readPrimarySessionStatus } from './primary-session-status'
 
 const RECONCILE_LIMIT = 1000
@@ -80,19 +83,11 @@ async function reconcileLive(
   report: PrimarySessionReconcileReport,
   timestamp: string
 ): Promise<void> {
-  if (owner.receipt?.nativeCoordinator === true) {
-    const native = deps.db.getCurrentRunForCoordinator({
-      terminalHandle: owner.terminalHandle,
-      paneKey: owner.paneKey,
-      orcaSessionId: null
-    })
-    if (
-      native?.id !== owner.runId &&
-      (owner.state === 'running' || owner.state === 'unverifiable')
-    ) {
-      moveOwner(deps.db, owner.ownerId, 'exited', 'coordinator_rebound', timestamp)
-      return
-    }
+  if (
+    owner.receipt?.nativeCoordinator === true &&
+    retireUnboundPrimaryOwner(deps.db, owner, timestamp)
+  ) {
+    return
   }
   if (owner.state === 'stopping') {
     moveOwner(deps.db, owner.ownerId, 'unverifiable', 'stop_interrupted', timestamp)

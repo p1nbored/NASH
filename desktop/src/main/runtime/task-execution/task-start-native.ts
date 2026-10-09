@@ -4,7 +4,6 @@ import { workspaceKindForWorktreeId } from '../../../shared/workspace-launch-kin
 import { randomUUID } from 'node:crypto'
 import { stopOrchestrationWorker } from '../rpc/methods/orchestration/worker/worker-stop'
 import { isNativeTaskAttempt } from '../workflow-run/app-run-policy'
-import { withStructuredNativeChatDisabled } from '../workflow-run/primary-session-preflight'
 import type { OrcaRuntimeService } from '../orca-runtime'
 import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
 import { getTaskSpecStore } from '../orchestration/db/task-spec-store'
@@ -147,11 +146,7 @@ async function startWorker(
     existingTask: task,
     params,
     orchestrationMutation: input.mutationReceipt,
-    // Permission relay hooks require a terminal CLI until structured approval callbacks are bridged.
-    mode: decideWorkerStartMode({
-      params,
-      settings: withStructuredNativeChatDisabled(readWorkerStartModeSettings(runtime) ?? {})
-    }),
+    mode: routedWorkerMode(runtime, params),
     taskAccess: access,
     taskBrief: brief,
     routeId: route.routeId,
@@ -175,6 +170,24 @@ async function startWorker(
     },
     // Native readiness is not task completion; worker reports own the later settlement.
     settled: Promise.resolve()
+  }
+}
+
+function routedWorkerMode(
+  runtime: OrcaRuntimeService,
+  params: Parameters<typeof decideWorkerStartMode>[0]['params']
+) {
+  const mode = decideWorkerStartMode({ params, settings: readWorkerStartModeSettings(runtime) })
+  if (mode.mode !== 'structured' || runtime.getClientSettings().agentPermissionMode === 'manual') {
+    return mode
+  }
+  // Auto review needs original tool inputs and a dispatch-fenced decision; native prompts omit them.
+  return {
+    ...mode,
+    mode: 'terminal' as const,
+    reason: 'structured_sessions_unavailable' as const,
+    detail:
+      'Started a terminal agent worker because structured routed workers support Manual permissions only; Auto review requires the terminal permission relay.'
   }
 }
 

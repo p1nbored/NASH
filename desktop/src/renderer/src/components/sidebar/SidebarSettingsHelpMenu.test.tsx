@@ -218,9 +218,9 @@ describe('SidebarSettingsHelpMenu', () => {
     expect(helpIndex).toBeGreaterThan(settingsIndex)
   })
 
-  it('hides Send Feedback in NASH builds, which send nothing to Orca', () => {
+  it('offers feedback through NASH GitHub Issues', () => {
     const html = renderToStaticMarkup(<SidebarSettingsHelpMenu />)
-    expect(html).not.toContain('Send Feedback')
+    expect(html).toContain('Send Feedback')
   })
 
   it('renders Keyboard Shortcuts menu item', () => {
@@ -333,15 +333,15 @@ describe('SidebarSettingsHelpMenu', () => {
     })
   })
 
-  it('never loads the feedback form in NASH builds, even when the menu opens', async () => {
+  it('loads the restored feedback form when the menu opens', async () => {
     const container = await renderMenu()
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-testid="open-menu"]')?.click()
     })
 
-    expect(mocks.feedbackChunkLoads).toBe(0)
-    expect(container.textContent).not.toContain('Send Feedback')
+    expect(mocks.feedbackChunkLoads).toBeGreaterThan(0)
+    expect(container.textContent).toContain('Send Feedback')
     expect(document.body.querySelector('[data-testid="feedback-dialog"]')).toBeNull()
   })
 
