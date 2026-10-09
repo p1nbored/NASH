@@ -16,6 +16,7 @@ class FakeChild extends EventEmitter {
 
 function makeRunner(
   overrides: {
+    prepareUpdate?: (names: readonly string[]) => void
     rescanOutdatedNames?: (names: string[]) => Promise<string[]>
     resolveCommand?: (name: string) => string
     killTree?: (pid: number, killRoot: () => void) => Promise<void>
@@ -26,6 +27,7 @@ function makeRunner(
   const spawnCalls: { command: string; args: string[]; options: Record<string, unknown> }[] = []
   const states: SkillUpdateRun[] = []
   const runner = new SkillUpdateRunner({
+    prepareUpdate: overrides.prepareUpdate,
     now: () => 1000,
     resolveCommand: overrides.resolveCommand ?? (() => '/usr/local/bin/npx'),
     rescanOutdatedNames: overrides.rescanOutdatedNames,
@@ -46,6 +48,20 @@ async function flush(): Promise<void> {
 }
 
 describe('SkillUpdateRunner', () => {
+  it('prepares registrations before spawning and surfaces migration failures', () => {
+    const prepareUpdate = vi.fn(() => {
+      throw new Error('Registration is read-only')
+    })
+    const { runner, spawnCalls } = makeRunner({ prepareUpdate })
+    runner.start(['orchestration', 'orchestration'])
+    expect(prepareUpdate).toHaveBeenCalledWith(['orchestration'])
+    expect(spawnCalls).toHaveLength(0)
+    expect(runner.getState()).toMatchObject({
+      state: 'error',
+      failedNames: ['orchestration'],
+      message: 'Registration is read-only'
+    })
+  })
   it('passes both non-interactive flags and the sorted skill names', () => {
     const { runner, spawnCalls } = makeRunner()
 

@@ -1,6 +1,6 @@
 import { isUsableSkillsCliAgentKey } from './skills-cli-agent-keys'
 
-export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/stablyai/orca'
+export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/p1nbored/NASH/tree/main/desktop/skills'
 
 export const ORCA_CLI_SKILL_NAME = 'orca-cli'
 export const COMPUTER_USE_SKILL_NAME = 'computer-use'

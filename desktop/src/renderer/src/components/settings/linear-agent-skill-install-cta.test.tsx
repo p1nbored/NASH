@@ -116,7 +116,7 @@ describe('LinearAgentSkillInstallCta', () => {
       'Full guided setup (connect + skill + visibility) is under Settings → Task Sources.'
     )
     expect(rendered.textContent).toContain(
-      'npx skills add https://github.com/stablyai/orca --skill orca-linear --global'
+      'npx skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill orca-linear --global'
     )
   })
 
@@ -130,7 +130,7 @@ describe('LinearAgentSkillInstallCta', () => {
     })
 
     expect(mocks.clipboardWrite).toHaveBeenCalledWith(
-      'npx skills add https://github.com/stablyai/orca --skill orca-linear --global'
+      'npx skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill orca-linear --global'
     )
     expect(mocks.toastSuccess).toHaveBeenCalled()
   })

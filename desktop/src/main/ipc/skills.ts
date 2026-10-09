@@ -15,6 +15,7 @@ import { inventorySkillFreshness } from '../skills/skill-freshness-inventory'
 import { SkillUpdateRunner } from '../skills/skill-update-run'
 import { skillUpdateFailedNames } from '../skills/skill-update-outcome'
 import { readGloballyUpdatableSkillLocks } from '../skills/skill-update-registration'
+import { migrateGlobalSkillUpdateSources } from '../../shared/skill-update-source'
 import {
   clearSkillDiscoveryCaches,
   discoverSkillsOnTarget,
@@ -41,6 +42,7 @@ export function registerSkillsHandlers(store: Store, runtime?: OrcaRuntimeServic
     })
 
   const runner = new SkillUpdateRunner({
+    prepareUpdate: migrateGlobalSkillUpdateSources,
     // Why: per-skill outcomes come from re-hashing what is actually on disk, not
     // from scraping stdout.
     rescanOutdatedNames: async (names) => {

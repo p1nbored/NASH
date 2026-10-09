@@ -5,6 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { delimiter, join } from 'node:path'
 import type * as CodexCliCommandModule from '../shared/node-cli-command-resolution'
 import { WINDOWS_BATCH_UNSAFE_CHARACTERS_LABEL } from '../shared/windows-batch-spawn'
+import { migrateGlobalSkillUpdateSources } from '../shared/skill-update-source'
+
+vi.mock('../shared/skill-update-source', () => ({ migrateGlobalSkillUpdateSources: vi.fn() }))
 
 const {
   detectCommandsMock,
@@ -95,6 +98,7 @@ import { main } from './index'
 describe('orca skills CLI', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.mocked(migrateGlobalSkillUpdateSources).mockClear()
     runtimeClientConstructorMock.mockClear()
     resolveCliCommandMock.mockReset()
     resolveCliCommandMock.mockReturnValue('npx')
@@ -339,7 +343,7 @@ describe('orca skills CLI', () => {
     await main(['skills', 'install', '--skill', 'alpha', '--dry-run'], '/tmp/repo')
 
     expect(stdoutText(stdoutSpy)).toBe(
-      'npx --yes skills add https://github.com/stablyai/orca --skill alpha --global --agent claude-code --agent universal -y\n\n' +
+      'npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --global --agent claude-code --agent universal -y\n\n' +
         'Rerun without --dry-run to install now.\n'
     )
     expect(spawnMock).not.toHaveBeenCalled()
@@ -354,7 +358,7 @@ describe('orca skills CLI', () => {
       `${JSON.stringify(
         {
           command:
-            'npx --yes skills add https://github.com/stablyai/orca --skill alpha --global --agent claude-code --agent universal -y',
+            'npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --global --agent claude-code --agent universal -y',
           skills: ['alpha'],
           global: true,
           executed: false
@@ -371,7 +375,7 @@ describe('orca skills CLI', () => {
     await main(['skills', 'install', '--skill', 'alpha', '--local', '--dry-run'], '/tmp/repo')
 
     expect(stdoutText(stdoutSpy)).toBe(
-      'npx --yes skills add https://github.com/stablyai/orca --skill alpha --agent claude-code --agent universal -y\n\n' +
+      'npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --agent claude-code --agent universal -y\n\n' +
         'Rerun without --dry-run to install now.\n'
     )
 
@@ -385,7 +389,7 @@ describe('orca skills CLI', () => {
       `${JSON.stringify(
         {
           command:
-            'npx --yes skills add https://github.com/stablyai/orca --skill alpha --agent claude-code --agent universal -y',
+            'npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --agent claude-code --agent universal -y',
           skills: ['alpha'],
           global: false,
           executed: false
@@ -412,7 +416,7 @@ describe('orca skills CLI', () => {
         '--yes',
         'skills',
         'add',
-        'https://github.com/stablyai/orca',
+        'https://github.com/p1nbored/NASH/tree/main/desktop/skills',
         '--skill',
         'alpha',
         '--agent',
@@ -447,7 +451,7 @@ describe('orca skills CLI', () => {
         '--yes',
         'skills',
         'add',
-        'https://github.com/stablyai/orca',
+        'https://github.com/p1nbored/NASH/tree/main/desktop/skills',
         '--skill',
         'alpha',
         '--global',
@@ -495,7 +499,7 @@ describe('orca skills CLI', () => {
         '--yes',
         'skills',
         'add',
-        'https://github.com/stablyai/orca',
+        'https://github.com/p1nbored/NASH/tree/main/desktop/skills',
         '--skill',
         'alpha',
         '--global',
@@ -525,7 +529,7 @@ describe('orca skills CLI', () => {
         '--yes',
         'skills',
         'add',
-        'https://github.com/stablyai/orca',
+        'https://github.com/p1nbored/NASH/tree/main/desktop/skills',
         '--skill',
         'alpha',
         '--skill',
@@ -897,7 +901,7 @@ describe('orca skills CLI', () => {
         '--yes',
         'skills',
         'add',
-        'https://github.com/stablyai/orca',
+        'https://github.com/p1nbored/NASH/tree/main/desktop/skills',
         '--skill',
         'alpha',
         '--skill',
@@ -922,7 +926,7 @@ describe('orca skills CLI', () => {
     )
 
     expect(stdoutText(stdoutSpy)).toBe(
-      'npx --yes skills add https://github.com/stablyai/orca --skill alpha --global --agent claude-code --agent universal -y\n\n' +
+      'npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --global --agent claude-code --agent universal -y\n\n' +
         'Rerun without --dry-run to install now.\n'
     )
     expect(spawnMock).not.toHaveBeenCalled()
@@ -940,7 +944,7 @@ describe('orca skills CLI', () => {
 
     // Why: stdout belongs to the child, so this record has to go to stderr.
     expect(stderrSpy).toHaveBeenCalledWith(
-      'Running: npx --yes skills add https://github.com/stablyai/orca --skill alpha --global --agent claude-code --agent universal -y\n'
+      'Running: npx --yes skills add https://github.com/p1nbored/NASH/tree/main/desktop/skills --skill alpha --global --agent claude-code --agent universal -y\n'
     )
   })
 
@@ -951,6 +955,7 @@ describe('orca skills CLI', () => {
 
     const resultPromise = main(['skills', 'update', '--all'], '/tmp/repo')
     await vi.waitFor(() => expect(spawnMock).toHaveBeenCalled())
+    expect(migrateGlobalSkillUpdateSources).toHaveBeenCalledWith(['alpha', 'gamma', 'zeta'])
     child.emit('exit', 2, null)
     await resultPromise
 

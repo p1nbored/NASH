@@ -58,7 +58,9 @@ export const FIXTURE_MODEL_LISTS: RoutingModelLists = {
   ]
 }
 
-export function renderRouting(ui: ReactElement) {
+export function renderRouting(
+  ui: ReactElement
+): Omit<ReturnType<typeof render>, 'rerender'> & { rerender: (child: ReactElement) => void } {
   const wrap = (child: ReactElement) =>
     createElement(RoutingModelsContext.Provider, { value: FIXTURE_MODEL_LISTS }, child)
   const result = render(wrap(ui))

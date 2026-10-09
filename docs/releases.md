@@ -1,5 +1,21 @@
 # Releases and verification
 
+## v1.4.217 — 2026-10-09
+
+[Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.217).
+
+Fixes orchestration updates that reported all skills current while NASH still marked the installed skill outdated. New installs use NASH's desktop/skills source; desktop and global CLI updates migrate selected, unpinned upstream registrations before updating. Other registrations, installed hashes and user-pinned refs are preserved. The dialog's copied retry command follows the same NASH CLI migration path.
+
+Validation: 282 tests passed, 4 skipped across 20 relevant files. Node, CLI and Web typechecks and changed-code quality gates passed. The isolated Windows build passed package dependency, native terminal, daemon entry, plugin and packaged CLI smoke checks. The packaged version and source migration were also verified.
+
+The Windows x64 installer remains unsigned and automatic updates remain off. No macOS/Linux package or orcad template is included. This release excludes unrelated in-progress workflow changes in the primary checkout.
+
+| Asset | Size / SHA-256 |
+|---|---|
+| nash-windows-setup.exe | 259214898 bytes; dc5983f0e62d3b17207eedd9c58b0efd627814bbe994ad0416a37d7e9227cb75 |
+| nash-windows-setup.exe.blockmap | 264254 bytes; 26f652ab87d67aa76fcdb9644173bf52a6bec97389ff5c51ff739af5649527bf |
+| SHA256SUMS.txt | Installer and blockmap checksums |
+
 ## v1.4.216 — 2026-10-08
 
 [Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.216). Source is pinned by the `v1.4.216` tag.

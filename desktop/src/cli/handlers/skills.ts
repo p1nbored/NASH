@@ -5,6 +5,7 @@ import { getRepeatedStringFlag } from '../flags'
 import { writeStdoutLine } from '../stdout-line'
 import { loadCanonicalGuides, type BundledSkillGuide } from './bundled-skill-guide-table'
 import { SKILL_GUIDE_GET_HANDLER } from './skill-guide-get'
+import { migrateGlobalSkillUpdateSources } from '../../shared/skill-update-source'
 import { resolveCliCommand, withCliRuntimeOnPath } from '../../shared/node-cli-command-resolution'
 import { detectCommandsInInstallDirs } from '../../shared/local-agent-install-dir-detection'
 import {
@@ -262,6 +263,9 @@ function createSkillMutationHandler(verb: SkillMutationVerb): CommandHandler {
 
     // Why: stdio is inherited for the child below, so this status line must go to
     // stderr — stdout is npx's own output, not this command's JSON channel.
+    if (verb === 'update' && global) {
+      migrateGlobalSkillUpdateSources(skillNames)
+    }
     process.stderr.write(`Running: ${command}\n`)
     process.exitCode = await runNpxSkills(npxArgs)
   }

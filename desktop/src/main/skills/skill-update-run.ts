@@ -28,6 +28,7 @@ const OUTPUT_FLUSH_MS = 100
 export const CANCEL_RELEASE_TIMEOUT_MS = 12_000
 
 export type SkillUpdateRunnerDeps = {
+  prepareUpdate?: (names: readonly string[]) => void
   spawnProcess?: typeof spawn
   resolveCommand?: (commandName: string) => string
   /** Returns the subset of `names` that did not land, re-read from disk. */
@@ -88,6 +89,20 @@ export class SkillUpdateRunner {
     const canonicalNames = canonicalizeSkillUpdateNames(names)
     if (!canonicalNames) {
       return { started: false, reason: 'invalid-names' }
+    }
+
+    try {
+      this.deps.prepareUpdate?.(canonicalNames)
+    } catch (error) {
+      this.publish({
+        state: 'error',
+        names: canonicalNames,
+        failedNames: canonicalNames,
+        finishedAt: this.deps.now(),
+        output: '',
+        message: error instanceof Error ? error.message : 'Could not prepare skill update.'
+      })
+      return { started: true }
     }
 
     const resolveCommand = this.deps.resolveCommand ?? ((name: string) => resolveCliCommand(name))
