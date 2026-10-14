@@ -2,7 +2,7 @@ import { realpathSync, statSync } from 'node:fs'
 import {
   resolveWindowsCmdShim,
   type WindowsCmdShimResolution
-} from '../../shared/child-process/windows-cmd-shim-resolution'
+} from '@orca/process-host/windows-cmd-shim-resolution'
 import { readEnvironmentVariable, sanitizePathList } from './codex-exec-environment'
 import { isLocalAbsolutePath, pathApiFor } from '../agent-exec-shared/path-containment'
 import { powerShellScriptTarget } from '../agent-exec-shared/powershell-script-launch'

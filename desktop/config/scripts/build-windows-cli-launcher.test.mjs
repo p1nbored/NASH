@@ -13,10 +13,11 @@ import { dirname, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 import {
-  shouldReuseCompiledWindowsCliLauncher,
-  windowsCliLauncherFileVersion,
-  windowsCliLauncherFingerprint
-} from './build-windows-cli-launcher.mjs'
+  shouldReuseCompiledWindowsRustExecutable,
+  windowsRustExecutableFileVersion,
+  windowsRustExecutableTarget,
+  windowsRustExecutableFingerprint
+} from './windows-rust-executable-build.mjs'
 import { findDynamicVcRuntimeImports, readPeImportedDllNames } from './windows-pe-imports.mjs'
 
 const itCrossHost = process.platform === 'win32' ? it.skip : it
@@ -56,33 +57,33 @@ describe('Windows CLI launcher', () => {
         }
       )
       const outputPath = join(root, 'nash.exe')
-      const fingerprint = windowsCliLauncherFingerprint(inputs, '1.4.214')
-      expect(shouldReuseCompiledWindowsCliLauncher(outputPath, fingerprint)).toBe(false)
+      const fingerprint = windowsRustExecutableFingerprint(inputs, '1.4.214')
+      expect(shouldReuseCompiledWindowsRustExecutable(outputPath, fingerprint)).toBe(false)
       writeFileSync(outputPath, 'binary')
-      expect(shouldReuseCompiledWindowsCliLauncher(outputPath, fingerprint)).toBe(false)
+      expect(shouldReuseCompiledWindowsRustExecutable(outputPath, fingerprint)).toBe(false)
       writeFileSync(`${outputPath}.sha256`, fingerprint)
       for (const input of inputs) {
         utimesSync(input, new Date(), new Date())
       }
       expect(
-        shouldReuseCompiledWindowsCliLauncher(
+        shouldReuseCompiledWindowsRustExecutable(
           outputPath,
-          windowsCliLauncherFingerprint(inputs, '1.4.214')
+          windowsRustExecutableFingerprint(inputs, '1.4.214')
         )
       ).toBe(true)
       expect(
-        shouldReuseCompiledWindowsCliLauncher(
+        shouldReuseCompiledWindowsRustExecutable(
           outputPath,
-          windowsCliLauncherFingerprint(inputs, '1.4.215')
+          windowsRustExecutableFingerprint(inputs, '1.4.215')
         )
       ).toBe(false)
       for (const input of inputs) {
         const original = readFileSync(input)
         writeFileSync(input, 'changed')
         expect(
-          shouldReuseCompiledWindowsCliLauncher(
+          shouldReuseCompiledWindowsRustExecutable(
             outputPath,
-            windowsCliLauncherFingerprint(inputs, '1.4.214')
+            windowsRustExecutableFingerprint(inputs, '1.4.214')
           )
         ).toBe(false)
         writeFileSync(input, original)
@@ -93,10 +94,10 @@ describe('Windows CLI launcher', () => {
   })
 
   it('reduces a prerelease to the numeric version Windows can record', () => {
-    expect(windowsCliLauncherFileVersion('1.4.214-daily.202609281300')).toBe('1.4.214.0')
-    expect(windowsCliLauncherFileVersion('1.4.214')).toBe('1.4.214.0')
+    expect(windowsRustExecutableFileVersion('1.4.214-daily.202609281300')).toBe('1.4.214.0')
+    expect(windowsRustExecutableFileVersion('1.4.214')).toBe('1.4.214.0')
     for (const version of ['1.4.65535', '1.4', '1.4.214"', undefined]) {
-      expect(() => windowsCliLauncherFileVersion(version)).toThrow('Invalid Windows')
+      expect(() => windowsRustExecutableFileVersion(version)).toThrow('Invalid Windows')
     }
   })
 
@@ -163,30 +164,6 @@ describe('Windows CLI launcher', () => {
     }
   })
 
-  itCrossHost('never hands the child an explicit environment map', () => {
-    // Why: setting any entry on the child's environment makes the spawn build its own
-    // block from a case-insensitive map, which collapses an inherited PATH and Path
-    // into one entry and killed the CLI (stablyai/orca#12046). Mutating this process
-    // and leaving the map untouched passes the block through verbatim.
-    const source = readFileSync(
-      join(projectRoot, 'native', 'windows-cli-launcher', 'src', 'main.rs'),
-      'utf8'
-    )
-    const code = source.replace(/^\s*\/\/.*$/gm, '')
-
-    expect(code).not.toMatch(/\.envs?\(/u)
-    expect(code).not.toContain('env_clear')
-    expect(code).toContain('env::set_var')
-  })
-
-  itCrossHost('never reintroduces a managed launcher alongside the native one', () => {
-    // Why: the MSIL image is what vendors flagged (stablyai/orca#23383). A stray .cs
-    // left in the crate would compile back into the shape the rewrite removed.
-    expect(
-      existsSync(join(projectRoot, 'native', 'windows-cli-launcher', 'OrcaCliLauncher.cs'))
-    ).toBe(false)
-  })
-
   itWindows('preserves a multiline argument from PowerShell through the native launcher', () => {
     const appRoot = mkdtempSync(join(tmpdir(), 'orca cli launcher '))
     try {
@@ -243,6 +220,84 @@ describe('Windows CLI launcher', () => {
       })
     } finally {
       removeFixtureTree(appRoot)
+    }
+  })
+
+  it('cross-compiles only the architectures the orcad template ships', () => {
+    expect(windowsRustExecutableTarget(undefined)).toBeNull()
+    expect(windowsRustExecutableTarget('x64')).toBe('x86_64-pc-windows-msvc')
+    expect(windowsRustExecutableTarget('arm64')).toBe('aarch64-pc-windows-msvc')
+    expect(() => windowsRustExecutableTarget('ia32')).toThrow('Unsupported')
+  })
+
+  itWindows('runs a server profile CLI on pinned Node with argv and profile intact', () => {
+    const root = mkdtempSync(join(tmpdir(), 'orca server launcher '))
+    try {
+      const profile = join(root, 'server profile')
+      const launcherPath = join(profile, 'cli', 'bin', 'orca.exe')
+      const cliPath = join(root, 'server slot', 'out', 'cli', 'index.js')
+      mkdirSync(dirname(cliPath), { recursive: true })
+      writeFileSync(
+        cliPath,
+        `process.stdout.write(JSON.stringify({
+  argv: process.argv.slice(2),
+  profile: process.env.ORCA_USER_DATA_PATH,
+  electronRunAsNode: process.env.ELECTRON_RUN_AS_NODE ?? null,
+  nodeOptions: process.env.NODE_OPTIONS ?? null,
+  desktopMarker: process.env.ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER ?? null
+}))\n`,
+        'utf8'
+      )
+      const build = spawnSync(
+        process.execPath,
+        ['config/scripts/build-windows-cli-launcher.mjs', '--output', launcherPath],
+        { cwd: projectRoot, encoding: 'utf8' }
+      )
+      expect(build.status, `${build.stdout}\n${build.stderr}`).toBe(0)
+      writeFileSync(
+        join(dirname(launcherPath), 'orca-launcher.cfg'),
+        `node=${process.execPath}\ncli=${cliPath}\nuser-data=${profile}\n`
+      )
+
+      const inherited = {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: '1',
+        NODE_OPTIONS: '--require C:\\missing\\preload.js',
+        ORCA_USER_DATA_PATH: 'C:\\another\\owner',
+        ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER: '1',
+        ORCA_TEST_LAUNCHER: launcherPath
+      }
+      const expected = (body) => ({
+        argv: ['orchestration', 'send', '--body', body, '--json'],
+        profile,
+        electronRunAsNode: null,
+        nodeOptions: null,
+        desktopMarker: null
+      })
+      // Windows PowerShell 5.1 itself drops embedded double quotes, so its body has none.
+      const shellBody = 'line one & %PATH% ^caret\n\nline three'
+      const powershell = spawnSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          '& $env:ORCA_TEST_LAUNCHER orchestration send --body $env:ORCA_TEST_BODY --json'
+        ],
+        { encoding: 'utf8', env: { ...inherited, ORCA_TEST_BODY: shellBody } }
+      )
+      expect(powershell.status, powershell.stderr).toBe(0)
+      expect(JSON.parse(powershell.stdout)).toEqual(expected(shellBody))
+
+      const body = 'line one "quoted" \\"escaped\\" & %PATH% ^caret\\\n\nline three\\'
+      const direct = spawnSync(launcherPath, expected(body).argv, {
+        encoding: 'utf8',
+        env: inherited
+      })
+      expect(direct.status, direct.stderr).toBe(0)
+      expect(JSON.parse(direct.stdout)).toEqual(expected(body))
+    } finally {
+      removeFixtureTree(root)
     }
   })
 

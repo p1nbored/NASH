@@ -85,6 +85,7 @@ vi.mock('../ipc/worktree-symlinks', () => ({
 }))
 
 import { createRuntimeLocalManagedWorktree } from './runtime-local-worktree-create'
+import { WorktreeCreateSetupChoiceRefusedError } from './worktree-create-setup-choice-refusal'
 import type { PreparationRearmHolder } from '../worktree-create-preparation'
 import {
   createWorktreeCreateTimingRecorder,
@@ -139,8 +140,10 @@ function createWorktree(
     createdWithAgent: undefined,
     resolveRemoteTrackingBase: mocks.remoteBase,
     hasRemoteTrackingRef: mocks.hasRemoteRef,
-    refreshRemoteTrackingBase: mocks.refresh,
-    fetchRemote: mocks.fetch,
+    // Why: a vi.fn marks the promise it returns as handled; a fresh promise keeps
+    // an unawaited fetch rejection visible to the unhandled-rejection checks.
+    refreshRemoteTrackingBase: async (...refreshArgs) => await mocks.refresh(...refreshArgs),
+    fetchRemote: async (...fetchArgs) => await mocks.fetch(...fetchArgs),
     onWorktreeMetadataPersisted: () => undefined,
     rearm,
     timing
@@ -402,6 +405,135 @@ describe('runtime create Git priority', () => {
   })
 })
 
+describe('runtime create PR conflict probe', () => {
+  const remoteTrackingBase = {
+    remote: 'origin',
+    branch: 'main',
+    base: 'origin/main',
+    ref: 'refs/remotes/origin/main'
+  }
+
+  beforeEach(() => {
+    mocks.branchName.mockImplementation(async (_path, _override, name: string) => name)
+  })
+
+  it('runs the first name PR lookup while the base fetch is still in flight', async () => {
+    mocks.remoteBase.mockResolvedValue(remoteTrackingBase)
+    let finishFetch!: () => void
+    mocks.refresh.mockReturnValue(
+      new Promise((resolve) => {
+        finishFetch = () => resolve({ ok: true })
+      })
+    )
+    let fetchPendingAtLookup = false
+    mocks.githubPr.mockImplementation(async () => {
+      fetchPendingAtLookup = mocks.refresh.mock.calls.length === 1
+      finishFetch?.()
+      return null
+    })
+
+    await createWorktree()
+
+    expect(fetchPendingAtLookup).toBe(true)
+    expect(mocks.githubPr).toHaveBeenCalledWith('/repo', 'app', {})
+    expect(mocks.consume).toHaveBeenCalledWith(
+      expect.objectContaining({
+        branch: 'app',
+        options: expect.objectContaining({ remoteTrackingBase })
+      })
+    )
+  })
+
+  it('suffixes past a PR on the first name', async () => {
+    mocks.githubPr.mockResolvedValueOnce({ number: 7, state: 'closed' }).mockResolvedValue(null)
+
+    await createWorktree()
+
+    expect(mocks.githubPr.mock.calls.map(([, branch]) => branch)).toEqual(['app', 'app-2'])
+    expect(mocks.consume).toHaveBeenCalledWith(expect.objectContaining({ branch: 'app-2' }))
+  })
+
+  it.each([undefined, 'Ubuntu'])(
+    'probes the next name for a PR once the first name collides, routed for %s',
+    async (wslDistro) => {
+      const routing = wslDistro ? { wslDistro } : {}
+      mocks.routing.mockReturnValue(routing)
+      mocks.branchConflict.mockResolvedValueOnce('local').mockResolvedValue(null)
+
+      await createWorktree()
+
+      expect(mocks.githubPr).toHaveBeenCalledOnce()
+      expect(mocks.githubPr).toHaveBeenCalledWith('/repo', 'app-2', routing)
+    }
+  )
+
+  it('skips a later name that already has a PR', async () => {
+    mocks.branchConflict.mockResolvedValueOnce('local').mockResolvedValue(null)
+    mocks.githubPr.mockResolvedValueOnce({ number: 7, state: 'closed' }).mockResolvedValue(null)
+
+    await createWorktree()
+
+    expect(mocks.githubPr.mock.calls.map(([, branch]) => branch)).toEqual(['app-2', 'app-3'])
+    expect(mocks.consume).toHaveBeenCalledWith(expect.objectContaining({ branch: 'app-3' }))
+  })
+
+  it('reports the naming failure when the started base fetch also fails', async () => {
+    mocks.remoteBase.mockResolvedValue(remoteTrackingBase)
+    mocks.refresh.mockRejectedValue(new Error('offline'))
+    mocks.branchConflict.mockResolvedValue('local')
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+    try {
+      await expect(createWorktree()).rejects.toThrow('Branch "app-')
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(mocks.refresh).toHaveBeenCalledOnce()
+      expect(unhandled).not.toHaveBeenCalled()
+      expect(mocks.consume).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
+
+  it('runs the first name PR lookup while the origin fetch is still in flight', async () => {
+    mocks.hasBase.mockResolvedValue(false)
+    let finishFetch!: () => void
+    mocks.fetch.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishFetch = resolve
+      })
+    )
+    let fetchPendingAtLookup = false
+    mocks.githubPr.mockImplementation(async () => {
+      fetchPendingAtLookup = mocks.fetch.mock.calls.length === 1
+      finishFetch?.()
+      return null
+    })
+
+    await createWorktree()
+
+    expect(fetchPendingAtLookup).toBe(true)
+    expect(mocks.fetch).toHaveBeenCalledWith('/repo', 'origin', {})
+    expect(mocks.consume).toHaveBeenCalledWith(expect.objectContaining({ branch: 'app' }))
+  })
+
+  it('reports the naming failure when the started origin fetch also fails', async () => {
+    mocks.hasBase.mockResolvedValue(false)
+    mocks.fetch.mockRejectedValue(new Error('offline'))
+    mocks.branchConflict.mockResolvedValue('local')
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+    try {
+      await expect(createWorktree()).rejects.toThrow('Branch "app-')
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(mocks.fetch).toHaveBeenCalledOnce()
+      expect(unhandled).not.toHaveBeenCalled()
+      expect(mocks.consume).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
+})
+
 describe('runtime create base without a tracking ref', () => {
   const originMain = {
     remote: 'origin',
@@ -547,9 +679,11 @@ describe('runtime create setup decision', () => {
     const timing = createWorktreeCreateTimingRecorder()
     // No requested base, so a create that got past the check would resolve the default base.
     const request = { baseBranch: undefined }
-    await expect(createWorktree(request, undefined, timing, askRepo)).rejects.toThrow(
-      'Setup decision required for this repository'
+    const refusal = await createWorktree(request, undefined, timing, askRepo).catch(
+      (error: unknown) => error
     )
+    expect(refusal).toBeInstanceOf(WorktreeCreateSetupChoiceRefusedError)
+    expect(refusal).toMatchObject({ message: 'Setup decision required for this repository' })
     // Hooks come from the main checkout (no worktree path): the new worktree doesn't exist yet.
     expect(mocks.effectiveHooks.mock.calls).toEqual([[expect.objectContaining({ path: '/repo' })]])
     for (const gitWork of [mocks.defaultBase, mocks.remoteBase, mocks.hasBase, mocks.refresh]) {

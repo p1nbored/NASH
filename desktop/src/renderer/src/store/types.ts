@@ -25,6 +25,7 @@ import type { BrowserSlice } from './slices/browser'
 import type { RateLimitSlice } from './slices/rate-limits'
 import type { SshSlice } from './slices/ssh'
 import type { RuntimeEnvironmentSshSlice } from './slices/runtime-environment-ssh'
+import type { WslHostsSlice } from './slices/wsl-hosts'
 import type { AgentStatusSlice } from './slices/agent-status'
 import type { PaneForegroundAgentSlice } from './slices/pane-foreground-agent'
 import type { DiffCommentsSlice } from './slices/diffComments'
@@ -72,6 +73,7 @@ export type AppState = RepoSlice &
   RateLimitSlice &
   SshSlice &
   RuntimeEnvironmentSshSlice &
+  WslHostsSlice &
   AgentStatusSlice &
   PaneForegroundAgentSlice &
   DiffCommentsSlice &

@@ -1,17 +1,17 @@
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createServer } from 'node:net'
 import { describe, expect, it, vi } from 'vitest'
-import { runProcess } from '../../shared/child-process/run-process'
-vi.mock('./ssh-relay-deploy-helpers', () => ({
-  execCommand: vi.fn(),
-  isUnconfirmedSshCommandTermination: () => false
+import { runProcess } from '@orca/process-host'
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
+  execCommand: vi.fn()
 }))
 import {
   relayEndpointIncumbentProbeCommand,
   parseRelayEndpointIncumbentProbe,
-  mayLaunchOverRelayEndpoint,
   isReapableRelayHusk
 } from './ssh-relay-endpoint-incumbent'
 
@@ -100,7 +100,6 @@ describe.skipIf(process.platform === 'win32').concurrent('real generated incumbe
         holdersEnumerable: false
       })
       expect(p.verdict.holders.map((holder) => holder.pid)).toContain(process.pid)
-      expect(mayLaunchOverRelayEndpoint(p.verdict)).toBe(false)
       expect(isReapableRelayHusk(p.verdict)).toBe(false)
     }
   )

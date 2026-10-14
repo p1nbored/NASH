@@ -5,7 +5,10 @@
  * leases: moving a direct SSH host's state into a managed server is the catalog migration.
  */
 import type { Store } from '../persistence'
-import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
+import {
+  getManagedOrcadFenceEnvironmentId,
+  isEphemeralRuntimeSshOwner
+} from '../../shared/managed-orcad-ssh-owner'
 import type {
   OrcadMigrationBlocker,
   OrcadMigrationPreflight
@@ -45,28 +48,11 @@ export class SshTargetOrcadClaims {
     targetId: string,
     owner?: { environmentId: string; recorded: boolean }
   ): OrcadMigrationPreflight {
-    const target = this.store.getSshTarget(targetId)
-    if (!target) {
-      return {
-        targetId,
-        targetLabel: null,
-        claimable: false,
-        blockers: [{ code: 'orcad_migration_target_not_found', category: 'registration' }]
-      }
+    const resolved = resolveOrcadPreflightTarget(this.store, targetId, owner)
+    if ('result' in resolved) {
+      return resolved.result
     }
-    const ownedBy = getManagedOrcadFenceEnvironmentId(target)
-    if (owner && ownedBy === owner.environmentId) {
-      return owner.recorded
-        ? { targetId, targetLabel: target.label, claimable: true, blockers: [] }
-        : {
-            targetId,
-            targetLabel: target.label,
-            claimable: false,
-            blockers: [
-              { code: 'orcad_migration_owner_unrecorded', category: 'exclusive-ownership' }
-            ]
-          }
-    }
+    const { target } = resolved
     const blockers = collectEmptyTargetBlockers(this.store, target)
     return { targetId, targetLabel: target.label, claimable: blockers.length === 0, blockers }
   }
@@ -170,6 +156,38 @@ export class SshTargetOrcadClaims {
   }
 }
 
+/** Not-found and own-fence results shared by claim and export preflight; an owner without a durable record never passes. */
+export function resolveOrcadPreflightTarget(
+  store: Pick<Store, 'getSshTarget'>,
+  targetId: string,
+  owner?: { environmentId: string; recorded: boolean }
+): { result: OrcadMigrationPreflight } | { target: SshTarget } {
+  const target = store.getSshTarget(targetId)
+  if (!target) {
+    return {
+      result: {
+        targetId,
+        targetLabel: null,
+        claimable: false,
+        blockers: [{ code: 'orcad_migration_target_not_found', category: 'registration' }]
+      }
+    }
+  }
+  if (!owner || getManagedOrcadFenceEnvironmentId(target) !== owner.environmentId) {
+    return { target }
+  }
+  return {
+    result: owner.recorded
+      ? { targetId, targetLabel: target.label, claimable: true, blockers: [] }
+      : {
+          targetId,
+          targetLabel: target.label,
+          claimable: false,
+          blockers: [{ code: 'orcad_migration_owner_unrecorded', category: 'exclusive-ownership' }]
+        }
+  }
+}
+
 function collectEmptyTargetBlockers(store: ClaimStore, target: SshTarget): OrcadMigrationBlocker[] {
   return [
     ...collectTargetCatalogBlockers(store, target),
@@ -219,11 +237,12 @@ export function collectTargetCatalogBlockers(
   return blockers
 }
 
-/** Who holds the target exclusively: an ephemeral runtime or a managed Orca server. */
+/** Who holds the target exclusively: a managed Orca server, or an unmigrated legacy owner. */
 function targetHolder(
   target: SshTarget
 ): Extract<OrcadMigrationBlocker, { code: 'orcad_migration_target_owned' }>['holder'] | null {
-  if (target.owner) {
+  // Why: a recipe VM's runtime owns when the host is created and destroyed, not which server runs it.
+  if (target.owner && !isEphemeralRuntimeSshOwner(target.owner)) {
     return { kind: 'runtime', runtimeId: target.owner.runtimeId }
   }
   const environmentId = getManagedOrcadFenceEnvironmentId(target)

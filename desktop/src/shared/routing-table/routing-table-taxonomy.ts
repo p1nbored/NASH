@@ -1,3 +1,5 @@
+import { ROUTING_CLI_TARGETS } from './routing-cli-registry'
+
 /** The classifier question set's taxonomy; a table of another taxonomy cannot activate. */
 export const ROUTING_TAXONOMY_VERSION = 2
 
@@ -26,8 +28,7 @@ export const EXECUTION_TARGETS = [
   'claude_primary',
   'claude_subagent',
   'claude_workflow',
-  'codex_cli',
-  'agy_cli'
+  ...ROUTING_CLI_TARGETS
 ] as const
 export type ExecutionTarget = (typeof EXECUTION_TARGETS)[number]
 

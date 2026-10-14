@@ -1,7 +1,9 @@
 /**
- * The one place an agent is actually started — for the surfaces moved onto it, which today is
- * `agent.launch` alone. Orchestration dispatch, mobile create, CLI create and the desktop agent
- * tab each still start agents their own way; moving them here is later stack work.
+ * The one place an agent launch is sequenced — for the surfaces moved onto it: `agent.launch`,
+ * `worktree.create` (CLI and mobile create) through `createWorktreeWithStartupAgent`, whose
+ * `legacy-host` create still starts the agent itself, orchestration workers, local and
+ * federated, and server-run automations. The desktop agent tab still starts agents its own way;
+ * moving it here is later work.
  *
  * The mode decision is shared, not copied: `agent-launch-mode` owns it, and
  * `orchestration-worker-start-mode` is a thin adapter over it supplying orchestration's receipt
@@ -34,20 +36,18 @@ import type {
 } from '../../shared/agent-launch-intent'
 import { withoutReservedAgentCreateFields } from '../../shared/agent-launch-intent'
 import {
+  combineLaunchWarnings,
+  ignoredStructuredLaunchInputsWarning
+} from './agent-launch-warnings'
+import {
   argvLaunchPrompt,
   deliverTerminalLaunchPrompt,
   HANDED_TO_TERMINAL,
-  launchCommandPrompt,
   promptReceipt,
   settledAtCreation,
   settleLaunchPromptDisposal
 } from './agent-launch-prompt-delivery'
-import {
-  workspaceKindForWorktreeId,
-  type WorkspaceLaunchKind
-} from '../../shared/workspace-launch-kind'
-import type { OrcaRuntimeService } from '../runtime/orca-runtime'
-import { deriveAgentLaunchTerminalViewMode } from './agent-launch-view-mode'
+import { workspaceKindForLaunchTarget } from '../../shared/workspace-launch-kind'
 import { isDefinitiveAgentSessionCreateRefusal } from '../../shared/agent-session-definitive-refusal'
 import {
   decideAgentLaunchMode,
@@ -59,33 +59,21 @@ import {
   warnStructuredLaunchDowngrade
 } from './agent-launch-mode'
 import {
+  assertLegacyHostTarget,
+  createLaunchPromptInputs,
+  legacyHostCreateResult
+} from './agent-launch-legacy-host'
+import {
   AgentLaunchStructuredSessionRefusedError,
-  type AgentLaunchStructuredSurface,
-  type AgentLaunchSurfaceFactory,
-  type AgentLaunchWorkspaceFactory
+  type AgentLaunchStructuredSurface
 } from './agent-launch-surface-factories'
+import type {
+  AgentLaunchExecution,
+  AgentLaunchPublishedSurface,
+  AgentLaunchSurfaceExecution
+} from './agent-launch-execution'
 
-export type AgentLaunchExecution = {
-  runtime: Pick<OrcaRuntimeService, 'getStructuredAgentSessionCreateSupport' | 'getClientSettings'>
-  intent: AgentLaunchIntent
-  surfaces: AgentLaunchSurfaceFactory
-  workspaces?: AgentLaunchWorkspaceFactory
-  vocabulary?: AgentLaunchModeVocabulary
-  /** False when the calling client cannot show the agent's chat; absent for the host's own callers. */
-  callerRendersStructured?: boolean
-  /** Attributes a throw to the step that was running, the way a dispatch's own stages do. */
-  onStage?: (stage: 'worktree_create' | 'mode_settle' | 'surface_create') => void
-  /** The surface exists and its tab is published; runs before any prompt delivery. Must not throw. */
-  onSurfacePublished?: (surface: AgentLaunchPublishedSurface) => void
-}
-
-/**
- * The launch as it stands once its surface exists: a complete result whose prompt receipt says only
- * what creation itself settled — carried on the launch command, a draft the host never delivers, or
- * a submit still `unconfirmed`. Complete so a host that dies during the delivery still leaves a
- * truthful answer behind.
- */
-export type AgentLaunchPublishedSurface = AgentLaunchResult
+export type { AgentLaunchExecution, AgentLaunchPublishedSurface } from './agent-launch-execution'
 
 export async function executeAgentLaunch(
   execution: AgentLaunchExecution
@@ -95,21 +83,29 @@ export async function executeAgentLaunch(
     assertOpenCodeModelLaunchPreferencesAbsent(intent.agent, intent.sessionOptions)
   }
   const vocabulary = execution.vocabulary ?? DEFAULT_LAUNCH_VOCABULARY
-  const settings = readAgentLaunchModeSettings(runtime)
-  const preflight = decideAgentLaunchMode({
-    placement: {
-      agent: intent.agent,
-      workspaceKind: launchWorkspaceKind(intent.target),
-      ...(intent.reuseTerminal ? { terminal: intent.reuseTerminal.handle } : {}),
-      ...(intent.cwd ? { cwd: intent.cwd } : {}),
-      ...(intent.target.kind === 'existing' && intent.target.workspacePath
-        ? { workspacePath: intent.target.workspacePath }
-        : {}),
-      ...(execution.callerRendersStructured === false ? { callerRendersStructured: false } : {})
-    },
-    settings,
-    vocabulary
-  })
+  const preflight =
+    execution.decidedMode ??
+    decideAgentLaunchMode({
+      placement: {
+        agent: intent.agent,
+        workspaceKind: workspaceKindForLaunchTarget(intent.target),
+        ...(intent.reuseTerminal ? { terminal: intent.reuseTerminal.handle } : {}),
+        ...(intent.cwd ? { cwd: intent.cwd } : {}),
+        ...(intent.target.kind === 'existing' && intent.target.workspacePath
+          ? { workspacePath: intent.target.workspacePath }
+          : {}),
+        ...(execution.callerRendersStructured === false ? { callerRendersStructured: false } : {})
+      },
+      settings: readAgentLaunchModeSettings(runtime, intent.nativeChatDefault),
+      ...(execution.terminalOnly ? { terminalOnly: true } : {}),
+      vocabulary
+    })
+  // The create's startup terminal is this launch's only surface, and the create delivers the text.
+  if (execution.promptPolicy === 'legacy-host') {
+    assertLegacyHostTarget(execution)
+    const placed = await resolveWorkspace(execution, preflight)
+    return published(execution, legacyHostCreateResult(execution, placed, preflight))
+  }
 
   // A reused terminal already downgraded in the pre-flight; there is nothing to create. Its agent
   // was running before this launch existed, so argv is unreachable and the PTY is the only way in.
@@ -159,13 +155,17 @@ export async function executeAgentLaunch(
   }
 
   execution.onStage?.('mode_settle')
-  let settled = await resolveAgentLaunchModeOnHost(
-    runtime,
-    preflight,
-    placed.worktreeId,
-    intent.agent,
-    vocabulary
-  )
+  // A caller's own decision about an existing workspace already carries that host's answer.
+  let settled =
+    execution.decidedMode && intent.target.kind === 'existing'
+      ? preflight
+      : await resolveAgentLaunchModeOnHost(
+          runtime,
+          preflight,
+          placed.worktreeId,
+          intent.agent,
+          vocabulary
+        )
 
   execution.onStage?.('surface_create')
   let created: CreatedSurface
@@ -235,7 +235,7 @@ async function resolveWorkspace(
   preflight: AgentLaunchModeReceipt
 ): Promise<{
   worktreeId: string
-  connectionId: string | null | undefined
+  connectionId?: string | null
   startupTerminalHandle: string | undefined
   startupTerminalPaneKey?: string
   warning?: string
@@ -253,14 +253,20 @@ async function resolveWorkspace(
     throw new Error('agent_launch_workspace_factory_required')
   }
   execution.onStage?.('worktree_create')
-  const startupPrompt = launchCommandPrompt(intent, preflight.mode)
+  if (intent.target.kind === 'create-folder-workspace') {
+    if (!workspaces.createFolderWorkspace) {
+      throw new Error('agent_launch_workspace_factory_required')
+    }
+    const created = await workspaces.createFolderWorkspace({ create: intent.target.create })
+    return { ...created, startupTerminalHandle: undefined }
+  }
   const created = await workspaces.createWorktree({
     // A caller migrating from `worktree.create` passes its existing params; a stale `startupAgent`
     // in there would re-create the agent-first path this executor exists to replace. The launch
     // owns the prompt for the same reason, so it re-supplies its own rather than honouring theirs.
     create: withoutReservedAgentCreateFields(intent.target.create),
     startupAgent: preflight.mode === 'structured' ? undefined : intent.agent,
-    ...(startupPrompt ? { startupPrompt } : {}),
+    ...createLaunchPromptInputs(execution, preflight.mode),
     ...(preflight.mode === 'structured' ? {} : terminalLaunchInputs(intent))
   })
   // Only when a startup terminal actually came back: a create that produced none ran no command,
@@ -282,8 +288,8 @@ export type CreatedSurface = {
 }
 
 async function createSurface(
-  execution: AgentLaunchExecution,
-  workspace: { worktreeId: string; connectionId: string | null | undefined },
+  execution: AgentLaunchSurfaceExecution,
+  workspace: { worktreeId: string; connectionId?: string | null },
   settled: AgentLaunchModeReceipt
 ): Promise<CreatedSurface> {
   const { intent, surfaces } = execution
@@ -305,24 +311,10 @@ async function createSurface(
         ...(session.tabId ? { tabId: session.tabId } : {})
       },
       structured: session,
-      ...ignoredStructuredAgentArgsWarning(intent)
+      ...ignoredStructuredLaunchInputsWarning(intent)
     }
   }
   return createTerminalSurface(execution, workspace)
-}
-
-/**
- * Structured chat uses saved Arguments, so a per-call override still needs a truthful warning.
- */
-function ignoredStructuredAgentArgsWarning(
-  intent: AgentLaunchIntent
-): { warning: string } | undefined {
-  return intent.agentArgs === undefined
-    ? undefined
-    : {
-        warning:
-          'Started a structured chat session using saved agent Arguments; the per-launch argument override was ignored.'
-      }
 }
 
 /** What every route that builds a terminal agent passes on, so the startup terminal of a new
@@ -334,7 +326,8 @@ function terminalLaunchInputs(intent: AgentLaunchIntent) {
     ...(intent.agentArgs !== undefined ? { agentArgs: intent.agentArgs } : {}),
     ...(intent.cwd ? { cwd: intent.cwd } : {}),
     ...(intent.launchSource ? { launchSource: intent.launchSource } : {}),
-    ...(intent.paneKey ? { paneKey: intent.paneKey } : {})
+    ...(intent.paneKey ? { paneKey: intent.paneKey } : {}),
+    ...(intent.accountEnv ? { accountEnv: intent.accountEnv } : {})
   }
 }
 
@@ -343,8 +336,8 @@ function terminalLaunchInputs(intent: AgentLaunchIntent) {
  * surface — carrying the same argv prompt — as a launch that chose a terminal outright.
  */
 async function createTerminalSurface(
-  execution: AgentLaunchExecution,
-  workspace: { worktreeId: string; connectionId: string | null | undefined }
+  execution: AgentLaunchSurfaceExecution,
+  workspace: { worktreeId: string; connectionId?: string | null }
 ): Promise<CreatedSurface> {
   const { intent, surfaces } = execution
   const startupPrompt = argvLaunchPrompt(intent)
@@ -353,12 +346,7 @@ async function createTerminalSurface(
     agent: intent.agent,
     ...(startupPrompt ? { startupPrompt } : {}),
     ...terminalLaunchInputs(intent),
-    viewMode: deriveAgentLaunchTerminalViewMode({
-      settings: readAgentLaunchModeSettings(execution.runtime),
-      agent: intent.agent,
-      ...(intent.prompt ? { prompt: intent.prompt } : {}),
-      connectionId: workspace.connectionId
-    })
+    viewMode: 'terminal'
   })
   return {
     outcome: {
@@ -371,32 +359,6 @@ async function createTerminalSurface(
   }
 }
 
-/**
- * Two warnings, both true, neither droppable.
- *
- * Mirrors how the create combines its own failures — `appendFailure` in
- * runtime-local-worktree-terminal-startup.ts, and the startup-terminal catch in
- * runtime-remote-managed-worktree-create.ts — which append rather than replace.
- */
-function combineLaunchWarnings(
-  create: string | undefined,
-  surface: string | undefined
-): string | undefined {
-  if (!create || !surface) {
-    return create ?? surface
-  }
-  return `${create} Also ${surface[0].toLowerCase()}${surface.slice(1)}`
-}
-
 function existingWorktreeId(target: AgentLaunchTarget): string {
   return target.kind === 'existing' ? target.worktree : ''
-}
-
-/**
- * Read from the id rather than carried alongside it, so the kind cannot disagree with the workspace
- * it describes. `worktree` here is never a caller's selector — the method resolved it to an id
- * before building the intent — and a create always produces a git worktree.
- */
-function launchWorkspaceKind(target: AgentLaunchTarget): WorkspaceLaunchKind {
-  return target.kind === 'existing' ? workspaceKindForWorktreeId(target.worktree) : 'git-worktree'
 }

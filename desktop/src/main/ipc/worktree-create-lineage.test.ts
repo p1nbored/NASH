@@ -150,7 +150,6 @@ describe('recordWorkspaceLineageForCreatedWorktree', () => {
 
       expect(store.setWorktreeLineage).not.toHaveBeenCalled()
       expect(result.lineage).toBeNull()
-      // A persisted cross-host row makes filterLineageForHost return null for the entire host.
       expect(store.setWorkspaceLineage).not.toHaveBeenCalled()
       expect(result.workspaceLineage).toBeNull()
     }

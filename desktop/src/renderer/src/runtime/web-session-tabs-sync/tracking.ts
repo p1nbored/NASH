@@ -250,6 +250,11 @@ export function rememberHostTerminalTabCount(
   snapshot: RuntimeMobileSessionTabsResult
 ): void {
   const key = sessionTabsFreshnessKey(environmentId, snapshot.worktree)
+  if (!hostSnapshotAffirmsWorktreeContents(snapshot)) {
+    // Why: "ask me later" is not a count of zero; a restarting host may be about to republish.
+    lastHostTerminalTabCountByWorktree.delete(key)
+    return
+  }
   const terminalCount = snapshot.tabs.filter((tab) => tab.type === 'terminal').length
   lastHostTerminalTabCountByWorktree.set(key, terminalCount)
 }

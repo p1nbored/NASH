@@ -1,4 +1,4 @@
-import { Check, Terminal } from 'lucide-react'
+import { Ban, Check, Terminal } from 'lucide-react'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { AgentCatalogEntry } from '@/lib/agent-catalog'
 import { AgentIcon } from '@/lib/agent-catalog'
@@ -41,17 +41,19 @@ export function AgentDefaultSetting({
   enabledDetectedAgents,
   catalog,
   description,
-  onSetDefault
+  onSetDefault,
+  allowSetupOnly = true
 }: {
-  defaultAgent: TuiAgent | 'blank' | null
+  allowSetupOnly?: boolean
+  defaultAgent: TuiAgent | 'blank' | 'setup-only' | null
   detectedIds: Set<string> | null
   enabledDetectedAgents: AgentCatalogEntry[]
   catalog: AgentCatalogEntry[]
   description: string
-  onSetDefault: (agent: TuiAgent | 'blank' | null) => void
+  onSetDefault: (agent: TuiAgent | 'blank' | 'setup-only' | null) => void
 }): React.JSX.Element {
   const storedDefaultAgent =
-    defaultAgent !== null && defaultAgent !== 'blank'
+    defaultAgent !== null && defaultAgent !== 'blank' && defaultAgent !== 'setup-only'
       ? catalog.find((agent) => agent.id === defaultAgent)
       : undefined
   const defaultAgentPills =
@@ -75,6 +77,20 @@ export function AgentDefaultSetting({
           {translate('auto.components.settings.AgentsPane.110b74b022', 'No agent (blank terminal)')}
           {defaultAgent === 'blank' && <Check className="size-3.5" />}
         </DefaultAgentPill>
+        {allowSetupOnly && (
+          <DefaultAgentPill
+            active={defaultAgent === 'setup-only'}
+            onClick={() => onSetDefault('setup-only')}
+            title={translate(
+              'auto.components.settings.AgentsPane.setupOnlyHint',
+              'Runs setup without an extra blank terminal in new-tab mode. Split mode keeps a shell pane; skipped or missing setup opens a blank terminal.'
+            )}
+          >
+            <Ban className="size-3.5" />
+            {translate('auto.components.settings.AgentsPane.setupOnly', 'None')}
+            {defaultAgent === 'setup-only' && <Check className="size-3.5" />}
+          </DefaultAgentPill>
+        )}
         {defaultAgentPills.map((agent) => {
           const isActive = defaultAgent === agent.id
           const isUndetected = detectedIds !== null && !detectedIds.has(agent.id)

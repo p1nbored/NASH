@@ -68,23 +68,6 @@ export function registerSessionHandlers(store: Store, runtime: OrcaRuntimeServic
     return store.flushPendingOrThrowAsync()
   })
 
-  // Older renderers block on the reply; main remains free to await the writer.
-  ipcMain.on('session:set-sync', (event, args: WorkspaceSessionState, hostId?: string | null) => {
-    void (async () => {
-      try {
-        if (!isFenced(hostId)) {
-          store.setWorkspaceSession(args, hostId)
-        }
-        await store.flushPendingOrThrowAsync({ drainToStableGeneration: false })
-      } catch (error) {
-        console.error('[persistence] Failed to flush legacy session checkpoint:', error)
-      } finally {
-        // This legacy response has always been best effort, including on disk errors.
-        event.returnValue = true
-      }
-    })()
-  })
-
   ipcMain.on(
     'session:read-terminal-scrollback-sync',
     (event, args: { ref?: unknown } | undefined) => {

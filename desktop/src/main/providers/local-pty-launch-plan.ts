@@ -10,7 +10,7 @@ import {
 } from './local-pty-launch-helpers'
 import type { LocalPtyProviderOptions } from './local-pty-provider-types'
 import type { getShellLaunchConfig } from './local-pty-shell-ready'
-import { ensureNodePtySpawnHelperExecutable, validateWorkingDirectory } from './local-pty-utils'
+import { ensureNodePtySpawnHelperExecutable } from './local-pty-utils'
 import {
   resolveEffectiveWindowsPowerShell,
   shouldProbeWindowsPowerShellAvailability,
@@ -19,7 +19,7 @@ import {
 import { buildWindowsPowerShellSpawnAttempts } from './windows-shell-fallback-chain'
 import { resolveWindowsShellLaunchArgs } from './windows-shell-args'
 import { assertSafeAgentStartupCwd } from './pty-default-cwd'
-import type { PtySpawnOptions } from './types'
+import type { PtySpawnOptions } from './pty-provider-contract'
 
 type WslLaunchContext = { distro: string; treatPosixCwdAsWsl: true }
 type LocalPtyLaunchSeed = {
@@ -77,9 +77,6 @@ function finalizeLocalPtyLaunchPlan(
   }
 ): LocalPtyLaunchPlan {
   ensureNodePtySpawnHelperExecutable()
-  if (seed.args.prevalidatedCwd !== shell.validationCwd) {
-    validateWorkingDirectory(shell.validationCwd)
-  }
   const isWslShell =
     Boolean(seed.wslInfo) || pathWin32.basename(shell.shellPath).toLowerCase() === 'wsl.exe'
   return {

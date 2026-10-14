@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import type * as DeployHelpers from './ssh-relay-deploy-helpers'
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import type * as InstallLock from './ssh-relay-install-lock'
 
-vi.mock('./ssh-relay-deploy-helpers', async (importOriginal) => ({
-  ...(await importOriginal<typeof DeployHelpers>()),
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn().mockResolvedValue('')
 }))
 vi.mock('./ssh-relay-install-lock', async (importOriginal) => ({
@@ -11,7 +11,7 @@ vi.mock('./ssh-relay-install-lock', async (importOriginal) => ({
   acquireInstallLock: vi.fn().mockResolvedValue(undefined)
 }))
 
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execCommand } from './ssh-relay-exec-command'
 import { acquireInstallLock, RemoteInstallLockBusyError } from './ssh-relay-install-lock'
 import {
   parseOrcadActivationTransaction,
@@ -36,7 +36,6 @@ import {
 import { FakeOrcadHost, NEW, OLD } from './orcad-activation-host-test-harness'
 import { withRolledBackVersion } from './orcad-activation-record'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import type { SshConnection } from './ssh-connection'
 
 const T = new Date('2026-02-02T00:00:00.000Z')
 const ID = '7f1c2a7e-6c1b-4a8e-9f0e-0a1b2c3d4e5f'
@@ -168,7 +167,7 @@ describe('planOrcadTransactionRecovery', () => {
 
 describe('activation fence', () => {
   const target = {
-    conn: {} as SshConnection,
+    conn: Object.create(null),
     host: getRemoteHostPlatform('linux-x64'),
     remoteHome: '/home/u'
   }

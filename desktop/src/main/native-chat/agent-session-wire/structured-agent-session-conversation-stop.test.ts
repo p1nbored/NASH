@@ -207,7 +207,7 @@ describe('a Stop that names no turn', () => {
       identity: identityFor(SESSION),
       fence: 1,
       spawnToken: 'spawn-catalog',
-      options: { fastMode: 'true' },
+      options: { serviceTier: 'priority' },
       // Codex's turn events reach the host's journal, as the runtime wires them.
       events: hostEvents()
     })
@@ -222,7 +222,7 @@ describe('a Stop that names no turn', () => {
     )
     expect(await pickOption('model', 'gpt-next')).toMatchObject({
       ok: true,
-      value: { options: { model: 'gpt-next', fastMode: 'true' } }
+      value: { options: { model: 'gpt-next', serviceTier: 'priority' } }
     })
     expect(codex.connections[0].calls.filter((call) => call.method === 'model/list')).toHaveLength(
       1
@@ -248,7 +248,7 @@ describe('a Stop that names no turn', () => {
     )
     expect(
       codex.connections[0].calls.filter((call) => call.method === 'turn/start')[1]?.params
-    ).toMatchObject({ model: 'gpt-next', serviceTier: 'default' })
+    ).toMatchObject({ model: 'gpt-next', serviceTier: 'priority' })
     pending.resolve({ data: [], nextCursor: null })
   })
 
@@ -769,7 +769,22 @@ describe('a Stop that names no turn', () => {
 })
 
 describe('a Stop that names its turn, as an older client sends it', () => {
+  it('is a quiet no-op, reaching no agent, when that turn is already over', async () => {
+    expect(await stop('turn-1')).toMatchObject({
+      ok: true,
+      value: { turnId: 'turn-1', cancelled: false }
+    })
+    expect(cancelTurn).not.toHaveBeenCalled()
+    expect(await statusRows()).toEqual([])
+  })
+
   it('reaches the provider with that turn, and writes no row when it stopped nothing', async () => {
+    // Only a turn the journal shows running: one already over is a late Stop, a no-op.
+    events!.appendItem(
+      { provider: 'codex', threadId: THREAD, turnId: 'turn-1', ordinal: 900 },
+      { kind: 'turn', turnId: 'turn-1', state: 'running' },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
+    )
     cancelTurn.mockResolvedValueOnce({ cancelled: false })
 
     expect(await stop('turn-1')).toMatchObject({
@@ -777,18 +792,6 @@ describe('a Stop that names its turn, as an older client sends it', () => {
       value: { turnId: 'turn-1', cancelled: false }
     })
     expect(cancelTurn).toHaveBeenCalledWith(expect.objectContaining({ turnId: 'turn-1' }))
-    expect(await statusRows()).toEqual([])
-  })
-
-  it('keeps the child, and writes no row, when the provider could not interrupt it with the conversation at rest', async () => {
-    cancelTurn.mockResolvedValueOnce({
-      cancelled: false,
-      refusal: { detail: { text: 'failed to interrupt turn', audience: 'person' } }
-    })
-
-    expect(await stop('turn-1')).toMatchObject({ ok: true, value: { cancelled: false } })
-
-    expect(closeSession).not.toHaveBeenCalled()
     expect(await statusRows()).toEqual([])
   })
 
@@ -886,11 +889,14 @@ describe('a Stop on a provider whose Stop ends its session', () => {
 
   it('leaves the child alone when the Stop named a turn that is no longer live', async () => {
     stopEndsSession = true
+    // Handed over, with no row yet for the turn it names: the Stop reaches the provider.
+    await handedOver()
     cancelTurn.mockResolvedValueOnce({ cancelled: false })
 
     expect(await stop('turn-1')).toMatchObject({ ok: true, value: { cancelled: false } })
     await laneDrained()
 
+    expect(cancelTurn).toHaveBeenCalledWith(expect.objectContaining({ turnId: 'turn-1' }))
     expect(closeSession).not.toHaveBeenCalled()
     // It stopped nothing, so it writes no row.
     expect(await statusRows()).toEqual([])

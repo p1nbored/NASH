@@ -1,15 +1,12 @@
 /**
- * The design D5/D6 hostile-host matrix: each cell is an SSH target (a container, or the runner's
- * own loopback sshd) and the place the relay runtime ladder must land there.
- * `ssh-relay-hostile-hosts.docker.test.ts` drives the real client-side deploy against each one;
- * `.github/workflows/ssh-hostile-hosts.yml` runs it.
+ * The hostile-host matrix: each cell is an SSH target (a container, or the runner's own loopback
+ * sshd) and what managed orcad must do there. `ssh-hostile-hosts.docker.test.ts` drives the real
+ * client-side deploy against each one; `.github/workflows/ssh-hostile-hosts.yml` runs it.
  */
-import type { NodeRuntimeTarget, ServerTarget } from '../../shared/node-runtime-pin'
-import type { SshRemoteRuntimeRung } from '../../shared/ssh-types'
-import type { RelayRuntimeFallbackReason } from './ssh-relay-pinned-node'
-import type { RelayRuntimeStep, RemoteRuntimeUnavailableReason } from './ssh-relay-runtime-ladder'
+import type { NodeRuntimeTarget } from '../../shared/node-runtime-pin'
+import type { OrcadHostUnavailableReason } from '../orcad/orcad-host-unavailable'
 
-/** Every shimmed toolchain command appends its name here; rungs A and C must leave it empty. */
+/** Every shimmed toolchain command appends its name here; a managed deploy must leave it empty. */
 export const FORBIDDEN_TOOL_LOG = '/tmp/orca-forbidden-tool-calls.log'
 export const FORBIDDEN_TOOLS = ['npm', 'npx', 'node-gyp', 'gcc', 'g++', 'cc', 'c++', 'make']
 
@@ -20,41 +17,17 @@ export function forbiddenToolShimScript(logPath: string): string {
   )
 }
 
-export type RungRefusal = { step: RelayRuntimeStep; reason: RelayRuntimeFallbackReason }
-
-export type HostileHostExpectation =
-  /** A pinned rung ran: the terminal echoes, a second connect reuses the runtime, GC keeps it. */
-  | {
-      outcome: 'launched'
-      rung: 'A' | 'B'
-      /** The host's target; `runtime` names the compat runtime rung B ran on instead. */
-      target: ServerTarget
-      runtime?: NodeRuntimeTarget
-      refusals?: readonly RungRefusal[]
-    }
-  /** Rung D: nothing may run, and the connect fails with the classified reason. */
-  | {
-      outcome: 'unavailable'
-      reason: RemoteRuntimeUnavailableReason
-      refusals: readonly RungRefusal[]
-    }
-  /** The ladder fell through to the host-npm path, which cannot run on this host either. */
-  | { outcome: 'legacy_failed'; refusals: readonly RungRefusal[] }
-  /** The host opted out: the ladder never runs and nothing enters the pinned runtime store. */
-  | { outcome: 'legacy_opt_out' }
-
 /** What any hostile-host driver needs, whatever provisions the host. */
 export type HostileHostCellCore = {
   id: string
-  expect: HostileHostExpectation
-  /** Also deploy managed orcad on a fresh host, on this runtime target. */
-  managed?: ManagedOrcadExpectation
+  /** Managed orcad on a fresh host: the runtime target it resolves, and what the deploy does there. */
+  managed: ManagedOrcadExpectation
 }
 
 export type ManagedOrcadExpectation =
   | { outcome: 'activated'; runtime: NodeRuntimeTarget }
-  /** The candidate is refused with this deferral code, and the relay that follows settles on `relayRung`. */
-  | { outcome: 'refused'; runtime: NodeRuntimeTarget; code: string; relayRung: 'A' | 'B' }
+  /** The deploy throws an error the connect classifies as this host being unable to run orcad. */
+  | { outcome: 'unavailable'; runtime: NodeRuntimeTarget; reason: OrcadHostUnavailableReason }
 
 export type DockerHostileHostCell = HostileHostCellCore & {
   host?: 'docker'
@@ -103,8 +76,6 @@ const ALPINE_3_20 =
 const UBUNTU_22_04 =
   'ubuntu:22.04@sha256:b8b6ee6aa931ecd9d0d952abc34dc0e5f7c6a30c6bb71b079fe399fde0329c02'
 const CENTOS_7 = 'centos:7@sha256:be65f488b7764ad3638f236b7b515b3678369a5124c47b8d32916d6487418ea4'
-const NODE_20 =
-  'node:20-bookworm-slim@sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0'
 
 // Why the archive: buster left deb.debian.org; its packages live on only at archive.debian.org.
 const DEBIAN_10_LINES = [
@@ -121,7 +92,7 @@ export const HOSTILE_HOST_CELLS: readonly HostileHostCell[] = [
   {
     id: 'debian10-glibc228',
     dockerfile: DEBIAN_10_LINES,
-    expect: { outcome: 'launched', rung: 'A', target: 'linux-x64-glibc' }
+    managed: { outcome: 'activated', runtime: 'linux-x64-glibc' }
   },
   {
     id: 'almalinux8-glibc228',
@@ -129,48 +100,33 @@ export const HOSTILE_HOST_CELLS: readonly HostileHostCell[] = [
       `FROM ${ALMALINUX_8}`,
       'RUN dnf install -y openssh-server procps-ng tar gzip && dnf clean all'
     ],
-    expect: { outcome: 'launched', rung: 'A', target: 'linux-x64-glibc' }
+    managed: { outcome: 'activated', runtime: 'linux-x64-glibc' }
   },
   {
     id: 'alpine-musl',
     dockerfile: [`FROM ${ALPINE_3_20}`, `${ALPINE_SSHD} libgcc libstdc++`],
-    expect: { outcome: 'launched', rung: 'A', target: 'linux-x64-musl' }
+    managed: { outcome: 'activated', runtime: 'linux-x64-musl' }
   },
   {
-    // The musl Node links libstdc++, so its self-test proves the missing library; B has no
-    // compat runtime yet and C finds no host Node.
+    // The musl Node links libstdc++, so its self-test fails before orcad can start.
     id: 'alpine-musl-no-libstdcxx',
     dockerfile: [`FROM ${ALPINE_3_20}`, ALPINE_SSHD],
-    expect: {
-      outcome: 'unavailable',
-      reason: 'no_runtime',
-      refusals: [
-        { step: 'A', reason: 'missing_lib' },
-        { step: 'B', reason: 'runtime_unavailable' },
-        { step: 'C', reason: 'host_node_missing' }
-      ]
-    }
+    managed: { outcome: 'unavailable', runtime: 'linux-x64-musl', reason: 'runtime_self_test' }
   },
   {
-    // A host Node 20 does not help: rung C would load its addons from the same noexec tree.
-    id: 'ubuntu2204-node20-noexec-home',
+    // The runtime lands under the noexec home, so its self-test cannot execute it.
+    id: 'ubuntu2204-noexec-home',
     dockerfile: [
-      `FROM ${NODE_20} AS host-node`,
       `FROM ${UBUNTU_22_04}`,
       'RUN apt-get update' +
         ' && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server procps' +
-        ' && rm -rf /var/lib/apt/lists/*',
-      'COPY --from=host-node /usr/local/bin/node /usr/local/bin/node'
+        ' && rm -rf /var/lib/apt/lists/*'
     ],
     homeNoexec: true,
-    expect: {
-      outcome: 'unavailable',
-      reason: 'home_noexec',
-      refusals: [{ step: 'A', reason: 'noexec' }]
-    }
+    managed: { outcome: 'unavailable', runtime: 'linux-x64-glibc', reason: 'runtime_self_test' }
   },
   {
-    // glibc 2.17 is below the pinned Node's floor, so rung B runs the glibc 2.17 compat runtime.
+    // glibc 2.17 is below the pinned Node's floor, so orcad runs on the glibc 2.17 compat runtime.
     id: 'centos7-glibc217',
     dockerfile: [
       `FROM ${CENTOS_7}`,
@@ -178,36 +134,28 @@ export const HOSTILE_HOST_CELLS: readonly HostileHostCell[] = [
       "RUN sed -i -e 's/^mirrorlist=/#mirrorlist=/' -e 's|^#\\?baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/7.9.2009|' /etc/yum.repos.d/CentOS-*.repo" +
         ' && yum install -y openssh-server procps-ng && yum clean all'
     ],
-    expect: {
-      outcome: 'launched',
-      rung: 'B',
-      target: 'linux-x64-glibc',
-      runtime: 'linux-x64-glibc217',
-      refusals: [{ step: 'A', reason: 'libc_floor' }]
-    },
-    // Managed orcad runs on the same compat runtime and slot, so an empty CentOS 7 host is managed.
     managed: { outcome: 'activated', runtime: 'linux-x64-glibc217' }
   },
   {
-    // The client uploads the runtime over SSH, so a host that cannot reach nodejs.org still runs A.
+    // The client uploads the runtime over SSH, so a host that cannot reach nodejs.org still runs orcad.
     id: 'debian10-no-egress',
     dockerfile: DEBIAN_10_LINES,
     noEgress: true,
-    expect: { outcome: 'launched', rung: 'A', target: 'linux-x64-glibc' }
+    managed: { outcome: 'activated', runtime: 'linux-x64-glibc' }
   },
   {
     id: 'macos-arm64-local-sshd',
     host: 'local-sshd',
     runsOn: { platform: 'darwin', arch: 'arm64' },
     extraForbiddenTools: MACOS_FORBIDDEN_TOOLS,
-    expect: { outcome: 'launched', rung: 'A', target: 'darwin-arm64' }
+    managed: { outcome: 'activated', runtime: 'darwin-arm64' }
   },
   {
     id: 'macos-x64-local-sshd',
     host: 'local-sshd',
     runsOn: { platform: 'darwin', arch: 'x64' },
     extraForbiddenTools: MACOS_FORBIDDEN_TOOLS,
-    expect: { outcome: 'launched', rung: 'A', target: 'darwin-x64' }
+    managed: { outcome: 'activated', runtime: 'darwin-x64' }
   }
 ]
 
@@ -253,83 +201,10 @@ export function selectHostileHostCells(
   )
 }
 
-export type HostileHostObservation = {
-  /** The rung the ladder settled on, or null when it never settled (legacy failure). */
-  settledRung: SshRemoteRuntimeRung | null
-  /** The server target of a launched relay, when the ladder resolved one. */
-  target: ServerTarget | null
-  /** Set when the deploy failed with the rung D error. */
-  unavailableReason: RemoteRuntimeUnavailableReason | null
-  deployError: string | null
-  refusals: readonly RungRefusal[]
-  forbiddenToolCalls: readonly string[]
-}
-
-function describeRefusals(refusals: readonly RungRefusal[]): string {
-  return refusals.map(({ step, reason }) => `${step}:${reason}`).join(' > ') || 'none'
-}
-
-/** Every way `observed` departs from the cell's expectation; empty when the cell holds. */
-export function hostileHostCellViolations(
-  cell: HostileHostCellCore,
-  observed: HostileHostObservation
-): string[] {
-  const { expect } = cell
-  const violations: string[] = []
-  const expectedRefusals = expect.outcome === 'legacy_opt_out' ? [] : (expect.refusals ?? [])
-  if (describeRefusals(observed.refusals) !== describeRefusals(expectedRefusals)) {
-    violations.push(
-      `refusals ${describeRefusals(observed.refusals)}, expected ${describeRefusals(expectedRefusals)}`
-    )
-  }
-  // Why every ladder outcome: no rung reached before legacy may reach for npm or a compiler.
-  const legacy = expect.outcome === 'legacy_failed' || expect.outcome === 'legacy_opt_out'
-  if (!legacy && observed.forbiddenToolCalls.length > 0) {
-    violations.push(`toolchain invoked: ${observed.forbiddenToolCalls.join('; ')}`)
-  }
-  switch (expect.outcome) {
-    case 'launched':
-      if (observed.deployError) {
-        violations.push(`deploy failed: ${observed.deployError}`)
-      }
-      if (observed.settledRung !== expect.rung) {
-        violations.push(`settled on ${observed.settledRung ?? 'nothing'}, expected ${expect.rung}`)
-      }
-      if (observed.target !== expect.target) {
-        violations.push(`target ${observed.target ?? 'unresolved'}, expected ${expect.target}`)
-      }
-      break
-    case 'unavailable':
-      if (observed.settledRung !== 'D') {
-        violations.push(`settled on ${observed.settledRung ?? 'nothing'}, expected D`)
-      }
-      if (observed.unavailableReason !== expect.reason) {
-        violations.push(
-          `rung D reason ${observed.unavailableReason ?? 'none'}, expected ${expect.reason}`
-        )
-      }
-      break
-    case 'legacy_failed':
-      if (observed.settledRung !== null) {
-        violations.push(`settled on ${observed.settledRung}, expected the host-npm path to fail`)
-      }
-      if (!observed.deployError) {
-        violations.push('deploy succeeded on a host with no runnable runtime')
-      }
-      break
-    case 'legacy_opt_out':
-      // The host-Node path's own verdict depends on the host's Node, so only the ladder is judged.
-      if (observed.settledRung !== null) {
-        violations.push(`settled on ${observed.settledRung}, expected the ladder never to run`)
-      }
-      break
-  }
-  return violations
-}
-
-export function parseForbiddenToolLog(contents: string): string[] {
-  return contents
+/** Logged toolchain calls that install or compile; a bare `--version`/`-v` probe is read-only. */
+export function forbiddenToolActions(log: string): string[] {
+  return log
     .split('\n')
     .map((line) => line.trim())
-    .filter(Boolean)
+    .filter((call) => call && !/^\S+ (?:--version|-v)$/.test(call))
 }

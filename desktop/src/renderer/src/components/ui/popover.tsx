@@ -169,7 +169,7 @@ function PopoverContent({
         // Why: one opaque paper recipe for every floating layer (floating-border edge, popover
         // fill, themed floating shadow) keeps menus, popovers and dialogs a family in both themes.
         className={cn(
-          'z-[60] overflow-hidden rounded-lg border border-floating-border bg-popover text-popover-foreground shadow-floating outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'z-[60] overflow-hidden rounded-lg border border-floating-border bg-popover text-popover-foreground shadow-floating outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           wheelScroll && 'popover-wheel-scroll',
           className
         )}

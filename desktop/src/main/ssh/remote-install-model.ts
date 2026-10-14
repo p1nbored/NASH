@@ -19,7 +19,7 @@ import {
   relayArtifactFilenames,
   RELAY_INSTALL_COMPLETE_FILENAME,
   RELAY_VERSION_FILENAME
-} from '../../shared/relay-artifacts'
+} from './relay-install-artifacts'
 import {
   orcadArtifactFilenames,
   ORCAD_INSTALL_COMPLETE_FILENAME,
@@ -98,6 +98,12 @@ export function remoteInstallDirName(model: RemoteInstallModel, fullVersion: str
 export function remoteInstallVersionDirRegex(model: RemoteInstallModel): RegExp {
   assertSafeDirPrefix(model.dirPrefix)
   return new RegExp(`^${model.dirPrefix}-(${VERSION_PATTERN})$`)
+}
+
+/** A strictly named leftover of one model's interrupted GC rename; safe to delete on sight. */
+export function remoteInstallGcTombstoneRegex(model: RemoteInstallModel): RegExp {
+  assertSafeDirPrefix(model.dirPrefix)
+  return new RegExp(`^${model.dirPrefix}-(${VERSION_PATTERN})${TOMBSTONE_PATTERN}$`)
 }
 
 /** What the remote listing is allowed to return: live dirs plus their tombstones. */

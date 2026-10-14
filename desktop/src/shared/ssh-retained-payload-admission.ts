@@ -103,6 +103,7 @@ export function admitSshConnectionState(
       ? { remotePlatform: input.remotePlatform }
       : {}),
     ...admitSshPlainSshMode(input.plainSsh),
+    ...(input.hostNodeRuntime === true ? { hostNodeRuntime: true } : {}),
     ...admitSshManagedServerStatus(input.managedServer)
   }
 }
@@ -157,7 +158,6 @@ function admitSshManagedServerStatus(value: unknown): { managedServer?: SshManag
         ? { detail: clampUtf8TextPrefix(detail, SSH_CONNECTION_ERROR_MAX_UTF8_BYTES) }
         : {}),
       ...(isNonNegativeSafeInteger(terminals) ? { terminals } : {}),
-      ...('offerMove' in value && value.offerMove === true ? { offerMove: true } : {}),
       ...('terminalsElsewhere' in value && value.terminalsElsewhere === true
         ? { terminalsElsewhere: true }
         : {})
@@ -226,6 +226,7 @@ export function admitSshConnectionStateForAuthorityReconciliation(
       supportsFolderDownload: input.supportsFolderDownload,
       remotePlatform: input.remotePlatform,
       plainSsh: input.plainSsh,
+      hostNodeRuntime: input.hostNodeRuntime,
       managedServer: input.managedServer
     },
     expectedTargetId

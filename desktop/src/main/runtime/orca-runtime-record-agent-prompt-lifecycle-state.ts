@@ -6,7 +6,6 @@ import { findLastCompleteOscTitleRange } from './orca-runtime-core'
 import { extractLastOscTitle } from '../../shared/osc-title-extraction'
 import { detectAgentStatusFromTitle } from '../../shared/agent-detection'
 import type { RuntimeTerminalDataMeta } from './runtime-terminal-stream-consumers'
-import type { RemoteTerminalSourceRangeConsumerHooks } from './remote-terminal-source-range-consumer'
 
 export class OrcaRuntimeWithRecordAgentPromptLifecycleState extends OrcaRuntimeWithCreateTerminalSideEffectCommandCodeDetector {
   protected recordAgentPromptLifecycleState(ptyId: string, status: AgentStatus | null): void {
@@ -193,11 +192,5 @@ export class OrcaRuntimeWithRecordAgentPromptLifecycleState extends OrcaRuntimeW
     listener: (data: string, meta?: RuntimeTerminalDataMeta) => void
   ): () => void {
     return this.terminalStreamConsumers.subscribe(ptyId, listener)
-  }
-
-  setRemoteTerminalSourceRangeConsumerHooks(
-    hooks: RemoteTerminalSourceRangeConsumerHooks | null
-  ): void {
-    this.terminalStreamConsumers.setSourceRangeHooks(hooks)
   }
 }

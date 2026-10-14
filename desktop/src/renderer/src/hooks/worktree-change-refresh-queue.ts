@@ -8,6 +8,7 @@ type WorktreeRename = {
 type WorktreeChangeOwner = {
   forceLocalOwner?: boolean
   executionHostId?: ExecutionHostId
+  sortOrderOnly?: boolean
 }
 
 type WorktreeChangeEvent = {
@@ -17,6 +18,7 @@ type WorktreeChangeEvent = {
   // refresh pins to the local host instead of dropping the event (see useIpcEvents).
   forceLocalOwner?: boolean
   executionHostId?: ExecutionHostId
+  sortOrderOnly?: boolean
 }
 
 type WorktreeChangeRefreshHandler = (
@@ -51,7 +53,8 @@ export function createWorktreeChangeRefreshQueue(
         try {
           await handler(repoId, next?.renamed, {
             forceLocalOwner: next?.forceLocalOwner,
-            ...(next?.executionHostId ? { executionHostId: next.executionHostId } : {})
+            ...(next?.executionHostId ? { executionHostId: next.executionHostId } : {}),
+            ...(next?.sortOrderOnly === true ? { sortOrderOnly: true } : {})
           })
         } catch (error) {
           console.error('Failed to refresh changed worktrees:', error)
@@ -103,8 +106,12 @@ export function createWorktreeChangeRefreshQueue(
         ) {
           state.queue.push({
             forceLocalOwner: event.forceLocalOwner,
-            executionHostId: event.executionHostId
+            executionHostId: event.executionHostId,
+            ...(event.sortOrderOnly === true ? { sortOrderOnly: true } : {})
           })
+        } else if (event.sortOrderOnly !== true) {
+          // An order save cannot erase an adjacent structural refresh.
+          delete lastQueued.sortOrderOnly
         }
       }
 

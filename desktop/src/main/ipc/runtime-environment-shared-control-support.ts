@@ -1,7 +1,5 @@
-import type {
-  getPreferredPairingOffer,
-  KnownRuntimeEnvironment
-} from '../../shared/runtime-environments'
+import type { PairedRuntimeConnection } from '../../shared/paired-runtime-connection'
+import type { KnownRuntimeEnvironment } from '../../shared/runtime-environments'
 import { RemoteRuntimeClientError } from '../../shared/remote-runtime-client-error'
 import {
   getAcceptedRuntimeEnvironmentCapabilityOutcome,
@@ -21,12 +19,12 @@ export function resetSharedControlSupport(): void {
 export async function supportsSharedControl(
   userDataPath: string,
   environment: KnownRuntimeEnvironment,
-  pairing: ReturnType<typeof getPreferredPairingOffer>,
+  connection: PairedRuntimeConnection,
   timeoutMs: number
 ): Promise<RuntimeEnvironmentCapabilityOutcome> {
   const accepted = getAcceptedRuntimeEnvironmentCapabilityOutcome(
     environment.id,
-    pairing,
+    connection,
     environment.runtimeId
   )
   if (accepted) {
@@ -41,7 +39,7 @@ export async function supportsSharedControl(
   return (
     getAcceptedRuntimeEnvironmentCapabilityOutcome(
       environment.id,
-      pairing,
+      connection,
       response._meta.runtimeId
     ) ?? { kind: 'stale_incarnation' }
   )

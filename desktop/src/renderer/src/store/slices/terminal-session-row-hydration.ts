@@ -21,14 +21,6 @@ type CanonicalTerminals = {
   aiVaultTitleByTabId: Map<string, AiVaultSessionTitle>
 }
 
-export type HydrateWorkspaceTerminalRowsOptions = {
-  /**
-   * Rows arrived from a remote snapshot. `unifiedTabs` is not on the remote wire, so the session's
-   * canonical list still describes the local client and cannot arbitrate ownership of these rows.
-   */
-  rowsFromRemoteSnapshot?: boolean
-}
-
 export type WorkspaceTerminalRowHydration = {
   rows: TerminalTab[]
   /** PTYs a retained row must give up because a canonical row already owns them. */
@@ -50,8 +42,7 @@ export type WorkspaceTerminalRowHydration = {
 export function hydrateWorkspaceTerminalRows(
   session: WorkspaceSessionState,
   worktreeId: string,
-  rows: readonly TerminalTab[],
-  options: HydrateWorkspaceTerminalRowsOptions = {}
+  rows: readonly TerminalTab[]
 ): WorkspaceTerminalRowHydration {
   const canonical = readCanonicalTerminals(session, worktreeId, rows)
   const releasedPtyIdsByTabId = new Map<string, Set<string>>()
@@ -66,9 +57,7 @@ export function hydrateWorkspaceTerminalRows(
       invalidTabIds.push(row.id)
       continue
     }
-    const claim = options.rowsFromRemoteSnapshot
-      ? RETAINED_UNCLAIMED
-      : resolveCanonicalPtyClaim(session, row, canonical)
+    const claim = resolveCanonicalPtyClaim(session, row, canonical)
     if (claim.kind === 'subsumed') {
       subsumedTabIds.push(row.id)
       canonicalTabIdBySubsumedTabId.set(row.id, claim.canonicalTabId)
@@ -209,7 +198,8 @@ function restoreCanonicalMetadata(
     ...(aiVaultTitle ? { aiVaultTitle } : {}),
     sortOrder: index,
     // Why: suppress restored mounts so only real activity updates Recent.
-    pendingActivationSpawn: true
+    pendingActivationSpawn: true,
+    restoredFromSession: true
   }
 }
 

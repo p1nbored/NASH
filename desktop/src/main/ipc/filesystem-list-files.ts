@@ -6,7 +6,8 @@ import { sep } from 'node:path'
 import type { ChildProcess } from 'node:child_process'
 import type { Store } from '../persistence'
 import { resolveAuthorizedPath } from './filesystem-auth'
-import { parseWslPath, toWindowsWslPath } from '../wsl'
+import { toWindowsWslPath } from '../wsl'
+import { resolveBundledRipgrepWslRouting } from '../ripgrep/bundled-ripgrep-wsl-routing'
 import { getLocalGitOptionsForRegisteredWorktree } from './local-worktree-runtime-options'
 import {
   buildExcludePathPrefixes,
@@ -44,10 +45,10 @@ export async function listQuickOpenFiles(
   options: { includeIgnored?: boolean; followSymlinks?: boolean; candidatePaths?: string[] } = {}
 ): Promise<string[]> {
   const authorizedRootPath = await resolveAuthorizedPath(rootPath, store)
-  const localGitOptions = getLocalGitOptionsForRegisteredWorktree(
-    store,
-    rootPath,
-    authorizedRootPath
+  const { wslDistro, wslDistroForOutput } = resolveBundledRipgrepWslRouting(
+    authorizedRootPath,
+    getLocalGitOptionsForRegisteredWorktree(store, rootPath, authorizedRootPath).wslDistro,
+    { followSymlinks: options.followSymlinks }
   )
 
   // Why: when the main worktree sits at the repo root, linked worktrees are
@@ -61,7 +62,6 @@ export async function listQuickOpenFiles(
     ])
   ]
   const includePath = quickOpenListingPathFilter(excludePathPrefixes, options.candidatePaths)
-  const wslDistroForOutput = parseWslPath(authorizedRootPath)?.distro ?? localGitOptions.wslDistro
 
   const inventoryBudget =
     maxResults === undefined && maxSerializedBytes === undefined ? new FileInventoryBudget() : null
@@ -144,7 +144,7 @@ export async function listQuickOpenFiles(
       try {
         child = spawnBundledRipgrep(args, {
           cwd: authorizedRootPath,
-          wslDistro: localGitOptions.wslDistro,
+          wslDistro,
           wslDistroForOutput,
           stdio: ['ignore', 'pipe', 'pipe']
         })

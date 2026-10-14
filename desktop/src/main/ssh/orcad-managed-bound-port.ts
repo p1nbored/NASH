@@ -16,12 +16,12 @@ import {
   readOrcadReadinessNowCommand
 } from './orcad-remote-readiness-wait'
 import { execOrcadRemote, type OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 
 export type OrcadTunnelPortInput = {
   environment: KnownRuntimeEnvironment
   target: SshTarget
-  connection: SshConnection
+  connection: OrcadHostTransport
 }
 
 export function orcadBoundPort(readiness: Pick<ServeReadiness, 'boundEndpoint'>): number | null {

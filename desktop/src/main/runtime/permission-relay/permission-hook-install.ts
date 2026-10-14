@@ -95,7 +95,7 @@ export function installPermissionHooks(
   const targets: [Provider, string][] = []
   try {
     const router = getClaudeProfileRouter()
-    const selectedHome = router?.selectedHome()
+    const selectedHome = router?.routedHome()
     const claudeHomes = new Set([
       router?.systemDefaultHome() ??
         resolveClaudeDefaultHome(home, readUserClaudeConfigDir(process.env)),

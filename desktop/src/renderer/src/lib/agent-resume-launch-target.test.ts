@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentResumeLaunchTargetArgs } from './agent-resume-launch-target'
 
 function setNavigatorUserAgent(userAgent: string): () => void {
@@ -40,8 +40,11 @@ async function resolveWith(
 describe('resolveAgentResumeLaunchTarget on a Windows client', () => {
   let restoreNavigator = (): void => {}
 
-  beforeEach(() => {
+  beforeAll(() => {
     vi.resetModules()
+  })
+
+  beforeEach(() => {
     restoreNavigator = setNavigatorUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
   })
 

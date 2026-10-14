@@ -20,7 +20,8 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { createServer } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
-import { runProcess, type ProcessResult } from '../../../src/shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
+import type { ProcessResult } from '@orca/process-host/process-spec'
 import { getE2ECompletedOnboardingProfile } from './e2e-completed-onboarding-profile'
 import { getOrcaElectronLaunchArgs } from './electron-launch-args'
 import { retryTransientMainEvaluate } from './electron-main-evaluate-retry'
@@ -102,12 +103,6 @@ function createRestartLaunchIsolation(
     inheritedEnv: cleanEnv,
     launchEnv: {
       NODE_ENV: 'development',
-      ...((process.env.ORCA_E2E_SSH_LOCALHOST === '1' ||
-        process.env.ORCA_E2E_SSH_DOCKER === '1' ||
-        process.env.ORCA_E2E_NESTED_RUNTIME_SSH === '1') &&
-      !cleanEnv.ORCA_RELAY_PATH
-        ? { ORCA_RELAY_PATH: path.join(process.cwd(), 'out', 'relay') }
-        : {}),
       ...extraEnv,
       ...(headful ? { ORCA_E2E_HEADFUL: '1' } : { ORCA_E2E_HEADLESS: '1' })
     },
@@ -264,7 +259,7 @@ export async function attachRepoAndOpenTerminal(page: Page, repoPath: string): P
             }
             // Why: repos.add emits a concurrent refresh whose generation can
             // supersede this fetch; poll until either refresh publishes the repo.
-            await store.getState().fetchRepos()
+            await store.getState().fetchRepos({ runtimeEnvironmentId: null, throwOnError: true })
             const repo = store.getState().repos.find((candidate) => candidate.id === repoId)
             if (!repo) {
               return false

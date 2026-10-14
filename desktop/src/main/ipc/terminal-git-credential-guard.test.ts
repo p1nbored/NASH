@@ -13,6 +13,14 @@ function expectGuarded(env: Record<string, string>): void {
 }
 
 describe('applyTerminalGitCredentialPromptGuard', () => {
+  it.each(['win32', 'darwin', 'linux'] as const)('guards a delayed agent on %s', (platform) => {
+    const env: Record<string, string> = {}
+    expect(
+      applyTerminalGitCredentialPromptGuard(env, { launchCommand: 'sleep 30 && claude', platform })
+    ).toBe(true)
+    expectGuarded(env)
+  })
+
   it('guards an agent terminal on every platform', () => {
     for (const platform of ['win32', 'darwin', 'linux'] as const) {
       const env: Record<string, string> = { PATH: '/usr/bin' }

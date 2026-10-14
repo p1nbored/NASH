@@ -6,6 +6,7 @@ import { prepareLoadedTerminalSettings } from './prepare-loaded-terminal-setting
 import { prepareLoadedProfileSettings } from './prepare-loaded-profile-settings'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { PersistedState } from '../../../shared/persisted-state-types'
+import { applyAgentPermissionMode } from '../../../shared/tui-agent-permissions'
 
 // Simulates a profile created before the dedicated Experimental switch was persisted.
 function normalizeLegacyProfile(overrides: Record<string, unknown>): PersistedState['settings'] {
@@ -42,6 +43,30 @@ describe('retired managed servers experiment', () => {
     expect(
       'experimentalManagedServers' in normalizeLegacyProfile({ experimentalManagedServers: true })
     ).toBe(false)
+  })
+})
+
+describe('retired chat default selectors', () => {
+  it('keeps Chat UI on while dropping both older keys from a saved profile', () => {
+    const normalized = normalizeLegacyProfile({
+      experimentalNativeChat: true,
+      experimentalStructuredNativeChat: false,
+      openAgentTabsInChatByDefault: true
+    })
+    expect(normalized.experimentalNativeChat).toBe(true)
+    expect(normalized).not.toHaveProperty('experimentalStructuredNativeChat')
+    expect(normalized).not.toHaveProperty('openAgentTabsInChatByDefault')
+  })
+
+  it('turns Chat UI off when new tabs opened in the terminal, dropping both older keys', () => {
+    const normalized = normalizeLegacyProfile({
+      experimentalNativeChat: true,
+      experimentalStructuredNativeChat: false,
+      openAgentTabsInChatByDefault: false
+    })
+    expect(normalized.experimentalNativeChat).toBe(false)
+    expect(normalized).not.toHaveProperty('experimentalStructuredNativeChat')
+    expect(normalized).not.toHaveProperty('openAgentTabsInChatByDefault')
   })
 })
 
@@ -99,5 +124,27 @@ describe('chat appearance settings', () => {
         nativeChatAppearance: { fontSize: 14, codeFontSize: 12, width: 'comfortable' }
       }).nativeChatAppearance
     ).toBeUndefined()
+  })
+})
+
+describe('the new-chat permission setting', () => {
+  it.each([
+    ['manual', 'ask'],
+    ['yolo', 'full-access']
+  ] as const)('seeds a profile without it from %s Agent Permissions', (mode, expected) => {
+    const normalized = normalizeLegacyProfile({
+      nativeChatPermissionMode: undefined,
+      ...applyAgentPermissionMode({ mode })
+    })
+    expect(normalized.nativeChatPermissionMode).toBe(expected)
+  })
+
+  // Seeded once: after the next save the setting is the user's, not a mirror of Agent Permissions.
+  it('keeps a saved value when Agent Permissions change afterwards', () => {
+    const normalized = normalizeLegacyProfile({
+      nativeChatPermissionMode: 'ask',
+      ...applyAgentPermissionMode({ mode: 'yolo' })
+    })
+    expect(normalized.nativeChatPermissionMode).toBe('ask')
   })
 })

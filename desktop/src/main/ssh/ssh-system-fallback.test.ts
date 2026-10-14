@@ -252,6 +252,12 @@ describe('spawnSystemSsh', () => {
     expect(args).toContain('ProxyCommand=ssh -W %h:%p bastion')
   })
 
+  it('pins LogLevel=INFO only where a caller reads channel failures from stderr', () => {
+    const quiet = buildSshArgs(createTarget(), { logChannelFailures: true })
+    expect(quiet.slice(0, quiet.indexOf('--'))).toContain('LogLevel=INFO')
+    expect(buildSshArgs(createTarget())).not.toContain('LogLevel=INFO')
+  })
+
   it('uses configHost without resolved field overrides so OpenSSH sees the Host block', () => {
     const args = buildSshArgs(
       createTarget({

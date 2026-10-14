@@ -7,6 +7,7 @@ import {
   encodeTerminalStreamJson,
   encodeTerminalStreamText
 } from '../../../../shared/terminal-stream-protocol'
+import { stubRuntimeEnvironmentBridge } from '../../runtime/runtime-environment-bridge-fixture'
 
 // Client-side wire regression: the host dimensions every snapshot it publishes,
 // but only the REQUESTED snapshot path ever read `cols`/`rows` back. Both PUSH
@@ -52,11 +53,7 @@ describe('remote transport snapshot source-grid threading', () => {
         return { unsubscribe: vi.fn(), sendBinary: subscriptionSendBinary }
       }
     )
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: { call: runtimeCall, subscribe: runtimeSubscribe }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall, subscribe: runtimeSubscribe })
   })
 
   it('carries the host grid on pushed snapshots and omits it when the host has none', async () => {

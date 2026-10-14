@@ -28,7 +28,7 @@ type IssueSourceActionsInput = Pick<
   | 'setReuseEligibleBranch'
   | 'setReuseSelectedBranch'
   | 'setStartFromResetHint'
-  | 'smartGitHubPrStartPointSelectionRef'
+  | 'smartSourceSelectionRef'
 >
 
 import { useCallback, useMemo } from 'react'
@@ -54,7 +54,7 @@ import {
   buildWorkspaceSourceSelection,
   shouldApplyWorkspaceSourceAutoName
 } from '../../../../shared/new-workspace/workspace-source'
-import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/SmartWorkspaceNameField'
+import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/smart-workspace-name-field-model'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 
 export function useIssueSourceActions(input: IssueSourceActionsInput) {
@@ -85,11 +85,12 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     setReuseEligibleBranch,
     setReuseSelectedBranch,
     setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
+    smartSourceSelectionRef
   } = input
 
   const handleSmartLinearIssueSelect = useCallback(
     (issue: LinearIssue): void => {
+      smartSourceSelectionRef.current = null
       if (isProjectGroupTarget) {
         const linkedItem = toLinearLinkedWorkItem(issue)
         setLinkedIssue('')
@@ -103,9 +104,10 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
         if (
           shouldApplyWorkspaceSourceAutoName({
             currentName: name,
-            lastAutoName: lastAutoNameRef.current
+            lastAutoName: lastAutoNameRef.current,
+            lookupTextIsQuery: !linkedWorkItem
           }) ||
-          name.trim().toLowerCase() === issue.identifier.toLowerCase()
+          (!linkedWorkItem && name.trim().toLowerCase() === issue.identifier.toLowerCase())
         ) {
           setName(suggestedName)
           lastAutoNameRef.current = suggestedName
@@ -124,9 +126,10 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
       if (
         shouldApplyWorkspaceSourceAutoName({
           currentName: name,
-          lastAutoName: lastAutoNameRef.current
+          lastAutoName: lastAutoNameRef.current,
+          lookupTextIsQuery: !linkedWorkItem
         }) ||
-        name.trim().toLowerCase() === issue.identifier.toLowerCase()
+        (!linkedWorkItem && name.trim().toLowerCase() === issue.identifier.toLowerCase())
       ) {
         setName(suggestedName)
         lastAutoNameRef.current = suggestedName
@@ -141,6 +144,7 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     [
       isProjectGroupTarget,
       name,
+      linkedWorkItem,
       branchAutoNameRef,
       lastAutoNameRef,
       setBranchNameOverride,
@@ -152,12 +156,14 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
       setLinkedPR,
       setLinkedTaskSourceContext,
       setLinkedWorkItem,
-      setName
+      setName,
+      smartSourceSelectionRef
     ]
   )
 
   const handleSmartJiraIssueSelect = useCallback(
     (issue: JiraIssue, sourceContext: TaskSourceContext): void => {
+      smartSourceSelectionRef.current = null
       const linkedItem: LinkedWorkItemSummary = buildJiraWorkspaceSource(issue)
       setLinkedIssue('')
       setLinkedPR(null)
@@ -182,7 +188,8 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
         suggestedName &&
         shouldApplyWorkspaceSourceAutoName({
           currentName: name,
-          lastAutoName: lastAutoNameRef.current
+          lastAutoName: lastAutoNameRef.current,
+          lookupTextIsQuery: !linkedWorkItem
         })
       ) {
         setName(suggestedName)
@@ -191,6 +198,7 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     },
     [
       name,
+      linkedWorkItem,
       baseBranchNamesWorkspace,
       branchAutoNameRef,
       lastAutoNameRef,
@@ -206,12 +214,13 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
       setLinkedTaskSourceContext,
       setLinkedWorkItem,
       setName,
-      setPushTarget
+      setPushTarget,
+      smartSourceSelectionRef
     ]
   )
 
   const handleClearSmartNameSelection = useCallback((): void => {
-    smartGitHubPrStartPointSelectionRef.current = null
+    smartSourceSelectionRef.current = null
     setLinkedIssue('')
     setLinkedPR(null)
     setLinkedGitLabIssue(null)
@@ -262,7 +271,7 @@ export function useIssueSourceActions(input: IssueSourceActionsInput) {
     setReuseEligibleBranch,
     setReuseSelectedBranch,
     setStartFromResetHint,
-    smartGitHubPrStartPointSelectionRef
+    smartSourceSelectionRef
   ])
 
   const smartNameSelection = useMemo<SmartWorkspaceNameSelection | null>(() => {

@@ -5,9 +5,12 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AgentSessionJournalIdentity } from '../../../shared/agent-session-journal-types'
 import type { AgentChildWorkView } from '../../../shared/agent-status-child-work-view'
+import type { AgentChildWorkEvidence } from '../../../shared/agent-status-child-work-evidence'
+import type { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import { createTrackedJournalOpener } from '../agent-session-journal/journal-host-database-test-support'
 import type { StructuredAgentSessionAdapter } from './structured-agent-session-adapter'
 import { performCancel, type AgentSessionTurnContext } from './structured-agent-session-turns'
+import { runTargetedCancel } from './structured-agent-session-targeted-cancel'
 import { createDeferredStructuredAgentSessionEventSink } from './structured-agent-session-event-sink'
 import { agentJournalItemKey } from '../../../shared/agent-session-journal-item-key'
 import { createStructuredAgentSessionLogger } from './structured-agent-session-logger'
@@ -207,7 +210,7 @@ describe('performCancel', () => {
       now: () => 1
     }
 
-    const result = await performCancel(ctx, {
+    const result = await runTargetedCancel(acceptedStop(ctx), {
       clientOperationId: 'cancel-background-tasks',
       turnId: 'background-tasks',
       scope: 'background-tasks',
@@ -222,7 +225,8 @@ describe('performCancel', () => {
     expect(stopBackgroundTasks).toHaveBeenCalledWith({
       sessionId: 'session-1',
       fence: 1,
-      taskIds: ['task-1']
+      taskIds: ['task-1'],
+      acknowledge: expect.any(Function)
     })
     expect(cancelTurn).not.toHaveBeenCalled()
     expect(journal.snapshot().items).toEqual([])
@@ -247,7 +251,7 @@ describe('performCancel', () => {
       now: () => 1
     }
 
-    const result = await performCancel(ctx, {
+    const result = await runTargetedCancel(acceptedStop(ctx), {
       clientOperationId: 'cancel-background-task-2',
       turnId: 'background-tasks',
       scope: 'background-tasks',
@@ -262,12 +266,164 @@ describe('performCancel', () => {
     expect(stopBackgroundTasks).toHaveBeenCalledWith({
       sessionId: 'session-1',
       fence: 1,
-      taskIds: ['task-2']
+      taskIds: ['task-2'],
+      acknowledge: expect.any(Function)
     })
     expect(cancelTurn).not.toHaveBeenCalled()
     expect(journal.snapshot().items).toEqual([])
   })
+
+  async function backgroundStopWith(
+    stopBackgroundTasks: StructuredAgentSessionAdapter['stopBackgroundTasks'],
+    operation: string,
+    acknowledgeStops?: (evidence: AgentChildWorkEvidence[]) => void,
+    /** An untargeted press, as production sends with unlisted work: `listed` is what the records list. */
+    untargeted?: {
+      unlisted: { present: () => boolean; stop: () => Promise<void> }
+      listed: AgentChildWorkView[]
+      onJournal?: (journal: AgentSessionJournal) => void
+    }
+  ) {
+    root = await mkdtemp(join(tmpdir(), 'orca-background-task-failed-cancel-'))
+    const journal = await journals.open({ identity: IDENTITY, stateDirectory: root })
+    untargeted?.onJournal?.(journal)
+    const cancelTurn = vi.fn(async () => ({ cancelled: true }))
+    const ctx: AgentSessionTurnContext = {
+      logger: createStructuredAgentSessionLogger(),
+      sessionId: 'session-1',
+      journal,
+      fence: 1,
+      agents: NO_STRUCTURED_AGENTS,
+      agent: 'codex',
+      adapter: { cancelTurn, stopBackgroundTasks } as unknown as StructuredAgentSessionAdapter,
+      persistOptions: async () => undefined,
+      resolvedBy: 'client-1',
+      publish: vi.fn(),
+      now: () => 1
+    }
+    const result = await runTargetedCancel(acceptedStop(ctx), {
+      clientOperationId: operation,
+      turnId: 'background-tasks',
+      scope: 'background-tasks',
+      ...(untargeted
+        ? { unlisted: untargeted.unlisted, childWork: () => untargeted.listed }
+        : { taskId: 'task-1', childWork: () => [liveTask('task-1')] }),
+      ...(acknowledgeStops ? { acknowledgeStops } : {})
+    })
+    expect(cancelTurn).not.toHaveBeenCalled()
+    return { result, items: journal.snapshot().items }
+  }
+
+  it('ends the agent for unlisted work only when, after the listed stops, no turn runs', async () => {
+    const stop = vi.fn(async () => {})
+    // Unlisted work is read inside the Stop's step: here it appears while the listed stop is out.
+    let incomplete = false
+    const atRest = await backgroundStopWith(
+      async () => {
+        incomplete = true
+        return { cancelled: false }
+      },
+      'cancel-background-unlisted',
+      undefined,
+      { unlisted: { present: () => incomplete, stop }, listed: [liveTask('task-1')] }
+    )
+    expect(atRest.result).toEqual({
+      ok: true,
+      value: { turnId: 'background-tasks', cancelled: true }
+    })
+    expect(atRest.items).toEqual([])
+    expect(stop).toHaveBeenCalledOnce()
+
+    // A turn the agent opens while the listed stops are out is not the Stop's to end.
+    let journal: AgentSessionJournal | undefined
+    const woke = await backgroundStopWith(
+      async () => {
+        await journal!.appendItem(
+          {
+            provider: 'legacy',
+            agent: 'codex',
+            sessionId: 'session-1',
+            recordId: 'turn-lifecycle:woke'
+          },
+          {
+            kind: 'status',
+            text: 'Agent is working…',
+            turnLifecycle: { turnId: 'woke', state: 'running' }
+          },
+          { fence: 1, turnScope: AGENT_JOURNAL_THREAD_SCOPE }
+        )
+        return { cancelled: false }
+      },
+      'cancel-background-unlisted-woke',
+      undefined,
+      {
+        unlisted: { present: () => true, stop },
+        listed: [liveTask('task-1')],
+        onJournal: (opened) => (journal = opened)
+      }
+    )
+    expect(woke.result).toEqual({
+      ok: true,
+      value: { turnId: 'background-tasks', cancelled: false }
+    })
+    // Only what the agent itself wrote is there.
+    expect(woke.items).toHaveLength(1)
+    expect(stop).toHaveBeenCalledOnce()
+  })
+
+  it('ends the agent for unlisted work with nothing listed, never asking an agent that has no stop', async () => {
+    const stop = vi.fn(async () => {})
+    // As an ACP agent with no cancellation route answers any stop.
+    const stopBackgroundTasks = vi.fn(async () => {
+      throw new Error('ACP child cancellation is unavailable')
+    })
+    const { result, items } = await backgroundStopWith(
+      stopBackgroundTasks,
+      'cancel-background-unlisted-acp',
+      undefined,
+      {
+        unlisted: { present: () => true, stop },
+        listed: []
+      }
+    )
+    expect(result).toEqual({ ok: true, value: { turnId: 'background-tasks', cancelled: true } })
+    expect(items).toEqual([])
+    expect(stopBackgroundTasks).not.toHaveBeenCalled()
+    expect(stop).toHaveBeenCalledOnce()
+  })
+
+  it('ends a run the agent accepted the stop of, even when a later stop in the batch fails', async () => {
+    const acknowledgeStops = vi.fn()
+    const { result, items } = await backgroundStopWith(
+      async ({ acknowledge }) => {
+        acknowledge?.({ taskId: 'task-1' })
+        throw new Error('claude control request timed out')
+      },
+      'cancel-background-task-partial',
+      acknowledgeStops
+    )
+
+    // Saved first, so the timeout comes back as the unconfirmed note, never a refusal.
+    expect(result).toEqual({ ok: true, value: { turnId: 'background-tasks', cancelled: false } })
+    expect(items).toHaveLength(1)
+    expect(acknowledgeStops).toHaveBeenCalledWith([
+      expect.objectContaining({ type: 'stop-acknowledged', childWorkId: 'child-task-1' })
+    ])
+  })
 })
+
+/** A Stop whose receipt is already saved, as the receipt runner hands a background Stop. */
+function acceptedStop(ctx: AgentSessionTurnContext): AgentSessionTurnContext {
+  return {
+    ...ctx,
+    operationReceipt: {
+      write: () => {},
+      committed: () => {},
+      isCommitted: () => true,
+      commitAlone: async () => {}
+    }
+  }
+}
 
 /** A live child record the strip would offer a stop, named by the provider as `providerId`. */
 function liveTask(

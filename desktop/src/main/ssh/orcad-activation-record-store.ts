@@ -5,7 +5,7 @@
  * unreadable record must fail loudly in both: treating "I cannot parse this" as "nothing is
  * activated" would deploy over a live install and lose its rollback target.
  */
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { RELAY_REMOTE_DIR } from './relay-protocol'
 import {
   ORCAD_ACTIVATION_FILENAME,
@@ -24,7 +24,7 @@ import {
 const ORCAD_ACTIVATION_RECORD_MAX_BYTES = 64 * 1024
 
 type ActivationRecordTarget = {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   remoteHome: string
   signal?: AbortSignal

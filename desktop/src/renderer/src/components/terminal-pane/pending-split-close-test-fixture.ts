@@ -20,7 +20,7 @@ vi.mock('react', () => ({
   useImperativeHandle: () => {},
   useRef: (current: unknown) => ({ current })
 }))
-vi.mock('../../runtime/web-runtime-session', () => ({ closeWebRuntimeTerminal: vi.fn() }))
+vi.mock('../../runtime/web-runtime-terminal-actions', () => ({ closeWebRuntimeTerminal: vi.fn() }))
 vi.mock('../../runtime/sync-runtime-graph', () => ({ scheduleRuntimeGraphSync: vi.fn() }))
 vi.mock('../terminal/terminal-close-copy-kind', () => ({ resolveLeafCloseCopyKind: vi.fn() }))
 vi.mock('../terminal/running-terminal-close-guard', () => ({ RUNNING_CLOSE_PROBE_TIMEOUT_MS: 100 }))

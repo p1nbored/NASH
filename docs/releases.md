@@ -1,5 +1,19 @@
 # Releases and verification
 
+## v1.4.219 — 2026-10-14
+
+[Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.219).
+
+- Synchronizes Orca through `75513668fb20442f23a9ab530adb3cf628bce747`, preserving NASH identity, Workbench, Dot and permissions.
+- Expands task routing and new coordinators to ten existing CLI adapters, with model selection and supported effort choices. Configuration does not require the CLI to be installed locally.
+- Adds `gemini-4-argon` to Gemini CLI's model catalog. Gemini CLI uses its own thinking configuration; AGY effort choices select the corresponding listed model variant.
+- Shares model/effort lookup and the native coordinator launch path, removing duplicate validation and fallback branches.
+- Migrates v2/v3 workflow databases to v4 while preserving existing records and saved routing tables.
+
+Verification covers Node/CLI/Web types, routing, native launch arguments, workflow/database migration, renderer interactions in both themes, localization and isolated hidden Electron startup. Real provider tasks have not been run. Per-CLI effort and read-only limits are in the [operations guide](nash-operations.md).
+
+Windows assets are `nash-windows-setup.exe`, its `.blockmap`, `latest.yml`, and `SHA256SUMS.txt`. The installer is unsigned. No macOS/Linux installer is published in this release.
+
 ## v1.4.218 — 2026-10-09
 
 [Windows x64 release](https://github.com/p1nbored/NASH/releases/tag/v1.4.218).

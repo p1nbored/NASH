@@ -4,9 +4,8 @@ import { join } from 'node:path'
 import type { Server } from 'node:net'
 import type { EventEmitter } from 'node:events'
 import { PassThrough } from 'node:stream'
-import type { ClientChannel } from 'ssh2'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { OrcadStdioBridgeUnavailableError } from './orcad-host-unavailable'
+import { OrcadStdioBridgeUnavailableError } from '../orcad/orcad-host-unavailable'
 import { checkOrcadStdioBridge, type OrcadStdioBridge } from './orcad-stdio-bridge'
 import {
   orcadPosixStdioBridgeCommand,
@@ -15,7 +14,8 @@ import {
 import { OrcadStdioBridgeBase64Encoder, OrcadStdioBridgeDecoder } from './orcad-stdio-bridge-stream'
 import { spawnLocalBridgeChannel, startEchoServer } from './orcad-stdio-bridge-test-channel'
 import { ORCAD_WINDOWS_HOST_SCRIPT } from './orcad-windows-host-script'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
+import type { RemoteCommandChannel } from './remote-install-transport'
 
 const POSIX = process.platform !== 'win32'
 let echo: { server: Server; port: number }
@@ -34,7 +34,10 @@ afterAll(() => {
 /** Every byte value, so a text layer anywhere in the path would show. */
 const PAYLOAD = Buffer.from(Array.from({ length: 4096 }, (_, index) => index % 256))
 
-async function roundTrip(channel: ClientChannel, mode: OrcadStdioBridgeMode): Promise<Buffer> {
+async function roundTrip(
+  channel: RemoteCommandChannel,
+  mode: OrcadStdioBridgeMode
+): Promise<Buffer> {
   const decoder = new OrcadStdioBridgeDecoder(mode)
   channel.pipe(decoder)
   const input = mode === 'base64' ? new OrcadStdioBridgeBase64Encoder() : new PassThrough()
@@ -67,9 +70,9 @@ function posixHome(withRuntime: boolean): string {
   return home
 }
 
-function connectionRunning(channel: () => ClientChannel): SshConnection {
+function connectionRunning(channel: () => RemoteCommandChannel): OrcadHostTransport {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the check calls only exec.
-  return { exec: async () => channel() } as unknown as SshConnection
+  return { exec: async () => channel() } as unknown as OrcadHostTransport
 }
 
 const posixBridge = (port: number): OrcadStdioBridge => ({
@@ -164,13 +167,13 @@ describe('reading a bridge channel', () => {
 })
 
 /** A channel the test drives by hand. */
-function scriptedChannel(): ClientChannel & EventEmitter & { stderr: PassThrough } {
+function scriptedChannel(): RemoteCommandChannel & EventEmitter & { stderr: PassThrough } {
   const channel = Object.assign(new PassThrough(), {
     stderr: new PassThrough(),
     close: () => {}
   })
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the check uses only the stream, `stderr`, `close`, and events.
-  return channel as unknown as ClientChannel & EventEmitter & { stderr: PassThrough }
+  return channel as unknown as RemoteCommandChannel & EventEmitter & { stderr: PassThrough }
 }
 
 describe('checking a bridge before the tunnel relies on it', () => {
@@ -227,7 +230,7 @@ describe('checking a bridge before the tunnel relies on it', () => {
       exec: async () => {
         throw new Error('open failed')
       }
-    } as unknown as SshConnection
+    } as unknown as OrcadHostTransport
     await expect(checkOrcadStdioBridge(conn, posixBridge(1))).resolves.toBe('unverifiable')
   })
 })

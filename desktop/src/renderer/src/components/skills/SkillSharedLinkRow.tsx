@@ -87,7 +87,7 @@ export function SkillSharedLinkRow({
         toast.error(
           translate(
             'auto.components.skills.SkillSharedLinkRow.deleteFailed',
-            'NASH could not delete this from Orca Cloud.'
+            'NASH could not delete this from NASH Cloud.'
           )
         )
         return

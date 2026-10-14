@@ -1,6 +1,10 @@
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('./ssh-relay-deploy-helpers', () => ({ execCommand: vi.fn() }))
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
+  execCommand: vi.fn()
+}))
 vi.mock('./ssh-relay-install-lock', () => ({
   acquireInstallLock: vi.fn().mockResolvedValue(undefined),
   RELAY_INSTALL_LOCK_NAME: '.install-lock'
@@ -13,8 +17,8 @@ vi.mock('./orcad-remote-node-runtime', () => ({
   ensureRemoteOrcadNodeRuntime: vi.fn().mockResolvedValue(undefined)
 }))
 
-import type { SshConnection } from './ssh-connection'
-import { execCommand } from './ssh-relay-deploy-helpers'
+import type { OrcadHostTransport } from './orcad-host-transport'
+import { execCommand } from './ssh-relay-exec-command'
 import { uploadRelayDirectory, writeRelayFile } from './ssh-relay-install-transfers'
 import { installOrcadBundle } from './orcad-remote-install'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
@@ -29,7 +33,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: All connection operations are mocked.
-const conn = {} as SshConnection
+const conn = {} as OrcadHostTransport
 const mockExec = vi.mocked(execCommand)
 const mockUpload = vi.mocked(uploadRelayDirectory)
 const mockWrite = vi.mocked(writeRelayFile)

@@ -27,6 +27,7 @@ import { createBrowserSlice } from './slices/browser'
 import { createRateLimitSlice } from './slices/rate-limits'
 import { createSshSlice } from './slices/ssh'
 import { createRuntimeEnvironmentSshSlice } from './slices/runtime-environment-ssh'
+import { createWslHostsSlice } from './slices/wsl-hosts'
 import { createAgentStatusSlice } from './slices/agent-status'
 import { createPaneForegroundAgentSlice } from './slices/pane-foreground-agent'
 import { createDiffCommentsSlice } from './slices/diffComments'
@@ -49,7 +50,7 @@ import { createRemoteServerUpdatesSlice } from './slices/remote-server-updates'
 import { createTerminalQuickCommandHostsSlice } from './slices/terminal-quick-command-hosts'
 import { createStructuredSessionLaunchDirectorySlice } from './slices/structured-session-launch-directories'
 import { e2eConfig } from '@/lib/e2e-config'
-import type { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-session'
+import type { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-terminal-creation'
 import {
   registerHttpLinkStoreAccessor,
   registerWorkspaceHttpLinkBrowserOpener
@@ -63,6 +64,7 @@ import {
   summarizeStateCollectionSizes
 } from '@/lib/renderer-memory-profile'
 import { estimateStateCollectionKB } from '@/lib/state-collection-byte-estimate'
+import { registerWindowsPathAccessEnvironments } from '@/lib/windows-path-access'
 
 // Why dev-only: nothing in the app arms the churn probe, so a shipped build would
 // pay its wrapper frame on every write for a diagnostic it can never read. The
@@ -105,6 +107,7 @@ export const useAppStore = create<AppState>()(
         ...createRateLimitSlice(...a),
         ...createSshSlice(...a),
         ...createRuntimeEnvironmentSshSlice(...a),
+        ...createWslHostsSlice(...a),
         ...createAgentStatusSlice(...a),
         ...createPaneForegroundAgentSlice(...a),
         ...createDiffCommentsSlice(...a),
@@ -132,6 +135,7 @@ export const useAppStore = create<AppState>()(
 )
 
 registerHttpLinkStoreAccessor(() => useAppStore.getState())
+registerWindowsPathAccessEnvironments(() => useAppStore.getState().runtimeEnvironments)
 registerWorkspaceHttpLinkBrowserOpener(async (request) => {
   const { openWorkspaceBrowserTab } = await import('@/lib/workspace-browser-tab-open')
   await openWorkspaceBrowserTab(request)
@@ -161,7 +165,9 @@ if ((import.meta.env.DEV || e2eConfig.exposeStore) && typeof window !== 'undefin
   if (e2eConfig.exposeStore) {
     testWindow.__webRuntimeSessionE2E = {
       createTerminal: async (args: Parameters<typeof createWebRuntimeSessionTerminal>[0]) =>
-        (await import('@/runtime/web-runtime-session')).createWebRuntimeSessionTerminal(args)
+        (await import('@/runtime/web-runtime-terminal-creation')).createWebRuntimeSessionTerminal(
+          args
+        )
     }
   }
 }

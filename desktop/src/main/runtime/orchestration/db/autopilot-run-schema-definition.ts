@@ -1,3 +1,4 @@
+import { ROUTING_AGENTS } from '../../../../shared/routing-table/routing-cli-registry'
 // Run, owner and permission tables of the autopilot_runtime_schema family (D-016 plan 1.2).
 // Orca ids are kept as plain text with no foreign key to an Orca table, because Orca's reset deletes those rows.
 import {
@@ -77,7 +78,7 @@ export const AUTOPILOT_RUN_SCHEMA_DEFINITIONS = [
       requested_access TEXT NOT NULL CHECK (requested_access IN (${sqlStringList(WORKFLOW_RUN_ACCESS_LEVELS)})),
       routing_table_version INTEGER NOT NULL CHECK (routing_table_version > 0),
       routing_table_sha256 TEXT NOT NULL CHECK (length(routing_table_sha256) = 64),
-      coordinator_agent TEXT NOT NULL DEFAULT 'claude' CHECK (coordinator_agent IN ('claude', 'codex')),
+      coordinator_agent TEXT NOT NULL DEFAULT 'claude' CHECK (coordinator_agent IN (${sqlStringList(ROUTING_AGENTS)})),
       coordinator_model TEXT NOT NULL CHECK (length(coordinator_model) BETWEEN 1 AND 128),
       coordinator_effort TEXT NOT NULL CHECK (coordinator_effort IN (${sqlStringList(AUTOPILOT_EFFORT_LEVELS)})),
       end_reason TEXT CHECK (end_reason IS NULL OR length(end_reason) BETWEEN 1 AND 64),

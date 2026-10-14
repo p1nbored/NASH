@@ -1,6 +1,7 @@
 import type { AppState } from '../../../types'
 import type { EditorSlice } from '../types/editor-slice'
-import type { DiffSource, EditorOpenTargetOptions, OpenFile } from '../types/open-file'
+import type { EditorOpenTargetOptions, OpenFile } from '../types/open-file'
+import type { DiffSource } from '../../../../../../shared/editor-tab-view-types'
 import { toSshExecutionHostId } from '../../../../../../shared/execution-host'
 import { areLocalWindowsWslPathAliases } from '../../../../../../shared/cross-platform-path'
 import { getConnectionIdForFileFromState } from '@/lib/connection-owner-resolution'

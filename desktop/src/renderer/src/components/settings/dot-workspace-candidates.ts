@@ -1,7 +1,5 @@
-import {
-  getKnownExecutionHostIdForWorktree,
-  type WorktreeRuntimeOwnerState
-} from '@/lib/worktree-runtime-owner'
+import { getKnownExecutionHostIdForWorktree } from '@/lib/worktree-runtime-owner'
+import type { WorktreeRuntimeOwnerState } from '@/lib/worktree-runtime-owner-state'
 import { DOT_WORKSPACE_LABEL_MAX_CHARS } from '../../../../shared/dot-ingress/dot-ingress-limits'
 import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import type { Repo } from '../../../../shared/repo-types'

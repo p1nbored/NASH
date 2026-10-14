@@ -1,10 +1,8 @@
-import { getCommandTokenPathBasename, getFirstCommandToken } from './command-token-scanner'
 import type { TuiAgent } from './tui-agent'
+import { getAgentLaunchExecutableName } from './agent-command-line-intent'
 
 function openCodeCommandAgent(launchCommand: string | undefined): 'opencode' | 'opencode2' | null {
-  const binary = getCommandTokenPathBasename(getFirstCommandToken(launchCommand ?? ''))
-    .toLowerCase()
-    .replace(/\.(?:cmd|exe|sh)$/, '')
+  const binary = getAgentLaunchExecutableName(launchCommand)
   return binary === 'opencode' || binary === 'opencode2' ? binary : null
 }
 

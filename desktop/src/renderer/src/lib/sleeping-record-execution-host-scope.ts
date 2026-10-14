@@ -4,10 +4,8 @@ import {
   toSshExecutionHostId,
   type ExecutionHostId
 } from '../../../shared/execution-host'
-import {
-  getKnownExecutionHostIdForWorktree,
-  type WorktreeRuntimeOwnerState
-} from './worktree-runtime-owner'
+import { getKnownExecutionHostIdForWorktree } from './worktree-runtime-owner'
+import type { WorktreeRuntimeOwnerState } from './worktree-runtime-owner-state'
 
 /**
  * Does this record's `--resume` locator belong to a different machine than the one the resume would

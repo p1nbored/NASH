@@ -118,6 +118,39 @@ describe('worktree list folder reveal', () => {
       )
     ).toEqual([getProjectGroupHeaderKey(root.id), getProjectGroupHeaderKey(child.id)])
   })
+
+  it.each(['local', 'ssh:builder', 'runtime:builder'] as const)(
+    'expands only the %s owner when folder and group ids repeat across hosts',
+    (executionHostId) => {
+      const otherHostId = executionHostId === 'local' ? 'runtime:other' : 'local'
+      const root = makeProjectGroup({ id: 'selected-root', executionHostId })
+      const child = makeProjectGroup({
+        id: 'group-child',
+        parentGroupId: root.id,
+        executionHostId
+      })
+      const otherRoot = makeProjectGroup({ id: 'other-root', executionHostId: otherHostId })
+      const otherChild = makeProjectGroup({
+        id: child.id,
+        parentGroupId: otherRoot.id,
+        executionHostId: otherHostId
+      })
+      const folderWorkspace = makeFolderWorkspace({ executionHostId })
+
+      expect(
+        getFolderWorkspaceRevealGroupKeys(
+          folderWorkspaceKey(folderWorkspace.id),
+          [{ ...folderWorkspace, executionHostId: otherHostId }, folderWorkspace],
+          [root, child, otherRoot, otherChild],
+          { executionHostId, defaultHostId: 'local' }
+        )
+      ).toEqual([
+        getProjectGroupHeaderKey(root.id),
+        getProjectGroupHeaderKey(child.id),
+        `host:${executionHostId}`
+      ])
+    }
+  )
 })
 
 describe('reveal keys under non-repo grouping', () => {

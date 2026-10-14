@@ -7,6 +7,7 @@ import {
   type BackgroundMountTerminalWorktreeDetail,
   type WakeHibernatedAgentsWorktreeDetail
 } from '@/constants/terminal'
+import { listenForHibernatedAgentWake } from '@/components/terminal-pane/hibernated-agent-wake-listener'
 import type { ResumeSleepingAgentSessionsOptions } from './resume-sleeping-agent-session'
 
 const resumeSpy = vi.fn<
@@ -379,21 +380,24 @@ describe('wakeSleepingAgentsForWorktreeInBackground', () => {
     )
   })
 
-  it('passes claims consumed by mounted panes to the generic resume as skipClaimKeys', () => {
+  it('wakes mounted panes through the real pane listener and skips their claims', () => {
     sleepingRecords = { k1: { worktreeId: 'wt-1', paneKey: 'tab-a:leaf-1', tabId: 'tab-a' } }
     isPassiveSpy.mockReturnValue(false)
-    // A mounted pane consuming the in-place wake adds its claim key to the
-    // event detail — exactly what use-terminal-pane-lifecycle does.
-    const onWake = (event: Event): void => {
-      ;(event as CustomEvent<WakeHibernatedAgentsWorktreeDetail>).detail.wokenClaimKeys?.add(
-        'claim-1'
-      )
-    }
-    window.addEventListener(WAKE_HIBERNATED_AGENTS_WORKTREE_EVENT, onWake)
+    const wakeHibernatedAgentIfArmed = vi.fn(() => 'claim-1')
+    const otherWorktreeWake = vi.fn(() => 'claim-other')
+    const stopListening = listenForHibernatedAgentWake('wt-1', () => [
+      { dispose: () => {}, wakeHibernatedAgentIfArmed }
+    ])
+    const stopOtherListening = listenForHibernatedAgentWake('wt-2', () => [
+      { dispose: () => {}, wakeHibernatedAgentIfArmed: otherWorktreeWake }
+    ])
 
     wakeSleepingAgentsForWorktreeInBackground('wt-1')
 
-    window.removeEventListener(WAKE_HIBERNATED_AGENTS_WORKTREE_EVENT, onWake)
+    stopListening()
+    stopOtherListening()
+    expect(wakeHibernatedAgentIfArmed).toHaveBeenCalledTimes(1)
+    expect(otherWorktreeWake).not.toHaveBeenCalled()
     const options = resumeSpy.mock.calls[0]?.[1]
     expect(options?.skipClaimKeys?.has('claim-1')).toBe(true)
   })

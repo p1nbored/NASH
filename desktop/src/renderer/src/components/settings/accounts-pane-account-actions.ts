@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import type { FeatureInteractionId } from '../../../../shared/feature-interaction-catalog'
 import type {
   ClaudeRateLimitAccountsState,
@@ -32,6 +33,8 @@ import { getClaudeAccountLabel } from './accounts-pane-runtime'
 
 type CodexActionContext = {
   settings: GlobalSettings
+  /** Host whose roster the action writes. */
+  accountOwner: RuntimeClientTarget
   accountRuntime: LocalAccountRuntime
   isRemoteAccountScope: boolean
   codexAccounts: CodexRateLimitAccountsState
@@ -40,15 +43,19 @@ type CodexActionContext = {
   setCodexAction: Dispatch<SetStateAction<CodexAccountAction>>
   fetchSettings: () => Promise<void>
   recordFeatureInteraction: (featureId: FeatureInteractionId) => void
+  /** False once the pane shows a different account owner than this action targeted. */
+  isCurrentAccountOwner: () => boolean
 }
 
 export function createCodexAccountActionRunner(
   context: CodexActionContext
 ): CodexAccountActionRunner {
   const {
+    accountOwner,
     accountRuntime,
     codexAccounts,
     fetchSettings,
+    isCurrentAccountOwner,
     isRemoteAccountScope,
     recordFeatureInteraction,
     setCodexAccounts,
@@ -56,8 +63,11 @@ export function createCodexAccountActionRunner(
     setCodexAction
   } = context
   const syncCodexAccounts = async (next: CodexRateLimitAccountsState): Promise<void> => {
-    setCodexAccounts(next)
-    setCodexAccountsLoaded(true)
+    // Why: only the roster is the shown owner's; the toast and follow-up still describe this action.
+    if (isCurrentAccountOwner()) {
+      setCodexAccounts(next)
+      setCodexAccountsLoaded(true)
+    }
     // Why: remote mutations never change local GlobalSettings account fields.
     if (!isRemoteAccountScope) {
       await fetchSettings()
@@ -112,6 +122,7 @@ export function createCodexAccountActionRunner(
           nextAccountId: nextActiveAccountId ?? null,
           // Why: the mutation wrote this row's slot only, so panes on any other
           // lane still launch under the account they already had.
+          owner: accountOwner,
           target: addedAccount ? getProviderAccountRuntime(addedAccount) : actionRuntime,
           // Why: clearing a distro-less WSL row nulls every distro slot at once.
           clearsEveryWslDistro: action === 'select:system'
@@ -147,6 +158,8 @@ type ClaudeActionContext = {
   setClaudeAction: Dispatch<SetStateAction<ClaudeAccountAction>>
   fetchSettings: () => Promise<void>
   recordFeatureInteraction: (featureId: FeatureInteractionId) => void
+  /** False once the pane shows a different account owner than this action targeted. */
+  isCurrentAccountOwner: () => boolean
 }
 
 export function createClaudeAccountActionRunner(
@@ -156,13 +169,16 @@ export function createClaudeAccountActionRunner(
     accountRuntime,
     claudeAccounts,
     fetchSettings,
+    isCurrentAccountOwner,
     isRemoteAccountScope,
     recordFeatureInteraction,
     setClaudeAccounts,
     setClaudeAction
   } = context
   const syncClaudeAccounts = async (next: ClaudeRateLimitAccountsState): Promise<void> => {
-    setClaudeAccounts(next)
+    if (isCurrentAccountOwner()) {
+      setClaudeAccounts(next)
+    }
     if (!isRemoteAccountScope) {
       await fetchSettings()
     }

@@ -1,26 +1,24 @@
 import type { DirectSshAuthority } from '../../shared/ssh-types'
-import type { SshConnection } from '../ssh/ssh-connection'
-import type { SshRelaySession } from '../ssh/ssh-relay-session'
 import { getSshTargetRegistryStore } from '../ssh/ssh-target-registry'
 import { clearSshHostServerStatus } from '../ssh/ssh-host-server-status'
 import { isSshConnectionSolelyOwnedBy } from '../ssh/ssh-connection-attribution'
-import { activeSessions } from './ssh-active-relay-sessions'
 import {
   connectInFlight,
   invalidateConnectAttempt,
   isCurrentConnectAttempt
 } from './ssh-connect-attempt-registry'
 import { connectionManager, persistedStore, portForwardManager } from './ssh-ipc-context'
-import { clearRelayLostBackoff } from './ssh-relay-lost-backoff'
-import { clearRelayStateOverride } from './ssh-renderer-broadcast'
 import { runTargetLifecycle } from './ssh-target-lifecycle-queue'
+import { errorMessage } from '../../shared/error-message'
+import {
+  forgetLegacyRelayTarget,
+  stopLegacyRelayBridge
+} from '../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
 
 export async function disconnectRegisteredSshTarget(targetId: string): Promise<void> {
   invalidateConnectAttempt(targetId)
   clearSshHostServerStatus(targetId)
-  await runTargetLifecycle(targetId, () =>
-    teardownSshTargetTransport(targetId, (session) => session.detachAndPersist())
-  )
+  await runTargetLifecycle(targetId, () => teardownSshTargetTransport(targetId))
 }
 
 export async function removeRegisteredSshTarget(targetId: string): Promise<void> {
@@ -32,15 +30,13 @@ export async function removeRegisteredSshTarget(targetId: string): Promise<void>
   clearSshHostServerStatus(targetId)
   await runTargetLifecycle(targetId, async () => {
     try {
-      // Why: removal is destructive; dispose so remote PTYs cannot reattach to a deleted target.
-      await teardownSshTargetTransport(targetId, (session) => session.disposeAndPersist())
+      await teardownSshTargetTransport(targetId)
     } catch (err) {
       // Why: a failed disconnect must not block metadata removal, else the target lingers in the store with uncleaned leases.
-      console.warn(
-        `[ssh] Failed to disconnect removed target ${targetId}: ${err instanceof Error ? err.message : String(err)}`
-      )
+      console.warn(`[ssh] Failed to disconnect removed target ${targetId}: ${errorMessage(err)}`)
     }
     persistedStore?.removeSshRemotePtyLeases(targetId)
+    forgetLegacyRelayTarget(targetId)
     store.removeTarget(targetId)
     // Why: removal is the storage boundary — the target's browser cookie jars
     // must not outlive the record that scoped them.
@@ -59,119 +55,26 @@ export async function removeRegisteredSshTarget(targetId: string): Promise<void>
       await storage.clearBrowserRoutePartitionStorageForLocalSshTarget(targetId)
     } catch (error) {
       console.warn(
-        `[ssh] Failed to clear browser partitions for removed target ${targetId}: ${error instanceof Error ? error.message : String(error)}`
+        `[ssh] Failed to clear browser partitions for removed target ${targetId}: ${errorMessage(error)}`
       )
     }
   })
 }
 
-export async function teardownSshTargetTransport(
-  targetId: string,
-  teardown: (session: SshRelaySession) => void | Promise<void>
-): Promise<void> {
-  let transportDisconnect: Promise<{ ok: true } | { ok: false; error: unknown }>
-  try {
-    transportDisconnect = Promise.resolve(connectionManager?.disconnect(targetId)).then(
-      () => ({ ok: true }) as const,
-      (error: unknown) => ({ ok: false, error }) as const
-    )
-  } catch (error) {
-    transportDisconnect = Promise.resolve({ ok: false, error })
-  }
-  const sessionTeardown = teardownActiveSshSession(targetId, teardown).then(
-    () => ({ ok: true }) as const,
-    (error: unknown) => ({ ok: false, error }) as const
-  )
-  const [disconnectResult, teardownResult] = await Promise.all([
-    transportDisconnect,
-    sessionTeardown
+export async function teardownSshTargetTransport(targetId: string): Promise<void> {
+  // COMPAT(legacy-relay-bridge): hangs up only this client; the relays keep their terminals.
+  stopLegacyRelayBridge(targetId)
+  // Why first: local listeners must be released before disconnect completes, else an immediate
+  // reconnect hits EADDRINUSE.
+  const [forwards, disconnect] = await Promise.allSettled([
+    portForwardManager?.removeAllForwards(targetId),
+    (async () => connectionManager?.disconnect(targetId))()
   ])
-  if (!teardownResult.ok) {
-    throw teardownResult.error
+  if (forwards.status === 'rejected') {
+    throw forwards.reason
   }
-  if (!disconnectResult.ok) {
-    throw disconnectResult.error
-  }
-}
-
-export async function teardownActiveSshSession(
-  targetId: string,
-  teardown: (session: SshRelaySession) => void | Promise<void>
-): Promise<void> {
-  const session = activeSessions.get(targetId)
-  if (!session) {
-    return
-  }
-  let teardownError: { error: unknown } | null = null
-  try {
-    // Why: await port teardown so local listeners are released before disconnect/remove completes, else an immediate reconnect hits EADDRINUSE.
-    await portForwardManager?.removeAllForwards(targetId)
-  } catch (error) {
-    teardownError = { error }
-  }
-  try {
-    await teardown(session)
-  } catch (error) {
-    teardownError ??= { error }
-  }
-  if (activeSessions.get(targetId) === session) {
-    activeSessions.delete(targetId)
-    clearRelayLostBackoff(targetId)
-    clearRelayStateOverride(targetId)
-  }
-  if (teardownError) {
-    throw teardownError.error
-  }
-}
-
-// Why: a dropped session must detach, not just leave activeSessions — detach releases the SSH PTY
-// consumer identity so the next connect reclaims its owner lease instead of minting a new one.
-// Why awaited, and why the map entry outlives the await: a retry can start the moment this returns,
-// so it must either find the session (and await this same latched teardown at the existing-session
-// path) or find nothing because the 'detached' lease write is already durable. Deleting first lets a
-// fast reconnect mark leases 'attached' and then have this session's late 'detached' write clobber it.
-export async function abandonFailedSshSession(
-  targetId: string,
-  session: SshRelaySession
-): Promise<void> {
-  // Why: detachAndPersist transitions recovery ownership synchronously; only durability is awaited.
-  try {
-    await session.detachAndPersist()
-  } catch (error) {
-    // Why: a teardown throw must not mask the connect error the caller is about to rethrow.
-    console.warn(
-      `[ssh] Failed to detach abandoned session for ${targetId}: ${error instanceof Error ? error.message : String(error)}`
-    )
-  }
-  if (activeSessions.get(targetId) === session) {
-    activeSessions.delete(targetId)
-  }
-}
-
-// Why: a connect cancelled after its transport already opened still owns that transport and its
-// unpublished session — nothing else will reach them, so it has to close them itself. Why only the
-// connection it minted, and by identity: disconnecting by target id (or closing a transport it merely
-// reused) would tear down the replacement connect's live transport.
-export async function abandonCancelledConnectAttempt(
-  targetId: string,
-  session: SshRelaySession,
-  mintedConnection: SshConnection | null
-): Promise<void> {
-  // Why the identity guard: every path that removes a session from activeSessions detaches it first,
-  // so re-detaching a superseded session would only clobber the replacement's lease state.
-  if (activeSessions.get(targetId) === session) {
-    await abandonFailedSshSession(targetId, session)
-  }
-  if (!mintedConnection) {
-    return
-  }
-  try {
-    await connectionManager!.disconnectConnection(targetId, mintedConnection)
-  } catch (error) {
-    // Why: the caller is about to throw the cancellation; a teardown throw must not replace it.
-    console.warn(
-      `[ssh] Failed to disconnect cancelled connect transport for ${targetId}: ${error instanceof Error ? error.message : String(error)}`
-    )
+  if (disconnect.status === 'rejected') {
+    throw disconnect.reason
   }
 }
 
@@ -198,12 +101,13 @@ export async function abandonDecisionTransport(
   ) {
     return
   }
+  stopLegacyRelayBridge(targetId)
   try {
     await connectionManager!.disconnectConnection(targetId, opened)
   } catch (error) {
     // Why: the caller is about to throw the cancellation; a teardown throw must not replace it.
     console.warn(
-      `[ssh] Failed to close the transport a cancelled decision opened for ${targetId}: ${error instanceof Error ? error.message : String(error)}`
+      `[ssh] Failed to close the transport a cancelled decision opened for ${targetId}: ${errorMessage(error)}`
     )
   }
 }

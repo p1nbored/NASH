@@ -1,17 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { makeDeferred } from './pty-ipc-test-constants'
 import { setupPtyIpcSuite } from './pty-ipc-test-harness'
-import {
-  acceptSshPtyOutputData,
-  acceptSshPtyOutputExit,
-  closeSshPtyOutputGeneration
-} from './ssh-pty-output-intake-registry'
-import {
-  registerPtyHandlers,
-  registerSshPtyProvider,
-  getPtyRendererDeliveryDebugSnapshot,
-  unregisterSshPtyProvider
-} from './pty'
+import { registerPtyHandlers } from './pty/register-handlers'
+import { getPtyRendererDeliveryDebugSnapshot } from './pty/delivery/debug'
 
 vi.mock('electron', () => import('./pty-ipc-mock-registry').then((m) => m.electronModuleMock()))
 vi.mock('fs', () => import('./pty-ipc-mock-registry').then((m) => m.fsModuleMock()))
@@ -58,135 +48,9 @@ vi.mock('../codex/codex-state-db-backfill-recovery', () =>
 )
 
 describe('registerPtyHandlers', () => {
-  const {
-    mainWindow,
-    installObservableDaemonTestProvider,
-    getPtyAckDataListener,
-    getPtyDataSendCalls
-  } = setupPtyIpcSuite()
+  const { mainWindow, installObservableDaemonTestProvider, getPtyDataSendCalls } =
+    setupPtyIpcSuite()
 
-  it('pauses and resumes the exact SSH provider generation across reconnect replacement', async () => {
-    vi.useFakeTimers()
-    const completion = makeDeferred()
-    let sequence = 0
-    let captures = 0
-    const runtime = {
-      setPtyController: vi.fn(),
-      setRemoteTerminalSourceRangeConsumerHooks: vi.fn(),
-      getPtyOutputSequence: vi.fn(() => sequence),
-      acceptPtyDataBounded: vi.fn((_id: string, _data: string, _at: number, rawLength: number) => {
-        sequence += rawLength
-        captures++
-        return {
-          sequence,
-          completion: captures === 1 ? completion.promise : Promise.resolve()
-        }
-      })
-    }
-    const original = {
-      providerGeneration: 41,
-      hasPtyDeliveryPauseAdapter: () => true,
-      pauseProducer: vi.fn(),
-      resumeProducer: vi.fn()
-    }
-    const replacement = {
-      providerGeneration: 42,
-      hasPtyDeliveryPauseAdapter: () => true,
-      pauseProducer: vi.fn(),
-      resumeProducer: vi.fn()
-    }
-    const id = 'ssh:ssh-generation-replacement@@relay-pty'
-    const receipts: Promise<unknown>[] = []
-
-    try {
-      registerPtyHandlers(mainWindow as never, runtime as never)
-      registerSshPtyProvider('ssh-generation-replacement', original as never)
-      const running = acceptSshPtyOutputData({
-        id,
-        data: 'a'.repeat(256 * 1024),
-        providerGeneration: 41,
-        ptyIncarnation: 'incarnation-41',
-        rawLength: 256 * 1024,
-        transformed: false
-      })
-      receipts.push(running)
-      registerSshPtyProvider('ssh-generation-replacement', replacement as never)
-      const pressured = acceptSshPtyOutputData({
-        id,
-        data: 'b',
-        providerGeneration: 41,
-        ptyIncarnation: 'incarnation-41',
-        rawLength: 1,
-        transformed: false
-      })
-      receipts.push(pressured)
-
-      expect(original.pauseProducer).toHaveBeenCalledWith(id)
-      expect(replacement.pauseProducer).not.toHaveBeenCalled()
-
-      completion.resolve()
-      await Promise.all([running, pressured])
-      expect(original.resumeProducer).toHaveBeenCalledWith(id)
-      expect(replacement.resumeProducer).not.toHaveBeenCalled()
-    } finally {
-      completion.resolve()
-      await Promise.allSettled(receipts)
-      closeSshPtyOutputGeneration(41, 'test-cleanup')
-      unregisterSshPtyProvider('ssh-generation-replacement')
-    }
-  })
-  it('rejects local data while an SSH renderer exit waits for projection settlement', async () => {
-    const provider = installObservableDaemonTestProvider()
-    let sequence = 0
-    const runtime = {
-      setPtyController: vi.fn(),
-      setRemoteTerminalSourceRangeConsumerHooks: vi.fn(),
-      getPtyOutputSequence: vi.fn(() => sequence),
-      acceptPtyDataBounded: vi.fn((_id: string, _data: string, _at: number, rawLength: number) => {
-        sequence += rawLength
-        return { sequence, completion: Promise.resolve() }
-      }),
-      onPtyData: vi.fn(),
-      onPtyExit: vi.fn()
-    }
-    const id = 'ssh:exit-data-race@@relay-pty'
-
-    registerPtyHandlers(mainWindow as never, runtime as never)
-    mainWindow.webContents.send.mockClear()
-    await acceptSshPtyOutputData({
-      id,
-      data: 'before-exit',
-      providerGeneration: 51,
-      ptyIncarnation: 'incarnation-51',
-      rawLength: 'before-exit'.length,
-      transformed: false
-    })
-    const exit = acceptSshPtyOutputExit({
-      id,
-      code: 0,
-      providerGeneration: 51,
-      ptyIncarnation: 'incarnation-51'
-    })
-    await Promise.resolve()
-
-    provider.emitData(id, 'must-not-follow-exit')
-    expect(mainWindow.webContents.send).not.toHaveBeenCalledWith('pty:data', {
-      id,
-      data: 'must-not-follow-exit'
-    })
-
-    getPtyAckDataListener()(null, { id, processedChars: 'before-exit'.length })
-    await exit
-    expect(mainWindow.webContents.send.mock.calls.at(-1)).toEqual([
-      'pty:exit',
-      {
-        id,
-        code: 0,
-        providerGeneration: 51,
-        ptyIncarnation: 'incarnation-51'
-      }
-    ])
-  })
   it('resumes a paused producer when the PTY exits before draining', async () => {
     vi.useFakeTimers()
     try {

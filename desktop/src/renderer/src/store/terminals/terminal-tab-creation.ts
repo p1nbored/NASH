@@ -2,20 +2,21 @@ import { warnIfZCodeCannotOpenSession } from '@/components/terminal-pane/zcode-m
 import { clearWorktreeSleepIntent } from '@/lib/worktree-sleep-intent'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import { isValidHostTerminalTabId } from '../../../../shared/terminal-tab-id'
-import { emptyLayoutSnapshot, singlePaneLayoutSnapshot } from '../slices/terminal-helpers'
+import { getNextTerminalOrdinal } from '../../../../shared/workspace-layout/terminal-tab-ordinal'
+import { singlePaneLayoutSnapshot } from '../slices/terminal-helpers'
 import { isTerminalLeafId } from '../../../../shared/stable-pane-id'
 import {
   buildOrphanTerminalCleanupPatch,
   getOrphanTerminalIds
 } from '../slices/terminal-orphan-helpers'
 import {
-  dedupeTabOrder,
   ensureGroup,
   findTabByEntityInGroup,
   pushRecentTabId,
   sanitizeRecentTabIds,
   updateGroup
 } from '../slices/tab-group-state'
+import { dedupeTabOrder } from '../../../../shared/workspace-layout/tab-order'
 import { createBrowserUuid } from '@/lib/browser-uuid'
 import { ownsGlobalSelection } from '../global-selection-owner'
 import { getLocalProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
@@ -25,22 +26,6 @@ import {
   resolveCreatedTabShellOverride,
   worktreeUsesWslPath
 } from './terminal-workspace-routing'
-export function getNextTerminalOrdinal(tabs: TerminalTab[]): number {
-  const usedOrdinals = new Set<number>()
-  for (const tab of tabs) {
-    const match = /^Terminal (\d+)$/.exec(tab.defaultTitle ?? tab.title)
-    if (!match) {
-      continue
-    }
-    usedOrdinals.add(Number(match[1]))
-  }
-  let nextOrdinal = 1
-  while (usedOrdinals.has(nextOrdinal)) {
-    nextOrdinal += 1
-  }
-  return nextOrdinal
-}
-
 type TabStartupCommand = TerminalSlice['pendingStartupByTabId'][string]
 
 function normalizeTabStartupCommand(startup: TabStartupCommand): TabStartupCommand {
@@ -87,12 +72,8 @@ export function createTerminalTabCreationActions(
           options?.initialLeafId && isTerminalLeafId(options.initialLeafId)
             ? options.initialLeafId
             : undefined
-        // Why: startup delivery is pane-owned; pin its first leaf so an aborted/remounted renderer retries against the same spawn reservation.
-        // Why a bare leaf id too: a host launch lays out its pane before the process it attaches to exists.
-        const initialLeafId =
-          options?.initialPtyId || options?.pendingStartup || requestedInitialLeafId
-            ? (requestedInitialLeafId ?? createBrowserUuid())
-            : undefined
+        // Why: name the first pane at creation so the saved layout is never empty; the pane mounts and spawns into this leaf.
+        const initialLeafId = requestedInitialLeafId ?? createBrowserUuid()
         const shouldActivate = options?.activate !== false
         const nextOrdinal = getNextTerminalOrdinal(existing)
         const defaultTitle = `Terminal ${nextOrdinal}`
@@ -278,9 +259,7 @@ export function createTerminalTabCreationActions(
             : orphanCleanupPatch.automaticAgentResumeClaimsByTabId,
           terminalLayoutsByTabId: {
             ...orphanCleanupPatch.terminalLayoutsByTabId,
-            [tab.id]: initialLeafId
-              ? singlePaneLayoutSnapshot(initialLeafId, options?.initialPtyId)
-              : emptyLayoutSnapshot()
+            [tab.id]: singlePaneLayoutSnapshot(initialLeafId, options?.initialPtyId)
           }
         }
       })

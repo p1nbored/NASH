@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   stat: vi.fn(),
   resolveNativeChatAttachmentOwner: vi.fn(),
   resolveNativeChatAttachmentOwnerForWorktree: vi.fn(),
-  uploadNativeChatAttachmentPaths: vi.fn(),
   prepareNativeChatSessionAttachmentUpload: vi.fn(),
   uploadNativeChatSessionAttachmentPaths: vi.fn(),
   toastLoading: vi.fn()
@@ -29,7 +28,6 @@ vi.mock('./native-chat-attachment-upload', async (importOriginal) => ({
   ...(await importOriginal<typeof AttachmentUploadModule>()),
   resolveNativeChatAttachmentOwner: mocks.resolveNativeChatAttachmentOwner,
   resolveNativeChatAttachmentOwnerForWorktree: mocks.resolveNativeChatAttachmentOwnerForWorktree,
-  uploadNativeChatAttachmentPaths: mocks.uploadNativeChatAttachmentPaths,
   prepareNativeChatSessionAttachmentUpload: mocks.prepareNativeChatSessionAttachmentUpload,
   uploadNativeChatSessionAttachmentPaths: mocks.uploadNativeChatSessionAttachmentPaths
 }))
@@ -175,7 +173,6 @@ describe('useNativeChatExternalAttachments', () => {
     expect(attachResolvedPaths).toHaveBeenCalledWith(['/local/a.txt'], undefined, {
       destinationIsCurrent: expect.any(Function)
     })
-    expect(mocks.uploadNativeChatAttachmentPaths).not.toHaveBeenCalled()
   })
 
   it('rejects a whole batch over the drop path limit, like a drop does', async () => {
@@ -192,7 +189,7 @@ describe('useNativeChatExternalAttachments', () => {
   })
 
   it('reports a remote runtime before the path limit, since trimming would not help', async () => {
-    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({ kind: 'runtime' })
+    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({ kind: 'remote' })
     const setNotice = vi.fn()
     const probe = await renderProbe({ attachResolvedPaths: vi.fn(), setNotice })
     await act(async () => {
@@ -238,7 +235,7 @@ describe('useNativeChatExternalAttachments', () => {
 
   it('does not attach local paths when the owner changes during the file check', async () => {
     const fileCheck = deferred<void>()
-    let owner: { kind: 'local' } | { kind: 'runtime' } = { kind: 'local' }
+    let owner: { kind: 'local' } | { kind: 'remote' } = { kind: 'local' }
     mocks.resolveNativeChatAttachmentOwner.mockImplementation(() => owner)
     mocks.stat.mockReturnValueOnce(fileCheck.promise)
     const attachResolvedPaths = vi.fn()
@@ -249,7 +246,7 @@ describe('useNativeChatExternalAttachments', () => {
     })
 
     act(() => probe.latest().attachExternalPaths(['/external/a.png', '/external/b.png']))
-    owner = { kind: 'runtime' }
+    owner = { kind: 'remote' }
     await act(async () => fileCheck.resolve())
 
     expect(attachResolvedPaths).not.toHaveBeenCalled()
@@ -264,7 +261,7 @@ describe('useNativeChatExternalAttachments', () => {
   // and a path attached to a host that no longer owns it.
   it('reports a one-file drop whose owner changes during its file check', async () => {
     const fileCheck = deferred<void>()
-    let owner: { kind: 'local' } | { kind: 'runtime' } = { kind: 'local' }
+    let owner: { kind: 'local' } | { kind: 'remote' } = { kind: 'local' }
     mocks.resolveNativeChatAttachmentOwner.mockImplementation(() => owner)
     mocks.stat.mockReturnValueOnce(fileCheck.promise)
     const attachResolvedPaths = vi.fn()
@@ -275,7 +272,7 @@ describe('useNativeChatExternalAttachments', () => {
     })
 
     act(() => probe.latest().attachExternalPaths(['/external/only.pdf']))
-    owner = { kind: 'runtime' }
+    owner = { kind: 'remote' }
     await act(async () => fileCheck.resolve())
 
     expect(attachResolvedPaths).not.toHaveBeenCalled()
@@ -308,106 +305,6 @@ describe('useNativeChatExternalAttachments', () => {
     )
   })
 
-  // The upload window is the long one: the paths go to the remote worktree the
-  // attach captured, so a pane that moved workspaces meanwhile must not receive
-  // remote paths that live under the workspace it left.
-  it('does not attach uploaded paths when the pane changes workspace during upload', async () => {
-    const sshOwner = {
-      kind: 'ssh',
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1',
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    } as const
-    mocks.resolveNativeChatAttachmentOwnerForWorktree.mockReturnValue(sshOwner)
-    const upload = deferred<string[]>()
-    mocks.uploadNativeChatAttachmentPaths.mockReturnValueOnce(upload.promise)
-    const attachResolvedPaths = vi.fn()
-    const notices: (string | null)[] = []
-    const probe = await renderProbe({
-      structuredWorktreeId: 'worktree-1',
-      attachResolvedPaths,
-      setNotice: (notice) => notices.push(notice)
-    })
-
-    act(() => probe.latest().attachExternalPaths(['/local/a.txt']))
-    await probe.setStructuredWorktreeId('worktree-2')
-    await act(async () => upload.resolve(['/remote/wt/.orca/drops/a.txt']))
-
-    expect(attachResolvedPaths).not.toHaveBeenCalled()
-    expect(notices.at(-1)).toBe(
-      'This workspace changed hosts while attaching — drop the files again.'
-    )
-  })
-
-  it('uploads SSH worktree paths and attaches the remote results', async () => {
-    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({
-      kind: 'ssh',
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1',
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    })
-    mocks.uploadNativeChatAttachmentPaths.mockResolvedValue(['/remote/wt/.orca/drops/a.txt'])
-    const attachResolvedPaths = vi.fn()
-    const probe = await renderProbe({ attachResolvedPaths })
-    await act(async () => {
-      probe.latest().attachExternalPaths(['/local/a.txt'])
-    })
-    expect(mocks.uploadNativeChatAttachmentPaths).toHaveBeenCalledWith(['/local/a.txt'], {
-      kind: 'ssh',
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1',
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    })
-    expect(attachResolvedPaths).toHaveBeenCalledWith(['/remote/wt/.orca/drops/a.txt'], 'conn-1', {
-      destinationIsCurrent: expect.any(Function)
-    })
-    expect(mocks.stat).not.toHaveBeenCalled()
-  })
-
-  it('delivers concurrent SSH resolutions in order without deduplicating paths', async () => {
-    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({
-      kind: 'ssh',
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1',
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    })
-    const firstUpload = deferred<string[]>()
-    const secondUpload = deferred<string[]>()
-    mocks.uploadNativeChatAttachmentPaths
-      .mockReturnValueOnce(firstUpload.promise)
-      .mockReturnValueOnce(secondUpload.promise)
-    const attachResolvedPaths = vi.fn()
-    const probe = await renderProbe({ attachResolvedPaths })
-
-    act(() => {
-      probe.latest().attachExternalPaths(['/local/a.txt'])
-      probe.latest().attachExternalPaths(['/local/b.txt'])
-    })
-    await act(async () => {
-      secondUpload.resolve(['/remote/wt/.orca/drops/b.txt', '/remote/wt/.orca/drops/b.txt'])
-    })
-    await act(async () => {
-      firstUpload.resolve(['/remote/wt/.orca/drops/a.txt'])
-    })
-
-    expect(attachResolvedPaths.mock.calls).toEqual([
-      [
-        ['/remote/wt/.orca/drops/b.txt', '/remote/wt/.orca/drops/b.txt'],
-        'conn-1',
-        { destinationIsCurrent: expect.any(Function) }
-      ],
-      [['/remote/wt/.orca/drops/a.txt'], 'conn-1', { destinationIsCurrent: expect.any(Function) }]
-    ])
-  })
-
   it('shows the not-ready notice instead of attaching unresolved paths', async () => {
     mocks.resolveNativeChatAttachmentOwner.mockReturnValue({ kind: 'not-ready' })
     const attachResolvedPaths = vi.fn()
@@ -421,7 +318,7 @@ describe('useNativeChatExternalAttachments', () => {
   })
 
   it('does not attach client-local paths to a remote runtime', async () => {
-    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({ kind: 'runtime' })
+    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({ kind: 'remote' })
     const attachResolvedPaths = vi.fn()
     const setNotice = vi.fn()
     const probe = await renderProbe({ attachResolvedPaths, setNotice })
@@ -443,63 +340,6 @@ describe('useNativeChatExternalAttachments', () => {
 
     expect(mocks.resolveNativeChatAttachmentOwner).not.toHaveBeenCalled()
     expect(attachResolvedPaths).not.toHaveBeenCalled()
-  })
-
-  it('drops an upload that resolves after the composer became disabled', async () => {
-    mocks.resolveNativeChatAttachmentOwner.mockReturnValue({
-      kind: 'ssh',
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1',
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    })
-    let resolveUpload: (paths: string[]) => void = () => {}
-    mocks.uploadNativeChatAttachmentPaths.mockReturnValue(
-      new Promise<string[]>((resolve) => {
-        resolveUpload = resolve
-      })
-    )
-    const attachResolvedPaths = vi.fn()
-    const probe = await renderProbe({ attachResolvedPaths })
-    await act(async () => {
-      probe.latest().attachExternalPaths(['/local/a.txt'])
-    })
-    await probe.setDisabled(true)
-    await act(async () => {
-      resolveUpload(['/remote/wt/.orca/drops/a.txt'])
-    })
-    expect(attachResolvedPaths).not.toHaveBeenCalled()
-  })
-
-  it('drops an upload that resolves after the SSH owner generation changes', async () => {
-    const initialOwner = {
-      kind: 'ssh' as const,
-      connectionId: 'conn-1',
-      worktreePath: '/remote/wt',
-      expectedExecutionHostId: 'ssh:conn-1' as const,
-      expectedSshTargetId: 'conn-1',
-      expectedSshConnectionGeneration: 4
-    }
-    mocks.resolveNativeChatAttachmentOwner
-      .mockReturnValueOnce(initialOwner)
-      .mockReturnValue({ ...initialOwner, expectedSshConnectionGeneration: 5 })
-    const upload = deferred<string[]>()
-    mocks.uploadNativeChatAttachmentPaths.mockReturnValue(upload.promise)
-    const attachResolvedPaths = vi.fn()
-    const notices: (string | null)[] = []
-    const probe = await renderProbe({
-      attachResolvedPaths,
-      setNotice: (notice) => notices.push(notice)
-    })
-
-    act(() => probe.latest().attachExternalPaths(['/local/a.txt']))
-    await act(async () => upload.resolve(['/remote/wt/.orca/drops/a.txt']))
-
-    expect(attachResolvedPaths).not.toHaveBeenCalled()
-    expect(notices.at(-1)).toBe(
-      'This workspace changed hosts while attaching — drop the files again.'
-    )
   })
 
   describe('a structured chat on a paired server', () => {
@@ -587,9 +427,9 @@ describe('useNativeChatExternalAttachments', () => {
         '/srv/agent-session-attachments/u1/shot.png',
         null
       )
-      expect(chips.drop).toHaveBeenCalledExactlyOnceWith('chip-2')
+      expect(chips.drop).not.toHaveBeenCalled()
       expect(chips.attachReferences).toHaveBeenCalledExactlyOnceWith([
-        '/srv/agent-session-attachments/u2/notes.md'
+        { id: 'chip-2', path: '/srv/agent-session-attachments/u2/notes.md' }
       ])
       // The client never reads its own disk for these paths: the server stores the bytes.
       expect(mocks.stat).not.toHaveBeenCalled()
@@ -653,11 +493,11 @@ describe('useNativeChatExternalAttachments', () => {
         )
       )
       expect(chips.attachReferences).toHaveBeenCalledExactlyOnceWith([
-        '/srv/agent-session-attachments/u1/notes.md'
+        { id: 'chip-1', path: '/srv/agent-session-attachments/u1/notes.md' }
       ])
     })
 
-    it('does not insert a file whose chip the user removed while it uploaded', async () => {
+    it('keeps each file operation ID through reference settlement, including removed chips', async () => {
       const upload = deferred<AgentSessionAttachmentPathUploadResult>()
       mocks.uploadNativeChatSessionAttachmentPaths.mockReturnValueOnce(upload.promise)
       const chips = trackingChips()
@@ -681,7 +521,8 @@ describe('useNativeChatExternalAttachments', () => {
       )
 
       expect(chips.attachReferences).toHaveBeenCalledExactlyOnceWith([
-        '/srv/agent-session-attachments/u2/notes.md'
+        { id: 'chip-1', path: '/srv/agent-session-attachments/u1/report.pdf' },
+        { id: 'chip-2', path: '/srv/agent-session-attachments/u2/notes.md' }
       ])
     })
 
@@ -709,7 +550,7 @@ describe('useNativeChatExternalAttachments', () => {
 
       expect(chips.drop).toHaveBeenCalledWith('chip-1')
       expect(chips.attachReferences).toHaveBeenCalledExactlyOnceWith([
-        '/srv/agent-session-attachments/u2/notes.md'
+        { id: 'chip-2', path: '/srv/agent-session-attachments/u2/notes.md' }
       ])
       // The cause, the size limit here, rides in the same notice.
       expect(notices).toEqual([

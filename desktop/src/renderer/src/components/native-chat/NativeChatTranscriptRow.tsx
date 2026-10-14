@@ -1,7 +1,7 @@
 import { memo, useContext } from 'react'
 import type { CommentMarkdownLinkClickHandler } from '@/components/sidebar/CommentMarkdown'
 import { cn } from '@/lib/utils'
-import type { RuntimeFileOperationArgs } from '@/runtime/runtime-file-client'
+import type { RuntimeFileOperationArgs } from '@/runtime/runtime-file-client-types'
 import { MessageRow, type NativeChatDeliveryNotice } from './NativeChatMessageRow'
 import { NativeChatResolutionReceipt } from './NativeChatResolutionReceipt'
 import { NativeChatWorkingStatus } from './NativeChatWorkingStatus'
@@ -18,6 +18,7 @@ import { nativeChatRowOffersRewind } from './native-chat-rewind-eligibility'
 /** Everything a row needs that is the same for every row. Held as one memoized
  *  object so a row's props change only when that row's own slot does. */
 export type NativeChatTranscriptRowContext = {
+  agentName?: string
   expandSignal: boolean
   revealedDiff: NativeChatDiffReveal | null
   taskListPredecessors: ReadonlyMap<string, NativeChatTaskListPredecessors>
@@ -72,7 +73,7 @@ export const NativeChatTranscriptRow = memo(function NativeChatTranscriptRow({
         sections={slot.sections}
         onSetSectionOpen={context.subagentDisclosure.setSectionOpen}
         // The type its roster row's list inherits, so both halves of the list match.
-        className="text-xs leading-relaxed text-muted-foreground"
+        className="text-xs leading-relaxed text-chat-foreground-faint"
       />
     )
   }
@@ -101,6 +102,7 @@ export const NativeChatTranscriptRow = memo(function NativeChatTranscriptRow({
       ) : (
         <MessageRow
           message={message}
+          agentName={context.agentName}
           previousTodoWrite={predecessors?.todowrite}
           previousUpdatePlan={predecessors?.update_plan}
           revealedDiff={
@@ -121,7 +123,8 @@ export const NativeChatTranscriptRow = memo(function NativeChatTranscriptRow({
           inSubagentSection={slot.depth > 0}
           runtimeContext={context.runtimeContext}
           rewind={
-            nativeChatRowOffersRewind(message, slot, deliveryNotice !== undefined)
+            nativeChatRowOffersRewind(message, slot, deliveryNotice !== undefined) &&
+            (!rewind?.eligibleItemIds || rewind.eligibleItemIds.has(message.id))
               ? rewind
               : undefined
           }

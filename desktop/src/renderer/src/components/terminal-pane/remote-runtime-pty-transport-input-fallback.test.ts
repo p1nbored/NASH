@@ -235,6 +235,8 @@ describe('createRemoteRuntimePtyTransport', () => {
     const newStream = {
       streamId: 2,
       sendInput: vi.fn(() => true),
+      acknowledgesInput: vi.fn(() => false),
+      inputLedgerId: vi.fn(() => null),
       resize: vi.fn(() => true),
       serializeBuffer: vi.fn(async () => null),
       close: vi.fn()
@@ -252,7 +254,6 @@ describe('createRemoteRuntimePtyTransport', () => {
         return newStream
       })
     vi.doMock('../../runtime/remote-runtime-terminal-multiplexer', () => ({
-      REMOTE_TERMINAL_SNAPSHOT_TOO_LARGE: 'remote_terminal_snapshot_too_large',
       getRemoteRuntimeTerminalMultiplexer: vi.fn(() => ({ subscribeTerminal }))
     }))
     const { createRemoteRuntimePtyTransport } = await import('./remote-runtime-pty-transport')
@@ -321,8 +322,8 @@ describe('createRemoteRuntimePtyTransport', () => {
       })
       subscriptionSendBinary.mockClear()
 
-      // Why: replacement input stays disabled until terminal.resolvePane proves the new handle belongs to this pane.
-      expect(transport.sendInput('x', 'driving')).toBe(false)
+      // Why: replacement input is held for the new handle until terminal.resolvePane proves it belongs to this pane.
+      expect(transport.sendInput('x', 'driving')).toBe(true)
       vi.advanceTimersByTime(8)
 
       const inputFrames = subscriptionSendBinary.mock.calls

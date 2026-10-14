@@ -17,13 +17,18 @@ import { resolveTerminalLayoutRoot } from '../remote-terminal-layout-resolution'
 import { buildMobileSessionTabSnapshots } from './mobile-session-snapshots'
 import { isWebOnlyMirroredTerminalTab } from './mobile-session-surfaces'
 import { resolveRuntimeTerminalTitle } from './sync-projections'
+import { measureTerminalGroupGridSizes } from './terminal-group-grid-sizes'
 import {
   collectAmbiguousTerminalTabIds,
-  findRegisteredTerminalTab,
   graphState,
   mobilePublicationEpoch,
   NO_TRANSPORT_GRACE_MS
 } from './graph-state'
+import {
+  findRegisteredTerminalTab,
+  getMountedTerminalTabRegisteredAt,
+  mountedTerminalTabEntries
+} from '../mounted-terminal-tab-registry'
 
 export async function syncRuntimeGraph(): Promise<void> {
   if (!graphState.syncEnabled || !graphState.getStoreState) {
@@ -54,15 +59,20 @@ export async function syncRuntimeGraph(): Promise<void> {
     ambiguousTerminalTabIds
   )
   const publication = partitionMobileSessionPublication(mobileSessionTabs)
+  const gridSizes = measureTerminalGroupGridSizes(state.settings?.terminalFontSize ?? 14)
   const graph: RuntimeRendererSyncWindowGraph = {
     tabs: [],
     leaves: [],
     rendererGeneration: mobilePublicationEpoch,
     mobileSessionTabs: publication.changed,
-    unchangedMobileSessionWorktrees: publication.unchangedWorktrees
+    unchangedMobileSessionWorktrees: publication.unchangedWorktrees,
+    ...(gridSizes ? { terminalGroupGridSizes: gridSizes.groups } : {}),
+    ...(gridSizes?.singleGroupWorkspace
+      ? { singleGroupWorkspaceGridSize: gridSizes.singleGroupWorkspace }
+      : {})
   }
 
-  for (const [registrationKey, registeredTab] of graphState.registeredTabs) {
+  for (const [registrationKey, registeredTab] of mountedTerminalTabEntries()) {
     if (ambiguousTerminalTabIds.has(registeredTab.tabId)) {
       continue
     }
@@ -91,7 +101,7 @@ export async function syncRuntimeGraph(): Promise<void> {
       const leafId = pane.leafId
       const ptyId = registeredTab.getPtyIdForPane(pane.id)
       const savedPtyId = savedPtyIdsByLeafId[leafId] ?? null
-      const registeredTime = graphState.tabRegisteredAt.get(registrationKey) ?? 0
+      const registeredTime = getMountedTerminalTabRegisteredAt(registrationKey) ?? 0
       if (!ptyId && savedPtyId && Date.now() - registeredTime > NO_TRANSPORT_GRACE_MS) {
         warnTerminalLifecycleAnomaly('mounted terminal leaf has saved PTY but no live transport', {
           tabId: registeredTab.tabId,
@@ -187,6 +197,7 @@ export async function syncRuntimeGraph(): Promise<void> {
 
   try {
     const result = await window.api.runtime.syncWindowGraph(graph)
+    graphState.publishedTerminalGroupGridSizesKey = JSON.stringify(gridSizes ?? null)
     commitMobileSessionPublication(mobileSessionTabs, result?.mobileSessionResyncWorktrees)
     const currentState = graphState.getStoreState()
     currentState?.setRuntimeAgentOrchestrationByPaneKey?.(result?.agentOrchestrationByPaneKey ?? {})

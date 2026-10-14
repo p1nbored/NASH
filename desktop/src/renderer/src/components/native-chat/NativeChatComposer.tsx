@@ -3,7 +3,6 @@ import type { NativeChatComposerInput } from './native-chat-composer-input'
 import { forwardRef, useCallback, useState } from 'react'
 import { useNativeChatComposerInterrupt } from './use-native-chat-composer-interrupt'
 import { useNativeChatContextUsageSummary } from './use-native-chat-context-usage-summary'
-import { getSettingsForAgentTabRuntimeOwner } from '@/lib/agent-paste-draft'
 import { useNativeChatMentionFiles } from './use-native-chat-mention-files'
 import { useNativeChatDraft } from './use-native-chat-draft'
 import { useNativeChatComposerRecall } from './use-native-chat-composer-recall'
@@ -143,23 +142,18 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
       structuredWorktreeId: structuredTransport?.worktreeId
     })
 
-    // Resolve the live ptyId for this chat leaf; runtime owner settings route
-    // local vs remote (SSH) sends.
+    // Resolve the live ptyId for this chat leaf; the id names its owning host.
     const resolveTarget = useCallback((): NativeChatResolvedTarget | null => {
       if (!targetPtyId) {
         return null
       }
-      return { ptyId: targetPtyId, settings: getSettingsForAgentTabRuntimeOwner(terminalTabId) }
-    }, [targetPtyId, terminalTabId])
+      return { ptyId: targetPtyId }
+    }, [targetPtyId])
 
     // Why inputOwnedByCard: the hidden field can still hold keyboard focus for a frame.
     const [hasPty, disabled] = structuredTransport
       ? [true, !canSend]
       : [targetPtyId !== null, targetPtyId === null || !canSend || inputOwnedByCard]
-
-    const syncCaret = useCallback((el: NativeChatComposerInput) => {
-      setCaret(el.selectionStart ?? el.value.length)
-    }, [])
 
     const attachments = useNativeChatComposerAttachments({
       attachmentScopeKey: draftScopeKey,
@@ -174,12 +168,8 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
       setDraft,
       setNotice
     })
-    const {
-      imageAttachments,
-      attachResolvedPaths,
-      clearImageAttachments,
-      removeImageAttachment
-    } = attachments
+    const { imageAttachments, attachResolvedPaths, clearImageAttachments, removeImageAttachment } =
+      attachments
     const imageBlock = nativeChatImageSendBlock(imageAttachments)
     const sendHeld = disabled || structuredTransport?.sendOut === true || imageBlock.holdsSend
     const sendButtonDisabled = isWorking
@@ -201,6 +191,7 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
     })
 
     const handlePasteEvent = useNativeChatComposerHandle(ref, {
+      attachmentScopeKey: draftScopeKey,
       textareaRef,
       caret,
       draft,
@@ -345,12 +336,13 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
 
     const handleDraftChange = useCallback(
       (value: string, element: NativeChatComposerInput) => {
+        const nextCaret = element.selectionStart ?? value.length
         setDraft(value)
-        syncCaret(element)
-        handleDraftOrCaretChange(value, element.selectionStart ?? value.length)
+        setCaret(nextCaret)
+        handleDraftOrCaretChange(value, nextCaret)
         setActiveSuggestion(0)
       },
-      [handleDraftOrCaretChange, setDraft, syncCaret]
+      [handleDraftOrCaretChange, setDraft]
     )
 
     return (
@@ -379,8 +371,10 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
         imeEnterGesture={imeEnterGesture}
         onDraftChange={handleDraftChange}
         onTextareaSelect={(element) => {
-          syncCaret(element)
-          handleDraftOrCaretChange(element.value, element.selectionStart ?? element.value.length)
+          const value = element.value
+          const nextCaret = element.selectionStart ?? value.length
+          setCaret(nextCaret)
+          handleDraftOrCaretChange(value, nextCaret)
           setActiveSuggestion(0)
         }}
         onKeyDown={handleKeyDown}
@@ -409,6 +403,7 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
         sessionOptionsSnapshot={sessionOptionsSnapshot}
         contextUsage={contextUsageSummary}
         sessionOptionsPickerRequest={structuredTransport?.optionPickerRequest ?? null}
+        agent={agent}
       />
     )
   }

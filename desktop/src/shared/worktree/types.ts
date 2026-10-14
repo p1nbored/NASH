@@ -9,6 +9,32 @@ import type { BuiltInWorktreeVisibilitySourceId } from '../repo-types'
 import type { WorktreeIdentity } from './identity'
 import type { WorktreeScanFailureKind } from '../worktree-scan-failure'
 
+export type WorkspaceAttachmentOrigin = {
+  kind: 'observed'
+  tabId: string
+  paneKey?: string
+  hostId?: ExecutionHostId
+  label?: string
+  agent?: string
+  sessionId?: string
+}
+
+export type WorkspaceAttachment = {
+  provider: 'github' | 'gitlab' | 'linear' | 'jira' | 'bitbucket' | 'azure-devops' | 'gitea'
+  type: 'issue' | 'pr' | 'mr'
+  number: number
+  identifier?: string
+  title?: string
+  url?: string
+  repoId?: string
+  linearIdentifier?: string
+  jiraIdentifier?: string
+  linearWorkspaceId?: string
+  linearOrganizationUrlKey?: string
+  taskSourceContext?: TaskSourceContext
+  origins?: WorkspaceAttachmentOrigin[]
+}
+
 export type WorkspaceLinkedItem = {
   provider: 'github' | 'gitlab' | 'linear' | 'jira'
   type: 'issue' | 'pr' | 'mr'
@@ -51,6 +77,13 @@ export type WorktreeHeadIdentity = {
   head: string
   /** Full ref (e.g. `refs/heads/main`), or null for a detached HEAD. */
   branch: string | null
+}
+
+/** `worktreePaths` names the only checkouts whose status the burst can have
+ *  changed; absent means unattributed, so every listener must refresh. */
+export type GitStatusMetadataChangedEvent = {
+  repoId: string
+  worktreePaths?: string[]
 }
 
 // ─── Worktree (app-level, enriched) ──────────────────────────────────
@@ -106,6 +139,8 @@ export type Worktree = {
   linkedAzureDevOpsPR?: number | null
   linkedGiteaPR?: number | null
   linkedWorkItem?: WorkspaceLinkedItem | null
+  /** All attachments; singular fields select the active review/task for older readers. */
+  linkedItems?: WorkspaceAttachment[]
   linkedTaskSourceContext?: TaskSourceContext | null
   isArchived: boolean
   isUnread: boolean

@@ -6,20 +6,17 @@ import {
   type NativeChatAttachmentOwner
 } from './native-chat-attachment-upload'
 
-type ClipboardImageOwner = Extract<
-  NativeChatAttachmentOwner,
-  { kind: 'local' | 'ssh' | 'runtime-session' }
->
+type ClipboardImageOwner = Extract<NativeChatAttachmentOwner, { kind: 'local' | 'runtime-session' }>
 
 /** Owners whose attachment path is a file this client can write right now. */
 export function ownerAcceptsClipboardImage(
   owner: NativeChatAttachmentOwner
 ): owner is ClipboardImageOwner {
-  return owner.kind === 'local' || owner.kind === 'ssh' || owner.kind === 'runtime-session'
+  return owner.kind === 'local' || owner.kind === 'runtime-session'
 }
 
-/** Where the clipboard image is saved: this machine, the SSH host, or the chat's store on its
- *  paired server, after asking that server whether it keeps one. */
+/** Where the clipboard image is saved: this machine, or the chat's store on its paired server,
+ *  after asking that server whether it keeps one. */
 async function clipboardImageSaveArgs(
   owner: ClipboardImageOwner
 ): Promise<
@@ -28,9 +25,6 @@ async function clipboardImageSaveArgs(
 > {
   if (owner.kind === 'local') {
     return { ok: true, args: { forNativeChatDraft: true } }
-  }
-  if (owner.kind === 'ssh') {
-    return { ok: true, args: { connectionId: owner.connectionId } }
   }
   const prepared = await prepareNativeChatSessionAttachmentUpload(owner)
   if (!prepared.ok) {

@@ -4,7 +4,7 @@ import { useAppStore } from '../../store'
 import { retireUnboundRuntimeTerminalPane } from './retire-unbound-runtime-terminal-pane'
 import type { PaneExternalDropTarget } from '@/lib/pane-manager/pane-manager'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
-import { closeWebRuntimeTerminal } from '@/runtime/web-runtime-session'
+import { closeWebRuntimeTerminal } from '@/runtime/web-runtime-terminal-actions'
 import { resolveLeafCloseCopyKind } from '../terminal/terminal-close-copy-kind'
 import { RUNNING_CLOSE_PROBE_TIMEOUT_MS } from '../terminal/running-terminal-close-guard'
 import { probePtyRunningWork } from '../terminal/pty-running-work-probe'
@@ -147,7 +147,7 @@ export function useTerminalPaneCloseActions(controller: TerminalPaneBindingContr
       )
       // Why the shared probe rather than a direct inspect: this is the same question the tab-close
       // guard asks, and the two must not drift on what an unanswered host means.
-      void probePtyRunningWork(settings, [ptyId], { timeoutMs: RUNNING_CLOSE_PROBE_TIMEOUT_MS })
+      void probePtyRunningWork([ptyId], { timeoutMs: RUNNING_CLOSE_PROBE_TIMEOUT_MS })
         .then((probes) => {
           clearTimeout(probeTimeout)
           decide(() => {

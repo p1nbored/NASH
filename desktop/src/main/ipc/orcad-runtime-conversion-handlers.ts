@@ -15,11 +15,10 @@ export function registerOrcadRuntimeConversionHandlers(getUserDataPath: () => st
       _event,
       args: { sshTargetId: string; name: string }
     ): Promise<OrcadManagedConversionResult> => {
-      const sshTargetId = requiredString(args?.sshTargetId, 'SSH target')
       return convertSshTargetToManagedOrcad(getUserDataPath(), {
-        sshTargetId,
+        sshTargetId: requiredString(args?.sshTargetId, 'SSH target'),
         name: requiredString(args?.name, 'Server name'),
-        ...conversionCollaborators(sshTargetId)
+        ...conversionCollaborators()
       })
     }
   )

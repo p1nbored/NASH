@@ -10,6 +10,7 @@ import {
   OrcadCompletedStopReceiptSchema,
   OrcadManagedStopRequestSchema,
   OrcadDaemonRetirementRecordSchema,
+  orcadManagedStopRequestKey,
   type OrcadCompletedStopReceipt,
   type OrcadDaemonRetirementRecord,
   type OrcadManagedStopRequest
@@ -49,8 +50,7 @@ export function readOrcadStopReceipt<T extends { request: OrcadManagedStopReques
   const receipt = schema.parse(
     JSON.parse(readNodeFileSyncWithinLimit(path, RECEIPT_MAX_BYTES).buffer.toString('utf8'))
   )
-  const expected = OrcadManagedStopRequestSchema.parse(request)
-  if (JSON.stringify(receipt.request) !== JSON.stringify(expected)) {
+  if (orcadManagedStopRequestKey(receipt.request) !== orcadManagedStopRequestKey(request)) {
     throw new Error('orcad_stop_receipt_mismatch')
   }
   return receipt

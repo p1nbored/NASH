@@ -58,6 +58,37 @@ describe('send fingerprints never cover the sender', () => {
     expect(withSender.body.from).toEqual(FROM)
   })
 
+  it('carries options in the operation fingerprint only; without them the send is unchanged', () => {
+    const send = (options?: Record<string, string>) =>
+      structuredAgentSessionMessageSendMutation({
+        sessionId: 'session-1',
+        clientOperationId: 'op-1',
+        expectedRuntimeFence: 1,
+        body: BODY,
+        ...(options ? { options } : {})
+      })
+    const plain = send()
+    // An older host gets exactly today's shape and fingerprint.
+    expect(plain).not.toHaveProperty('options')
+    expect(plain.envelope.payloadFingerprint).toBe(
+      structuredAgentSessionPayloadFingerprint({
+        method: 'agentSession.send',
+        sessionId: 'session-1',
+        fields: { body: BODY }
+      })
+    )
+    const carried = send({ model: 'opus', effort: 'high' })
+    expect(carried.options).toEqual({ model: 'opus', effort: 'high' })
+    expect(carried.envelope.payloadFingerprint).toBe(
+      structuredAgentSessionPayloadFingerprint({
+        method: 'agentSession.send',
+        sessionId: 'session-1',
+        fields: { body: BODY, options: { model: 'opus', effort: 'high' } }
+      })
+    )
+    expect(SendParams.safeParse({ ...carried, body: BODY }).success).toBe(true)
+  })
+
   it('refuses a client send whose body names a sender', () => {
     const params = (body: unknown) => ({
       envelope: {

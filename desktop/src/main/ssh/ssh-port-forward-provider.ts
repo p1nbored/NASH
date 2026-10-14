@@ -16,10 +16,17 @@ export type PortForwardStartOptions = {
   onUnexpectedClose?: (entry: PortForwardEntry, reason: PortForwardCloseReason) => void
 }
 
+/** How the SSH client reported its last failed channel open through this forward. */
+export type ForwardChannelOpenFailure = 'administratively-prohibited' | 'connect-failed'
+
 export type StartedPortForward = {
   entry: PortForwardEntry
   close: () => Promise<void>
   dispose: () => void
+  /** False once `conn` no longer carries the transport this forward tunnels through. */
+  isLive?: (conn: SshConnection) => boolean
+  /** Forwards run by an out-of-process client, whose channel answers reach only its stderr. */
+  lastChannelOpenFailure?: () => ForwardChannelOpenFailure | null
 }
 
 export type SshPortForwardProvider = {

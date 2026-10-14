@@ -5,24 +5,30 @@
  * terminals, and a rejected candidate is restored through the activation journal, so the old
  * version keeps serving. A host a newer Orca activated is never downgraded.
  */
-import { compareAppVersions } from '../../shared/app-version'
 import type { OrcadActivationRecord } from './orcad-activation-record'
-import { materializeOrcadArtifact } from './orcad-artifact-materializer'
-import { OrcadArtifactsUnavailableError, OrcadHostUnsupportedError } from './orcad-host-unavailable'
+import {
+  refuseOrcadHostDowngrade,
+  type OrcadHostVersionRefusal
+} from './orcad-host-version-admission'
+import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
+import {
+  OrcadArtifactsUnavailableError,
+  OrcadHostUnsupportedError
+} from '../orcad/orcad-host-unavailable'
 import { findIncompleteManagedOrcadMigration } from './orcad-managed-migration-status'
 import { ORCAD_ACTIVATION_FENCE_BUSY_CODE } from './orcad-activation-fence-hold'
 import { resolveLinkedOrcadContext } from './orcad-managed-runtime-context'
 import { runManagedOrcadUpdate, withManagedOrcadLifecycle } from './orcad-runtime-maintenance'
 import type { OrcadUpdateDeferCode } from './orcad-update-plan'
-import { readLocalFullVersion } from './ssh-relay-versioned-install'
+import { readLocalFullVersion } from './remote-versioned-install'
 
 export type ManagedOrcadAutoUpdateSkip =
   | 'current'
   | 'no-template'
-  | 'host-newer'
   | 'rolled-back'
   | 'failed-before'
   | 'migrating'
+  | OrcadHostVersionRefusal
 
 export type ManagedOrcadAutoUpdatePlan =
   | { action: 'update' }
@@ -54,12 +60,13 @@ export function planManagedOrcadAutoUpdate(input: {
   if (record.rolledBackFrom === candidateVersion) {
     return { action: 'skip', reason: 'rolled-back' }
   }
-  // Why absent counts as older: only builds that predate the field omit it.
-  if (
-    record.activeAppVersion &&
-    compareAppVersions(record.activeAppVersion, input.appVersion) > 0
-  ) {
-    return { action: 'skip', reason: 'host-newer' }
+  const refusal = refuseOrcadHostDowngrade(record, candidateVersion, input.appVersion)
+  if (refusal) {
+    return { action: 'skip', reason: refusal }
+  }
+  // Why no `failedBefore` skip on a stopped host: nothing serves, so retrying is the only way back.
+  if (record.active === null && record.previous !== null) {
+    return { action: 'update' }
   }
   return input.failedBefore ? { action: 'skip', reason: 'failed-before' } : { action: 'update' }
 }
@@ -98,9 +105,10 @@ export function autoUpdateManagedOrcadEnvironment(
       return { outcome: 'skipped', reason: 'migrating' }
     }
     const context = await resolveLinkedOrcadContext(managed.environment, managed.deployment)
+    const candidateVersion = await bundledOrcadVersion(context.serverTarget)
     const plan = planManagedOrcadAutoUpdate({
       record: context.activationRecord,
-      candidateVersion: await bundledOrcadVersion(context.serverTarget),
+      candidateVersion,
       appVersion: args.appVersion,
       failedBefore: args.failedBefore
     })
@@ -108,8 +116,27 @@ export function autoUpdateManagedOrcadEnvironment(
       return { outcome: 'skipped', reason: plan.reason }
     }
     args.onUpdating()
+    let lockedSkip: ManagedOrcadAutoUpdateSkip | null = null
     try {
-      const result = await runManagedOrcadUpdate(userDataPath, managed, context, {})
+      const result = await runManagedOrcadUpdate(userDataPath, managed, context, {
+        // Why again under the fence: another desktop may activate or stop a newer build mid-upload.
+        admitRecord: (record) => {
+          const locked = planManagedOrcadAutoUpdate({
+            record,
+            candidateVersion,
+            appVersion: args.appVersion,
+            failedBefore: false
+          })
+          if (locked.action === 'update') {
+            return null
+          }
+          lockedSkip = locked.reason
+          return `Auto-update skipped under the host fence: ${locked.reason}.`
+        }
+      })
+      if (lockedSkip) {
+        return { outcome: 'skipped', reason: lockedSkip }
+      }
       if (result.outcome !== 'deferred') {
         return { outcome: 'updated', activeVersion: result.activeVersion }
       }

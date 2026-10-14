@@ -32,6 +32,7 @@ export type RuntimeServiceCommandSurface = {
   dispatchMobileNotification: RuntimeMobileNotificationController['dispatch']
   getMissedNotificationsSince: RuntimeMobileNotificationController['getMissedSince']
   configureNotificationDismissalStore: RuntimeMobileNotificationController['configureDismissalStore']
+  closeNotificationDismissals: RuntimeMobileNotificationController['closeDismissals']
   reconcileDismissedPushes: RuntimeMobileNotificationController['reconcileDismissedPushes']
   getMobileNotificationEpoch: RuntimeMobileNotificationController['getEpoch']
   dismissMobileNotification: RuntimeMobileNotificationController['dismiss']
@@ -63,6 +64,8 @@ export type RuntimeServiceCommandSurface = {
   selectDataAccount: RuntimeAccountController['selectData']
   removeDataAccount: RuntimeAccountController['removeData']
   onAccountsChanged: RuntimeAccountController['onChanged']
+  setHostAccountLaunchEnv: RuntimeAccountController['setHostLaunchEnv']
+  restoreHostAccountLaunchEnv: RuntimeAccountController['restoreHostLaunchEnv']
   listMobileSpeechModels: RuntimeMobileSpeechCatalog['list']
   downloadMobileSpeechModel: RuntimeMobileSpeechCatalog['download']
   deleteMobileSpeechModel: RuntimeMobileSpeechCatalog['delete']
@@ -131,6 +134,7 @@ export function installRuntimeServiceCommandSurface(
     dispatchMobileNotification: notifications.dispatch.bind(notifications),
     getMissedNotificationsSince: notifications.getMissedSince.bind(notifications),
     configureNotificationDismissalStore: notifications.configureDismissalStore.bind(notifications),
+    closeNotificationDismissals: notifications.closeDismissals.bind(notifications),
     reconcileDismissedPushes: notifications.reconcileDismissedPushes.bind(notifications),
     getMobileNotificationEpoch: notifications.getEpoch.bind(notifications),
     dismissMobileNotification: notifications.dismiss.bind(notifications),
@@ -165,6 +169,8 @@ export function installRuntimeServiceCommandSurface(
     selectDataAccount: accounts.selectData.bind(accounts),
     removeDataAccount: accounts.removeData.bind(accounts),
     onAccountsChanged: accounts.onChanged.bind(accounts),
+    setHostAccountLaunchEnv: accounts.setHostLaunchEnv.bind(accounts),
+    restoreHostAccountLaunchEnv: accounts.restoreHostLaunchEnv.bind(accounts),
     listMobileSpeechModels: speech.list.bind(speech),
     downloadMobileSpeechModel: speech.download.bind(speech),
     deleteMobileSpeechModel: speech.delete.bind(speech),

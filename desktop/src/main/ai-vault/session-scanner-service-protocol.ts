@@ -128,6 +128,8 @@ export type AiVaultServiceChildMessage =
   | ({ type: 'result'; id: number } & AiVaultServiceResultValue)
   | { type: 'error'; id: number; message: string; retryable: boolean }
   | { type: 'invalidated'; generation: number }
+  // `units` only grows within one scan; the parent re-arms that scan's deadline on an advance.
+  | { type: 'progress'; id: number; units: number }
 
 /** Everything but the two bulk reads is interactive: a search must not queue behind a scan. */
 export function aiVaultServiceLane(operation: AiVaultServiceOperation): AiVaultServiceLane {
@@ -162,6 +164,14 @@ export function isAiVaultServiceChildMessage(value: unknown): value is AiVaultSe
   }
   if (message.type === 'invalidated') {
     return Number.isSafeInteger(message.generation)
+  }
+  if (message.type === 'progress') {
+    return (
+      Number.isSafeInteger(message.id) &&
+      typeof message.units === 'number' &&
+      Number.isSafeInteger(message.units) &&
+      message.units > 0
+    )
   }
   return (message.type === 'result' || message.type === 'error') && Number.isSafeInteger(message.id)
 }

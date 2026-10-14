@@ -1,5 +1,9 @@
 {
   "app": {
+    "saving": {
+      "delayedTitle": "配置存储操作耗时比平时更长",
+      "delayedDescription": "在此操作完成前，后续保存可能会延迟。"
+    },
     "recoverableError": {
       "rootTitle": "NASH 遇到渲染器错误。",
       "rootDescription": "应用 shell 无法完成渲染。重试以重新挂载，如果错误仍然存在，请重新启动 NASH。",
@@ -11,11 +15,61 @@
     "retrying": "正在重试..."
   },
   "settings": {
+    "chat": {
+      "permissionsTitle": "新聊天的权限",
+      "permissionsDescription": "仅适用于新聊天。在终端中打开的智能体使用设置 → 智能体 → 智能体权限。",
+      "description": "选择聊天的外观和行为方式。",
+      "names": {
+        "title": "聊天名称",
+        "description": "使用智能体根据首条消息为新聊天生成名称。未生成名称时，聊天仍显示为 Claude Chat 或 Codex Chat。",
+        "enable": "自动为聊天命名",
+        "recipe": "聊天名称",
+        "recipeDescription": "根据新聊天的首条消息生成简短名称。",
+        "customCommandDescription": "选择自定义命令的配置共用此命令行。使用 {prompt} 将输入作为参数传递，否则通过标准输入传递。",
+        "saveFailed": "无法保存聊天命名设置。",
+        "searchAgent": "智能体",
+        "searchTemplate": "命令模板"
+      }
+    },
     "terminal": {
       "optionLayoutAlt": "ABC 或 U.S. — Option 键发送 Alt/Esc 序列",
       "optionLayoutCompose": "此布局使用 Option 键输入 @、€、[、] 等字符",
       "optionLayoutUnknown": "未知布局 — Option 键输入字符（安全的默认设置）",
-      "optionShortcutHint": "选择“两个都”使用 Option 快捷键，选择“关”输入重音字符和符号，或选择“左边”/“右边”让两个 Option 键各司其职。"
+      "optionShortcutHint": "选择“两个都”使用 Option 快捷键，选择“关”输入重音字符和符号，或选择“左边”/“右边”让两个 Option 键各司其职。",
+      "windows": {
+        "administratorApproval": "Windows 将请求批准。请使用您常用的账户。",
+        "administratorDialogScope": "这会更改整个应用的权限。SSH 和 WSL 保留各自的权限。",
+        "administratorDocumentation": "阅读指南",
+        "administratorLabel": "管理员模式",
+        "administratorPromptCancellation": "取消 Windows 的提示后，NASH 会带着保留的终端重新打开。SSH 和 WSL 的权限仍由其主机控制。",
+        "administratorRestartConsequences": "请先保存您的工作。批准后，当前本地终端主机上的终端和智能体会关闭。已恢复的标签页会打开新的管理员 shell。",
+        "administratorRestartFailed": "NASH 无法重启。请重试，或使用手动说明。",
+        "administratorScope": "NASH 应用的权限。现有终端可能有所不同。",
+        "administratorSearchDescription": "查看 NASH 的 Windows 权限，或通过管理员批准进行重启。",
+        "administratorStatus": "管理员",
+        "cancelAdministratorRestart": "取消",
+        "checkingAdministrator": "检查中…",
+        "closeAdministratorHelp": "关闭",
+        "closeLocalSessions": "请保存您的工作，关闭所有本地终端会话，然后退出 NASH。",
+        "confirmAdministratorRestart": "以管理员身份重启？",
+        "keywordAdmin": "管理员",
+        "keywordAdministrator": "管理员",
+        "keywordElevated": "提升权限",
+        "keywordPermissions": "权限",
+        "keywordRestart": "重启",
+        "keywordUac": "uac",
+        "launchAdministrator": "在 Windows 开始菜单中，右键单击 NASH，然后选择“以管理员身份运行”。使用您常用的账户批准 Windows 提示。",
+        "launchStandard": "从 Windows 开始菜单正常打开 NASH。",
+        "manualAdministratorHelp": "手动说明",
+        "openManageSessions": "打开管理会话",
+        "restartAdministrator": "以管理员身份重启",
+        "restartingAdministrator": "正在重启…",
+        "retainedTerminalPermissions": "如果新终端仍使用之前的权限，请打开管理会话并选择重新启动守护进程。这会关闭本地终端及其正在运行的命令。",
+        "returnStandardHelp": "标准模式指南",
+        "runAdministratorHelp": "管理员指南",
+        "standardStatus": "标准用户",
+        "unknownAdministrator": "无法确定"
+      }
     },
     "appearance": {
       "language": {
@@ -125,27 +179,24 @@
     },
     "agents": {
       "codexTerminalServerIsolation": {
-        "description": "保持 NASH 的状态和关闭选项卡正常工作。关闭以使用 Codex 的共享服务器及其智能体概述。适用于新终端。",
-        "title": "在自己的服务器上运行每个 Codex 终端"
+        "title": "在自己的服务器上运行每个 Codex 终端",
+        "description": "保持 NASH 的状态和关闭选项卡正常工作。关闭以使用 Codex 的共享服务器及其智能体概述。适用于新终端。"
       },
       "codexSharedServerWarning": {
         "title": "当 Codex 选项卡共享服务器时发出警告",
         "description": "当您自己启动的 Codex 与其他选项卡共享服务器时，在您自己启动的 Codex 上显示一条通知，因为它的智能体状态可能是错误的。"
-      }
-    },
-    "chat": {
-      "description": "选择聊天的外观和命名方式。",
-      "names": {
-        "title": "聊天名称",
-        "description": "使用智能体根据首条消息为新聊天生成名称。未生成名称时，聊天仍显示为 Claude Chat 或 Codex Chat。",
-        "enable": "自动为聊天命名",
-        "recipe": "聊天名称",
-        "recipeDescription": "根据新聊天的首条消息生成简短名称。",
-        "customCommandDescription": "选择自定义命令的配置共用此命令行。使用 {prompt} 将输入作为参数传递，否则通过标准输入传递。",
-        "saveFailed": "无法保存聊天命名设置。",
-        "searchAgent": "智能体",
-        "searchTemplate": "命令模板"
-      }
+      },
+      "environmentName": "环境变量名称",
+      "environmentValue": "{{name}} 的值",
+      "savedEnvironment": "已保存的值 · 输入以替换",
+      "newEnvironment": "值",
+      "removeEnvironment": "删除",
+      "loadingHost": "正在加载智能体设置…",
+      "updateHost": "请更新此服务器以编辑其智能体启动设置。",
+      "readFailed": "无法读取智能体设置。请检查主机连接并重试。",
+      "saveFailed": "无法保存智能体设置。请检查主机连接并重试。",
+      "hostDefaults": "所选主机上新智能体的默认设置。",
+      "save": "保存"
     },
     "followSymlinkedDirectoriesKeywords": {
       "symlink": "符号链接",
@@ -167,6 +218,7 @@
     "reportCrash": "发送崩溃报告...",
     "file": "文件",
     "exit": "退出",
+    "quitApp": "退出 {{appName}}",
     "edit": "编辑",
     "appearance": "外观",
     "toggleLeftSidebar": "显示/隐藏左侧边栏",
@@ -174,7 +226,7 @@
     "showStatusBar": "显示状态栏",
     "showTasksButton": "显示任务按钮",
     "showAutomationsButton": "显示自动化按钮",
-    "showMobileButton": "显示 Orca 手机端按钮",
+    "showMobileButton": "显示 NASH 手机端按钮",
     "showTitlebarAppName": "显示标题栏应用名称",
     "view": "查看",
     "reload": "重新加载",
@@ -346,6 +398,18 @@
             "07f788de83": "WebSocket"
           }
         }
+      },
+      "pairingSecurity": {
+        "hide": "隐藏",
+        "storedCodeInsecureOrigin": "此浏览器会保存一个可重复使用的配对码，因为此页面是另一台机器上的纯 http 页面。任何能读取此浏览器存储的人都可以使用它。如需更安全的配对，请通过 https、本机的 localhost 或 SSH 隧道打开 NASH，然后重新配对。",
+        "storedCodeNoEd25519": "此浏览器会保存一个可重复使用的配对码，因为它无法创建安全的登录密钥（Ed25519）。请使用最新版浏览器并重新配对，以获得更安全的配对。",
+        "sessionInsecureOrigin": "此配对仅在此标签页打开期间有效，因为此页面是另一台机器上的纯 http 页面。如需让此浏览器记住配对，请通过 https、本机的 localhost 或 SSH 隧道打开 NASH。",
+        "sessionNoEd25519": "此配对仅在此标签页打开期间有效，因为此浏览器无法创建安全的登录密钥（Ed25519）。请使用最新版浏览器以获得此浏览器能记住的配对。"
+      },
+      "runtimeAuth": {
+        "insecureOrigin": "NASH 拒绝从此页面配对：它是另一台机器上的纯 http 页面，因此网络路径上的任何人都可以替换它并取走配对码。请通过 https、本机的 localhost 或 SSH 隧道打开 Web 客户端。如需仍然允许，服务器操作员可以使用 ORCA_ALLOW_INSECURE_WEB_PAIRING=1 重新启动 NASH。",
+        "deviceDowngraded": "此 NASH 服务器不再支持此浏览器的登录密钥（可能已被降级）。请更新服务器，或重新配对此浏览器。",
+        "unauthorized": "未授权。请重新配对此 Web 客户端。"
       }
     },
     "store": {
@@ -490,7 +554,7 @@
             "319d7cf39b": "已创建云配置文件",
             "d6e764e7db": "请重新连接此配置文件",
             "f0c9e11a6d": "创建云配置文件失败",
-            "8b8fa73174": "未配置 Orca Cloud 登录",
+            "8b8fa73174": "未配置 NASH Cloud 登录",
             "33290e88ed": "连接配置文件失败",
             "9fcb07a796": "配置文件已连接",
             "2f6c78a039": "刷新配置文件身份验证失败",
@@ -642,13 +706,6 @@
           "background": {
             "session": {
               "4ca0651d56": "您的自动化提示未发送 - 打开工作区并粘贴它。"
-            }
-          }
-        },
-        "worktree": {
-          "background": {
-            "terminals": {
-              "setupTitle": "设置"
             }
           }
         },
@@ -919,6 +976,7 @@
               "undecryptableUnknown": "{{value0}} cookie 无法解密并被跳过。完全关闭源浏览器并再次尝试导入。",
               "unrecognizedWarning": "cookie 导入结束时出现此版本的 NASH 无法识别的警告。更新 NASH 以查看详细信息，然后在依赖其 cookie 之前检查此配置文件。",
               "undecryptableUnrecognizedReason": "{{value0}} cookies 无法解密并被跳过，原因是此版本的 NASH 无法识别。更新 NASH 以查看详细信息，然后再次尝试导入。",
+              "partitionSkippedBreakdown": "无法读取网站分区的 Cookie：{{value0}}。为保护现有会话而未导入的相关 Cookie：{{value1}}。这些网站现有的 Cookie 保持不变。再次登录前，请在此配置文件中检查这些网站。",
               "partitionSkipped": "{{value0}} cookie 未导入，因为无法读取其站点分区。在 NASH 中再次登录这些网站。",
               "locationClientHosted": "从此设备读取并存储在此处以供 {{value0}} 工作区使用。",
               "locationRemoteHost": "从 {{value0}} 上的浏览​​器读取并存储在那里。",
@@ -961,7 +1019,8 @@
       },
       "file": {
         "preview": {
-          "pairedOutsideWorktree": "工作区之外的文件尚无法在配对服务器上预览。"
+          "pairedOutsideWorktree": "工作区之外的文件尚无法在配对服务器上预览。",
+          "webClientUnavailable": "文档预览在 Web 客户端中不可用。"
         }
       },
       "clipboardWriteFailure": {
@@ -1004,7 +1063,6 @@
         "workspaceHostUnresolved": "目标工作区跨越多个主机，因此此运行没有可供使用的单个主机。"
       },
       "useComposerState": {
-        "7eb3f44ff7": "所选智能体已禁用。创建之前选择启用的智能体。",
         "b2ead86962": "无法解析 PR 基础引用。",
         "3db83fc58a": "没有可用于附件的远程项目路径。",
         "ba6cb77082": "无法连接到项目。",
@@ -1015,7 +1073,8 @@
         "5f3d2c8a1b": "解析 MR 基础分支失败",
         "dropPartiallyAttached": "无法附加 {{count}} 项中的 {{failureCount}} 项。",
         "dropPartiallyAttached_one": "无法附加 {{count}} 项目的 {{failureCount}}。",
-        "dropPartiallyAttached_other": "无法附加 {{count}} 项中的 {{failureCount}} 项。"
+        "dropPartiallyAttached_other": "无法附加 {{count}} 项中的 {{failureCount}} 项。",
+        "7eb3f44ff7": "所选智能体已禁用。创建之前选择启用的智能体。"
       },
       "useGlobalFileDrop": {
         "38c9f034ff": "无法上传删除的文件。",
@@ -1036,19 +1095,11 @@
         "0e3cf53060": "未找到浏览器选项卡 {{value0}}",
         "2f6637fe6c": "浏览器选项卡 {{value0}} 已固定",
         "a8d2bf8e9e": "没有可关闭的活动浏览器选项卡",
-        "291c8ed902": "当远程运行时处于活动状态时，浏览器选项卡不可用",
-        "f45fa2b03c": "当远程运行时处于活动状态时，浏览器配置文件不可用",
         "f000b2ff76": "没有活动的工作树",
         "56d3ec4203": "无法创建无标题 Markdown 文件。",
         "f6300deb8b": "新浏览器选项卡",
         "7a64b31991": "当远程运行时处于活动状态时，本地终端创建不可用",
         "60428567b4": "当远程运行时处于活动状态时，本地终端显示不可用",
-        "f8aaf2bde3": "工作区已上传",
-        "2fe88c2e06": "远程工作区同步不可用",
-        "workspaceChangedOnAnotherDevice": "工作区已在另一台设备上更改",
-        "2ec42e1c52": "还没有远程工作区",
-        "88214a785b": "工作区同步等待本地会话恢复(hydration)并超时",
-        "4f78ba5885": "工作区已同步",
         "ef223fbb6b": "有设备尝试连接但未配对",
         "11992d0337": "如果这是您的手机或其他 NASH 客户端，请从设置 → 移动端重新配对。",
         "6573cfe955": "打开移动端设置",
@@ -1947,7 +1998,7 @@
         "92b0f9d921": "已通过身份验证并重试。",
         "cd8c34aac1": "gh",
         "cf82170065": "无法为该仓库加注星标。确保",
-        "30c36231c1": "Orca 是开源项目。如果它今天帮到了你，GitHub 星标会帮助其他开发者找到它。",
+        "30c36231c1": "NASH 是开源项目。如果它今天帮到了你，GitHub 星标会帮助其他开发者找到它。",
         "b5e685e4d9": "关闭",
         "5f6df21046": "喜欢 NASH 吗？",
         "2d67b6c849": "在 GitHub 上加星标",
@@ -2399,8 +2450,8 @@
         "34c8fbb46e": "SSH远程",
         "63c2be1914": "SSH 已断开连接",
         "95be6587d3": "创建工作树“{{value0}}”",
-        "worktreesHeader": "工作树",
-        "recentWorktreesHeader": "最近的工作树",
+        "worktreesHeader": "工作空间",
+        "recentWorktreesHeader": "最近的工作空间",
         "settingsBadge": "设置",
         "actionBadge": "操作",
         "paletteHostBadge": "主机：{{value0}}",
@@ -2409,8 +2460,8 @@
         "projectBadge": "项目",
         "repoGroupBadge": "仓库组",
         "pluginCommandFailed": "无法运行插件命令。",
-        "27f10cca63": "搜索聊天、终端、工作树、设置和操作...",
-        "2770f02910": "搜索聊天、终端、工作树、设置和操作",
+        "27f10cca63": "搜索聊天、终端、工作空间、设置和操作...",
+        "2770f02910": "搜索聊天、终端、工作空间、设置和操作",
         "recentChatsTerminalsHeader": "最近的聊天和终端",
         "lastActiveTime": "最后活跃时间 {{value0}} 前"
       },
@@ -2940,7 +2991,6 @@
             "efb3843e75": "筛选并排序工作区",
             "93b7381d50": "筛选",
             "a615e24679": "排序",
-            "4cc5b73efe": "正在查找非活动工作区...",
             "5bf2e88480": "已扫描 {{value0}}/{{value1}} 个{{value2}}",
             "searchPlaceholder": "搜索工作区",
             "ageFilter": "时间",
@@ -2952,7 +3002,6 @@
             "1d3503357d": "删除继续期间，你可以关闭此窗口并稍后回来。",
             "4c2990886e": "已删除 {{value0}}/{{value1}}",
             "86ba852118": "{{value0}}，{{value1}} 个失败",
-            "7b7bde5181": "到目前为止已检查工作区：{{value0}}",
             "deletingCount": "正在删除工作区：{{value0}}",
             "deleteCount": "删除工作区：{{value0}}？",
             "selectedForDeletionCount": "已选择删除：{{value0}}",
@@ -3029,7 +3078,8 @@
           }
         },
         "dialog": {
-          "f26c4baeda": "关闭"
+          "f26c4baeda": "关闭",
+          "minimize": "最小化"
         },
         "repo": {
           "multi": {
@@ -3119,25 +3169,25 @@
           },
           "MobileDriverOverlay": {
             "c6460cf584": "收回",
-            "c8f2e1a4b9": "收回此终端",
             "c44659e09f": "手机控制中",
-            "7cffad954c": "折叠",
             "3eed73394f": "您的键盘已暂停",
-            "faa367dc74": "手机将此终端留在手机尺寸",
-            "54f7d6f69d": "收回所有终端",
-            "b3d8e1f42a": "恢复此终端",
-            "e8c4f2a91b": "恢复所有终端",
-            "f2a8b9c1d3": "来自手机",
             "c7e4a2b8f1": "手机正在控制",
-            "d9f3c6e2a4": "桌面键盘已暂停。收回此终端以在此输入，收回手机控制的所有终端，或折叠以继续观看。",
-            "a6b1d8f3e2": "手机会话已结束。将此终端或手机留在手机尺寸的所有终端恢复为桌面尺寸。",
             "4b7e1c9a20": "尺寸仍适合您的手机",
             "9d2f6a3e58": "您的手机会话结束了。恢复以适合此窗口。",
             "1e5c8b7d43": "恢复",
             "6a3d9f2c71": "全部恢复",
             "8c1a5e9f36": "桌面打字已暂停。输出持续流动。",
             "2f7b4d1e95": "全部收回",
-            "3a9c5f7e12": "最小化"
+            "3a9c5f7e12": "最小化",
+            "c8f2e1a4b9": "收回此终端",
+            "7cffad954c": "折叠",
+            "faa367dc74": "手机将此终端留在手机尺寸",
+            "54f7d6f69d": "收回所有终端",
+            "b3d8e1f42a": "恢复此终端",
+            "e8c4f2a91b": "恢复所有终端",
+            "f2a8b9c1d3": "来自手机",
+            "d9f3c6e2a4": "桌面键盘已暂停。收回此终端以在此输入，收回手机控制的所有终端，或折叠以继续观看。",
+            "a6b1d8f3e2": "手机会话已结束。将此终端或手机留在手机尺寸的所有终端恢复为桌面尺寸。"
           },
           "TerminalAgentSessionForkDialog": {
             "17fc841e59": "复制上下文",
@@ -3189,8 +3239,9 @@
             "sourceRestoring": "重新连接该终端 — 正在重新建立其输出。会话仍在进行。",
             "ptyAllocationLimit": "系统无法再分配 pty 设备。请在 NASH 或其他程序中关闭一些不用的终端，然后重试。",
             "terminalProcessLimit": "系统无法再启动终端进程。请关闭不用的终端或退出不用的进程，然后重试。",
-            "heldByPreviousRelay": "该终端仍在主机上以先前版本的 NASH 运行，当前版本无法连接到它。它会一直运行直到退出。请打开新终端以继续在此工作。",
-            "ownerHostMismatch": "此终端保存的会话属于另一个主机连接，因此 NASH 无法在此重新附加它。请打开新终端以继续。"
+            "hostTerminalCap": "主机上运行的终端数量已达到 NASH 允许的上限。请关闭一个不再需要的终端，然后重试。",
+            "ownerHostMismatch": "此终端保存的会话属于另一个主机连接，因此 NASH 无法在此重新附加它。请打开新终端以继续。",
+            "heldByPreviousRelay": "该终端仍在主机上以先前版本的 NASH 运行，当前版本无法连接到它。它会一直运行直到退出。请打开新终端以继续在此工作。"
           },
           "TerminalProcessExitOverlay": {
             "capacityTitle": "已达到 Git Bash 控制台上限",
@@ -3281,6 +3332,7 @@
                 "ce8248b835": "工作树路径不可用。",
                 "internalTooManyPaths": "拖放的路径过多，无法安全粘贴到终端。",
                 "internalPathsTooLarge": "拖放的路径列表过大，无法安全粘贴到终端。",
+                "internalHostMismatch": "请拖放与此终端位于同一主机的文件。",
                 "b4cf68e889": "已跳过 {{value0}} {{value1}}。",
                 "writeTimeout": "文件拖放已取消：终端在安全超时前未接受路径。",
                 "writeRejected": "文件拖放已取消：终端无法接受路径。"
@@ -3374,6 +3426,18 @@
             "notStarted": "智能体无法启动。",
             "unconfirmed": "无法确认智能体已启动。",
             "workspaceGone": "其工作区已不可用。"
+          },
+          "TerminalSleepingPaneOverlay": {
+            "pausedDetail": "由于主机意外停止，自动恢复已暂停。您的会话已保存。",
+            "liveCapDetail": "此主机上已有足够多的智能体在运行。您的会话已保存。",
+            "pressureDetail": "主机负载过高。您的会话已保存。",
+            "deadlineDetail": "主机正忙于恢复其他终端。您的会话已保存。",
+            "title": "休眠中 — 点击恢复",
+            "resume": "恢复",
+            "resumeAutomaticRestores": "继续自动恢复"
+          },
+          "WslHostUnavailableBanner": {
+            "turnOn": "开启"
           }
         }
       },
@@ -3446,7 +3510,9 @@
             "ec2adf093e": "在新终端中启动 {{value0}}",
             "465e432ef1": "无法为 {{value0}} 构建启动命令。",
             "e518f544b1": "未检测到智能体",
-            "8dea9b5cdf": "没有启用智能体"
+            "8dea9b5cdf": "没有启用智能体",
+            "needsServerUpdate": "请更新此服务器上的 NASH 以列出此工作区的智能体",
+            "hostUnreachable": "无法连接此工作区的主机以列出其智能体"
           },
           "RecentTabSwitcher": {
             "329638ff6f": "切换选项卡",
@@ -3698,7 +3764,9 @@
             "b8f4a2c1d0e3": "{{value0}} 个孤立项",
             "c7e3b1a0d9f2": "终止 {{value0}} 个孤立终端",
             "d8f4c2b1e0a3": "终止 {{value0}} 个孤立终端",
-            "e9a5d3c2b1f0": "终止 {{value0}}？"
+            "e9a5d3c2b1f0": "终止 {{value0}}？",
+            "8a0472ab54": "无法连接 {{value0}}；其资源未知。",
+            "1ea066b73f": "更新 {{value0}} 以查看其资源。"
           },
           "SshStatusSegment": {
             "3ad70e0365": "管理远程主机",
@@ -3727,8 +3795,6 @@
             "connectedHostCount_one": "{{count}} 个主机",
             "connectedHostCount_other": "{{count}} 个主机",
             "connecting": "正在连接…",
-            "workspaceConflict": "工作区冲突",
-            "workspaceSyncError": "工作区同步错误",
             "runtime_unavailable_transport_up": "NASH 不可用",
             "runtime_workspace_window_closed": "工作区窗口已关闭"
           },
@@ -3763,6 +3829,11 @@
             "54e8d6bb2d": "Fable",
             "d79c3362c4": "5小时",
             "a79c64f87e": "Fable",
+            "c98ea88392": "没有其他账户",
+            "9332ba8684": "切换到",
+            "d450654fa2": "Claude 账户",
+            "11e2354daf": "Claude 使用量运行时",
+            "3dd7ddfae1": "打开 Claude 详情和账户切换器",
             "59c6e7b4e0": "可见会话将立即重启。其他会话会在其工作树变为活动状态时重启。",
             "c676918adc": "系统默认",
             "3325d996cb": "刷新速率限制",
@@ -3794,16 +3865,11 @@
             "grokUsageAria": "打开 Grok 使用详情",
             "grokUsageMenu": "Grok 使用情况",
             "floatingTerminalNewActivity": "{{label}}，有新活动",
+            "4fba7dc1e7": "余额 {{value0}}",
             "codexSignInSuccess": "已登录 Codex",
             "codexSignInError": "Codex 登录失败，请重试。",
             "cursorUsageMenu": "Cursor 用量",
             "hiddenUsageProviders": "另有：{{value0}}",
-            "c98ea88392": "没有其他账户",
-            "9332ba8684": "切换到",
-            "d450654fa2": "Claude 账户",
-            "11e2354daf": "Claude 使用量运行时",
-            "3dd7ddfae1": "打开 Claude 详情和账户切换器",
-            "4fba7dc1e7": "余额 {{value0}}",
             "zcodeUsageMenu": "Z代码使用",
             "4025a6f62f": "无限制",
             "a95969101f": "{{value0}} 积分"
@@ -3992,14 +4058,6 @@
             "zcode": {
               "mcp": "MCP"
             },
-            "fbc80d8be2": "Zen 余额",
-            "c03c61f53f": "余额",
-            "f6a27a3c0a": "{{value0}} 可用",
-            "7404abbece": "用量积分",
-            "473d45cd0f": "余额 {{value0}}",
-            "f21b2ba897": "积分",
-            "56c0d70577": "无限制",
-            "87b5bda4d3": "{{value0}} 积分可用",
             "claude": {
               "waiting": {
                 "label": "运行 Claude 时更新",
@@ -4009,14 +4067,31 @@
                 "label": "登录已过期",
                 "message": "Claude 用量信息已过期。请使用此账户启动 Claude 以刷新。"
               }
-            }
+            },
+            "fbc80d8be2": "Zen 余额",
+            "c03c61f53f": "余额",
+            "f6a27a3c0a": "{{value0}} 可用",
+            "7404abbece": "用量积分",
+            "473d45cd0f": "余额 {{value0}}",
+            "f21b2ba897": "积分",
+            "56c0d70577": "无限制",
+            "87b5bda4d3": "{{value0}} 积分可用"
           },
           "SshTargetStatusRow": {
             "sshHost": "SSH 主机"
           },
           "usagePercentageLabel": {
             "used": "已用 {{value0}}%",
-            "remaining": "剩余 {{value0}}%"
+            "remaining": "剩余 {{value0}}%",
+            "bare": "{{value0}}%"
+          },
+          "StatusBarUsageChangeNotices": {
+            "compactTitle": "用量显示现已精简",
+            "compactBody": "每个服务提供商显示一个主要指标。在用量菜单中选择“<detailed>详细</detailed>”即可查看更多限额。"
+          },
+          "usageUnitLabel": {
+            "used": "已用",
+            "remaining": "剩余"
           },
           "UsagePercentageDisplayChangeNotice": {
             "title": "用量现在显示已用百分比",
@@ -4118,17 +4193,14 @@
             "checkAriaOne": "恢复后有 1 个待检查的聊天。点击查看详情。",
             "checkAria": "恢复后有 {{value0}} 个待检查的聊天。点击查看详情。",
             "checkTooltip": "重启后 NASH 未能恢复或未能确认已恢复的聊天。点击查看详情。",
-            "resumingLabelOne": "正在恢复 1 个聊天",
-            "resumingLabel": "正在恢复 {{value0}} 个聊天",
-            "resumingAriaOne": "正在恢复 1 个聊天。点击查看详情。",
-            "resumingAria": "正在恢复 {{value0}} 个聊天。点击查看详情。",
-            "resumingTooltip": "正在恢复中断的聊天并请它们继续…"
-          },
-          "usageReadingSource": {
-            "claudeStatusLine": "Claude Code 状态行",
-            "codexAppServer": "codex app-server",
-            "agyUsage": "agy /usage",
-            "from": "来自 {{source}}"
+            "resumingTooltip": "正在恢复中断的聊天并请它们继续…",
+            "resumingProgressLabel": "正在恢复聊天 {{value0}}/{{value1}}",
+            "resumingProgressAria": "正在恢复聊天，已完成 {{value0}}/{{value1}}。点击查看详情。",
+            "resumedLabelOne": "已恢复 1 个聊天",
+            "resumedLabel": "已恢复 {{value0}} 个聊天",
+            "resumedAriaOne": "已恢复 1 个聊天。点击查看。",
+            "resumedAria": "已恢复 {{value0}} 个聊天。点击查看。",
+            "resumedTooltip": "重启后 NASH 恢复的聊天。点击查看。"
           },
           "provider": {
             "extra": {
@@ -4139,6 +4211,12 @@
                 }
               }
             }
+          },
+          "usageReadingSource": {
+            "claudeStatusLine": "Claude Code 状态行",
+            "codexAppServer": "codex app-server",
+            "agyUsage": "agy /usage",
+            "from": "来自 {{source}}"
           }
         }
       },
@@ -4636,9 +4714,8 @@
         "SkillFreshnessRow": {
           "statusUpdateAvailable": "有更新",
           "statusCantUpdate": "无法更新",
-          "cantUpdateReason": "此技能安装在 NASH 无法安全更新的位置，因此 npx skills update 命令不会更改它。",
+          "cantUpdateReason": "此技能安装在 NASH 无法安全更新的位置，因此 更新命令不会更改它。",
           "chipCurrent": "最新",
-          "chipUnrecognized": "无法识别",
           "chipInaccessible": "无法访问",
           "chipDuplicate": "重复",
           "chipExternalLink": "外部链接",
@@ -4647,15 +4724,13 @@
           "chipInRepo": "在仓库中",
           "chipPluginCache": "插件缓存",
           "tipCurrent": "这里的技能已是最新，更新不会更改它。",
-          "tipUnrecognized": "这里的技能内容与任何官方版本都不匹配，因此 NASH 无法安全更新它。请移除或替换此处的内容以允许更新。",
           "tipInaccessible": "NASH 无法读取这里的技能（权限或文件错误），因此无法检查或更新它。",
-          "tipDuplicate": "此技能除主副本外还安装在这里，因此 npx skills update 命令无法访问它。请移除它以允许更新。",
+          "tipDuplicate": "此技能除主副本外还安装在这里，因此 更新命令无法访问它。请移除它以允许更新。",
           "tipExternalLink": "这是一个指向 NASH 技能文件夹之外的快捷方式；更新不会跟随它。",
           "tipBrokenLink": "这是一个指向已不存在内容的快捷方式，可以安全删除。",
           "tipReadOnly": "这里的技能位于只读位置，需更改其权限后才能更新。",
           "tipInRepo": "这里的技能位于某个项目内，而非全局技能；NASH 只更新全局技能。",
           "tipPluginCache": "这里的技能由插件管理；请改为更新插件。",
-          "skippedReasonUnrecognized": "此处的副本与官方版本不一致 — 它可能被修改过，或是同名但内容不同的技能。NASH 将其排除在更新之外，以免覆盖它。如果您希望 NASH 更新此技能，请删除它。",
           "skippedReasonReadOnly": "此副本位于只读位置，因此 NASH 未将其纳入更新。请更改其权限，让 NASH 更新它。",
           "skippedReasonInaccessible": "NASH 无法读取此副本，因此未将该技能纳入更新。",
           "skippedReasonInRepo": "这是项目技能而非全局技能 — NASH 只更新您的全局技能，因此将其排除在更新之外。",
@@ -4663,9 +4738,8 @@
           "skippedReasonExternalLink": "此副本是指向 NASH 技能文件夹之外的快捷方式，因此 NASH 未将其纳入更新。",
           "skippedReasonBrokenLink": "此副本是指向已不存在内容的快捷方式，因此 NASH 将其排除 — 您可以放心删除。",
           "skippedReasonDuplicate": "这是独立的副本，因此更新不会触及它 — 该命令只刷新主副本。请删除此副本并重新安装技能，使此位置跟随主副本。",
+          "skippedReasonUnrecognized": "此处的副本与官方版本不一致 — 它可能被修改过，或是同名但内容不同的技能。NASH 将其排除在更新之外，以免覆盖它。如果您希望 NASH 更新此技能，请删除它。",
           "skippedReasonNewer": "此副本的版本比当前 NASH 版本内置的更新，因此 NASH 未动它，以免回退。更新 NASH 后两者将恢复一致。",
-          "skippedReasonStaleRecord": "技能更新器没有此副本的有效记录，因此它报告技能已是最新且不做任何更改。请重新安装，使记录恢复一致：{{value0}}",
-          "chipNewer": "Newer",
           "tipNewer": "此副本的版本比当前 NASH 版本内置的更新。"
         },
         "SkillFreshnessUpdateDialog": {
@@ -4707,7 +4781,9 @@
           "scanOutsideRoot": "此插件路径指向插件缓存之外，NASH 已将其跳过。",
           "scanIoErrorWithCode": "NASH 无法读取此插件路径（{{value0}}）。",
           "scanIoError": "NASH 无法读取此插件路径。",
-          "scanIssueLimit": "被跳过的插件文件夹过多，NASH 无法逐一列出。"
+          "scanIssueLimit": "被跳过的插件文件夹过多，NASH 无法逐一列出。",
+          "unselectedForeignOne": "有 1 个非 NASH 安装的技能未选中。",
+          "unselectedForeignMany": "有 {{value0}} 个非 NASH 安装的技能未选中。"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "有可用更新",
@@ -4722,8 +4798,12 @@
           "stillOutdated": "更新运行后仍为过期状态。"
         },
         "SkillUpdateRow": {
-          "oneLocation": "1 location",
-          "manyLocations": "{{value0}} locations"
+          "oneLocation": "1 个位置",
+          "manyLocations": "{{value0}} 个位置",
+          "notFromOrca": "非 NASH 安装",
+          "notFromOrcaSourceTip": "安装自 {{value0}}。选中后会替换为 NASH 的版本。",
+          "notFromOrcaNoRecordTip": "此副本没有 NASH 安装记录。选中后会替换为 NASH 的版本。",
+          "includeSkill": "包含 {{value0}}"
         },
         "host": {
           "local": "此机器",
@@ -4756,8 +4836,8 @@
           "hostUnavailable": "无法到达所选机器。刷新并重试。"
         },
         "SkillShareDialog": {
-          "reconnect": "共享前重新连接您的 Orca 帐户。",
-          "unconfigured": "共享前连接 Orca Cloud 帐户。",
+          "reconnect": "共享前重新连接您的 NASH 帐户。",
+          "unconfigured": "共享前连接 NASH Cloud 帐户。",
           "prepareFailed": "无法准备此技能以供共享。",
           "peopleRequired": "选择至少一名队友。",
           "publishCancelled": "上传已取消。准备好的副本仍然可以重试。",
@@ -4766,7 +4846,7 @@
           "preparing": "正在准备预览...",
           "ready": "技能链接已准备好",
           "title": "分享技能",
-          "readyDescription": "收件人先通过 Orca 进行身份验证，然后才能检查或安装它。",
+          "readyDescription": "收件人先通过 NASH 进行身份验证，然后才能检查或安装它。",
           "newVersionDescription": "查看确切的文件，然后将不可变版本发布到现有云包。",
           "description": "查看确切的文件，选择谁可以访问它们，然后发布不可变的版本。",
           "0f07fa2a79": "发布技能",
@@ -4860,7 +4940,7 @@
           "69236de8d6": "检查…",
           "27672470d9": "打开链接不会安装任何东西。首先查看不可变版本。",
           "66cff7a804": "https://app.orca.dev/skills/share/…",
-          "93eb0fe8c7": "Orca 技能链接",
+          "93eb0fe8c7": "NASH 技能链接",
           "releaseNotes": "发行说明：",
           "targetHeader": "安装目标"
         },
@@ -4900,7 +4980,7 @@
           "f25429e266": "选定的人",
           "0a49d901ab": "组织",
           "6817a7f6f8": "技能获取",
-          "c15d90c10b": "需要连接的 Orca 云帐户。",
+          "c15d90c10b": "需要连接的 NASH 云帐户。",
           "266527d295": "发布为 {{value0}}{{value1}}。",
           "78d863235c": "使用权",
           "b3b1d4b911": "SHA-256",
@@ -5003,18 +5083,18 @@
           "installing": "下载、验证和安装...",
           "selectSkill": "至少选择一项技能。",
           "chooseWorkspace": "选择一个工作区。",
-          "reconnectBeforeInstalling": "安装前重新连接您的 Orca 帐户。",
+          "reconnectBeforeInstalling": "安装前重新连接您的 NASH 帐户。",
           "bundleVerificationFailed": "在 NASH 验证请求的捆绑包之前安装失败。",
           "destinationAlreadyFinished": "目的地已经完成此安装。",
-          "enterShareLink": "输入 Orca 技能共享链接。",
+          "enterShareLink": "输入 NASH 技能共享链接。",
           "shareUnavailable": "此共享不可用。该链接可能无效、过期或已撤销。",
           "requestedVersionVerificationFailed": "在 NASH 验证请求的版本之前安装失败。",
           "versionVerificationFailed": "NASH 无法验证请求的版本。",
           "inspectManagedFailed": "NASH 无法检查此计算机上的托管安装。",
-          "reconnectForVersionHistory": "重新连接您的 Orca 帐户以加载版本历史记录。",
+          "reconnectForVersionHistory": "重新连接您的 NASH 帐户以加载版本历史记录。",
           "versionHistoryUnavailable": "该技能的版本历史记录不可用。",
           "bundleSkillsMissing": "此版本不包含任何已安装的内置技能。",
-          "reconnectBeforeVersionChange": "在更改版本之前重新连接您的 Orca 帐户。",
+          "reconnectBeforeVersionChange": "在更改版本之前重新连接您的 NASH 帐户。",
           "removeFailed": "NASH 无法安全地移除该技能。",
           "agentsLabel": "智能体",
           "agentsCanonical": "始终为 {{value0}} 安装，读取为 {{value1}}。",
@@ -5104,8 +5184,7 @@
         "AddProjectFromFolderDialog": {
           "7d1f51678c": "添加项目",
           "7726a16374": "取消",
-          "046751dbfb": "将此文件夹添加为单独的 NASH 项目。",
-          "e643b30398": "添加了远程项目"
+          "046751dbfb": "将此文件夹添加为单独的 NASH 项目。"
         },
         "AddRepoCreateStep": {
           "0ae45b8238": "my-project",
@@ -5123,8 +5202,7 @@
           "fe1e616c5b": "创建项目需要 Git。",
           "c234df77f7": "创建前请选择或输入服务器父文件夹。",
           "3a13f6e88b": "未选择位置",
-          "6ed14c0281": "未选择服务器文件夹",
-          "ssh_parent_manual": "输入 SSH 父路径。"
+          "6ed14c0281": "未选择服务器文件夹"
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "扫描存储库。单击停止。",
@@ -5149,21 +5227,17 @@
           "e52454b7f6": "作为文件夹打开"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "停止扫描",
           "6680289908": "/home/user/project",
           "ef410aa881": "远程路径",
-          "0416bde073": "在设置中添加",
-          "df6fbcf880": "未配置 SSH 目标。",
           "44637f43bd": "SSH 目标",
-          "80557be85a": "选择已连接的 SSH 目标并输入 Git 存储库的路径。",
+          "serverDescription": "选择 {{server}} 连接的 SSH 主机，并输入该主机上 Git 仓库的路径。",
+          "serverEmpty": "{{server}} 还没有 SSH 主机。",
+          "serverAddHost": "添加 SSH 主机",
           "91b93a90a4": "打开远程项目",
           "007651bdf9": "导航到目录并单击“选择”以选择它。",
           "dd3ff65486": "浏览远程文件系统",
           "36d427bb66": "添加远程项目",
-          "35831a7312": "添加...",
-          "lockedDescription": "输入 {{value0}} 上 Git 仓库的路径。",
-          "lockedDisconnected": "{{value0}} 已断开连接。",
-          "93e0221434": "连接"
+          "35831a7312": "添加..."
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "返回添加选项",
@@ -5340,7 +5414,9 @@
           "b79b39d865": "删除项目",
           "removeDescriptionSsh": "此操作仅将 {{name}} 从 NASH 中移除。文件仍保留在 {{host}} 上 — 重新添加该 SSH 主机即可恢复。",
           "removeDescriptionLocal": "此操作仅将 {{name}} 从 NASH 中移除。文件仍保留在您的磁盘上。",
-          "removeDescriptionVmRecipe": "这会从 NASH 中删除 {{name}}。其VM配方决定是否永久删除环境及其文件。"
+          "removeDescriptionVmRecipe": "这会从 NASH 中删除 {{name}}。其VM配方决定是否永久删除环境及其文件。",
+          "openTerminalWarningOne": "此项目中 1 个打开的终端将被关闭。",
+          "openTerminalWarningMany": "此项目中 {{count}} 个打开的终端将被关闭。"
         },
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "显示活动工作区"
@@ -5390,7 +5466,7 @@
           "26108d3699": "加入 Discord",
           "d245c4ef6c": "GitHub 议题",
           "9b33530b3d": "其他联系我们的方式",
-          "a828fa4aee": "分享什么是有效的、什么是有问题的，或者 Orca 接下来应该做什么。",
+          "a828fa4aee": "分享什么是有效的、什么是有问题的，或者 NASH 接下来应该做什么。",
           "0eb643f07f": "发送反馈",
           "60b721e857": "提交反馈失败。请再试一次。",
           "7a46c228b8": "感谢您的反馈。",
@@ -5437,7 +5513,7 @@
           "80611a8b10": "搜索",
           "0c3395fd32": "搜索工作树和浏览器选项卡",
           "c86d83b5c3": "新功能",
-          "1b5c41caee": "Orca 手机端",
+          "1b5c41caee": "NASH 手机端",
           "9c95e1ce91": "智能体",
           "f323383e9a": "自动化",
           "e7ad3c540d": "打开 Jira 任务",
@@ -5549,7 +5625,7 @@
           "allHostsDetail": "显示所有主机",
           "configuredSshHost": "已配置 SSH",
           "projectSshHost": "项目 SSH",
-          "activeRuntimeHost": "活动服务器",
+          "activeRuntimeHost": "新项目的默认主机",
           "projectRuntimeHost": "项目服务器",
           "631b97eea9": "主机范围",
           "2d4f0eb933": "默认",
@@ -5833,7 +5909,8 @@
           "remotePathInvalid": "路径对此 SSH 主机无效。",
           "remotePathInvalidDetail": "请先刷新工作区，再重试。",
           "remoteLaunchFailed": "无法在 VS Code 中打开此路径。",
-          "remoteLaunchFailedDetail": "请检查此机器上配置的 VS Code 命令。"
+          "remoteLaunchFailedDetail": "请检查此机器上配置的 VS Code 命令。",
+          "wsl": "WSL"
         },
         "WorktreeTitleInlineRename": {
           "2f42ae024f": "未读：",
@@ -5913,12 +5990,11 @@
                   "5f9ffac036": "克隆远程 Git 存储库",
                   "7edb8ebe24": "从 URL 克隆",
                   "a6c20dca96": "从 SSH 目标打开项目",
-                  "3d162cc76f": "远程项目",
+                  "serverSshTitle": "此服务器 SSH 主机上的项目",
+                  "serverSshDescription": "从此服务器连接的 SSH 主机打开项目文件夹",
+                  "serverSshUpdate": "更新此服务器后才能在其 SSH 主机上添加项目",
                   "fb4fc5380e": "本地项目、Git 仓库或包含多个仓库的文件夹",
                   "2281fdc8c7": "浏览文件夹",
-                  "sshCreateUnavailable": "SSH 主机暂不可用",
-                  "sshBrowseTitle": "在 SSH 主机上打开项目",
-                  "sshBrowseDescription": "此 SSH 主机上的现有 Git 仓库或文件夹",
                   "runtimeBrowseDescription": "此主机上的现有 Git 仓库或文件夹"
                 }
               }
@@ -5985,7 +6061,9 @@
               "740e8d0d46": "使用“添加项目”作为服务器路径",
               "e344666fb8": "服务器运行时处于激活状态",
               "d0f8943f8b": "准备项目添加流程",
-              "18d3cf40e9": "检查文件夹"
+              "18d3cf40e9": "检查文件夹",
+              "wslFolder": "拖放 WSL 文件夹以添加项目",
+              "wslFolderDescription": "\\\\wsl.localhost 下的文件夹"
             }
           }
         },
@@ -6023,7 +6101,9 @@
           "451a4638db": "拖放文件夹以将其添加为项目。",
           "5ccb56c7be": "使用“添加项目”输入服务器路径。",
           "849ef13dc0": "本地文件夹放置对于服务器运行时不可用。",
-          "c0315153d1": "一次放下一个文件夹。"
+          "c0315153d1": "一次放下一个文件夹。",
+          "windowsDriveOnWslHost": "Windows 驱动器上的文件夹保留在此计算机上，而不在 {{value0}} 中。",
+          "windowsDriveOnWslHostDescription": "在 Windows 驱动器上，WSL 中的 Git 速度很慢。请将主机切换到此计算机以添加它，或从 \\\\wsl.localhost\\{{value0}} 拖放文件夹。"
         },
         "workspace": {
           "status": {
@@ -6163,7 +6243,11 @@
           "addRemoteHostTooltip": "可选择能通过 SSH 登录的机器，也可选择运行 NASH 的远程服务器。",
           "addSshHostDetail": "通过 SSH 使用现有机器。",
           "addRemoteServerDetail": "与另一台电脑上运行的 NASH 配对。",
-          "addRemoteHostDetail": "SSH 主机或 NASH 服务器"
+          "addRemoteHostDetail": "SSH 主机或 NASH 服务器",
+          "addWslHost": "添加 WSL 发行版",
+          "addWslHostDetail": "在 WSL 2 发行版内运行 NASH 服务器。实验性。",
+          "addRemoteHostDetailWithWsl": "SSH 主机、NASH 服务器或 WSL 发行版",
+          "turnOnWslHosts": "开启"
         },
         "sidebarHostOptions": {
           "3e102f111c": "所有主机",
@@ -6190,7 +6274,8 @@
           "alsoForgetLocal": "同时从 NASH 中移除这些 {{value0}}",
           "advanced": "高级",
           "alsoDeleteRemoteHint": "永久删除远程 Git worktree 及其分支。此操作不可撤销。",
-          "alsoForgetLocalHint": "仅从 NASH 中清除。远程文件、worktree 和分支不受影响。"
+          "alsoForgetLocalHint": "仅从 NASH 中清除。远程文件、worktree 和分支不受影响。",
+          "wslHostEndsTerminals": "从 NASH 中移除 {{value0}}，结束其打开的终端，并停止该发行版中的 NASH 服务器。发行版中的文件不受影响。"
         },
         "HostRenameDialog": {
           "1a2b3c4d5e": "重命名主机",
@@ -6269,12 +6354,12 @@
           "3b7e4a1c96": "隐藏外部工作树"
         },
         "useAddRepoHostSelection": {
-          "connectionFailed": "SSH 连接失败。"
+          "connectionFailed": "SSH 连接失败。",
+          "wslConnectionFailed": "无法启动 WSL 主机。"
         },
         "AddRemoteHostDialog": {
           "sshHostRequired": "必须填写主机或 SSH 配置别名。",
           "sshPortInvalid": "端口必须介于 1 到 65535 之间。",
-          "sshRelayGraceInvalid": "终端超时时间必须介于 60 到 {{value0}} 秒之间。",
           "sshSaved": "已添加 SSH 主机。",
           "sshSaveFailed": "添加 SSH 主机失败。",
           "serverFieldsRequired": "必须填写服务器名称和配对码。",
@@ -6283,7 +6368,10 @@
           "serverTitle": "添加远程服务器",
           "sshTitle": "添加 SSH 主机",
           "serverDescription": "与另一台电脑上运行的 NASH 配对。",
+          "serverRunsAsYou": "此设备将能够在此服务器上以你的身份运行命令。",
           "sshDescription": "添加一台可通过 SSH 登录并持久保存的机器。",
+          "serverSshTitle": "向 {{server}} 添加 SSH 主机",
+          "serverSshDescription": "{{server}} 会保存此主机并连接到它。密码和密钥口令会在连接时询问。",
           "cancel": "取消",
           "saving": "正在保存...",
           "save": "保存",
@@ -6360,10 +6448,10 @@
           "parkTerminal": "Park terminal"
         },
         "SidebarFeedbackImageAttachments": {
+          "preparing": "正在准备附件…",
           "attachImages": "Attach",
           "removeImage": "Remove {{fileName}}",
-          "screenshotsHint": "最多附加 {{count}} 张截图，总计 {{maxSize}}",
-          "preparing": "正在准备附件…"
+          "screenshotsHint": "最多附加 {{count}} 张截图，总计 {{maxSize}}"
         },
         "WorkspaceKanbanSearchField": {
           "bdb753c78d": "没有匹配的工作区",
@@ -6473,6 +6561,49 @@
           "title": "排序更改为手动",
           "description": "手动将工作区保留在您放置它们的位置。",
           "restore": "返回{{label}}"
+        },
+        "AddWslHostDialogBody": {
+          "added": "已添加 {{value0}}。"
+        },
+        "AddWslHostFormPanel": {
+          "wsl1": "WSL 1 · 不受支持",
+          "added": "已是主机",
+          "running": "运行中",
+          "stopped": "已停止",
+          "title": "添加 WSL 发行版",
+          "description": "NASH 在发行版内运行其服务器，因此 git、文件和终端都在 Linux 中原生运行。请将其用于新项目；通过 \\\\wsl.localhost 打开的项目会照常工作。",
+          "distro": "发行版",
+          "loading": "正在查找 WSL 发行版…",
+          "placeholder": "选择发行版",
+          "none": "未找到 WSL 发行版。使用以下命令安装：wsl --install",
+          "stoppedHint": "{{value0}} 已停止。添加后会自动启动。",
+          "addingHint": "正在发行版中安装并启动 NASH 服务器。首次可能需要一分钟。",
+          "adding": "正在设置…",
+          "startAndAdd": "启动并添加",
+          "add": "添加主机",
+          "refresh": "刷新"
+        },
+        "wslHostRowStatus": {
+          "connecting": "正在启动",
+          "reconnecting": "正在重新连接",
+          "distroStopped": "发行版已停止",
+          "unverifiable": "无法验证",
+          "idle": "空闲",
+          "failed": "启动失败",
+          "kind": "WSL 发行版",
+          "turnedOff": "WSL 主机已在设置 → 实验性中关闭",
+          "turnedOffShort": "已在设置 → 实验性中关闭",
+          "serverFilesMissing": "此版本的 NASH 无法运行 WSL 主机（缺少服务器文件）。",
+          "serverFilesMissingShort": "此版本无法运行 WSL 主机"
+        },
+        "wslHostRemoval": {
+          "partial": "主机已被移除，但发行版中仍有内容在运行：{{value0}}"
+        },
+        "addRepoWslHostFolderPicker": {
+          "otherDistro": "该文件夹位于 {{value0}} 中，而不是 {{value1}}。",
+          "outsideDistro": "请选择 {{value0}} 内的文件夹。",
+          "underDistro": "此主机只能添加 \\\\wsl.localhost\\{{value0}} 下的文件夹。",
+          "windowsDrive": "Windows 驱动器上的文件夹保留在此计算机上。请选择此计算机作为主机以添加。"
         }
       },
       "shared": {
@@ -6548,6 +6679,7 @@
         "AccountsPane": {
           "c2d2751587": "删除账户",
           "dbb9626ed1": "取消",
+          "63843e37e2": "删除 Claude 账户？",
           "380a7736cc": "移除此账户会永久删除其托管的 Codex 主目录，包括其中存储的所有 Codex 会话历史记录和 MCP 登录信息。此操作无法撤销。如果该账户当前处于活动状态，NASH 将回退到系统默认的 Codex 登录。",
           "0d47394635": "删除 Codex 账户？",
           "ae3b21eb6c": "opencode.ai/workspace/wrk_…/go",
@@ -6591,8 +6723,14 @@
           "340d6f7a85": "每个账户在 NASH 中都保留自己的本地登录上下文。账户身份验证保留在此设备上。",
           "cedfab35ab": "可选。NASH 可使用系统默认 Codex 登录；仅当你需要在 NASH 中快速切换账户时才添加账户。",
           "ef91cfa06b": "Codex",
+          "3fe7862418": "{{value0}} 没有受管理的 Claude 账户。NASH 将使用该环境的系统默认 Claude 登录，直到您在此处添加一个。",
           "3455cf43fa": "Claude 登录。",
           "fcc4093fc1": "使用您当前 {{value0}} Codex 登录名。",
+          "8bbfd74556": "Claude 账户",
+          "72b36ea174": "可选。NASH 可使用系统默认 Claude 登录；仅当你需要快速切换且不想迁移聊天会话时才添加账户。",
+          "26ef4b55be": "Claude",
+          "2743cdc0af": "Claude 账户更新失败。",
+          "f921d32606": "Claude 账户已更新。",
           "5bf8764953": "Codex 账户更新失败。",
           "9baf45d071": "当前设备",
           "2358ac71d2": "WSL 默认值",
@@ -6611,6 +6749,7 @@
           "75ca9b718e": "Codex 报告活动账户需要重新登录。在开始新的 Codex 会话之前重新对其进行身份验证。",
           "b11078a9c2": "wsl",
           "350b2a1aa7": "用你已有的",
+          "e05d0ff737": "使用您当前 {{value0}} Claude 登录名。",
           "2f24f244a4": "需要 MiniMax Cookie。",
           "8e6f0cb1d8": "MiniMax Cookie 未保存。",
           "8d61637a77": "MiniMax Cookie 已保存。",
@@ -6652,6 +6791,7 @@
           "accountScopeRemoteServerUnnamed": "远程服务器",
           "remoteScopeLocalAccountsKept": "此桌面端管理的账户并未改变。将默认运行时切换回本地桌面即可查看。",
           "remoteScopeAuthContext": "每个账户在 {{value0}} 上保留自己的登录上下文。",
+          "remoteEmptyClaudeAccounts": "{{value0}} 上没有受管理的 Claude 账户。它使用其系统默认的 Claude 登录；请在该服务器上添加账户。",
           "remoteEmptyCodexAccounts": "{{value0}} 上没有受管理的 Codex 账户。它使用其系统默认的 Codex 登录；请在该服务器上添加账户。",
           "codexSystemDefaultCustomProvider": "自定义提供商 — 不跟踪使用情况。",
           "codexSystemDefaultNeedsSignIn": "未找到 {{value0}} 的 Codex 登录信息。",
@@ -6701,15 +6841,7 @@
               "help": "用于在状态栏中显示 OpenCode Go 使用情况。下面的会话 Cookie 仅旧版控制台 (OpenCode Black) 账号需要。"
             }
           },
-          "63843e37e2": "删除 Claude 账户？",
-          "3fe7862418": "{{value0}} 没有受管理的 Claude 账户。NASH 将使用该环境的系统默认 Claude 登录，直到您在此处添加一个。",
-          "8bbfd74556": "Claude 账户",
-          "72b36ea174": "可选。NASH 可使用系统默认 Claude 登录；仅当你需要快速切换且不想迁移聊天会话时才添加账户。",
-          "26ef4b55be": "Claude",
-          "2743cdc0af": "Claude 账户更新失败。",
-          "f921d32606": "Claude 账户已更新。",
-          "e05d0ff737": "使用您当前 {{value0}} Claude 登录名。",
-          "remoteEmptyClaudeAccounts": "{{value0}} 上没有受管理的 Claude 账户。它使用其系统默认的 Claude 登录；请在该服务器上添加账户。"
+          "remoteScopeLocalAccountsKeptHostPicker": "在此桌面上管理的账户保持不变。请在设置顶部的“主机”菜单中选择此计算机以查看它们。"
         },
         "AdvancedPane": {
           "40b29e0bf3": "重新启动",
@@ -6799,11 +6931,13 @@
           "codexSessionSourceInfo": "关于导入 Codex 历史记录",
           "codexSessionSourceTooltip": "NASH 在隔离的主目录中运行 Codex。将此项指向您现有的 Codex 主目录以导入会话历史记录。留空则使用 ~/.codex。",
           "03e1a5081a": "on {{value0}}",
-          "25a41a9aad": "重新检测活动服务器上安装的智能体",
+          "25a41a9aad": "重新检测此服务器上安装的智能体",
           "remoteDetectionFailed": "无法检测已安装的智能体。请检查主机连接后重试。",
           "retryDetection": "Retry",
           "storedDefaultUndetected": "已保存为默认值，但目前未检测到",
           "noAgentsDetected": "未检测到智能体。如果安装了探测器，探测器可能会超时。",
+          "setupOnly": "无",
+          "setupOnlyHint": "在新标签页模式下运行设置，不额外打开空白终端。分屏模式保留 shell 窗格；跳过设置或缺少设置时会打开空白终端。",
           "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
@@ -6815,9 +6949,9 @@
           "3057983501": "未分配",
           "0cd9b8228f": "选择 Dock 和窗口切换器中显示的应用程序图标。",
           "ca1590d42f": "应用程序图标",
-          "61d842eca0": "在侧边栏中显示 Orca 手机端 快捷方式。它仍然可以从工具箱中获取。",
-          "9da1020447": "显示 Orca 手机端按钮",
-          "5db6ba961f": "在左侧边栏顶部显示 Orca 手机端按钮。",
+          "61d842eca0": "在侧边栏中显示 NASH 手机端 快捷方式。它仍然可以从工具箱中获取。",
+          "9da1020447": "显示 NASH 手机端按钮",
+          "5db6ba961f": "在左侧边栏顶部显示 NASH 手机端按钮。",
           "fa882a3e6b": "在左侧边栏顶部显示“自动化”按钮。",
           "511f270ebb": "显示自动化按钮",
           "661942ab7f": "在左侧边栏顶部显示“任务”按钮。",
@@ -6877,14 +7011,6 @@
           "1626524572": "Nautilus",
           "0de9fda203": "放弃",
           "c71770c455": "{basePrompt}",
-          "f19a56498d": ";您的分支前缀设置仍然适用。",
-          "800edb1e54": "fix-login-flow",
-          "5d569f5199": "。 NASH 仅生成最后一段，例如",
-          "570817d126": "和",
-          "56580dcf60": "。您还可以参考",
-          "9c9b54e4ea": "内置分支名称提示",
-          "69bf4830c2": "包括 NASH 的",
-          "9241b59bf5": "使用",
           "a869d0edd8": "分支名称提示词模板",
           "e784ea62dc": "高级",
           "d9b65054ef": "）到总结任务的简短名称。只有 NASH 命名的分支才会被重命名，并且在推送后不会被重命名。",
@@ -6895,8 +7021,8 @@
           "cfd82406dd": "保存中...",
           "40e7be7850": "已保存",
           "7c7e34a66d": "未保存的更改",
-          "a4fa380b67": "{assistantMessage}",
-          "2ee2779c05": "{firstPrompt}"
+          "commandTemplateDescription": "使用 <basePrompt>{basePrompt}</basePrompt> 可包含 NASH 的<promptLink>内置分支名称提示</promptLink>。您还可以引用 <firstPrompt>{firstPrompt}</firstPrompt> 和 <assistantMessage>{assistantMessage}</assistantMessage>。NASH 只生成最后一段，例如 <example>fix-login-flow</example>；您的分支前缀设置仍然适用。",
+          "5d569f5199": "。 NASH 仅生成最后一段，例如"
         },
         "AutoRenameBranchPromptEditor": {
           "63121132c0": "放弃",
@@ -7203,7 +7329,10 @@
           "connectionTestHost": "主持人",
           "connectionTestPort": "端口",
           "connectionTestRunning": "测试...",
-          "connectionTestAction": "测试连接"
+          "connectionTestAction": "测试连接",
+          "appStatus": "应用： ",
+          "terminalHostStatus": "终端主机： ",
+          "terminalHostRecovery": "如果终端无法读取受保护的文件，请保存其工作并在终端 → 管理会话中将其关闭。如果新终端也受到影响，请重新启动守护进程；重新启动会关闭其当前终端。"
         },
         "ExperimentalPane": {
           "9762364929": "在可能时在 macOS 上使用 APFS clone-copy；否则，将配置的文件夹或文件符号链接到创建的工作树中。",
@@ -7235,14 +7364,7 @@
           },
           "nativeChat": {
             "title": "Chat UI",
-            "description": "预览受支持的智能体终端会话的桌面聊天界面。",
-            "copy": "添加可从受支持的智能体终端窗格切换的 Chat UI 视图。在我们调整记录保真度、流式传输和终端一致性期间，此功能仍处于实验阶段。",
             "toggleLabel": "切换 Chat UI",
-            "defaultTitle": "默认视图",
-            "defaultCopy": "选择如何打开受支持智能体的新终端标签页。",
-            "defaultViewLabel": "默认 Chat UI 视图",
-            "defaultViewTerminal": "终端聊天",
-            "defaultViewNative": "Chat UI",
             "shellEnvNamesLabel": "从 shell 传递的变量",
             "shellEnvNamePlaceholder": "变量名",
             "shellEnvNameAdd": "添加",
@@ -7252,13 +7374,12 @@
             "shellEnvTitle": "使用 shell 环境",
             "shellEnvCopy": "Codex 和 Claude 聊天启动时会带上登录 shell 导出的所有变量，与终端一致。关闭后可选择传递哪些变量。",
             "shellEnvToggleLabel": "切换使用 shell 环境",
-            "structuredTitle": "使用更新的结构化本机聊天",
-            "structuredCopy": "在支持的情况下，将新的智能体作为结构化聊天打开。关闭时会在基于终端的聊天中打开。已有的聊天保持不变。",
-            "structuredScope": "在本机和运行支持该功能版本的已配对 NASH 服务器上运行；较旧的服务器保留终端聊天。WSL 和 SSH 主机继续使用终端聊天。",
-            "structuredToggleLabel": "切换更新的结构化本机聊天",
             "resumeTitle": "重启后自动恢复工作聊天",
             "resumeCopy": "当 NASH 退出或安装更新时，重新打开 NASH 后，正在工作的聊天会自动恢复。",
-            "resumeToggleLabel": "重启后切换自动恢复"
+            "resumeToggleLabel": "重启后切换自动恢复",
+            "structuredScope": "在本机和运行支持该功能版本的已配对 NASH 服务器上运行；较旧的服务器保留终端聊天。WSL 和 SSH 主机继续使用终端聊天。",
+            "description": "在聊天界面中打开受支持的新智能体。",
+            "copy": "受支持的新智能体会在结构化聊天中打开。其他智能体在终端中打开；现有聊天仍可使用。"
           },
           "agentDashboard": {
             "title": "智能体仪表盘",
@@ -7450,13 +7571,6 @@
           "aa204f185f": "当前 GitHub CLI REST、搜索和 GraphQL 速率限制。",
           "612a440e57": "GitHub API 预算",
           "2cde9044a8": "graphql",
-          "36e3de3619": "避免与过时的历史记录进行比较。如果该分支有未提交的更改或仅在本地的提交，NASH 会跳过更新。",
-          "d072a12995": "git diff main...HEAD",
-          "db3a127eb1": "。这使得命令像",
-          "3ae3de8898": "master",
-          "5bf885be48": "或者",
-          "ffba483bae": "main",
-          "976afc6b3e": "当您创建工作区时，NASH 会刷新远程库并安全地快进您匹配的本地分支，例如",
           "1ec5c91e1d": "选择分支名称是使用您的 Git 用户名、自定义前缀还是不使用前缀。",
           "330f584b50": "分支前缀",
           "1ffaadf0a0": "创建工作树时添加到分支名称的前缀。",
@@ -7477,7 +7591,10 @@
           "compareAgainstUpstreamTitle": "默认对比基准",
           "compareAgainstUpstreamDescription": "选择源代码管理在比较已提交变更时默认使用的基准。分支上游会自动跟随当前分支；如果没有上游，则回退到仓库默认分支。你仍然可以在对应 worktree 的 Git 面板中按 worktree 更改对比基准。Pull Request 和变基目标不会改变。",
           "compareBaseRepositoryDefault": "仓库默认",
-          "compareBaseBranchUpstream": "分支上游"
+          "compareBaseBranchUpstream": "分支上游",
+          "refreshLocalBaseDescription": "创建工作区时，NASH 会刷新远程基准分支，并安全地快进对应的本地分支，例如 <mainBranch>main</mainBranch> 或 <masterBranch>master</masterBranch>。这样可以避免 <diffCommand>git diff main...HEAD</diffCommand> 等命令与过时的历史记录进行比较。如果该分支有未提交的更改或仅在本地的提交，NASH 会跳过更新。",
+          "36e3de3619": "避免与过时的历史记录进行比较。如果该分支有未提交的更改或仅在本地的提交，NASH 会跳过更新。",
+          "976afc6b3e": "当您创建工作区时，NASH 会刷新远程库并安全地快进您匹配的本地分支，例如"
         },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "在本机启用粗体故障捕获手势：{{samplingShortcut}} 开始采样突发；{{captureShortcut}} 将窗格证据捕获到磁盘。",
@@ -7675,13 +7792,13 @@
           "b2fd62ea75": "新模拟器标签页和智能体附加命令使用的默认设备。自动选择会优先使用已在运行的设备。"
         },
         "MobileNetworkInterfaceSection": {
-          "63d5e4ae1e": "重新生成二维码并从 Orca 手机应用程序扫描。",
+          "63d5e4ae1e": "重新生成二维码并从 NASH 手机应用程序扫描。",
           "87985ba6f5": "在此网络接口菜单中，选择 Tailscale 地址，通常是 100.x.y.z IP。",
           "1f7c26d36a": "在两台设备上登录相同的 tailnet。",
           "668016be7a": "在您的计算机和手机上。",
           "1dc87a7fbc": "Tailscale",
           "51d29927eb": "安装",
-          "9fc5d203ff": "Orca 手机端 直接连接到此计算机。要在远离同一局域网的地方使用它，请将您的计算机和手机置于同一私有覆盖网络上，然后使用所选的网络地址生成二维码。",
+          "9fc5d203ff": "NASH 手机端 直接连接到此计算机。要在远离同一局域网的地方使用它，请将您的计算机和手机置于同一私有覆盖网络上，然后使用所选的网络地址生成二维码。",
           "39fad211d9": "使用尾网连接 Wi-Fi 外部",
           "a9db5d771d": "刷新网络接口",
           "b2c384cfd6": "没有找到接口",
@@ -7691,14 +7808,13 @@
           "1e64659126": "再生"
         },
         "MobilePane": {
-          "dd3cd78d04": "使用 Orca 手机端 扫描",
-          "35100bca5d": "当您在手机上使用终端时，NASH 会将其缩小以适合您的手机屏幕。当您关闭应用程序或切换离开时，这可以控制它是保持手机大小（因此交互式 CLI 工具不会回流）还是将大小调整回桌面。您始终可以在横幅上使用“恢复此终端”或“恢复所有终端”来手动调整大小。",
+          "dd3cd78d04": "使用 NASH 手机端 扫描",
           "ee56f1c7e4": "当您离开手机应用程序时",
           "3939fd062c": "撤销设备会立即断开连接。",
           "254a6d09e4": "配对",
           "d7ce676270": "配对设备",
           "e778ecb209": "或者将此代码粘贴到手机应用程序中：",
-          "310924ad2c": "使用 Orca 手机应用程序扫描此代码。每个代码都会创建一个唯一的设备token。",
+          "310924ad2c": "使用 NASH 手机应用程序扫描此代码。每个代码都会创建一个唯一的设备token。",
           "870e1b5ca5": "撤销设备失败",
           "2e3dd0bc29": "设备已撤销",
           "711231348f": "复制配对码失败",
@@ -7711,14 +7827,15 @@
           "aa1263e881": "保持手机尺寸（默认）",
           "6436e56546": "用于手机配对的二维码",
           "1b1b70279a": "尚未配对任何设备。",
-          "1592afcc7a": "尚未配对任何设备。使用 Orca 手机应用程序扫描二维码。",
+          "1592afcc7a": "尚未配对任何设备。使用 NASH 手机应用程序扫描二维码。",
           "relayDegradedNotice": "无法连接 Relay — 此二维码仅在局域网或 Tailscale 内可用。请重新生成后再试。",
-          "pairingQrError": "无法将此配对码呈现为二维码。请改为将其复制到 Orca Mobile。",
+          "pairingQrError": "无法将此配对码呈现为二维码。请改为将其复制到 NASH Mobile。",
           "pairingCodeReady": "配对码已准备就绪",
           "copyPairingCode": "复制配对码",
           "diagnosticsCopied": "已复制诊断信息",
           "diagnosticsCopyFailed": "无法复制诊断信息",
-          "5e2c7a1f84": "当您在手机上使用终端时，NASH 会将其缩小以适合您的手机屏幕。当您关闭应用程序或切换离开时，这可以控制它是保持手机大小（因此交互式 CLI 工具不会回流）还是将大小调整回桌面。您始终可以使用横幅上的“还原”或“全部还原”来手动调整大小。"
+          "5e2c7a1f84": "当您在手机上使用终端时，NASH 会将其缩小以适合您的手机屏幕。当您关闭应用程序或切换离开时，这可以控制它是保持手机大小（因此交互式 CLI 工具不会回流）还是将大小调整回桌面。您始终可以使用横幅上的“还原”或“全部还原”来手动调整大小。",
+          "35100bca5d": "当您在手机上使用终端时，NASH 会将其缩小以适合您的手机屏幕。当您关闭应用程序或切换离开时，这可以控制它是保持手机大小（因此交互式 CLI 工具不会回流）还是将大小调整回桌面。您始终可以在横幅上使用“恢复此终端”或“恢复所有终端”来手动调整大小。"
         },
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub 发布",
@@ -7727,10 +7844,10 @@
           "c8491c17ef": "通过扫描二维码从手机控制 NASH。 Beta/早期预览 - 预计会出现错误和重大更改。从以下位置获取 iOS 应用程序",
           "e7a3ae8c4e": "移动端",
           "174f4a3c6d": "通过手机控制终端和智能体。",
-          "1de96ec8a6": "显示 Orca 手机端按钮",
-          "682293cadf": "在左侧边栏顶部显示 Orca 手机端按钮。",
-          "d4f2b65f30": "在边栏中显示 Orca 手机端 快捷入口。",
-          "installIntro": "从以下应用商店安装 Orca Mobile",
+          "1de96ec8a6": "显示 NASH 手机端按钮",
+          "682293cadf": "在左侧边栏顶部显示 NASH 手机端按钮。",
+          "d4f2b65f30": "在边栏中显示 NASH 手机端 快捷入口。",
+          "installIntro": "从以下应用商店安装 NASH Mobile",
           "installOutro": "，然后在下方配对。",
           "androidApkLabel": "Android APK"
         },
@@ -7910,18 +8027,13 @@
         },
         "RepositoryHooksSection": {
           "af49e2a19e": "该文件存在，但 NASH 找不到有效的“scripts”或“issueCommand”定义。",
-          "3397879bee": "并且本地命令存在，选择哪个运行。",
           "39da2ae12f": "orca.yaml",
-          "ac9038d2cc": "当两者",
           "32fec28f5b": "命令源",
           "bbbd6e0bc4": "命令源 & orca.yaml",
           "c9bc1bfd8f": "高级",
           "610d90fdbd": "命令源和 orca.yaml 详细信息。",
-          "52aef29e69": "留空以使用仓库默认值",
           "4084720f47": "完成 {{artifact_url}}",
           "13394103bd": "自定义 GitHub 议题命令",
-          "70ad20f883": "对于链接的议题或 PR URL。",
-          "b997331366": "可选覆盖。使用",
           "2cc27dc12b": "关联议题命令的可选每用户覆盖。",
           "b91a0f297d": "在归档工作树之前运行的本地和共享脚本。",
           "9a100323ff": "存档脚本",
@@ -7971,7 +8083,7 @@
           "0e8b2a520d": "忽略 orca.yaml；仅运行本地命令。",
           "83dc78202a": "仅限本地",
           "29397e8bbc": "仅运行已 commit 的仓库命令；忽略本地命令。",
-          "d88b6ff88f": "仅 Orca.yaml",
+          "d88b6ff88f": "仅 NASH.yaml",
           "99e3264a49": "仅在选择时运行安装程序。",
           "15debc1fd9": "默认跳过",
           "022ba10cf2": "自动运行安装程序。",
@@ -7980,8 +8092,6 @@
           "e03d9a8f38": "每次都问",
           "8dbe6bedf5": "无效的",
           "0e0dd5b9a5": "已加载",
-          "9b12f15b1e": "当一个存在时。",
-          "c85c2c88a2": "{{artifact_url}}",
           "fac13f8c1e": "权威性",
           "0518758f38": "两个都",
           "d2b3016c20": "共享",
@@ -7994,7 +8104,11 @@
           "81057d5f71": "保存中...",
           "da37d6f10e": "复制",
           "3149964b66": "已复制",
-          "waitForSetupBeforeAgent": "等待设置完成后再启动智能体"
+          "waitForSetupBeforeAgent": "等待设置完成后再启动智能体",
+          "issueCommandDescription": "可选覆盖。使用 <artifactUrl>{{artifact_url}}</artifactUrl> 表示关联议题或 PR 的 URL。",
+          "issueCommandSharedDefault": "留空则使用 <yaml>orca.yaml</yaml> 中的仓库默认值。",
+          "issueCommandOptionalDefault": "留空则使用 <yaml>orca.yaml</yaml> 中的仓库默认值（如果有）。",
+          "commandSourceDescription": "当 <yaml>orca.yaml</yaml> 和本地命令同时存在时，选择要运行哪些命令。"
         },
         "RepositoryIconPicker": {
           "2b7d27b93c": "使用 {{value0}} 仓库颜色",
@@ -8186,16 +8300,16 @@
           "6ce4664003": "刷新服务器",
           "b07070ed3c": "没有连接服务器",
           "78692becbd": "本地桌面",
-          "64b6bea541": "活动服务器",
+          "64b6bea541": "新项目的默认主机",
           "99ac81fb43": "切换到 {{value0}}。",
           "b5b5114cb0": "删除了 {{value0}}。",
           "6cb6eae14f": "无法保存运行时环境。",
-          "7b5986c8df": "已保存 {{value0}}。准备好后可通过活动服务器进行切换。",
+          "7b5986c8df": "已连接到 {{value0}}。若要默认在其上创建新项目，请在“高级 > 新项目的默认主机”中选择它。",
           "5ef712f407": "名为“{{value0}}”的服务器已存在。",
           "0c55a47480": "需要名称和配对代码。",
           "e6410d72c3": "无法加载运行时环境。",
           "6ef71985da": "无终点",
-          "ed3e3f069d": "这将从 NASH 中删除保存的服务器。它不会更改活动服务器。",
+          "ed3e3f069d": "这会从 NASH 中移除已保存的服务器，不会更改新项目的默认主机。",
           "b2fda48c39": "删除活动服务器会使此浏览器与该主机断开连接。现有主机会话会保持不变。",
           "9f7665a01b": "删除活动服务器会先将 NASH 切换回本地桌面。现有主机会话会保持不变。",
           "3595fd1948": "新链接",
@@ -8217,7 +8331,7 @@
           "hostModelCapabilityProjectSetup": "项目设置",
           "hostModelCapabilityTaskSourceContext": "任务来源上下文",
           "hostModelCapabilityWorkspaceRunContext": "工作区运行上下文",
-          "3f67e8078a": "默认使用此电脑。仅当你希望受支持的项目、文件、终端、提供商检查以及浏览器/移动端接续通过某个服务器运行时，才选择已保存的服务器。",
+          "3f67e8078a": "除非在此选择已保存的服务器，否则新项目会在这台电脑上创建。现有项目、文件和终端仍留在各自的主机上。",
           "2c85efb3e8": "选择已保存的服务器后，此浏览器会将配对的 NASH 运行时用作默认主机。",
           "serverConnected": "已连接",
           "serverChecking": "正在检查…",
@@ -8225,7 +8339,7 @@
           "disconnectedServer": "已断开与 {{value0}} 的连接。",
           "connectToRemoteServers": "连接到远程服务器",
           "connectToRemoteServersHelp": "配对另一个 NASH 运行时，然后在此处连接或断开连接。仅当你想更改默认主机时，才使用高级 > 活动服务器。",
-          "activeServerRowHelp": "用于通过服务器路由的项目、终端和提供商检查的活动服务器。",
+          "activeServerRowHelp": "新项目的默认主机。现有项目仍留在各自的主机上。",
           "disconnect": "断开连接",
           "connect": "连接",
           "advanced": "高级",
@@ -8239,8 +8353,8 @@
           "updateServer": "更新",
           "reviewServerUpdates": "服务器更新",
           "orcaVersion": "NASH v{{value0}}",
-          "removeActiveServerBlocked": "请先在“高级”中选择另一个活动服务器，然后再移除此服务器。",
-          "removeActiveServerDescription": "请先在“高级”中选择另一个活动服务器，然后再移除此服务器。现有的主机会话将保留。",
+          "removeActiveServerBlocked": "此服务器是新项目的默认主机。请先在“高级”中选择另一个主机，然后再移除它。",
+          "removeActiveServerDescription": "此服务器是新项目的默认主机。请先在“高级”中选择另一个主机，然后再移除它。现有的主机会话将保留。",
           "updatingServers": "正在更新服务器…",
           "workflow": "远程服务器工作流程",
           "connectWorkflow": "连接到主机",
@@ -8280,6 +8394,7 @@
           "de6d5cff95": "这台电脑（",
           "de77eb1b65": "连接地址",
           "ff80904fc4": "为浏览器或桌面客户端创建可撤销的访问授权。",
+          "pairedRunsAsYou": "已配对的客户端可以在此电脑上以你的身份运行命令。",
           "f8500e134a": "分享此 NASH 服务器",
           "d6c081adf4": "复制 URL 失败。",
           "df0aa45a86": "复制的配对 URL。",
@@ -8524,13 +8639,8 @@
           "a7d28dff81": "添加远程主机以在 NASH 中连接到它。",
           "94c5284560": "目标",
           "f495689b82": "导入失败",
-          "f8050f6307": "已同步 {{value0}} 服务器{{value1}}",
           "68c13b4589": "测试失败",
           "81d08bcddf": "连接成功",
-          "2c4ee7332b": "无法重置远程中继",
-          "db2e48975e": "远程中继已重置",
-          "025e107643": "无法结束远程终端",
-          "90e308c98b": "远程终端结束",
           "a43de1d3ee": "断开连接失败",
           "e95d5ae10e": "连接失败",
           "c2a69510e3": "删除目标失败",
@@ -8538,12 +8648,12 @@
           "2227ce47b6": "保存目标失败",
           "f602009125": "目标已添加",
           "b4ba0ce33d": "目标已更新",
-          "3879cbaa52": "终端超时时间必须介于 60 到 {{value0}} 秒之间，或保持终端运行直到重置。",
           "4db9afce1c": "端口必须介于 1 和 65535 之间",
           "0e5aa04161": "需要主机或 SSH 配置别名",
           "f1fc50dad2": "无法加载 SSH 目标",
           "0cda732f43": "连接测试失败",
-          "terminateUnverifiable": "无法访问 {{terminals}} 远程终端。重新连接以结束它们。"
+          "syncedServerSingular": "已同步 {{count}} 台服务器",
+          "syncedServerPlural": "已同步 {{count}} 台服务器"
         },
         "SshPassphraseDialog": {
           "d5a234456f": "取消",
@@ -8572,30 +8682,17 @@
           "7f7b3d7ab4": "删除目标",
           "3d21a22d0e": "移除目标",
           "3d8af2949f": "编辑目标",
-          "762a48c662": "重置远程中继",
-          "97dea4e8cf": "正在重置远程中继",
-          "da16e108e6": "结束远程终端",
-          "c77f1abfe3": "结束远程终端",
           "18968ede9e": "错误",
           "f0871e6bfb": "连接",
-          "47e94bd6ba": "已连接",
-          "a883f5a00f": "终端超时：{{value0}}",
-          "8ce71262f4": "终端保持运行直到重置"
+          "47e94bd6ba": "已连接"
         },
         "SshTargetDestructiveActions": {
-          "7e66942808": "这将停止此 SSH 目标上的活动终端会话。重新连接不会恢复它们。",
-          "accf177a03": "结束远程终端？",
-          "26be00392d": "这将强制停止此 SSH 目标的远程中继。该目标的活动远程终端和端口转发将结束。",
-          "570a7a0574": "重置远程中继？",
           "3bb0cf0ee4": "这将删除目标并结束任何活动的远程终端。",
           "4808966c41": "删除 SSH 目标"
         },
         "SshTargetForm": {
           "fea9cb402e": "取消",
-          "1b19b00e93": "有限超时时间必须介于 60 秒到 7 天之间。",
           "137e88ce8d": "NASH 与此主机断开连接后，远程终端会继续运行。",
-          "b574994adc": "需要停止它们时，请使用“结束远程终端”或“重置中继”。",
-          "71fc546097": "保持终端运行直到重置",
           "92f80edbfd": "远程终端持久化",
           "feae1d1e69": "可选。相当于 ProxyJump / ssh -J。",
           "11bcb4507a": "bastion.example.com",
@@ -8617,8 +8714,6 @@
           "a62b4cb39a": "保存更改",
           "29af933cd5": "新的 SSH 目标",
           "f2331ce599": "编辑 SSH 目标",
-          "7c13f58c91": "直到重置",
-          "55c56cf2c7": "断开连接后的超时时间（秒）",
           "4a342f44c1": "高级连接",
           "e9609ddca6": "代理、跳板主机和连接复用",
           "8c922dffba": "复用 SSH 连接以加快设置",
@@ -8628,11 +8723,9 @@
           "editDescription": "更新此机器的连接详情。更改将在下次连接时生效。",
           "addDescription": "添加一台可通过 SSH 登录的持久机器。",
           "editingPrefix": "正在编辑",
-          "remoteRuntimeHelp": "哪个 Node.js 在此主机上运行 NASH。 NASH 管理的Node自己上传，不需要npm；主机节点使用已安装在那里的 Node.js。",
-          "remoteRuntimePinnedNode": "NASH 管理的节点",
-          "remoteRuntime": "运行时",
-          "remoteRuntimeAuto": "自动",
-          "remoteRuntimeHostNode": "主机节点"
+          "allowRemoteCliControl": "允许此主机的 orca CLI 控制 NASH",
+          "allowRemoteCliControlHelp": "关闭时，在此主机上运行的 orca 命令只能访问其自身的终端。开启后，可让它们访问此计算机上的其他主机、编排、文件和集成。",
+          "remoteRuntimeHelp": "哪个 Node.js 在此主机上运行 NASH。 NASH 管理的Node自己上传，不需要npm；主机节点使用已安装在那里的 Node.js。"
         },
         "TasksPane": {
           "f71d8a9dd3": "任务提供者",
@@ -8810,8 +8903,6 @@
             "tui": "TUI",
             "tuiDescription": "面向全屏终端应用的离散滚轮报告。"
           },
-          "defaultShellDescription": "选择 NASH 新建本地终端窗格时打开的 Shell。",
-          "customShellHelp": "输入 PATH 中的 Shell 名称或可执行文件路径。NASH 会将其作为登录 Shell 启动。",
           "8dbe0bc942": "shell 参数，每行一个",
           "f58cb71f53": "--rcfile\n/path/to/rcfile",
           "48b91a3ed2": "自定义参数",
@@ -8842,7 +8933,9 @@
           "a909136b3f": "shell",
           "1c29734248": "用于新终端窗格的 shell",
           "9589abc009": "默认 shell",
-          "5a5eac2f44": "未找到 shell：{{value0}}"
+          "5a5eac2f44": "未找到 shell：{{value0}}",
+          "defaultShellDescription": "选择 NASH 新建本地终端窗格时打开的 Shell。",
+          "customShellHelp": "输入 PATH 中的 Shell 名称或可执行文件路径。NASH 会将其作为登录 Shell 启动。"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "预览 {{value0}} 主题",
@@ -8954,13 +9047,8 @@
           "1ba81c0ff0": "受到推崇的",
           "cfde55c7b0": "下载模型失败。",
           "43fd4f454b": "语音模型",
-          "7cf715f891": "举行。",
-          "295d84b849": "一次开始，再次停止。按住：指示同时",
-          "ff9a680010": "切换：按下",
           "ba4a900d1d": "听写模式",
           "0121960365": "启用语音听写",
-          "366e1b4f36": "将文本听写到任何焦点窗格中。",
-          "4465596675": "按",
           "62d2a84d31": "无法清除 OpenAI API 密钥",
           "37aba8bb63": "OpenAI API 密钥已清除",
           "8572bbb537": "无法保存 OpenAI API 密钥",
@@ -8972,7 +9060,7 @@
           "d504ab05f0": "流媒体",
           "fbe5990716": "选择型号",
           "e24f7d43d2": "选择语音模型，本地模型离线运行；云模型需要 API 密钥。",
-          "174da92062": "抓住",
+          "174da92062": "按住",
           "118b3c2dee": "切换",
           "901985625d": "切换",
           "ad5d036ecc": "无法请求麦克风权限。未启用语音听写。",
@@ -8980,7 +9068,9 @@
           "1eac933202": "打开 macOS 隐私和安全。授予访问权限后再次启用听写。",
           "cd9fe37556": "已授予麦克风权限",
           "6fa734ed95": "删除 {{value0}}",
-          "openAiKeyName": "您的 OpenAI 转录密钥"
+          "openAiKeyName": "您的 OpenAI 转录密钥",
+          "dictationShortcutDescription": "按 {{shortcut}} 可将文本听写到当前聚焦的任意窗格中。",
+          "dictationModesDescription": "切换：按一次 {{shortcut}} 开始，再按一次停止。按住：按住 {{shortcut}} 期间进行听写。"
         },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "删除 {{value0}}",
@@ -9060,6 +9150,8 @@
             "b40d5b6570": "Codex 和实时速率限制提取的可选账户切换。",
             "17c5d244eb": "Codex 账户",
             "e14049e1a8": "claude",
+            "dd75a73991": "Claude 的可选账户切换，同时保留共享聊天上下文。",
+            "75682e1b62": "Claude 账户",
             "e02c136ad0": "授权",
             "9f70aa706c": "提供者",
             "488a7e9206": "操作系统",
@@ -9105,9 +9197,7 @@
                 "codingPlan": "coding plan",
                 "rateLimit": "rate limit"
               }
-            },
-            "dd75a73991": "Claude 的可选账户切换，同时保留共享聊天上下文。",
-            "75682e1b62": "Claude 账户"
+            }
           }
         },
         "advanced": {
@@ -9224,8 +9314,8 @@
             "5bff6a2ef0": "侧边栏",
             "5e5b8878bf": "手机",
             "74618577c7": "移动端",
-            "682293cadf": "在左侧边栏顶部显示 Orca 手机端按钮。",
-            "1de96ec8a6": "显示 Orca 手机端按钮",
+            "682293cadf": "在左侧边栏顶部显示 NASH 手机端按钮。",
+            "1de96ec8a6": "显示 NASH 手机端按钮",
             "4c920ab2d1": "日程",
             "58f4e22fa2": "自动化",
             "b186f3cefb": "自动化",
@@ -9701,7 +9791,6 @@
             },
             "nativeChat": {
               "title": "Chat UI",
-              "description": "预览受支持的智能体终端会话的桌面聊天界面。",
               "grok": "grok",
               "native": "原生",
               "chat": "聊天",
@@ -9711,7 +9800,8 @@
               "omp": "奥普",
               "terminal": "终端",
               "agent": "智能体",
-              "queue": "队列"
+              "queue": "队列",
+              "description": "在聊天界面中打开受支持的新智能体。"
             },
             "agentDashboard": {
               "title": "智能体仪表盘",
@@ -10206,8 +10296,8 @@
               "f213400800": "移动端",
               "671eb4173c": "通过手机控制终端和智能体。",
               "ffd52a96e4": "移动端",
-              "1de96ec8a6": "显示 Orca Mobile 按钮",
-              "682293cadf": "在左侧边栏顶部显示 Orca Mobile 按钮。",
+              "1de96ec8a6": "显示 NASH Mobile 按钮",
+              "682293cadf": "在左侧边栏顶部显示 NASH Mobile 按钮。",
               "e4f4daea0e": "中继",
               "5d5af8e041": "iPhone",
               "74618577c7": "移动端",
@@ -10372,7 +10462,7 @@
             "d141897c90": "命令源和 orca.yaml 详细信息。",
             "cc11699c3d": "高级",
             "bf460fded8": "yaml",
-            "9cad92fe77": "Orca.yaml 挂钩",
+            "9cad92fe77": "NASH.yaml 挂钩",
             "6b80f7d3c8": "本地设置脚本",
             "a1a4c51d58": "归档命令",
             "fbfd2386e8": "存档脚本",
@@ -10503,12 +10593,15 @@
               "ebd5369acf": "环境",
               "d198440ce3": "运行时",
               "baec27aa8f": "将此浏览器连接到已保存的 NASH 服务器。",
-              "3517fb2ec0": "活动服务器",
+              "3517fb2ec0": "远程 NASH 服务器",
               "c6e5a03aa0": "开发盒",
               "f1575f1e09": "网络客户端",
               "81444c4102": "配对网址",
               "104f4d7dbd": "配对",
-              "4575341c77": "选择本地桌面、添加已保存的远程 NASH 服务器或生成配对 URL。"
+              "4575341c77": "添加已保存的远程 NASH 服务器、生成配对 URL，或选择新项目的默认主机。",
+              "defaultHostKeyword": "默认主机",
+              "newProjectsKeyword": "新项目",
+              "activeServerKeyword": "活动服务器"
             }
           }
         },
@@ -10937,8 +11030,8 @@
           "a42f6fbdd8": "在智能体工作时保持此电脑和显示器唤醒。NASH 还会根据电源策略，在合盖时请求此设备保持唤醒。",
           "modeTitle": "防止电脑休眠",
           "modeDescriptionWindows": "选择“打开”、“智能体”或“关闭”。智能体工作时智能体模式保持唤醒状态；盖子关闭行为遵循该设备的电源设置。",
-          "modeDescriptionDefault": "选择“打开”、“智能体”或“关闭”。当智能体工作时，智能体模式保持唤醒状态。 NASH 还要求该设备在盖子关闭时保持唤醒状态，具体取决于其电源策略。",
           "modeDescriptionMac": "选择“打开”、“智能体”或“关闭”。智能体模式会在智能体工作时防止空闲休眠，因此开盖即可完成长时间任务。合上盖子仍会使此 Mac 进入睡眠状态。",
+          "modeDescriptionDefault": "选择“打开”、“智能体”或“关闭”。当智能体工作时，智能体模式保持唤醒状态。 NASH 还要求该设备在盖子关闭时保持唤醒状态，具体取决于其电源策略。",
           "lidNoteMac": "开盖时防止空闲休眠；合上盖子仍会使此 Mac 进入睡眠状态。",
           "lidNoteWindows": "合盖行为遵循该设备的电源设置。",
           "lidNoteDefault": "NASH 还要求该设备在盖子关闭时保持唤醒状态，具体取决于其电源策略。"
@@ -11078,21 +11171,23 @@
                 "60996beda6": "添加 Jira 站点",
                 "7ca5ffffdb": "从 Jira Cloud 议题浏览、创建并开始工作。",
                 "a1093a06c7": "在显示设置操作前正在检查 Jira 访问权限。",
-                "9fa04a032e": "{{value0}} 个站点{{value1}} 已连接",
                 "cef18762a2": "用 Linear 设置里的个人 API 密钥添加访问权限。完全访问密钥可看到密钥所有者能访问的所有团队。",
                 "6224fe9d34": "每个已连接的 Linear 工作区都有一个由活动运行时存储的密钥。全权限密钥可覆盖密钥所有者可访问的所有团队；受限密钥可随时更换。",
                 "1a12e33fe5": "添加 Linear 访问",
                 "622c224082": "添加工作区访问权限",
                 "eae4a9f16b": "添加 Linear 访问以浏览和链接议题。",
                 "fe9231215b": "在显示设置操作前正在检查 Linear 访问权限。",
-                "e1f5e6424c": "{{value0}} 个工作区{{value1}} 已连接",
                 "disconnect_all": "断开连接",
                 "account_scope_prefix": "账户范围",
                 "2d60ec7921": "使用 API token 连接 Jira Cloud 站点，或使用个人访问令牌或用户名和密码连接自托管 Jira。凭据会发送到所选远程运行时并以运行时支持的加密方式存储。",
                 "977e360b71": "使用 API token 连接 Jira Cloud 站点，或使用个人访问令牌或用户名和密码连接自托管 Jira。凭据存储在本地，本地运行时存储支持时会进行加密。",
                 "statusConnected": "已连接",
                 "statusNotConnected": "未连接",
-                "linearTokenName": "您的 Linear API 令牌"
+                "linearTokenName": "您的 Linear API 令牌",
+                "connectedSiteSingular": "已连接 {{count}} 个站点",
+                "connectedSitePlural": "已连接 {{count}} 个站点",
+                "connectedWorkspaceSingular": "已连接 {{count}} 个工作区",
+                "connectedWorkspacePlural": "已连接 {{count}} 个工作区"
               }
             }
           }
@@ -11173,18 +11268,18 @@
         },
         "providerAccountScope": {
           "remoteServer": "远程服务器：{{value0}}",
-          "remoteServerCredentials": "此提供商的凭据和账户检查由该远程服务器拥有。使用“设置 > 远程 NASH 服务器 > 高级”编辑另一个默认运行时范围。",
+          "remoteServerCredentials": "此提供商的凭据和账户检查由这台远程服务器管理。要使用其他主机，请更改“设置 > 远程 NASH 服务器 > 高级 > 新项目的默认主机”。",
           "localMac": "本地 Mac",
-          "localCredentials": "此提供商的凭据和账户检查由该桌面客户端拥有。使用“设置 > 远程 NASH 服务器 > 高级”编辑服务器拥有的凭据。",
-          "remoteServerRateLimit": "{{value0}} API 预算从此远程服务器上的 CLI 获取。使用“设置 > 远程 NASH 服务器 > 高级”查看另一个默认运行时预算。",
-          "localRateLimit": "{{value0}} API 预算从此桌面客户端上的 CLI 获取。使用“设置 > 远程 NASH 服务器 > 高级”查看服务器拥有的预算。"
+          "localCredentials": "此提供商的凭据和账户检查由这台桌面客户端管理。要使用服务器，请更改“设置 > 远程 NASH 服务器 > 高级 > 新项目的默认主机”。",
+          "remoteServerRateLimit": "{{value0}} API 额度从这台远程服务器上的 CLI 获取。要查看其他主机的额度，请在“设置”顶部的主机菜单中选择。",
+          "localRateLimit": "{{value0}} API 额度从这台桌面客户端上的 CLI 获取。要查看服务器的额度，请在“设置”顶部的主机菜单中选择。"
         },
         "settingOwnership": {
           "clientDefault": "客户端默认",
           "sourceControlAiDefaults": "方案、提示和托管评审默认值由此客户端共享；模型选择和发现则限定在智能体运行的主机内。",
           "projectOnThisHost": "此主机上的项目",
           "repositorySourceControlAi": "这些覆盖项应用于此项目设置，并继承客户端的源代码管理 AI 默认值，直至自定义。",
-          "agentLaunchDefaults": "默认智能体、命令覆盖、CLI 参数和启动环境是客户端偏好。SSH 和远程服务器启动仍会在运行时验证主机可用性。",
+          "agentLaunchDefaults": "默认智能体、命令覆盖、CLI 参数和启动环境保存在所选主机上。",
           "clientDefaultProjectScopes": "客户端默认 + 项目范围",
           "terminalQuickCommands": "命令保存在此客户端，然后限定为全局或某项目设置，以便从所选终端上下文运行。",
           "hostOverride": "主机覆盖",
@@ -11353,13 +11448,13 @@
           "notificationPlayground": "通知测试面板",
           "notificationPlaygroundDescription": "用于检查提示布局、恢复操作和长文案换行的开发触发器。",
           "devOnly": "仅开发",
-          "orcaCloud": "Orca Cloud",
+          "orcaCloud": "NASH Cloud",
           "orcaCloudDescription": "仅限开发环境的第一方云登录预览。在生产环境中隐藏；在开发环境中，设置 ORCA_CLOUD_API_URL 和 ORCA_CLOUD_CLIENT_ID 后也会出现在侧边栏账户切换器中。",
           "orcaCloudStatus": "状态",
           "orcaCloudSignOut": "退出登录",
           "orcaCloudConnect": "连接配置文件",
           "orcaCloudRefresh": "刷新状态",
-          "orcaCloudNotConfigured": "设置 ORCA_CLOUD_API_URL 和 ORCA_CLOUD_CLIENT_ID 以在此开发版本中预览 Orca Cloud 登录。",
+          "orcaCloudNotConfigured": "设置 ORCA_CLOUD_API_URL 和 ORCA_CLOUD_CLIENT_ID 以在此开发版本中预览 NASH Cloud 登录。",
           "deleteAnywayClicked": "仍然删除点击"
         },
         "EphemeralVmRecipeRow": {
@@ -11509,7 +11604,7 @@
           "connecting": "正在连接",
           "reconnecting": "正在重新连接",
           "offline": "离线",
-          "title": "Orca Relay",
+          "title": "NASH Relay",
           "automatic": "手机配对后可从任何地方连接",
           "signInPrompt": "在此桌面端登录以从任何地方连接",
           "directStillAvailable": "局域网和 Tailscale 连接仍然可用。",
@@ -11527,21 +11622,21 @@
           "signIn": "登录以使用 Relay",
           "localDescription": "手机必须连接此 Wi‑Fi 或通过 Tailscale。无需账号。",
           "pathGroup": "手机访问此电脑的方式",
-          "anywhereTitle": "Orca Relay",
+          "anywhereTitle": "NASH Relay",
           "anywhereDescription": "手机可通过蜂窝网络或任意 Wi‑Fi 连接。仅 Relay 需要登录。",
-          "signInRequired": "仅 Relay 需要 — 局域网无需账号。",
-          "relayUnavailable": "此版本不支持 Orca Relay。请使用局域网。",
+          "relayUnavailable": "此版本不支持 NASH Relay。请使用局域网。",
           "signInAgain": "重新登录以使用 Relay",
           "localTitle": "局域网",
           "retrying": "重试",
-          "relayCell": "中继单元"
+          "relayCell": "中继单元",
+          "relaySignInDetail": "将此桌面登录到 NASH，并通过 NASH 的服务器路由手机。LAN 无需账户。"
         },
         "MobilePairingSetupSection": {
           "title": "配对手机",
           "regenerate": "重新生成",
           "generate": "生成二维码",
           "refresh": "刷新网络接口",
-          "overview": "生成二维码，然后在 Orca Mobile 的 Pair Desktop 中扫描。",
+          "overview": "生成二维码，然后在 NASH Mobile 的 Pair Desktop 中扫描。",
           "step1Title": "连接方式",
           "step2Title": "此电脑的地址",
           "step2LocalDescription": "手机必须能通过 Tailscale 或 Wi‑Fi 访问此地址。",
@@ -11555,7 +11650,7 @@
           "placeholder": "自动检测"
         },
         "MobileRelayBetaAvailability": {
-          "about": "关于 Orca Relay 测试版",
+          "about": "关于 NASH Relay 测试版",
           "beta": "测试版",
           "availability": "可用平台：",
           "testFlight": "TestFlight",
@@ -11580,8 +11675,8 @@
           "manageConnectionLink": "集成"
         },
         "MobileRelayBetaNotice": {
-          "notice": "Orca Relay 目前处于测试阶段。",
-          "nashUnavailable": "NASH 版本不提供 Orca Relay 和移动端推送通知。"
+          "notice": "NASH Relay 目前处于测试阶段。",
+          "nashUnavailable": "NASH 版本不提供 NASH Relay 和移动端推送通知。"
         },
         "EditorFontFamilySetting": {
           "title": "编辑器字体",
@@ -11637,7 +11732,7 @@
           "failed": "更新失败",
           "serviceManagerHelp": "通过启动此服务器的服务管理器更新 NASH。",
           "unpackedHelp": "开发版本必须从其源代码检出进行更新。",
-          "legacyHelp": "手动更新此服务器一次以启用远程更新。"
+          "legacyHelp": "此服务器无法远程更新。请在服务器主机上更新 NASH。"
         },
         "BrowserLinkRoutingSetting": {
           "description": "在 NASH 内置浏览器中打开来自终端、Markdown 和编辑器的 http(s) 链接。{{shortcut}} 始终使用系统浏览器。",
@@ -11755,7 +11850,7 @@
           "official": "官方",
           "installed": "已安装",
           "noDescription": "未提供描述。",
-          "blocked": "已被 Orca 安全列表阻止：{{value0}}",
+          "blocked": "已被 NASH 安全列表阻止：{{value0}}",
           "blockedAction": "已阻止",
           "checkUpdate": "检查更新",
           "install": "Install"
@@ -11779,7 +11874,7 @@
           "noContributions": "仅清单元数据",
           "capabilities": "请求的访问权限",
           "workerWarning": "能力限制了此插件如何使用 NASH 的 API。其工作进程仍作为普通进程在此计算机上运行，可以完全访问您的文件、网络和其他进程。",
-          "blocked": "Orca 的安全列表阻止了此插件：{{value0}}",
+          "blocked": "NASH 的安全列表阻止了此插件：{{value0}}",
           "current": "此插件内容已安装。",
           "close": "关闭",
           "cancel": "取消",
@@ -11838,8 +11933,8 @@
           "description": "安装和管理 NASH 插件。插件在此计算机上运行，即使是 SSH 工作区也是如此。",
           "logsFailed": "无法加载插件日志。",
           "rollbackFailed": "无法回滚此插件。之前的不可变版本可能不可用。",
-          "orcaCatalogLabel": "使用 Orca 插件目录",
-          "orcaCatalogDescription": "从 Orca 服务器下载官方插件列表和插件安全列表。"
+          "orcaCatalogLabel": "使用 NASH 插件目录",
+          "orcaCatalogDescription": "从 NASH 服务器下载官方插件列表和插件安全列表。"
         },
         "PluginSettingsRow": {
           "blocked": "已阻止",
@@ -11858,7 +11953,7 @@
           "dev": "开发",
           "bundled": "内置",
           "noDescription": "未提供描述。",
-          "killListMessage": "Orca 的安全列表禁用了此插件：{{value0}}",
+          "killListMessage": "NASH 的安全列表禁用了此插件：{{value0}}",
           "viewAdvisory": "查看公告",
           "runtimeError": "插件在激活或工作进程错误后停止。",
           "restartCount": " · {{value0}} 次重启",
@@ -11899,9 +11994,9 @@
             "permissions": "插件权限",
             "logs": "插件日志",
             "development": "开发插件",
-            "orcaCatalogTitle": "使用 Orca 插件目录",
-            "orcaCatalogDescription": "从 Orca 服务器下载官方插件列表和插件安全列表。",
-            "orcaMarketplace": "Orca 插件市场",
+            "orcaCatalogTitle": "使用 NASH 插件目录",
+            "orcaCatalogDescription": "从 NASH 服务器下载官方插件列表和插件安全列表。",
+            "orcaMarketplace": "NASH 插件市场",
             "safetyList": "插件安全列表"
           }
         },
@@ -12046,7 +12141,6 @@
         },
         "BrowserTerminalLinkActionsSetting": {
           "title": "终端 URL 点击次数",
-          "description": "单击终端或聊天记录中的链接时显示可用的操作。关闭此功能需要在终端中单击 {{modifier}}。",
           "descriptionV2": "控制点击终端窗格和聊天记录中打印的已检测的 URL。",
           "plainClickLabel": "简单的点击",
           "plainClickDescription": "选择左键单击是显示操作、打开 URL 还是将其留给终端。 Cmd/Ctrl-单击始终直接打开。",
@@ -12088,10 +12182,10 @@
         "artifacts": {
           "enable": "启用工件",
           "enableDescription": "将工件添加到侧边栏，以便您可以打开和删除共享文件。",
-          "account": "Orca 账户",
+          "account": "NASH 账户",
           "connected": "已连接",
           "signInRequired": "需要登录才能上传和管理工件。",
-          "signIn": "登录 Orca",
+          "signIn": "登录 NASH",
           "title": "工件",
           "description": "与您的团队共享 HTML 和 Markdown 文件并管理他们的公共链接。",
           "howToTitle": "如何使用神器",
@@ -12108,7 +12202,7 @@
           "showButtonDescription": "在侧边栏中显示 Artifacts 快捷方式。",
           "openArtifactsDescriptionV2": "预览、复制和管理通过您的帐户共享的链接。",
           "signInTitle": "登录以共享工件",
-          "signInDescription": "使用您的 Orca 帐户上传工件并管理其公共链接。",
+          "signInDescription": "使用您的 NASH 帐户上传工件并管理其公共链接。",
           "signInAgain": "重新登录",
           "enableStepTitle": "启用工件共享",
           "enableStepWebDescription": "在主机设备上的 NASH 桌面应用程序中打开设置 → 工件并启用发布。",
@@ -12130,21 +12224,21 @@
         "orcaAccount": {
           "connected": "已连接",
           "reconnectRequired": "您的会话已过期。重新登录即可使用云功能。",
-          "unavailable": "Orca 登录在此版本中不可用。",
-          "signedOut": "登录以使用云功能扩展 NASH，包括 Artifacts 和 Orca Relay。",
+          "unavailable": "NASH 登录在此版本中不可用。",
+          "signedOut": "登录以使用云功能扩展 NASH，包括 Artifacts 和 NASH Relay。",
           "checking": "检查帐户状态...",
-          "account": "Orca 账户",
+          "account": "NASH 账户",
           "signOut": "登出",
           "signInAgain": "重新登录",
-          "signIn": "登录 Orca",
-          "title": "Orca 账户",
-          "description": "无论您身在何处，都可以立即共享工作并通过 Orca Mobile 访问您的桌面。",
-          "searchDescription": "登录或退出 Artifacts 和 Orca Relay 使用的帐户。",
+          "signIn": "登录 NASH",
+          "title": "NASH 账户",
+          "description": "无论您身在何处，都可以立即共享工作并通过 NASH Mobile 访问您的桌面。",
+          "searchDescription": "登录或退出 Artifacts 和 NASH Relay 使用的帐户。",
           "benefitsTitle": "包含在您的帐户中",
           "artifactsTitle": "神器分享",
           "artifactsDescription": "发布 HTML 和 Markdown 文件，然后管理 NASH 中的每个共享链接。",
-          "relayTitle": "Orca 接力赛",
-          "relayDescription": "通过蜂窝网络或任何 Wi-Fi 将 Orca Mobile 连接到此桌面。",
+          "relayTitle": "NASH 接力赛",
+          "relayDescription": "通过蜂窝网络或任何 Wi-Fi 将 NASH Mobile 连接到此桌面。",
           "skillsTitle": "技能分享",
           "skillsDescription": "在未列出的链接后面共享一项技能或一整套技能，并将它们安装在您使用的任何计算机上。",
           "keywordAccount": "帐户",
@@ -12154,7 +12248,7 @@
           "keywordSignOut": "登出",
           "keywordRelay": "中继",
           "keywordCloud": "云",
-          "nashUnavailable": "NASH 版本不支持 Orca Cloud 登录。"
+          "nashUnavailable": "NASH 版本不支持 NASH Cloud 登录。"
         },
         "automations": {
           "showButton": "显示自动化按钮",
@@ -12194,9 +12288,9 @@
           "linkDescription": "共享捆绑包无法在 NASH 中搜索或列出。该链接是凭据，因此仅将其发送给您信任的人。",
           "signInTitle": "登录以分享技能",
           "signInWebDescription": "NASH 桌面应用程序提供发布和链接管理。",
-          "signInDescription": "使用您的 Orca 帐户发布捆绑包并管理其链接。收件人不需要帐户。",
+          "signInDescription": "使用您的 NASH 帐户发布捆绑包并管理其链接。收件人不需要帐户。",
           "signInAgain": "重新登录",
-          "signIn": "登录 Orca",
+          "signIn": "登录 NASH",
           "howToTitle": "如何分享技能",
           "howToDescription": "发布一项技能或一组技能，例如在一个链接后面发布 30 项技能的集合。",
           "openSkills": "开放技能",
@@ -12325,6 +12419,20 @@
           "usageLabel": "用量",
           "usageTitle": "每月套餐用量"
         },
+        "ZcodeCliSetupSection": {
+          "title": "通过 ZCode 使用 GLM",
+          "description": "登录后即可将 GLM 用作编程智能体。上方的配额 API 密钥仅用于监控用量；ZCode 自行管理登录和模型选择。",
+          "help": "选择对应套餐站点的浏览器登录，或使用 ZCode 的隐藏输入 API 密钥设置。登录后，启动 ZCode 并使用 /model 选择 GLM 模型。",
+          "zai": "Z.AI 浏览器登录",
+          "bigmodel": "BigModel 浏览器登录",
+          "apiKey": "ZCode API 密钥设置",
+          "close": "关闭设置终端",
+          "loading": "正在加载登录终端…",
+          "terminalTitle": "ZCode 登录",
+          "terminalLabel": "ZCode 登录终端",
+          "apiKeyInstructions": "按 Enter 启动 ZCode，然后输入 /login 并选择套餐站点的 API 密钥选项。在 ZCode 的隐藏输入提示中输入密钥。",
+          "oauthInstructions": "按 Enter 运行登录命令，然后打开 ZCode 输出的授权网址。登录信息保存在此终端的执行主机上。"
+        },
         "ZcodePlanAccountsSection": {
           "site": {
             "bigmodel": "智谱 · BigModel（open.bigmodel.cn）",
@@ -12345,7 +12453,7 @@
           "keyStored": "API key 已保存 · {{value0}}",
           "keyStoredHelp": "仅保存在本地，并只发送到所选站点用于用量刷新。优先级高于 ZCode CLI 登录。",
           "usingCli": "正在使用 ZCode CLI 登录",
-          "usingCliHelp": "NASH 从 ~/.zcode/cli/config.json 读取 Coding Plan key。在下方保存 API key 即可改为在此关联套餐。",
+          "usingCliHelp": "NASH 会从此电脑上的 ZCode CLI 凭据存储中读取所选编程套餐。您也可以在下方保存 API 密钥以直接关联套餐。",
           "notConfigured": "尚未关联 GLM Coding Plan",
           "notConfiguredHelp": "在下方保存套餐 API key，或在这台电脑上通过 ZCode CLI 登录。",
           "refreshUsage": "刷新用量",
@@ -12367,8 +12475,194 @@
           "detailsUnavailable": "计划凭据详细信息只能在运行 NASH 的计算机上读取。",
           "siteUnavailable": "主机计划网站不可用"
         },
+        "NotificationHostToggles": {
+          "offCount": "{{count}} 台已关闭",
+          "machines": "机器",
+          "machinesDescription": "选择哪些机器可以在此电脑上显示通知。已配对服务器的开关也控制通过该服务器开展的工作。"
+        },
         "UnsealedCredentialNotice": {
           "body": "{{credential}} 未加密存储 — 该系统没有 NASH 可以使用的操作系统密钥环。任何可以读取您的磁盘或其备份的人都可以读取该凭据。安装并解锁 gnome-keyring 或 kwallet，然后再次保存以密封它。"
+        },
+        "managedServers": {
+          "row": {
+            "notRunning": "未运行",
+            "refresh": "刷新状态",
+            "migration": "迁移：{{phase}}",
+            "update": "更新",
+            "rollback": "回滚",
+            "recover": "恢复",
+            "cancelStop": "取消停止",
+            "confirmStop": "停止并移除服务器",
+            "keep": "保持运行",
+            "stop": "停止…",
+            "deferredVersion": "已推迟更新到 {{version}}。",
+            "confirmRestore": "恢复快照并重新启动",
+            "keepState": "保留状态",
+            "statusUnknown": "状态未知",
+            "checking": "正在检查…",
+            "forget": "忘记…",
+            "confirmForget": "在此桌面上忘记",
+            "keepLinked": "保持关联",
+            "forgetDescription": "在此处取消关联此服务器，而不联系其主机。如果主机恢复，服务器可能仍在那里运行。"
+          },
+          "title": "受管服务器",
+          "description": "NASH 会在空的 SSH 主机上安装并运行服务器，并使其保持最新。",
+          "deploy": {
+            "host": "SSH 主机",
+            "hostPlaceholder": "选择一个空的 SSH 主机",
+            "name": "服务器名称",
+            "submit": "部署服务器",
+            "running": "正在部署…"
+          },
+          "pending": {
+            "resume": "继续"
+          },
+          "access": {
+            "title": "配对服务器的 SSH 访问",
+            "linked": "{{name}}（通过 SSH）",
+            "unlink": "停止使用 SSH",
+            "target": "通过 SSH 主机访问",
+            "port": "服务器端口",
+            "link": "使用 SSH",
+            "linking": "正在连接…"
+          },
+          "search": {
+            "title": "受管服务器",
+            "keywordSsh": "ssh"
+          },
+          "phase": {
+            "fenced": "主机已锁定",
+            "staged": "副本已暂存",
+            "committed": "副本已提交",
+            "retired": "已完成"
+          },
+          "recovery": {
+            "activate": "更新已中断",
+            "rollback": "回滚已中断",
+            "decommission": "停止已中断"
+          },
+          "terminals": {
+            "unknown": "正在运行的终端：未知",
+            "count": "正在运行的终端：{{count}}"
+          },
+          "blocker": {
+            "notFound": "该 SSH 主机已不存在。",
+            "owned": "此 SSH 主机已属于一个受管服务器。",
+            "catalog": "此主机上的项目尚无法迁移。",
+            "terminals": "此主机上的终端仍在运行（{{count}}）。请先关闭它们。",
+            "portForwards": "已保存的端口转发会保留在 SSH 主机上。",
+            "dependents": "尚无法迁移的状态：{{kinds}}。",
+            "unverifiable": "NASH 无法读取其保存的 {{sources}}，因此无法确定将迁移哪些内容。"
+          },
+          "kind": {
+            "portForward": "端口转发",
+            "terminalLease": "终端",
+            "terminalRecovery": "终端恢复记录",
+            "workspaceSession": "打开的选项卡和布局",
+            "worktreeMetadata": "工作树详情",
+            "worktreeLineage": "工作树历史",
+            "workspaceLineage": "工作区历史",
+            "sparsePreset": "稀疏检出预设",
+            "retiredWorktreeName": "已停用工作树名称",
+            "automation": "自动化",
+            "automationRun": "自动化运行记录",
+            "mobileTabSelection": "移动端选项卡选择",
+            "uiRouting": "侧边栏和筛选设置"
+          },
+          "loadFailed": "NASH 无法加载 SSH 主机和未完成的迁移。请重新打开设置以重试。",
+          "outcome": {
+            "activeServer": "未完成：此服务器是新项目的默认主机。请先在“高级”中选择另一个主机，然后再停止它。",
+            "live": "未完成：此服务器上的终端仍在运行。请关闭它们后重试。",
+            "unverifiable": "未完成：NASH 无法确认此服务器上正在运行什么。请在主机可访问时重试。",
+            "migration": "未完成：迁移到此服务器的操作尚未完成。请先继续该操作。",
+            "deferred": "尚未完成：服务器尚未准备好执行此操作。请稍后重试。",
+            "failed": "NASH 无法在服务器上完成此操作。请重试。"
+          }
+        },
+        "sshHostServer": {
+          "sourceChanged": "较旧版本的 NASH 更改了此主机的项目。要重新连接，请将这些更改迁移到其受管服务器，或保留服务器版本。",
+          "deploying": "正在设置受管的 NASH 服务器…",
+          "converting": "正在将此主机的项目迁移到其受管的 NASH 服务器…",
+          "connecting": "正在连接到受管的 NASH 服务器…",
+          "updating": "正在更新受管服务器…",
+          "starting": "正在启动受管服务器…",
+          "notServing": "NASH 无法确认受管服务器是否正在响应。",
+          "hostNewer": "运行来自较新版本 NASH 的受管 NASH 服务器；它会保留该版本。",
+          "failureDetails": "详情",
+          "cause": {
+            "unsupportedHost": "NASH 没有适用于此系统的服务器构建",
+            "artifactsUnavailable": "此 NASH 构建不包含该服务器",
+            "libcUnidentified": "NASH 无法识别主机的系统库",
+            "runtimeSelfTest": "服务器的运行时未通过自检",
+            "securitySoftware": "安全软件更改了服务器的运行时",
+            "nativePreflight": "主机缺少服务器所需的系统库"
+          },
+          "updateDeferredLater": "运行受管的 NASH 服务器；它会在下次连接时更新。",
+          "updateFailedPrevious": "在其先前版本上运行受管的 NASH 服务器；更新失败。",
+          "refusedBlocked": "未迁移到受管服务器：此主机上的某些因素阻止了迁移。",
+          "unsupported": "此版本的 NASH 不支持此主机（{{reason}}）。如需继续使用，请安装旧版本的 NASH。",
+          "unsupportedUnknown": "此版本的 NASH 不支持此主机。如需继续使用，请安装旧版本的 NASH。",
+          "tunnelUnsupported": "此版本的 NASH 不支持此主机：其 SSH 服务器不允许端口转发，NASH 也无法通过 SSH 会话连接到其服务器。如需继续使用，请安装旧版本的 NASH。",
+          "setupRetry": "NASH 无法在此主机上启动其服务器。请重新连接。",
+          "olderTerminalsUncounted": "由旧版本 NASH 启动的终端仍在此主机上运行，且不会自行停止。请在该版本的 NASH 中关闭它们，或在主机上结束它们，然后重新连接。",
+          "olderTerminalsUnverifiable": "NASH 无法确认由旧版本 NASH 启动的终端是否已退出。请重新连接后重试。",
+          "olderTerminals_one": "由旧版本 NASH 启动的 {{count}} 个终端仍在此主机上运行，且不会自行停止。请在该版本的 NASH 中关闭它们，或在主机上结束它们，然后重新连接。",
+          "olderTerminals_other": "由旧版本 NASH 启动的 {{count}} 个终端仍在此主机上运行，且不会自行停止。请在该版本的 NASH 中关闭它们，或在主机上结束它们，然后重新连接。",
+          "olderTerminals": "由旧版本 NASH 启动的 {{count}} 个终端仍在此主机上运行，且不会自行停止。请在该版本的 NASH 中关闭它们，或在主机上结束它们，然后重新连接。",
+          "unavailable": "运行中继：此主机上无法运行受管的 NASH 服务器（{{reason}}）。",
+          "tunnelUnavailable": "运行中继：此主机的 SSH 服务器不允许端口转发，NASH 也无法通过 SSH 会话连接到受管服务器。",
+          "terminalsUnverifiable": "运行中继：NASH 无法确认其终端已关闭。它会在下次连接时迁移。",
+          "unavailableUnknown": "运行中继：此主机上无法运行受管的 NASH 服务器。",
+          "terminalsElsewhere": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
+          "terminalsElsewhere_one": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
+          "terminalsElsewhere_other": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
+          "terminalsElsewhereUncounted": "当另一台 NASH 桌面端或会话在此主机上打开的终端仍在运行时，会运行中继。"
+        },
+        "deltaMove": {
+          "action": "迁移新项目…",
+          "title": "迁移新项目",
+          "description": "较旧版本的 NASH 在此主机迁移到其受管服务器后对其进行了更改。这会将它所创建的内容添加到服务器；绝不会覆盖服务器已有的内容。",
+          "added": "已添加到服务器",
+          "nothingNew": "没有可添加的新内容。",
+          "notReflected": "在较旧版本上已更改或移除；服务器会保留自己的副本",
+          "cancel": "取消",
+          "confirm": "迁移新项目",
+          "kind": {
+            "repository": "仓库 {{name}}",
+            "folder": "文件夹 {{name}}",
+            "group": "项目组 {{name}}"
+          }
+        },
+        "keepServer": {
+          "action": "保留服务器的版本…",
+          "title": "保留服务器的版本",
+          "description": "此主机将按原样恢复为使用其受管服务器。较旧版本的 NASH 在此处添加或更改的内容不会被迁移；它们只会保留在这台电脑保存的设置中，直到被清理。",
+          "cancel": "取消",
+          "confirm": "保留服务器的版本"
+        },
+        "SettingsHostScopePicker": {
+          "label": "主机",
+          "unavailable": "{{value0}}（不可用）",
+          "description": "下方的账户、已检测的智能体和终端选项均针对此主机。",
+          "unavailableNotice": "此服务器已不再被保存，因此无法显示它的任何内容。请在设置顶部选择其他主机。"
+        },
+        "wslHostsExperimental": {
+          "toggleLabel": "切换“WSL 发行版作为主机”",
+          "title": "WSL 发行版作为主机",
+          "description": "将 WSL 2 发行版添加为主机。NASH 在发行版内运行其服务器，因此其中新项目里的 git、文件和终端都在 Linux 中原生运行。",
+          "keywordWsl": "wsl",
+          "keywordLinux": "linux",
+          "keywordDistro": "发行版"
+        },
+        "wslHosts": {
+          "title": "WSL 主机",
+          "experimental": "实验性",
+          "description": "NASH 在每个发行版内运行一个服务器。已停止的发行版只有在您打开其某个项目或在此连接它时才会启动。",
+          "add": "添加 WSL 发行版",
+          "connect": "连接",
+          "remove": "移除",
+          "turnOn": "在实验性中开启",
+          "forceUpdate": "强制更新"
         },
         "clef": {
           "clear": {
@@ -12577,7 +12871,8 @@
             "rowInvalid": "此行无效。请检查目标、模型和推理级别。",
             "nothingChanged": "当前路由表没有变化。请先编辑至少一条路由。",
             "primaryCli": "协调者 CLI",
-            "coordinatorModel": "协调者模型"
+            "coordinatorModel": "协调者模型",
+            "exactModelId": "精确模型 ID"
           },
           "notices": {
             "saved": "已保存。"
@@ -12625,7 +12920,8 @@
             "ultra": "极高",
             "inherit": "继承",
             "whenSupported": "（支持时使用）",
-            "sameAsCoordinator": "与协调者相同"
+            "sameAsCoordinator": "与协调者相同",
+            "cliDefault": "CLI 默认值"
           },
           "inline": {
             "edit": "编辑",
@@ -12872,159 +13168,6 @@
             "effort": "推理强度",
             "agent": "智能体"
           }
-        },
-        "NotificationHostToggles": {
-          "offCount": "{{count}} 台已关闭",
-          "machines": "机器",
-          "machinesDescription": "选择哪些机器可以在此电脑上显示通知。已配对服务器的开关也控制通过该服务器开展的工作。"
-        },
-        "managedServers": {
-          "row": {
-            "notRunning": "未运行",
-            "refresh": "刷新状态",
-            "migration": "迁移：{{phase}}",
-            "update": "更新",
-            "rollback": "回滚",
-            "recover": "恢复",
-            "cancelStop": "取消停止",
-            "confirmStop": "停止并移除服务器",
-            "keep": "保持运行",
-            "stop": "停止…",
-            "deferredVersion": "已推迟更新到 {{version}}。",
-            "confirmRestore": "恢复快照并重新启动",
-            "keepState": "保留状态",
-            "statusUnknown": "状态未知",
-            "checking": "正在检查…"
-          },
-          "title": "受管服务器",
-          "description": "NASH 会在空的 SSH 主机上安装并运行服务器，并使其保持最新。",
-          "deploy": {
-            "host": "SSH 主机",
-            "hostPlaceholder": "选择一个空的 SSH 主机",
-            "name": "服务器名称",
-            "submit": "部署服务器",
-            "running": "正在部署…"
-          },
-          "pending": {
-            "resume": "继续"
-          },
-          "access": {
-            "title": "配对服务器的 SSH 访问",
-            "linked": "{{name}}（通过 SSH）",
-            "unlink": "停止使用 SSH",
-            "target": "通过 SSH 主机访问",
-            "port": "服务器端口",
-            "link": "使用 SSH",
-            "linking": "正在连接…"
-          },
-          "search": {
-            "title": "受管服务器",
-            "keywordSsh": "ssh"
-          },
-          "phase": {
-            "fenced": "主机已锁定",
-            "staged": "副本已暂存",
-            "committed": "副本已提交",
-            "retired": "已完成"
-          },
-          "recovery": {
-            "activate": "更新已中断",
-            "rollback": "回滚已中断",
-            "decommission": "停止已中断"
-          },
-          "terminals": {
-            "unknown": "正在运行的终端：未知",
-            "count": "正在运行的终端：{{count}}"
-          },
-          "blocker": {
-            "notFound": "该 SSH 主机已不存在。",
-            "owned": "此 SSH 主机已属于一个受管服务器。",
-            "catalog": "此主机上的项目尚无法迁移。",
-            "terminals": "此主机上的终端仍在运行（{{count}}）。请先关闭它们。",
-            "portForwards": "已保存的端口转发会保留在 SSH 主机上。",
-            "dependents": "尚无法迁移的状态：{{kinds}}。",
-            "unverifiable": "NASH 无法读取其保存的 {{sources}}，因此无法确定将迁移哪些内容。"
-          },
-          "kind": {
-            "portForward": "端口转发",
-            "terminalLease": "终端",
-            "terminalRecovery": "终端恢复记录",
-            "workspaceSession": "打开的选项卡和布局",
-            "worktreeMetadata": "工作树详情",
-            "worktreeLineage": "工作树历史",
-            "workspaceLineage": "工作区历史",
-            "sparsePreset": "稀疏检出预设",
-            "retiredWorktreeName": "已停用工作树名称",
-            "automation": "自动化",
-            "automationRun": "自动化运行记录",
-            "mobileTabSelection": "移动端选项卡选择",
-            "uiRouting": "侧边栏和筛选设置"
-          },
-          "loadFailed": "NASH 无法加载 SSH 主机和未完成的迁移。请重新打开设置以重试。",
-          "outcome": {
-            "live": "未完成：此服务器上的终端仍在运行。请关闭它们后重试。",
-            "unverifiable": "未完成：NASH 无法确认此服务器上正在运行什么。请在主机可访问时重试。",
-            "migration": "未完成：迁移到此服务器的操作尚未完成。请先继续该操作。",
-            "deferred": "尚未完成：服务器尚未准备好执行此操作。请稍后重试。",
-            "failed": "NASH 无法在服务器上完成此操作。请重试。"
-          }
-        },
-        "sshHostServer": {
-          "sourceChanged": "在较旧版本的 NASH 上发生了更改：会持续运行中继，直到再次迁移到其受管服务器。",
-          "unavailable": "运行中继：此主机上无法运行受管的 NASH 服务器（{{reason}}）。",
-          "tunnelUnavailable": "运行中继：此主机的 SSH 服务器不允许端口转发，NASH 也无法通过 SSH 会话连接到受管服务器。",
-          "deploying": "正在设置受管的 NASH 服务器…",
-          "converting": "正在将此主机的项目迁移到其受管的 NASH 服务器…",
-          "connecting": "正在连接到受管的 NASH 服务器…",
-          "updating": "正在更新受管服务器…",
-          "starting": "正在启动受管服务器…",
-          "notServing": "受管的 NASH 服务器未运行，且无法启动。",
-          "hostNewer": "运行来自较新版本 NASH 的受管 NASH 服务器；它会保留该版本。",
-          "terminalsLive": "在其 {{count}} 个打开的终端全部关闭前运行中继，然后迁移到受管服务器。",
-          "terminalsLive_one": "在其 {{count}} 个打开的终端关闭前运行中继，然后迁移到受管服务器。",
-          "terminalsLive_other": "在其 {{count}} 个打开的终端全部关闭前运行中继，然后迁移到受管服务器。",
-          "terminalsUnverifiable": "运行中继：NASH 无法确认其终端已关闭。它会在下次连接时迁移。",
-          "retry": "本次会话运行中继；它会在下次连接时迁移到受管服务器。",
-          "failureDetails": "详情",
-          "unavailableUnknown": "运行中继：此主机上无法运行受管的 NASH 服务器。",
-          "cause": {
-            "unsupportedHost": "NASH 没有适用于此系统的服务器构建",
-            "artifactsUnavailable": "此 NASH 构建不包含该服务器",
-            "libcUnidentified": "NASH 无法识别主机的系统库",
-            "runtimeSelfTest": "服务器的运行时未通过自检",
-            "securitySoftware": "安全软件更改了服务器的运行时",
-            "nativePreflight": "主机缺少服务器所需的系统库"
-          },
-          "updateDeferredLater": "运行受管的 NASH 服务器；它会在下次连接时更新。",
-          "updateFailedPrevious": "在其先前版本上运行受管的 NASH 服务器；更新失败。",
-          "terminalsLiveUncounted": "在其打开的终端全部关闭前运行中继，然后迁移到受管服务器。",
-          "refusedBlocked": "未迁移到受管服务器：此主机上的某些因素阻止了迁移。",
-          "terminalsElsewhere": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
-          "terminalsElsewhere_one": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
-          "terminalsElsewhere_other": "当另一台 NASH 桌面端或会话在此主机上打开的 {{count}} 个终端仍在运行时，会运行中继。",
-          "terminalsElsewhereUncounted": "当另一台 NASH 桌面端或会话在此主机上打开的终端仍在运行时，会运行中继。"
-        },
-        "deltaMove": {
-          "action": "迁移新项目…",
-          "title": "迁移新项目",
-          "description": "较旧版本的 NASH 在此主机迁移到其受管服务器后对其进行了更改。这会将它所创建的内容添加到服务器；绝不会覆盖服务器已有的内容。",
-          "added": "已添加到服务器",
-          "nothingNew": "没有可添加的新内容。",
-          "notReflected": "在较旧版本上已更改或移除；服务器会保留自己的副本",
-          "cancel": "取消",
-          "confirm": "迁移新项目",
-          "kind": {
-            "repository": "仓库 {{name}}",
-            "folder": "文件夹 {{name}}",
-            "group": "项目组 {{name}}"
-          }
-        },
-        "keepServer": {
-          "action": "保留服务器的版本…",
-          "title": "保留服务器的版本",
-          "description": "此主机将按原样恢复为使用其受管服务器。较旧版本的 NASH 在此处添加或更改的内容不会被迁移；它们只会保留在这台电脑保存的设置中，直到被清理。",
-          "cancel": "取消",
-          "confirm": "保留服务器的版本"
         }
       },
       "right": {
@@ -13291,7 +13434,8 @@
             "740aca88ab": "工作区端口扫描失败。",
             "5be4f7f727": "端口 {{value0}} 菜单",
             "7550998473": "复制",
-            "1004af16ab": "复制 {{value0}}"
+            "1004af16ab": "复制 {{value0}}",
+            "153d3a8026": "工作区主机未知"
           },
           "Search": {
             "1abfb25a66": "输入要在文件中搜索的内容",
@@ -13568,7 +13712,6 @@
             "38b899cc02": "所有仓库"
           },
           "SourceControlAgentActionDialogForm": {
-            "1bc0bdbb5e": "启动：",
             "7ec6abbf2a": "重置",
             "f4f3c9ca4a": "提示词模板",
             "fe119187bb": "--model sonnet",
@@ -13590,7 +13733,8 @@
             "b0da3a4d3e": "启动预设已保存",
             "bff4795a6d": "更改智能体、参数或提示词模板以更新已保存的预设。",
             "5c75b24735": "自定义 NASH 启动智能体前发送给它的内容。",
-            "repoAgentOverrideNote": "此仓库会覆盖你的全局默认值（{{global}}），当前运行 {{effective}}。保存到此仓库以更改这里运行的内容。"
+            "repoAgentOverrideNote": "此仓库会覆盖你的全局默认值（{{global}}），当前运行 {{effective}}。保存到此仓库以更改这里运行的内容。",
+            "1bc0bdbb5e": "启动："
           },
           "SourceControlTextGenerationDialog": {
             "c5b7fa7cb6": "保存为全局默认值",
@@ -13865,7 +14009,8 @@
                   "title": "此处不支持 {{reviewLabelCap}}",
                   "body": "此仓库提供程序不支持从 NASH 创建 {{reviewLabel}}。"
                 }
-              }
+              },
+              "loadFailedOnMachine": "无法从 {{machine}} 加载：{{detail}}"
             }
           },
           "gitlab": {
@@ -14236,7 +14381,10 @@
             "sessionDeleteFailed": "无法删除会话",
             "resumeInChatConflict": "另一个聊天室已经在进行此对话。",
             "resumeInChatTranscriptMissing": "无法加载此对话的历史记录，因此无法在聊天中恢复。",
-            "resumeInChatFailed": "无法在新聊天中恢复此会话。"
+            "resumeInChatFailed": "无法在新聊天中恢复此会话。",
+            "resumeInNewCliUnavailable": "无法在 CLI 中打开此会话。",
+            "resumeInNewCliHostTooOld": "请更新运行此聊天的主机上的 NASH，才能在新的 CLI 中恢复它。",
+            "folderWorkspaceUnavailable": "文件夹工作区不再可用。"
           },
           "AiVaultPanelControls": {
             "scanningSessions": "正在扫描会话",
@@ -14338,7 +14486,9 @@
             "copied": "已复制",
             "copy": "复制",
             "noFirstPromptAvailable": "没有可用的首次提示",
-            "loadingFirstPrompt": "正在加载首次提示…"
+            "loadingFirstPrompt": "正在加载首次提示…",
+            "folder": "文件夹",
+            "resumeInFolder": "在文件夹中恢复"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "恢复 {{value0}} 会话",
@@ -14372,7 +14522,10 @@
             "deleteReasonNonLocalHost": "只能删除此设备上的会话。",
             "deleteReasonSyntheticPath": "此会话无法在 NASH 中删除。",
             "deleteReasonUnsupportedAgent": "{{value0}} 会话无法在 NASH 中删除。",
-            "resumeInNewChat": "在新聊天中继续"
+            "resumeInNewNativeChat": "在新的本机聊天中恢复",
+            "resumeInNewCli": "在新的 CLI 中恢复",
+            "resumeInNewCliTooltipFork": "将此对话派生到新的 CLI 会话中。",
+            "resumeInNewCliTooltipChat": "本机聊天保持不变。"
           },
           "AiVaultSessionDeleteDialog": {
             "title": "要删除此会话吗？",
@@ -14431,7 +14584,12 @@
             "noRecordedWorktree": "此会话没有记录工作树。",
             "archivedJumpUnavailable": "此会话位于已归档的工作树中。",
             "noActiveWorktreeMatch": "没有与此会话匹配的活动工作树。",
-            "noActiveWorktreeTarget": "没有可用的活动工作树。"
+            "noActiveWorktreeTarget": "没有可用的活动工作树。",
+            "activeFolder": "文件夹",
+            "archivedFolder": "已归档的文件夹",
+            "archivedFolderJumpUnavailable": "此会话位于已归档的文件夹中。",
+            "currentFolder": "当前文件夹",
+            "jumpToFolder": "跳转到文件夹"
           },
           "AiVaultSessionSubagents": {
             "subagentsCount": "子智能体（{{value0}}）",
@@ -14440,8 +14598,8 @@
           },
           "aiVaultSessionLogOpen": {
             "workspaceGone": "无法打开日志 — 工作区已不可用。",
-            "notAuthorized": "无法打开日志 — 路径未授权。",
-            "alreadyEditable": "日志已处于编辑状态。"
+            "alreadyEditable": "日志已处于编辑状态。",
+            "notAuthorized": "无法打开日志 — 路径未授权。"
           },
           "github": {
             "refresh": {
@@ -14863,22 +15021,22 @@
           "dfd2aa9d5d": "网络",
           "2f077ef4eb": "，然后扫码。",
           "3aa7bb2d8b": "配对桌面",
-          "d1495e5e64": "打开 Orca 手机端，点击",
+          "d1495e5e64": "打开 NASH 手机端，点击",
           "3960f5c339": "第 2 步（共 2 步）",
           "3241f3c26a": "安装二维码",
           "7af266b80d": "安装二维码",
           "aa97420ba4": "复制安装链接",
           "ac1eb64952": "安卓",
           "711e6f4b47": "iOS系统",
-          "e75647ace0": "使用手机扫描二维码或打开安装链接以获取 Orca 手机端。",
+          "e75647ace0": "使用手机扫描二维码或打开安装链接以获取 NASH 手机端。",
           "0d9b33299e": "获取应用程序。",
           "92ddfdfa1f": "第 1 步（共 2 步）",
           "ff48d9d520": "与另一台设备配对",
           "f9cbf4bb53": "撤销设备",
           "34f878d04f": "撤销 {{value0}}",
           "94829abdb1": "配对",
-          "266c18c105": "打开 Orca 手机端 从上次中断的地方继续，或配对其他设备。",
-          "5410d55d79": "Orca 手机端",
+          "266c18c105": "打开 NASH 手机端 从上次中断的地方继续，或配对其他设备。",
+          "5410d55d79": "NASH 手机端",
           "10d27b4cba": "开始使用",
           "da1d5e5ed0": "可用于",
           "ec0607bf66": "支持的手机平台",
@@ -14894,7 +15052,7 @@
             "stable": "稳定版"
           },
           "relayDegradedNotice": "无法连接 Relay — 此二维码仅在局域网或 Tailscale 内可用。",
-          "pairingQrError": "无法将此配对码呈现为二维码。请改为将其复制到 Orca Mobile。",
+          "pairingQrError": "无法将此配对码呈现为二维码。请改为将其复制到 NASH Mobile。",
           "directAddressDisclosure": "也可使用更快的本地连接",
           "directAddressHint": "可选。选择手机在附近（同一 Wi‑Fi 或 Tailscale）时使用的地址，通常比 Relay 更快。外出时仍走 Relay。",
           "noRelayCode": "没有可用的配对码",
@@ -14927,18 +15085,18 @@
         },
         "MobilePageToolbar": {
           "ad2284a9e2": "关闭 · Esc",
-          "9883b58693": "关闭 Orca 手机",
+          "9883b58693": "关闭 NASH 手机",
           "fb5f28330e": "在侧边栏中显示",
           "c669abcf8f": "从侧边栏隐藏",
           "e1c7b4a92d": "在设置 > 移动端中配置。",
-          "a4f8c2d91e": "从左侧边栏隐藏 Orca 手机端",
-          "b7e3d1c84a": "在左侧边栏显示 Orca 手机端",
+          "a4f8c2d91e": "从左侧边栏隐藏 NASH 手机端",
+          "b7e3d1c84a": "在左侧边栏显示 NASH 手机端",
           "f3d8e5b71a": "将快捷方式添加回左侧边栏。"
         },
         "PhoneCarousel": {
           "96d651cb87": "终端会话",
           "93217b41c1": "工作树列表",
-          "89c7713645": "Orca 手机主屏幕"
+          "89c7713645": "NASH 手机主屏幕"
         },
         "mobile": {
           "platform": {
@@ -15044,24 +15202,24 @@
           "remove-custom": "删除 {{address}}"
         },
         "WindowsFirewallNotice": {
-          "repair-success": "Windows 防火墙现已允许 Orca Mobile 在专用网络上通信",
+          "repair-success": "Windows 防火墙现已允许 NASH Mobile 在专用网络上通信",
           "repair-failed": "无法更新 Windows 防火墙规则",
           "public-title": "Windows 将此网络标记为公用",
           "missing-title": "允许手机连接通过 Windows 防火墙",
-          "public-description": "请先将此受信任的 Wi-Fi 网络更改为专用网络，然后再允许 Orca Mobile 连接。",
+          "public-description": "请先将此受信任的 Wi-Fi 网络更改为专用网络，然后再允许 NASH Mobile 连接。",
           "missing-description": "Windows 可能会阻止配对服务器。请为此 NASH 应用和专用网络上的 TCP 端口 {{port}} 添加规则。",
           "open-settings": "打开网络设置",
           "waiting": "正在等待 Windows…",
           "allow": "允许手机连接",
           "repair-unverified": "无法验证 Windows 防火墙访问权限",
-          "blocked-title": "Windows 可能正在阻止 Orca Mobile",
+          "blocked-title": "Windows 可能正在阻止 NASH Mobile",
           "blocked-description": "现有的入站阻止规则可能会覆盖配对例外。修复将移除此 NASH 应用的冲突 TCP 规则，然后在专用网络上允许端口 {{port}}。",
           "repair": "修复防火墙访问权限",
-          "relay-note": "配对仍可通过 Orca Relay 进行 — 允许后只是额外获得更快的本地连接。"
+          "relay-note": "配对仍可通过 NASH Relay 进行 — 允许后只是额外获得更快的本地连接。"
         },
         "MobileRelayMintFailureNotice": {
-          "retryingTitle": "正在重试 Orca 中继...",
-          "unavailableTitle": "Orca Relay 在此桌面上不可用。",
+          "retryingTitle": "正在重试 NASH 中继...",
+          "unavailableTitle": "NASH Relay 在此桌面上不可用。",
           "title": "无法创建中继配对代码。",
           "retryingBody": "创建新的配对代码。通过远程连接，这可能需要一些时间。",
           "unavailableBody": "使用 LAN 通过 Tailscale 或相同的 Wi-Fi 进行配对。",
@@ -15070,8 +15228,10 @@
           "retrying": "正在重试...",
           "retry": "重试中继",
           "copyDiagnostics": "复制诊断",
-          "reconnectTitle": "您的 Orca 帐户会话已过期。",
-          "reconnectBody": "再次登录以使用 Orca Relay，或使用 LAN 通过 Tailscale 或同一 Wi-Fi 进行配对。"
+          "reconnectTitle": "您的 NASH 帐户会话已过期。",
+          "reconnectBody": "再次登录以使用 NASH Relay，或使用 LAN 通过 Tailscale 或同一 Wi-Fi 进行配对。",
+          "notEntitledTitle": "此 NASH 账户不包含 NASH Relay。",
+          "rateLimitedBody": "NASH Relay 正忙。请等待一分钟再重试，或使用 LAN 通过 Tailscale 或同一 Wi‑Fi 配对。"
         }
       },
       "gitlab": {
@@ -15116,19 +15276,19 @@
             "88ffb502e5": "打开 Markdown 笔记",
             "629528690b": "新的 Markdown 笔记",
             "3215fc73e9": "新终端",
-            "da508bd7f5": "保存",
-            "918c2139f3": "不保存",
-            "e7bf09d4d4": "取消",
-            "690b6fb98a": "未保存的更改",
             "bbc177f98f": "启用",
             "adc281394d": "关闭",
             "8cf80db43b": "设置 NASH CLI 和智能体技能，以便智能体可以通过 NASH 进行协调。",
             "2a3c5ddf5e": "启用编排",
-            "d6b563ae24": "正在加载编辑器...",
             "8b14ba6c17": "新浏览器选项卡",
+            "25d7817f79": "终端",
+            "da508bd7f5": "保存",
+            "918c2139f3": "不保存",
+            "e7bf09d4d4": "取消",
+            "690b6fb98a": "未保存的更改",
+            "d6b563ae24": "正在加载编辑器...",
             "b085fb58b5": "该文件有未保存的更改。",
-            "5ddc688c52": "“{{value0}}”有未保存的更改。您想在关闭前保存吗？",
-            "25d7817f79": "终端"
+            "5ddc688c52": "“{{value0}}”有未保存的更改。您想在关闭前保存吗？"
           },
           "FloatingTerminalToggleButton": {
             "3b04b065b5": "显示浮动工作区",
@@ -15487,13 +15647,13 @@
               },
               "UsageAccountsCard": {
                 "6986b36708": "表面利率限制和内联掉期账户。",
+                "d90d2e1f6d": "跟踪会话和每周使用情况。",
                 "8919321417": "Codex 登录失败。",
                 "c7b90c140b": "添加了 Codex 账户。",
+                "9ddeb558f9": "已添加 Claude 账户。",
                 "29d0653961": "登入",
                 "945865332e": "登录",
                 "accountStatusUnknown": "账户状态未知",
-                "d90d2e1f6d": "跟踪会话和每周使用情况。",
-                "9ddeb558f9": "已添加 Claude 账户。",
                 "4e71d72912": "Claude 登录失败。"
               },
               "UsagePage": {
@@ -16034,8 +16194,16 @@
           "7b458e0b7f": "选择 Markdown 模板。",
           "1829437fce": "新 Markdown"
         },
+        "DiagramViewerModal": {
+          "title": "图表",
+          "zoomOut": "缩小",
+          "zoomIn": "放大",
+          "fit": "适应屏幕",
+          "close": "关闭"
+        },
         "MermaidBlock": {
-          "dcc132e691": "图表错误："
+          "dcc132e691": "图表错误：",
+          "expand": "展开图表"
         },
         "MonacoEditor": {
           "68cb83f4a7": "在选定的文本上添加注释",
@@ -16762,7 +16930,6 @@
             "deb5293610": "浏览器注释在远程运行时不可用",
             "90d021f2ad": "添加",
             "0cb3bd6221": "注释意图",
-            "8f87e6c2e5": "意图",
             "532bac48c5": "描述智能体应该在这里改变什么......",
             "d2a7092e6e": "注释评论",
             "b472c5fe03": "添加浏览器注释",
@@ -16842,14 +17009,14 @@
             "effd75e330": "附近的环境",
             "7d1480fbf1": "超文本标记语言",
             "9098b118ab": "页",
+            "accessibleNameOpenQuote": "“",
             "eb98a0971a": "”",
             "d053db279d": "角色=",
             "a759d8f866": "选定的元素",
             "9c6ce0632a": "所选元素屏幕截图",
             "50f7114f99": "附加前请先检查。捕获的页面上下文可以包括可见的站点内容。",
             "f3575229df": "抓住",
-            "405bb315da": "无题",
-            "accessibleNameOpenQuote": "“"
+            "405bb315da": "无题"
           },
           "browser": {
             "address": {
@@ -16884,7 +17051,9 @@
                     "09a7c1df70": "编辑注释 {{value0}}",
                     "c16f932cb3": "保存",
                     "024467ceac": "取消",
-                    "449d2c2629": "注释意图"
+                    "449d2c2629": "注释意图",
+                    "38d320108c": "折叠注释",
+                    "9f209891a7": "展开注释"
                   }
                 }
               }
@@ -17461,6 +17630,16 @@
         "runHistory": {
           "occurrencesWithLatest": "{{times}} 次，最近一次 {{date}}",
           "occurrences": "{{times}} 次"
+        },
+        "extraAgentArgs": {
+          "advanced": "高级",
+          "clear": "清除参数",
+          "unsupported": "此智能体暂不支持额外参数。",
+          "label": "额外的智能体参数",
+          "needsFreshSession": "额外参数要求每次运行都使用新会话。",
+          "useFreshSessions": "使用新会话",
+          "helper": "每次新会话时附加到此主机的默认参数之后。",
+          "detailLabel": "额外参数"
         }
       },
       "agent": {
@@ -17470,7 +17649,8 @@
           "579c768bde": "没有智能体符合您的搜索。",
           "48c6a5a9b4": "搜索智能体...",
           "9c6b59fe58": "设置为默认值",
-          "1b0d6965fa": "当前默认值"
+          "1b0d6965fa": "当前默认值",
+          "setupOnly": "无"
         },
         "AgentSettingsDialog": {
           "50cdb57c03": "管理 AI 智能体、设置默认值并自定义命令。",
@@ -17499,7 +17679,6 @@
           "770d458144": "分组方式",
           "795cbf26e2": "筛选...",
           "4616ea39fd": "跳转到工作区",
-          "threadListOptionsFiltered": "线程列表选项，筛选器已启用",
           "showSearch": "显示搜索",
           "markThreadRead": "将话题标记为已读",
           "59b131fbd9": "将话题标记为未读",
@@ -17529,7 +17708,8 @@
           "filtersSection": "筛选",
           "viewSection": "视图",
           "threadListOptionsActive": "线程列表选项（{{value0}} 个生效）",
-          "activityOptionsActive": "活动选项（{{value0}}）"
+          "activityOptionsActive": "活动选项（{{value0}}）",
+          "threadListOptionsFiltered": "线程列表选项，筛选器已启用"
         },
         "ActivityScopeFilterControls": {
           "resetScope": "显示所有主机和项目",
@@ -17904,8 +18084,8 @@
         "profiles": {
           "signout": {
             "confirm": {
-              "title": "退出 Orca？",
-              "description": "你将在此设备上退出 Orca。本地项目和工作树不会受到影响。",
+              "title": "退出 NASH？",
+              "description": "你将在此设备上退出 NASH。本地项目和工作树不会受到影响。",
               "cancel": "取消",
               "action": "退出登录"
             }
@@ -17960,11 +18140,11 @@
           "tool": {
             "arrow": "箭头",
             "ellipse": "椭圆",
+            "eraser": "橡皮擦",
             "highlight": "高亮",
             "pen": "画笔",
             "rect": "矩形",
-            "text": "文字",
-            "eraser": "橡皮擦"
+            "text": "文字"
           },
           "undo": "撤销",
           "widthOption": "{{value0}} px"
@@ -18003,14 +18183,14 @@
           "deleteTitle": "删除工件？",
           "deleteDescription": "“{{name}}” 将无法再通过其公共链接访问。",
           "delete": "删除",
-          "signInAgain": "再次登录 Orca 以加载工件。",
+          "signInAgain": "再次登录 NASH 以加载工件。",
           "loadFailed": "无法加载工件。",
           "deleteFailed": "无法删除工件。",
           "title": "工件",
           "refresh": "刷新",
-          "signInHeading": "登录 Orca",
+          "signInHeading": "登录 NASH",
           "signInCopy": "登录以查看和管理通过您的帐户共享的工件。",
-          "signIn": "登录 Orca",
+          "signIn": "登录 NASH",
           "empty": "没有共享工件",
           "emptyCopy": "打开 HTML 或 Markdown 文件并选择共享为工件，或要求您的智能体共享它。",
           "openArtifact": "打开神器",
@@ -18022,17 +18202,17 @@
           "publishingOffCopy": "此设备上的任何内容都无法创建公共工件链接。允许在“设置”→“工件”中进行发布，然后从打开的 HTML 或 Markdown 文件进行共享或询问您的智能体。",
           "openArtifactsSettings": "打开设置 → 工件",
           "retry": "重试",
-          "reconnectHeading": "再次登录 Orca",
+          "reconnectHeading": "再次登录 NASH",
           "reconnectCopy": "再次登录以查看和管理通过您的帐户共享的工件。",
           "signInAgainAction": "重新登录",
-          "unconfiguredCopy": "此计算机上尚未配置 Orca 帐户登录。",
+          "unconfiguredCopy": "此计算机上尚未配置 NASH 帐户登录。",
           "openAccountSettings": "开设账户设置"
         },
         "ArtifactPublishButton": {
           "a4a49da6af": "分享为工件",
           "confirmTitle": "分享为工件",
           "confirmDescription": "这会将当前文件发布为链接，任何拥有该 URL 的人都可以查看。",
-          "accountTitle": "Orca 账户",
+          "accountTitle": "NASH 账户",
           "accountDescription": "登录以创建和管理此链接。",
           "signInAgain": "重新登录",
           "signIn": "登录",
@@ -18048,7 +18228,7 @@
         },
         "artifact-publish-flow": {
           "9a078a0c65": "工件共享不可用",
-          "bba20daa6d": "登录 Orca 并重试。",
+          "bba20daa6d": "登录 NASH 并重试。",
           "54b1805328": "无法共享工件",
           "430019efd0": "工件已共享",
           "2fc727c831": "工件已更新",
@@ -18137,19 +18317,15 @@
         "selectAgent": "在 {{value2}} 中恢复 {{value0}} 聊天“{{value1}}”",
         "resumeSelected": "恢复 {{value0}} 聊天",
         "resumeSelectedOne": "恢复 1 次聊天",
-        "continueUnconfirmed": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它们进行检查。",
-        "continueUnconfirmed_one": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它进行检查。",
-        "continueUnconfirmed_other": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它们进行检查。",
         "dismissAll": "全部关闭",
-        "dismissUnconfirmed": "拒绝简历邀请尚未得到确认——它可能仍在状态栏中。",
         "notContinuedOne": "1 个聊天无法恢复",
         "notContinuedMany": "{{value0}} 个聊天无法恢复",
         "notConfirmedOne": "无法确认 1 个聊天已恢复",
         "notConfirmedMany": "无法确认 {{value0}} 个聊天已恢复",
         "notConfirmedOtherOne": "无法确认另外 1 个聊天已恢复",
         "notConfirmedOtherMany": "无法确认另外 {{value0}} 个聊天已恢复",
-        "show": "显示",
-        "dismiss": "关闭",
+        "viewChats": "查看聊天",
+        "review": "检查",
         "activityUnnamed": "未命名",
         "activityApproval": "等待您的批准：{{value0}}",
         "activityQuestion": "等待您的回答：{{value0}}",
@@ -18157,7 +18333,24 @@
         "activitySubagentOne": "子智能体运行中：{{value0}}",
         "activitySubagentMany": "{{value0}} 个子智能体运行中",
         "activityMonitorOne": "正在监控：{{value0}}",
-        "activityMonitorMany": "正在监控 {{value0}} 个后台任务"
+        "activityMonitorMany": "正在监控 {{value0}} 个后台任务",
+        "selectWorkspace": "选择 {{value0}} 中的全部聊天",
+        "workspaceSelectedCount": "{{value0}}/{{value1}}",
+        "selectAll": "选择全部聊天",
+        "selectAllLabel": "选择全部",
+        "selectedCount": "已选择 {{value0}}/{{value1}}",
+        "selectProject": "选择 {{value0}} 中的全部聊天",
+        "collapseNode": "折叠 {{value0}}",
+        "expandNode": "展开 {{value0}}",
+        "selectMachine": "选择 {{value0}} 上的全部聊天",
+        "sshHost": "SSH",
+        "done": "完成",
+        "resultListLabel": "本次恢复的聊天",
+        "continueUnconfirmed": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它们进行检查。",
+        "continueUnconfirmed_one": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它进行检查。",
+        "continueUnconfirmed_other": "对于 {{value0}} 聊天，未确认继续传送。在发送另一条消息之前打开它们进行检查。",
+        "dismissUnconfirmed": "拒绝简历邀请尚未得到确认——它可能仍在状态栏中。",
+        "dismiss": "关闭"
       },
       "linear-issue-attribute-filter-coverage-notice": {
         "statusPartialTeamCoverage": "过滤 {{value1}} 团队状态中的 {{value0}} — 不包括其余团队的问题。",
@@ -18185,7 +18378,8 @@
         "streamConnectionLost": "与远程服务器的连接丢失。",
         "streamConnectionUnreachable": "无法到达远程服务器。",
         "streamRestartFailed": "无法重新启动远程浏览器流。",
-        "streamCapabilityUnsupported": "所选运行时不支持远程浏览器流式传输。"
+        "streamCapabilityUnsupported": "所选运行时不支持远程浏览器流式传输。",
+        "streamBrowserUnavailable": "远程浏览器不可用。请检查其在服务器上的设置。"
       },
       "BrowserCookieImportMachineNotice": {
         "clientLabel": "此设备上的浏览器",
@@ -18195,15 +18389,15 @@
       },
       "native": {
         "chat": {
-          "NativeChatStructuredSession": {
-            "1f772bb5d0": "消息传递未经确认。",
-            "93ef441197": "消息未发送。",
-            "a5e7f14068": "重试"
-          },
           "NativeChatLaunchRetry": {
             "failed": "无法开始聊天。",
             "unknown": "无法确认聊天连接。",
             "retry": "重试"
+          },
+          "NativeChatStructuredSession": {
+            "1f772bb5d0": "消息传递未经确认。",
+            "93ef441197": "消息未发送。",
+            "a5e7f14068": "重试"
           }
         }
       },
@@ -18221,16 +18415,16 @@
       "UnexpectedSignoutCard": {
         "9f2c1a4b7d": "您已退出",
         "3e8f5c2a91": "关闭",
-        "7b4d9e1f2a": "再次以 {{value0}} 身份登录即可恢复神器共享、Orca Relay 和技能共享。",
-        "5a1c8d3e6f": "重新登录即可恢复神器共享、Orca Relay 和技能共享。",
+        "7b4d9e1f2a": "再次以 {{value0}} 身份登录即可恢复神器共享、NASH Relay 和技能共享。",
+        "5a1c8d3e6f": "重新登录即可恢复神器共享、NASH Relay 和技能共享。",
         "1f6b2c9d4e": "你得到什么",
         "8d2e4f7a1b": "神器分享",
         "2c9a5b6e8d": "发布 HTML 和 Markdown 文件并管理 NASH 的每个共享链接。",
-        "6e3f1a9c5b": "Orca 接力赛",
-        "4b7d2e8f1a": "通过蜂窝网络或任何 Wi-Fi 将 Orca Mobile 连接到此桌面。",
+        "6e3f1a9c5b": "NASH 接力赛",
+        "4b7d2e8f1a": "通过蜂窝网络或任何 Wi-Fi 将 NASH Mobile 连接到此桌面。",
         "9a4c6b2d7e": "技能分享",
         "3d8e5f1b9c": "分享未列出链接背后的技能并将其安装在您使用的任何计算机上。",
-        "c5b3e8a17d": "登录 Orca"
+        "c5b3e8a17d": "登录 NASH"
       },
       "NativeChatResumeOutcomeRow": {
         "openChat": "打开聊天",
@@ -18256,8 +18450,47 @@
         "preloadApi": {
           "cursorAccounts": {
             "hostOnly": "Cursor 登录详情仅可在运行 NASH 的电脑上读取。"
+          },
+          "accounts": {
+            "signInHostOnly": "添加或重新登录账户仅在运行 NASH 的计算机上的桌面应用中可用。",
+            "claudeWslDefaultUnavailable": "将 WSL 账户切换回系统默认仅在桌面应用中可用。"
           }
         }
+      },
+      "NativeChatResumeRunPanel": {
+        "resumedTitle": "已恢复 {{value0}}/{{value1}} 个聊天",
+        "resumedTitleOne": "已恢复 {{value0}}/1 个聊天",
+        "resumingTitleOne": "正在恢复 1 个聊天",
+        "resumingTitle": "正在恢复 {{value0}} 个聊天",
+        "description": "每个聊天都会带着完整上下文恢复，并被要求检查它停在了哪里。你可以关闭此窗口，状态栏会继续显示进度。",
+        "finished": "NASH 关闭时这些聊天正在工作。NASH 已将每个聊天恢复到停止的位置并保留完整上下文，并让智能体在继续之前先检查它之前在做什么。你自己的提示没有被重新发送。",
+        "finishedUpdate": "NASH 安装更新时这些聊天正在工作。NASH 已将每个聊天恢复到停止的位置并保留完整上下文，并让智能体在继续之前先检查它之前在做什么。你自己的提示没有被重新发送。",
+        "finishedPartial": "NASH 关闭时这些聊天正在工作。NASH 恢复的聊天已回到停止的位置并保留完整上下文，并被要求在继续之前先检查之前在做什么。你自己的提示没有被重新发送。请在列表中查看仍需处理或可以恢复的聊天。",
+        "finishedPartialUpdate": "NASH 安装更新时这些聊天正在工作。NASH 恢复的聊天已回到停止的位置并保留完整上下文，并被要求在继续之前先检查之前在做什么。你自己的提示没有被重新发送。请在列表中查看仍需处理或可以恢复的聊天。"
+      },
+      "NativeChatResumeRunStatusIcon": {
+        "waitingForReply": "等待回复",
+        "starting": "正在启动",
+        "waitingToStart": "等待启动",
+        "inFlight": "{{value0}} · {{value1}}",
+        "resumed": "已恢复"
+      },
+      "NativeChatResumeRunSummary": {
+        "done": "已完成 {{value0}}/{{value1}}",
+        "starting": "{{value0}} 个正在启动",
+        "waitingForReply": "{{value0}} 个等待回复",
+        "waitingToStart": "{{value0}} 个等待启动",
+        "all": "全部",
+        "inProgress": "进行中",
+        "resumed": "已恢复",
+        "attention": "需要处理",
+        "running": "已运行 {{value0}}",
+        "filter": "显示聊天"
+      },
+      "NativeChatResumeAutoNote": {
+        "resuming": "重启后正在自动恢复。",
+        "resumed": "重启后已自动恢复。",
+        "changeInSettings": "在设置中更改"
       }
     },
     "i18n": {
@@ -18299,6 +18532,10 @@
       },
       "gitlabIpcTimeout": {
         "timedOut": "与 GitLab 对话超时。"
+      },
+      "forgeCredentialTarget": {
+        "unknownHost": "拥有此存储库的计算机尚不清楚。请重新连接它并重试。",
+        "thisComputer": "此计算机"
       }
     },
     "ssh": {
@@ -18348,6 +18585,7 @@
   },
   "components": {
     "native-chat": {
+      "reasoning": "推理",
       "contextMenu": {
         "copyOrcaSessionId": "复制 NASH 会话 ID",
         "orcaSessionIdCopied": "已复制 NASH 会话 ID",
@@ -18359,9 +18597,17 @@
         "providerStartFailed": "{{agent}} 在完成启动前已停止。",
         "runCommandAgain": "请重新运行 /{{command}}。",
         "sendToTryAgain": "请发送您的消息以重试。",
+        "sendAgainToTryOnceMore": "请重新发送您的消息，再试一次。",
         "couldNotStart": "{{agent}} 无法启动。",
+        "editSavedArguments": "请在设置 > 智能体 > 参数中编辑。",
         "couldNotRestart": "{{agent}} 无法重新启动。",
-        "notSignedIn": "{{agent}} 未使用所选账户登录。",
+        "codexCliTooOld": "Codex {{installedVersion}} 版本过旧，无法用于聊天。请更新到 {{minimumVersion}} 或更高版本。",
+        "notSignedIn": "{{agent}} 尚未登录。",
+        "claudeSystemNotSignedIn": "Claude 尚未登录。请运行 `{{loginCommand}}`，或在 Claude 账户设置中选择账户。",
+        "claudeManagedNotSignedIn": "此 Claude 账户尚未登录。请在 Claude 账户设置中重新登录。",
+        "codexSystemNotSignedIn": "Codex 尚未登录。请运行 `{{loginCommand}}`。",
+        "codexManagedNotSignedIn": "此 Codex 账户尚未登录。请在 Codex 账户设置中重新登录。",
+        "cliMissing": "在运行此聊天的计算机上找不到 {{agent}}。请安装它，或检查设置 → 智能体中的命令。",
         "signInFirst": "请先登录。",
         "signInThenRunCommand": "请登录，然后重新运行 /{{command}}。",
         "signInThenSend": "请登录，然后重新发送您的消息。",
@@ -18369,13 +18615,18 @@
         "managedAccountEnvOverride": "此次 Claude 启动设置了自己的 Anthropic 登录变量。请移除这些变量以使用受管理的 Claude 账户。",
         "accountSwitchInProgress": "正在切换 Claude 账户。请在切换完成后重试。",
         "managedAccountUnsupported": "当 WSL 中添加了 Claude 账户时，Claude 聊天需要 Windows Claude 账户。",
+        "launchFolderMissing": "此聊天运行所在的文件夹已不存在。请恢复该文件夹以继续此聊天。",
+        "historyInOtherAccount": "此聊天的历史记录位于另一个 Claude 账户中。请切换回该账户以继续此聊天。",
+        "claudeAccountFolderMissing": "所选 Claude 账户的文件夹不存在。请重新登录该账户或选择其他账户。",
+        "claudeAccountSetupFailed": "无法设置所选 Claude 账户。请重试或选择其他账户。",
+        "agentCommandNotRunnable": "{{agent}} 在设置 → 智能体中的命令必须是 NASH 能找到的程序路径或名称，且不能包含参数或变量。请修改或重置。",
         "chooseClaudeAccount": "请在 Claude 账户设置中选择或添加一个。",
         "chooseClaudeAccountThenRunCommand": "请在 Claude 账户设置中选择或添加一个，然后重新运行 /{{command}}。",
         "chooseClaudeAccountThenSend": "请在 Claude 账户设置中选择或添加一个，然后重新发送您的消息。",
         "providerExitedRow": "{{agent}} 在生成此回复时停止了。您可以在此对话中继续。",
         "providerExitedRejection": "{{agent}} 在发送此消息前已停止。",
-        "providerRejected": "提供商未接受此消息。",
-        "providerRejectedQuoted": "提供商未接受此消息：{{detail}}。",
+        "providerRejected": "{{agent}} 未接受此消息。",
+        "providerRejectedQuoted": "{{agent}} 未接受此消息：{{detail}}。",
         "attachmentEmpty": "此消息中的一张图片为空，因此消息未发送。",
         "attachmentTooLarge": "此消息中的一张图片过大，因此消息未发送。",
         "attachmentLargerThan": "此消息中的一张图片超过 {{size}} MB，因此消息未发送。",
@@ -18402,32 +18653,35 @@
         "compactionFailedQuoted": "压缩失败：{{detail}}。",
         "compactionUnconfirmed": "未确认压缩是否完成。",
         "cancelUnconfirmed": "未确认取消。",
+        "backgroundTaskNotStopped": "后台任务未停止。",
+        "backgroundTasksNotStopped": "后台任务未停止。",
         "stopRefused": "{{agent}} 未停止。",
         "stopRefusedQuoted": "{{agent}} 未停止：{{detail}}。",
+        "couldNotStop": "无法停止 {{agent}}。",
+        "couldNotStopTheAgent": "无法停止智能体。",
         "noTurnToStop": "{{agent}} 没有正在运行的轮次可停止。",
         "answerUnconfirmed": "您的回答已记录，但智能体未确认。",
+        "argumentsMissingValue": "已保存的参数需要为 {{option}} 指定一个值。",
+        "argumentsMultipleValues": "已保存的参数为 {{option}} 指定了多个值。",
+        "argumentsPositionalPrompt": "已保存的参数中包含提示词。",
+        "argumentsUnsupportedOption": "已保存的参数包含不支持的选项（{{option}}）。",
         "hostFault": "NASH 遇到问题，因此此操作未完成。",
         "hostFaultTryAgain": "NASH 遇到问题，因此此操作未完成。请重试。",
         "hostStopped": "{{agent}} 始终未完成启动，因此 NASH 已将其停止。",
         "providerRateLimited": "{{agent}} 已被限流，正在重试。",
         "providerRetrying": "{{agent}} 遇到临时问题，正在重试。",
         "providerRetryingQuoted": "{{agent}} 正在重试：{{detail}}。",
-        "previousExitUnverifiable": "无法停止之前的 {{agent}}。",
-        "sendAgainToTryOnceMore": "请重新发送您的消息，再试一次。",
-        "editSavedArguments": "请在设置 > 智能体 > 参数中编辑。",
-        "launchFolderMissing": "此聊天运行所在的文件夹已不存在。请恢复该文件夹以继续此聊天。",
-        "historyInOtherAccount": "此聊天的历史记录位于另一个 Claude 账户中。请切换回该账户以继续此聊天。",
-        "claudeAccountFolderMissing": "所选 Claude 账户的文件夹不存在。请重新登录该账户或选择其他账户。",
-        "claudeAccountSetupFailed": "无法设置所选 Claude 账户。请重试或选择其他账户。",
-        "agentCommandNotRunnable": "{{agent}} 在设置 → 智能体中的命令必须是 NASH 能找到的程序路径或名称，且不能包含参数或变量。请修改或重置。",
-        "argumentsMissingValue": "已保存的参数需要为 {{option}} 指定一个值。",
-        "argumentsMultipleValues": "已保存的参数为 {{option}} 指定了多个值。",
-        "argumentsPositionalPrompt": "已保存的参数中包含提示词。",
-        "argumentsUnsupportedOption": "已保存的参数包含不支持的选项（{{option}}）。",
         "providerRetryNumber": "第 {{attempt}} 次重试。",
         "providerRetryNumberOf": "第 {{attempt}} 次重试，共 {{maxRetries}} 次。",
         "providerRetryLastError": "上次错误：{{detail}}。",
-        "sessionNotRestored": "{{agent}} 无法重新打开之前的会话，因此此聊天将在新会话中继续。{{agent}} 不记得之前的消息。"
+        "previousExitUnverifiable": "无法停止之前的 {{agent}}。",
+        "sessionNotRestored": "{{agent}} 无法重新打开之前的会话，因此此聊天将在新会话中继续。{{agent}} 不记得之前的消息。",
+        "agentCommandNotSignedIn": "请在运行此聊天的电脑上使用 `{{loginCommand}}` 登录 {{agent}}。",
+        "interactiveAgentNotSignedIn": "请在运行此聊天的电脑上启动 `{{loginCommand}}` 并使用 `{{slashCommand}}` 登录 {{agent}}。",
+        "agentNotSignedIn": "请登录 {{agent}}。",
+        "thenSendAgain": "然后再次发送消息。",
+        "runCommandWhenDone": "完成后再运行 /{{command}}。",
+        "commandAfterAnswer": "请先回答智能体的问题或审批，然后再运行 /{{command}}。"
       },
       "writeNotice": {
         "notDoneReadHistory": "无法加载此聊天的历史记录。",
@@ -18442,19 +18696,25 @@
         "notDoneCommand": "命令未运行。",
         "notDoneGoal": "目标未更改。",
         "restartFailed": "智能体无法重新启动。",
-        "capacity": "NASH 在过去一天内收到的请求过多。",
+        "capacity": "运行此聊天的计算机上的 NASH 已达到请求上限。请在那台计算机上更新 NASH，然后重试。",
         "outcomeUnknown": "NASH 无法确认发生了什么。请查看聊天。",
         "sendOutcomeLost": "NASH 无法确认你的消息已送达智能体。请查看聊天，如有需要请重新发送。",
         "questionChanged": "此问题已被回答或已更改。",
+        "cancelNotSaved": "无法取消此问题或审批。",
         "historyUnreadable": "NASH 无法读取此聊天的已保存历史记录。",
         "historyUnusable": "无法加载此聊天。",
         "historyUnavailable": "NASH 目前无法打开此聊天的历史记录。",
         "savedByNewerOrca": "这些聊天由更新版本的 NASH 保存。",
         "updateOrcaToKeepUsing": "请更新 NASH 以继续使用这些聊天。",
+        "chatSavedByNewerOrca": "此聊天由更新版本的 NASH 保存。",
+        "updateOrcaToOpenChat": "请更新 NASH 以打开它。",
         "unsupported": "运行此聊天的计算机需要更新版本的 NASH。请在该计算机上更新 NASH 后重试。",
         "notAvailable": "此聊天中无法使用此功能。",
+        "cannotRunHere": "NASH 无法在此处以聊天方式运行此智能体。",
         "unreachable": "NASH 无法连接到智能体。",
         "recordFailed": "NASH 无法将此内容保存到聊天历史记录中。",
+        "attachmentExpired": "此附件已过期。",
+        "reattachFile": "请将其移除后重新附加。",
         "conversationCleared": "此对话已被清除。",
         "openCurrentConversation": "请打开当前对话以继续。",
         "clearUnfinished": "上一次 /clear 未完成。",
@@ -18470,6 +18730,8 @@
         "waitForBackgroundTasks": "请等待后台任务完成。",
         "messagesUnsettled": "您之前发送的一条消息尚未确认。",
         "settleEarlierMessage": "请等待之前的消息送达，或重试该消息。",
+        "queueTooLarge": "队列中等待的文本过多。",
+        "shrinkQueue": "请删除一条排队的消息，或等待其送达，然后重试。",
         "optionRejected": "智能体未接受此设置。",
         "goalsUnsupported": "此智能体不支持目标。",
         "agentRefused": "智能体拒绝了此请求。",
@@ -18483,11 +18745,15 @@
         "chatNotFound": "NASH 找不到此聊天。",
         "startNewChat": "请开始新的聊天以继续。",
         "tryAgain": "请重试。",
-        "chatSavedByNewerOrca": "此聊天由更新版本的 NASH 保存。",
-        "updateOrcaToOpenChat": "请更新 NASH 以打开它。",
-        "cannotRunHere": "NASH 无法在此处以聊天方式运行此智能体。",
-        "attachmentExpired": "此附件已过期。",
-        "reattachFile": "请将其移除后重新附加。"
+        "agentStillWorking": "智能体仍在工作。",
+        "runClearWhenDone": "完成后再运行 /clear。",
+        "clearAfterAnswer": "请先回答智能体的问题或审批，然后再运行 /clear。",
+        "runCompactWhenDone": "完成后再运行 /compact。",
+        "compactAfterAnswer": "请先回答智能体的问题或审批，然后再运行 /compact。",
+        "clearAfterRetry": "请先重试您之前的消息，然后再运行 /clear。",
+        "compactAfterRetry": "请先重试您之前的消息，然后再运行 /compact。",
+        "clearAfterSending": "您之前的消息仍在发送中。发送完成后再运行 /clear。",
+        "compactAfterSending": "您之前的消息仍在发送中。发送完成后再运行 /compact。"
       },
       "composer": {
         "imageUnsupported": "此智能体不支持粘贴图片。",
@@ -18495,25 +18761,38 @@
         "noPty": "没有实时终端，请切回终端以重新连接。",
         "locked": "输入正被另一台设备占用。",
         "placeholder": "随便问，@ 提及文件，/ 使用命令",
-        "mentionHint": "引用文件：",
+        "loadingFiles": "正在加载文件...",
+        "noFiles": "没有匹配的文件",
+        "filesLoadFailed": "无法加载文件",
         "attach": "附加文件",
         "startDictation": "开始听写",
         "stopDictation": "停止听写",
         "noSkills": "没有匹配的技能",
         "localAttachmentUnsupported": "远程会话不支持本地附件。",
+        "attachFailed": "无法附加 {{files}}。",
+        "attachFailedBecause": "无法附加 {{files}}。{{reason}}",
+        "uploadingFile": "正在上传 {{name}}…",
         "removeAttachment": "移除附件",
         "pastedImageLabel": "粘贴的图片",
+        "draftNotSaved": "此草稿尚未保存成功。NASH 会继续尝试。",
+        "imageNotBroughtBack": "无法随此草稿恢复 {{name}}。请重新附加或将其移除。",
+        "pastedImageNotBroughtBack": "无法随此草稿恢复这张粘贴的图片。请将其移除，如仍需要请重新粘贴。",
+        "removeImageToSend": "有一张图片无法恢复。请将其移除后再发送。",
+        "removeImagesToSend": "有些图片无法恢复。请将其移除后再发送。",
+        "imageAttachAgainLabel": "重新附加",
+        "pastedImageNotKeptLabel": "未保留",
         "imagePasteFailed": "图片粘贴失败。",
         "worktreeNotReady": "工作树未就绪 — 请稍后重试。",
         "pasteUnavailable": "无法粘贴 — 此聊天当前不接受输入。",
-        "uploadingAttachments": "正在将 {{value0}} 个文件上传到远端…",
         "model": "模型",
         "effort": "推理强度",
         "fastMode": "快速模式",
+        "speed": "速度",
         "thinking": "思考",
-        "options": "选项",
         "sessionOptions": "会话选项",
         "chooseInAgentPicker": "在智能体选择器中选择…",
+        "searchModels": "搜索模型…",
+        "noModelsMatch": "没有符合搜索条件的模型。",
         "toggleOption": "切换{{value0}}",
         "pillAccessibleName": "{{value0}} {{value1}}",
         "sentNotConfirmed": "已发送给智能体 — 尚未确认",
@@ -18528,12 +18807,14 @@
           "high": "高",
           "xhigh": "极高",
           "max": "最大",
-          "ultra": "极致"
+          "ultra": "极致",
+          "standard": "标准"
         },
         "noCommandsOrSkills": "没有匹配的命令或技能",
         "commands": "命令",
         "skills": "技能",
         "loadingSkills": "正在加载技能…",
+        "clearDescription": "清除对话上下文",
         "skillsUnavailableHost": "SSH 聊天中无法列出技能",
         "skillsLoadFailed": "无法加载技能",
         "retrySkills": "重试",
@@ -18550,31 +18831,35 @@
         "viewAttachment": "查看图片",
         "imagePreview": "全尺寸图像预览",
         "imagePreviewUnavailable": "预览不可用",
-        "workspaceAttachmentMismatch": "文件只能附加到其源工作区。",
-        "attachmentOwnerChanged": "此工作区在附加时更改了主机 - 再次删除文件。",
-        "attachmentUnreadable": "无法读取删除的文件。",
-        "loadingFiles": "正在加载文件...",
-        "noFiles": "没有匹配的文件",
-        "filesLoadFailed": "无法加载文件",
-        "attachFailed": "无法附加 {{files}}。",
-        "attachFailedBecause": "无法附加 {{files}}。{{reason}}",
-        "uploadingFile": "正在上传 {{name}}…",
-        "draftNotSaved": "此草稿尚未保存成功。NASH 会继续尝试。",
-        "imageNotBroughtBack": "无法随此草稿恢复 {{name}}。请重新附加或将其移除。",
-        "pastedImageNotBroughtBack": "无法随此草稿恢复这张粘贴的图片。请将其移除，如仍需要请重新粘贴。",
-        "removeImageToSend": "有一张图片无法恢复。请将其移除后再发送。",
-        "removeImagesToSend": "有些图片无法恢复。请将其移除后再发送。",
-        "imageAttachAgainLabel": "重新附加",
-        "pastedImageNotKeptLabel": "未保留",
-        "searchModels": "搜索模型…",
-        "noModelsMatch": "没有符合搜索条件的模型。",
         "copyImage": "复制图片",
         "copyImageFailed": "无法复制图片",
         "copyImageTooLarge": "图片太大，无法复制。",
         "imageCopied": "已复制图片",
+        "workspaceAttachmentMismatch": "文件只能附加到其源工作区。",
+        "attachmentOwnerChanged": "此工作区在附加时更改了主机 - 再次删除文件。",
+        "attachmentUnreadable": "无法读取删除的文件。",
         "tooManyAttachments": "每次最多附加 {{value0}} 个文件。",
+        "permissions": "权限",
+        "permissionAsk": "请求批准",
+        "permissionAskDescription": "在设置未允许的编辑和命令前询问",
+        "permissionAskCodexDescription": "在此工作区中编辑文件并运行命令；其他操作前会询问",
+        "permissionAskSharedDescription": "在执行尚未获准的编辑或命令前询问",
+        "permissionAcceptEdits": "接受编辑",
+        "permissionAcceptEditsDescription": "批准文件编辑和文件命令；其余操作会询问",
+        "permissionAuto": "替我批准",
+        "permissionAutoDescription": "代你审核批准请求",
+        "permissionFullAccess": "完全访问",
+        "permissionFullAccessDescription": "编辑或运行命令前从不询问",
+        "permissionFullAccessCodexDescription": "从不询问；可以编辑任何文件并使用网络",
+        "permissionFullAccessSharedDescription": "编辑或运行命令前从不询问",
         "pasteFailed": "粘贴失败。",
-        "commandAttachmentsUnsupported": "使用聊天会话命令前，请先移除附件。"
+        "commandAttachmentsUnsupported": "使用聊天会话命令前，请先移除附件。",
+        "optionValueShort": {
+          "minimal": "最小",
+          "medium": "中",
+          "xhigh": "极高"
+        },
+        "mentionHint": "引用文件："
       },
       "tool": {
         "running": "正在运行…",
@@ -18586,6 +18871,8 @@
         "moreCalls": "+{{value0}} 更多",
         "failedCount": "{{value0}} 失败",
         "failedCallsLabel": "失败的工具调用：{{value0}}",
+        "interruptedCount": "{{value0}} 已中断",
+        "interruptedCallsLabel": "已中断的工具调用：{{value0}}",
         "runningPreview": "正在运行 {{preview}}",
         "runningCommand": "运行命令",
         "runningNamedPreview": "运行 {{toolName}} {{preview}}",
@@ -18596,13 +18883,35 @@
         "ranCommandsManyToolsSummary": "运行 {{commandCount}} 命令并使用 {{toolCount}} 工具",
         "usedOneSummary": "使用 1 个工具",
         "usedManySummary": "使用过的 {{toolCount}} 工具",
-        "editedFile": "已编辑文件",
-        "addedFile": "已添加文件",
-        "deletedFile": "已删除的文件",
-        "renamedFile": "重命名的文件",
         "copyDiff": "复制差异",
         "diffGap": "未显示线路",
         "diffTruncated": "差异被截断",
+        "row": {
+          "running": "正在运行",
+          "reading": "正在读取",
+          "editing": "正在编辑",
+          "searching": "正在搜索",
+          "searchingWeb": "正在搜索网页",
+          "fetching": "正在获取",
+          "listed": "列出了",
+          "listing": "正在列出",
+          "ran": "运行了",
+          "read": "读取了",
+          "edited": "编辑了",
+          "searched": "搜索了",
+          "searchedWeb": "搜索了网页",
+          "fetched": "获取了",
+          "added": "添加了",
+          "deleted": "删除了",
+          "renamed": "重命名了",
+          "subagent": "子智能体",
+          "triedRead": "尝试读取",
+          "triedEdit": "尝试编辑",
+          "triedSearch": "尝试搜索",
+          "triedList": "尝试列出",
+          "triedFetch": "尝试获取",
+          "triedSearchWeb": "尝试搜索网页"
+        },
         "runReadOne": "读取 1 个文件",
         "runReadMany": "读取 {{value0}} 文件",
         "runSearchOne": "已搜索 1 次",
@@ -18645,52 +18954,39 @@
         "runLivePlanMany": "更新计划 {{value0}} 次",
         "runLiveToolOne": "使用 1 个工具",
         "runLiveToolMany": "使用 {{value0}} 工具",
-        "interruptedCount": "{{value0}} 已中断",
-        "interruptedCallsLabel": "已中断的工具调用：{{value0}}",
-        "row": {
-          "running": "正在运行",
-          "reading": "正在读取",
-          "editing": "正在编辑",
-          "searching": "正在搜索",
-          "searchingWeb": "正在搜索网页",
-          "fetching": "正在获取",
-          "listed": "列出了",
-          "listing": "正在列出",
-          "ran": "运行了",
-          "read": "读取了",
-          "edited": "编辑了",
-          "searched": "搜索了",
-          "searchedWeb": "搜索了网页",
-          "fetched": "获取了",
-          "added": "添加了",
-          "deleted": "删除了",
-          "renamed": "重命名了",
-          "subagent": "子智能体",
-          "triedRead": "尝试读取",
-          "triedEdit": "尝试编辑",
-          "triedSearch": "尝试搜索",
-          "triedList": "尝试列出",
-          "triedFetch": "尝试获取",
-          "triedSearchWeb": "尝试搜索网页"
-        }
+        "editedFile": "已编辑文件",
+        "addedFile": "已添加文件",
+        "deletedFile": "已删除的文件",
+        "renamedFile": "重命名的文件"
       },
       "status": {
         "responding": "智能体正在回复",
         "working": "处理中…",
+        "stopping": "正在停止…",
+        "queueAfterStop": "将消息加入队列，在停止后运行",
+        "sendAfterStop": "发送消息，在停止后运行",
         "thinking": "思维",
         "workingFor": "已工作 {{value0}}",
         "workedFor": "工作了 {{value0}}",
         "interruptedAfter": "{{value0}} 后中断",
         "failedAfter": "{{value0}} 后失败",
-        "toggleDetails": "切换回合详情",
-        "stopping": "正在停止…",
-        "queueAfterStop": "将消息加入队列，在停止后运行",
-        "sendAfterStop": "发送消息，在停止后运行"
+        "toggleDetails": "切换回合详情"
       },
       "jumpToLatest": "跳到最新消息",
+      "find": {
+        "label": "在聊天中查找",
+        "noResults": "没有结果",
+        "previousMatch": "上一个结果",
+        "nextMatch": "下一个结果",
+        "close": "关闭"
+      },
+      "transcriptLabel": "对话",
       "toggle": {
-        "showTerminal": "显示终端",
-        "showChat": "显示聊天视图"
+        "showTerminal": "显示终端"
+      },
+      "resumeInNewChat": {
+        "notSavedYet": "{{agent}} 尚未保存此对话。请在它回复后重试。",
+        "cannotResume": "此 {{agent}} 对话无法在本机聊天中恢复。"
       },
       "state": {
         "loading": {
@@ -18702,7 +18998,6 @@
           "title": "无法加载对话",
           "subtitle": "无法读取记录。请切回终端继续工作。"
         },
-        "reconnecting": "正在重新连接此聊天…",
         "pairHost": "配对主机以查看智能体聊天记录。",
         "notAgent": {
           "title": "这里没有对话",
@@ -18711,7 +19006,8 @@
         "empty": {
           "title": "开始与 {{value0}} 聊天",
           "subtitle": "让 {{value0}} 检查代码、解释输出或进行修改。"
-        }
+        },
+        "reconnecting": "正在重新连接此聊天…"
       },
       "stop": "停止智能体",
       "copyMessage": {
@@ -18722,6 +19018,10 @@
       "loadingEarlier": "正在加载…",
       "loadEarlier": "加载更早的消息",
       "loadingEarlierMessages": "正在加载更早的消息…",
+      "prompt": {
+        "collapse": "收起",
+        "expand": "展开"
+      },
       "question": {
         "step": "步骤 {{value0}}",
         "other": "其他…",
@@ -18733,18 +19033,18 @@
         "sending": "正在发送…"
       },
       "approval": {
+        "needsNewerOrca": "此请求需要更新版本的 NASH。",
         "title": "允许 {{value0}}？",
         "allow": "允许",
         "deny": "拒绝",
         "cancel": "取消",
         "reason": "原因",
-        "blockedPath": "路径受阻",
-        "askRule": "询问规则",
+        "needsAccess": "需要访问的路径",
         "plan": {
           "file": "计划文件"
         },
-        "needsNewerOrca": "此请求需要更新版本的 NASH。",
-        "needsAccess": "需要访问的路径"
+        "blockedPath": "路径受阻",
+        "askRule": "询问规则"
       },
       "launchPromptNotDelivered": "未送达 — 请检查终端",
       "taskList": {
@@ -18767,17 +19067,19 @@
         "one": "1 个已更改的文件",
         "many": "{{count}} 更改了文件",
         "partial": "部分差异",
-        "recorded": "本轮记录编辑的总计。"
+        "showDiff": "显示差异",
+        "hideDiff": "隐藏差异"
       },
       "receipt": {
         "unavailable": "所选答案不可用",
+        "emptyAnswer": "空回答",
         "cancelled": "取消",
         "resolved": "已解决",
         "resolver": "回复于 {{device}}",
-        "cancelledBy": "于 {{device}} 取消",
-        "emptyAnswer": "空回答"
+        "cancelledBy": "于 {{device}} 取消"
       },
       "notices": {
+        "contextCleared": "上下文已清除",
         "compaction": "上下文压缩",
         "details": "细节",
         "plan": "计划",
@@ -18789,7 +19091,9 @@
         "orcaStopUpdate": "此回复进行期间，{{machine}} 上的 NASH 为更新而重新启动。",
         "orcaStopQuit": "此回复进行期间，{{machine}} 上的 NASH 已关闭。",
         "orcaStopCrash": "此回复进行期间，{{machine}} 上的 NASH 意外停止。",
-        "orcaStopCanContinue": "你可以在此对话中继续。"
+        "orcaStopRemote": "此回复进行期间，{{machine}} 上的 NASH 已停止。",
+        "orcaStopCanContinue": "你可以在此对话中继续。",
+        "orcaStopUnnamedServer": "远程服务器"
       },
       "providerFrame": {
         "byteLength": "{{value0}} 字节"
@@ -18819,11 +19123,17 @@
         "countTasksMany": "{{value0}} 任务",
         "headerTotal": "{{value0}} 后台任务",
         "stateWorking": "处理中",
+        "stateWorkingCount": "{{value0}} 处理中",
         "stateMonitoring": "监控",
+        "stateMonitoringCount": "{{value0}} 监控",
         "stateWaiting": "等待",
+        "stateWaitingCount": "{{value0}} 等待",
         "stateBlocked": "被阻止",
+        "stateBlockedCount": "{{value0}} 被阻止",
         "stateDone": "完毕",
+        "stateDoneCount": "{{value0}} 完毕",
         "stateIdle": "停止了",
+        "stateIdleCount": "{{value0}} 停止了",
         "stateUnverifiable": "状态不可用",
         "stateUnverifiableCount": "{{value0}} 状态不可用",
         "reasonWaiting": "需要批准",
@@ -18832,13 +19142,7 @@
         "groupShell": "壳",
         "groupMonitors": "显示器",
         "groupWorkflows": "工作流程",
-        "groupTasks": "任务",
-        "stateWorkingCount": "{{value0}} 处理中",
-        "stateMonitoringCount": "{{value0}} 监控",
-        "stateWaitingCount": "{{value0}} 等待",
-        "stateBlockedCount": "{{value0}} 被阻止",
-        "stateDoneCount": "{{value0}} 完毕",
-        "stateIdleCount": "{{value0}} 停止了"
+        "groupTasks": "任务"
       },
       "railLabel": "您的留言",
       "railImageMessage": "图片附件",
@@ -18878,6 +19182,18 @@
         "subtitle": "文件将作为智能体可以读取的路径添加到您的消息中。"
       },
       "copyCode": "复制代码",
+      "wrapLines": "自动换行",
+      "disableLineWrap": "关闭自动换行",
+      "context": {
+        "unavailable": "上下文用量暂时未知，将在智能体下次响应后提供。",
+        "summary": "上下文：{{used}}/{{window}} token（{{percent}}%），根据上一次响应的估算值。",
+        "used": "上下文：已用 {{used}} token，根据上一次响应的估算值。",
+        "unreported": "此会话无法提供上下文用量。"
+      },
+      "agentMessage": {
+        "messageFrom": "消息来自",
+        "unnamedSender": "一个智能体"
+      },
       "goal": {
         "placeholder": "描述您的目标，定义可衡量的结果以获得最佳结果",
         "clear": "明确的目标",
@@ -18905,14 +19221,18 @@
         "estimated": "根据上一次响应的估算值。"
       },
       "dismissDeliveryNotice": "关闭",
+      "addSelectionToChat": "添加到聊天",
       "messageNotSent": "消息未发送",
       "deliveryUnconfirmed": "无法确认送达 — 重试前请检查聊天",
+      "messageSending": "正在发送…",
+      "userMessage": {
+        "showFull": "显示完整消息",
+        "showLess": "收起"
+      },
       "queuedMessages": {
         "alreadySent": "此消息已发送。",
-        "editAlreadySent": "已发送 — 你的文本仍在输入框中。",
         "listLabel": "排队的消息",
         "behindReturnedHold": "等待中 — 前面有一条消息需要处理",
-        "awaitingAnswerHold": "等待你的回答",
         "steer": "立即发送",
         "send": "发送",
         "steerHint": "提交且不中断模型",
@@ -18920,13 +19240,13 @@
         "delete": "删除",
         "moreActions": "更多操作",
         "editMessage": "编辑消息",
+        "showFullMessage": "显示完整消息",
+        "showLess": "收起",
         "turnOffQueueing": "关闭排队",
         "withdrawnHold": "在发送前已停止",
         "pausedSendFailed": "无法发送。点按发送以重试。",
         "paused": "已暂停",
         "queuePausedStopped": "因你中断了操作，队列已暂停",
-        "queuePausedRestarted": "因 NASH 重新启动，队列已暂停",
-        "queuePausedCleared": "清除对话后，队列已暂停",
         "queuePaused": "队列已暂停",
         "resume": "继续",
         "sendConfirmTitle": "发送消息？",
@@ -18935,36 +19255,25 @@
         "sendConfirmBody_other": "你即将发送一条消息。是否清除之前排队的 {{count}} 条消息？",
         "sendConfirmClear": "清空队列",
         "sendConfirmSend": "发送消息",
-        "from": "来自 {{names}}"
+        "fromSender": "来自",
+        "pausedSendFailedWaiting": "无法发送。智能体完成后，点按发送以重试。",
+        "save": "保存",
+        "editingMessage": "正在编辑消息",
+        "cancelEditing": "取消编辑",
+        "editChanged": "你编辑时此消息已更改。你编辑的内容已放入聊天输入框。",
+        "editChangedPrompt": "你编辑时此消息已更改。回答智能体后，你编辑的内容会出现在聊天输入框中。",
+        "editFailed": "此消息无法编辑。",
+        "editGone": "此消息已发送或移除。你编辑的内容已放入聊天输入框。",
+        "editGonePrompt": "此消息已发送或移除。回答智能体后，你编辑的内容会出现在聊天输入框中。",
+        "queuePausedRestarted": "因 NASH 重新启动，队列已暂停",
+        "queuePausedCleared": "清除对话后，队列已暂停"
       },
+      "thought": "已思考",
+      "thoughtForDuration": "思考了 {{duration}}",
       "structuredSessionHostDeclined": "已在终端中打开 {{value0}}",
       "structuredSessionHostDeclinedDescription": "此服务器无法在此工作区中运行 {{value0}} 聊天。",
       "structuredSessionHostUnreachable": "无法连接到 {{value0}}",
       "structuredSessionHostUnreachableDescription": "NASH 未打开 {{value0}} 聊天。请检查与服务器的连接，然后重试。",
-      "reasoning": "推理",
-      "transcriptLabel": "对话",
-      "prompt": {
-        "collapse": "收起",
-        "expand": "展开"
-      },
-      "context": {
-        "unavailable": "上下文用量暂时未知，将在智能体下次响应后提供。",
-        "summary": "上下文：{{used}}/{{window}} token（{{percent}}%），根据上一次响应的估算值。",
-        "used": "上下文：已用 {{used}} token，根据上一次响应的估算值。",
-        "unreported": "此会话无法提供上下文用量。"
-      },
-      "agentMessage": {
-        "messageFrom": "消息来自",
-        "unnamedSender": "一个智能体"
-      },
-      "addSelectionToChat": "添加到聊天",
-      "messageSending": "正在发送…",
-      "userMessage": {
-        "showFull": "显示完整消息",
-        "showLess": "收起"
-      },
-      "thought": "已思考",
-      "thoughtForDuration": "思考了 {{duration}}",
       "hostOutage": {
         "offline": "{{hostName}} 已离线",
         "reconnecting": "正在重新连接 {{hostName}}…",
@@ -18973,7 +19282,7 @@
       "interruptedContinue": {
         "continue": "继续",
         "failed": "无法继续此聊天。请重试，或发送一条消息。",
-        "explanation": "继续后，代理会先检查其上一步是否已完成。"
+        "explanation": "继续后，智能体会先检查其上一步是否已完成。"
       },
       "rewind": {
         "unsupported": "此聊天无法返回到更早的消息。",
@@ -18998,8 +19307,7 @@
       },
       "visualUnavailable": "可视化不可用",
       "visualLoading": "正在加载可视化",
-      "visualOpenInSidebar": "在侧边栏中打开",
-      "visualClose": "关闭可视化",
+      "visualOpenInNewTab": "在新标签页中打开",
       "claudeSignIn": {
         "signingIn": "正在登录…"
       }
@@ -19018,6 +19326,11 @@
         "EditorFileTabContextMenu": {
           "closeOthers": "关闭其他",
           "closeTabsToLeft": "关闭左侧的选项卡"
+        },
+        "CopyTabIdMenuItem": {
+          "copied": "已复制标签页 ID",
+          "failed": "无法复制标签页 ID",
+          "copy": "复制标签页 ID"
         }
       }
     },
@@ -19275,8 +19588,8 @@
       }
     },
     "agentSessionContinuation": {
-      "continueInNewSession": "在新会话中继续…",
-      "dialogTitle": "在新会话中继续",
+      "handOffToAnotherAgent": "移交给另一个智能体",
+      "dialogTitle": "移交给另一个智能体",
       "dialogDescription": "从当前进度启动一个新的智能体会话，原会话保持不变。",
       "untitledSession": "当前会话",
       "originalAgent": "原智能体：{{agent}}",
@@ -19384,7 +19697,18 @@
       "nativeChat": {
         "queueFollowUpsTitle": "将后续消息加入队列",
         "queueFollowUpsCopy": "Agent 工作时发送的消息会以卡片形式等待，你可以立即发送、编辑或删除。带图片的消息会立即发送。",
-        "queueFollowUpsToggleLabel": "切换后续消息队列"
+        "queueFollowUpsToggleLabel": "切换后续消息队列",
+        "inlineVisualsTitle": "内联可视化",
+        "inlineVisualsCopy": "允许智能体在其回复中显示图表、示意图和原型图。适用于新启动的聊天。",
+        "inlineVisualsToggleLabel": "切换内联可视化",
+        "behaviorTitle": "行为",
+        "resumeSearchUpdate": "更新",
+        "resumeSearchRelaunch": "重新启动",
+        "queueSearchQueue": "队列",
+        "queueSearchSteer": "立即发送",
+        "shellEnvSearchVariables": "环境变量",
+        "shellEnvSearchPath": "PATH",
+        "shellEnvSearchProxy": "代理"
       }
     },
     "agentChildRow": {
@@ -19401,6 +19725,9 @@
       "important": "重要",
       "warning": "警告",
       "caution": "注意"
+    },
+    "automations": {
+      "runTerminalUnavailable": "运行终端不可用。"
     }
   },
   "dashboardPopout": {
@@ -19524,6 +19851,8 @@
       "preparationFailed": "无法在此桌面上启动远程浏览器。检查配对连接并重试。",
       "unavailableTitle": "客户端托管的浏览器不可用",
       "unavailableDescription": "此页面目前在此桌面上不可用。",
+      "unavailableOtherDesktopDescription": "此页面已在另一台桌面上打开。",
+      "unavailableHostOfflineDescription": "{{host}} 已离线。重新连接后，此页面将在此处重新加载。",
       "download": {
         "started": "正在下载 {{filename}}...",
         "completed": "已下载{{filename}}",
@@ -19541,9 +19870,7 @@
       "hostRowOfflineNamed": "离线 — 托管于 {{device}}",
       "hostRowOffline": "离线 — 托管它的设备退出",
       "hostRowNamed": "主办于 {{device}}",
-      "hostRow": "托管在另一台设备上",
-      "unavailableOtherDesktopDescription": "此页面已在另一台桌面上打开。",
-      "unavailableHostOfflineDescription": "{{host}} 已离线。重新连接后，此页面将在此处重新加载。"
+      "hostRow": "托管在另一台设备上"
     },
     "navigation": {
       "back": "返回",
@@ -19591,6 +19918,9 @@
       "description": "每个配置文件的用户代理设置已被删除。在浏览器设置中选择 Cleaned 或 Native；更改在重新启动后生效。",
       "title": "浏览器身份现在是应用程序范围内的",
       "openSettings": "打开设置"
+    },
+    "request": {
+      "pairedServerWorkspace": "此工作区在配对服务器上运行。请使用该服务器的浏览器标签页。"
     }
   },
   "runtimeRpc": {
@@ -19662,6 +19992,19 @@
     }
   },
   "featureTips": {
+    "nativeChatUpgrade": {
+      "eyebrow": "新功能",
+      "title": "本机聊天已升级",
+      "intro": "受支持智能体的新聊天现在会在升级后的聊天视图中打开。要在聊天和 CLI 之间切换，请打开右侧边栏中的{{panel}}：",
+      "resumeInNativeChat": "{{action}}：在本机聊天中打开受支持的 CLI 对话。",
+      "resumeInCli": "{{action}}：将 Claude 或 Codex 聊天复制到新的 CLI 会话中。原始聊天保持不变。",
+      "settingsInstruction": "可在以下位置管理 Chat UI：",
+      "settingsLink": "设置 → 实验性",
+      "gotIt": "知道了",
+      "leaveOff": "保持关闭",
+      "enableNow": "立即启用",
+      "enableError": "无法启用聊天模式。"
+    },
     "voice": {
       "demoPrompt": "查看此差异以了解边缘情况，并为您发现的任何内容添加测试。",
       "startDictation": "开始听写",
@@ -19757,9 +20100,9 @@
     "launchFailedDetail": "NASH 重试了 {{recoveryCount}} 次，但未成功。",
     "processLimitDetail": "由于你的用户帐户已达到进程数上限，系统拒绝创建新进程。这通常由失控的终端、开发服务器或智能体导致。请关闭其中一些，然后点击“重试”。",
     "launchFailedGenericDetail": "系统拒绝启动它。请释放内存或关闭其他应用，然后点击“重试”。如果问题持续出现，请重新安装 NASH。",
-    "lowCommitAdvice": "通过关闭未使用的应用程序或 NASH 工作区来释放内存，或增加 Windows 页面文件大小，然后单击“重新加载”。",
     "lowCommitMessage": "Windows 内存不足。",
-    "lowCommitDetail": "Windows 只剩下 {{availableMB}} MB 内存供应用程序使用，因此窗口在重新加载后再次耗尽内存。"
+    "lowCommitDetail": "Windows 只剩下 {{availableMB}} MB 内存供应用程序使用，因此窗口在重新加载后再次耗尽内存。",
+    "lowCommitAdvice": "通过关闭未使用的应用程序或 NASH 工作区来释放内存，或增加 Windows 页面文件大小，然后单击“重新加载”。"
   },
   "sessionSearch": {
     "panel": {
@@ -19774,6 +20117,7 @@
       "sortResultsAriaLabel": "排序结果：{{value0}}",
       "consent": "启用全文搜索吗？ NASH 根据本地智能体记录在此计算机上构建索引，包括完整对话和每个工具输出最多 3,072 个字符。内容未经过编辑。经过身份验证的配对客户端可以搜索它。",
       "remoteDisabled": "此计算机上已禁用搜索。在该计算机上启用转录索引以搜索其会话。",
+      "titleOnly": "此计算机上的全文搜索已关闭，因此仅匹配会话标题。",
       "notReady": "搜索索引尚未准备好。稍后再试。",
       "noService": "在此计算机上无法进行搜索。它可能需要 NASH 更新或具有搜索支持的运行时。",
       "failed": "无法搜索这台计算机。检查其连接并重试。",
@@ -19911,6 +20255,10 @@
     "removePath": "Remove {{name}}"
   },
   "accounts": {
+    "wslAccountNotApplied": {
+      "title": "未在 {{distro}} 中应用账户选择",
+      "description": "在 WSL 中的 NASH 更新之前，那里的智能体将使用该发行版默认的 Claude 和 Codex 账户。"
+    },
     "managedData": {
       "description": "在 NASH 主机的终端中运行此命令以添加账户。选择适用于该主机上新启动的智能体；直接 SSH 连接和 Windows 托管的 WSL 使用各自的凭据。",
       "copied": "已复制",
@@ -19966,62 +20314,64 @@
       "usageSignInLabel": "重新登录",
       "usageSignInMessage": "所选 Claude 账户需要重新登录。请打开“设置”>“AI 提供商账户”，或选择“系统默认”。",
       "signIn": "登录",
-      "signInNotice": {
-        "title": "完成 Claude 账户设置",
-        "description": "在每个已保存的账户中登录一次，即可随时切换。",
-        "action": "登录 {{value0}}"
-      }
+      "moreSignInOptions": "更多登录选项",
+      "copySignInLink": "改为复制登录链接",
+      "signInLinkCopied": "已复制登录链接。请在隐私窗口中打开它以使用其他账户登录。",
+      "signInLinkCopyFailed": "无法复制链接。"
     }
+  },
+  "osDocumentOpen": {
+    "failed": "无法打开文件。"
   },
   "terminal": {
     "sessionSaveFailure": {
-      "unknown": "NASH 无法保存最终状态。再试一次。如果这种情况持续存在，请与支持人员共享 NASH 日志，以便我们找出原因。",
       "title": "无法保存终端会话",
-      "capacity": "保存该终端的设备报告存储空间已满或超出存储配额。该设备上有可用空间，然后重试。"
+      "capacity": "保存该终端的设备报告存储空间已满或超出存储配额。该设备上有可用空间，然后重试。",
+      "unknown": "NASH 无法保存最终状态。再试一次。如果这种情况持续存在，请与支持人员共享 NASH 日志，以便我们找出原因。"
     },
     "codexTerminalServerIsolationNotice": {
       "title": "NASH 现在无需共享服务器即可运行 Codex",
       "description": "这使得智能体状态更加可靠。您可以在“设置”中将其重新打开。",
       "openSettings": "打开设置"
     },
+    "codexSharedSettingsNotice": {
+      "title": "NASH 中的 Codex 现在使用 ~/.codex",
+      "description": "Codex 可能会再次要求信任文件夹或批准命令。重新添加您仅在 NASH 中添加的所有 MCP 服务器。"
+    },
     "codexSharedServerBanner": {
-      "openedBeforeUpdateBody": "这个终端是在 NASH 开始为每个 Codex 提供自己的服务器之前打开的。",
-      "dialogDescription": "Codex 会话直接在共享一台后台服务器的终端中启动。 NASH 将其启动的 Codex 会话分开保存。当会话共享一台服务器时，关闭一个服务器可能会结束其他服务器，并且智能体状态可能会错误。",
-      "step1Note": "这会更改您的 Codex 设置，因此它也适用于 NASH 外部。",
-      "turnOffFailed": "NASH 无法关闭此功能。",
-      "stopFailed": "NASH 无法停止服务器。",
-      "confirmStopDescription": "这将关闭所有共享它的开放 Codex 会话，包括 NASH 之外的会话。",
       "title": "此 Codex 与您的其他 Codex 选项卡共享服务器",
       "body": "会话可能会意外结束，并且智能体状态可能会错误。",
+      "openedBeforeUpdateBody": "这个终端是在 NASH 开始为每个 Codex 提供自己的服务器之前打开的。",
       "oldTerminalDialogTitle": "为什么此 Codex 共享服务器",
       "oldTerminalDialogRisk": "共享服务器的 Codex 会话可能会一起结束，并且智能体状态可能会错误。",
       "oldTerminalDialogCause": "较旧的终端仍然共享 Codex 服务器。打开一个新终端以在单独的服务器上运行 Codex。",
       "fix": "使固定",
       "dialogTitle": "为每个 Codex 选项卡提供自己的服务器",
+      "dialogDescription": "Codex 会话直接在共享一台后台服务器的终端中启动。 NASH 将其启动的 Codex 会话分开保存。当会话共享一台服务器时，关闭一个服务器可能会结束其他服务器，并且智能体状态可能会错误。",
       "copy": "复制",
       "copied": "已复制",
       "done": "完成",
       "step1Title": "关闭 Codex 服务器共享",
+      "step1Note": "这会更改您的 Codex 设置，因此它也适用于 NASH 外部。",
       "step2Title": "停止正在运行的共享服务器",
       "undo": "要撤消，请运行 codex features enable daemon_auto_start。",
       "step2Warning": "关闭共享服务器的所有打开的 Codex 会话",
       "turnOff": "关",
       "turningOff": "正在关闭…",
       "turnedOff": "已关闭",
+      "turnOffFailed": "NASH 无法关闭此功能。",
       "stopServer": "停止服务器",
       "stopping": "停止…",
       "stopped": "已停止",
+      "stopFailed": "NASH 无法停止服务器。",
       "confirmStopTitle": "停止共享服务器？",
+      "confirmStopDescription": "这将关闭所有共享它的开放 Codex 会话，包括 NASH 之外的会话。",
       "cancel": "取消",
       "runs": "跑步",
       "openNewTerminal": "打开新终端",
       "dontShowAgain": "不再显示",
       "dismiss": "关闭",
       "learnMore": "了解更多"
-    },
-    "codexSharedSettingsNotice": {
-      "title": "NASH 中的 Codex 现在使用 ~/.codex",
-      "description": "Codex 可能会再次要求信任文件夹或批准命令。重新添加您仅在 NASH 中添加的所有 MCP 服务器。"
     },
     "paneMove": {
       "failed": "无法将窗格移动到新选项卡。"
@@ -20037,7 +20387,202 @@
       "dialogTitle": "为什么这里的 claude 不使用所选账户",
       "dialogDescription": "NASH 现在将每个 Claude 账户保存在独立文件夹中，新终端里的 claude 会使用你选择的账户。",
       "dialogCause": "更新前打开的终端不会跟随此选择，因此这里的 claude 使用“系统默认”的登录信息。请打开新终端以使用所选账户。"
+    },
+    "newerDaemonBanner": {
+      "failedTitle": "无法重新打开此终端",
+      "title": "此终端是在较新版本的 NASH 中打开的",
+      "resumableBody": "在此重新打开以继续工作。您的智能体会话将会恢复。",
+      "reopening": "正在重新打开…",
+      "tryAgain": "重试",
+      "reopenTerminal": "重新打开 {{count}} 个终端",
+      "reopenTerminal_one": "重新打开终端",
+      "reopenTerminal_other": "重新打开 {{count}} 个终端",
+      "reopened": "已重新打开 {{count}} 个终端",
+      "reopened_one": "已重新打开 {{count}} 个终端",
+      "reopened_other": "已重新打开 {{count}} 个终端",
+      "resumed": "已恢复 {{count}} 个智能体会话。",
+      "resumed_one": "已恢复 {{count}} 个智能体会话。",
+      "resumed_other": "已恢复 {{count}} 个智能体会话。"
+    },
+    "severedDaemonBanner": {
+      "unknownCount": "其正在运行的终端",
+      "count": "{{count}} 个正在运行的终端",
+      "unverifiable": "NASH 无法验证终端服务进程，因此未停止任何内容。",
+      "alreadyReplaced": "终端服务已被替换；未停止任何内容。",
+      "restarted": "终端服务已重新启动。",
+      "failed": "重新启动失败。",
+      "title": "终端服务在缺少其程序文件的情况下运行",
+      "body": "此计算机上的终端服务是从一个已不再挂载的 AppImage 启动的。它仍在运行 {{sessions}}，但随时可能崩溃。在您重新启动它之前，NASH 退出时新终端不会被保留。",
+      "restart": "重新启动终端守护进程",
+      "dismiss": "关闭",
+      "confirmTitle": "重新启动终端守护进程？",
+      "confirmBody": "重新启动会结束 {{sessions}} 中运行的所有进程。支持恢复的智能体之后可以恢复；shell 和其他作业则不能，必须重新启动。请在智能体空闲时执行此操作。",
+      "cancel": "取消",
+      "confirm": "重新启动并结束进程"
     }
+  },
+  "fileSearch": {
+    "failed": "搜索失败。再试一次。"
+  },
+  "csv": {
+    "detectingDelimiter": "正在检测分隔符…",
+    "indexProgress": "正在为 CSV 建立索引… {{percent}}%",
+    "loadingCell": "加载中…",
+    "nextRows": "下一批行",
+    "previousRows": "上一批行",
+    "readOnlyPreview": "大文件预览 · 只读",
+    "resizeColumn": "调整列 {{column}} 的大小",
+    "rowWindow": "行 {{first}}–{{last}}",
+    "editor": "CSV 编辑器",
+    "editCell": "编辑第 {{row}} 行，第 {{column}} 列",
+    "filterRows": "筛选行",
+    "edit": "编辑单元格",
+    "copy": "复制",
+    "paste": "粘贴",
+    "rows": "行",
+    "insertRowAbove": "在上方插入行",
+    "insertRowBelow": "在下方插入行",
+    "deleteRows": "删除选中的行",
+    "columns": "列",
+    "newColumn": "第 {{column}} 列",
+    "insertColumnBefore": "在左侧插入列",
+    "insertColumnAfter": "在右侧插入列",
+    "moveColumnLeft": "向左移动列",
+    "moveColumnRight": "向右移动列",
+    "deleteColumns": "删除选中的列",
+    "sort": "排序",
+    "sortAscending": "对选中的列升序排序",
+    "sortDescending": "对选中的列降序排序",
+    "originalOrder": "原始行顺序",
+    "save": "保存",
+    "inspectionOnly": "仅查看 · 文件行顺序不变"
+  },
+  "worktree": {
+    "nestedRemoval": {
+      "refreshFailed": "无法刷新工作区列表",
+      "review": "连同嵌套工作树一起删除…",
+      "title": "删除工作区和嵌套工作树？",
+      "description": "这将永久删除“{{name}}”、下面列出的每个嵌套工作树及其中的所有文件（包括未提交的更改）。它们的终端和智能体将被停止。",
+      "detached": "分离 HEAD",
+      "loading": "正在检查嵌套工作树…",
+      "order": "嵌套工作树会先被删除。如果其中一个失败，删除将停止并保留父工作树。分支遵循您现有的删除设置。",
+      "cancel": "取消",
+      "retry": "重新检查",
+      "deleting": "正在删除…",
+      "confirm": "删除所有列出的工作树",
+      "preservedBranches": "部分嵌套工作树分支已保留"
+    }
+  },
+  "mediaPreview": {
+    "unavailable": "无法播放此媒体文件。文件可能不可用或使用了不支持的编解码器。",
+    "openFailed": "无法在默认应用中打开此文件。",
+    "openDefault": "在默认应用中打开"
+  },
+  "projectBoard": {
+    "noColumnField": "此看板视图没有可用于分组的单选或迭代字段，因此 NASH 改为列出各项。",
+    "noField": "无 {{field}}"
+  },
+  "projectBoardCard": {
+    "restrictedItem": "受限项",
+    "itemLabel": "{{number}} — {{title}}"
+  },
+  "projectViews": {
+    "layout": {
+      "board": "看板"
+    },
+    "unsupported": {
+      "switchLayout": "切换到表格、看板或路线图视图以在 NASH 中处理此项目。",
+      "description": "NASH 可渲染表格、看板和路线图项目视图。此视图使用的布局尚无法渲染。"
+    }
+  },
+  "projectField": {
+    "updateFailed": "无法更新项目字段"
+  },
+  "workspaceDeletion": {
+    "preferenceSaveFailed": "无法保存删除偏好设置",
+    "alwaysForceDelete": "始终强制删除",
+    "moreActions": "更多强制删除选项",
+    "alwaysForceDeleteTooltip": "适用于今后所有工作区删除操作。"
+  },
+  "workspace": {
+    "links": {
+      "foreignReview": "此评审属于另一个存储库。请添加来自此工作区存储库的评审。",
+      "repositoryLoading": "存储库身份仍在加载。待其可用后重试。",
+      "duplicate": "此链接已附加。",
+      "title": "已链接的工作",
+      "count": "已链接 {{count}} 项",
+      "empty": "将此工作区的所有评审和任务集中在一起。",
+      "reviews": "评审",
+      "tasks": "议题和任务",
+      "openItem": "打开 {{label}}",
+      "open": "打开链接",
+      "unlinkItem": "取消链接 {{label}}",
+      "unlink": "从工作区取消链接",
+      "show": "显示 {{count}} 个已链接的评审和任务",
+      "manage": "管理链接…",
+      "details": "工作区详情",
+      "description": "为此工作区关联评审和任务，并保留笔记。",
+      "commentHelp": "支持 Markdown。按 Enter 或 {{shortcut}} 保存 · Shift+Enter 换行。",
+      "kind": {
+        "github_pr": "GitHub PR",
+        "github_issue": "GitHub 议题",
+        "linear_task": "Linear 任务",
+        "gitlab_mr": "GitLab MR",
+        "gitlab_issue": "GitLab 议题",
+        "jira_task_url": "Jira 任务（URL）",
+        "bitbucket_pr": "Bitbucket PR",
+        "azure_devops_pr": "Azure DevOps PR",
+        "gitea_pr": "Gitea PR"
+      },
+      "mrReference": "MR !{{number}}",
+      "prReference": "PR #{{number}}",
+      "issueReference": "议题 #{{number}}",
+      "foreignIssue": "此议题属于另一个存储库。请添加来自此工作区存储库的议题。",
+      "linkedResult": "已链接",
+      "addReference": "添加引用",
+      "searchLabel": "搜索引用",
+      "searchReferences": "搜索评审和任务，或粘贴链接",
+      "noReferences": "没有匹配的引用。请尝试标题、编号或 URL。",
+      "addItem": "添加 {{label}}",
+      "referenceType": "引用类型",
+      "clearSearch": "清除搜索",
+      "inlineSearchHint": "选择结果以附加。",
+      "nameHelp": "显示在侧边栏中。文件夹名称保持不变。",
+      "notes": "笔记",
+      "addNotes": "添加笔记",
+      "notesOptional": "可选 · Markdown",
+      "saveHint": "保存后更改才会生效",
+      "terminal": "终端",
+      "seenIn": "出现于 {{label}}",
+      "unavailableTab": "标签页不可用",
+      "sessions": "会话和终端",
+      "jiraModeRequired": "选择 Smart 或 Jira 以加载此议题。",
+      "linearModeRequired": "选择 Smart 或 Linear 以加载此议题。",
+      "loadingLinear": "正在加载 Linear 议题…",
+      "linearConnectRequired": "在设置中连接 Linear 以链接此议题。",
+      "linearReadFailed": "无法加载此 Linear 议题。请检查 URL 和已连接的工作区。",
+      "retrySource": "重试",
+      "lastKnownStatus": "上次已知状态",
+      "reviewTarget": "目标：{{branch}}",
+      "reviewUrlRequired": "粘贴评审 URL 以验证其存储库和提供方。",
+      "stackSummary": "已链接 {{count}} 项：{{references}}",
+      "sessionsForItem": "{{label}} 的会话和终端 · {{count}}",
+      "checksFailed": "失败",
+      "checksPending": "待处理",
+      "checksPassing": "通过",
+      "checksUnknown": "未知",
+      "checksNeutral": "中性",
+      "allReviewChecks": "评审：{{count}} · 检查：{{status}}"
+    },
+    "attachments": {
+      "updateRuntime": "更新远程运行时以更改工作区链接",
+      "updateRuntimeSafely": "更新远程运行时以安全地更改工作区链接"
+    }
+  },
+  "tabHoverCard": {
+    "browser": "浏览器",
+    "editor": "编辑器",
+    "terminal": "终端"
   },
   "workbench": {
     "tasks": {
@@ -20348,86 +20893,6 @@
       "copyFailed": "无法复制",
       "copy": "复制详情"
     }
-  },
-  "osDocumentOpen": {
-    "failed": "无法打开文件。"
-  },
-  "fileSearch": {
-    "failed": "搜索失败。再试一次。"
-  },
-  "csv": {
-    "detectingDelimiter": "正在检测分隔符…",
-    "indexProgress": "正在为 CSV 建立索引… {{percent}}%",
-    "loadingCell": "加载中…",
-    "nextRows": "下一批行",
-    "previousRows": "上一批行",
-    "readOnlyPreview": "大文件预览 · 只读",
-    "resizeColumn": "调整列 {{column}} 的大小",
-    "rowWindow": "行 {{first}}–{{last}}",
-    "editor": "CSV 编辑器",
-    "editCell": "编辑第 {{row}} 行，第 {{column}} 列",
-    "filterRows": "筛选行",
-    "edit": "编辑单元格",
-    "copy": "复制",
-    "paste": "粘贴",
-    "rows": "行",
-    "insertRowAbove": "在上方插入行",
-    "insertRowBelow": "在下方插入行",
-    "deleteRows": "删除选中的行",
-    "columns": "列",
-    "newColumn": "第 {{column}} 列",
-    "insertColumnBefore": "在左侧插入列",
-    "insertColumnAfter": "在右侧插入列",
-    "moveColumnLeft": "向左移动列",
-    "moveColumnRight": "向右移动列",
-    "deleteColumns": "删除选中的列",
-    "sort": "排序",
-    "sortAscending": "对选中的列升序排序",
-    "sortDescending": "对选中的列降序排序",
-    "originalOrder": "原始行顺序",
-    "save": "保存",
-    "inspectionOnly": "仅查看 · 文件行顺序不变"
-  },
-  "worktree": {
-    "nestedRemoval": {
-      "refreshFailed": "无法刷新工作区列表",
-      "review": "连同嵌套工作树一起删除…",
-      "title": "删除工作区和嵌套工作树？",
-      "description": "这将永久删除“{{name}}”、下面列出的每个嵌套工作树及其中的所有文件（包括未提交的更改）。它们的终端和智能体将被停止。",
-      "detached": "分离 HEAD",
-      "loading": "正在检查嵌套工作树…",
-      "order": "嵌套工作树会先被删除。如果其中一个失败，删除将停止并保留父工作树。分支遵循您现有的删除设置。",
-      "cancel": "取消",
-      "retry": "重新检查",
-      "deleting": "正在删除…",
-      "confirm": "删除所有列出的工作树",
-      "preservedBranches": "部分嵌套工作树分支已保留"
-    }
-  },
-  "mediaPreview": {
-    "unavailable": "无法播放此媒体文件。文件可能不可用或使用了不支持的编解码器。",
-    "openFailed": "无法在默认应用中打开此文件。",
-    "openDefault": "在默认应用中打开"
-  },
-  "projectBoard": {
-    "noColumnField": "此看板视图没有可用于分组的单选或迭代字段，因此 NASH 改为列出各项。",
-    "noField": "无 {{field}}"
-  },
-  "projectBoardCard": {
-    "restrictedItem": "受限项",
-    "itemLabel": "{{number}} — {{title}}"
-  },
-  "projectViews": {
-    "layout": {
-      "board": "看板"
-    },
-    "unsupported": {
-      "switchLayout": "切换到表格、看板或路线图视图以在 NASH 中处理此项目。",
-      "description": "NASH 可渲染表格、看板和路线图项目视图。此视图使用的布局尚无法渲染。"
-    }
-  },
-  "projectField": {
-    "updateFailed": "无法更新项目字段"
   },
   "crashReport": {
     "githubDescription": "在 GitHub 上检查并提交崩溃报告。“复制详细信息”包含完整的诊断文本。",

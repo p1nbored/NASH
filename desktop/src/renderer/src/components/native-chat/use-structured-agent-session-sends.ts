@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import type { AgentJournalSubmission } from '../../../../shared/agent-session-journal-types'
 import type { StructuredAgentSessionAttachment } from '../../../../shared/structured-agent-session-send-mutation'
-import type { RuntimeClientTarget } from '@/runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import {
   structuredAgentSessionQueueRequest,
   type StructuredAgentSessionQueueDelivery
@@ -35,6 +35,8 @@ export function useStructuredAgentSessionSends(args: {
   isWorking?: boolean
   /** The chat reads Stopping: a send made now is drawn after the turn being stopped. */
   stopping?: boolean
+  /** The composer's model and effort each send carries; undefined to a host that takes none. */
+  sendOptions?: () => Readonly<Record<string, string>> | undefined
 }) {
   const {
     fence,
@@ -42,6 +44,7 @@ export function useStructuredAgentSessionSends(args: {
     isWorking = false,
     queue,
     queuedMessageIds,
+    sendOptions,
     sessionId,
     stopping,
     submissions,
@@ -91,12 +94,14 @@ export function useStructuredAgentSessionSends(args: {
         return false
       }
       const delivery = structuredAgentSessionQueueRequest(queue, attachments)
+      const options = sendOptions?.()
       const sent = sendStructuredAgentSessionMessage({
         sessionId,
         target,
         text,
         attachments,
         ...(delivery ? { delivery } : {}),
+        ...(options ? { options } : {}),
         ...(stopping ? { sentWhileStopping: true as const } : {})
       })
       // Refused while the chat's send is out: the text stays in the box.
@@ -112,7 +117,7 @@ export function useStructuredAgentSessionSends(args: {
         ? 'queued'
         : true
     },
-    [isWorking, queue, queuedMessageIds, sessionId, stopping, target]
+    [isWorking, queue, queuedMessageIds, sendOptions, sessionId, stopping, target]
   )
 
   return {

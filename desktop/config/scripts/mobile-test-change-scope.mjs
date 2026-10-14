@@ -9,6 +9,7 @@ const NON_TEST_FILES = new Set([
   '.github/workflows/mobile-ios-release.yml',
   'config/scripts/pr-code-change-scope.mjs',
   'config/scripts/pr-code-change-scope.test.mjs',
+  'config/scripts/pr-layout-oracle-route.mjs',
   'config/scripts/mobile-release-check-scope.mjs',
   'config/scripts/mobile-release-check-scope.test.mjs'
 ])

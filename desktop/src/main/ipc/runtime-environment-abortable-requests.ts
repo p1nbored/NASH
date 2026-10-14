@@ -1,4 +1,4 @@
-import type { PairingOffer } from '../../shared/pairing'
+import type { PairedRuntimeConnection } from '../../shared/paired-runtime-connection'
 import type { RuntimeCapability } from '../../shared/protocol-version'
 import { sendRemoteRuntimeRequest } from '../../shared/remote-runtime-client'
 import type {
@@ -11,7 +11,7 @@ import {
 } from './runtime-environment-request-connections'
 
 export function sendRemoteRuntimeRequestAbortable(
-  pairing: PairingOffer,
+  connection: PairedRuntimeConnection,
   method: string,
   params: unknown,
   timeoutMs: number,
@@ -21,7 +21,7 @@ export function sendRemoteRuntimeRequestAbortable(
 ): Promise<RuntimeRpcResponse<unknown>> {
   if (signal || clientCapabilities.length > 0) {
     return sendRemoteRuntimeRequest(
-      pairing,
+      connection,
       method,
       params,
       timeoutMs,
@@ -31,26 +31,33 @@ export function sendRemoteRuntimeRequestAbortable(
     )
   }
   return envelope
-    ? sendRemoteRuntimeRequest(pairing, method, params, timeoutMs, envelope)
-    : sendRemoteRuntimeRequest(pairing, method, params, timeoutMs)
+    ? sendRemoteRuntimeRequest(connection, method, params, timeoutMs, envelope)
+    : sendRemoteRuntimeRequest(connection, method, params, timeoutMs)
 }
 
 export function sendRemoteRuntimeConnectionRequestAbortable(
   environmentId: string,
-  pairing: PairingOffer,
+  connection: PairedRuntimeConnection,
   method: string,
   params: unknown,
   timeoutMs: number,
   signal?: AbortSignal
 ): Promise<RuntimeRpcResponse<unknown>> {
   return signal
-    ? sendRemoteRuntimeConnectionRequest(environmentId, pairing, method, params, timeoutMs, signal)
-    : sendRemoteRuntimeConnectionRequest(environmentId, pairing, method, params, timeoutMs)
+    ? sendRemoteRuntimeConnectionRequest(
+        environmentId,
+        connection,
+        method,
+        params,
+        timeoutMs,
+        signal
+      )
+    : sendRemoteRuntimeConnectionRequest(environmentId, connection, method, params, timeoutMs)
 }
 
 export function sendRemoteRuntimeSharedControlRequestAbortable(
   environmentId: string,
-  pairing: PairingOffer,
+  connection: PairedRuntimeConnection,
   method: string,
   params: unknown,
   timeoutMs: number,
@@ -60,7 +67,7 @@ export function sendRemoteRuntimeSharedControlRequestAbortable(
   if (signal) {
     return sendRemoteRuntimeSharedControlRequest(
       environmentId,
-      pairing,
+      connection,
       method,
       params,
       timeoutMs,
@@ -71,11 +78,11 @@ export function sendRemoteRuntimeSharedControlRequestAbortable(
   return envelope
     ? sendRemoteRuntimeSharedControlRequest(
         environmentId,
-        pairing,
+        connection,
         method,
         params,
         timeoutMs,
         envelope
       )
-    : sendRemoteRuntimeSharedControlRequest(environmentId, pairing, method, params, timeoutMs)
+    : sendRemoteRuntimeSharedControlRequest(environmentId, connection, method, params, timeoutMs)
 }

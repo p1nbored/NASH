@@ -4,11 +4,9 @@ import {
   pendingRuntimeFileWatcherUnsubscribes,
   runtimeFileWatcherLeasesByOwnerAndRoot,
   runtimeWatcherReleaseKey,
-  sshFileExplorerWatchRearms,
   trackRuntimeFileWatcherUnsubscribe
 } from './runtime-file-commands-mobile-file-list-limit'
 import { isWatcherProcessFailure } from '../ipc/parcel-watcher-process-failure'
-import { stopSshFileExplorerWatchRearms } from './runtime-file-commands-ssh-file-watcher-rearm'
 
 export function registerRuntimeFileWatcherRelease(
   runtimeId: string,
@@ -169,9 +167,6 @@ export function _resetRuntimeFileWatcherLeasesForTests(): void {
   }
   for (const lease of leases) {
     lease.forget()
-  }
-  for (const key of Array.from(sshFileExplorerWatchRearms.keys())) {
-    stopSshFileExplorerWatchRearms(key)
   }
   runtimeFileWatcherLeasesByOwnerAndRoot.clear()
 }

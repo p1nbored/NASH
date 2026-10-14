@@ -1,3 +1,5 @@
+import type { RuntimeClientEvent } from '../../../shared/runtime-client-events'
+import { getDefaultWorkspaceSession } from '../../../shared/constants'
 import { describe, expect, it, vi } from 'vitest'
 import {
   OrcaRuntimeService,
@@ -6,7 +8,6 @@ import {
   computeWorktreePathMock,
   createSetupRunnerScript,
   detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgentsMock,
   electronMocks,
   ensurePathWithinWorkspaceMock,
   getEffectiveHooks,
@@ -14,7 +15,12 @@ import {
   shouldRunSetupForCreate
 } from '../orca-runtime-test-mocks.spec'
 import type { WorktreeMeta } from '../orca-runtime-test-mocks.spec'
-import { TEST_REPO_ID, makeWorktreeMeta, store } from '../orca-runtime-test-fixtures.spec'
+import {
+  TEST_REPO_ID,
+  makeWorktreeMeta,
+  store,
+  makeRuntimeStoreWithWorkspaceSession
+} from '../orca-runtime-test-fixtures.spec'
 
 describe('OrcaRuntimeService', () => {
   it('sends follow-up prompts for CLI-created stdin-after-start startup agents', async () => {
@@ -233,7 +239,7 @@ describe('OrcaRuntimeService', () => {
   it('honors split setup placement for opted-in local startup-draft worktrees', async () => {
     const metaById: Record<string, WorktreeMeta> = {}
     const runtimeStore = {
-      ...store,
+      ...makeRuntimeStoreWithWorkspaceSession(getDefaultWorkspaceSession()).runtimeStore,
       getSettings: () => ({
         ...store.getSettings(),
         defaultTuiAgent: 'codex' as const,
@@ -372,7 +378,7 @@ describe('OrcaRuntimeService', () => {
     )
   })
 
-  it('passes the wrapped setup command to activation when startup spawned but setup did not', async () => {
+  it('hands only the host window a setup main tried and failed to start', async () => {
     const runtime = new OrcaRuntimeService(store)
     const spawn = vi
       .fn()
@@ -400,6 +406,8 @@ describe('OrcaRuntimeService', () => {
       terminalDriverChanged: vi.fn()
     })
     runtime.attachWindow(1)
+    const events: RuntimeClientEvent[] = []
+    const unsubscribe = runtime.onClientEvent((event) => events.push(event))
 
     computeWorktreePathMock.mockReturnValue('/tmp/workspaces/runtime-startup-setup-retry')
     ensurePathWithinWorkspaceMock.mockReturnValue('/tmp/workspaces/runtime-startup-setup-retry')
@@ -433,8 +441,10 @@ describe('OrcaRuntimeService', () => {
       name: 'runtime-startup-setup-retry',
       setupDecision: 'run',
       activate: true,
+      navigation: 'all',
       startup: { command: 'claude' }
     })
+    unsubscribe()
 
     expect(spawn).toHaveBeenCalledTimes(2)
     expect(activateWorktree).toHaveBeenCalledWith(
@@ -447,6 +457,11 @@ describe('OrcaRuntimeService', () => {
       undefined,
       undefined
     )
+    expect(activateWorktree).toHaveBeenCalledOnce()
+    // The window retries it where the user sees its output or its spawn error; clients never run it.
+    expect(
+      events.filter((event) => event.type === 'activateWorktree' && event.setup !== undefined)
+    ).toEqual([])
     const activationSetup = activateWorktree.mock.calls[0]?.[2] as { command?: string } | undefined
     expect(activationSetup?.command).toContain('printf')
   })
@@ -516,7 +531,6 @@ describe('OrcaRuntimeService', () => {
     })
 
     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHaveBeenCalled()
-    expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
     expect(spawn).toHaveBeenCalledWith(
       expect.objectContaining({
         cwd: '/tmp/workspaces/runtime-explicit-draft',
@@ -602,7 +616,6 @@ describe('OrcaRuntimeService', () => {
     })
 
     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHaveBeenCalled()
-    expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
     expect(spawn).not.toHaveBeenCalled()
     expect(metaById[result.worktree.id]?.createdWithAgent).toBeUndefined()
     expect(activateWorktree).toHaveBeenCalledWith(

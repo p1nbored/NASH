@@ -6,7 +6,6 @@ import type { TerminalKittyKeyboardModeTracker } from '../../../../shared/termin
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { TerminalLayoutSnapshot } from '../../../../shared/terminal-tab-types'
 import type { SetupSplitDirection } from '../../../../shared/worktree/launch-types'
-import type { DirectSshPaneRetryAttemptId } from '@/store/slices/direct-ssh-terminal-recovery'
 import type {
   PaneExternalDropHandler,
   PaneExternalDropResolver,
@@ -15,8 +14,7 @@ import type {
 import type { EffectiveMacOptionAsAlt } from '@/lib/keyboard-layout/detect-option-as-alt'
 import type { PaneCwdMap } from './resolve-split-cwd'
 import type { PaneProcessExit, PtyPaneStartup } from './pty-connection-types'
-import type { PtyTransport } from './pty-transport'
-import type { PtyTransportRecoveryState } from './pty-transport-types'
+import type { PtyTransport, PtyTransportRecoveryState } from './pty-transport-types'
 import type { ReplayingPanesRef } from './replay-guard'
 import type { TerminalLinkActionRequester } from './terminal-link-action-request'
 import type { TerminalLinkRoutingPreferenceRequester } from './terminal-url-link-hit-testing'
@@ -87,12 +85,7 @@ export type UseTerminalPaneLifecycleDeps = {
   updateTabTitle: (tabId: string, title: string) => void
   setRuntimePaneTitle: (tabId: string, paneId: number, title: string) => void
   clearRuntimePaneTitle: (tabId: string, paneId: number) => void
-  updateTabPtyId: (
-    tabId: string,
-    ptyId: string,
-    replacedPtyId?: string,
-    directSshRetryAttemptId?: DirectSshPaneRetryAttemptId
-  ) => void
+  updateTabPtyId: (tabId: string, ptyId: string, replacedPtyId?: string) => void
   markWorktreeUnread: (worktreeId: string) => void
   markTerminalTabUnread: (tabId: string, reason: AgentAttentionUnreadReason) => void
   markTerminalPaneUnread: (paneKey: string, reason: AgentAttentionUnreadReason) => void

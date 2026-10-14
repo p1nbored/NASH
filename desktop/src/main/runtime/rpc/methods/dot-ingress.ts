@@ -61,6 +61,7 @@ const params = DotVersionedParamsSchema
 export const DOT_INGRESS_RPC_METHODS = [
   defineMethod({
     name: 'dotIngress.requests.attach',
+    permission: 'workspace',
     params,
     handler: async (raw, context) => {
       dotCall(context)
@@ -94,6 +95,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.hello',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)
@@ -107,6 +109,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.workspaces.list',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)
@@ -118,6 +121,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.requests.submit',
+    permission: 'workspace',
     params,
     handler: async (raw, context) => {
       dotCall(context)
@@ -128,6 +132,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.requests.status',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)
@@ -139,6 +144,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.requests.list',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)
@@ -154,6 +160,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.requests.cancel',
+    permission: 'workspace',
     params,
     handler: async (raw, context) => {
       dotCall(context)
@@ -165,6 +172,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.requests.message',
+    permission: 'workspace',
     params,
     handler: async (raw, context) => {
       dotCall(context)
@@ -180,6 +188,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.decisions.list',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)
@@ -192,6 +201,7 @@ export const DOT_INGRESS_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.decisions.answer',
+    permission: 'workspace',
     params,
     handler: (raw, context) => {
       dotCall(context)

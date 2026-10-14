@@ -24,6 +24,26 @@ export function structuredAgentSessionStopNamesTurnNotLive(
   return namedTurnId !== undefined && namedTurnId !== liveTurnId
 }
 
+/** A Stop names a turn already over: one the journal shows, or showed before a rewind removed it,
+ *  that is not the live one. A named turn the journal never had may still be opening, while the
+ *  agent works on the send it opens. */
+export function structuredAgentSessionStopNamesEndedTurn(
+  journal: Pick<AgentSessionJournal, 'activeTurnId' | 'snapshot' | 'stops'>,
+  namedTurnId: string | undefined,
+  working: boolean
+): boolean {
+  const live = journal.activeTurnId()
+  if (namedTurnId === undefined || namedTurnId === live) {
+    return false
+  }
+  return (
+    live !== null ||
+    !working ||
+    journal.stops.turnWasRemoved(namedTurnId) ||
+    structuredAgentSessionNamedTurnScope(journal, namedTurnId) !== null
+  )
+}
+
 /** The scope of the turn `turnId` names, running or ended; null when the journal has no such turn. */
 export function structuredAgentSessionNamedTurnScope(
   journal: Pick<AgentSessionJournal, 'snapshot'>,

@@ -12,8 +12,6 @@ import { routingCli, routingEffortFor } from './routing-table-effort-options'
 
 type ActiveVersionRef = { readonly version: number; readonly sha256: string }
 
-const DEFAULT_EFFORT = 'high'
-
 export type InlineEditKey = EditableRoute['taskType'] | 'coordinator' | number
 
 export function canInherit(target: ExecutionTarget): boolean {
@@ -33,8 +31,16 @@ export function editForTarget(row: EditableRoute, target: ExecutionTarget): Rout
     return { target, model: 'inherit', reasoningLevel: 'inherit', requirement: 'required' }
   }
   const inherits = row.model === 'inherit' || row.reasoningLevel === 'inherit'
-  if (inherits && !canInherit(target)) {
-    return { target, model: '', reasoningLevel: DEFAULT_EFFORT, requirement: 'required' }
+  if ((inherits && !canInherit(target)) || routingCli(row.target) !== routingCli(target)) {
+    return {
+      target,
+      model: '',
+      reasoningLevel: routingEffortFor(routingCli(target), '', row.reasoningLevel),
+      requirement: 'required'
+    }
+  }
+  if (inherits) {
+    return { target }
   }
   return {
     target,

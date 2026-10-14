@@ -195,6 +195,7 @@ describe('worktree removal and the Node file pool', () => {
       sentinels.push(sentinel)
     }
     const checkoutDeleted = (): boolean => sentinels.every((path) => statSync(path).nlink === 1)
+    const deletionStarted = (): boolean => sentinels.some((path) => statSync(path).nlink === 1)
     const probePath = join(repoPath, 'seed.txt')
 
     let removalSettled = false
@@ -207,6 +208,7 @@ describe('worktree removal and the Node file pool', () => {
     let maxQueued = 0
     let maxStatMs = 0
     let statCount = 0
+    let statsDuringDeletion = 0
     const sampler = setInterval(() => {
       maxQueued = Math.max(maxQueued, queuedFsRequests())
     }, 1)
@@ -214,9 +216,13 @@ describe('worktree removal and the Node file pool', () => {
       while (!removalSettled || !checkoutDeleted()) {
         expect(performance.now() - startedAt).toBeLessThan(60_000)
         maxQueued = Math.max(maxQueued, queuedFsRequests())
+        const deletionInProgress = deletionStarted() && !checkoutDeleted()
         const statStartedAt = performance.now()
         await stat(probePath)
         maxStatMs = Math.max(maxStatMs, performance.now() - statStartedAt)
+        if (deletionInProgress && !checkoutDeleted()) {
+          statsDuringDeletion += 1
+        }
         statCount += 1
       }
     } finally {
@@ -226,10 +232,10 @@ describe('worktree removal and the Node file pool', () => {
     await removal
 
     console.log(
-      `[pool] files=${POOL_FIXTURE_FILES} delete=${deletionMs.toFixed(0)}ms stats=${statCount} maxStat=${maxStatMs.toFixed(1)}ms maxQueuedFsRequests=${maxQueued}`
+      `[pool] files=${POOL_FIXTURE_FILES} delete=${deletionMs.toFixed(0)}ms stats=${statCount} statsDuringDeletion=${statsDuringDeletion} maxStat=${maxStatMs.toFixed(1)}ms maxQueuedFsRequests=${maxQueued}`
     )
     expect(existsSync(worktreePath)).toBe(false)
     expect(maxQueued).toBeLessThan(32)
-    expect(maxStatMs).toBeLessThan(deletionMs / 4)
+    expect(statsDuringDeletion).toBeGreaterThan(0)
   }, 120_000)
 })

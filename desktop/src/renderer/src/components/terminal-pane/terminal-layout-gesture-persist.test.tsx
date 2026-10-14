@@ -9,7 +9,9 @@ const RIGHT = '22222222-2222-4222-8222-222222222222'
 vi.mock('../../store', () => ({
   useAppStore: { getState: () => ({ terminalLayoutsByTabId: {} }) }
 }))
-vi.mock('@/runtime/web-runtime-session', () => ({ clearWebRuntimeTerminalBuffer: () => true }))
+vi.mock('@/runtime/web-runtime-terminal-buffer-actions', () => ({
+  clearWebRuntimeTerminalBuffer: () => true
+}))
 vi.mock('@/lib/pane-manager/terminal-scrollback-clear', () => ({
   clearTerminalScrollbackAndFollowOutput: vi.fn()
 }))

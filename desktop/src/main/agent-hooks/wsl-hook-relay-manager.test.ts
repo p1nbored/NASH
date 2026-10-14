@@ -14,8 +14,8 @@ vi.mock('./nash-managed-hook-scope', async (importOriginal) => ({
   isNashManagedHookAgent: () => true
 }))
 
-import { RelayDispatcher } from '../../relay/dispatcher'
-import { registerWslHookFsHandlers } from '../../relay/wsl-hook-fs-bridge'
+import { RelayDispatcher } from '../../wsl-guest/dispatcher'
+import { registerWslHookFsHandlers } from '../../wsl-guest/wsl-hook-fs-bridge'
 import { SshChannelMultiplexer, type MultiplexerTransport } from '../ssh/ssh-channel-multiplexer'
 import { createWslHookSftpAdapter } from './wsl-hook-fs-adapter'
 import {

@@ -1,7 +1,12 @@
 import type { SshConnectionStore } from './ssh-connection-store'
-import type { SshChannelMultiplexer } from './ssh-channel-multiplexer'
 import type { SshConnectionManager } from './ssh-connection-manager'
-import type { SshConnectionState, SshTarget } from '../../shared/ssh-types'
+import type {
+  SshConnectionState,
+  SshTarget,
+  SshTargetAddResult,
+  SshTargetCreateInput,
+  SshTargetUpdateInput
+} from '../../shared/ssh-types'
 
 /**
  * The SSH target/state registry, split out of `ipc/ssh.ts`.
@@ -14,8 +19,8 @@ import type { SshConnectionState, SshTarget } from '../../shared/ssh-types'
  * This holds only the registry: the store plus the two callbacks the handler layer
  * installs. `registerSshHandlers` populates it; the runtime reads it. Keeping the
  * indirection (rather than the runtime holding a manager directly) is deliberate —
- * SSH providers register after construction and may reconnect, so callers must
- * resolve the current generation rather than freeze one.
+ * `registerSshHandlers` may re-run, so callers must resolve the current generation
+ * rather than freeze one.
  */
 
 let sshStore: SshConnectionStore | null = null
@@ -61,36 +66,27 @@ export function listRegisteredRemovedSshTargetLabels(): Record<string, string> {
   return sshStore?.listRemovedTargetLabels() ?? {}
 }
 
-let registeredGetActiveMultiplexer:
-  | ((connectionId: string) => SshChannelMultiplexer | undefined)
-  | null = null
-
-export function setSshActiveMultiplexerResolver(
-  resolve: ((connectionId: string) => SshChannelMultiplexer | undefined) | null
-): void {
-  registeredGetActiveMultiplexer = resolve
+/** Add/update/remove with the same rules the desktop's SSH settings use. */
+export type SshTargetMutations = {
+  add: (target: SshTargetCreateInput) => SshTargetAddResult
+  update: (targetId: string, updates: SshTargetUpdateInput) => SshTarget | null
+  remove: (targetId: string) => Promise<void>
 }
 
-/**
- * The live channel multiplexer for a connection, or undefined when the target is not
- * connected. Undefined means "not connected", never "the connection died" — callers
- * must not read absence here as an `exited` verdict (docs/reference/ssh-execution-boundary.md).
- *
- * Why it throws when no resolver is installed rather than returning undefined: that
- * case is a wiring error, not a connection state, and the two are indistinguishable to
- * callers. A host that never loaded the SSH layer would otherwise report every target as
- * quietly "not connected" — which is precisely the unverifiable-reported-as-exited
- * conflation the execution-boundary doc exists to prevent.
- */
-export function getActiveMultiplexer(connectionId: string): SshChannelMultiplexer | undefined {
-  if (!registeredGetActiveMultiplexer) {
-    throw new Error('ssh_active_multiplexer_resolver_not_installed')
+let registeredSshTargetMutations: SshTargetMutations | null = null
+
+export function setSshTargetMutations(mutations: SshTargetMutations | null): void {
+  registeredSshTargetMutations = mutations
+}
+
+export function getRegisteredSshTargetMutations(): SshTargetMutations {
+  if (!registeredSshTargetMutations) {
+    throw new Error('ssh_handlers_not_registered')
   }
-  return registeredGetActiveMultiplexer(connectionId)
+  return registeredSshTargetMutations
 }
 
 let registeredGetSshConnectionManager: (() => SshConnectionManager | null) | null = null
-let registeredHasDirectSshAuthority: ((targetId: string) => boolean) | null = null
 
 export function setSshConnectionManagerResolver(
   resolve: (() => SshConnectionManager | null) | null
@@ -108,15 +104,4 @@ export function setSshConnectionManagerResolver(
  */
 export function getSshConnectionManager(): SshConnectionManager | null {
   return registeredGetSshConnectionManager?.() ?? null
-}
-
-export function setDirectSshAuthorityResolver(
-  resolve: ((targetId: string) => boolean) | null
-): void {
-  registeredHasDirectSshAuthority = resolve
-}
-
-/** Whether this process currently holds the target's relay session; false when unregistered. */
-export function hasRegisteredDirectSshAuthority(targetId: string): boolean {
-  return registeredHasDirectSshAuthority?.(targetId) ?? false
 }

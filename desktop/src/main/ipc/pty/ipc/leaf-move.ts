@@ -2,6 +2,7 @@ import { getPtyIpc } from '../../pty-host-bindings'
 import type { Store } from '../../../persistence'
 import type { OrcaRuntimeService } from '../../../runtime/orca-runtime'
 import { agentHookServer } from '../../../agent-hooks/server'
+import { forgetFailedAgentLaunches } from '../../../agent-launch/agent-launch-pane-attachment'
 import {
   isTerminalLeafMoveRequest,
   terminalLeafMovePaneKeys,
@@ -22,6 +23,11 @@ export async function commitLeafMoveAndRekey(
     return result
   }
   const { from: fromPaneKey, to: toPaneKey } = terminalLeafMovePaneKeys(request)
+  forgetFailedAgentLaunches(request.worktreeId, {
+    kind: 'pane',
+    tabId: request.sourceTabId,
+    leafId: request.leafId
+  })
   try {
     // The process keeps the pane key baked into its env, so status must alias old to new.
     agentHookServer.transferPaneAuthority(

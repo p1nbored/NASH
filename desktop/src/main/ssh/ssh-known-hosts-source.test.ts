@@ -6,7 +6,6 @@ import { parseSshGOutput, type SshResolvedConfig } from './ssh-g-config-resoluti
 import { matchKnownHosts, readHostKeyType, type KnownHostsEntry } from './ssh-known-hosts'
 import {
   defaultKnownHostsFiles,
-  loadKnownHostsEntries,
   loadKnownHostsEvidence,
   resolveKnownHostsFiles,
   resolveKnownHostsLookupHost
@@ -202,7 +201,11 @@ describe('parsing real ssh -G output', () => {
   })
 })
 
-describe('loadKnownHostsEntries', () => {
+// The caller runs `matchKnownHosts` once over the union, so a hit in any file wins.
+const loadKnownHostsEntries = async (files: readonly string[]): Promise<KnownHostsEntry[]> =>
+  (await loadKnownHostsEvidence(files)).entries
+
+describe('the union of known_hosts entries', () => {
   it('unions the entries of every file', async () => {
     const root = await createRoot()
     const userFile = join(root, 'known_hosts')

@@ -1,17 +1,21 @@
+import { withWorkspaceRoute } from '../../../../src/navigation/workspace-route'
+import {
+  useWorkspaceExecutionHost,
+  workspaceRouteParams
+} from '../../../../src/navigation/workspace-execution-host'
 import { useLocalSearchParams } from 'expo-router'
 import { MobileAgentSessionHistoryPanel } from '../../../../src/agent-history/MobileAgentSessionHistoryPanel'
 import { MobileWebShellScreen } from '../../../../src/mobile-web-shell/MobileWebShellScreen'
-import { ShellSwitchPendingScreen } from '../../../../src/mobile-web-shell/ShellSwitchPendingScreen'
 import { shellScreenRoute } from '../../../../src/mobile-web-shell/shell-screen-route'
-import { useShellSwitchDecision } from '../../../../src/mobile-web-shell/shell-switch-decision'
+import { shellSwitchDecision } from '../../../../src/mobile-web-shell/shell-switch-decision'
 import { firstParam } from '../../../../src/navigation/route-param-reader'
 
 /**
  * Agent session history, from the desktop's bundle or from this app.
  *
  * The switch is `index.tsx`'s, for its reasons: the shell renders the page only for a route the
- * bundle lists with grants this app implements, `fallback` is what a negotiation that said no
- * falls back to, and a flag read still settling paints neither renderer.
+ * bundle lists with grants this app implements, and `fallback` is what a negotiation that said no
+ * falls back to.
  *
  * Two dynamic segments rather than one, so both are encoded: `useLocalSearchParams` answers the
  * decoded value, and a worktree id or a deep-linked host id carrying `/`, `?`, `#` or whitespace
@@ -29,7 +33,7 @@ import { firstParam } from '../../../../src/navigation/route-param-reader'
  * routes first, and every switch now asks the one module beside the schema
  * rather than carrying its own copy of the call.
  */
-export default function MobileAgentSessionHistoryScreen() {
+export default withWorkspaceRoute(function MobileAgentSessionHistoryScreen() {
   const params = useLocalSearchParams<{
     hostId?: string | string[]
     worktreeId?: string | string[]
@@ -38,26 +42,26 @@ export default function MobileAgentSessionHistoryScreen() {
   const hostId = firstParam(params.hostId)
   const worktreeId = firstParam(params.worktreeId)
   const name = firstParam(params.name)
+  const executionHost = useWorkspaceExecutionHost()
+  const routeParams = {
+    ...(name === '' ? {} : { name }),
+    ...workspaceRouteParams(executionHost)
+  }
   const panel = (
     <MobileAgentSessionHistoryPanel hostId={hostId} worktreeId={worktreeId} name={name} />
   )
 
-  // Built before the decision rather than after it, as every switch does now: the decision needs
-  // to know whether the shell is a possible outcome before it can say a neutral frame is owed.
   const route =
     hostId && worktreeId
       ? shellScreenRoute({
           pathname: `/h/${encodeURIComponent(hostId)}/agent-history/${encodeURIComponent(worktreeId)}`,
           // Omitted rather than empty: the page reads the label off the search half, and a `name=`
           // with nothing after it is a label, where an absent one lets the panel derive its own.
-          ...(name === '' ? {} : { params: { name } })
+          ...(Object.keys(routeParams).length === 0 ? {} : { params: routeParams })
         })
       : null
-  const decision = useShellSwitchDecision(route)
+  const decision = shellSwitchDecision(route)
 
-  if (decision.kind === 'pending') {
-    return <ShellSwitchPendingScreen />
-  }
   if (decision.kind === 'native') {
     return panel
   }
@@ -73,4 +77,4 @@ export default function MobileAgentSessionHistoryScreen() {
       fallback={panel}
     />
   )
-}
+})

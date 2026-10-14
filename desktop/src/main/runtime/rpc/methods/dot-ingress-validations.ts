@@ -23,6 +23,7 @@ import { defineMethod } from '../core'
 export const DOT_INGRESS_VALIDATION_RPC_METHODS = [
   defineMethod({
     name: 'dotIngress.validations.list',
+    permission: 'workspace',
     params: DotVersionedParamsSchema,
     handler: (raw, context) => {
       requireDotIngressCaller(context.dotIngressCaller)
@@ -36,6 +37,7 @@ export const DOT_INGRESS_VALIDATION_RPC_METHODS = [
   }),
   defineMethod({
     name: 'dotIngress.validations.decide',
+    permission: 'workspace',
     params: DotVersionedParamsSchema,
     handler: async (raw, context) => {
       requireDotIngressCaller(context.dotIngressCaller)

@@ -22,10 +22,9 @@ import {
   ORCAD_RUNTIMES_DIRNAME,
   orcadNodeRuntimeExecutable
 } from '../../shared/orcad-artifacts'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { shellEscape } from './ssh-connection-utils'
-import { execCommand } from './ssh-relay-deploy-helpers'
-import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
+import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import { uploadRelayDirectory } from './ssh-relay-install-transfers'
 import {
   isWindowsRemoteHost,
@@ -34,7 +33,7 @@ import {
   type RemoteHostPlatform
 } from './ssh-remote-platform'
 import { assertPosixOrcadHost } from './orcad-remote-host-support'
-import { withRuntimeStoreLock } from './remote-node-runtime-store-lock'
+import { withRuntimeStoreLock, type HeldRuntimeStoreLock } from './remote-node-runtime-store-lock'
 import {
   assertRemoteNodeRuntimePromoted,
   REMOTE_NODE_RUNTIME_EXIT_PREFIX,
@@ -47,8 +46,7 @@ import {
   windowsNodeRuntimePresentCommand,
   windowsNodeRuntimeProbeCommand,
   windowsNodeRuntimePromoteCommand,
-  windowsNodeRuntimeStageCleanupCommand,
-  WINDOWS_NODE_RUNTIME_PROMOTE_TIMEOUT_MS
+  windowsNodeRuntimeStageCleanupCommand
 } from './orcad-remote-node-runtime-windows'
 
 export {
@@ -62,6 +60,11 @@ export {
   RemoteNodeRuntimeSelfTestError
 } from './orcad-remote-node-runtime-report'
 const VERIFIED_MARKER = REMOTE_NODE_RUNTIME_VERIFIED_MARKER
+/**
+ * Any step that reads the whole ~110 MiB executable (probe hash, extract, self-test) takes minutes
+ * on slow storage (HH-3), and Windows may fall back to Expand-Archive.
+ */
+export const NODE_RUNTIME_PROMOTE_TIMEOUT_MS = 300_000
 /** Upload stages sit in the store beside the runtimes they become; store GC sweeps stale ones. */
 export const RUNTIME_STORE_STAGE_PREFIX = '.stage-'
 
@@ -110,7 +113,7 @@ export function nodeRuntimeStageDir(
 }
 
 // Why both tools: GNU/busybox ship sha256sum, macOS ships shasum; either prints the digest first.
-function sha256Of(path: string): string {
+export function remoteSha256Command(path: string): string {
   return `{ sha256sum ${path} 2>/dev/null || shasum -a 256 ${path}; } | cut -d' ' -f1`
 }
 
@@ -127,26 +130,38 @@ export function probeRemoteNodeRuntimeCommand(
   const verified = shellEscape(joinRemotePath(host, runtimeDir, VERIFIED_MARKER))
   return (
     `if [ -f ${verified} ] && [ -x ${executable} ] && ` +
-    `[ "$(${sha256Of(executable)})" = ${shellEscape(pinnedNodeRuntimeAsset(target).executableSha256)} ]; ` +
+    `[ "$(${remoteSha256Command(executable)})" = ${shellEscape(pinnedNodeRuntimeAsset(target).executableSha256)} ]; ` +
     `then echo ${REMOTE_NODE_RUNTIME_READY}; else echo ${REMOTE_NODE_RUNTIME_MISSING}; fi`
   )
 }
 
 /** Cheap warm-path check: a published runtime has its marker and an executable; no re-hash. */
+/**
+ * READY when the verified runtime is in place. With `run`, the same command also runs it and
+ * reports a refusal the way promotion does, so a host whose exec policy or libraries changed since
+ * the install is caught before a launch, at no extra round trip.
+ */
 export function remoteNodeRuntimePresentCommand(
   host: RemoteHostPlatform,
-  runtimeDir: string
+  runtimeDir: string,
+  run = false
 ): string {
   if (isWindowsRemoteHost(host)) {
-    return windowsNodeRuntimePresentCommand(runtimeDir)
+    return windowsNodeRuntimePresentCommand(runtimeDir, run)
   }
   const executable = shellEscape(
     joinRemotePath(host, runtimeDir, ...ORCAD_NODE_RUNTIME_POSIX_EXECUTABLE.split('/'))
   )
   const verified = shellEscape(joinRemotePath(host, runtimeDir, VERIFIED_MARKER))
+  const ready = run
+    ? `{ orca_rt_out=$(${executable} --version 2>&1); orca_rt_status=$?; ` +
+      `if [ "$orca_rt_out" = ${shellEscape(`v${NODE_RUNTIME_PIN.version}`)} ]; then echo ${REMOTE_NODE_RUNTIME_READY}; ` +
+      `else echo ${REMOTE_NODE_RUNTIME_SELFTEST_FAILED}; echo "${REMOTE_NODE_RUNTIME_EXIT_PREFIX}$orca_rt_status"; ` +
+      `printf '%s\\n' "$orca_rt_out" | head -c 4000; fi; }`
+    : `echo ${REMOTE_NODE_RUNTIME_READY}`
   return (
     `if [ -f ${verified} ] && [ -x ${executable} ]; ` +
-    `then echo ${REMOTE_NODE_RUNTIME_READY}; else echo ${REMOTE_NODE_RUNTIME_MISSING}; fi`
+    `then ${ready}; else echo ${REMOTE_NODE_RUNTIME_MISSING}; fi`
   )
 }
 
@@ -176,7 +191,7 @@ export function promoteRemoteNodeRuntimeCommand(
   return [
     `cd ${stage} || exit 1`,
     `tar -xzf ${shellEscape(joinRemotePath(host, args.stageDir, args.archive))} ${shellEscape(member)} || { echo ORCA_NODE_RUNTIME_EXTRACT_FAILED; exit 1; }`,
-    `[ "$(${sha256Of(extracted)})" = ${shellEscape(asset.executableSha256)} ] || { echo ORCA_NODE_RUNTIME_HASH_MISMATCH; exit 1; }`,
+    `[ "$(${remoteSha256Command(extracted)})" = ${shellEscape(asset.executableSha256)} ] || { echo ORCA_NODE_RUNTIME_HASH_MISMATCH; exit 1; }`,
     `chmod 755 ${extracted}`,
     // Why run it: executing is the only reliable check for noexec mounts and a wrong libc.
     // Exit 0 on refusal so the caller receives the loader's words to classify, not a bare exit 1.
@@ -190,6 +205,21 @@ export function promoteRemoteNodeRuntimeCommand(
     `: > ${verified}`,
     `echo ${REMOTE_NODE_RUNTIME_READY}`
   ].join(' && ')
+}
+
+/**
+ * The under-lock step as one host command: publish unless a sibling already did while this client
+ * uploaded. One command, so the host's lock release covers the re-hash as well as the promote.
+ */
+export function recheckAndPromoteRemoteNodeRuntimeCommand(
+  host: RemoteHostPlatform,
+  args: Parameters<typeof promoteRemoteNodeRuntimeCommand>[1]
+): string {
+  const probe = probeRemoteNodeRuntimeCommand(host, args.runtimeDir, args.target)
+  return (
+    `if [ "$(${probe})" = ${REMOTE_NODE_RUNTIME_READY} ]; then echo ${REMOTE_NODE_RUNTIME_READY}; ` +
+    `else ${promoteRemoteNodeRuntimeCommand(host, args)}; fi`
+  )
 }
 
 /**
@@ -222,7 +252,7 @@ export type EnsuredRemoteNodeRuntime = {
  * when needed, and returns its executable and whether this call uploaded it.
  */
 export async function ensureRemoteOrcadNodeRuntime(options: {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   slotDir: string
   target: NodeRuntimeTarget
@@ -231,6 +261,8 @@ export async function ensureRemoteOrcadNodeRuntime(options: {
   signal?: AbortSignal
   /** Wraps each host round trip, so a caller can tell an unconfirmed channel from a local failure. */
   remoteStep?: RemoteRuntimeStep
+  /** Replaces the POSIX first probe only; the under-lock recheck always hashes. */
+  posixProbeCommand?: typeof probeRemoteNodeRuntimeCommand
 }): Promise<EnsuredRemoteNodeRuntime> {
   const { conn, host, target, signal } = options
   const remoteStep = options.remoteStep ?? runDirectly
@@ -250,8 +282,8 @@ export async function ensureRemoteOrcadNodeRuntime(options: {
   const probe = await exec(
     windows
       ? windowsNodeRuntimeProbeCommand(runtimeDir, target, stageDir)
-      : probeRemoteNodeRuntimeCommand(host, runtimeDir, target),
-    { signal }
+      : (options.posixProbeCommand ?? probeRemoteNodeRuntimeCommand)(host, runtimeDir, target),
+    { signal, timeoutMs: NODE_RUNTIME_PROMOTE_TIMEOUT_MS }
   )
   if (probe.trim() === REMOTE_NODE_RUNTIME_READY) {
     return { executable, transfer: 'cached' }
@@ -276,33 +308,39 @@ export async function ensureRemoteOrcadNodeRuntime(options: {
     await remoteStep(() => uploadRelayDirectory(conn, uploadDir, stageDir, host, { signal }))
     let promoteRan = false
     // Why unwrapped on Windows: these are already self-contained powershell.exe command lines.
-    const runLocked = (command: string, timeoutMs?: number): Promise<string> =>
-      execCommand(conn, command, { signal, timeoutMs, wrapCommand: !windows })
-    const promote = (): Promise<string> => {
+    const runLocked = (command: string): Promise<string> =>
+      execCommand(conn, command, {
+        signal,
+        timeoutMs: NODE_RUNTIME_PROMOTE_TIMEOUT_MS,
+        wrapCommand: !windows
+      })
+    // Why re-probe under the lock: a sibling installer may have published this pin while we uploaded.
+    const recheckAndPromote = async (held: HeldRuntimeStoreLock): Promise<string> => {
+      if (!windows) {
+        return runLocked(
+          held.releasedByHostOnExit(
+            recheckAndPromoteRemoteNodeRuntimeCommand(host, {
+              stageDir,
+              archive,
+              runtimeDir,
+              target,
+              token
+            })
+          )
+        )
+      }
+      if (
+        (await runLocked(probeRemoteNodeRuntimeCommand(host, runtimeDir, target))).trim() ===
+        REMOTE_NODE_RUNTIME_READY
+      ) {
+        return REMOTE_NODE_RUNTIME_READY
+      }
       promoteRan = true
-      return windows
-        ? runLocked(
-            windowsNodeRuntimePromoteCommand({ stageDir, archive, runtimeDir, target }),
-            WINDOWS_NODE_RUNTIME_PROMOTE_TIMEOUT_MS
-          )
-        : runLocked(
-            promoteRemoteNodeRuntimeCommand(host, { stageDir, archive, runtimeDir, target, token })
-          )
+      return runLocked(windowsNodeRuntimePromoteCommand({ stageDir, archive, runtimeDir, target }))
     }
     // Why the lock on Windows too: store GC collects there as well (design D5).
     const promoted = await remoteStep(() =>
-      withRuntimeStoreLock(
-        conn,
-        host,
-        remoteDirname(runtimeDir, host),
-        // Why re-probe under the lock: a sibling installer may have published this pin while we uploaded.
-        async () =>
-          (await runLocked(probeRemoteNodeRuntimeCommand(host, runtimeDir, target))).trim() ===
-          REMOTE_NODE_RUNTIME_READY
-            ? REMOTE_NODE_RUNTIME_READY
-            : promote(),
-        signal
-      )
+      withRuntimeStoreLock(conn, host, remoteDirname(runtimeDir, host), recheckAndPromote, signal)
     )
     // Why: the Windows promote script removes its stage on every path; skip a second powershell.exe.
     hostRemovedStage = windows && promoteRan

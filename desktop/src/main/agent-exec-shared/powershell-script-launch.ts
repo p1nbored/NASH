@@ -1,5 +1,5 @@
 import { win32 as pathWin32 } from 'node:path'
-import { windowsPowerShellPath } from '../../shared/child-process/windows-system-binary'
+import { windowsPowerShellPath } from '@orca/process-host/windows-system-binary'
 
 // D-023 amendment: a CLI installed only as a `.ps1` launcher starts the way a shell would run it.
 

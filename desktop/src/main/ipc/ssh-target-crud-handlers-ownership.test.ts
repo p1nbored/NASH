@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => {
     state,
     addTarget: vi.fn(),
     updateTarget: vi.fn(),
+    setMutations: vi.fn(),
     closeTunnel: vi.fn(async () => {}),
     disconnect: vi.fn(async () => {})
   }
@@ -21,7 +22,8 @@ vi.mock('../ssh/ssh-target-registry', () => ({
     addTarget: mocks.addTarget,
     updateTarget: mocks.updateTarget,
     lastRepoReadoptions: []
-  })
+  }),
+  setSshTargetMutations: mocks.setMutations
 }))
 vi.mock('./ssh-session-teardown', () => ({ removeRegisteredSshTarget: mocks.remove }))
 vi.mock('../ssh/orcad-managed-tunnel', () => ({ closeOrcadManagedTunnel: mocks.closeTunnel }))
@@ -89,6 +91,14 @@ describe('SSH target CRUD against managed orcad targets', () => {
     await expect(handler('ssh:removeTarget')(null, { id: 'ssh-1' })).rejects.toThrow(
       'managed Orca server'
     )
+    expect(mocks.remove).not.toHaveBeenCalled()
+  })
+
+  it('gives paired clients the same rules: a managed host is refused there too', async () => {
+    const mutations = mocks.setMutations.mock.calls.at(-1)?.[0]
+    await expect(mutations.remove('ssh-1')).rejects.toThrow('Settings › Managed servers')
+    mutations.update('ssh-1', { host: 'elsewhere', generation: 9 })
+    expect(mocks.updateTarget).toHaveBeenCalledWith('ssh-1', { host: 'elsewhere' })
     expect(mocks.remove).not.toHaveBeenCalled()
   })
 

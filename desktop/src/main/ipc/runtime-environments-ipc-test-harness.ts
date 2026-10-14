@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 import type { Mock } from 'vitest'
-import { getPreferredPairingOffer } from '../../shared/runtime-environments'
+import { getPreferredPairedRuntimeConnection } from '../../shared/runtime-environments'
 import { encodePairingOffer } from '../../shared/pairing'
 import { resolveEnvironment } from '../../shared/runtime-environment-store'
 import { createRuntimeEnvironmentStatusOwner } from './runtime-environment-status-owner'
@@ -32,7 +32,7 @@ export function withRuntimeStatusOwners<T extends Record<string, Mock>>(transpor
           establish: () => {
             transport.ensureRemoteRuntimeSharedControlConnection?.(
               environment.id,
-              getPreferredPairingOffer(environment)
+              getPreferredPairedRuntimeConnection(environment)
             )
             transport.reconnectRemoteRuntimeSharedControlConnection?.(environment.id)
           },

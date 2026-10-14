@@ -1,3 +1,4 @@
+import { isAgentSessionProviderContextBoundary } from '../../../src/shared/agent-session-provider-context'
 import { MobileSelectableText as Text } from '../components/MobileSelectableText'
 import { memo, useCallback, useContext, useState } from 'react'
 import { Image, Text as NativeText, View } from 'react-native'
@@ -21,6 +22,8 @@ import {
 } from '../../../src/shared/agent-session-host-status-rows'
 import type { NativeChatBlock, NativeChatMessage } from '../../../src/shared/native-chat-types'
 import { MobileMarkdown } from '../components/MobileMarkdown'
+import { MobileSourceCopyButton } from '../components/MobileSourceCopyButton'
+import { nativeChatMessagePlainText } from './mobile-native-chat-message-plain-text'
 import { deriveNativeChatRowContent } from '../../../src/shared/native-chat-row-content'
 import { MobileNativeChatReasoningRow } from './MobileNativeChatReasoningRow'
 import { MobileNativeChatTurnStatus } from './MobileNativeChatTurnStatus'
@@ -57,6 +60,18 @@ function Prose({
   onLongPress?: () => void
 }): React.JSX.Element | null {
   if (isTextBlock(block)) {
+    if (isAgentSessionProviderContextBoundary(block.contextClear)) {
+      return (
+        <View style={styles.contextBoundary}>
+          <Text
+            selectable={INLINE_TEXT_SELECTION}
+            style={[styles.hostNotice, { fontSize: TEXT_SIZE * fontScale }]}
+          >
+            {block.text}
+          </Text>
+        </View>
+      )
+    }
     if (isAgentSessionHostStatusPresentation(block.presentation)) {
       return (
         <Text
@@ -133,6 +148,7 @@ function MobileNativeChatMessageImpl({
   reasoningIsLive = false,
   reasoningExpanded,
   onToggleReasoning,
+  unsentNotice,
   subagentGroupsOpen,
   onToggleSubagentGroup
 }: {
@@ -162,6 +178,8 @@ function MobileNativeChatMessageImpl({
   /** The transcript-held disclosure of a reasoning row; one stable handler takes its key. */
   reasoningExpanded?: boolean
   onToggleReasoning?: (key: string) => void
+  /** Why the host did not deliver this message, when it is drawn as not sent. */
+  unsentNotice?: string
   /** The roster groups the reader opened, held by the transcript; only a roster row gets it. */
   subagentGroupsOpen?: ReadonlySet<string>
   onToggleSubagentGroup?: (groupId: string) => void
@@ -193,6 +211,9 @@ function MobileNativeChatMessageImpl({
   // Keep the memoized Markdown context stable as the message streams.
   const openActions = useCallback(() => setActionsOpen(true), [])
   const onLongPress = INLINE_TEXT_SELECTION ? undefined : openActions
+  // Like desktop's hover-only copy: a tap on the message shows it, another tap hides it.
+  const [copyShown, setCopyShown] = useState(false)
+  const toggleCopy = useCallback(() => setCopyShown((shown) => !shown), [])
   const renderVisual = useContext(MobileNativeChatVisualContext) ?? undefined
   // Structured replies grow in place: only the last block of the newest row may still be typing.
   const growingBlock =
@@ -241,6 +262,10 @@ function MobileNativeChatMessageImpl({
       </>
     )
   }
+  const copyText =
+    INLINE_TEXT_SELECTION && (message.role === 'user' || message.role === 'assistant')
+      ? nativeChatMessagePlainText(message)
+      : ''
   return (
     <>
       {/* A turn with no user bubble carries its bar above its first row. */}
@@ -248,6 +273,7 @@ function MobileNativeChatMessageImpl({
       <View style={[styles.row, isUser && styles.rowUser]}>
         <Content
           onLongPress={onLongPress}
+          onPress={copyText.length > 0 ? toggleCopy : undefined}
           style={[
             styles.content,
             isUser && styles.userBubble,
@@ -295,6 +321,14 @@ function MobileNativeChatMessageImpl({
             />
           ) : null}
         </Content>
+        {unsentNotice ? <NativeText style={styles.unsentNotice}>{unsentNotice}</NativeText> : null}
+        {copyShown && copyText.length > 0 ? (
+          <MobileSourceCopyButton
+            key={message.id}
+            text={copyText}
+            accessibilityLabel="Copy message"
+          />
+        ) : null}
       </View>
       {actionsOpen ? (
         <MobileNativeChatMessageActionsSheet

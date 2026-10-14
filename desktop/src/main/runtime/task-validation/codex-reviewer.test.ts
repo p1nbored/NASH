@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { runProcess, type ProcessSpec, type ProcessResult } from '../../../shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
+import type { ProcessSpec, ProcessResult } from '@orca/process-host/process-spec'
 import { createCodexReviewer } from './codex-reviewer'
 import { REVIEW_OUTPUT_SCHEMA } from './model-review-verdict'
 import type { ReviewerRequest } from './reviewer-runner'
@@ -135,10 +136,17 @@ describe('Codex reviewer using Orca native one-shot primitives', () => {
 
 it('executes a harmless Node stand-in through the real Orca process runner', async () => {
   const review = createCodexReviewer({
-    resolveInvocation: async () => ({ command: process.execPath, env: { ...process.env, FIXTURE_REVIEW: REVIEW } }),
-    run: (spec) => runProcess({ ...spec, args: ['-e', 'process.stdout.write(process.env.FIXTURE_REVIEW)'] })
+    resolveInvocation: async () => ({
+      command: process.execPath,
+      env: { ...process.env, FIXTURE_REVIEW: REVIEW }
+    }),
+    run: (spec) =>
+      runProcess({ ...spec, args: ['-e', 'process.stdout.write(process.env.FIXTURE_REVIEW)'] })
   })
-  await expect(review(request({ workspacePath: process.cwd() }))).resolves.toMatchObject({ status: 'completed', text: REVIEW })
+  await expect(review(request({ workspacePath: process.cwd() }))).resolves.toMatchObject({
+    status: 'completed',
+    text: REVIEW
+  })
 })
 it('cancels a harmless running Node stand-in through the native termination barrier', async () => {
   const controller = new AbortController()
@@ -147,20 +155,33 @@ it('cancels a harmless running Node stand-in through the native termination barr
     run: (spec) => runProcess({ ...spec, args: ['-e', 'setInterval(()=>{},1000)'] })
   })
   const timer = setTimeout(() => controller.abort(), 150)
-  try { await expect(review(request({ workspacePath: process.cwd(), signal: controller.signal }))).resolves.toEqual({ status: 'failed', reason: 'cancelled' }) }
-  finally { clearTimeout(timer) }
+  try {
+    await expect(
+      review(request({ workspacePath: process.cwd(), signal: controller.signal }))
+    ).resolves.toEqual({ status: 'failed', reason: 'cancelled' })
+  } finally {
+    clearTimeout(timer)
+  }
 })
 it('cancels while queued without releasing the previous Codex lock or launching later', async () => {
-  const f = fixture(); let closeFirst!: () => void
-  f.run.mockImplementationOnce(async (spec) => { closeFirst = spec.onChildTerminated!; return answer() })
+  const f = fixture()
+  let closeFirst!: () => void
+  f.run.mockImplementationOnce(async (spec) => {
+    closeFirst = spec.onChildTerminated!
+    return answer()
+  })
   await f.review(request())
   const controller = new AbortController()
   const queued = f.review(request({ signal: controller.signal }))
-  await Promise.resolve(); await Promise.resolve(); controller.abort()
+  await Promise.resolve()
+  await Promise.resolve()
+  controller.abort()
   try {
     await expect(queued).resolves.toEqual({ status: 'failed', reason: 'cancelled' })
     expect(f.run).toHaveBeenCalledTimes(1)
-  } finally { closeFirst() }
+  } finally {
+    closeFirst()
+  }
   await f.review(request())
   expect(f.run).toHaveBeenCalledTimes(2)
 })

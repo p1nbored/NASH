@@ -1,4 +1,9 @@
 {
+  "accounts": {
+    "wslAccountNotApplied": {
+      "description": "Agents there use the distro's default Claude and Codex accounts until NASH in WSL is updated."
+    }
+  },
   "agentsSidebarIntro": {
     "migrated": {
       "action": "Open Agents"
@@ -83,6 +88,12 @@
         "dismiss": "Dismiss",
         "dismissUnconfirmed": "Dismissing the resume offer was not confirmed — it may still be in the status bar."
       },
+      "NativeChatResumeRunPanel": {
+        "finished": "These chats were working when NASH closed. NASH restored each one where it stopped, with its full context, and asked the agent to check what it was doing before carrying on. Your own prompts weren’t re-sent.",
+        "finishedPartial": "These chats were working when NASH closed. The ones NASH resumed were restored where they stopped, with their full context, and asked to check what they were doing before carrying on. Your own prompts weren’t re-sent. Check the list for chats that still need attention or can be resumed.",
+        "finishedPartialUpdate": "These chats were working when NASH installed an update. The ones NASH resumed were restored where they stopped, with their full context, and asked to check what they were doing before carrying on. Your own prompts weren’t re-sent. Check the list for chats that still need attention or can be resumed.",
+        "finishedUpdate": "These chats were working when NASH installed an update. NASH restored each one where it stopped, with its full context, and asked the agent to check what it was doing before carrying on. Your own prompts weren’t re-sent."
+      },
       "NewWorkspaceComposerCard": {
         "0e587e31fb": "yaml",
         "2132b670da": "both",
@@ -136,6 +147,7 @@
         "ff84e1f54c": "{{value0}} {{value1}} as viewed"
       },
       "StarNagCard": {
+        "30c36231c1": "NASH is built on NASH, which is open source. If it helped today, a GitHub star for NASH helps other developers find it.",
         "68a41bc3aa": "Could not star with",
         "73dfd4eb8d": "Don't ask again",
         "92b0f9d921": "is authenticated and try again.",
@@ -193,6 +205,13 @@
       "Terminal": {
         "cdc9ac4b2d": "editor"
       },
+      "UnexpectedSignoutCard": {
+        "4b7d2e8f1a": "Connect NASH Mobile to this desktop across cellular or any Wi-Fi.",
+        "5a1c8d3e6f": "Sign in again to restore Artifact sharing, NASH Relay, and skill sharing.",
+        "6e3f1a9c5b": "NASH Relay",
+        "7b4d9e1f2a": "Sign in again as {{value0}} to restore Artifact sharing, NASH Relay, and skill sharing.",
+        "c5b3e8a17d": "Sign in to NASH Cloud"
+      },
       "UpdateCard": {
         "522df222b9": "spinner",
         "7ffc08506e": "check",
@@ -222,13 +241,21 @@
         }
       },
       "artifacts": {
+        "ArtifactPublishButton": {
+          "accountTitle": "NASH cloud account"
+        },
         "ArtifactsPage": {
           "openArtifact": "Open artifact",
+          "reconnectHeading": "Sign in to NASH Cloud again",
+          "signIn": "Sign in to NASH Cloud",
+          "signInAgain": "Sign in to NASH Cloud again to load artifacts.",
           "signInCopy": "Sign in to view and manage artifacts shared through your account.",
-          "signInHeading": "Sign in to Orca Cloud"
+          "signInHeading": "Sign in to NASH Cloud",
+          "unconfiguredCopy": "NASH Cloud sign-in is not configured on this machine yet."
         },
         "artifact-publish-flow": {
-          "5cb4f5ec36": "Copy link"
+          "5cb4f5ec36": "Copy link",
+          "bba20daa6d": "Sign in to NASH Cloud and try again."
         }
       },
       "automations": {
@@ -683,10 +710,15 @@
       },
       "mobile": {
         "MobileHero": {
+          "266c18c105": "Open NASH Mobile to pick up where you left off, or pair another device.",
+          "5410d55d79": "NASH Mobile",
           "79d2f480da": "Network interface to advertise",
           "7af266b80d": "Install QR code",
           "bb0074ce11": "Pairing QR code",
           "ca85e595a7": "No interfaces found",
+          "d1495e5e64": "Open NASH Mobile, tap",
+          "e75647ace0": "Scan the QR with your phone or open the install link to grab NASH Mobile.",
+          "pairingQrError": "This pairing code couldn’t be rendered as a QR code. Copy it into NASH Mobile instead.",
           "relayDegradedNotice": "Relay couldn’t be reached — this code only works on your LAN or Tailscale."
         },
         "MobilePage": {
@@ -694,8 +726,26 @@
           "c5909374cf": "intro"
         },
         "MobilePageToolbar": {
+          "9883b58693": "Close NASH Mobile",
           "a4f8c2d91e": "Hide from sidebar",
           "b7e3d1c84a": "Show in sidebar"
+        },
+        "MobileRelayMintFailureNotice": {
+          "notEntitledTitle": "NASH Relay isn’t included with this NASH account.",
+          "rateLimitedBody": "NASH Relay is busy. Wait a minute and retry, or use LAN to pair over Tailscale or the same Wi‑Fi.",
+          "reconnectBody": "Sign in again to use NASH Relay, or use LAN to pair over Tailscale or the same Wi‑Fi.",
+          "reconnectTitle": "Your NASH cloud account session expired.",
+          "retryingTitle": "Retrying NASH Relay…",
+          "unavailableTitle": "NASH Relay isn’t available on this desktop."
+        },
+        "PhoneCarousel": {
+          "89c7713645": "NASH Mobile home screen"
+        },
+        "WindowsFirewallNotice": {
+          "blocked-title": "Windows may be blocking NASH Mobile",
+          "public-description": "Change this trusted Wi-Fi network to Private before allowing NASH Mobile connections.",
+          "relay-note": "Pairing still works over NASH Relay — allowing this only adds the faster local connection.",
+          "repair-success": "Windows Firewall now allows NASH Mobile on private networks"
         },
         "mobile": {
           "platform": {
@@ -762,12 +812,23 @@
           }
         }
       },
+      "orca": {
+        "profiles": {
+          "signout": {
+            "confirm": {
+              "description": "Artifacts and NASH Relay will be unavailable until you sign in again. Your local projects and worktrees won't be affected.",
+              "title": "Sign out of NASH Cloud?"
+            }
+          }
+        }
+      },
       "right": {
         "sidebar": {
           "AiVaultPanel": {
             "localSessionSshWorkspaceUnsupported": "This session's history is stored on this machine, so it can't resume in an SSH workspace. Open a local workspace instead.",
             "localWorkspacesOnly": "Resume from history is only available in local workspaces.",
             "remoteBrowseLocalHistory": "Remote workspaces can browse local history. Resume actions run from local workspaces.",
+            "resumeInNewCliHostTooOld": "Update NASH on the host that runs this chat to resume it in a new CLI.",
             "valueCopyFailed": "Unable to copy {{value0}}"
           },
           "AiVaultPanelControls": {
@@ -1163,7 +1224,8 @@
           "b2b1aa936d": "Paste your opencode.ai session cookie for rate limit fetching.",
           "b43e761fe5": "MiniMax cookie update failed.",
           "b8c2905c2b": "Could not load Codex accounts.",
-          "f5d8d2a6a1": "Open platform.minimax.io/console/usage in your browser and sign in."
+          "f5d8d2a6a1": "Open platform.minimax.io/console/usage in your browser and sign in.",
+          "remoteScopeLocalAccountsKept": "Accounts managed on this desktop are unchanged. Switch the default runtime back to Local desktop to view them."
         },
         "AdvancedNetworkSettingsSection": {
           "d93c7cd531": "Configure app-level network routing.",
@@ -1195,12 +1257,14 @@
           "2df8f79aa5": "Show NASH in the titlebar.",
           "42554f615f": "Choose the font used by the NASH interface.",
           "4de76f6902": "Control what appears in the application titlebar.",
-          "5db6ba961f": "Show the Orca Mobile button at the top of the left sidebar.",
+          "5db6ba961f": "Show the NASH Mobile button at the top of the left sidebar.",
+          "61d842eca0": "Show the NASH Mobile shortcut in the sidebar. It remains available from Toolbox.",
           "622e1c3465": "Scale the entire application interface.",
           "661942ab7f": "Show the Tasks button at the top of the left sidebar.",
           "6a272ca553": "Titlebar",
           "75f07ab60c": "Show files matched by .gitignore in the file explorer.",
           "872af9556e": "System Tray",
+          "9da1020447": "Show NASH Mobile Button",
           "e9f2ca5582": "Turn off to hide files matched by .gitignore from the file explorer.",
           "ea943d0db0": "Choose which indicators appear at the bottom of the window. You can also right-click the status bar for the same toggles.",
           "f687711a9b": "Scale the entire application interface. Use",
@@ -1209,6 +1273,7 @@
           "workspaceCardLayoutGuidance": "Managed from the workspace sidebar."
         },
         "AutoRenameBranchFromWorkSetting": {
+          "5d569f5199": ". NASH generates only the final segment, like",
           "ef787db0e3": "Auto-Rename Branch"
         },
         "AutoRenameBranchPromptEditor": {
@@ -1262,6 +1327,10 @@
           "4d03dec2d0": "Read app interface trees and perform requested actions.",
           "6b5a2cd3a5": "Accessibility"
         },
+        "DevToolsPane": {
+          "orcaCloud": "NASH Cloud",
+          "orcaCloudNotConfigured": "Set ORCA_CLOUD_API_URL and ORCA_CLOUD_CLIENT_ID to preview NASH Cloud sign-in in this dev build."
+        },
         "EphemeralVmRuntimesSection": {
           "cleaned": "Cleaned up temporary VM runtime.",
           "cleanupFailedToast": "Couldn’t clean up temporary VM runtime.",
@@ -1279,6 +1348,10 @@
           "a05bcdaf57": "Agents View",
           "f63ea281e3": "Threaded left-sidebar feed for agent completions and blocking states.",
           "fb82ea1d7a": "Automatically materialize configured files or folders into newly created worktrees.",
+          "nativeChat": {
+            "resumeCopy": "When NASH quits or installs an update, chats that were working are automatically resumed when NASH is reopened.",
+            "structuredScope": "Runs on this machine and on paired NASH servers running a version that supports it; older servers keep terminal chat. WSL and SSH hosts continue to use terminal chat."
+          },
           "newWorktreeCardStyle": {
             "copy": "Preview updated worktree-card layout, metadata placement, card-display menu options, and status presentation."
           }
@@ -1310,6 +1383,8 @@
           "show": "Show"
         },
         "GitPane": {
+          "36e3de3619": "from comparing against stale history. NASH skips the update if that branch has uncommitted changes or local-only commits.",
+          "976afc6b3e": "When you create a workspace, NASH refreshes the remote base and safely fast-forwards your matching local branch, such as",
           "f35007e6e8": "git-username"
         },
         "GrokAccountsSection": {
@@ -1413,24 +1488,40 @@
           "39fad211d9": "Connect outside your Wi-Fi with a tailnet",
           "406a35121c": "Network Interface",
           "51d29927eb": "Install",
-          "63d5e4ae1e": "Regenerate the QR code and scan it from the Orca mobile app.",
+          "63d5e4ae1e": "Regenerate the QR code and scan it from the NASH mobile app.",
           "668016be7a": "on your computer and phone.",
           "87985ba6f5": "In this Network Interface menu, choose the Tailscale address, usually a 100.x.y.z IP.",
-          "9fc5d203ff": "Orca Mobile connects directly to this computer. To use it away from the same LAN, put your computer and phone on the same private overlay network, then generate the QR code with that network address selected.",
+          "9fc5d203ff": "NASH Mobile connects directly to this computer. To use it away from the same LAN, put your computer and phone on the same private overlay network, then generate the QR code with that network address selected.",
           "a9db5d771d": "Refresh network interfaces",
           "c541f67790": "Generate QR Code",
           "d536b5e20d": "Choose which network address to advertise in the QR code. Use your LAN address for same-network pairing, or an overlay network address (Tailscale, ZeroTier) for cross-network access."
         },
+        "MobilePairingConnectionOptions": {
+          "anywhereTitle": "NASH Relay",
+          "relaySignInDetail": "Signs this desktop in to NASH and routes the phone through NASH’s servers. LAN does not need an account.",
+          "relayUnavailable": "NASH Relay isn’t available in this build. Use LAN."
+        },
+        "MobilePairingSetupSection": {
+          "overview": "Generate a QR code, then scan it in NASH Mobile under Pair Desktop."
+        },
         "MobilePane": {
+          "1592afcc7a": "No devices paired yet. Scan the QR code with the NASH mobile app.",
+          "310924ad2c": "Scan this code with the NASH mobile app. Each code creates a unique device token.",
           "35100bca5d": "While you're using a terminal on your phone, NASH shrinks it to fit your phone screen. When you close the app or switch away, this controls whether it stays at phone size (so interactive CLI tools don't reflow) or resizes back to your desktop. You can always use Restore this terminal or Restore all terminals on the banner to resize manually.",
+          "dd3cd78d04": "Scan with NASH Mobile",
+          "pairingQrError": "This pairing code couldn’t be rendered as a QR code. Copy it into NASH Mobile instead.",
           "relayDegradedNotice": "Relay couldn’t be reached — this code only works on your LAN or Tailscale. Regenerate to try again."
         },
         "MobileRelayBetaAvailability": {
-          "about": "About the Orca Relay beta",
+          "about": "About the NASH Relay beta",
           "androidApk": "Android APK",
           "availability": "Available on",
           "beta": "Beta",
           "testFlight": "TestFlight"
+        },
+        "MobileRelayBetaNotice": {
+          "nashUnavailable": "NASH Relay and mobile push notifications are not available in NASH builds.",
+          "notice": "NASH Relay is in beta."
         },
         "MobileRelayStatusSection": {
           "automatic": "Connect from anywhere when a phone is paired",
@@ -1443,13 +1534,17 @@
           "signIn": "Sign in",
           "signInPrompt": "Sign in on this desktop to connect from anywhere",
           "standby": "Standby — no relay devices",
-          "title": "Orca Relay",
+          "title": "NASH Relay",
           "unavailable": "Unavailable"
         },
         "MobileSettingsPane": {
+          "1de96ec8a6": "Show NASH Mobile Button",
+          "682293cadf": "Show the NASH Mobile button at the top of the left sidebar.",
           "9a3c280e49": "GitHub Releases",
           "b0088412a1": "or the Android APK from",
-          "c8491c17ef": "Control NASH from your phone by scanning a QR code. Beta / early preview - expect bugs and breaking changes. Get the iOS app from the"
+          "c8491c17ef": "Control NASH from your phone by scanning a QR code. Beta / early preview - expect bugs and breaking changes. Get the iOS app from the",
+          "d4f2b65f30": "Show the NASH Mobile shortcut in the sidebar.",
+          "installIntro": "Install NASH Mobile from the"
         },
         "NotificationsPane": {
           "274af61bc0": "system",
@@ -1459,9 +1554,18 @@
           "fullCoverage_one": "All 1 detected agent has the skill.",
           "fullCoverage_other": "All {{value0}} detected agents have the skill."
         },
+        "PluginMarketplaceListingRow": {
+          "blocked": "Blocked by NASH's safety list: {{value0}}"
+        },
+        "PluginMarketplacePreviewDialog": {
+          "blocked": "NASH's safety list blocks this plugin: {{value0}}"
+        },
+        "PluginSettingsRow": {
+          "killListMessage": "NASH's safety list disabled this plugin: {{value0}}"
+        },
         "PluginsSettingsSection": {
-          "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers.",
-          "orcaCatalogLabel": "Use Orca's plugin catalog"
+          "orcaCatalogDescription": "Downloads NASH's official plugin list and plugin safety list from NASH's servers.",
+          "orcaCatalogLabel": "Use NASH's plugin catalog"
         },
         "PrivacyPane": {
           "afec8b03be": "ci"
@@ -1469,8 +1573,11 @@
         "ProjectWindowsRuntimeSetting": {
           "activeTaskPlural": "{{count}} active tasks",
           "activeTaskSingular": "{{count}} active task",
+          "distroMissing": "{{value0}} is not installed in WSL. Choose an installed distro or switch this project to Windows.",
+          "distroRequired": "Choose a WSL distro or switch this project to Windows.",
           "liveTerminalPlural": "{{count}} live terminals",
-          "liveTerminalSingular": "{{count}} live terminal"
+          "liveTerminalSingular": "{{count}} live terminal",
+          "wslUnavailable": "WSL is not available. Switch this project to Windows or repair WSL."
         },
         "QuickCommandsPane": {
           "44923dd982": "destructive",
@@ -1487,6 +1594,9 @@
           "restartWarning": "Updating restarts these servers. {{value0}} live tabs and {{value1}} terminal panes may briefly disconnect.",
           "updateOne": "Update server",
           "updating": "Updating servers…"
+        },
+        "RemoteServerUpdateStatus": {
+          "legacyHelp": "Remote updates are unavailable for this server. Update NASH on the server host."
         },
         "RepositoryGitHubAccountSection": {
           "retry": "Retry"
@@ -1531,7 +1641,6 @@
           "1826bd0608": "Saved Servers",
           "54ebacc600": "Server name",
           "55fcc964cd": "on the server and paste the printed pairing URL.",
-          "7b5986c8df": "Saved {{value0}}. Use Active Server to switch when ready.",
           "8cf8790697": "Saved servers route this browser through a paired NASH runtime.",
           "960e901ae4": "nash serve --pairing-address <host>",
           "9bc9b83474": "Pairing code",
@@ -1588,7 +1697,9 @@
         },
         "SshPane": {
           "94c5284560": "Targets",
-          "a7d28dff81": "Add a remote host to connect to it in NASH."
+          "a7d28dff81": "Add a remote host to connect to it in NASH.",
+          "syncedServerPlural": "Synced {{count}} servers",
+          "syncedServerSingular": "Synced {{count}} server"
         },
         "SshTargetCard": {
           "47e94bd6ba": "connected",
@@ -1600,7 +1711,8 @@
           "4a342f44c1": "Advanced Connection",
           "92f80edbfd": "Remote Terminal Persistence",
           "e9609ddca6": "Proxy, jump host, and connection reuse",
-          "f2331ce599": "Edit SSH Target"
+          "f2331ce599": "Edit SSH Target",
+          "remoteRuntimeHelp": "Which Node.js runs NASH on this host. NASH-managed Node uploads its own and needs no npm; Host Node uses the Node.js already installed there."
         },
         "TerminalAppearanceSection": {
           "16c471ee03": "on",
@@ -1734,16 +1846,20 @@
         },
         "appearance": {
           "search": {
+            "1de96ec8a6": "Show NASH Mobile Button",
             "468448bba4": "watercolor",
+            "682293cadf": "Show the NASH Mobile button at the top of the left sidebar.",
             "f586abfa35": "blue"
           }
         },
         "artifacts": {
-          "account": "Orca cloud account",
+          "account": "NASH cloud account",
           "connected": "Connected",
           "enable": "Enable Artifacts",
           "enableDescription": "Add Artifacts to the sidebar so you can open and delete shared files.",
           "openArtifactsDescription": "View and delete links shared through your account.",
+          "signIn": "Sign in to NASH Cloud",
+          "signInDescription": "Use your NASH cloud account to upload artifacts and manage their public links.",
           "signInRequired": "Sign in is required to upload and manage artifacts."
         },
         "auto": {
@@ -1799,7 +1915,11 @@
             "d23ae13990": "worktree",
             "f082788cfe": "links",
             "fa72e71f05": "agents",
-            "fe5688b761": "sidebar"
+            "fe5688b761": "sidebar",
+            "nativeChat": {
+              "description": "Open supported new agents in Chat UI.",
+              "queue": "queue"
+            }
           }
         },
         "general": {
@@ -1864,15 +1984,29 @@
         "mobile": {
           "settings": {
             "search": {
+              "1de96ec8a6": "Show NASH Mobile Button",
+              "682293cadf": "Show the NASH Mobile button at the top of the left sidebar.",
               "b730ff7049": "experimental"
             }
           }
         },
+        "orcaAccount": {
+          "account": "NASH cloud account",
+          "description": "Share work instantly and reach your desktop from NASH Mobile wherever you are.",
+          "nashUnavailable": "NASH Cloud sign-in is not available in NASH builds.",
+          "relayDescription": "Connect NASH Mobile to this desktop across cellular or any Wi-Fi.",
+          "relayTitle": "NASH Relay",
+          "searchDescription": "Sign in or out of the account used by Artifacts and NASH Relay.",
+          "signIn": "Sign in to NASH Cloud",
+          "signedOut": "Sign in to NASH Cloud to extend NASH with cloud features, including Artifacts and NASH Relay.",
+          "title": "NASH Cloud Account",
+          "unavailable": "NASH Cloud sign-in is unavailable in this build."
+        },
         "plugins": {
           "search": {
-            "orcaCatalogDescription": "Downloads Orca's official plugin list and plugin safety list from Orca's servers.",
-            "orcaCatalogTitle": "Use Orca's plugin catalog",
-            "orcaMarketplace": "Orca marketplace",
+            "orcaCatalogDescription": "Downloads NASH's official plugin list and plugin safety list from NASH's servers.",
+            "orcaCatalogTitle": "Use NASH's plugin catalog",
+            "orcaMarketplace": "NASH marketplace",
             "safetyList": "plugin safety list"
           }
         },
@@ -1892,14 +2026,9 @@
         "routingTable": {
           "editor": {
             "geminiExcluded": "Gemini 4 models are excluded from routing."
-          }
-        },
-        "runtime": {
-          "environments": {
-            "search": {
-              "3517fb2ec0": "Active Server",
-              "4575341c77": "Choose local desktop, add a saved remote NASH server, or generate a pairing URL."
-            }
+          },
+          "labels": {
+            "none": "None"
           }
         },
         "settingOwnership": {
@@ -1908,7 +2037,9 @@
         },
         "shareSkills": {
           "refreshLinks": "Refresh",
-          "showButton": "Show Skills button"
+          "showButton": "Show Skills button",
+          "signIn": "Sign in to NASH Cloud",
+          "signInDescription": "Use your NASH cloud account to publish bundles and manage their links. Recipients do not need an account."
         },
         "ssh": {
           "search": {
@@ -1917,10 +2048,28 @@
           }
         },
         "sshHostServer": {
+          "olderTerminals_one": "{{count}} terminal started by an older version of NASH is still running on this host, and it doesn’t stop on its own. Close it in that version of NASH or end it on the host, then reconnect.",
+          "olderTerminals_other": "{{count}} terminals started by an older version of NASH are still running on this host, and they don’t stop on their own. Close them in that version of NASH or end them on the host, then reconnect.",
+          "terminalsElsewhere": "Runs the relay while {{count}} terminals another NASH desktop or session opened on this host are running.",
+          "terminalsElsewhereUncounted": "Runs the relay while terminals another NASH desktop or session opened on this host are running.",
           "terminalsElsewhere_one": "Runs the relay while {{count}} terminal another NASH desktop or session opened on this host is running.",
           "terminalsElsewhere_other": "Runs the relay while {{count}} terminals another NASH desktop or session opened on this host are running.",
-          "terminalsLive_one": "Runs the relay until its {{count}} open terminal is closed, then moves to a managed server.",
-          "terminalsLive_other": "Runs the relay until its {{count}} open terminals are closed, then moves to a managed server."
+          "terminalsUnverifiable": "Runs the relay: NASH couldn’t confirm its terminals are closed. It moves on a later connect.",
+          "tunnelUnavailable": "Runs the relay: this host’s SSH server doesn’t allow port forwarding, and NASH couldn’t reach a managed server through the SSH session either.",
+          "unavailable": "Runs the relay: a managed NASH server can’t run on this host ({{reason}}).",
+          "unavailableUnknown": "Runs the relay: a managed NASH server can’t run on this host."
+        },
+        "task": {
+          "tracker": {
+            "integration": {
+              "cards": {
+                "connectedSitePlural": "{{count}} sites connected",
+                "connectedSiteSingular": "{{count}} site connected",
+                "connectedWorkspacePlural": "{{count}} workspaces connected",
+                "connectedWorkspaceSingular": "{{count}} workspace connected"
+              }
+            }
+          }
         },
         "terminal": {
           "windows": {
@@ -1966,6 +2115,12 @@
           "imported_other": "Imported {{value0}} themes",
           "over_limit_one": "Importing these themes would exceed the {{value0}} custom terminal theme limit. Deselect 1 new theme and try again.",
           "over_limit_other": "Importing these themes would exceed the {{value0}} custom terminal theme limit. Deselect {{value1}} new themes and try again."
+        },
+        "wslHosts": {
+          "description": "NASH runs a server inside each distro. A stopped distro starts only when you open one of its projects or connect it here."
+        },
+        "wslHostsExperimental": {
+          "description": "Add a WSL 2 distro as a host. NASH runs its server inside the distro, so git, files and terminals in new projects there run natively in Linux."
         }
       },
       "shared": {
@@ -2008,6 +2163,10 @@
         },
         "AddRepoSteps": {
           "04a4c4e84a": "Clone location"
+        },
+        "AddWslHostFormPanel": {
+          "addingHint": "Installing and starting the NASH server in the distro. The first time can take a minute.",
+          "description": "NASH runs its server inside the distro, so git, files and terminals run natively in Linux. Use it for new projects; projects you opened through \\\\wsl.localhost keep working as they are."
         },
         "CacheTimer": {
           "07729cc155": "expired"
@@ -2061,7 +2220,7 @@
           "8de03e23c5": "Submit with your typed feedback only, or connect `gh` to include GitHub identity.",
           "9b33530b3d": "Other ways to reach us",
           "a2fd890d9e": "Please enter feedback before submitting.",
-          "a828fa4aee": "Feedback goes to the Orca team. Share what's working, what's broken, or what should come next.",
+          "a828fa4aee": "Feedback goes to the NASH team. Share what's working, what's broken, or what should come next.",
           "c9e5ea0791": "GitHub:",
           "d20439c560": "Checking GitHub identity…",
           "d245c4ef6c": "GitHub issues",
@@ -2083,6 +2242,7 @@
           "scopedTo": "{{value0}} visible"
         },
         "SidebarNav": {
+          "1b5c41caee": "NASH Mobile",
           "9c95e1ce91": "Agents"
         },
         "SidebarSettingsHelpMenu": {
@@ -2131,6 +2291,22 @@
           "34f733dda2": "Go to Worktree",
           "3e5f66564e": "Workspace unavailable"
         },
+        "WorktreeIssueLinkField": {
+          "0a7a2c6efd": "Not a GitHub issue number or issue URL.",
+          "161b2d053a": "Open linked issue",
+          "25852bfc59": "Linear",
+          "269198eeda": "Couldn't open that issue. Check the number and your GitHub connection.",
+          "2c245ac134": "Saving unlinks {{link}} — a workspace tracks one issue.",
+          "5b440069e6": "GitHub",
+          "662ae142f8": "Issue #, or a GitHub or Linear URL",
+          "72486800ff": "Saving unlinks {{first}} and {{second}} — a workspace tracks one issue.",
+          "929c98d05a": "Issue provider",
+          "964d9bc00a": "Not a Linear issue key or linear.app issue URL.",
+          "ad78f9bee2": "Issue",
+          "d4785f9954": "Issue links are set when a folder workspace is created and can't be changed here yet.",
+          "d8c8a30d1f": "Couldn't open that issue. Check the identifier and your Linear connection.",
+          "f047887705": "Paste a GitHub or Linear URL, or enter a number. Leave blank to remove the link."
+        },
         "WorktreeList": {
           "2ca6e29a3c": "repo",
           "45fbfe0335": "rename",
@@ -2141,12 +2317,26 @@
         },
         "WorktreeMetaDialog": {
           "029ea5ec57": "Open GitHub issue",
+          "077a4f7b5c": "PR # or GitHub URL",
+          "1b91db7e14": "GH PR",
+          "382fd11a3e": "Edit Worktree Details",
+          "459ad7f650": "Only changes the name shown in the sidebar — the folder on disk stays the same. Leave blank to use the branch or folder name.",
+          "5ae06f40fd": "Paste a pull request URL, or enter a number. Leave blank to remove the link.",
           "645fa4a0fd": "GH Issue",
           "65770ad0f0": "Edit GitHub links and notes for this workspace.",
           "741279e7b7": "Issue # or GitHub URL",
-          "7c454be4c5": "Paste an issue URL, or enter a number. Leave blank to remove the link."
+          "7c454be4c5": "Paste an issue URL, or enter a number. Leave blank to remove the link.",
+          "7f0be5e9a6": "Supports **markdown** — bold, lists, `code`, links. Press Enter or",
+          "9c1d1e9b71": "Comment",
+          "a0d191b7a7": "Edit issue links, pull request links, and notes for this workspace.",
+          "b48c271d39": "to save, Shift+Enter for a new line.",
+          "gitlabDescription": "Edit issue links, merge request links, and notes for this workspace.",
+          "gitlabHelp": "Paste a merge request URL, or enter a number. Leave blank to remove the link.",
+          "gitlabMR": "GitLab MR",
+          "gitlabPlaceholder": "MR ! or GitLab URL"
         },
         "WorktreeOpenInMenu": {
+          "0bed8727db": "It may have been moved or deleted. Refresh workspaces or remove it from NASH.",
           "3ec372b664": "file-manager"
         },
         "WorktreeVisibilityDialog": {
@@ -2197,6 +2387,13 @@
               }
             }
           }
+        },
+        "worktreeIssueDisplacement": {
+          "3f61c0a8d2": "Linear {{value}}",
+          "9c4b7e1f60": "GitHub #{{value}}"
+        },
+        "wslHostRowStatus": {
+          "serverFilesMissing": "This build of NASH can’t run WSL hosts (server files missing)."
         }
       },
       "skills": {
@@ -2245,6 +2442,11 @@
           "eb603f7888": "outside the current roster will be preserved.",
           "ed753624c0": "Delete Cloud package",
           "linkCopied": "Share link copied"
+        },
+        "SkillFreshnessRow": {
+          "skippedReasonNewer": "This copy is a later version than the one this build of NASH ships, so NASH left it alone rather than roll it back. Updating NASH will bring the two back in line.",
+          "skippedReasonUnrecognized": "The copy here doesn’t match the official version — it may be modified, or a different skill with the same name. NASH left it out of the update so it won’t overwrite it. Remove it if you want NASH to update this skill.",
+          "tipNewer": "This copy is a later version than the one this build of NASH ships."
         },
         "SkillInstallDialog": {
           "4a00d133c5": "NASH verifies access and package identity before changing the selected machine."
@@ -2295,7 +2497,7 @@
           "descriptionV2": "Review the exact files, then publish an immutable version behind an unlisted link.",
           "newVersionDescription": "Review the exact files, then publish an immutable version to the existing Cloud package.",
           "peopleRequired": "Select at least one teammate.",
-          "readyDescription": "Recipients authenticate with Orca Cloud before they can inspect or install it.",
+          "readyDescription": "Recipients authenticate with NASH Cloud before they can inspect or install it.",
           "readyDescriptionV2": "Anyone with this unlisted link can inspect and install the skills."
         },
         "SkillShareReviewContent": {
@@ -2386,6 +2588,13 @@
           "e9283eb171": "1 directory"
         }
       },
+      "star": {
+        "nag": {
+          "StarNagToastHost": {
+            "body": "If you’re enjoying NASH so far, a GitHub star for NASH, the open-source project it is built on, helps other developers discover it."
+          }
+        }
+      },
       "stats": {
         "ClaudeUsagePane": {
           "02a046792e": "sessions •",
@@ -2434,6 +2643,9 @@
       },
       "status": {
         "bar": {
+          "NativeChatResumeStatusSegment": {
+            "resumedTooltip": "Chats NASH resumed after the restart. Click to see them."
+          },
           "PortsStatusSegment": {
             "4ae65d871a": "external",
             "9aa11005bf": "workspace ·",
@@ -2523,6 +2735,9 @@
             "openContainingFolder": "Open Containing Folder",
             "revealInFileExplorer": "Reveal in File Explorer",
             "revealInFinder": "Reveal in Finder"
+          },
+          "QuickLaunchButton": {
+            "needsServerUpdate": "Update NASH on this server to list this workspace’s agents"
           },
           "SortableTabContextMenu": {
             "0ce4bae39d": "Split Left",
@@ -2691,11 +2906,10 @@
             "faa367dc74": "Your phone left this at phone size"
           },
           "TerminalErrorToast": {
+            "heldByPreviousRelay": "This terminal is still running on the host under the previous NASH version, which this version cannot connect to. It keeps running until it exits. Open a new terminal to keep working here.",
+            "hostTerminalCap": "The host is already running as many terminals as NASH allows. Close a terminal you no longer need, then try again.",
             "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in NASH or another program, then try again.",
             "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again."
-          },
-          "TerminalRemoteRuntimeReconnectBanner": {
-            "retryingBody": "NASH will retry for up to one minute. This terminal will resume if the connection returns."
           },
           "TerminalSessionStateSaveFailureDialog": {
             "678c780a2c": "Disk space is unavailable",
@@ -2733,6 +2947,13 @@
             "combobox": {
               "286ce70256": "SSH"
             }
+          }
+        }
+      },
+      "web": {
+        "preloadApi": {
+          "accounts": {
+            "signInHostOnly": "Adding or re-signing an account is only available in the desktop app on the computer running NASH."
           }
         }
       },
@@ -2882,16 +3103,35 @@
     },
     "ssh": {
       "managedServerMove": {
+        "close": "Close",
+        "confirm": "Move",
+        "failed": "Could not move {{host}}: {{reason}}",
+        "moved": "{{host}} now runs a managed NASH server.",
+        "notNow": "Not now",
+        "offer": "Move {{host}} to a managed NASH server for more reliable connections. Its {{count}} open terminals will restart.",
+        "offerUncounted": "Move {{host}} to a managed NASH server for more reliable connections. Its open terminals will restart.",
         "offer_one": "Move {{host}} to a managed NASH server for more reliable connections. Its {{count}} open terminal will restart.",
         "offer_other": "Move {{host}} to a managed NASH server for more reliable connections. Its {{count}} open terminals will restart.",
+        "refusedLive": "Not moved: {{count}} terminals on {{host}} are still running.",
         "refusedLive_one": "Not moved: {{count}} terminal on {{host}} is still running.",
         "refusedLive_other": "Not moved: {{count}} terminals on {{host}} are still running.",
+        "refusedUnverifiable": "Not moved: NASH couldn’t confirm that {{count}} terminals on {{host}} stopped.",
+        "refusedUnverifiableUncounted": "Not moved: NASH couldn’t confirm that the terminals on {{host}} stopped.",
         "refusedUnverifiable_one": "Not moved: NASH couldn’t confirm that {{count}} terminal on {{host}} stopped.",
-        "refusedUnverifiable_other": "Not moved: NASH couldn’t confirm that {{count}} terminals on {{host}} stopped."
+        "refusedUnverifiable_other": "Not moved: NASH couldn’t confirm that {{count}} terminals on {{host}} stopped.",
+        "retry": "Try again",
+        "running": "Moving {{host}} to a managed NASH server…",
+        "stayed": "{{host}} still runs the relay. SSH Hosts in Settings shows why.",
+        "title": "Move to managed server"
       }
     },
     "store": {
       "slices": {
+        "orca": {
+          "profiles": {
+            "8b8fa73174": "NASH Cloud sign-in is not configured"
+          }
+        },
         "settings": {
           "faa8fb83dd": "Save or close unsaved editor tabs before switching servers."
         },
@@ -2908,6 +3148,16 @@
           "f4503ca505": "Open Settings > Git and try again.",
           "fa9299a66f": "Your new worktree is current, but local {{value0}} is {{value1}} {{value2}} behind. AI diffs may miss recent commits."
         }
+      }
+    },
+    "web": {
+      "pairingSecurity": {
+        "sessionInsecureOrigin": "This pairing lasts only while this tab is open, because this page is plain http on another machine. For a pairing this browser remembers, open NASH over https, at localhost on this computer, or through an SSH tunnel.",
+        "storedCodeInsecureOrigin": "This browser keeps a reusable pairing code, because this page is plain http on another machine. Anyone who can read this browser’s storage could use it. For a safer pairing, open NASH over https, at localhost on this computer, or through an SSH tunnel, and pair again."
+      },
+      "runtimeAuth": {
+        "deviceDowngraded": "This NASH server no longer supports this browser’s sign-in key (it may have been downgraded). Update the server, or pair this browser again.",
+        "insecureOrigin": "NASH refused to pair from this page: it is plain http on another machine, so anyone on the network path could replace it and take the pairing code. Open the web client over https, at localhost on this computer, or through an SSH tunnel. To allow it anyway, the server operator can restart NASH with ORCA_ALLOW_INSECURE_WEB_PAIRING=1."
       }
     }
   },
@@ -2987,6 +3237,8 @@
       "failureWords": {
         "accountSwitchInProgress": "A Claude account switch is in progress. Try again after it finishes.",
         "agentCommandNotRunnable": "{{agent}}'s Command in Settings → Agents must be a program path or name NASH can find, with no arguments or variables. Change it or reset it.",
+        "agentCommandNotSignedIn": "Sign in to {{agent}} with `{{loginCommand}}` on the computer running this chat.",
+        "agentNotSignedIn": "Sign in to {{agent}}.",
         "answerUnconfirmed": "Your answer was recorded but the agent did not confirm it.",
         "argumentsMissingValue": "Saved Arguments need a value for {{option}}.",
         "argumentsMultipleValues": "Saved Arguments give {{option}} more than one value.",
@@ -3004,6 +3256,8 @@
         "attachmentTotalTooLarge": "The images on this message are too large together, so the message was not sent.",
         "attachmentUnreadable": "An attachment on this message couldn't be read, so the message was not sent.",
         "attachmentUnsupportedType": "{{agent}} accepts only PNG, JPEG, GIF, and WebP images, so this message was not sent.",
+        "backgroundTaskNotStopped": "The background task wasn't stopped.",
+        "backgroundTasksNotStopped": "The background tasks weren't stopped.",
         "cancelUnconfirmed": "Cancellation was not confirmed.",
         "cancelled": "This message was withdrawn before the agent started it.",
         "chatClosed": "The chat closed before this message was sent.",
@@ -3012,6 +3266,13 @@
         "chooseClaudeAccountThenSend": "Choose or add one in Claude Accounts settings, then send your message again.",
         "claudeAccountFolderMissing": "The selected Claude account's folder is missing. Sign in to it again or choose another account.",
         "claudeAccountSetupFailed": "The selected Claude account could not be set up. Try again or choose another account.",
+        "claudeManagedNotSignedIn": "This Claude account isn't signed in. Sign in again in Claude Accounts settings.",
+        "claudeSystemNotSignedIn": "Claude isn't signed in. Run `{{loginCommand}}`, or choose an account in Claude Accounts settings.",
+        "cliMissing": "{{agent}} wasn't found on the computer running this chat. Install it, or check its Command in Settings → Agents.",
+        "codexCliTooOld": "Codex {{installedVersion}} is too old for chats. Update to {{minimumVersion}} or newer.",
+        "codexManagedNotSignedIn": "This Codex account isn't signed in. Sign in again in Codex Accounts settings.",
+        "codexSystemNotSignedIn": "Codex isn't signed in. Run `{{loginCommand}}`.",
+        "commandAfterAnswer": "Answer the agent's question or approval, then run /{{command}}.",
         "commandRefused": "This command didn't run.",
         "commandRefusedTryAgain": "This command didn't run. Try it again.",
         "compactionFailed": "Compaction failed.",
@@ -3019,6 +3280,8 @@
         "compactionUnconfirmed": "Compaction completion is unconfirmed.",
         "couldNotRestart": "{{agent}} couldn't restart.",
         "couldNotStart": "{{agent}} couldn't start.",
+        "couldNotStop": "Couldn't stop {{agent}}.",
+        "couldNotStopTheAgent": "Couldn't stop the agent.",
         "editSavedArguments": "Edit them in Settings > Agents > Arguments.",
         "emptyMessage": "This message is empty, so it was not sent.",
         "historyInOtherAccount": "This chat's history is in another Claude account. Switch back to that account to continue it.",
@@ -3027,19 +3290,20 @@
         "hostFaultTryAgain": "NASH ran into a problem, so this didn't go through. Try again.",
         "hostRestarted": "NASH restarted before this message was sent.",
         "hostStopped": "{{agent}} never finished starting, so NASH stopped it.",
+        "interactiveAgentNotSignedIn": "Sign in to {{agent}} by running `{{loginCommand}}` and using `{{slashCommand}}` on the computer running this chat.",
         "launchFolderMissing": "The folder this chat ran in no longer exists. Restore it to continue this chat.",
         "managedAccountEnvOverride": "This Claude launch sets its own Anthropic sign-in variables. Remove them to use a managed Claude account.",
         "managedAccountUnsupported": "While a Claude account is added in WSL, Claude chats need a Windows Claude account.",
         "noTurnToStop": "{{agent}} had no turn running to stop.",
         "notDelivered": "This message was not delivered.",
         "notDeliveredSendAgain": "This message was not delivered. Send it again to continue.",
-        "notSignedIn": "{{agent}} is not signed in for the selected account.",
+        "notSignedIn": "{{agent}} is not signed in.",
         "previousExitUnverifiable": "Couldn't stop {{agent}} from before.",
         "providerExitedRejection": "{{agent}} stopped before this message was sent.",
         "providerExitedRow": "{{agent}} stopped while this response was in progress. You can continue in this conversation.",
         "providerRateLimited": "{{agent}} is rate-limited and retrying.",
-        "providerRejected": "The provider did not accept this message.",
-        "providerRejectedQuoted": "The provider did not accept this message: {{detail}}.",
+        "providerRejected": "{{agent}} didn't accept this message.",
+        "providerRejectedQuoted": "{{agent}} didn't accept this message: {{detail}}.",
         "providerRetryLastError": "Last error: {{detail}}.",
         "providerRetryNumber": "Retry {{attempt}}.",
         "providerRetryNumberOf": "Retry {{attempt}} of {{maxRetries}}.",
@@ -3048,6 +3312,7 @@
         "providerStartFailed": "{{agent}} stopped before it finished starting.",
         "queueFull": "Too many messages were waiting for the agent, so this one was not sent.",
         "runCommandAgain": "Run /{{command}} again.",
+        "runCommandWhenDone": "Run /{{command}} when it's done.",
         "sendAgainToTryOnceMore": "Send your message again to try once more.",
         "sendToTryAgain": "Send your message to try again.",
         "sessionNotRestored": "{{agent}} couldn't reopen its earlier session, so this chat continues in a new one. {{agent}} doesn't remember the earlier messages.",
@@ -3057,11 +3322,13 @@
         "stopRefused": "{{agent}} didn't stop.",
         "stopRefusedQuoted": "{{agent}} didn't stop: {{detail}}.",
         "theAgent": "The agent",
+        "thenSendAgain": "Then send your message again.",
         "writeFailed": "NASH couldn't hand this message to the agent, so it was not sent."
       },
       "notices": {
         "historyItemTooLarge": "This part of the chat was too large to show.",
-        "historyRepaired": "Part of this chat's history couldn't be loaded."
+        "historyRepaired": "Part of this chat's history couldn't be loaded.",
+        "orcaStopRemote": "NASH on {{machine}} stopped while this response was in progress."
       },
       "question": {
         "other": "Other…"
@@ -3148,15 +3415,23 @@
       "writeNotice": {
         "agentRefused": "The agent turned this down.",
         "agentStarting": "The agent is still starting.",
+        "agentStillWorking": "The agent is still working.",
         "answerFirst": "Answer the question or approval first.",
         "attachmentExpired": "This attachment expired.",
         "backgroundTasksRunning": "Background tasks are still running.",
+        "cancelNotSaved": "Couldn't cancel this question or approval.",
         "cannotRunHere": "NASH can't run this agent in a chat here.",
-        "capacity": "NASH has received too many requests in the last day.",
+        "capacity": "NASH on the computer running this chat has hit a request limit. Update NASH there, then try again.",
         "chatNotFound": "NASH can't find this chat.",
         "chatSavedByNewerOrca": "This chat was saved by a newer NASH.",
+        "clearAfterAnswer": "Answer the agent's question or approval, then run /clear.",
+        "clearAfterRetry": "Retry your earlier message, then run /clear.",
+        "clearAfterSending": "Your earlier message is still being sent. Run /clear once it has gone.",
         "clearUnfinished": "The last /clear didn't finish.",
         "commandRunning": "A /compact or /clear is still running.",
+        "compactAfterAnswer": "Answer the agent's question or approval, then run /compact.",
+        "compactAfterRetry": "Retry your earlier message, then run /compact.",
+        "compactAfterSending": "Your earlier message is still being sent. Run /compact once it has gone.",
         "conversationCleared": "This conversation has been cleared.",
         "goalsUnsupported": "This agent doesn't support goals.",
         "historyUnavailable": "NASH couldn't open this chat's history right now.",
@@ -3181,15 +3456,19 @@
         "ownerUnproven": "The previous agent in this chat may still be running.",
         "promptPending": "The agent is waiting for an answer to a question or approval.",
         "questionChanged": "This question was already answered or has changed.",
+        "queueTooLarge": "Too much text is waiting in the queue.",
         "quitTerminalAgent": "Quit that agent to continue the chat here.",
         "reattachFile": "Remove it and attach it again.",
         "recordFailed": "NASH couldn't save this to the chat's history.",
         "recordUnreadable": "NASH couldn't read this chat's saved state.",
         "reopenChat": "Reopen the chat to check again.",
         "restartFailed": "The agent couldn't restart.",
+        "runClearWhenDone": "Run /clear when it's done.",
+        "runCompactWhenDone": "Run /compact when it's done.",
         "savedByNewerOrca": "Chats were saved by a newer NASH.",
         "sendOutcomeLost": "NASH couldn't confirm your message reached the agent. Check the chat, then send it again if needed.",
         "settleEarlierMessage": "Wait for your earlier message to go through, or retry it.",
+        "shrinkQueue": "Delete a queued message, or wait for one to go through, then try again.",
         "startNewChat": "Start a new chat to continue.",
         "terminalAgentHoldsChat": "This chat is still open in a terminal agent.",
         "tryAgain": "Try again.",
@@ -3270,6 +3549,10 @@
       "viewing": "Viewing: {{path}}"
     }
   },
+  "menu": {
+    "quitApp": "Quit {{appName}}",
+    "showMobileButton": "Show NASH Mobile Button"
+  },
   "runtimeRpc": {
     "startupFailure": {
       "guidance": {
@@ -3294,6 +3577,17 @@
         "probeSkippedHosts": "Hosts routed without the connection check (Try anyway):",
         "title": "Browse through SSH workspace hosts"
       }
+    },
+    "terminal": {
+      "windows": {
+        "administratorPromptCancellation": "Canceling Windows’ prompt reopens NASH with its retained terminals. SSH and WSL permissions stay controlled on their hosts.",
+        "administratorRestartFailed": "NASH could not restart. Try again or use the manual instructions.",
+        "administratorScope": "Permissions for the NASH app. Existing terminals may differ.",
+        "administratorSearchDescription": "See NASH’s Windows permissions or restart with administrator approval.",
+        "closeLocalSessions": "Save your work, close all local terminal sessions, then exit NASH.",
+        "launchAdministrator": "In the Windows Start menu, right-click NASH and choose Run as administrator. Approve the Windows prompt using your usual account.",
+        "launchStandard": "Open NASH normally from the Windows Start menu."
+      }
     }
   },
   "sparsePreset": {
@@ -3308,6 +3602,19 @@
       "dontShowAgain": "Don't show again",
       "learnMore": "Learn more",
       "openNewTerminal": "Open new terminal"
+    },
+    "newerDaemonBanner": {
+      "reopenTerminal_one": "Reopen terminal",
+      "reopenTerminal_other": "Reopen {{count}} terminals",
+      "reopened_one": "Reopened {{count}} terminal",
+      "reopened_other": "Reopened {{count}} terminals",
+      "resumed_one": "{{count}} agent session resumed.",
+      "resumed_other": "{{count}} agent sessions resumed.",
+      "title": "This terminal was opened in a newer version of NASH"
+    },
+    "severedDaemonBanner": {
+      "body": "The terminal service on this computer started from an AppImage that is no longer mounted. It still runs {{sessions}}, but it can crash at any moment. Until you restart it, new terminals are not kept when NASH quits.",
+      "unverifiable": "NASH could not verify the terminal service process, so nothing was stopped."
     }
   },
   "worktreeJumpPalette": {

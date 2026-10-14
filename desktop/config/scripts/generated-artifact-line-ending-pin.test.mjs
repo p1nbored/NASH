@@ -12,8 +12,6 @@ it('keeps byte-compared artifacts and source LF in an autocrlf checkout', () => 
   const crlf = 'first\r\nsecond\r\n'
   const paths = new Map([
     ['resources/skills/current-manifest.json', lf],
-    ['resources/skills/snapshot-registry.json', lf],
-    ['resources/skills/release-mapping.json', lf],
     ['src/main/__snapshots__/example.test.ts.snap', lf],
     ['src/renderer/src/example.tsx', lf],
     ['src/main/example.ts', lf],

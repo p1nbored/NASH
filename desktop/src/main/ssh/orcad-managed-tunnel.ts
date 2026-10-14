@@ -30,6 +30,17 @@ export async function ensureOrcadManagedTunnel(
   )
 }
 
+/** After a redeploy: the reused forward may target the port the previous server bound. */
+export async function rebuildOrcadManagedTunnel(
+  userDataPath: string,
+  selector: string
+): Promise<void> {
+  const environment = resolveEnvironment(userDataPath, selector)
+  await managedTunnels.rebuild(environment, () =>
+    resolveEnvironmentOrNull(userDataPath, environment.id)
+  )
+}
+
 function resolveEnvironmentOrNull(userDataPath: string, id: string) {
   try {
     return resolveEnvironment(userDataPath, id)
@@ -44,6 +55,11 @@ export function verifyManagedTunnelServing(environment: KnownRuntimeEnvironment)
 
 export function disposeOrcadManagedTunnels(): void {
   managedTunnels.dispose()
+}
+
+/** Why on quit: a system-ssh tunnel is its own `ssh -L` process and would outlive Orca. */
+export function shutdownOrcadManagedTunnels(): Promise<void> {
+  return managedTunnels.shutdown()
 }
 
 export function recoverOrcadManagedTunnelsAfterHostResume(

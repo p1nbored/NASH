@@ -50,6 +50,7 @@ function parseGrokCatalogModels(stdout: string): CatalogModel[] {
 }
 
 export const GROK_SESSION_OPTION_CATALOG: AgentSessionOptionCatalog = {
+  supportsWorkerLaunchPreferences: true,
   // Why: Grok model access depends on the signed-in account and on [model.*]
   // config. Seed only what is verified; discovery supplies the rest.
   models: [

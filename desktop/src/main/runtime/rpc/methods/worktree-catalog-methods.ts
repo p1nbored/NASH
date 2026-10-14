@@ -1,5 +1,6 @@
 import { defineMethod } from '../core'
 import { resolveWorktreeCatalogSnapshot } from '../worktree-catalog-snapshot'
+import { coarsenWorktreePsActivity } from '../worktree-ps-coarse-activity'
 import { supportsWorktreeVisibilitySourceDefaults } from '../worktree-visibility-client-capability'
 import {
   projectWorktreeListRemovals,
@@ -10,11 +11,12 @@ import {
   WorktreeDetectedListParams,
   WorktreeListParams,
   WorktreePsParams
-} from './worktree-schemas'
+} from '../../../../shared/rpc-contract/worktree-params'
 
 export const WORKTREE_CATALOG_METHODS = [
   defineMethod({
     name: 'worktree.ps',
+    permission: 'workspace',
     params: WorktreePsParams,
     handler: async (params, context) => {
       const pendingAtScan = snapshotPendingWorktreeRemovals()
@@ -30,13 +32,19 @@ export const WORKTREE_CATALOG_METHODS = [
         pendingAtScan
       )
       // Why: callers that never send the field get the byte-exact legacy response.
-      return params.afterSnapshotId === undefined
-        ? result
-        : resolveWorktreeCatalogSnapshot(result, params.afterSnapshotId)
+      if (params.afterSnapshotId === undefined) {
+        return result
+      }
+      // Why: snapshot pollers get activity at poll-friendly granularity so the id survives terminal output.
+      return resolveWorktreeCatalogSnapshot(
+        coarsenWorktreePsActivity(result),
+        params.afterSnapshotId
+      )
     }
   }),
   defineMethod({
     name: 'worktree.list',
+    permission: 'workspace',
     params: WorktreeListParams,
     handler: async (params, context) => {
       const pendingAtScan = snapshotPendingWorktreeRemovals()
@@ -53,11 +61,13 @@ export const WORKTREE_CATALOG_METHODS = [
   }),
   defineMethod({
     name: 'worktree.listRetiredNames',
+    permission: 'workspace',
     params: WorktreeDetectedListParams,
     handler: async (params, { runtime }) => runtime.listRetiredWorktreeNames(params.repo)
   }),
   defineMethod({
     name: 'worktree.detectedList',
+    permission: 'workspace',
     params: WorktreeDetectedListParams,
     handler: async (params, context) => {
       const pendingAtScan = snapshotPendingWorktreeRemovals()

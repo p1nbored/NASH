@@ -118,8 +118,6 @@ export const recentTerminalOutputIncludesPath =
 export const recentTerminalPathCandidatesIncludePath =
   importedValues.exportedRecentTerminalPathCandidatesIncludePath
 export const registerLocalPtyMemoryRow = importedValues.exportedRegisterLocalPtyMemoryRow
-export const registerSshFilesystemProvider = importedValues.exportedRegisterSshFilesystemProvider
-export const registerSshGitProvider = importedValues.exportedRegisterSshGitProvider
 export const removeWorktree = importedValues.exportedRemoveWorktree
 export const resolveSetupRunnerShell = importedValues.exportedResolveSetupRunnerShell
 export const resolveWorktreeScanCacheTtlMs = importedValues.exportedResolveWorktreeScanCacheTtlMs
@@ -138,9 +136,6 @@ export const setWorktreeWatcherRemoval = importedValues.exportedSetWorktreeWatch
 export const shouldRunSetupForCreate = importedValues.exportedShouldRunSetupForCreate
 export const tmpdir = importedValues.exportedTmpdir
 export const unregisterLocalPtyMemoryRow = importedValues.exportedUnregisterLocalPtyMemoryRow
-export const unregisterSshFilesystemProvider =
-  importedValues.exportedUnregisterSshFilesystemProvider
-export const unregisterSshGitProvider = importedValues.exportedUnregisterSshGitProvider
 export const vi = importedValues.exportedVi
 export const win32 = importedValues.exportedWin32
 export const worktreePathComparison = importedValues.exportedWorktreePathComparison
@@ -179,15 +174,7 @@ export {
   computeWorktreePathMock,
   ensurePathWithinWorkspaceMock
 } from './orca-runtime-test-mocks/setup.spec'
-export const sshGitProviders = setup.sshGitProviders
-export const sshProviderGenerations = setup.sshProviderGenerations
 export {
-  getSshGitProviderMock,
-  getSshGitProviderGenerationMock,
-  registerSshGitProviderMock,
-  unregisterSshGitProviderMock,
-  getActiveMultiplexerMock,
-  muxRequestMock,
   invalidateAuthorizedRootsCacheMock,
   prepareLocalWorktreeRootForRepoMock,
   createHostedReviewMock,
@@ -228,7 +215,6 @@ export {
   listGitHubAssignableUsersMock,
   applyAgentStatusHooksEnabledMock,
   detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgentsMock,
   markCodexProjectTrustedMock,
   markCopilotFolderTrustedMock,
   markCursorWorkspaceTrustedMock,
@@ -270,7 +256,7 @@ export type {
 export type { BrowserClientHostCommandEvent } from '../../shared/browser-client-host-protocol'
 export type { FolderWorkspace } from '../../shared/folder-workspace-types'
 export type { GitUsernameModule }
-export type { IPtyProvider } from '../providers/types'
+export type { IPtyProvider } from '../providers/pty-provider-contract'
 export type { MessagePriority, MessageRow, MessageType } from './orchestration/types'
 export type { ProjectGroup } from '../../shared/project-group-types'
 export type { RpcRequest } from './rpc/core'

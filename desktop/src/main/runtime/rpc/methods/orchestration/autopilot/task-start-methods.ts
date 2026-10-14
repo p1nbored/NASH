@@ -13,6 +13,8 @@ import { requireTaskOfRun } from './autopilot-task-snapshot'
  */
 export const TASK_START_METHOD = defineMethod({
   name: 'orchestration.taskStart',
+
+  permission: 'workspace',
   params: TaskStartParams,
   handler: async (params, context): Promise<TaskStartResult> => {
     const api = requireAutopilotTaskApi(context.runtime)

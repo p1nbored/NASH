@@ -19,6 +19,8 @@ import {
 import { createRequire } from 'node:module'
 import { electronViteConfig } from '../../electron.vite.config'
 import { BOOTSTRAP_FATAL_EXIT_GUARD_KEY } from '../../src/main/startup/bootstrap-fatal-exit-guard'
+import { FOREIGN_SQLITE_READER_ENTRY_FILENAME } from '../../src/main/foreign-sqlite-readers/foreign-sqlite-reader-entry-path'
+import { ORCAD_CHILD_ENTRY_POINTS } from './orcad-entry-build.mjs'
 
 type BootstrapProcessMock = EventEmitter & {
   env: Record<string, string>
@@ -70,7 +72,9 @@ function failBootstrapWithBanner(options: {
   return processMock
 }
 
-const electronBuilderConfig = createRequire(import.meta.url)('../electron-builder.config.cjs')
+const require = createRequire(import.meta.url)
+const electronBuilderConfig = require('../electron-builder.config.cjs')
+const { FileMatcher } = require('app-builder-lib/out/fileMatcher')
 
 describe('Electron Vite output contract', () => {
   it("minifies main and renderer with rolldown's in-process minifier", () => {
@@ -90,13 +94,38 @@ describe('Electron Vite output contract', () => {
 
   it('keeps main-process and plain-Node entries at stable CommonJS paths', () => {
     const output = electronViteConfig.main?.build?.rollupOptions?.output
-    if (!output || Array.isArray(output)) {
-      throw new Error('Expected one main-process output')
+    if (!output || Array.isArray(output) || typeof output.entryFileNames !== 'string') {
+      throw new Error('Expected one main-process output with a filename template')
     }
 
     expect(output.format).toBe('cjs')
     expect(output.entryFileNames).toBe('[name].js')
     expect(output.chunkFileNames).toBe('chunks/[name]-[hash].js')
+
+    const build = electronViteConfig.main?.build
+    const input = build?.rollupOptions?.input
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+      throw new Error('Expected named main-process inputs')
+    }
+
+    const entryName = nodePath.parse(FOREIGN_SQLITE_READER_ENTRY_FILENAME).name
+    expect(input[entryName]).toBe(nodePath.resolve(ORCAD_CHILD_ENTRY_POINTS.foreignSqliteReader))
+    const outputFilename = output.entryFileNames.replace('[name]', entryName)
+    expect(outputFilename).toBe(FOREIGN_SQLITE_READER_ENTRY_FILENAME)
+
+    const appRoot = join(tmpdir(), 'orca-sqlite-unpack-app')
+    const matcher = new FileMatcher(
+      appRoot,
+      join(tmpdir(), 'orca-sqlite-unpack-destination'),
+      (value: string) => value,
+      electronBuilderConfig.asarUnpack
+    )
+    const relativeOutDir = nodePath.relative(
+      nodePath.resolve('.'),
+      nodePath.resolve(build?.outDir ?? join('out', 'main'))
+    )
+    const outputPath = join(appRoot, relativeOutDir, outputFilename)
+    expect(matcher.createFilter()(outputPath, { isDirectory: () => false })).toBe(true)
   })
 
   it('keeps CLI main imports unpacked at stable paths', () => {
@@ -142,12 +171,16 @@ describe('Electron Vite output contract', () => {
     expect(external('@parcel/watcher', undefined, false)).toBe(true)
     expect(external('electron', undefined, false)).toBe(true)
     expect(external('node:fs', undefined, false)).toBe(true)
+    expect(external('@orca/process-host', undefined, false)).toBe(true)
+    expect(external('@orca/process-host/spawn-observer', undefined, false)).toBe(true)
     expect(external('@xterm/headless', undefined, false)).toBe(false)
     expect(external('@xterm/addon-serialize', undefined, false)).toBe(false)
     expect(external('tldts', undefined, false)).toBe(false)
     expect(external('zod', undefined, false)).toBe(false)
     expect(external('smol-toml', undefined, false)).toBe(false)
     expect(external('smol-toml/package.json', undefined, false)).toBe(false)
+    expect(external('@noble/hashes/blake3', undefined, false)).toBe(false)
+    expect(external('@noble/hashes/utils', undefined, false)).toBe(false)
     expect(electronViteConfig.main?.build?.externalizeDeps?.exclude).toContain('tldts')
     expect(electronViteConfig.main?.build?.externalizeDeps?.exclude).toContain('zod')
     expect(electronViteConfig.main?.build?.externalizeDeps?.exclude).toContain('smol-toml')

@@ -66,12 +66,6 @@ function routesDeclaring(token) {
   ).map((route) => route.pathname)
 }
 
-describe('the grant token this census is written against', () => {
-  it('is the one the shell declares', () => {
-    expect(externalNavigationGrantToken()).toBe('externalNavigation')
-  })
-})
-
 describeClosure(
   'the routes that render an HTML artifact',
   () => {

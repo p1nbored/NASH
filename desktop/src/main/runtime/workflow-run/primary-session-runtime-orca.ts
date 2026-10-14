@@ -1,29 +1,32 @@
-import { stopNativeRunWorkers } from '../task-execution/task-start-native'
-import { randomBytes, randomUUID } from 'node:crypto'
-import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { getAppEnvironment, hasAppEnvironment } from '../../../shared/app-environment'
-import { executeAgentLaunch } from '../../agent-launch/agent-launch-executor'
-import type { RoutingTableRuntime } from '../../routing-table/routing-table-runtime'
-import { localOrchestrationCliCommand } from '../orchestration/cli-command'
-import type { OrchestrationDb } from '../orchestration/db'
-import type { OrcaRuntimeService } from '../orca-runtime'
-import { deliverTerminalAgentLaunchPrompt } from '../rpc/methods/agent-launch-terminal-prompt'
-import { createOrcaPrimaryLaunchLedger } from './primary-session-ledger'
-import { withStructuredNativeChatDisabled } from './primary-session-preflight'
-import { composePrimarySessionRuntime, type PrimarySessionRuntime } from './primary-session-runtime'
-import type { RunMessageDeliveryDeps } from './run-message-delivery'
+import { stopNativeRunWorkers } from "../task-execution/task-start-native";
+import { randomBytes, randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { getAppEnvironment, hasAppEnvironment } from "../../../shared/app-environment";
+import { executeAgentLaunch } from "../../agent-launch/agent-launch-executor";
+import type { RoutingTableRuntime } from "../../routing-table/routing-table-runtime";
+import { localOrchestrationCliCommand } from "../orchestration/cli-command";
+import type { OrchestrationDb } from "../orchestration/db";
+import type { OrcaRuntimeService } from "../orca-runtime";
+import { deliverTerminalAgentLaunchPrompt } from "../rpc/methods/agent-launch-terminal-prompt";
+import { createOrcaPrimaryLaunchLedger } from "./primary-session-ledger";
+import { withStructuredNativeChatDisabled } from "./primary-session-preflight";
+import {
+  composePrimarySessionRuntime,
+  type PrimarySessionRuntime,
+} from "./primary-session-runtime";
+import type { RunMessageDeliveryDeps } from "./run-message-delivery";
 import {
   resolvePrimaryStatusLineRelayContext,
-  type PrimaryStatusLineRelayContext
-} from './primary-session-status-line-context'
+  type PrimaryStatusLineRelayContext,
+} from "./primary-session-status-line-context";
 
 /** Read at each launch, so a Git Bash installed after startup is found by the next session. */
 function hostStatusLineRelay(): PrimaryStatusLineRelayContext | null {
   if (!hasAppEnvironment()) {
-    return null
+    return null;
   }
-  const app = getAppEnvironment()
+  const app = getAppEnvironment();
   return resolvePrimaryStatusLineRelayContext({
     platform: process.platform,
     env: process.env,
@@ -32,35 +35,35 @@ function hostStatusLineRelay(): PrimaryStatusLineRelayContext | null {
     resourcesPath: process.resourcesPath,
     execPath: process.execPath,
     homeDir: homedir(),
-    exists: existsSync
-  })
+    exists: existsSync,
+  });
 }
 
 export type OrcaPrimarySessionRuntimeDeps = {
-  readonly runtime: OrcaRuntimeService
-  readonly db: OrchestrationDb
-  readonly routing: Pick<RoutingTableRuntime, 'resolver' | 'activeTable'>
-  readonly userDataPath: string
-  readonly primaryStatusChanges?: RunMessageDeliveryDeps['primaryStatusChanges']
-}
+  readonly runtime: OrcaRuntimeService;
+  readonly db: OrchestrationDb;
+  readonly routing: Pick<RoutingTableRuntime, "resolver" | "activeTable">;
+  readonly userDataPath: string;
+  readonly primaryStatusChanges?: RunMessageDeliveryDeps["primaryStatusChanges"];
+};
 
 /**
  * Binds the primary-session runtime to the running app (E1 calls this once the database is open).
  * Typed against `OrcaRuntimeService`, so the compiler proves Orca satisfies every port.
  */
 export function createOrcaPrimarySessionRuntime(
-  deps: OrcaPrimarySessionRuntimeDeps
+  deps: OrcaPrimarySessionRuntimeDeps,
 ): PrimarySessionRuntime {
-  const { runtime } = deps
+  const { runtime } = deps;
   // Why: the launch decision reads only these two; structured chat off makes it a terminal launch.
   const launchModeRuntime: Pick<
     OrcaRuntimeService,
-    'getStructuredAgentSessionCreateSupport' | 'getClientSettings'
+    "getStructuredAgentSessionCreateSupport" | "getClientSettings"
   > = {
     getStructuredAgentSessionCreateSupport: (worktree, agent) =>
       runtime.getStructuredAgentSessionCreateSupport(worktree, agent),
-    getClientSettings: () => withStructuredNativeChatDisabled(runtime.getClientSettings())
-  }
+    getClientSettings: () => withStructuredNativeChatDisabled(runtime.getClientSettings()),
+  };
   const primary = composePrimarySessionRuntime({
     db: deps.db,
     terminal: runtime,
@@ -74,7 +77,7 @@ export function createOrcaPrimarySessionRuntime(
         handle,
         agent,
         freshLaunch: true,
-        text
+        text,
       }),
     workspaces: { require: (workspaceId) => runtime.requireWorkbenchWorkspace(workspaceId) },
     routing: deps.routing,
@@ -83,14 +86,14 @@ export function createOrcaPrimarySessionRuntime(
       platform: process.platform,
       cliCommand: localOrchestrationCliCommand(),
       clientSettings: () => runtime.getClientSettings(),
-      statusLineRelay: hostStatusLineRelay
+      statusLineRelay: hostStatusLineRelay,
     },
     clock: {
       now: () => Date.now(),
-      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     },
-    entropy: () => randomBytes(16).toString('hex'),
-    newRequestId: () => randomUUID()
-  })
-  return { ...primary, stopRunWorkers: (runId) => stopNativeRunWorkers(runtime, runId) }
+    entropy: () => randomBytes(16).toString("hex"),
+    newRequestId: () => randomUUID(),
+  });
+  return { ...primary, stopRunWorkers: (runId) => stopNativeRunWorkers(runtime, runId) };
 }

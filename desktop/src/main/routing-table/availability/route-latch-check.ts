@@ -49,7 +49,7 @@ export function applyLatches(input: {
   freshness: EvaluateFreshness
   /** The `updatedAt` of the provider's rate-limit reading, null when there is none. */
   limitsUpdatedAtMs: number | null
-  /** When the route's CLI answered its model listing in this check; used without a vendor meter. */
+  /** When the CLI answered in this check, never a static catalog's regeneration time. */
   cliAnsweredAtMs?: number | null
 }): { checks: readonly CheckOutcome[]; cleared: readonly RouteLatch['kind'][] } {
   const held: CheckOutcome[] = []

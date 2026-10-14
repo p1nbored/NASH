@@ -1,13 +1,22 @@
 /** Mirrors ORCA_REQUIRED_TEST_INPUTS_ENV in src/main/orcad/orcad-node-slot-fixture.ts. */
 export const REQUIRED_TEST_INPUTS_ENV = 'ORCA_REQUIRED_TEST_INPUTS'
 
-// Need Bun 1.4.2 and the last Bun orcad slot beside the built Node slot (design D7).
+// Need the pinned Bun and the last Bun orcad slot beside the built Node slot (design D7).
 export const CROSS_RUNTIME_TEST_PATHS = [
   'src/main/orcad/orcad-cross-runtime-daemon-adoption.integration.test.ts',
   'src/main/persistence/profile-state/profile-state-cross-runtime.integration.test.ts'
 ]
 
-export function nodeServerTestPaths({ artifact = false, crossRuntime = false } = {}) {
+// Need the built desktop server template; CI runs them by path after build-orcad-template.mjs.
+export const TEMPLATE_TEST_PATHS = [
+  'src/main/orcad/orcad-packaged-structured-chat.integration.test.ts'
+]
+
+export function nodeServerTestPaths({
+  artifact = false,
+  crossRuntime = false,
+  template = false
+} = {}) {
   return [
     'src/main/persistence/profile-state',
     'src/main/persistence/loading-store/profile-state',
@@ -31,6 +40,8 @@ export function nodeServerTestPaths({ artifact = false, crossRuntime = false } =
           'src/main/orcad/orcad-packaged-node-pty.integration.test.ts',
           'src/main/providers/agent-foreground-process-git-bash.win32.test.ts',
           'src/main/orcad/orcad-node-launcher.integration.test.ts',
+          'src/main/orcad/orcad-cli-launcher.integration.test.ts',
+          'src/main/orcad/orcad-cli-orchestration.integration.test.ts',
           'src/main/orcad/orcad-launcher-isolation.integration.test.ts',
           'src/main/orcad/orcad-stop-request-shutdown.integration.test.ts',
           'src/main/orcad/orcad-windows-conpty-breakaway.integration.test.ts',
@@ -38,6 +49,7 @@ export function nodeServerTestPaths({ artifact = false, crossRuntime = false } =
           'config/scripts/zip-extractor-command.test.mjs'
         ]
       : []),
-    ...(crossRuntime ? CROSS_RUNTIME_TEST_PATHS : [])
+    ...(crossRuntime ? CROSS_RUNTIME_TEST_PATHS : []),
+    ...(template ? TEMPLATE_TEST_PATHS : [])
   ]
 }

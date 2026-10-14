@@ -159,7 +159,8 @@ describe('task route store', () => {
         codexRoute(classificationId, { model: null, policyLevel: 'max' }),
         // Why: only the targets that run inside the primary session's configuration may inherit.
         codexRoute(classificationId, { policyLevel: 'inherit', model: null, cliSetting: null }),
-        codexRoute(classificationId, { target: 'gemini_cli' as never }),
+        // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Invalid wire input must be rejected by the store at runtime.
+        codexRoute(classificationId, { target: 'unknown_cli' as never }),
         codexRoute(classificationId, { policyLevel: 'extreme' as never }),
         codexRoute(classificationId, { status: 'maybe' as never }),
         codexRoute(classificationId, { routingTableVersion: 0 }),

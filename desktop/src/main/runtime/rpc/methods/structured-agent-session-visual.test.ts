@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentSessionRecord } from '../../../../shared/agent-session-record'
 import { agentSessionRecordFixture } from '../../../../shared/agent-session-record.test-fixture'
 import { setStructuredAgentSessionHost } from '../../../native-chat/agent-session-wire/structured-agent-session-registry'
-import { nativeChatVisualsFolderFor } from '../../../native-chat/native-chat-visuals-folder'
+import { nativeChatScratchFolderFor } from '../../../native-chat/native-chat-scratch-folder'
 import { ALL_RPC_METHODS } from '.'
 import { STRUCTURED_AGENT_SESSION_VISUAL_METHODS } from './structured-agent-session-visual'
 import {
@@ -46,7 +46,7 @@ afterEach(async () => {
 })
 
 async function writeVisual(name: string, html: string): Promise<void> {
-  const folder = nativeChatVisualsFolderFor(stateDirectory, SESSION)
+  const folder = nativeChatScratchFolderFor(stateDirectory, SESSION)
   await mkdir(folder, { recursive: true })
   await writeFile(join(folder, name), html)
 }

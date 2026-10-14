@@ -67,7 +67,7 @@ export function createWorkspaceTerminalHydrationActions(
           sleepingAgentSessionsByPaneKey,
           tabsByWorktree,
           validTabIds
-        } = buildWorkspaceTerminalRowPlan(session, validWorktreeIds, options)
+        } = buildWorkspaceTerminalRowPlan(session, validWorktreeIds)
         const fallbackActiveWorktreeId =
           !session.activeWorktreeId &&
           session.activeRepoId &&

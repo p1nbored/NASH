@@ -26,7 +26,7 @@ import type {
 import { RUNTIME_CAPABILITIES } from '../../shared/protocol-version'
 import { STRUCTURED_AGENT_RUNTIME_REGISTRATIONS } from '../runtime/structured-agent-runtime-registrations'
 import {
-  prefersStructuredNativeChatByDefault,
+  isNativeChatEnabled,
   resolveStructuredNativeChatSupport,
   type NativeChatDefaultSettings,
   type StructuredNativeChatBlocker
@@ -130,14 +130,13 @@ const HOST_SUPPORT_REASON: Record<
 export function decideAgentLaunchMode(args: {
   placement: AgentLaunchModePlacement
   settings: AgentLaunchModeSettings | null | undefined
+  /** Host-internal: the caller's contract is a terminal handle, so the chat default cannot apply. */
+  terminalOnly?: boolean
   vocabulary?: AgentLaunchModeVocabulary
-  /** Registered agents (beyond Claude and Codex) this surface can open as structured; defaults to
-   *  every agent this host registers. */
-  registeredStructuredAgents?: readonly string[]
 }): AgentLaunchModeReceipt {
   const { placement, settings } = args
   const vocabulary = args.vocabulary ?? DEFAULT_LAUNCH_VOCABULARY
-  if (!prefersStructuredNativeChatByDefault(settings)) {
+  if (args.terminalOnly || !isNativeChatEnabled(settings)) {
     return {
       mode: 'terminal',
       preferred: 'terminal',
@@ -158,7 +157,7 @@ export function decideAgentLaunchMode(args: {
     reusesTerminal: Boolean(placement.terminal),
     hostCapabilities: RUNTIME_CAPABILITIES,
     // This host is the one that will run the agent, so its own registrations answer.
-    hostStructuredAgents: args.registeredStructuredAgents ?? REGISTERED_STRUCTURED_AGENTS,
+    hostStructuredAgents: REGISTERED_STRUCTURED_AGENTS,
     // The host resolves the floating workspace to its configured directory; create-support still
     // answers for the resolved workspace, including whether it uses WSL.
     ...(placement.workspaceKind ? { workspaceKind: placement.workspaceKind } : {}),
@@ -266,10 +265,15 @@ export function warnStructuredLaunchDowngrade(
   }
 }
 
-/** The store can be missing on a runtime that never opened one; that reads as no preference. */
+/** The store can be missing on a runtime that never opened one; that reads as no preference.
+ *  A relaying desktop's stamped `nativeChatDefault` stands in for this host's own chat setting. */
 export function readAgentLaunchModeSettings(
-  runtime: Pick<OrcaRuntimeService, 'getClientSettings'>
+  runtime: Pick<OrcaRuntimeService, 'getClientSettings'>,
+  nativeChatDefault?: boolean
 ): AgentLaunchModeSettings | null {
+  if (nativeChatDefault !== undefined) {
+    return { experimentalNativeChat: nativeChatDefault }
+  }
   try {
     return runtime.getClientSettings()
   } catch {

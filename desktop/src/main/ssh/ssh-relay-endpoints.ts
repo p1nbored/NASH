@@ -1,14 +1,7 @@
 import { createHash } from 'node:crypto'
-import {
-  isWindowsRemoteHost,
-  joinRemotePath,
-  remoteBasename,
-  type RemoteHostPlatform
-} from './ssh-remote-platform'
+import { isWindowsRemoteHost, joinRemotePath, type RemoteHostPlatform } from './ssh-remote-platform'
 
-export const WINDOWS_ACTIVE_PIPE_MARKER_PREFIX = '.windows-active-pipe-'
-
-export function relayEndpointForHost(
+function relayEndpointForHost(
   hostPlatform: RemoteHostPlatform,
   remoteDir: string,
   sockName: string
@@ -23,23 +16,6 @@ export function relayEndpointForHost(
   return `\\\\.\\pipe\\orca-relay-${endpointHash}`
 }
 
-export function relayHookEndpointDirForHost(
-  hostPlatform: RemoteHostPlatform,
-  remoteDir: string,
-  sockPath: string
-): string {
-  return joinRemotePath(
-    hostPlatform,
-    remoteDir,
-    'agent-hooks',
-    remoteBasename(sockPath, hostPlatform)
-  )
-}
-
-export function windowsRelayFallbackSocketName(sockName: string): string {
-  return `${sockName}-fallback`
-}
-
 export function windowsRelayPipePathsForSocketName(
   hostPlatform: RemoteHostPlatform,
   remoteDir: string,
@@ -47,22 +23,6 @@ export function windowsRelayPipePathsForSocketName(
 ): string[] {
   return [
     relayEndpointForHost(hostPlatform, remoteDir, sockName),
-    relayEndpointForHost(hostPlatform, remoteDir, windowsRelayFallbackSocketName(sockName))
+    relayEndpointForHost(hostPlatform, remoteDir, `${sockName}-fallback`)
   ]
-}
-
-export function windowsActivePipeMarkerPath(
-  hostPlatform: RemoteHostPlatform,
-  remoteDir: string,
-  sockName: string
-): string {
-  return joinRemotePath(
-    hostPlatform,
-    remoteDir,
-    `${WINDOWS_ACTIVE_PIPE_MARKER_PREFIX}${sockName.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-  )
-}
-
-export function isWindowsRelayPipePath(value: string): boolean {
-  return /^\\\\[.?]\\pipe\\orca-relay-[0-9a-f]{20}$/i.test(value)
 }

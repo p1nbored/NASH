@@ -15,13 +15,11 @@ const mocks = vi.hoisted(() => {
     owner: NativeChatAttachmentOwner
     remoteTarget: boolean
     stat: ReturnType<typeof vi.fn>
-    upload: ReturnType<typeof vi.fn>
     tabsByWorktree: Record<string, { id: string }[]>
   } = {
     owner: { kind: 'local' },
     remoteTarget: false,
     stat: vi.fn(),
-    upload: vi.fn(),
     tabsByWorktree: { 'workspace-1': [{ id: 'tab-1' }] }
   }
   return state
@@ -36,8 +34,7 @@ vi.mock('@/runtime/runtime-terminal-inspection', () => ({
 vi.mock('./native-chat-attachment-upload', async (importOriginal) => ({
   ...(await importOriginal<typeof AttachmentUploadModule>()),
   resolveNativeChatAttachmentOwner: () => mocks.owner,
-  resolveNativeChatAttachmentOwnerForWorktree: () => mocks.owner,
-  uploadNativeChatAttachmentPaths: mocks.upload
+  resolveNativeChatAttachmentOwnerForWorktree: () => mocks.owner
 }))
 
 type Api = ReturnType<typeof useNativeChatExternalAttachments> &
@@ -98,7 +95,6 @@ beforeEach(() => {
   mocks.owner = { kind: 'local' }
   mocks.remoteTarget = false
   mocks.stat.mockReset().mockResolvedValue(undefined)
-  mocks.upload.mockReset().mockResolvedValue(['/remote/file.txt'])
   mocks.tabsByWorktree = { 'workspace-1': [{ id: 'tab-1' }] }
   vi.stubGlobal('api', { fs: { stat: mocks.stat } })
   container = document.createElement('div')
@@ -114,19 +110,9 @@ afterEach(() => {
 })
 
 describe('OS attachment destination through input-method composition', () => {
-  it.each(['workspace', 'host', 'ssh-generation', 'terminal-workspace'])(
+  it.each(['workspace', 'host', 'terminal-workspace'])(
     'refuses queued files after the %s changes',
     async (change) => {
-      if (change === 'ssh-generation') {
-        mocks.owner = {
-          kind: 'ssh',
-          connectionId: 'ssh-1',
-          worktreePath: '/remote',
-          expectedExecutionHostId: 'ssh:ssh-1',
-          expectedSshTargetId: 'ssh-1',
-          expectedSshConnectionGeneration: 1
-        }
-      }
       await render(change === 'terminal-workspace' ? undefined : 'workspace-1')
       await act(async () => latest().attachExternalPaths(['/local/file.txt', '/local/image.png']))
       expect(container.querySelector('[data-draft]')?.textContent).toBe('')
@@ -134,10 +120,7 @@ describe('OS attachment destination through input-method composition', () => {
         await render('workspace-2')
       }
       if (change === 'host') {
-        mocks.owner = { kind: 'runtime' }
-      }
-      if (change === 'ssh-generation' && mocks.owner.kind === 'ssh') {
-        mocks.owner = { ...mocks.owner, expectedSshConnectionGeneration: 2 }
+        mocks.owner = { kind: 'remote' }
       }
       if (change === 'terminal-workspace') {
         mocks.tabsByWorktree = { 'workspace-1': [] }
@@ -158,37 +141,6 @@ describe('OS attachment destination through input-method composition', () => {
     composing = false
     act(() => latest().flushPendingAttachments())
     expect(container.querySelector('[data-draft]')?.textContent).toBe('@/local/file.txt ')
-  })
-
-  it('refuses an obsolete SSH drop and attaches the retry once during the same composition', async () => {
-    mocks.owner = {
-      kind: 'ssh',
-      connectionId: 'ssh-1',
-      worktreePath: '/remote',
-      expectedExecutionHostId: 'ssh:ssh-1',
-      expectedSshTargetId: 'ssh-1',
-      expectedSshConnectionGeneration: 1
-    }
-    mocks.upload
-      .mockResolvedValueOnce(['/remote/a.txt', '/remote/a.png'])
-      .mockResolvedValueOnce(['/remote/b.txt', '/remote/b.png'])
-    await render('workspace-1')
-    await act(async () => latest().attachExternalPaths(['/local/a.txt', '/local/a.png']))
-    mocks.owner = { ...mocks.owner, expectedSshConnectionGeneration: 2 }
-    await act(async () => latest().attachExternalPaths(['/local/b.txt', '/local/b.png']))
-    expect(container.querySelector('[data-draft]')?.textContent).toBe('')
-    composing = false
-    act(() => {
-      latest().flushPendingAttachments()
-      latest().flushPendingAttachments()
-    })
-    expect(container.querySelector('[data-draft]')?.textContent).toBe('@/remote/b.txt ')
-    expect(latest().imageAttachments).toEqual([
-      expect.objectContaining({ path: '/remote/b.png', connectionId: 'ssh-1' })
-    ])
-    expect(container.querySelector('[data-notice]')?.textContent).toBe(
-      'This workspace changed hosts while attaching — drop the files again.'
-    )
   })
 
   it.each([true, false])(

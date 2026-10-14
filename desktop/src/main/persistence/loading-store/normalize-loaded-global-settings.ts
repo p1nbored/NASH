@@ -9,7 +9,11 @@ import { normalizeTerminalCustomThemes } from '../../../shared/terminal-custom-t
 import { projectSourceControlAiToLegacyCommitMessageAi } from '../../../shared/source-control-ai'
 import { normalizeUiLanguage } from '../../../shared/ui-language'
 import { normalizeNativeChatShellEnvironmentVariables } from '../../../shared/native-chat-shell-environment'
-import { stripRetiredGlobalSettings } from '../applying-settings/terminal-settings-migrations'
+import { loadedChatPermissionSetting } from '../../../shared/agent-chat-permission-mode'
+import {
+  savedChatUiWithTerminalDefaultView,
+  stripRetiredGlobalSettings
+} from '../applying-settings/terminal-settings-migrations'
 import { readLegacySidekickFlag } from '../applying-settings/onboarding-normalization'
 import { normalizeMachineName } from '../../../shared/machine-name'
 import type { PersistedState } from '../../../shared/persisted-state-types'
@@ -61,6 +65,10 @@ export function normalizeLoadedGlobalSettings(
     // old default indistinguishable from a real opt-in. Preserve stored `true`; only
     // the default changed.
     ...stripRetiredGlobalSettings(parsed.settings),
+    // Why: Chat UI on now opens new tabs in chat; keep users whose new tabs opened in the terminal there.
+    ...(savedChatUiWithTerminalDefaultView(parsed.settings)
+      ? { experimentalNativeChat: false }
+      : {}),
     nativeChatAppearance: normalizeNativeChatAppearanceSettings(
       parsed.settings?.nativeChatAppearance
     ),
@@ -125,6 +133,15 @@ export function normalizeLoadedGlobalSettings(
     nativeChatInheritShellEnvironment: parsed.settings?.nativeChatInheritShellEnvironment !== false,
     nativeChatShellEnvironmentVariables: normalizeNativeChatShellEnvironmentVariables(
       parsed.settings?.nativeChatShellEnvironmentVariables
+    ),
+    // Why: the next settings save stores the seed; until then a reload derives the same one.
+    nativeChatPermissionMode: loadedChatPermissionSetting(
+      parsed.settings?.nativeChatPermissionMode,
+      {
+        ...migratedAgentYoloDefaults,
+        terminalWindowsShell: parsed.settings?.terminalWindowsShell
+      },
+      process.platform
     ),
     defaultTaskSource: taskProviderSettings.defaultTaskSource,
     visibleTaskProviders: taskProviderSettings.visibleTaskProviders,

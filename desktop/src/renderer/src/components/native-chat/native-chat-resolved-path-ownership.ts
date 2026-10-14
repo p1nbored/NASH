@@ -21,17 +21,5 @@ export function nativeChatAttachmentOwnerUnchanged(
   captured: NativeChatAttachmentOwner,
   current: NativeChatAttachmentOwner
 ): boolean {
-  if (captured.kind !== current.kind || captured.kind === 'not-ready') {
-    return false
-  }
-  if (captured.kind !== 'ssh' || current.kind !== 'ssh') {
-    return true
-  }
-  return (
-    captured.connectionId === current.connectionId &&
-    captured.worktreePath === current.worktreePath &&
-    captured.expectedExecutionHostId === current.expectedExecutionHostId &&
-    captured.expectedSshTargetId === current.expectedSshTargetId &&
-    captured.expectedSshConnectionGeneration === current.expectedSshConnectionGeneration
-  )
+  return captured.kind === current.kind && captured.kind !== 'not-ready'
 }

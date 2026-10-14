@@ -7,25 +7,17 @@ import { getLocalProjectWorktreeGitOptions } from '../project-runtime-git-option
 import { listWorktreesStrict } from '../git/worktree'
 
 /**
- * Lists a repo's worktrees on the host the removal already routed to, with the git options
- * that host needs. The SSH provider carries its own exec context, so local project options
- * are resolved (and passed) only on the local route — asking for them on an SSH removal is
- * how a remote listing picked up this machine's WSL distro.
+ * Lists a repo's worktrees on the local host the removal routed to, with its git options. The route
+ * is required so a caller cannot list before routing has refused a non-local host.
  */
 export async function listWorktreesOnRemovalRoute(
-  route: WorktreeRemovalRoute,
+  _route: WorktreeRemovalRoute,
   repo: Repo,
   store: Store
 ): Promise<{
   localWorktreeGitOptions: LocalProjectWorktreeGitOptions
   registeredWorktrees: GitWorktreeInfo[]
 }> {
-  if (route.kind === 'ssh') {
-    return {
-      localWorktreeGitOptions: {},
-      registeredWorktrees: await route.provider.listWorktrees(repo.path)
-    }
-  }
   const localWorktreeGitOptions = getLocalProjectWorktreeGitOptions(store, repo)
   return {
     localWorktreeGitOptions,

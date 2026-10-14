@@ -1,15 +1,15 @@
-import type { OrchestrationDb } from '../orchestration/db'
-import { WORKFLOW_RUN_STATUSES } from '../orchestration/db/autopilot-run-schema-definition'
-import { getPrimarySessionStore } from '../orchestration/db/primary-session-store'
-import { getWorkflowRunStore } from '../orchestration/db/workflow-run-store'
-import { isPrimaryBoundToRun } from './primary-session-run-binding'
+import type { OrchestrationDb } from "../orchestration/db";
+import { WORKFLOW_RUN_STATUSES } from "../orchestration/db/autopilot-run-schema-definition";
+import { getPrimarySessionStore } from "../orchestration/db/primary-session-store";
+import { getWorkflowRunStore } from "../orchestration/db/workflow-run-store";
+import { isPrimaryBoundToRun } from "./primary-session-run-binding";
 import {
   WORKFLOW_RUN_TERMINAL_STATUSES,
-  type WorkflowRunStatus
-} from '../orchestration/db/workflow-run-transition'
+  type WorkflowRunStatus,
+} from "../orchestration/db/workflow-run-transition";
 
-export type AppRunRecord = { runId: string; status: WorkflowRunStatus }
-export type LivePrimaryPane = { runId: string; paneKey: string | null }
+export type AppRunRecord = { runId: string; status: WorkflowRunStatus };
+export type LivePrimaryPane = { runId: string; paneKey: string | null };
 
 /**
  * The narrow, read-only view the single-authority guards take of the app's side tables. The guards
@@ -17,26 +17,26 @@ export type LivePrimaryPane = { runId: string; paneKey: string | null }
  */
 export type AppRunReaders = {
   /** The app's record of a run, or null when the run has no workflow_runs row. */
-  findAppRun(runId: string): AppRunRecord | null
+  findAppRun(runId: string): AppRunRecord | null;
   /** App runs that have not reached completed, failed or canceled, oldest first. */
-  listOpenAppRuns(): readonly AppRunRecord[]
+  listOpenAppRuns(): readonly AppRunRecord[];
   /** The pane of each live primary session; a session still starting has no pane yet. */
-  listLivePrimaryPanes(): readonly LivePrimaryPane[]
+  listLivePrimaryPanes(): readonly LivePrimaryPane[];
   /** True when a validator recorded a passing verdict for the task (task_validations, written by B3). */
-  hasPassingValidation(taskId: string): boolean
-}
+  hasPassingValidation(taskId: string): boolean;
+};
 
 /** What every guard sees before the app ever recorded a run: no app run and no pass. */
 export const NO_APP_RUNS: AppRunReaders = Object.freeze({
   findAppRun: () => null,
   listOpenAppRuns: () => [],
   listLivePrimaryPanes: () => [],
-  hasPassingValidation: () => false
-})
+  hasPassingValidation: () => false,
+});
 
-const READ_LIMIT = 1000
-const TERMINAL: ReadonlySet<string> = new Set(WORKFLOW_RUN_TERMINAL_STATUSES)
-const OPEN_STATUSES = WORKFLOW_RUN_STATUSES.filter((status) => !TERMINAL.has(status))
+const READ_LIMIT = 1000;
+const TERMINAL: ReadonlySet<string> = new Set(WORKFLOW_RUN_TERMINAL_STATUSES);
+const OPEN_STATUSES = WORKFLOW_RUN_STATUSES.filter((status) => !TERMINAL.has(status));
 
 // Why: probing sqlite_master keeps an Orca database that never ran the app untouched; opening the
 // stores would create the family, so they are only reached once workflow_runs exists.
@@ -44,10 +44,10 @@ function hasAppRunTables(owner: OrchestrationDb): boolean {
   return (
     owner.db
       .prepare(
-        "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'workflow_runs'"
+        "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'workflow_runs'",
       )
       .get() !== undefined
-  )
+  );
 }
 
 /**
@@ -56,12 +56,12 @@ function hasAppRunTables(owner: OrchestrationDb): boolean {
  */
 export function appRunReadersFor(owner: OrchestrationDb): AppRunReaders {
   if (!hasAppRunTables(owner)) {
-    return NO_APP_RUNS
+    return NO_APP_RUNS;
   }
   return {
     findAppRun: (runId) => {
-      const run = getWorkflowRunStore(owner).get(runId)
-      return run ? { runId: run.runId, status: run.status } : null
+      const run = getWorkflowRunStore(owner).get(runId);
+      return run ? { runId: run.runId, status: run.status } : null;
     },
     listOpenAppRuns: () =>
       getWorkflowRunStore(owner)
@@ -72,7 +72,7 @@ export function appRunReadersFor(owner: OrchestrationDb): AppRunReaders {
         .listLive(READ_LIMIT)
         .filter(
           (session) =>
-            session.receipt?.nativeCoordinator !== true || isPrimaryBoundToRun(owner, session)
+            session.receipt?.nativeCoordinator !== true || isPrimaryBoundToRun(owner, session),
         )
         .map((session) => ({ runId: session.runId, paneKey: session.paneKey })),
     // Why: Orca's reset deletes tasks but not these rows, so a pass whose task is gone is no pass.
@@ -81,8 +81,8 @@ export function appRunReadersFor(owner: OrchestrationDb): AppRunReaders {
         .prepare(
           `SELECT 1 AS passed FROM task_validations v
             WHERE v.task_id = ? AND v.verdict = 'pass'
-              AND EXISTS (SELECT 1 FROM tasks WHERE tasks.id = v.task_id) LIMIT 1`
+              AND EXISTS (SELECT 1 FROM tasks WHERE tasks.id = v.task_id) LIMIT 1`,
         )
-        .get(taskId) !== undefined
-  }
+        .get(taskId) !== undefined,
+  };
 }

@@ -5,9 +5,9 @@ import { useAppStore } from '@/store'
 import { getConnectionId } from '@/lib/connection-context'
 import {
   generateRuntimePullRequestFields,
-  cancelRuntimeGeneratePullRequestFields,
-  type RuntimeGeneratePullRequestFieldsOverrides
-} from '@/runtime/runtime-git-client'
+  cancelRuntimeGeneratePullRequestFields
+} from '@/runtime/runtime-git-generation-client'
+import type { RuntimeGeneratePullRequestFieldsOverrides } from '@/runtime/runtime-git-client-context'
 import type { ChecksPanelReviewState } from './use-checks-panel-review-state'
 import type { ChecksPanelControllerState } from './use-checks-panel-controller-state'
 import { stripBaseRef } from '../create-pull-request-base-ref-normalization'
@@ -37,7 +37,7 @@ type ChecksPanelGenerationInput = Pick<
     | 'activeWorktreePath'
     | 'allocatePullRequestGenerationRequestId'
     | 'branch'
-    | 'ownerSettings'
+    | 'ownerTarget'
     | 'prGenerationRecords'
     | 'repo'
     | 'setPullRequestGenerationRecord'
@@ -54,7 +54,7 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
     branch,
     handleBranchChangedByPullRequestGeneration,
     hostedReviewCreateProvider,
-    ownerSettings,
+    ownerTarget,
     prCreationDefaults,
     prGenerationRecords,
     repo,
@@ -68,7 +68,13 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
       overrides?: RuntimeGeneratePullRequestFieldsOverrides,
       options?: PullRequestGenerationOptions
     ): Promise<PullRequestGenerationOutcome | undefined> => {
-      if (!repo || !activePullRequestGenerationKey || !activeWorktreePath || !branch) {
+      if (
+        !repo ||
+        !activePullRequestGenerationKey ||
+        !activeWorktreePath ||
+        !branch ||
+        !ownerTarget
+      ) {
         return undefined
       }
       const generationKey = activePullRequestGenerationKey
@@ -85,7 +91,7 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
         requestId,
         repoId: repo.id,
         branch,
-        runtimeTargetSettings: ownerSettings
+        runtimeTarget: ownerTarget
       }
       const seed = { ...fields }
       const previousRequiresPushBeforeCreate =
@@ -110,7 +116,8 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
           const result = await generateRuntimePullRequestFields(
             {
               // Why: route generation by the worktree owner captured at click time.
-              settings: context.runtimeTargetSettings,
+              target: context.runtimeTarget,
+              prefs: useAppStore.getState().settings,
               worktreeId: context.worktreeId,
               worktreePath: context.worktreePath,
               connectionId: context.connectionId
@@ -172,7 +179,7 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
       branch,
       handleBranchChangedByPullRequestGeneration,
       hostedReviewCreateProvider,
-      ownerSettings,
+      ownerTarget,
       prCreationDefaults.useTemplate,
       repo,
       setPullRequestGenerationRecord,
@@ -196,7 +203,7 @@ export function useChecksPanelGeneration(model: ChecksPanelGenerationInput) {
     })
     void cancelRuntimeGeneratePullRequestFields({
       // Why: Stop must target the request owner, not the currently focused worktree.
-      settings: record.context.runtimeTargetSettings,
+      target: record.context.runtimeTarget,
       worktreeId: record.context.worktreeId,
       worktreePath: record.context.worktreePath,
       connectionId: record.context.connectionId

@@ -15,10 +15,6 @@ import type {
   FolderWorkspacePathStatus,
   FolderWorkspacePathStatusRequest
 } from '../../shared/folder-workspace-path-status'
-import type {
-  HostLineageSnapshot,
-  ListDesktopLineageForHostArgs
-} from '../../shared/host-lineage-contract'
 import type { FolderWorkspace } from '../../shared/folder-workspace-types'
 import type {
   WorktreeBaseStatusEvent,
@@ -38,6 +34,7 @@ import type {
   DetectedWorktreeListResult,
   GitHubPrStartPoint,
   GitPushTarget,
+  GitStatusMetadataChangedEvent,
   GitWorktreeInfo,
   Worktree,
   WorktreeHeadIdentity
@@ -126,12 +123,11 @@ export type WorktreeApi = {
     worktreeId: string
     executionHostId?: ExecutionHostId
     updates: Partial<WorktreeMeta>
-  }) => Promise<Worktree>
+  }) => Promise<Worktree | null>
   listLineage: () => Promise<{
     lineage: Record<string, WorktreeLineage>
     workspaceLineage?: Record<string, WorkspaceLineage>
   }>
-  listLineageForHost?: (args: ListDesktopLineageForHostArgs) => Promise<HostLineageSnapshot>
   updateLineage: (args: {
     worktreeId: string
     parentWorktreeId?: string
@@ -142,7 +138,9 @@ export type WorktreeApi = {
    *  in main memory only — null after a restart or once the failure clears. */
   getBranchRenameFailureOutput: (args: { worktreeId: string }) => Promise<string | null>
   onChanged: (callback: (data: { repoId: string }) => void) => () => void
-  onGitStatusMetadataChanged: (callback: (data: { repoId: string }) => void) => () => void
+  onGitStatusMetadataChanged: (
+    callback: (data: GitStatusMetadataChangedEvent) => void
+  ) => () => void
   onHeadIdentitiesChanged: (
     callback: (data: { repoId: string; identities: WorktreeHeadIdentity[] }) => void
   ) => () => void

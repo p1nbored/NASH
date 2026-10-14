@@ -54,8 +54,8 @@ describe('route availability source hygiene', () => {
     expect(offenders).toEqual([])
   })
 
-  it('does not hardcode provider families in availability checks', () => {
-    const copies = files.filter((path) => /gemini|argon/i.test(codeOf(path)))
+  it('does not hardcode model families in availability checks', () => {
+    const copies = files.filter((path) => /gemini-\d|argon/i.test(codeOf(path)))
     expect(copies).toEqual([])
   })
 

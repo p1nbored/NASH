@@ -7,6 +7,7 @@ import {
   type JournalPayloadLimits
 } from '../agent-session-journal/journal-payload-bounds'
 import { codexGoalRowText, codexThreadGoalState } from '../../codex/codex-goal-journal-rows'
+import { isProviderRecord } from '../../provider-process/provider-json-record'
 import {
   classifyProviderFrame,
   hasTypedProviderFrameTranslator
@@ -80,6 +81,47 @@ export function readableProviderFrameText(payload: unknown): string | null {
   return null
 }
 
+function hookText(value: unknown): string | null {
+  return typeof value === 'string' ? value.trim() || null : null
+}
+
+function hookFailureFrameText(
+  provider: string,
+  kind: string,
+  payload: unknown,
+  fallback: string | null
+): string | null {
+  if (!isProviderRecord(payload)) {
+    return null
+  }
+  if (provider === 'codex' && kind === 'notification:hook/completed') {
+    const run = isProviderRecord(payload.run) ? payload.run : null
+    const event = hookText(run?.eventName)
+    const name = event ? ` ${event.charAt(0).toUpperCase()}${event.slice(1)}` : ''
+    const errors = Array.isArray(run?.entries)
+      ? run.entries.flatMap((entry: unknown) => {
+          const text =
+            isProviderRecord(entry) && entry.kind === 'error' ? hookText(entry.text) : null
+          return text ? [text] : []
+        })
+      : []
+    const detail = errors.join('\n') || fallback
+    return `Codex${name} hook failed${detail ? `: ${detail}` : '.'}`
+  }
+  if (provider === 'claude' && kind === 'message:system:hook_response') {
+    const name = hookText(payload.hook_name) ?? hookText(payload.hook_event)
+    const code = payload.exit_code
+    const exit =
+      typeof code === 'number' && Number.isSafeInteger(code) && code !== 0
+        ? ` (exit code ${code})`
+        : ''
+    const detail =
+      hookText(payload.stderr) ?? hookText(payload.output) ?? hookText(payload.stdout) ?? fallback
+    return `Claude${name ? ` ${name}` : ''} hook failed${exit}${detail ? `: ${detail}` : '.'}`
+  }
+  return null
+}
+
 /** Substantive adapter fallbacks become bounded journal rows; a chat draws one only with a sentence. */
 export function unhandledProviderFrameJournalItem(
   provider: string,
@@ -125,6 +167,9 @@ export function unhandledProviderFrameJournalItem(
       : undefined
   const tone = noticeTone ?? (classification === 'error-surface' ? 'error' : undefined)
   let message = readableProviderFrameText(payload)
+  if (classification === 'error-surface') {
+    message = hookFailureFrameText(provider, kind, payload, message) ?? message
+  }
   if (
     provider === 'codex' &&
     (method === 'configWarning' || method === 'deprecationNotice') &&

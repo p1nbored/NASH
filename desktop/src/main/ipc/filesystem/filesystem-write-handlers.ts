@@ -2,7 +2,7 @@ import { ipcMain, shell } from 'electron'
 import { lstat, writeFile } from 'node:fs/promises'
 import type { SshMutationExpectation } from '../../../shared/ssh-types'
 import { assertSshMutationExpectation } from '../../ssh/ssh-connection-generation'
-import { requireSshFilesystemProvider } from '../../providers/ssh-filesystem-dispatch'
+import { SshHostNotServedError } from '../../providers/ssh-host-not-served-error'
 import { tryDeleteWslUncPath } from '../../wsl-unc-delete'
 import type { LocalFileAccess } from '../../../shared/local-file-access'
 import {
@@ -36,10 +36,7 @@ export function registerFilesystemWriteHandlers(context: FilesystemHandlerContex
         args.expectedExecutionHostId
       )
       if (args.connectionId) {
-        return requireSshFilesystemProvider(args.connectionId).writeFile(
-          args.filePath,
-          args.content
-        )
+        throw new SshHostNotServedError(args.connectionId)
       }
       const filePath = await resolveLocalWriteRequestPath(args.filePath, args.access, store)
       try {
@@ -74,10 +71,7 @@ export function registerFilesystemWriteHandlers(context: FilesystemHandlerContex
         args.expectedExecutionHostId
       )
       if (args.connectionId) {
-        return requireSshFilesystemProvider(args.connectionId).deletePath(
-          args.targetPath,
-          args.recursive
-        )
+        throw new SshHostNotServedError(args.connectionId)
       }
       // Why: preserve the symlink so we delete the link, not its target (realpath would trash the real file, possibly outside all roots).
       const targetPath = await resolveDesktopAuthorizedPath(args.targetPath, store, {

@@ -1,11 +1,15 @@
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { resolveOrcadRuntimeTarget } from './orcad-runtime-target'
 import { SshConnection } from './ssh-connection'
 import { createCallbacks, createTarget } from './ssh-connection-test-fixtures'
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execCommand } from './ssh-relay-exec-command'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 
-vi.mock('./ssh-relay-deploy-helpers', () => ({ execCommand: vi.fn() }))
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
+  execCommand: vi.fn()
+}))
 beforeEach(() => vi.mocked(execCommand).mockReset())
 
 function resolveOn(platform: Parameters<typeof getRemoteHostPlatform>[0], ldd: string) {

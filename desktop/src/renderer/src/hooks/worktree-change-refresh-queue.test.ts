@@ -221,4 +221,29 @@ describe('createWorktreeChangeRefreshQueue', () => {
 
     expect(handler).not.toHaveBeenCalled()
   })
+
+  it.each([
+    [true, true, true],
+    [true, undefined, undefined],
+    [undefined, true, undefined],
+    [true, false, undefined]
+  ] as const)(
+    'coalesces order hints conservatively (%s followed by %s)',
+    async (firstHint, secondHint, expectedHint) => {
+      const firstRefresh = deferred()
+      const handler = vi.fn().mockReturnValueOnce(firstRefresh.promise).mockResolvedValue(undefined)
+      const queue = createWorktreeChangeRefreshQueue(handler)
+      queue.enqueue({ repoId: 'repo', executionHostId: 'runtime:env-1' })
+      queue.enqueue({ repoId: 'repo', executionHostId: 'runtime:env-1', sortOrderOnly: firstHint })
+      queue.enqueue({ repoId: 'repo', executionHostId: 'runtime:env-1', sortOrderOnly: secondHint })
+      firstRefresh.resolve()
+      await flushPromises()
+      expect(handler).toHaveBeenCalledTimes(2)
+      expect(handler).toHaveBeenLastCalledWith('repo', undefined, {
+        forceLocalOwner: undefined,
+        executionHostId: 'runtime:env-1',
+        ...(expectedHint ? { sortOrderOnly: true } : {})
+      })
+    }
+  )
 })

@@ -13,6 +13,7 @@ import {
   type CodexRateLimitWindowsSnapshot
 } from './codex-rate-limit-window-classification'
 import { mapCodexCredits } from './codex-credit-balance'
+import { classifyCodexRpcErrorFailureKind } from './codex-rpc-failure-kind'
 import type { CodexRateLimitFetchOptions } from './codex-rate-limit-fetch-options'
 import { abortedCodexRateLimitResult } from './codex-rate-limit-fetch-result'
 import { mapCodexRateLimitWindow } from './codex-rate-limit-window-mapper'
@@ -237,6 +238,7 @@ export function readCodexRateLimitsViaRpc(
             continue
           }
           if (message.error) {
+            const failureKind = classifyCodexRpcErrorFailureKind(message.error.message)
             settle(
               {
                 provider: 'codex',
@@ -244,7 +246,8 @@ export function readCodexRateLimitsViaRpc(
                 weekly: null,
                 updatedAt: Date.now(),
                 error: withMacTailscaleDnsHint(message.error.message, stderr),
-                status: 'error'
+                status: 'error',
+                ...(failureKind ? { usageMetadata: { failureKind } } : {})
               },
               { kill: true }
             )

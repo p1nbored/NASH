@@ -164,10 +164,7 @@ vi.mock('@/store/selectors', () => ({
 
 vi.mock('@/runtime/runtime-rpc-client', () => ({
   callRuntimeRpc: (...args: unknown[]) => mocks.callRuntimeRpc(...args),
-  getRuntimeEnvironmentStatus: (...args: unknown[]) => mocks.getRuntimeEnvironmentStatus(...args),
-  // Matches the real matcher's contract: the code is a `: <token>` message tail.
-  hasRuntimeRpcErrorCode: (error: unknown, code: string) =>
-    error instanceof Error && error.message.trimEnd().endsWith(`: ${code}`)
+  getRuntimeEnvironmentStatus: (...args: unknown[]) => mocks.getRuntimeEnvironmentStatus(...args)
 }))
 
 vi.mock('sonner', () => ({

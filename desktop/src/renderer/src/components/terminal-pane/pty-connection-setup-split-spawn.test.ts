@@ -1,6 +1,5 @@
 import type * as React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { toAppSshPtyId } from '../../../../shared/ssh-pty-id'
 import { flushAsyncTicks, createDeferred } from './pty-connection-test-async'
 import { createRect, createMeasuredElement } from './pty-connection-test-dom'
 import {
@@ -342,6 +341,63 @@ describe('connectPanePty', () => {
     expect(transport.connect).toHaveBeenCalledWith(expect.objectContaining({ cols: 120, rows: 50 }))
   })
 
+  it.each(['before', 'during'] as const)(
+    'spawns a startup command without waiting for frames when the window is hidden %s the grid settle',
+    async (hiddenWhen) => {
+      // A hidden window produces no animation frames, so only the queued ones below ever run.
+      const frameCallbacks: FrameRequestCallback[] = []
+      globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+        frameCallbacks.push(callback)
+        return frameCallbacks.length
+      })
+      const visibilityListeners: (() => void)[] = []
+      const fakeDocument = {
+        visibilityState: hiddenWhen === 'before' ? 'hidden' : 'visible',
+        addEventListener: vi.fn((type: string, listener: () => void) => {
+          if (type === 'visibilitychange') {
+            visibilityListeners.push(listener)
+          }
+        }),
+        removeEventListener: vi.fn()
+      }
+      vi.stubGlobal('document', fakeDocument)
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+      const { connectPanePty } = await import('./pty-connection')
+      const transport = createMockTransport()
+      transportFactoryQueue.push(transport)
+      const pane = createPane(1)
+      pane.container = createMeasuredElement({ rect: () => createRect(1200, 800) })
+      pane.fitAddon.proposeDimensions = vi.fn(() => ({ cols: 120, rows: 40 }))
+      pane.fitAddon.fit = vi.fn(() => {
+        pane.terminal.cols = 120
+        pane.terminal.rows = 40
+      })
+      const deps = createDeps({ startup: { command: 'claude' } })
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the pane, manager and deps doubles implement every member connectPanePty reads on this startup path.
+      const args = [pane, createManager(1), deps] as unknown as Parameters<typeof connectPanePty>
+      connectPanePty(...args)
+
+      if (hiddenWhen === 'before') {
+        vi.advanceTimersByTime(250)
+      } else {
+        for (let i = 0; i < 3; i++) {
+          frameCallbacks.shift()?.(0)
+        }
+        expect(transport.connect).not.toHaveBeenCalled()
+        fakeDocument.visibilityState = 'hidden'
+        for (const listener of visibilityListeners) {
+          listener()
+        }
+      }
+
+      expect(createdTransportOptions[0]?.command).toBe('claude')
+      expect(transport.connect).toHaveBeenCalledWith(
+        expect.objectContaining({ cols: 120, rows: 40 })
+      )
+    }
+  )
+
   it('spawns the delayed main setup-split pane when its sibling owns the tab PTY fallback', async () => {
     const frameCallbacks: FrameRequestCallback[] = []
     globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
@@ -548,27 +604,25 @@ describe('connectPanePty', () => {
     expect(notifyCodexPaneBoundForStaleSweep).toHaveBeenCalledWith('pty-daemon-reattach')
   })
 
-  it('replays a stable-pane adoption without submitting the SSH resume command', async () => {
+  it('replays a stable-pane adoption without submitting the resume command', async () => {
     const { connectPanePty } = await import('./pty-connection')
-    const stablePtyId = toAppSshPtyId('conn-1', 'stable-pane-session')
+    const stablePtyId = 'stable-pane-session'
     const transport = createMockTransport()
     transport.connect.mockImplementation(async ({ callbacks }) => {
       callbacks.onReattachDetermined?.()
       transport.getPtyId.mockReturnValue(stablePtyId)
-      callbacks.onData?.('NEWER-LIVE-SSH-OUTPUT')
+      callbacks.onData?.('NEWER-LIVE-OUTPUT')
       return {
         id: stablePtyId,
         isReattach: true,
-        replay: 'ORIGINAL-LIVE-SSH-OUTPUT'
+        replay: 'ORIGINAL-LIVE-OUTPUT'
       }
     })
     transportFactoryQueue.push(transport)
     mockStoreState = {
       ...mockStoreState,
       tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: null }] },
-      ptyIdsByTabId: { 'tab-1': [] },
-      repos: [{ id: 'repo1', connectionId: 'conn-1' }],
-      sshConnectionStates: new Map([['conn-1', { status: 'connected' }]])
+      ptyIdsByTabId: { 'tab-1': [] }
     }
     const pane = createPane(1)
     let onDataHandler: ((data: string) => void) | null = null
@@ -595,9 +649,9 @@ describe('connectPanePty', () => {
     ;(onDataHandler as (data: string) => void)('AFTER_ADOPTION_REPLAY\r')
 
     expect(pane.container.dataset.ptyId).toBe(stablePtyId)
-    expect(writes.join('')).toContain('ORIGINAL-LIVE-SSH-OUTPUT')
-    expect(writes.join('').indexOf('ORIGINAL-LIVE-SSH-OUTPUT')).toBeLessThan(
-      writes.join('').indexOf('NEWER-LIVE-SSH-OUTPUT')
+    expect(writes.join('')).toContain('ORIGINAL-LIVE-OUTPUT')
+    expect(writes.join('').indexOf('ORIGINAL-LIVE-OUTPUT')).toBeLessThan(
+      writes.join('').indexOf('NEWER-LIVE-OUTPUT')
     )
     expect(transport.sendInput).not.toHaveBeenCalledWith('codex resume provider-session\r')
     expect(transport.sendInput).toHaveBeenCalledWith('AFTER_ADOPTION_REPLAY\r', 'query-reply')

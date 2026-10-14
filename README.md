@@ -6,7 +6,7 @@ Dot can start a new coordinator or attach to an existing local Claude Code or Co
 
 ## Download
 
-[Windows x64 release v1.4.218](https://github.com/p1nbored/NASH/releases/tag/v1.4.218). The installer is unsigned. This version enables automatic updates from `p1nbored/NASH`. Earlier NASH builds need one manual upgrade because their update feed was disabled. See [release verification and limits](docs/releases.md).
+[Windows x64 release v1.4.219](https://github.com/p1nbored/NASH/releases/tag/v1.4.219). The installer is unsigned. Automatic updates use `p1nbored/NASH`; builds before v1.4.218 need one manual upgrade because their update feed was disabled. See [release verification and limits](docs/releases.md).
 
 ## Documentation
 

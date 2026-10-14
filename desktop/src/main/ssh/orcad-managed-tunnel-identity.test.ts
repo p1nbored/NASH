@@ -1,10 +1,11 @@
+import type { PairedRuntimeConnection } from '../../shared/paired-runtime-connection'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { encodePairingOffer, PAIRING_OFFER_VERSION, type PairingOffer } from '../../shared/pairing'
+import { encodePairingOffer, PAIRING_OFFER_VERSION } from '../../shared/pairing'
 import { RemoteRuntimeClientError } from '../../shared/remote-runtime-client-error'
 import type { ServeReadiness } from '../server/serve-readiness'
 
 const verifyRuntimePairingIdentity = vi.hoisted(() =>
-  vi.fn<(pairing: PairingOffer, expected: unknown) => Promise<unknown>>()
+  vi.fn<(pairing: PairedRuntimeConnection, expected: unknown) => Promise<unknown>>()
 )
 vi.mock('../runtime/runtime-environment-identity-verification', () => ({
   verifyRuntimePairingIdentity

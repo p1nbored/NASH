@@ -3,9 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   OrcaRuntimeService,
   getDefaultWorkspaceSession,
-  registerSshGitProvider,
-  setPlatform,
-  unregisterSshGitProvider
+  setPlatform
 } from '../orca-runtime-test-mocks.spec'
 import type { OrchestrationDb } from '../orchestration/db'
 import type { WorkspaceSessionState } from '../orca-runtime-test-mocks.spec'
@@ -130,47 +128,32 @@ describe('OrcaRuntimeService', () => {
       })
     )
     runtime.setNotifier({ revealTerminalSession } as never)
-    registerSshGitProvider(connectionId, {
-      listWorktrees: vi.fn(async () => [
-        {
-          path: TEST_WORKTREE_PATH,
-          head: 'abc',
-          branch: 'main',
-          isBare: false,
-          isMainWorktree: false
-        }
-      ])
-    } as never)
 
-    try {
-      await expect(
-        runtime.reconcileLegacyWorkerTerminals({
-          connectionId: 'ssh-wrong-host',
-          materializeRenderer: true
-        })
-      ).resolves.toMatchObject({
-        adoptedDispatchIds: [],
-        exitedDispatchIds: [],
-        deferredDispatchIds: ['dispatch-ssh']
+    await expect(
+      runtime.reconcileLegacyWorkerTerminals({
+        connectionId: 'ssh-wrong-host',
+        materializeRenderer: true
       })
-      expect(listProcesses).not.toHaveBeenCalled()
-      expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeDefined()
-      expect(localSession.sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()
+    ).resolves.toMatchObject({
+      adoptedDispatchIds: [],
+      exitedDispatchIds: [],
+      deferredDispatchIds: ['dispatch-ssh']
+    })
+    expect(listProcesses).not.toHaveBeenCalled()
+    expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeDefined()
+    expect(localSession.sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()
 
-      await expect(
-        runtime.reconcileLegacyWorkerTerminals({
-          connectionId,
-          materializeRenderer: true
-        })
-      ).resolves.toMatchObject({
-        adoptedDispatchIds: ['dispatch-ssh'],
-        exitedDispatchIds: [],
-        deferredDispatchIds: []
+    await expect(
+      runtime.reconcileLegacyWorkerTerminals({
+        connectionId,
+        materializeRenderer: true
       })
-      expect(listProcesses).toHaveBeenLastCalledWith(connectionId, LIST_PROVIDER_DEADLINE)
-    } finally {
-      unregisterSshGitProvider(connectionId)
-    }
+    ).resolves.toMatchObject({
+      adoptedDispatchIds: ['dispatch-ssh'],
+      exitedDispatchIds: [],
+      deferredDispatchIds: []
+    })
+    expect(listProcesses).toHaveBeenLastCalledWith(`ssh:${connectionId}`, LIST_PROVIDER_DEADLINE)
 
     expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()
     expect(getWorkspaceSession).toHaveBeenCalledWith(`ssh:${connectionId}`)
@@ -310,7 +293,13 @@ describe('OrcaRuntimeService', () => {
     expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()
     expect(revealTerminalSession).toHaveBeenCalledOnce()
     expect(listProcesses).toHaveBeenCalledTimes(5)
-    expect(listProcesses.mock.calls.map((call) => call[0])).toEqual([null, null, null, null, null])
+    expect(listProcesses.mock.calls.map((call) => call[0])).toEqual([
+      'local',
+      'local',
+      'local',
+      'local',
+      'local'
+    ])
   })
 
   it('restores orphan pane and group topology without replacing a newer host-owned tab', async () => {

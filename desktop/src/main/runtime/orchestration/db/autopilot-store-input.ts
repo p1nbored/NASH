@@ -13,7 +13,7 @@ export {
   AutopilotToolNameSchema
 } from '../../../../shared/rpc-contract/autopilot-identifier-fields'
 /** Model ids as the CLIs list them (claude-opus-5-5, gpt-6.1-sol, gemini-3.8-flash-high). */
-export const AutopilotModelIdSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/)
+export const AutopilotModelIdSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$/)
 export const AutopilotEffortSchema = z.enum(AUTOPILOT_EFFORT_LEVELS)
 export const AutopilotAccessSchema = z.enum(WORKFLOW_RUN_ACCESS_LEVELS)
 export const Sha256HexSchema = z.string().regex(/^[0-9a-f]{64}$/)

@@ -23,6 +23,7 @@ import { defineMethod, type RpcContext } from '../core'
  */
 export const WORKBENCH_VALIDATION_CHECK_PENDING_METHOD = defineMethod({
   name: 'workbench.validation.checkPending',
+  permission: 'workspace',
   params: WorkbenchValidationCheckPendingParams,
   handler: (_params, context): Promise<WorkbenchValidationCheckPendingResult> => {
     requireWorkbenchCaller(context.workbenchCaller)
@@ -45,6 +46,7 @@ function desktopDecisions(context: RpcContext): ValidationDecisionService {
 
 export const WORKBENCH_VALIDATION_LIST_DECISIONS_METHOD = defineMethod({
   name: 'workbench.validation.listDecisions',
+  permission: 'workspace',
   params: WorkbenchValidationListDecisionsParams,
   handler: (params, context): WorkbenchValidationListDecisionsResult =>
     desktopDecisions(context).listPending({
@@ -54,6 +56,7 @@ export const WORKBENCH_VALIDATION_LIST_DECISIONS_METHOD = defineMethod({
 
 export const WORKBENCH_VALIDATION_DECIDE_METHOD = defineMethod({
   name: 'workbench.validation.decide',
+  permission: 'workspace',
   params: WorkbenchValidationDecideParams,
   handler: (params, context): Promise<WorkbenchValidationDecideResult> =>
     desktopDecisions(context).decide({ ...params, by: 'desktop_user' })

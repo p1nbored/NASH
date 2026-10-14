@@ -7,7 +7,7 @@ import type {
 } from '../../../shared/runtime-types'
 import type { TerminalTab } from '../../../shared/terminal-tab-types'
 import { parseRemoteRuntimePtyId } from './runtime-terminal-stream'
-import { isWebTerminalSurfaceTabId, toHostSessionTabId } from './web-terminal-surface-id'
+import { isWebTerminalSurfaceTabId, toHostSessionTabId } from '../../../shared/terminal-surface-id'
 import {
   hasTerminalHandleRetirementProof,
   isRemovedSnapshot,

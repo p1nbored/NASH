@@ -1,3 +1,4 @@
+import { pairedRuntimeConnectionFromOffer } from '../../../../shared/paired-runtime-connection'
 const pendingSubscriptions = new Map<string, AbortController>()
 import type { PreloadApi } from '../../../../preload/api-types'
 import { parseHostAccessLink } from '../../../../shared/remote-pairing-address'
@@ -77,7 +78,7 @@ export function createRuntimeEnvironmentsApi(): NonNullable<
       let client: WebRuntimeClient | null = null
       let runtimeStatus: RuntimeStatus
       try {
-        client = new WebRuntimeClient(parsed.value.pairing)
+        client = new WebRuntimeClient(pairedRuntimeConnectionFromOffer(parsed.value.pairing))
         const response = (await client.call('status.get', undefined, {
           timeoutMs: 15_000
         })) as RuntimeRpcResponse<RuntimeStatus>

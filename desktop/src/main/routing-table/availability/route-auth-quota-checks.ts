@@ -3,7 +3,12 @@ import type {
   UsageRateLimitFailureKind
 } from '../../../shared/rate-limit-types'
 import { STALE_THRESHOLD_MS } from '../../rate-limits/service/service-types'
-import { providerHeadroomFrom, type RateLimitHeadroomState } from './route-provider-headroom'
+import {
+  accountWindowsOf,
+  isWindowExhausted,
+  providerHeadroomFrom,
+  type RateLimitHeadroomState
+} from './route-provider-headroom'
 import type { CheckOutcome, LiveRunPrimary, RouteProvider } from './route-availability-types'
 import type { RouteObservations } from './route-check-observations'
 
@@ -15,7 +20,18 @@ export function limitsForProvider(
   if (state === null) {
     return null
   }
-  return provider === 'agy' ? state.antigravity : state[provider]
+  switch (provider) {
+    case 'agy':
+      return state.antigravity
+    case 'claude':
+    case 'codex':
+    case 'gemini':
+    case 'grok':
+    case 'cursor':
+      return state[provider] ?? null
+    default:
+      return null
+  }
 }
 
 /** Failure kinds that mean the login itself is unusable, as Orca's usage service classifies them. */
@@ -99,6 +115,16 @@ export function quotaCheckOf(
   state: RateLimitHeadroomState | null,
   nowMs: number
 ): CheckOutcome {
+  if (provider !== 'claude' && provider !== 'codex' && provider !== 'agy') {
+    const limits = limitsForProvider(state, provider)
+    const fresh =
+      !!limits &&
+      Number.isFinite(limits.updatedAt) &&
+      nowMs - limits.updatedAt <= STALE_THRESHOLD_MS
+    return fresh && accountWindowsOf(limits).some((window) => isWindowExhausted(window, nowMs))
+      ? { check: 'quota', result: 'fail', reason: 'quota_exhausted' }
+      : { check: 'quota', result: 'pass', evidence: { observed: fresh } }
+  }
   const reading = providerHeadroomFrom(state, nowMs)
   const pool = provider
   if (!reading.headroom[pool]) {

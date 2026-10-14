@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as DeployHelpers from './ssh-relay-deploy-helpers'
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import type * as InstallLock from './ssh-relay-install-lock'
 
-vi.mock('./ssh-relay-deploy-helpers', async (importOriginal) => ({
-  ...(await importOriginal<typeof DeployHelpers>()),
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
 vi.mock('./ssh-connection-utils', () => ({ shellEscape: (s: string) => `'${s}'` }))
@@ -12,11 +12,11 @@ vi.mock('./ssh-relay-install-lock', async (importOriginal) => ({
   acquireInstallLock: vi.fn()
 }))
 
-import { execCommand } from './ssh-relay-deploy-helpers'
-import { acquireInstallLock } from './ssh-relay-install-lock'
+import { execCommand } from './ssh-relay-exec-command'
+import { acquireInstallLock, RemoteInstallLockBusyError } from './ssh-relay-install-lock'
 import { wakeStoppedManagedOrcad } from './orcad-managed-wake'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { FakeOrcadHost, OLD } from './orcad-activation-host-test-harness'
 import {
   ORCAD_E2E_IDLE_TIMEOUT_ENV,
@@ -27,7 +27,7 @@ let host = new FakeOrcadHost()
 
 const slot = {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: execCommand is mocked; the wake reads only the target id.
-  conn: { getTarget: () => ({ id: 'ssh-1' }) } as unknown as SshConnection,
+  conn: { getTarget: () => ({ id: 'ssh-1' }) } as unknown as OrcadHostTransport,
   host: getRemoteHostPlatform('linux-x64'),
   remoteHome: '/home/u',
   nodePath: '/usr/bin/node',
@@ -52,8 +52,11 @@ function stoppedHost(): FakeOrcadHost {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(execCommand).mockImplementation(async (_conn, command) => host.exec(command))
-  vi.mocked(acquireInstallLock).mockImplementation(async (_conn, _root, _host, options) => {
-    host.acquireFence()
+  vi.mocked(acquireInstallLock).mockImplementation(async (_conn, root, _host, options) => {
+    // A recovery takeover answers busy on a fence another run still holds.
+    if (!host.acquireFence(options)) {
+      throw new RemoteInstallLockBusyError(root, 0)
+    }
     // The real lock writes the owner token in the same command that creates it.
     host.wakeOwner = options?.owner?.token ?? null
   })
@@ -107,6 +110,7 @@ describe('wakeStoppedManagedOrcad', () => {
   it('defers to an update or recovery that holds the activation fence', async () => {
     host = stoppedHost()
     host.fence = true
+    host.fenceFresh = true
 
     expect(await wakeStoppedManagedOrcad(slot)).toEqual({ outcome: 'fenced' })
     expect(launches()).toEqual([])
@@ -163,6 +167,7 @@ describe('wakeStoppedManagedOrcad', () => {
     vi.mocked(execCommand).mockImplementation(async (_conn, command) => host.exec(command))
     // That fence was cleared unseen, and another desktop took a fresh one: no owner file yet.
     host.wakeOwner = null
+    host.fenceFresh = true
 
     expect(await wakeStoppedManagedOrcad(slot)).toEqual({ outcome: 'fenced' })
     expect(host.fence).toBe(true)
@@ -244,6 +249,7 @@ describe('wakeStoppedManagedOrcad', () => {
     vi.mocked(execCommand).mockImplementation(async (_conn, command) => host.exec(command))
     // A recovery cleared that fence, then another run took the host before journaling.
     host.wakeOwner = 'another-run'
+    host.fenceFresh = true
 
     expect(await wakeStoppedManagedOrcad(slot)).toEqual({ outcome: 'fenced' })
     expect(host.fence).toBe(true)
@@ -253,14 +259,26 @@ describe('wakeStoppedManagedOrcad', () => {
   it('never releases a fence another client may hold, even after its own wake dropped', async () => {
     host = stoppedHost()
     host.fence = true
+    host.fenceFresh = true
     expect(
       await wakeStoppedManagedOrcad({
         ...slot,
         // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: as above, a different target.
-        conn: { getTarget: () => ({ id: 'ssh-2' }) } as unknown as SshConnection
+        conn: { getTarget: () => ({ id: 'ssh-2' }) } as unknown as OrcadHostTransport
       })
     ).toEqual({ outcome: 'fenced' })
     expect(host.fence).toBe(true)
+  })
+
+  it('drops an abandoned fence no journal backs, and starts the slot', async () => {
+    host = stoppedHost()
+    // A stale or exited-own fence: the recovery takeover may take it.
+    host.fence = true
+    host.wakeOwner = 'exited-run'
+
+    expect(await wakeStoppedManagedOrcad(slot)).toMatchObject({ outcome: 'started' })
+    expect(launches()).toHaveLength(1)
+    expect(host.fence).toBe(false)
   })
 
   it('has nothing to start on a host with no activated server', async () => {

@@ -3,6 +3,8 @@ import { renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { editor as MonacoEditor } from 'monaco-editor'
 
+vi.mock('monaco-editor', () => import('monaco-editor/esm/vs/editor/editor.api.js'))
+
 const storeFixture = vi.hoisted(() => ({
   activeGroupIdByWorktree: {},
   clearDeliveredDiffComments: vi.fn()

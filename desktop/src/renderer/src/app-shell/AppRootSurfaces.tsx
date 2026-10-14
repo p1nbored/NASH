@@ -46,6 +46,7 @@ const NonGitFolderDialog = lazy(() => import('../components/sidebar/NonGitFolder
 const AddProjectFromFolderDialog = lazy(
   () => import('../components/sidebar/AddProjectFromFolderDialog')
 )
+const DiagramViewerModal = lazy(() => import('../components/editor/DiagramViewerModal'))
 const ProjectAddedDialog = lazy(() => import('../components/sidebar/ProjectAddedDialog'))
 const DeleteWorktreeDialog = lazy(() => import('../components/sidebar/DeleteWorktreeDialog'))
 const PreservedBranchBatchReviewModal = lazy(
@@ -222,6 +223,12 @@ export function AppRootSurfaces(props: {
         {activeModal === 'project-added' ? (
           <ModalBoundary boundaryId="modal.project-added" resetKey>
             <ProjectAddedDialog />
+          </ModalBoundary>
+        ) : null}
+        {/* Why: chat rows are virtualized, so the viewer must outlive the message that opened it. */}
+        {activeModal === 'diagram-viewer' ? (
+          <ModalBoundary boundaryId="modal.diagram-viewer" resetKey>
+            <DiagramViewerModal />
           </ModalBoundary>
         ) : null}
       </Suspense>

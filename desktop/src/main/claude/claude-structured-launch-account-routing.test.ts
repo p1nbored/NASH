@@ -1,3 +1,4 @@
+import { createClaudeStructuredLaunchResolver } from '../runtime/structured-agent-launch-composition.test-support'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve as resolvePath } from 'node:path'
@@ -10,7 +11,6 @@ import {
   type ClaudeProfileRouterSettings
 } from '../claude-accounts/claude-profile-router'
 import { installClaudeProfileRouter } from '../claude-accounts/claude-profile-installed-router'
-import { createClaudeStructuredLaunchResolver } from './claude-structured-launch-resolution'
 
 const roots: string[] = []
 afterEach(() => {
@@ -49,7 +49,7 @@ it('launches each acquisition under the current selection, not the account it wa
     resolveWorkspacePath: async (id) => `/repos/${id}`,
     resolveCommand: () => '/usr/local/bin/claude',
     resolveInheritedEnv: async () => ({ PATH: '/usr/bin' }),
-    resolveAuthPolicy: () => ({ stripAuthEnv: false })
+    resolveAuthPolicy: () => ({ account: 'system' })
   })
   const identity = {
     sessionId: record.sessionId,
@@ -115,7 +115,7 @@ function routedResumeFixture() {
     resolveWorkspacePath: async (id) => `/repos/${id}`,
     resolveCommand: () => '/usr/local/bin/claude',
     resolveInheritedEnv: async () => ({ PATH: '/usr/bin' }),
-    resolveAuthPolicy: () => ({ stripAuthEnv: false }),
+    resolveAuthPolicy: () => ({ account: 'system' }),
     hasTranscript: async ({ claudeConfigDir }) => transcriptHomes.has(claudeConfigDir)
   })
   const identity = {

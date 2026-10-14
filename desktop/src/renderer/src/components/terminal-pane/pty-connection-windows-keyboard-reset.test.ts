@@ -220,51 +220,6 @@ describe('connectPanePty', () => {
     }
   })
 
-  it('keeps SSH agent idle reset cursor-only on Windows clients', async () => {
-    const restoreUserAgent = temporarilySetNavigatorUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    )
-    const { connectPanePty } = await import('./pty-connection')
-    const transport = createMockTransport()
-    transportFactoryQueue.push(transport)
-
-    try {
-      mockStoreState = {
-        ...mockStoreState,
-        repos: [{ id: 'repo1', connectionId: 'conn-1' }],
-        sshConnectionStates: new Map([['conn-1', { status: 'connected' }]])
-      } as StoreState
-      const pane = createPane(1)
-      const manager = createManager(1)
-      const deps = createDeps()
-
-      connectPanePty(pane as never, manager as never, deps as never)
-
-      const idleHandler = createdTransportOptions[0]?.onAgentBecameIdle as
-        | ((title: string) => void)
-        | undefined
-      if (!idleHandler) {
-        throw new Error('Expected onAgentBecameIdle to be registered')
-      }
-
-      idleHandler('* Codex done')
-
-      expect(pane.terminal.write).toHaveBeenCalledWith(
-        RESET_TERMINAL_CURSOR_STYLE,
-        expect.any(Function)
-      )
-      expect(pane.terminal.write).not.toHaveBeenCalledWith(
-        `${RESET_TERMINAL_CURSOR_STYLE}${RESET_KITTY_KEYBOARD_PROTOCOL}`,
-        expect.any(Function)
-      )
-      transport.sendInput.mockClear()
-      sendTerminalInputThroughPane(pane, '\x1b[I')
-      expect(transport.sendInput).toHaveBeenCalledWith('\x1b[I', 'query-reply')
-    } finally {
-      restoreUserAgent()
-    }
-  })
-
   it.each([
     {
       name: 'WSL',

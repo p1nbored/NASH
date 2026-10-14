@@ -2,6 +2,10 @@ import { translate } from '@/i18n/i18n'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { withCoordinatorAgent, type EditorDraft } from './routing-table-editor-model'
 import { primaryAgentLabel } from './routing-table-labels'
+import {
+  isRoutingAgent,
+  ROUTING_AGENTS
+} from '../../../../shared/routing-table/routing-cli-registry'
 
 export function PrimaryCliSelect(props: {
   coordinator: EditorDraft['coordinator']
@@ -11,7 +15,7 @@ export function PrimaryCliSelect(props: {
     <Select
       value={props.coordinator.agent}
       onValueChange={(agent) => {
-        if (agent === 'claude' || agent === 'codex') {
+        if (isRoutingAgent(agent)) {
           props.onChange(withCoordinatorAgent(props.coordinator, agent))
         }
       }}
@@ -27,7 +31,7 @@ export function PrimaryCliSelect(props: {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {(['claude', 'codex'] as const).map((agent) => (
+        {ROUTING_AGENTS.map((agent) => (
           <SelectItem key={agent} value={agent}>
             {primaryAgentLabel(agent)}
           </SelectItem>

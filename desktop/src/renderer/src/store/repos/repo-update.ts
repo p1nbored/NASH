@@ -9,15 +9,14 @@ import {
   getRepoHostIdentityForParts,
   repoMatchesHostIdentity
 } from '../slices/repo-host-identity'
-import { callRuntimeRpc, getActiveRuntimeTarget } from '../../runtime/runtime-rpc-client'
+import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
 import { getRepoExecutionHostId } from '../../../../shared/execution-host'
 import {
   normalizeCustomWorktreeVisibilitySources,
   normalizeWorktreeVisibilitySourcePreferences
 } from '../../../../shared/worktree/visibility-sources'
 import type { RepoSlice, RepoUpdate } from './repo-state'
-import { repoWithFetchedOwner, settingsForRepoOwner } from './owner-routing'
-import { getRuntimeTargetHostId } from '../runtime-target-host'
+import { adoptFromEndpoint } from '../adopt-from-endpoint'
 import { getProjectSetupRuntimeTarget } from '../projects/project-host-routing'
 import { mergeProjectCompatibilityForHostRepoChange } from './repo-catalog-identity'
 
@@ -112,13 +111,9 @@ export function createRepoUpdateActions(
       const ownerHasExplicitHost = Boolean(
         options?.hostId || ownerRepo.executionHostId?.trim() || ownerRepo.connectionId?.trim()
       )
-      const explicitOwnerHostId = getRepoExecutionHostId(ownerRepo)
-      const ownerTarget = ownerHasExplicitHost
-        ? getProjectSetupRuntimeTarget(explicitOwnerHostId)
-        : getActiveRuntimeTarget(settingsForRepoOwner(get(), projectId))
-      const ownerHostId = ownerHasExplicitHost
-        ? explicitOwnerHostId
-        : getRuntimeTargetHostId(ownerTarget)
+      // Why: a row with no stamp is this app's own; ingest stamps every server row.
+      const ownerHostId = getRepoExecutionHostId(ownerRepo)
+      const ownerTarget = getProjectSetupRuntimeTarget(ownerHostId)
       const updateChainKey = getRepoHostIdentityForParts(projectId, ownerHostId)
       const applyRepoUpdate = async () => {
         try {
@@ -148,7 +143,7 @@ export function createRepoUpdateActions(
                 return r
               }
               if (updatedRepo) {
-                return repoWithFetchedOwner(updatedRepo, target)
+                return adoptFromEndpoint(target, { kind: 'repo', row: updatedRepo })
               }
               let mergedRepo: Repo = r
               const {

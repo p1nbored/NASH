@@ -55,6 +55,14 @@ export function getDefaultUserDataPath(
   if (inheritedUserDataPath) {
     return inheritedUserDataPath
   }
+  return getPlatformUserDataPath(platform, homeDir)
+}
+
+/** The packaged app's own default profile, ignoring any CLI override. */
+export function getPlatformUserDataPath(
+  platform: NodeJS.Platform = process.platform,
+  homeDir = homedir()
+): string {
   if (platform === 'darwin') {
     return join(homeDir, 'Library', 'Application Support', APP_IDENTITY.userDataDirName)
   }

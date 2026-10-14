@@ -629,27 +629,6 @@ describe('connectPanePty', () => {
     })
   })
 
-  it('does not retain a failed direct-SSH terminal locally', async () => {
-    const { connectPanePty } = await import('./pty-connection')
-    mockStoreState = {
-      ...mockStoreState,
-      repos: [{ ...mockStoreState.repos[0], connectionId: 'ssh-1' }]
-    } as StoreState
-    const transport = createMockTransport('tab-pty')
-    transportFactoryQueue.push(transport)
-    const manager = createManager(1)
-    const deps = createDeps({ onPaneProcessDied: vi.fn() })
-
-    connectPanePty(createPane(1) as never, manager as never, deps as never)
-    const onPtyExit = createdTransportOptions[0]?.onPtyExit as
-      | ((ptyId: string, exitCode?: number) => void)
-      | undefined
-    onPtyExit?.('tab-pty', 1)
-
-    expect(deps.onPaneProcessDied).not.toHaveBeenCalled()
-    expect(deps.onPtyExitRef.current).toHaveBeenCalledWith('tab-pty', 1)
-  })
-
   it('tears down the sole terminal when a reattached (not freshly spawned) PTY exits', async () => {
     // Why: reattach/coldRestore skip onPtySpawn, so a now-dead previously-live session must still route through onPtyExitRef; the keep-mounted guard is only for brand-new shells.
     const { connectPanePty } = await import('./pty-connection')

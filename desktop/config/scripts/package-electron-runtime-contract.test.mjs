@@ -48,7 +48,6 @@ describe('Electron runtime package contract', () => {
   it('keeps the native Windows credential addon optional and platform-gated', () => {
     expect(packageJson.optionalDependencies['@orca/windows-credentials']).toBe('workspace:*')
     expect(pnpmWorkspace.packages).toContain('native/windows-credentials')
-    // Why: same rule as the registry addon -- the Windows-only rebuild owns it, not pnpm install.
     expect(pnpmWorkspace.allowBuilds['@orca/windows-credentials']).toBe(false)
     if (windowsAddonsInstalled) {
       expect(packageTargets.win32).toEqual(
@@ -61,6 +60,26 @@ describe('Electron runtime package contract', () => {
       expect(packageTargets[platform]).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({ to: join('node_modules', '@orca', 'windows-credentials') })
+        ])
+      )
+    }
+  })
+
+  // Without it the secure-file writes report unrestricted and orcad's privacy check fails closed.
+  it('ships the native Windows ACL addon on Windows only, built by the Windows rebuild', () => {
+    expect(packageJson.optionalDependencies['@orca/windows-security']).toBe('workspace:*')
+    expect(pnpmWorkspace.allowBuilds['@orca/windows-security']).toBe(false)
+    if (windowsAddonsInstalled) {
+      expect(packageTargets.win32).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ to: join('node_modules', '@orca', 'windows-security') })
+        ])
+      )
+    }
+    for (const platform of ['darwin', 'linux']) {
+      expect(packageTargets[platform]).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ to: join('node_modules', '@orca', 'windows-security') })
         ])
       )
     }

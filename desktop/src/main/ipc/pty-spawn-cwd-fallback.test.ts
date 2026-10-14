@@ -4,7 +4,7 @@ import { setupPtyIpcSuite } from './pty-ipc-test-harness'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../shared/constants'
 import { _setWslCachesForTests } from '../wsl'
 import { acquireWatcherRemovalGate } from './watcher-removal-gate'
-import { registerPtyHandlers, registerSshPtyProvider } from './pty'
+import { registerPtyHandlers } from './pty/register-handlers'
 
 vi.mock('electron', () => import('./pty-ipc-mock-registry').then((m) => m.electronModuleMock()))
 vi.mock('fs', () => import('./pty-ipc-mock-registry').then((m) => m.fsModuleMock()))
@@ -259,59 +259,6 @@ describe('registerPtyHandlers', () => {
     } finally {
       Object.defineProperty(process, 'platform', { configurable: true, value: originalPlatform })
     }
-  })
-  it('does not probe or forward local WSL cwd evidence for SSH fallback spawns', async () => {
-    const sshSpawn = vi.fn(async () => ({ id: 'ssh-wsl-looking-cwd' }))
-    registerSshPtyProvider('ssh-1', {
-      spawn: sshSpawn,
-      write: vi.fn(),
-      resize: vi.fn(),
-      shutdown: vi.fn(),
-      sendSignal: vi.fn(),
-      getCwd: vi.fn(),
-      getInitialCwd: vi.fn(),
-      clearBuffer: vi.fn(),
-      acknowledgeDataEvent: vi.fn(),
-      hasChildProcesses: vi.fn(),
-      getForegroundProcess: vi.fn(),
-      serialize: vi.fn(),
-      revive: vi.fn(),
-      onData: vi.fn(() => () => {}),
-      onReplay: vi.fn(() => () => {}),
-      onExit: vi.fn(() => () => {}),
-      listProcesses: vi.fn(async () => []),
-      attach: vi.fn(),
-      getDefaultShell: vi.fn(),
-      getProfiles: vi.fn()
-    } as never)
-    registerPtyHandlers(mainWindow as never)
-
-    await handlers.get('pty:spawn')!(null, {
-      cols: 80,
-      rows: 24,
-      cwd: '/a',
-      cwdFallback: 'worktree',
-      connectionId: 'ssh-1',
-      worktreeId: 'repo-1::C:\\Users\\alice\\repo',
-      shellOverride: 'wsl.exe',
-      projectRuntime: {
-        status: 'resolved',
-        runtime: {
-          kind: 'wsl',
-          hostPlatform: 'wsl',
-          projectId: 'repo-1',
-          distro: 'Ubuntu-24.04',
-          reason: 'project-override',
-          cacheKey: 'repo-1:wsl'
-        }
-      }
-    })
-
-    expect(wslUncDirectoryExistsAsyncMock).not.toHaveBeenCalled()
-    expect(sshSpawn).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/a' }))
-    expect(sshSpawn).toHaveBeenCalledWith(
-      expect.not.objectContaining({ prevalidatedCwd: expect.anything() })
-    )
   })
   it('preserves a POSIX WSL cwd when the distro probe is inconclusive', async () => {
     const originalPlatform = process.platform

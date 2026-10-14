@@ -37,7 +37,6 @@ createTabsSliceMockApi()
 const { launchAgentThroughHost } = await import('./agent-launch-through-host')
 const { agentLaunchPaneSpawnHold, releaseAgentLaunchPaneSpawn } =
   await import('./agent-launch-pane-spawn-hold')
-const { agentLaunchPanePrompt } = await import('./agent-launch-pane-prompt')
 
 const WT = 'repo1::/tmp/feature'
 let store: ReturnType<typeof createTestStore>
@@ -117,32 +116,31 @@ describe('a desktop launch through the host', () => {
     expect(tab).toMatchObject({ ptyId: null, launchAgent: 'claude' })
     const leafId = tab.agentLaunchPane!.leafId
     expect(agentLaunchPaneSpawnHold(tab.id, leafId)).not.toBeNull()
-    expect(agentLaunchPanePrompt(tab.id)).toBe('fix the failing checks')
     expect(store.getState().activeTabId).toBe(tabId)
     // No prompt: the window pastes it, as main does, once the agent runs.
-    expect(callRuntimeRpc).toHaveBeenCalledWith({ kind: 'local' }, 'agent.launchReplay', {
+    expect(callRuntimeRpc).toHaveBeenCalledWith({ kind: 'local' }, 'agent.launch', {
       agent: 'claude',
       target: { kind: 'existing', worktree: `id:${WT}` },
       agentArgs: null,
       launchSource: 'source_control_recovery',
       placement: { groupId: store.getState().activeGroupIdByWorktree[WT] },
       presentation: 'focused',
-      operationId: expect.stringMatching(/^\d+-[0-9a-f]{32}$/),
       paneKey: `${tabId}:${leafId}`
     })
   })
 
-  it('names every click as its own operation', () => {
+  // Nothing reads a click's launch record, so a record store that cannot open never stops one.
+  it('names no operation, so the host writes no launch record; each click has its own pane', () => {
     callRuntimeRpc.mockReturnValue(new Promise(() => {}))
     launch()
     const first = lastParams()
     launch()
     const second = lastParams()
-    expect(second.operationId).not.toBe(first.operationId)
+    expect(first).not.toHaveProperty('operationId')
     expect(second.paneKey).not.toBe(first.paneKey)
   })
 
-  it('says the agent started only once the host answers, with its pane attached', async () => {
+  it('says the agent started only once the host answers, and its tab is then an ordinary one', async () => {
     const reply = deferred<unknown>()
     callRuntimeRpc.mockReturnValue(reply.promise)
     const { tabId, outcome } = launch()
@@ -156,35 +154,27 @@ describe('a desktop launch through the host', () => {
 
     await expect(outcome).resolves.toEqual({ kind: 'started' })
     expect(launchTab(tabId)).toBeDefined()
+    expect(launchTab(tabId)?.agentLaunchPane).toBeUndefined()
   })
 
-  it('takes its tab back on a refusal, before the pane ever spawns', async () => {
-    const reply = deferred<unknown>()
-    callRuntimeRpc.mockReturnValue(reply.promise)
-    const { tabId, outcome } = launch()
-
-    reply.reject(rpcError('agent_session_operation_conflict'))
-
-    await expect(outcome).resolves.toEqual({
-      kind: 'not-started',
-      unconfirmed: false,
-      code: 'agent_session_operation_conflict'
-    })
-    expect(launchTab(tabId)).toBeUndefined()
-  })
-
-  it('leaves a launch the host took to its pane, which says how it ended', async () => {
+  // Temporary until the pane's own spawn starts its agent: the window says it, not the pane.
+  it('keeps a tab the host took and then failed in, and says it could not confirm the start', async () => {
     const reply = deferred<unknown>()
     callRuntimeRpc.mockReturnValue(reply.promise)
     const { tabId, outcome } = launch()
     hostTakesPane(tabId)
 
-    reply.reject(rpcError('agent_session_operation_unknown'))
+    reply.reject(rpcError('terminal_reveal_failed'))
 
-    await expect(outcome).resolves.toEqual({ kind: 'pane-says' })
+    await expect(outcome).resolves.toEqual({
+      kind: 'not-started',
+      unconfirmed: true,
+      code: 'terminal_reveal_failed'
+    })
     expect(launchTab(tabId)).toBeDefined()
   })
 
+  // Temporary until the pane's own spawn starts its agent: the tab goes and the window says why.
   it('never leaves a pane the host did not take, which would open as a shell', async () => {
     const reply = deferred<unknown>()
     callRuntimeRpc.mockReturnValue(reply.promise)
@@ -202,42 +192,13 @@ describe('a desktop launch through the host', () => {
 
   // Why: the close was the user's own, as on the phone's "+".
   it('says nothing more when the user closed the tab while it started', async () => {
-    callRuntimeRpc.mockRejectedValueOnce(rpcError('agent_launch_tab_closed'))
-    await expect(launch().outcome).resolves.toEqual({ kind: 'closed-by-user' })
-  })
-
-  it('still starts the agent in the same tab when the launch record is full', async () => {
-    const unrecorded = deferred<unknown>()
-    callRuntimeRpc
-      .mockRejectedValueOnce(rpcError('agent_session_operation_capacity'))
-      .mockReturnValueOnce(unrecorded.promise)
+    const reply = deferred<unknown>()
+    callRuntimeRpc.mockReturnValue(reply.promise)
     const { tabId, outcome } = launch()
-    const paneKey = lastPaneKey()
-    await vi.waitFor(() => expect(callRuntimeRpc).toHaveBeenCalledTimes(2))
+    store.getState().closeTab(tabId)
 
-    const [, method, params] = callRuntimeRpc.mock.calls[1]!
-    expect(method).toBe('agent.launch')
-    expect(params).not.toHaveProperty('operationId')
-    // The same pane, held until the answer.
-    expect(params.paneKey).toBe(paneKey)
-    const leafId = launchTab(tabId)!.agentLaunchPane!.leafId
-    expect(agentLaunchPaneSpawnHold(tabId, leafId)).not.toBeNull()
+    reply.resolve(terminalResult(lastPaneKey()))
 
-    unrecorded.resolve(terminalResult(paneKey))
-    await expect(outcome).resolves.toEqual({ kind: 'started' })
-  })
-
-  it('takes its tab back when the unrecorded launch fails before the host revealed it', async () => {
-    callRuntimeRpc
-      .mockRejectedValueOnce(rpcError('agent_session_operation_capacity'))
-      .mockRejectedValueOnce(rpcError('worktree_not_found'))
-    const { tabId, outcome } = launch()
-
-    await expect(outcome).resolves.toEqual({
-      kind: 'not-started',
-      unconfirmed: false,
-      code: 'worktree_not_found'
-    })
-    expect(launchTab(tabId)).toBeUndefined()
+    await expect(outcome).resolves.toEqual({ kind: 'closed-by-user' })
   })
 })

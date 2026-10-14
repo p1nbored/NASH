@@ -15,28 +15,21 @@ import {
   recoverFreshSpawnProviderRouting,
   routesFreshSpawnsToLocalProvider
 } from '../host-env/fresh-spawn-routing'
-import { getAppPtyId, getProvider, getRelayPtyId } from '../provider/registry'
+import { getProvider } from '../provider/registry'
 import type { PtyIpcSpawnState } from './spawn-state'
+import { getConnectionExecutionHostId } from '../../../../shared/execution-host'
 
 export async function preparePtyIpcSpawnPreflight(ctx: PtyIpcSpawnState): Promise<void> {
   const args = ctx.args
   // Establish daemon identity before the first await so hidden delivery is gated before byte zero.
-  ctx.provider = getProvider(args.connectionId)
+  // Only this machine spawns here: an `ssh:` connection throws, so every line below is local.
+  ctx.provider = getProvider(getConnectionExecutionHostId(args.connectionId))
   ctx.isDaemonHostSpawn =
-    !args.connectionId &&
-    !(ctx.provider instanceof LocalPtyProvider) &&
-    !routesFreshSpawnsToLocalProvider(ctx.provider)
+    !(ctx.provider instanceof LocalPtyProvider) && !routesFreshSpawnsToLocalProvider(ctx.provider)
   ctx.isMintedSessionId = args.sessionId === undefined && ctx.isDaemonHostSpawn
   ctx.effectiveSessionId =
     args.sessionId ?? (ctx.isDaemonHostSpawn ? mintPtySessionId(args.worktreeId) : undefined)
-  ctx.effectiveSessionAppId =
-    ctx.effectiveSessionId !== undefined
-      ? getAppPtyId(args.connectionId, ctx.effectiveSessionId)
-      : undefined
-  ctx.effectiveSessionRelayId =
-    ctx.effectiveSessionId !== undefined
-      ? getRelayPtyId(args.connectionId, ctx.effectiveSessionId)
-      : undefined
+  ctx.effectiveSessionAppId = ctx.effectiveSessionId
   ctx.initiallyHidden = args.initiallyHidden === true
   ctx.preSpawnHiddenMarkId =
     ctx.initiallyHidden && ctx.isDaemonHostSpawn && ctx.effectiveSessionAppId !== undefined
@@ -73,9 +66,8 @@ export async function preparePtyIpcSpawnPreflight(ctx: PtyIpcSpawnState): Promis
     }
   }
   if (!ctx.preAdoptedStablePane) {
-    // Why: reattach needs exact cwd, SSH cannot probe locally, and successful stable-pane adoption needs no launch preflight.
-    const requestedMissingCwdFallback =
-      !args.connectionId && !args.sessionId && args.cwdFallback === 'worktree'
+    // Why: reattach needs exact cwd, and successful stable-pane adoption needs no launch preflight.
+    const requestedMissingCwdFallback = !args.sessionId && args.cwdFallback === 'worktree'
     const isPosixStartupCwd = args.cwd?.startsWith('/') === true
     const startupWorkspaceCwd =
       requestedMissingCwdFallback && isPosixStartupCwd
@@ -158,25 +150,16 @@ export async function preparePtyIpcSpawnPreflight(ctx: PtyIpcSpawnState): Promis
   ctx.spawnTiming.mark('preflight')
   const freshSpawnRecovery = ctx.preAdoptedStablePane
     ? undefined
-    : recoverFreshSpawnProviderRouting(ctx.provider, args.connectionId, args.sessionId)
+    : recoverFreshSpawnProviderRouting(ctx.provider, args.sessionId)
   if (freshSpawnRecovery) {
     await freshSpawnRecovery
     const previousHiddenMarkId = ctx.preSpawnHiddenMarkId
     ctx.isDaemonHostSpawn =
-      !args.connectionId &&
-      !(ctx.provider instanceof LocalPtyProvider) &&
-      !routesFreshSpawnsToLocalProvider(ctx.provider)
+      !(ctx.provider instanceof LocalPtyProvider) && !routesFreshSpawnsToLocalProvider(ctx.provider)
     ctx.isMintedSessionId = args.sessionId === undefined && ctx.isDaemonHostSpawn
     ctx.effectiveSessionId =
       args.sessionId ?? (ctx.isDaemonHostSpawn ? mintPtySessionId(args.worktreeId) : undefined)
-    ctx.effectiveSessionAppId =
-      ctx.effectiveSessionId !== undefined
-        ? getAppPtyId(args.connectionId, ctx.effectiveSessionId)
-        : undefined
-    ctx.effectiveSessionRelayId =
-      ctx.effectiveSessionId !== undefined
-        ? getRelayPtyId(args.connectionId, ctx.effectiveSessionId)
-        : undefined
+    ctx.effectiveSessionAppId = ctx.effectiveSessionId
     ctx.preSpawnHiddenMarkId =
       ctx.initiallyHidden && ctx.isDaemonHostSpawn && ctx.effectiveSessionAppId !== undefined
         ? ctx.effectiveSessionAppId
@@ -190,10 +173,9 @@ export async function preparePtyIpcSpawnPreflight(ctx: PtyIpcSpawnState): Promis
       }
     }
   }
-  ctx.isClaudeLaunch =
-    !ctx.preAdoptedStablePane && !args.connectionId && isClaudeLaunchCommand(args.command)
+  ctx.isClaudeLaunch = !ctx.preAdoptedStablePane && isClaudeLaunchCommand(args.command)
   ctx.terminalRuntimeOptions =
-    process.platform === 'win32' && !args.connectionId
+    process.platform === 'win32'
       ? resolveLocalWindowsTerminalRuntimeOptions({
           requestedShellOverride: args.shellOverride,
           settings: ctx.deps.getSettings?.(),
@@ -210,20 +192,19 @@ export async function preparePtyIpcSpawnPreflight(ctx: PtyIpcSpawnState): Promis
   // Why: daemon host-env setup needs a stable id BEFORE provider.spawn so buildPtyHostEnv hooks/Pi cleanup can run; daemon still honors opts.sessionId ?? mint().
   // Note: sessionId is STABLE across daemon restarts by design — do NOT simplify to a fresh UUID per spawn; that orphans reconnectable state.
   // Why: only clear ids minted in THIS request on failure — a caller-supplied args.sessionId may name an existing PTY we must not clobber.
-  ctx.expectedWslDistro = !args.connectionId
-    ? (resolveWslSessionContext({
-        cwd: ctx.cwd,
-        sessionId: ctx.effectiveSessionId,
-        shellOverride: ctx.terminalRuntimeOptions.shellOverride,
-        terminalWindowsWslDistro: ctx.terminalRuntimeOptions.terminalWindowsWslDistro
-      })?.distro ?? null)
-    : null
+  ctx.expectedWslDistro =
+    resolveWslSessionContext({
+      cwd: ctx.cwd,
+      sessionId: ctx.effectiveSessionId,
+      shellOverride: ctx.terminalRuntimeOptions.shellOverride,
+      terminalWindowsWslDistro: ctx.terminalRuntimeOptions.terminalWindowsWslDistro
+    })?.distro ?? null
   const initialSelectionTarget = getCodexSelectionTargetForPty(
     initialShellOverride,
     ctx.cwd,
     ctx.expectedWslDistro
   )
-  args.env = withClaudeProfileTerminalEnv(args.env, args.connectionId, initialSelectionTarget)
+  args.env = withClaudeProfileTerminalEnv(args.env, initialSelectionTarget)
   ctx.claudeAuth =
     ctx.isClaudeLaunch && ctx.deps.prepareClaudeAuth
       ? await ctx.deps.prepareClaudeAuth(initialSelectionTarget)

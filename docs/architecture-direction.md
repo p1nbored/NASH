@@ -1,6 +1,6 @@
 # NASH architecture and current decisions
 
-Updated 2026-10-09. This describes the current source; published versions and verification are in [releases](releases.md). It replaces the earlier architecture, decision log and implementation plans. Historical D-number references in code describe decisions preserved in Git history; they do not override the current behavior below.
+Updated 2026-10-14. Orca is synchronized through `75513668fb20442f23a9ab530adb3cf628bce747` (2026-10-14), preserving NASH behavior and identity. This describes the current source; published versions and verification are in [releases](releases.md). Historical D-number references in code describe decisions preserved in Git history; they do not override the current behavior below.
 
 ## 1. Product and ownership
 
@@ -8,14 +8,14 @@ Workbench is the app's task workspace. Dot submits and follows work through the 
 
 Orca's runs, tasks, dispatches, terminal identities, worktrees and mailbox remain authoritative. NASH adds task classification, recorded routing, permission review and validation metadata. Reuse existing runtime paths; add only what the requested behavior needs.
 
-A new request may launch a Claude Code or Codex coordinator. An existing local coordinator can adopt NASH task handling or be explicitly attached to Dot. Attachment preserves its process, model, context and task history. AGY is supported as a worker, not as an attached coordinator.
+A new request may launch any model-capable routing CLI as coordinator: Claude Code, Codex, AGY, Gemini CLI, Cursor, CodeBuddy, Grok, Muse, OMP or OpenCode. Existing local Claude Code/Codex coordinators can adopt NASH task handling or be explicitly attached to Dot. Attachment preserves their process, model, context and task history.
 
 ## 2. Task flow
 
 1. The coordinator proposes a TaskSpec with its objective, outputs, acceptance criteria and constraints.
 2. The classifier returns whether delegation is needed and the task type. It does not plan the task or select a model.
 3. The routing table selects the execution target, exact model and supported effort, with an availability check.
-4. Codex/AGY delegation uses Orca's native worker launch and context delivery. Claude in-session subagent/workflow paths remain available.
+4. CLI delegation uses Orca's native worker launch and context delivery. Claude in-session subagent/workflow paths remain available; a Claude subagent routed from another coordinator CLI launches as a native worker.
 5. Results, messages and stopping use native runtime mechanisms. Native worker completion is not presented as an independent NASH validation pass.
 
 The current classifier is Clef. Its settings use the generic name **Classifier**; other classifier providers have not been implemented. Credentials, verification, thresholds and runtime failure/quota protection remain. The removed Advanced panel no longer exposes its exclusive diagnostic state.

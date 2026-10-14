@@ -1,6 +1,10 @@
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SshConnection } from './ssh-connection'
-import type { RelayEndpointIncumbent } from './ssh-relay-endpoint-incumbent'
+import {
+  parseRelayEndpointIncumbentProbe,
+  type RelayEndpointIncumbent
+} from './ssh-relay-endpoint-incumbent'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 
 const { execCommand, probeRelayEndpointIncumbent, countRelayEndpointPtys } = vi.hoisted(() => ({
@@ -9,14 +13,17 @@ const { execCommand, probeRelayEndpointIncumbent, countRelayEndpointPtys } = vi.
   countRelayEndpointPtys: vi.fn()
 }))
 
-vi.mock('./ssh-relay-deploy-helpers', () => ({ execCommand }))
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
+  execCommand
+}))
 vi.mock('./ssh-relay-endpoint-pty-count', () => ({ countRelayEndpointPtys }))
 vi.mock('./ssh-relay-endpoint-incumbent', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   probeRelayEndpointIncumbent
 }))
 
-import { censusHostRelayEndpoints } from './ssh-host-relay-endpoint-census'
+import { censusHostRelayEndpoints, readRelayEndpointProbe } from './ssh-host-relay-endpoint-census'
 import { RELAY_DAEMON_ARGV_COMMAND } from './ssh-relay-endpoint-runtime'
 
 let daemonArgv = ''
@@ -165,5 +172,51 @@ describe('the host-side relay endpoint census', () => {
     })
     expect(countRelayEndpointPtys).toHaveBeenCalledWith(conn, pinned, sock(1), undefined)
     expect(noPathNode).not.toHaveBeenCalled()
+  })
+})
+
+describe('readRelayEndpointProbe', () => {
+  const probed = (lines: string[]) =>
+    parseRelayEndpointIncumbentProbe(
+      sock(1),
+      ['ORCA-INCUMBENT-BEGIN', ...lines, 'ORCA-INCUMBENT-END'].join('\n')
+    )
+
+  it('reads a live relay that still owns PTYs as holding work', () => {
+    expect(
+      readRelayEndpointProbe(
+        probed([
+          'PRESENT=yes',
+          'LISTEN=accepted',
+          'HOLDERS_SOURCE=lsof',
+          'HOLDER=3669803 yes 13 11'
+        ])
+      )
+    ).toBe('holds-work')
+  })
+
+  it('reads a proven empty relay as idle', () => {
+    expect(
+      readRelayEndpointProbe(
+        probed(['PRESENT=yes', 'LISTEN=accepted', 'HOLDERS_SOURCE=lsof', 'HOLDER=80583 yes 2 0'])
+      )
+    ).toBe('idle')
+  })
+
+  it('reads a socket proven to have no holder as idle', () => {
+    expect(
+      readRelayEndpointProbe(probed(['PRESENT=yes', 'LISTEN=refused', 'HOLDERS_SOURCE=lsof']))
+    ).toBe('idle')
+  })
+
+  it('never reads an unanswered endpoint as idle', () => {
+    expect(
+      readRelayEndpointProbe(
+        probed(['PRESENT=yes', 'LISTEN=unknown', 'HOLDERS_SOURCE=unavailable'])
+      )
+    ).toBe('unverifiable')
+    expect(
+      readRelayEndpointProbe(probed(['PRESENT=no', 'LISTEN=absent', 'HOLDERS_SOURCE=lsof']))
+    ).toBe('unverifiable')
   })
 })

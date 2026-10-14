@@ -1,3 +1,4 @@
+import { ROUTING_CLI_TARGETS } from '../../../../shared/routing-table/routing-cli-registry'
 // Task-side tables of the autopilot_runtime_schema family. The B3, C2, C4 and C5 stores write them;
 // they are defined here so the whole family is created and exact-SQL verified as one unit.
 import {
@@ -24,8 +25,7 @@ export const TASK_ROUTE_TARGETS = [
   'claude_primary',
   'claude_subagent',
   'claude_workflow',
-  'codex_cli',
-  'agy_cli'
+  ...ROUTING_CLI_TARGETS
 ] as const
 export const TASK_ROUTE_POLICY_LEVELS = [...AUTOPILOT_EFFORT_LEVELS, 'inherit'] as const
 export const TASK_ROUTE_STATUSES = [

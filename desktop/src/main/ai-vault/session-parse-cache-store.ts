@@ -38,15 +38,38 @@ export type SessionParseCacheEntry = {
 }
 
 const cache = new Map<string, SessionParseCacheEntry>()
+let revision = 0
+let onChange: (() => void) | null = null
+
+export function sessionParseCacheRevision(): number {
+  return revision
+}
+
+export function observeSessionParseCacheChanges(observer: (() => void) | null): void {
+  onChange = observer
+}
+
+function notifyChange(): void {
+  revision++
+  try {
+    onChange?.()
+  } catch (error) {
+    console.debug('[ai-vault] session parse cache checkpoint scheduling failed', error)
+  }
+}
 
 export function resetSessionParseCacheForTests(): void {
   cache.clear()
+  revision = 0
+  onChange = null
 }
 
 // Drops one entry after its file is deleted. Cleanliness, not correctness:
 // discovery walks disk first, so a trashed file is never rediscovered anyway.
 export function invalidateSessionParseCacheEntry(path: string): void {
-  cache.delete(path)
+  if (cache.delete(path)) {
+    notifyChange()
+  }
 }
 
 // Persisted subset of a cache entry: the non-serializable `resume` parser
@@ -115,6 +138,14 @@ export function getSessionParseCacheEntry(path: string): SessionParseCacheEntry 
 }
 
 export function storeSessionParseCacheEntry(path: string, entry: SessionParseCacheEntry): void {
+  const previous = cache.get(path)
+  const changed =
+    previous === undefined ||
+    previous.mtimeMs !== entry.mtimeMs ||
+    previous.sizeBytes !== entry.sizeBytes ||
+    previous.platform !== entry.platform ||
+    previous.session !== entry.session ||
+    !sameSidecar(previous.sidecar, entry.sidecar)
   cache.delete(path)
   cache.set(path, entry)
   if (cache.size > MAX_CACHE_ENTRIES) {
@@ -123,4 +154,21 @@ export function storeSessionParseCacheEntry(path: string, entry: SessionParseCac
       cache.delete(oldest.value)
     }
   }
+  if (changed) {
+    notifyChange()
+  }
+}
+
+function sameSidecar(
+  left: SessionSidecarObservation | undefined,
+  right: SessionSidecarObservation | undefined
+): boolean {
+  return (
+    left === right ||
+    (typeof left === 'object' &&
+      typeof right === 'object' &&
+      left.path === right.path &&
+      left.mtimeMs === right.mtimeMs &&
+      left.sizeBytes === right.sizeBytes)
+  )
 }

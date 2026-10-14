@@ -8,6 +8,7 @@ import type {
 } from '../../../shared/terminal-tab-types'
 import { parseLegacyNumericPaneKey, parsePaneKey } from '../../../shared/stable-pane-id'
 import { isWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
+import { isPaneSpawnDeferred } from './pane-spawn-deferral-registry'
 
 type AppStoreState = ReturnType<typeof useAppStore.getState>
 
@@ -146,6 +147,11 @@ export function recordPaneIsOwnedByPreservedPane(
       return false
     }
     if (activationTreatsNoteAsFinished(record)) {
+      return true
+    }
+    // Why: a deferred pane has no PTY yet still resumes this session when opened; a sweep that
+    // launched it elsewhere too would put two `--resume` on one transcript.
+    if (isPaneSpawnDeferred(record.paneKey)) {
       return true
     }
     // Why: a pane with a live PTY owns its running session regardless of which

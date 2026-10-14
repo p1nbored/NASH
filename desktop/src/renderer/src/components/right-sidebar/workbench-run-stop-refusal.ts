@@ -1,5 +1,5 @@
 import { translate } from '@/i18n/i18n'
-import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-client'
+import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import type { WorkbenchError } from './workbench-rpc-error'
 
 const STOP_REFUSED = 'workbench_run_stop_refused'

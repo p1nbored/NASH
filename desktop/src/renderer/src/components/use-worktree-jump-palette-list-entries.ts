@@ -83,10 +83,10 @@ export function useWorktreeJumpPaletteListEntries({
         id: `__header_worktrees__${idSuffix}`,
         type: 'section-header',
         label: hasQuery
-          ? translate('auto.components.WorktreeJumpPalette.worktreesHeader', 'Worktrees')
+          ? translate('auto.components.WorktreeJumpPalette.worktreesHeader', 'Workspaces')
           : translate(
               'auto.components.WorktreeJumpPalette.recentWorktreesHeader',
-              'Recent Worktrees'
+              'Recent Workspaces'
             )
       })
     }

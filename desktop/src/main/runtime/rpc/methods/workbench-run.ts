@@ -34,6 +34,7 @@ function desktopOwner(context: RpcContext): OrchestrationDb {
 
 export const WORKBENCH_RUN_LIST_METHOD = defineMethod({
   name: 'workbench.runs.list',
+  permission: 'workspace',
   params: WorkbenchRunListParams,
   handler: (params, context): WorkflowRunListResult =>
     WorkflowRunListResultSchema.parse(listWorkflowRunViews(desktopOwner(context), params))
@@ -42,6 +43,7 @@ export const WORKBENCH_RUN_LIST_METHOD = defineMethod({
 /** One run with what its primary is doing now; without the workflow runtime, stored records only. */
 export const WORKBENCH_RUN_SHOW_METHOD = defineMethod({
   name: 'workbench.runs.show',
+  permission: 'workspace',
   params: WorkbenchRunShowParams,
   handler: async (params, context): Promise<WorkflowRunShowResult> => {
     const owner = desktopOwner(context)
@@ -54,6 +56,7 @@ export const WORKBENCH_RUN_SHOW_METHOD = defineMethod({
 /** Stops the primary, ends the run as canceled and cancels its intake receipt (D-016 section 1.3). */
 export const WORKBENCH_RUN_STOP_METHOD = defineMethod({
   name: 'workbench.runs.stop',
+  permission: 'workspace',
   params: WorkbenchRunStopParams,
   handler: async (params, context): Promise<WorkflowRunStopResult> => {
     const owner = desktopOwner(context)
@@ -71,6 +74,7 @@ export const WORKBENCH_RUN_STOP_METHOD = defineMethod({
  */
 export const WORKBENCH_RUN_MESSAGE_METHOD = defineMethod({
   name: 'workbench.runs.message',
+  permission: 'workspace',
   params: WorkbenchRunMessageParams,
   handler: async (params, context): Promise<RunMessageSendResult> => {
     requireWorkbenchCaller(context.workbenchCaller)

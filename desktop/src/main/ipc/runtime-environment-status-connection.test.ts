@@ -35,7 +35,7 @@ it('publishes real same-socket verification after every authenticated reconnect'
   profiles.push(profile)
   const environment = addEnvironmentFromPairingCode(profile, {
     name: 'host',
-    pairingCode: encodePairingOffer(server.pairing)
+    pairingCode: encodePairingOffer(server.offer)
   })
   await getRuntimeEnvironmentStatus(profile, environment.id)
   const owner = getRuntimeEnvironmentStatusOwner(profile, environment.id)

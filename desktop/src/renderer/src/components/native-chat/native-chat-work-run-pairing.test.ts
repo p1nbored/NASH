@@ -53,9 +53,7 @@ const diff = (id: string, sequence: number, file: string) =>
 
 /** As the transcript list gets them: projected, then adjacent tool rows folded. */
 function messagesOf(items: AgentJournalRenderItem[]): NativeChatMessage[] {
-  return foldToolMessages(
-    projectStructuredAgentSessionMessages(items, [], [], { rejectedInPlace: false })
-  )
+  return foldToolMessages(projectStructuredAgentSessionMessages(items, [], []))
 }
 
 /** Each edit card's call input and the files it draws. */

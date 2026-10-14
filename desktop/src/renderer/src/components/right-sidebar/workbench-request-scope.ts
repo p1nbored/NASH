@@ -1,8 +1,6 @@
 import type { AppState } from '@/store'
-import {
-  getKnownExecutionHostIdForWorktree,
-  type WorktreeRuntimeOwnerState
-} from '@/lib/worktree-runtime-owner'
+import { getKnownExecutionHostIdForWorktree } from '@/lib/worktree-runtime-owner'
+import type { WorktreeRuntimeOwnerState } from '@/lib/worktree-runtime-owner-state'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
 
 type WorkbenchScopeState = WorktreeRuntimeOwnerState &

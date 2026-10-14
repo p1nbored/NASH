@@ -5,8 +5,8 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const projectDir = path.resolve(import.meta.dirname, '../..')
-const packageJson = JSON.parse(readFileSync(path.join(projectDir, 'package.json'), 'utf8'))
 const wrapperPath = path.join(projectDir, 'config', 'scripts', 'orca-dev.mjs')
+const packageJson = JSON.parse(readFileSync(path.join(projectDir, 'package.json'), 'utf8'))
 
 const identity = JSON.parse(
   readFileSync(path.join(projectDir, 'src', 'shared', 'app-identity-constants.json'), 'utf8')

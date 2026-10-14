@@ -1,10 +1,7 @@
 import { createHash } from 'node:crypto'
 import { getCommitMessageAgentSpec } from '../../../shared/commit-message-agent-spec'
-import {
-  runProcess,
-  type ProcessSpec,
-  type ProcessResult
-} from '../../../shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
+import type { ProcessSpec, ProcessResult } from '@orca/process-host/process-spec'
 import { withCliRuntimeOnPath } from '../../../shared/node-cli-command-resolution'
 import { resolveCodexHomeProcessLockKeyForSpawnEnv } from '../../codex-cli/codex-home-process-lock'
 import { runCodexProcessWithHomeLock } from '../../text-generation/source-control-local-generation'
@@ -47,7 +44,9 @@ export type ReviewerRunOutcome =
 export type ReviewerRunner = (request: ReviewerRequest) => Promise<ReviewerRunOutcome>
 
 export type NativeReviewerDeps = {
-  readonly resolveInvocation: (agent: 'claude' | 'codex') => Promise<{ command: string; env?: NodeJS.ProcessEnv }>
+  readonly resolveInvocation: (
+    agent: 'claude' | 'codex'
+  ) => Promise<{ command: string; env?: NodeJS.ProcessEnv }>
   readonly run?: (spec: ProcessSpec) => Promise<ProcessResult>
   readonly timeoutMs?: number
 }
@@ -105,7 +104,9 @@ export function createNativeReviewer(
     }
     const native = getCommitMessageAgentSpec(agent)!
     let invocation: Awaited<ReturnType<NativeReviewerDeps['resolveInvocation']>>
-    try { invocation = await deps.resolveInvocation(agent) } catch {
+    try {
+      invocation = await deps.resolveInvocation(agent)
+    } catch {
       return { status: 'unavailable', reason: 'account_unavailable' }
     }
     const program = invocation.command

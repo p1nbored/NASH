@@ -21,7 +21,8 @@ import {
 import {
   getTerminalRightClickToPasteSearchEntry,
   getTerminalWindowsPowershellImplementationSearchEntry,
-  getTerminalWindowsShellSearchEntry
+  getTerminalWindowsShellSearchEntry,
+  getTerminalWindowsAdministratorSearchEntry
 } from './terminal-windows-search'
 import { ManageSessionsSection } from './ManageSessionsSection'
 import { TerminalAdvancedSection } from './TerminalAdvancedSection'
@@ -29,6 +30,7 @@ import { TerminalInteractionSection } from './TerminalInteractionSection'
 import { TerminalRenderingSection } from './TerminalRenderingSection'
 import { TerminalSetupScriptSection } from './TerminalSetupScriptSection'
 import { TerminalWindowsShellSection } from './TerminalWindowsShellSection'
+import { TerminalWindowsAdministratorSection } from './TerminalWindowsAdministratorSection'
 import { SettingsSegmentedControl, SettingsSubsectionHeader } from './SettingsFormControls'
 import { translate } from '@/i18n/i18n'
 import { translateSearchKeyword } from './settings-search-keywords'
@@ -300,6 +302,10 @@ export function TerminalPane({
 
   const visibleSections = [
     defaultShellSection,
+    isWindows &&
+    matchesSettingsSearch(searchQuery, getTerminalWindowsAdministratorSearchEntry()) ? (
+      <TerminalWindowsAdministratorSection key="windows-administrator" />
+    ) : null,
     showWindowsHostSettings &&
     matchesSettingsSearch(searchQuery, getTerminalWindowsShellSearchEntry()) ? (
       <TerminalWindowsShellSection

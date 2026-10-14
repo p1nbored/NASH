@@ -74,7 +74,8 @@ export function createEvaluatorHarness(overrides: HarnessOverrides = {}) {
     models: {
       claude: overrides.models?.claude ?? listingPort('claude', CLAUDE_MODELS),
       codex: overrides.models?.codex ?? listingPort('codex', CODEX_MODELS),
-      agy: overrides.models?.agy ?? listingPort('agy', AGY_MODELS)
+      agy: overrides.models?.agy ?? listingPort('agy', AGY_MODELS),
+      ...overrides.models
     },
     rateLimits: {
       read: () => {

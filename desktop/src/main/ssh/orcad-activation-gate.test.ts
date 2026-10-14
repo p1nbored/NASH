@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { evaluateOrcadActivation } from './orcad-activation-gate'
-import { classifyOrcadHostUnavailable } from './orcad-host-unavailable'
+import { classifyOrcadHostUnavailable } from '../orcad/orcad-host-unavailable'
 import type { ServeReadiness } from '../server/serve-readiness'
 import type { OrcadHealth, TerminalDaemonHealth } from '../orcad/orcad-health'
 

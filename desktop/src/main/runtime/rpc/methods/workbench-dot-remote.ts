@@ -16,36 +16,43 @@ function control(context: RpcContext): DotRemoteControl {
 export const WORKBENCH_DOT_REMOTE_METHODS = [
   defineMethod({
     name: 'workbench.dotRemote.status',
+    permission: 'workspace',
     params: null,
     handler: (_params, context) => control(context).status()
   }),
   defineMethod({
     name: 'workbench.dotRemote.enable',
+    permission: 'host-admin',
     params: null,
     handler: (_params, context) => control(context).enable()
   }),
   defineMethod({
     name: 'workbench.dotRemote.disable',
+    permission: 'host-admin',
     params: null,
     handler: (_params, context) => control(context).disable()
   }),
   defineMethod({
     name: 'workbench.dotRemote.setConnection',
+    permission: 'accounts-admin',
     params: WorkbenchDotRemoteSetConnectionParams,
     handler: (params, context) => control(context).setConnection(params)
   }),
   defineMethod({
     name: 'workbench.dotRemote.pairing.start',
+    permission: 'pairing-admin',
     params: null,
     handler: (_params, context) => control(context).startPairing()
   }),
   defineMethod({
     name: 'workbench.dotRemote.pairing.status',
+    permission: 'workspace',
     params: null,
     handler: (_params, context) => control(context).pairingStatus()
   }),
   defineMethod({
     name: 'workbench.dotRemote.revoke',
+    permission: 'pairing-admin',
     params: null,
     handler: (_params, context) => control(context).revoke()
   })

@@ -234,7 +234,7 @@ export abstract class AgentBrowserBridgeInteractionCommands extends AgentBrowser
           releaseDebugger()
         }
       },
-      { ensureSession: false }
+      { ensureSession: false, requireScopedTarget: true }
     )
   }
 

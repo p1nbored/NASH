@@ -119,7 +119,7 @@ function installApi(previewInstall: ReturnType<typeof vi.fn>) {
 }
 
 async function inspectSkill(expectedDescription = 'A private skill'): Promise<void> {
-  fireEvent.change(screen.getByLabelText('Orca Cloud skill link'), {
+  fireEvent.change(screen.getByLabelText('NASH Cloud skill link'), {
     target: { value: 'https://app.orca.dev/skills/share/share_1' }
   })
   fireEvent.click(screen.getByRole('button', { name: 'Inspect skill' }))
@@ -162,7 +162,7 @@ describe('SkillInstallDialog', () => {
 
     await inspectSkill(sharedVersion.description)
     expect(screen.getByRole('button', { name: new RegExp(longName) })).toBeTruthy()
-    expect(screen.queryByText(/Published by Orca user/)).toBeNull()
+    expect(screen.queryByText(/Published by NASH user/)).toBeNull()
     expect(
       screen.getByText(
         (_, element) =>
@@ -422,7 +422,7 @@ describe('SkillInstallDialog', () => {
     render(<SkillInstallDialog open onOpenChange={onOpenChange} />)
 
     expect(document.activeElement).toBe(
-      screen.getByRole('textbox', { name: 'Orca Cloud skill link' })
+      screen.getByRole('textbox', { name: 'NASH Cloud skill link' })
     )
     // Why: the submit sits in the footer beside Close, so Enter in the field is
     // the keyboard path rather than tabbing past the back-out action.
@@ -434,7 +434,7 @@ describe('SkillInstallDialog', () => {
       'Inspect skill'
     ])
     await user.type(
-      screen.getByRole('textbox', { name: 'Orca Cloud skill link' }),
+      screen.getByRole('textbox', { name: 'NASH Cloud skill link' }),
       'https://app.orca.dev/skills/share/share_1'
     )
     await user.keyboard('{Enter}')
@@ -451,7 +451,7 @@ describe('SkillInstallDialog', () => {
     Object.defineProperty(window, 'api', { configurable: true, value: { skills } })
     render(<SkillInstallDialog open onOpenChange={() => undefined} />)
 
-    fireEvent.change(screen.getByLabelText('Orca Cloud skill link'), {
+    fireEvent.change(screen.getByLabelText('NASH Cloud skill link'), {
       target: { value: 'https://app.orca.dev/skills/share/share_1' }
     })
     fireEvent.click(screen.getByRole('button', { name: 'Inspect skill' }))

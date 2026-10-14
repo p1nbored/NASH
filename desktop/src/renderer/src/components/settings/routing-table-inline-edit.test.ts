@@ -54,11 +54,31 @@ describe('editForTarget', () => {
     })
   })
 
-  it('keeps the model and effort otherwise', () => {
+  it('clears another provider model while keeping a supported effort', () => {
     expect(editForTarget(row(), 'codex_cli')).toEqual({
       target: 'codex_cli',
-      reasoningLevel: 'max'
+      model: '',
+      reasoningLevel: 'max',
+      requirement: 'required'
     })
+  })
+
+  it('uses CLI defaults when switching to a CLI without an effort flag', () => {
+    expect(editForTarget(row(), 'gemini_cli')).toEqual({
+      target: 'gemini_cli',
+      model: '',
+      reasoningLevel: 'none',
+      requirement: 'required'
+    })
+  })
+
+  it('preserves inheritance when a row stays on its inherited workflow', () => {
+    expect(
+      editForTarget(
+        row({ target: 'claude_workflow', model: 'inherit', reasoningLevel: 'inherit' }),
+        'claude_workflow'
+      )
+    ).toEqual({ target: 'claude_workflow' })
   })
 })
 

@@ -244,12 +244,6 @@ export function installPtyResizeVisibilityIpc(session: PtyIpcSession): void {
       const pending = session.pendingData.get(args.id)
       if (pending && transition.droppable) {
         session.pendingData.delete(args.id)
-        if (pending.projectionAdmissionIds) {
-          session.sshOutputIntake?.transferProjections(
-            pending.projectionAdmissionIds,
-            'hidden-drop'
-          )
-        }
         session.updateProducerFlowControl(args.id)
         session.pendingOverflowMarkedPtys.delete(args.id)
         const drop = recordHiddenRendererPtyDataDrop(args.id, pending.data.length)

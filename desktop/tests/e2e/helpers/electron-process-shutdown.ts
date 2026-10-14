@@ -112,6 +112,15 @@ function killPid(pid: number, signal: NodeJS.Signals): void {
   }
 }
 
+function hasPidExited(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return false
+  } catch (error) {
+    return error instanceof Error && 'code' in error && error.code === 'ESRCH'
+  }
+}
+
 async function forceKillPidTree(pid: number): Promise<void> {
   if (!pid) {
     return
@@ -133,7 +142,17 @@ async function forceKillPidTree(pid: number): Promise<void> {
   for (const targetPid of [...pids].toReversed()) {
     killPid(targetPid, 'SIGTERM')
   }
-  await delay(FORCE_KILL_WAIT_MS)
+  const deadline = performance.now() + FORCE_KILL_WAIT_MS
+  while (true) {
+    if (pids.every(hasPidExited)) {
+      return
+    }
+    const remainingMs = deadline - performance.now()
+    if (remainingMs <= 0) {
+      break
+    }
+    await delay(Math.min(50, remainingMs))
+  }
   for (const targetPid of [...pids].toReversed()) {
     killPid(targetPid, 'SIGKILL')
   }

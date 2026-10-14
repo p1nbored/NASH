@@ -155,7 +155,9 @@ export function openPopupWithOriginBar(
       : {}),
     minWidth: MIN_POPUP_CONTENT_WIDTH,
     minHeight: MIN_POPUP_CONTENT_HEIGHT + POPUP_ORIGIN_BAR_HEIGHT,
-    title: initialOrigin.label
+    title: initialOrigin.label,
+    // Why: Windows/Linux attach Orca's app menu to every window, including web popups.
+    autoHideMenuBar: true
   })
 
   // Why: the origin bar renders only Orca's own data: URL and must stay
@@ -184,6 +186,8 @@ export function openPopupWithOriginBar(
     })
   }
   window.on('resize', layoutViews)
+  // Why: Alt-revealing the auto-hidden menu bar shrinks the content area without resizing the window.
+  window.contentView.on('bounds-changed', layoutViews)
   // Why: HTML5 fullscreen makes the whole window fullscreen. resize covers
   // this on macOS, but re-pin on the explicit events too so the origin bar
   // provably stays above fullscreen content on every platform.

@@ -63,6 +63,10 @@ export type AssignmentUnavailableCause =
   | 'relay_connection_headroom_exhausted'
   | 'relay_home_cell_unavailable'
   | 'relay_assignment_row_busy'
+  // Step 5: a starting director's map, a never-seen host with the database down, or intake.
+  | 'reserve-map-incomplete'
+  | 'reserve-database'
+  | 'reserve-paced'
 
 // Row-lock waiters seen in one pg_stat_activity sample, by who waits, on which
 // table, behind whom. Roles come from each pool's application_name.
@@ -481,6 +485,8 @@ export class RelayObservability implements RelayRuntimeObserver {
     const controlRenewalFlush = latencySummary(deltas.controlRenewalFlushLatenciesMs)
     const memory = process.memoryUsage()
     const p99 = this.eventLoop.count === 0 ? 0 : this.eventLoop.percentile(99) / 1_000_000
+    // One sample covers a whole freeze, so p99 cannot see a single long one; max can.
+    const max = this.eventLoop.count === 0 ? 0 : this.eventLoop.max / 1_000_000
     this.eventLoop.reset()
     this.write({
       severity: 'INFO',
@@ -591,7 +597,8 @@ export class RelayObservability implements RelayRuntimeObserver {
       httpLatencyMsMax: roundMs(deltas.httpLatencyMsMax),
       heapUsedBytes: memory.heapUsed,
       heapTotalBytes: memory.heapTotal,
-      eventLoopDelayMsP99: Number(p99.toFixed(3))
+      eventLoopDelayMsP99: Number(p99.toFixed(3)),
+      eventLoopDelayMsMax: Number(max.toFixed(3))
     })
   }
 }

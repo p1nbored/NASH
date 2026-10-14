@@ -187,11 +187,13 @@ function getClaudeStatusAccountsFromSettings(
 
 // Why: with a Remote NASH Server, local GlobalSettings describe this desktop, not the owner — the server snapshot wins (#7973).
 
+/** `ownerEnvironmentId` is the server owning the shown accounts; `null` is this desktop. */
 export function resolveClaudeStatusAccountState(
   settings: GlobalSettings | null | undefined,
-  runtimeState: ClaudeRateLimitAccountsState
+  runtimeState: ClaudeRateLimitAccountsState,
+  ownerEnvironmentId: string | null
 ): ClaudeRateLimitAccountsState {
-  if (settings?.activeRuntimeEnvironmentId?.trim()) {
+  if (ownerEnvironmentId) {
     return runtimeState
   }
   return getClaudeStatusAccountsFromSettings(settings, runtimeState) ?? runtimeState

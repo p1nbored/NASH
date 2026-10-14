@@ -3,9 +3,9 @@ import { useAppStore } from '@/store'
 import {
   createWebRuntimeAgentSessionTerminal,
   createWebRuntimeAgentSessionTerminalWithLaunchDraft,
-  createWebRuntimeSessionTerminal,
-  isWebTerminalSurfaceTabId
-} from '@/runtime/web-runtime-session'
+  createWebRuntimeSessionTerminal
+} from '@/runtime/web-runtime-terminal-creation'
+import { isWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
 import type { AgentStartupPlan } from '@/lib/tui-agent-startup'
 import type { Tab } from '../../../shared/tab-types'
 import type { TuiAgent } from '../../../shared/tui-agent'

@@ -41,7 +41,6 @@ const row = (path: string, mtimeMs: number): [string, PersistedSessionParseCache
   path,
   entry(mtimeMs)
 ]
-const stats = { reused: 0, fullParses: 1, incremental: 0, earlyStopped: 0, bytesRead: 0 }
 
 beforeEach(async () => {
   root = await mkdtemp(join(tmpdir(), 'orca-cache-bounds-'))
@@ -135,8 +134,8 @@ it('retains a valid newest suffix under both byte and structural capacity', asyn
 })
 
 it('keeps the previous atomic snapshot when its newest row cannot fit', async () => {
-  seedSessionParseCache([row('valid', 1)])
-  scheduleSessionParseCachePersist(stats)
+  storeSessionParseCacheEntry('valid', { ...entry(1), resume: null })
+  scheduleSessionParseCachePersist()
   await flushSessionParseCachePersist()
   const previous = await readFile(file, 'utf8')
   const session: AiVaultSession = {
@@ -167,7 +166,7 @@ it('keeps the previous atomic snapshot when its newest row cannot fit', async ()
   }
   Reflect.set(session, 'syntheticDeepField', deep)
   storeSessionParseCacheEntry('newest', { ...entry(2), session, resume: null })
-  scheduleSessionParseCachePersist(stats)
+  scheduleSessionParseCachePersist()
   await flushSessionParseCachePersist()
   expect(await readFile(file, 'utf8')).toBe(previous)
 })

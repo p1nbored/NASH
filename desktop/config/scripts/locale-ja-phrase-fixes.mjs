@@ -37,17 +37,6 @@ const RELOCALIZED_GENERIC_TERMS = [
 
 export const JA_PHRASE_FIXES = [
   ...RELOCALIZED_GENERIC_TERMS,
-  {
-    pattern: /エージェント/g,
-    replacement: 'Agent',
-    whenEnIncludes: 'agent',
-    // Skills metadata and routing fields use Japanese UI labels.
-    skipKeyPrefixes: [
-      'auto.components.skills.',
-      'components.native-chat.tool.row.subagent',
-      'auto.components.settings.routingTable.'
-    ]
-  },
   { pattern: /解雇/g, replacement: '閉じる', whenEnIncludes: 'Dismiss' },
   { pattern: /却下/g, replacement: '閉じる', whenEnIncludes: 'Dismiss' },
   { pattern: /代理人/g, replacement: 'Agent', whenEnIncludes: 'agent' },

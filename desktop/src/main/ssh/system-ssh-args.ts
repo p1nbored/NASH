@@ -8,6 +8,8 @@ export type SystemSshBuildArgsOptions = {
   suppressOrcaControlMaster?: boolean
   gssapiOnly?: boolean
   nonInteractive?: boolean
+  /** Keeps OpenSSH's channel-open failures on stderr even under a quieter configured LogLevel. */
+  logChannelFailures?: boolean
   /**
    * `false` only when the parsed ssh_config proves no `Host`/`Match` block claims `configHost`.
    *
@@ -25,6 +27,10 @@ export function buildSshArgs(target: SshTarget, options?: SystemSshBuildArgsOpti
     args.push('-F', options.configFile)
   }
   args.push('-o', options?.gssapiOnly || options?.nonInteractive ? 'BatchMode=yes' : 'BatchMode=no')
+  if (options?.logChannelFailures) {
+    // Why INFO: OpenSSH logs a refused forward channel at that level, below ERROR/QUIET.
+    args.push('-o', 'LogLevel=INFO')
+  }
   if (options?.gssapiOnly) {
     // Why: the probe must neither authenticate with a key nor open an OpenSSH
     // credential prompt; failure belongs to Orca's existing ssh2 prompt path.

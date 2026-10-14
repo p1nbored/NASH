@@ -9,7 +9,7 @@ import {
 import { execOrcadRemoteOr } from './orcad-remote-runtime-control'
 import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 
 /** An ssh2 exec channel whose remote command answers only when the test says so. */
 class SlowChannel extends EventEmitter {
@@ -36,7 +36,7 @@ const conn = {
 }
 const target = {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: only exec and usesSystemSshTransport are read.
-  conn: conn as unknown as SshConnection,
+  conn: conn as unknown as OrcadHostTransport,
   host: getRemoteHostPlatform('linux-x64')
 }
 

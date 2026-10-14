@@ -117,7 +117,7 @@ export function SkillInstallManagementDialog({
           operation.status === 'reconnect-required'
             ? translate(
                 'auto.components.skills.install.reconnectForVersionHistory',
-                'Reconnect your Orca cloud account to load version history.'
+                'Reconnect your NASH cloud account to load version history.'
               )
             : operation.message
         )
@@ -203,7 +203,7 @@ export function SkillInstallManagementDialog({
             operation.status === 'reconnect-required'
               ? translate(
                   'auto.components.skills.install.reconnectBeforeVersionChange',
-                  'Reconnect your Orca cloud account before changing versions.'
+                  'Reconnect your NASH cloud account before changing versions.'
                 )
               : operation.message
           )
@@ -232,7 +232,7 @@ export function SkillInstallManagementDialog({
           operation.status === 'reconnect-required'
             ? translate(
                 'auto.components.skills.install.reconnectBeforeVersionChange',
-                'Reconnect your Orca cloud account before changing versions.'
+                'Reconnect your NASH cloud account before changing versions.'
               )
             : operation.message
         )

@@ -12,7 +12,7 @@ import {
 } from './orcad-activation-fence-scope'
 import { isUnconfirmedSshCommandTermination, sshCommandExitError } from './ssh-relay-exec-command'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 
 /** An ssh2 exec channel; the host never acknowledges a close, as when the link is down. */
 class HostChannel extends EventEmitter {
@@ -38,7 +38,7 @@ const conn = {
 }
 const target = {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: only exec and usesSystemSshTransport are read.
-  conn: conn as unknown as SshConnection,
+  conn: conn as unknown as OrcadHostTransport,
   host: getRemoteHostPlatform('linux-x64')
 }
 const fence = {

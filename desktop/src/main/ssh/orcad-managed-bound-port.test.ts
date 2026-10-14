@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 
 const execOrcadRemote = vi.hoisted(() => vi.fn())
@@ -22,7 +22,7 @@ function readinessLine(boundEndpoint: string | null): string {
 function slot() {
   return {
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: exec is mocked; the connection is never used.
-    conn: {} as SshConnection,
+    conn: {} as OrcadHostTransport,
     host: getRemoteHostPlatform('linux-x64'),
     remoteInstallDir: '/home/deploy/.orca-orcad/1.0.0'
   }
@@ -78,7 +78,7 @@ describe('resolveManagedOrcadTunnelPort', () => {
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: passed through to the mocked context.
       target: { id: 'ssh-1' } as SshTarget,
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: passed through to the mocked context.
-      connection: {} as SshConnection
+      connection: {} as OrcadHostTransport
     }
   }
 

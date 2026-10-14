@@ -5,8 +5,21 @@ import type {
 } from '../../../shared/routing-table/routing-table-taxonomy'
 import type { WorkspaceLaunchKind } from '../../../shared/workspace-launch-kind'
 
-/** The CLIs behind the routes; each has its own model listing, login and quota. */
-export type RouteProvider = 'claude' | 'codex' | 'agy'
+import type { ModelListing } from './model-listing'
+import {
+  routingAgentForTarget,
+  type RoutingAgent,
+  type RoutingCliTarget
+} from '../../../shared/routing-table/routing-cli-registry'
+
+/** AGY keeps its stored provider key for existing availability records. */
+export type RouteProvider = Exclude<RoutingAgent, 'antigravity'> | 'agy'
+export type ModelListings = Partial<Record<RouteProvider, ModelListing>> &
+  Record<'claude' | 'codex' | 'agy', ModelListing>
+
+export function providerForAgent(agent: RoutingAgent): RouteProvider {
+  return agent === 'antigravity' ? 'agy' : agent
+}
 
 /** Why `claude_headless`: a validation reviewer runs `claude -p` outside the primary session (D-017). */
 export type RouteTarget = ExecutionTarget | 'claude_headless'
@@ -22,10 +35,10 @@ export type RouteSubject = {
 } & (
   | {
       readonly target: 'claude_primary' | 'claude_subagent' | 'claude_workflow'
-      readonly primaryAgent: 'claude' | 'codex'
+      readonly primaryAgent: RoutingAgent
     }
   | {
-      readonly target: 'codex_cli' | 'agy_cli' | 'claude_headless'
+      readonly target: RoutingCliTarget | 'claude_headless'
     }
 )
 
@@ -36,36 +49,28 @@ export type RouteSubject = {
 export type LiveRunPrimary = {
   readonly runId: string
   readonly ownerId: string
-  readonly agent: 'claude' | 'codex'
+  readonly agent: RoutingAgent
   readonly model: string
   readonly effort: ConcreteReasoningLevel
 }
 
 export function providerForTarget(target: RouteTarget): RouteProvider {
-  switch (target) {
-    case 'codex_cli':
-      return 'codex'
-    case 'agy_cli':
-      return 'agy'
-    case 'claude_primary':
-    case 'claude_subagent':
-    case 'claude_workflow':
-    case 'claude_headless':
-      return 'claude'
-  }
+  return providerForAgent(routingAgentForTarget(target))
 }
 
 /** Primary and workflow targets use the selected CLI. */
 export function providerForSubject(subject: RouteSubject): RouteProvider {
   return subject.target === 'claude_primary' || subject.target === 'claude_workflow'
-    ? subject.primaryAgent
+    ? providerForAgent(subject.primaryAgent)
     : providerForTarget(subject.target)
 }
 
 /** Identity of a route for latches: the executor-reported failure belongs to this target, model and level. */
 export function routeKeyOf(subject: RouteSubject): string {
   const primary =
-    'primaryAgent' in subject && subject.primaryAgent === 'codex' ? '|primary:codex' : ''
+    'primaryAgent' in subject && subject.primaryAgent !== 'claude'
+      ? `|primary:${subject.primaryAgent}`
+      : ''
   return `${subject.target}|${subject.model}|${subject.reasoningLevel}${primary}`
 }
 
@@ -120,6 +125,7 @@ export type EffortDelivery =
   | 'claude_workflow_definition'
   | 'codex_config_override'
   | 'agy_model_id_variant'
+  | 'native_session_option'
   | 'omitted'
 
 /** `if_supported` is resolved once, here, and recorded; launch never decides it again. */

@@ -4,20 +4,19 @@ import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { Repo } from '../../../../shared/repo-types'
 import { selectProjectGroupRemovalTargets } from '../slices/project-group-removal-targets'
 import {
-  catalogOwnsHost,
   getProjectGroupHostId,
   projectGroupMatchesOwnerHost,
   resolveProjectGroupOwnerHostId,
-  settingsForProjectGroupOwner
+  runtimeTargetForProjectGroupOwner
 } from '../slices/project-group-owner-routing'
 import { findRepoForHost, repoMatchesHostIdentity } from '../slices/repo-host-identity'
-import { callRuntimeRpc, getActiveRuntimeTarget } from '../../runtime/runtime-rpc-client'
+import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
+import { ipcOrRuntimeTargetForHostId } from '../../runtime/runtime-client-target'
 import { getRepoExecutionHostId } from '../../../../shared/execution-host'
 import type { ProjectRemovalFailure, RepoSlice } from '../repos/repo-state'
 import { mergeProjectCompatibilityForHostRepoChange } from '../repos/repo-catalog-identity'
 import { applyProjectGroupDeleteCascade } from './project-group-removal-state'
-import { repoWithFetchedOwner, settingsForRepoOwner } from '../repos/owner-routing'
-import { projectGroupWithFetchedOwner } from './project-group-owner-stamping'
+import { adoptFromEndpoint } from '../adopt-from-endpoint'
 
 export function createProjectGroupMutationActions(
   set: Parameters<StateCreator<AppState>>[0],
@@ -31,9 +30,13 @@ export function createProjectGroupMutationActions(
   | 'moveProjectToGroup'
 > {
   return {
-    createProjectGroup: async (name) => {
+    createProjectGroup: async (name, hostId) => {
       try {
-        const target = getActiveRuntimeTarget(get().settings)
+        // Why: a new group lands on the host of the project that seeds it, not the focused one.
+        const target = ipcOrRuntimeTargetForHostId(hostId)
+        if (!target) {
+          return null
+        }
         const group =
           target.kind === 'local'
             ? await window.api.projectGroups.create({
@@ -48,7 +51,7 @@ export function createProjectGroupMutationActions(
                   { timeoutMs: 15_000 }
                 )
               ).group
-        const ownedGroup = projectGroupWithFetchedOwner(group, target)
+        const ownedGroup = adoptFromEndpoint(target, { kind: 'projectGroup', row: group })
         const ownerHostId = getProjectGroupHostId(ownedGroup)
         set((s) => {
           // An overlapping catalog refresh may have already inserted a newer copy.
@@ -76,9 +79,10 @@ export function createProjectGroupMutationActions(
       try {
         // Why: the sidebar lists groups from every host, so the mutation follows the group's owner, not the focused host.
         const ownerHostId = resolveProjectGroupOwnerHostId(get(), groupId, options?.hostId)
-        const target = getActiveRuntimeTarget(
-          settingsForProjectGroupOwner(get(), groupId, options?.hostId)
-        )
+        const target = runtimeTargetForProjectGroupOwner(get(), groupId, options?.hostId)
+        if (!target) {
+          return false
+        }
         const updated =
           target.kind === 'local'
             ? await window.api.projectGroups.update({ groupId, updates })
@@ -93,7 +97,7 @@ export function createProjectGroupMutationActions(
         if (!updated) {
           return false
         }
-        const ownedGroup = projectGroupWithFetchedOwner(updated, target)
+        const ownedGroup = adoptFromEndpoint(target, { kind: 'projectGroup', row: updated })
         set((s) => ({
           projectGroups: s.projectGroups.map((group) =>
             projectGroupMatchesOwnerHost(group, groupId, ownerHostId) ? ownedGroup : group
@@ -111,9 +115,10 @@ export function createProjectGroupMutationActions(
       try {
         // Why: deletion targets the group's owner host (see updateProjectGroup); focus may be elsewhere.
         const ownerHostId = resolveProjectGroupOwnerHostId(get(), groupId, options?.hostId)
-        const target = getActiveRuntimeTarget(
-          settingsForProjectGroupOwner(get(), groupId, options?.hostId)
-        )
+        const target = runtimeTargetForProjectGroupOwner(get(), groupId, options?.hostId)
+        if (!target) {
+          return false
+        }
         const deleted =
           target.kind === 'local'
             ? await window.api.projectGroups.delete({ groupId })
@@ -180,26 +185,36 @@ export function createProjectGroupMutationActions(
 
       const removedProjectIds: string[] = []
       const failedProjectRemovals: ProjectRemovalFailure[] = []
-      // Why: the group's catalog can hold rows from several hosts (a local catalog also owns SSH rows),
-      // so each project is removed on its own host rather than on the group's.
-      const findOwnedProjects = (projectId: string): Repo[] =>
-        get().repos.filter(
-          (repo) =>
-            repo.id === projectId &&
-            (!ownerHostId || catalogOwnsHost(ownerHostId, getRepoExecutionHostId(repo)))
-        )
-      for (const projectId of targets.projectIds) {
-        const ownedProjects = findOwnedProjects(projectId)
-        const projectHostId =
-          ownedProjects.length === 1 ? getRepoExecutionHostId(ownedProjects[0]) : undefined
-        try {
-          if (ownedProjects.length > 0) {
-            await get().removeProject(projectId, { hostId: projectHostId })
-          }
-        } catch (err) {
-          console.error('Failed to remove contained project:', err)
+      // Why: members were captured before the cascade cleared membership; a same-id row on another
+      // host outside the group must survive, so each member row is removed on its own host.
+      const membersById = new Map<string, Repo[]>()
+      for (const member of targets.projects) {
+        const row = findRepoForHost(get().repos, member.id, { hostId: member.hostId })
+        if (row) {
+          membersById.set(member.id, [...(membersById.get(member.id) ?? []), row])
         }
-        const stillExists = findOwnedProjects(projectId).length > 0
+      }
+      for (const projectId of new Set(targets.projectIds)) {
+        const members = membersById.get(projectId) ?? []
+        // Why: an unstamped group already routes to the focused host, so only that host's member is removed.
+        const focusedMember = ownerHostId
+          ? null
+          : findRepoForHost(members, projectId, { settings: get().settings })
+        const removable = ownerHostId ? members : focusedMember ? [focusedMember] : []
+        const removableHostIds = removable.map((row) => getRepoExecutionHostId(row))
+        for (const hostId of removableHostIds) {
+          try {
+            await get().removeProject(projectId, { hostId })
+          } catch (err) {
+            console.error('Failed to remove contained project:', err)
+          }
+        }
+        // Why: an ambiguous unstamped member with no focused-host row was left in place, so it counts as remaining.
+        const stillExists =
+          (members.length > 0 && removableHostIds.length === 0) ||
+          removableHostIds.some((hostId) =>
+            get().repos.some((repo) => repoMatchesHostIdentity(repo, projectId, hostId))
+          )
         if (stillExists) {
           failedProjectRemovals.push({
             projectId,
@@ -219,12 +234,13 @@ export function createProjectGroupMutationActions(
       }
     },
 
-    moveProjectToGroup: async (projectId, groupId, order) => {
+    moveProjectToGroup: async (projectId, groupId, order, hostId) => {
       try {
-        if (!findRepoForHost(get().repos, projectId, { settings: get().settings })) {
+        const repo = findRepoForHost(get().repos, projectId, { settings: get().settings, hostId })
+        const target = repo ? ipcOrRuntimeTargetForHostId(getRepoExecutionHostId(repo)) : null
+        if (!target) {
           return false
         }
-        const target = getActiveRuntimeTarget(settingsForRepoOwner(get(), projectId))
         const moved =
           target.kind === 'local'
             ? await window.api.projectGroups.moveProject({
@@ -243,7 +259,7 @@ export function createProjectGroupMutationActions(
         if (!moved) {
           return false
         }
-        const ownedMoved = repoWithFetchedOwner(moved, target)
+        const ownedMoved = adoptFromEndpoint(target, { kind: 'repo', row: moved })
         const movedHostId = getRepoExecutionHostId(ownedMoved)
         set((s) => {
           const nextRepos = s.repos.map((repo) =>

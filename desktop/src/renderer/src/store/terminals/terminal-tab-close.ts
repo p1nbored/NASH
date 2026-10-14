@@ -121,9 +121,6 @@ export function createTerminalTabCloseActions(
         const nextDeferredSshSessionIdsByTabId = omitByTabId(s.deferredSshSessionIdsByTabId)
         const nextPendingReconnectPtyIdByTabId = omitByTabId(s.pendingReconnectPtyIdByTabId)
         const nextRuntimePaneTitlesByTabId = omitByTabId(s.runtimePaneTitlesByTabId)
-        const nextDirectSshPaneRetryByTabId = omitByTabId(s.directSshPaneRetryByTabId)
-        const nextDirectSshLivePtyBindingByTabId = omitByTabId(s.directSshLivePtyBindingByTabId)
-        const nextDirectSshPaneRetryHistoryByTabId = omitByTabId(s.directSshPaneRetryHistoryByTabId)
         const nextUnverifiedPtyLossTabIds = omitUnverifiedPtyLossTabIds(s.unverifiedPtyLossTabIds, [
           tabId
         ])
@@ -203,9 +200,6 @@ export function createTerminalTabCloseActions(
           deferredSshSessionIdsByTabId: nextDeferredSshSessionIdsByTabId,
           pendingReconnectPtyIdByTabId: nextPendingReconnectPtyIdByTabId,
           runtimePaneTitlesByTabId: nextRuntimePaneTitlesByTabId,
-          directSshPaneRetryByTabId: nextDirectSshPaneRetryByTabId,
-          directSshLivePtyBindingByTabId: nextDirectSshLivePtyBindingByTabId,
-          directSshPaneRetryHistoryByTabId: nextDirectSshPaneRetryHistoryByTabId,
           ...(nextUnverifiedPtyLossTabIds !== s.unverifiedPtyLossTabIds
             ? { unverifiedPtyLossTabIds: nextUnverifiedPtyLossTabIds }
             : {}),
@@ -229,7 +223,6 @@ export function createTerminalTabCloseActions(
           expandedPaneByTabId: nextExpanded,
           canExpandPaneByTabId: nextCanExpand,
           terminalLayoutsByTabId: nextLayouts,
-          pendingDirectSshLayoutEditsByTabId: omitByTabId(s.pendingDirectSshLayoutEditsByTabId),
           localOnlyScrollbackByTabId: nextLocalOnlyScrollback,
           pendingStartupByTabId: nextPendingStartupByTabId,
           automaticAgentResumeClaimsByTabId: nextAutomaticAgentResumeClaimsByTabId,

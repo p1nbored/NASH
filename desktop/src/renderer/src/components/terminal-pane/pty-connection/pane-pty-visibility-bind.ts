@@ -1,3 +1,4 @@
+import { isRemoteRuntimePtyId } from '../../../../../shared/remote-runtime-pty-id'
 import { captureNotificationTransportOwner } from '@/attention/notification-subject-owner'
 import { scheduleRuntimeGraphSync } from '@/runtime/sync-runtime-graph'
 import { useAppStore } from '@/store'
@@ -12,7 +13,6 @@ import {
   isAgentTaskCompleteNotificationEnabled,
   isAgentTaskCompleteTrackingEnabled
 } from './agent-task-complete-settings'
-import { isRemoteRuntimePtyId } from './paired-parked-terminal-restore'
 import { shouldIgnoreStalePanePtyLayoutBinding } from './pane-pty-layout-binding'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
@@ -92,28 +92,15 @@ export function installPanePtyVisibilityBind(session: ConnectPanePtySession): vo
     useAppStore.getState().restoreAgentPaneAuthority?.(session.cacheKey)
     notifyCodexPaneBoundForStaleSweep(ptyId)
     const tabPtyIds = useAppStore.getState().ptyIdsByTabId?.[session.deps.tabId] ?? []
-    const directSshRetryAttemptId =
-      session.capturedDirectSshRetryPtyAccepted && session.directSshRetryAttempt
-        ? session.directSshRetryAttempt.attemptId
-        : undefined
     const updateTabPtyBinding = (): void => {
-      if (directSshRetryAttemptId) {
-        session.deps.updateTabPtyId(
-          session.deps.tabId,
-          ptyId,
-          replacementPtyId,
-          directSshRetryAttemptId
-        )
-      } else if (replacementPtyId) {
+      if (replacementPtyId) {
         session.deps.updateTabPtyId(session.deps.tabId, ptyId, replacementPtyId)
       } else {
         session.deps.updateTabPtyId(session.deps.tabId, ptyId)
       }
     }
     const shouldUpdateTabPtyId =
-      directSshRetryAttemptId ||
-      options.updateTabPtyId !== 'if-missing' ||
-      !tabPtyIds.includes(ptyId)
+      options.updateTabPtyId !== 'if-missing' || !tabPtyIds.includes(ptyId)
     if (replacementPtyId) {
       // Replacement updates the tab and pane ownership in one store commit;
       // this follow-up is a no-op in production but keeps non-store test deps
@@ -165,15 +152,6 @@ export function installPanePtyVisibilityBind(session: ConnectPanePtySession): vo
   }
 
   session.onPtySpawn = (ptyId: string): void => {
-    if (!session.claimCapturedDirectSshRetryPty(ptyId)) {
-      // Why: this callback proves a fresh process was created, so rejecting its obsolete lease must also retire it.
-      queueMicrotask(() => {
-        if (session.transport.getPtyId() === ptyId) {
-          session.transport.disconnect()
-        }
-      })
-      return
-    }
     // Why: record that this exact PTY was freshly spawned (not reattached), so a
     // newborn shell that dies before any interaction (e.g. failing direnv on a
     // just-created worktree) can be kept visible rather than tearing down the
@@ -200,9 +178,6 @@ export function installPanePtyVisibilityBind(session: ConnectPanePtySession): vo
     incarnationId?: string | null
   ): void => {
     if (session.deps.paneTransportsRef.current.get(session.pane.id) !== session.transport) {
-      return
-    }
-    if (!session.canAdoptCapturedDirectSshRetryPty(ptyId)) {
       return
     }
     session.remotePtyIncarnationId = incarnationId ?? null

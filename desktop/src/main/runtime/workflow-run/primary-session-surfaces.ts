@@ -1,10 +1,10 @@
-import { toAgentLaunchPreferences } from '../../../shared/agent-launch-preferences'
-import type { TerminalSpawnDispatch } from '../../agent-launch/agent-launch-not-started'
-import type { AgentLaunchSurfaceFactory } from '../../agent-launch/agent-launch-surface-factories'
-import type { PrimaryTerminalPort } from './primary-session-ports'
+import { toAgentLaunchPreferences } from "../../../shared/agent-launch-preferences";
+import type { TerminalSpawnDispatch } from "../../agent-launch/agent-launch-not-started";
+import type { AgentLaunchSurfaceFactory } from "../../agent-launch/agent-launch-surface-factories";
+import type { PrimaryTerminalPort } from "./primary-session-ports";
 
 /** The telemetry label of a run's primary launch; read as attribution only, never as behaviour. */
-export const PRIMARY_SESSION_LAUNCH_SOURCE = 'workbench'
+export const PRIMARY_SESSION_LAUNCH_SOURCE = "workbench";
 
 /**
  * The surfaces `executeAgentLaunch` builds a primary session with: a terminal only. The tab opens in
@@ -13,12 +13,12 @@ export const PRIMARY_SESSION_LAUNCH_SOURCE = 'workbench'
  * the executor cannot downgrade around it and nothing is created.
  */
 export function createPrimarySessionSurfaces(
-  terminal: Pick<PrimaryTerminalPort, 'createTerminal'>,
-  spawn: TerminalSpawnDispatch
+  terminal: Pick<PrimaryTerminalPort, "createTerminal">,
+  spawn: TerminalSpawnDispatch,
 ): AgentLaunchSurfaceFactory {
   return {
     createStructuredSession: async () => {
-      throw new Error('autopilot_launch_structured_refused')
+      throw new Error("autopilot_launch_structured_refused");
     },
     createTerminalAgent: async ({
       worktreeId,
@@ -27,9 +27,9 @@ export function createPrimarySessionSurfaces(
       agentArgs,
       cwd,
       launchSource,
-      options
+      options,
     }) => {
-      const launchPreferences = toAgentLaunchPreferences(options)
+      const launchPreferences = toAgentLaunchPreferences(options);
       const created = await terminal
         .createTerminal(`id:${worktreeId}`, {
           startupAgent: agent,
@@ -39,14 +39,14 @@ export function createPrimarySessionSurfaces(
           ...(launchPreferences ? { launchPreferences } : {}),
           launchSource: launchSource ?? PRIMARY_SESSION_LAUNCH_SOURCE,
           surfaceOwner: false,
-          onPtySpawnDispatched: spawn.onPtySpawnDispatched
+          onPtySpawnDispatched: spawn.onPtySpawnDispatched,
         })
-        .catch(spawn.rethrow)
+        .catch(spawn.rethrow);
       return {
         handle: created.handle,
         ...(created.paneKey ? { paneKey: created.paneKey } : {}),
-        ...(created.warning ? { warning: created.warning } : {})
-      }
-    }
-  }
+        ...(created.warning ? { warning: created.warning } : {}),
+      };
+    },
+  };
 }

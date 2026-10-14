@@ -6,6 +6,7 @@
 // value the provider wrote — never recovered from a string afterwards, since by then nothing can
 // tell a provider's sentence from Orca's.
 
+import type { AgentSessionAccountKind } from './agent-session-availability'
 import {
   readAgentSessionArgumentProblem,
   type AgentSessionArgumentProblem
@@ -25,6 +26,8 @@ export const AGENT_SESSION_FAILURE_KINDS = [
   /** A start that did not land, with no one to blame: Orca's fault, a failed spawn, a close. */
   'startFailed',
   'notSignedIn',
+  /** The agent's CLI is not installed where the chat runs: its spawn found no such file. */
+  'cliMissing',
   'historyTooLarge',
   'managedAccountEnvOverride',
   'accountSwitchInProgress',
@@ -53,6 +56,10 @@ export const AGENT_SESSION_FAILURE_KINDS = [
   'cancelUnconfirmed',
   /** A Stop naming no turn reached the agent, which ended nothing while the chat read working. */
   'stopRefused',
+  /** A Stop Orca could not save: only a refusal says it. */
+  'stopFailed',
+  /** A background-task Stop the agent answered with the task still running. */
+  'backgroundTaskNotStopped',
   'answerUnconfirmed',
   'hostFault',
   /** Orca stopped an agent whose start never finished. */
@@ -76,6 +83,8 @@ const STATUS_ROW_ONLY_FAILURE_KINDS = [
   'compactionUnconfirmed',
   'cancelUnconfirmed',
   'stopRefused',
+  'stopFailed',
+  'backgroundTaskNotStopped',
   'answerUnconfirmed',
   'providerRetrying',
   'previousExitUnverifiable',
@@ -143,6 +152,7 @@ export type AgentSessionProviderRetry = {
 
 export type AgentSessionFailureFact = {
   kind: AgentSessionFailureKind
+  account?: AgentSessionAccountKind
   /** Provider-authored only; absent whenever Orca wrote the words. */
   detail?: ProviderDiagnostic
   /** On `restartFailed` and `startFailed`: the refusal that kept the agent from starting. On
@@ -154,7 +164,11 @@ export type AgentSessionFailureFact = {
   retry?: AgentSessionProviderRetry
   /** A safe option name from Orca's saved Arguments parser, never an error message. */
   argumentProblem?: AgentSessionArgumentProblem
+  /** On `backgroundTaskNotStopped`: one named task, or every task the Stop reached. */
+  backgroundStop?: AgentSessionBackgroundStop
 }
+
+export type AgentSessionBackgroundStop = 'task' | 'all'
 
 /** A fact as a row stores it: its kind may be one a newer host added, so only
  *  `readAgentSessionFailureFact` or the rejection classifier may place it. */
@@ -181,11 +195,13 @@ export function providerDiagnostic(
 export function agentSessionFailureFact<TKind extends AgentSessionFailureKind>(
   kind: TKind,
   extra: {
+    account?: AgentSessionAccountKind
     detail?: ProviderDiagnostic
     refusal?: AgentSessionRefusalReference
     attachment?: AgentSessionAttachmentProblem
     retry?: AgentSessionProviderRetry
     argumentProblem?: AgentSessionArgumentProblem
+    backgroundStop?: AgentSessionBackgroundStop
   } = {}
 ): AgentSessionFailureFact & { kind: TKind } {
   // Re-bounded here, so no writer can store more than the cap however it built the detail.
@@ -194,11 +210,13 @@ export function agentSessionFailureFact<TKind extends AgentSessionFailureKind>(
     : undefined
   return {
     kind,
+    ...(extra.account ? { account: extra.account } : {}),
     ...(detail ? { detail } : {}),
     ...(extra.refusal ? { refusal: extra.refusal } : {}),
     ...(extra.attachment ? { attachment: extra.attachment } : {}),
     ...(extra.retry ? { retry: extra.retry } : {}),
-    ...(extra.argumentProblem ? { argumentProblem: extra.argumentProblem } : {})
+    ...(extra.argumentProblem ? { argumentProblem: extra.argumentProblem } : {}),
+    ...(extra.backgroundStop ? { backgroundStop: extra.backgroundStop } : {})
   }
 }
 
@@ -268,11 +286,17 @@ export function readAgentSessionFailureFact(value: unknown): AgentSessionFailure
   const retry = readProviderRetry(value.retry)
   const argumentProblem = readAgentSessionArgumentProblem(value.argumentProblem)
   return agentSessionFailureFact(value.kind, {
+    ...(value.account === 'managed' || value.account === 'system'
+      ? { account: value.account }
+      : {}),
     ...(isProviderDiagnostic(value.detail) ? { detail: value.detail } : {}),
     ...(refusal ? { refusal } : {}),
     ...(attachment ? { attachment } : {}),
     ...(retry ? { retry } : {}),
-    ...(argumentProblem ? { argumentProblem } : {})
+    ...(argumentProblem ? { argumentProblem } : {}),
+    ...(value.backgroundStop === 'task' || value.backgroundStop === 'all'
+      ? { backgroundStop: value.backgroundStop }
+      : {})
   })
 }
 

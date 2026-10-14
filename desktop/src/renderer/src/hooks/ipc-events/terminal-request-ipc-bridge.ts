@@ -1,16 +1,10 @@
 import { requestBackgroundTerminalWorktreeMount } from '@/components/terminal/background-terminal-worktree-mount'
-import { getConnectionIdFromState } from '@/lib/connection-context'
-import { initialAgentTabViewModeProps } from '@/lib/native-chat-initial-view-mode'
-import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
 import { resolveTerminalWorktreeRoute } from '@/lib/terminal-worktree-route'
 import { insertUnifiedTabAfterAnchor } from '@/lib/unified-tab-anchor-insertion'
 import { translate } from '@/i18n/i18n'
+import { revealWorkspaceSurface } from '@/lib/workspace-surface-reveal'
 import { useAppStore } from '../../store'
-import {
-  activateTerminalInitiatedWorktree,
-  focusTerminalInitiatedTab,
-  resolveTerminalPresentation
-} from './terminal-command-state'
+import { focusTerminalInitiatedTab, resolveTerminalPresentation } from './terminal-command-state'
 
 export function registerTerminalRequestIpcBridge(unsubs: (() => void)[]): void {
   unsubs.push(
@@ -56,14 +50,7 @@ export function registerTerminalRequestIpcBridge(unsubs: (() => void)[]): void {
           ? {
               ...(shouldActivate ? {} : { activate: false, recordInteraction: false }),
               launchAgent: data.launchAgent,
-              ...(data.viewMode
-                ? { viewMode: data.viewMode }
-                : initialAgentTabViewModeProps(store.settings, {
-                    agent: data.launchAgent,
-                    nativeChatTranscriptIsLocalReadable: isNativeChatTranscriptLocalReadable(
-                      getConnectionIdFromState(store, worktreeId)
-                    )
-                  })),
+              ...(data.viewMode ? { viewMode: data.viewMode } : {}),
               ...(data.cwd ? { startupCwd: data.cwd } : {})
             }
           : shouldActivate
@@ -90,12 +77,13 @@ export function registerTerminalRequestIpcBridge(unsubs: (() => void)[]): void {
         }
         if (shouldActivate) {
           // After the tab lands: activating prunes the workspace's empty groups, the requested one too.
-          activateTerminalInitiatedWorktree(store, worktreeId, [tab.id])
+          revealWorkspaceSurface(store, worktreeId, [tab.id])
           store.setActiveTabType('terminal', worktreeId)
           store.setActiveTab(tab.id)
+        } else if (shouldSurfaceOwner) {
+          store.revealWorktreeInSidebar(worktreeId)
         }
         if (shouldSurfaceOwner) {
-          store.revealWorktreeInSidebar(worktreeId)
           focusTerminalInitiatedTab(tab.id, undefined, worktreeId)
         }
         if (data.title) {

@@ -23,7 +23,7 @@ import {
   agentResumeOriginNamesAnotherExecutionHost,
   sleepingRecordNamesAnotherExecutionHost
 } from './sleeping-record-execution-host-scope'
-import type { WorktreeRuntimeOwnerState } from './worktree-runtime-owner'
+import type { WorktreeRuntimeOwnerState } from './worktree-runtime-owner-state'
 
 const initialAppStoreState = useAppStore.getState()
 
@@ -158,9 +158,9 @@ describe('agentResumeOriginNamesAnotherExecutionHost', () => {
   )
 })
 
-/** The SSH workspace after its host has answered, so terminal-host authority is decided and the
- *  sweep is allowed to act. Without the hydration mark the sweep declines for an unrelated reason
- *  and every assertion below would pass vacuously. */
+/** The SSH workspace with its target connected, so terminal-host authority is decided and the
+ *  sweep is allowed to act. Without the connection the sweep declines for an unrelated reason and
+ *  every assertion below would pass vacuously. */
 function seedAnsweredSshWorkspace(...records: SleepingAgentSessionRecord[]): void {
   useAppStore.setState({
     repos: [{ ...TEST_REPO, id: 'repo-1', path: '/home/neil/projects', connectionId: TARGET_ID }],
@@ -179,7 +179,12 @@ function seedAnsweredSshWorkspace(...records: SleepingAgentSessionRecord[]): voi
       records.map((record) => [record.paneKey, record])
     )
   })
-  useAppStore.getState().markRemoteWorkspaceHydrated(TARGET_ID)
+  useAppStore.getState().setSshConnectionState(TARGET_ID, {
+    targetId: TARGET_ID,
+    status: 'connected',
+    error: null,
+    reconnectAttempt: 0
+  })
 }
 
 describe('the resume sweep under execution-host scope', () => {

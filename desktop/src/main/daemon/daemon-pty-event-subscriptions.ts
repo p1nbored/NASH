@@ -9,7 +9,7 @@ import {
   type ShutdownIfIdleResult
 } from './types'
 import type { DaemonIdleRetirementResult } from './daemon-pty-runtime-state'
-import type { PtyBackgroundStreamEvent } from '../providers/types'
+import type { PtyBackgroundStreamEvent } from '../providers/pty-provider-contract'
 
 export abstract class DaemonPtyEventSubscriptions extends DaemonPtySessionInventory {
   onData(callback: (payload: DaemonPtyRouterDataEvent) => void): () => void {

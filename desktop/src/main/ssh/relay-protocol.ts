@@ -37,60 +37,9 @@ export const MessageType = {
   KeepAlive: 9
 } as const
 
-/** Keepalive/timeout (VS Code ProtocolConstants). */
+/** Keepalive/timeout. */
 export const KEEPALIVE_SEND_MS = 5_000
 export const TIMEOUT_MS = 20_000
-
-// ── Relay error codes ───────────────────────────────────────────────
-
-export const RelayErrorCode = {
-  CommandNotFound: -33001,
-  PermissionDenied: -33002,
-  PathNotFound: -33003,
-  PtyAllocationFailed: -33004,
-  DiskFull: -33005,
-  TooManyStreams: -33006,
-  StreamProtocolError: -33007
-} as const
-
-export const JsonRpcErrorCode = {
-  MethodNotFound: -32601
-} as const
-
-// ── Streaming constants (see docs/relay-file-stream-design.md) ─────
-
-/** Per-chunk payload size for fs.readFileStream. Mirrors VS Code's
- * `bufferSize: 256 * 1024` (vs/platform/files/node/diskFileSystemProvider.ts).
- * 256KB raw → ~340KB base64, well under MAX_MESSAGE_SIZE. */
-export const STREAM_CHUNK_SIZE = 256 * 1024
-
-// ── Git response streaming (see docs/relay-git-response-stream-design.md) ──
-
-/** Sentinel the relay returns as the RPC result when the real payload streams
- * as git.responseChunk frames. Absent from old relays, so a new client falls
- * back to the plain result they return. */
-export type GitResponseStreamMarker = {
-  __orcaGitResponseStream: { streamId: number; totalBytes: number; chunkCount: number }
-}
-
-export function isGitResponseStreamMarker(value: unknown): value is GitResponseStreamMarker {
-  if (typeof value !== 'object' || value === null || !('__orcaGitResponseStream' in value)) {
-    return false
-  }
-  const marker = (value as { __orcaGitResponseStream?: unknown }).__orcaGitResponseStream
-  if (typeof marker !== 'object' || marker === null) {
-    return false
-  }
-  const fields = marker as Record<string, unknown>
-  return (
-    Number.isInteger(fields.streamId) &&
-    (fields.streamId as number) > 0 &&
-    Number.isInteger(fields.totalBytes) &&
-    (fields.totalBytes as number) >= 0 &&
-    Number.isInteger(fields.chunkCount) &&
-    (fields.chunkCount as number) >= 0
-  )
-}
 
 // ── JSON-RPC types ──────────────────────────────────────────────────
 

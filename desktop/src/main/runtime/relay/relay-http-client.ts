@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import type { E2EEKeypair } from '../e2ee-keypair'
 import { cancelUnreadResponseBody } from '../../lib/unread-response-body'
-import { parseRelayRetryAfterMs } from '../../../shared/relay-retry-after-header'
+import { parseRetryAfterHeaderMs } from '../../../shared/retry-after-header'
 import {
   RelayAssignAbortedError,
   RelayAssignRateLimitedError,
@@ -66,7 +66,7 @@ export class RelayAssignLocallyPacedError extends RelayHttpError {
 }
 
 function relayRetryAfterMs(value: string | null): number | null {
-  return parseRelayRetryAfterMs(value, RELAY_RETRY_AFTER_MAX_MS)
+  return parseRetryAfterHeaderMs(value, RELAY_RETRY_AFTER_MAX_MS)
 }
 
 export function shouldRetryRelayConnectionError(error: unknown): boolean {

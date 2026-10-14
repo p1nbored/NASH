@@ -12,9 +12,18 @@ import {
   editForTarget,
   usesCoordinator
 } from './routing-table-inline-edit'
-import { executionTargetLabel, reasoningLevelLabel } from './routing-table-labels'
+import {
+  cliDefaultEffortLabel,
+  executionTargetLabel,
+  reasoningLevelLabel
+} from './routing-table-labels'
 import { PrimaryCliSelect } from './routing-table-primary-cli'
-import { routingCli, routingEffortFor, routingEffortOptions } from './routing-table-effort-options'
+import {
+  routingCli,
+  routingEffortFor,
+  routingEffortOptions,
+  routingModelForEffort
+} from './routing-table-effort-options'
 
 function pick<T extends string>(options: readonly T[], value: string): T | undefined {
   return options.find((option) => option === value)
@@ -239,8 +248,15 @@ export function RouteChoiceEditor(
                   'Effort for {{task}}',
                   { task: taskLabel }
                 )}
-                onChange={(reasoningLevel) => props.onEdit({ reasoningLevel })}
+                onChange={(reasoningLevel) =>
+                  props.onEdit({
+                    reasoningLevel,
+                    model: routingModelForEffort(agent, row.model, reasoningLevel, models)
+                  })
+                }
               />
+            ) : row.model ? (
+              <span className="text-meta text-muted-foreground">{cliDefaultEffortLabel()}</span>
             ) : null}
             <CheckboxField
               checked={row.requirement === 'if_supported'}
@@ -309,8 +325,21 @@ export function CoordinatorChoiceEditor(
               'auto.components.settings.routingTable.inline.coordinatorEffort',
               'Coordinator effort'
             )}
-            onChange={(reasoningLevel) => props.onChange({ ...coordinator, reasoningLevel })}
+            onChange={(reasoningLevel) =>
+              props.onChange({
+                ...coordinator,
+                reasoningLevel,
+                model: routingModelForEffort(
+                  coordinator.agent,
+                  coordinator.model,
+                  reasoningLevel,
+                  models
+                )
+              })
+            }
           />
+        ) : coordinator.model ? (
+          <span className="text-meta text-muted-foreground">{cliDefaultEffortLabel()}</span>
         ) : null}
       </div>
       <EditActions

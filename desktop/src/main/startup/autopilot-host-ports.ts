@@ -6,6 +6,10 @@ import { claudeConfigDirEnvPatch } from '../claude/claude-config-dir-pin'
 import { resolveClaudeStructuredInvocation } from '../claude/claude-structured-launch-resolution'
 import { resolveCodexStructuredInvocation } from '../codex/codex-structured-launch-resolution'
 import type { GlobalSettings } from '../../shared/global-settings-types'
+import { getAgentModelProbeSpec } from '../../shared/agent-model-probe-spec'
+import { isTuiAgent } from '../../shared/tui-agent-config'
+import { ROUTING_AGENTS, type RoutingAgent } from '../../shared/routing-table/routing-cli-registry'
+import { nativeRouteModelListing } from '../routing-table/availability/native-route-models'
 import { nativeChatShellEnvironmentPolicy } from '../../shared/native-chat-shell-environment'
 import { resolveTuiAgentLaunchEnv } from '../../shared/tui-agent-launch-defaults'
 import type { LaunchTarget } from '../agent-exec-shared/launch-target'
@@ -41,7 +45,9 @@ import { resolveClaudeLaunchTarget } from './autopilot-claude-launch-target'
 // checked or a task starts, never at startup (D-016 E1: nothing live at startup).
 
 type EnvironmentResolvers = ReturnType<typeof createStructuredAgentEnvironmentResolvers>
-type ProbeOf<Deps> = (deps: Deps) => (accountHomePath: string) => Promise<CatalogProbeSuccess>
+type ProbeOf<Deps> = (
+  deps: Deps
+) => (accountHome: AgentSessionAccountHome) => Promise<CatalogProbeSuccess>
 
 /** The producers, replaceable in tests; production binds Orca's own. */
 export type AutopilotHostSeams = {
@@ -54,6 +60,10 @@ export type AutopilotHostSeams = {
   readonly createClaudeProbe: ProbeOf<ClaudeModelCatalogProbeDeps>
   readonly createCodexProbe: ProbeOf<CodexModelCatalogProbeDeps>
   readonly discoverModels: (env: NodeJS.ProcessEnv) => Promise<DiscoverCommitMessageModelsResult>
+  readonly discoverAgentModels: (
+    agent: RoutingAgent,
+    env: NodeJS.ProcessEnv
+  ) => Promise<DiscoverCommitMessageModelsResult>
   readonly resolveCodexExecutable: () => CodexExecutable
   readonly resolveAgyExecutable: () => AgyExecutable
   readonly resolveClaudeLaunchTarget: () => LaunchTarget | null
@@ -67,6 +77,7 @@ const PRODUCTION_SEAMS: AutopilotHostSeams = {
   createClaudeProbe: createClaudeModelCatalogProbe,
   createCodexProbe: createCodexModelCatalogProbe,
   discoverModels: (env) => discoverCommitMessageModelsLocal('antigravity', env),
+  discoverAgentModels: (agent, env) => discoverCommitMessageModelsLocal(agent, env),
   // Why installed: the vendor launcher is what `codex` runs in a shell (D-023).
   resolveCodexExecutable: () => resolveCodexExecutable({ kind: 'installed' }),
   resolveAgyExecutable: () => resolveAgyExecutable({}),
@@ -122,18 +133,21 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
   const environment = onFirstUse(() =>
     seams.createEnvironmentResolvers({
       resolveShellEnvironmentPolicy: () => nativeChatShellEnvironmentPolicy(settings()),
-      resolveLaunchEnvOverlay: () => resolveTuiAgentLaunchEnv('codex', settings().agentDefaultEnv)
+      resolveAgentLaunchEnv: (agent) =>
+        isTuiAgent(agent) ? resolveTuiAgentLaunchEnv(agent, settings().agentDefaultEnv) : {}
     })
   )
   const claudeProbe = onFirstUse(() =>
     seams.createClaudeProbe({
-      resolveInheritedEnv: () => environment().resolveClaudeInheritedEnv(),
+      resolveInheritedEnv: () => environment().resolveBaseEnvironment(),
       resolveAuthPolicy: () => claudeStructuredAuthPolicyForSettings(settings()),
       resolveEnv: () => resolveTuiAgentLaunchEnv('claude', settings().agentDefaultEnv)
     })
   )
   const codexProbe = onFirstUse(() =>
-    seams.createCodexProbe({ resolveEnvironment: () => environment().resolveCodexEnvironment() })
+    seams.createCodexProbe({
+      resolveEnvironment: () => environment().resolveAgentEnvironment('codex')
+    })
   )
   const homeOf = async (agent: 'claude' | 'codex'): Promise<string> =>
     requireLegacyAgentSessionAccountHome(
@@ -145,13 +159,13 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
         const home = await homeOf(agent)
         if (agent === 'codex') {
           const launch = await seams.resolveCodexInvocation({
-            resolveEnvironment: () => environment().resolveCodexEnvironment()
+            resolveEnvironment: () => environment().resolveAgentEnvironment('codex')
           })
           return { command: launch.command, env: { ...launch.environment, CODEX_HOME: home } }
         }
         return seams.resolveClaudeInvocation(
           {
-            resolveInheritedEnv: () => environment().resolveClaudeInheritedEnv(),
+            resolveInheritedEnv: () => environment().resolveBaseEnvironment(),
             resolveAuthPolicy: () => claudeStructuredAuthPolicyForSettings(settings()),
             resolveEnv: () => resolveTuiAgentLaunchEnv('claude', settings().agentDefaultEnv)
           },
@@ -164,18 +178,35 @@ export function createAutopilotHostPorts(sources: AutopilotHostSources): Autopil
       disabled: () => settings().disabledTuiAgents
     },
     models: {
+      ...Object.fromEntries(
+        ROUTING_AGENTS.filter(
+          (agent) => agent !== 'claude' && agent !== 'codex' && agent !== 'antigravity'
+        ).map((agent) => [
+          agent,
+          async () => {
+            const discovery = getAgentModelProbeSpec(agent)
+              ? await seams.discoverAgentModels(
+                  agent,
+                  await environment().resolveAgentEnvironment(agent)
+                )
+              : null
+            return nativeRouteModelListing(agent, discovery, now())
+          }
+        ])
+      ),
       claude: modelListingPortFromProbe({
         probe: (home) => claudeProbe()(home),
-        resolveAccountHome: () => homeOf('claude'),
+        resolveAccountHome: () => sources.runtime.resolveStructuredAgentAccountHome('claude'),
         now
       }),
       codex: modelListingPortFromProbe({
         probe: (home) => codexProbe()(home),
-        resolveAccountHome: () => homeOf('codex'),
+        resolveAccountHome: () => sources.runtime.resolveStructuredAgentAccountHome('codex'),
         now
       }),
       agy: modelListingPortFromDiscovery({
-        discover: async () => seams.discoverModels(await environment().resolveClaudeInheritedEnv()),
+        discover: async () =>
+          seams.discoverModels(await environment().resolveAgentEnvironment('antigravity')),
         now
       })
     },

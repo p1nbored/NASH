@@ -60,9 +60,7 @@ function phoneTranscript(state: StructuredAgentSessionState) {
   })
   return {
     items,
-    messages: projectStructuredAgentSessionMessages(items, [], state.submissions, {
-      rejectedInPlace: false
-    })
+    messages: projectStructuredAgentSessionMessages(items, [], state.submissions)
   }
 }
 
@@ -223,11 +221,16 @@ describe.each(['after-end', 'during-turn'] as const)(
       ])
     })
 
-    it.each([1, 2, 3])('from every subscribe point, %i row(s) per frame', (rowsPerFrame) => {
-      expect(compareFrames(journal, range(2, journal.rows.length), rowsPerFrame).differing).toEqual(
-        []
-      )
-    })
+    // Exhaustive frame enumeration shares CI CPUs with the typechecks.
+    it.each([1, 2, 3])(
+      'from every subscribe point, %i row(s) per frame',
+      (rowsPerFrame) => {
+        expect(
+          compareFrames(journal, range(2, journal.rows.length), rowsPerFrame).differing
+        ).toEqual([])
+      },
+      10_000
+    )
   }
 )
 

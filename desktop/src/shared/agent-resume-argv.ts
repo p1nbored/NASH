@@ -31,9 +31,8 @@ export function getAgentResumeArgv(
     case 'opencode':
       return providerSession.key === 'session_id' ? ['opencode', '--session', id] : null
     case 'opencode2':
-      return providerSession.key === 'session_id'
-        ? ['opencode2', '--standalone', '--session', id]
-        : null
+      // Why: the launch command owns standalone/shared mode, including user overrides.
+      return providerSession.key === 'session_id' ? ['opencode2', '--session', id] : null
     case 'pi':
       return providerSession.key === 'session_id' && providerSession.transcriptPath
         ? ['pi', '--session', providerSession.transcriptPath]
@@ -76,5 +75,30 @@ export function getAgentResumeArgv(
       return providerSession.key === 'session_id' ? ['dsh-tui', '--resume', id] : null
     case 'jcode':
       return providerSession.key === 'session_id' ? ['jcode', '--resume', id] : null
+    case 'kiro':
+      return providerSession.key === 'session_id' ? ['kiro-cli', '--resume-id', id] : null
   }
+}
+
+/** Opens a copy of the conversation under a new id, leaving the original untouched: how a chat's
+ *  conversation continues in the CLI without a second writer. Only CLIs that can copy one. */
+const FORK_ARGV: Partial<
+  Record<ResumableTuiAgent, (providerSession: AgentProviderSessionMetadata) => string[] | null>
+> = {
+  claude: ({ id }) => ['claude', '--resume', id, '--fork-session'],
+  codex: ({ id }) => ['codex', 'fork', id],
+  grok: ({ id }) => ['grok', '--resume', id, '--fork-session'],
+  pi: ({ transcriptPath }) => (transcriptPath ? ['pi', '--fork', transcriptPath] : null)
+}
+
+export function agentForksConversations(agent: string): boolean {
+  return Object.hasOwn(FORK_ARGV, agent)
+}
+
+export function getAgentForkArgv(
+  agent: ResumableTuiAgent,
+  providerSession: AgentProviderSessionMetadata
+): string[] | null {
+  const forkArgv = FORK_ARGV[agent]
+  return forkArgv && providerSession.key === 'session_id' ? forkArgv(providerSession) : null
 }

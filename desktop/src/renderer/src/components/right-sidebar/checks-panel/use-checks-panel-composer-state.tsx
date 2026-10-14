@@ -44,6 +44,7 @@ type ChecksPanelComposerStateInput = Pick<
     | 'setAgentComposerState'
     | 'setCreatePrError'
     | 'ownerSettings'
+    | 'ownerTarget'
     | 'pendingCommentResolutionRef'
     | 'claimedCommentResolutionRef'
     | 'commentResolutionLaunchAcceptedRef'
@@ -85,6 +86,7 @@ export function useChecksPanelComposerState(model: ChecksPanelComposerStateInput
     setCreatePrError,
     sourceControlAiActionsVisible,
     ownerSettings,
+    ownerTarget,
     pendingCommentResolutionRef,
     claimedCommentResolutionRef,
     commentResolutionLaunchAcceptedRef,
@@ -126,6 +128,7 @@ export function useChecksPanelComposerState(model: ChecksPanelComposerStateInput
     eligibility: hostedReviewCreation,
     repo,
     settings: ownerSettings,
+    target: ownerTarget,
     submitting: isCreatingPr,
     prCreationDefaults,
     sourceControlAiActionsVisible,

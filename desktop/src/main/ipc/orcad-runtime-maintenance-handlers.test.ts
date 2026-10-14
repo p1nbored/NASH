@@ -27,7 +27,12 @@ const { registerOrcadRuntimeMaintenanceHandlers } =
 
 const invalidateTransport = vi.fn()
 const clearHostServerStatus = vi.fn()
-const forgetHostSession = vi.fn()
+const clearHostServerNotes = vi.fn()
+const store = {
+  removeWorkspaceSessionHost: vi.fn(),
+  getRemoteLayoutSnapshot: vi.fn(),
+  setRemoteLayoutSnapshot: vi.fn()
+}
 
 function handler(channel: string): (_event: unknown, args: unknown) => Promise<unknown> {
   const registration = mocks.handle.mock.calls.find(([name]) => name === channel)
@@ -45,7 +50,8 @@ describe('managed orcad maintenance IPC', () => {
       getActiveEnvironmentId: () => 'active-environment',
       invalidateTransport,
       clearHostServerStatus,
-      forgetHostSession
+      clearHostServerNotes,
+      store
     })
   })
 
@@ -54,9 +60,52 @@ describe('managed orcad maintenance IPC', () => {
     await handler('runtimeEnvironments:updateOrcad')(null, { selector: 'Managed', force: 'yes' })
     expect(mocks.update).toHaveBeenCalledWith('/profile', { selector: 'Managed', force: false })
     expect(invalidateTransport).not.toHaveBeenCalled()
+    expect(clearHostServerNotes).not.toHaveBeenCalled()
     mocks.update.mockResolvedValueOnce({ outcome: 'updated', environment: { id: 'e-1' } })
     await handler('runtimeEnvironments:updateOrcad')(null, { selector: 'Managed', force: true })
     expect(invalidateTransport).toHaveBeenCalledWith('e-1')
+  })
+
+  it.each(['updated', 'already-current'])(
+    'clears the host notes after a verified %s update',
+    async (outcome) => {
+      mocks.update.mockResolvedValueOnce({
+        outcome,
+        environment: { id: 'e-1', orcadDeployment: { sshTargetId: 'ssh-1' } },
+        activeVersion: 'candidate'
+      })
+      await handler('runtimeEnvironments:updateOrcad')(null, { selector: 'Managed', force: true })
+      expect(clearHostServerNotes).toHaveBeenCalledExactlyOnceWith('ssh-1', 'e-1')
+      expect(invalidateTransport).toHaveBeenCalledTimes(outcome === 'updated' ? 1 : 0)
+    }
+  )
+
+  it('clears the notes only after the old transport has been retired', async () => {
+    let finishRetirement: (() => void) | undefined
+    invalidateTransport.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finishRetirement = resolve
+      })
+    )
+    mocks.update.mockResolvedValueOnce({
+      outcome: 'updated',
+      environment: { id: 'e-1', orcadDeployment: { sshTargetId: 'ssh-1' } }
+    })
+    const updating = handler('runtimeEnvironments:updateOrcad')(null, { selector: 'Managed' })
+    await vi.waitFor(() => expect(invalidateTransport).toHaveBeenCalledOnce())
+    expect(clearHostServerNotes).not.toHaveBeenCalled()
+    finishRetirement?.()
+    await updating
+    expect(clearHostServerNotes).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the previous diagnostic when an update rejects', async () => {
+    mocks.update.mockRejectedValueOnce(new Error('SSH contact lost'))
+    await expect(
+      handler('runtimeEnvironments:updateOrcad')(null, { selector: 'Managed' })
+    ).rejects.toThrow('SSH contact lost')
+    expect(clearHostServerNotes).not.toHaveBeenCalled()
+    expect(invalidateTransport).not.toHaveBeenCalled()
   })
 
   it('reconnects after rollback and after recovery restores a serving slot', async () => {
@@ -79,7 +128,7 @@ describe('managed orcad maintenance IPC', () => {
     expect(policy.isActiveEnvironment('active-environment')).toBe(true)
     expect(policy.isActiveEnvironment('e-1')).toBe(false)
     policy.retireLocalState('e-1')
-    expect(mocks.retire).toHaveBeenCalledWith('e-1', invalidateTransport, forgetHostSession)
+    expect(mocks.retire).toHaveBeenCalledWith('e-1', invalidateTransport, store)
     // The SSH host stops naming the unlinked server without waiting for a reconnect.
     expect(clearHostServerStatus).toHaveBeenCalledWith('ssh-1')
   })

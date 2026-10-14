@@ -19,7 +19,14 @@ const RoutingModelSchema = z.object({
 export const RoutingModelListsSchema = z.object({
   claude: z.array(RoutingModelSchema).nullable(),
   codex: z.array(RoutingModelSchema).nullable(),
-  agy: z.array(RoutingModelSchema).nullable()
+  agy: z.array(RoutingModelSchema).nullable(),
+  gemini: z.array(RoutingModelSchema).nullable().optional(),
+  cursor: z.array(RoutingModelSchema).nullable().optional(),
+  codebuddy: z.array(RoutingModelSchema).nullable().optional(),
+  grok: z.array(RoutingModelSchema).nullable().optional(),
+  muse: z.array(RoutingModelSchema).nullable().optional(),
+  omp: z.array(RoutingModelSchema).nullable().optional(),
+  opencode: z.array(RoutingModelSchema).nullable().optional()
 })
 export type RoutingModelLists = z.infer<typeof RoutingModelListsSchema>
 export type RoutingModel = z.infer<typeof RoutingModelSchema>

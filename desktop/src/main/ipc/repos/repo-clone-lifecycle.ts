@@ -25,7 +25,6 @@ import { invalidateAuthorizedRootsCache } from '../registered-worktree-roots-cac
 import { emitRepoAdded } from './repo-added-telemetry'
 import { notifyReposChanged } from './repos-changed-notification'
 import { runWithClonePathLock } from './clone-path-lock'
-import { abortActiveRemoteClone, cloneRemoteRepo } from './remote-repo-clone'
 
 type ActiveCloneMetadata = {
   path: string
@@ -111,7 +110,6 @@ export function registerRepoCloneHandlers(mainWindow: BrowserWindow, store: Stor
       clone.process.kill()
       activeClone = null
     }
-    abortActiveRemoteClone()
   })
 
   ipcMain.handle(
@@ -307,18 +305,6 @@ export function registerRepoCloneHandlers(mainWindow: BrowserWindow, store: Stor
           }
         }
       })
-    }
-  )
-
-  ipcMain.handle(
-    'repos:cloneRemote',
-    async (
-      _event,
-      args: { connectionId: string; url: string; destination: string }
-    ): Promise<Repo> => {
-      const repo = await cloneRemoteRepo(store, mainWindow, args)
-      notifyReposChanged(mainWindow)
-      return repo
     }
   )
 }

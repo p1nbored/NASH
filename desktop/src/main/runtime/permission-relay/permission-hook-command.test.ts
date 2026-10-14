@@ -10,7 +10,7 @@ import {
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { runProcess } from '../../../shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
 import { tokenizeCommandLine } from '../../../shared/agent-command-line-entrypoint'
 import { getPermissionHookCommand, installPermissionHookScript } from './permission-hook-command'
 

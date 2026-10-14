@@ -29,6 +29,7 @@ it.each([
   'pnpm-lock.yaml',
   'src/main/runtime/runtime-rpc.ts',
   'src/shared/protocol-version.ts',
+  'src/packages/process-host/src/run-process.ts',
   '.github/workflows/mobile.yml',
   '.github/actions/install-node-dependencies/action.yml',
   'config/scripts/mobile-test-change-scope.mjs',
@@ -43,14 +44,22 @@ it('retains tests on missing evidence and a move out of the source tree', () => 
   expect(shouldRunMobileTests(['mobile/src/deleted.ts', 'mobile/docs/moved.ts'])).toBe(true)
 })
 
-it('runs Mobile Checks on any shared-module or root lockfile change, on a pull request and on main', () => {
+it('runs Mobile Checks for shared modules, process-host tooling and the root lockfile on PRs and main', () => {
   const workflow = parse(
     readFileSync(new URL('../../.github/workflows/mobile.yml', import.meta.url), 'utf8')
   )
   for (const paths of [workflow.on.pull_request.paths, workflow.on.push.paths]) {
-    for (const file of ['src/shared/any/module.ts', 'pnpm-lock.yaml']) {
+    for (const file of [
+      'src/shared/any/module.ts',
+      'src/packages/process-host/src/run-process.ts',
+      'src/packages/process-host/package.json',
+      'pnpm-lock.yaml'
+    ]) {
       expect(paths.some((pattern) => matchesGlob(file, pattern))).toBe(true)
     }
+    expect(
+      paths.some((pattern) => matchesGlob('src/packages/unrelated/src/index.ts', pattern))
+    ).toBe(false)
   }
 })
 
@@ -69,4 +78,36 @@ it('skips only tests, after successful detection, and retains all other mobile g
   for (const name of ['Typecheck', 'Typecheck tests (ratchet)', 'Lint', 'Check formatting']) {
     expect(steps.find((step) => step.name === name).if).toBeUndefined()
   }
+})
+
+it('overlaps both typechecks with tests and collects their failures before the summary', () => {
+  const workflow = parse(
+    readFileSync(new URL('../../.github/workflows/mobile.yml', import.meta.url), 'utf8')
+  )
+  const steps = workflow.jobs.verify.steps
+  const install = steps.findIndex((step) => step.name === 'Install dependencies')
+  const test = steps.findIndex((step) => step.name === 'Test')
+  const summary = steps.findIndex((step) => step.name === 'Summarize RPC recording changes')
+  const waits = steps.filter((step) => step.wait !== undefined)
+  expect(waits).toHaveLength(1)
+  const [wait] = waits
+  expect(wait.wait).toEqual(['production-types', 'test-types', 'ruby-tools'])
+  expect(wait.if).toBeUndefined()
+  expect(steps.indexOf(wait)).toBeGreaterThan(test)
+  expect(steps.indexOf(wait)).toBeLessThan(summary)
+  for (const id of ['production-types', 'test-types']) {
+    const step = steps.find((candidate) => candidate.id === id)
+    expect(step.background).toBe(true)
+    expect(step['continue-on-error']).toBeUndefined()
+    expect(step.if).toBeUndefined()
+    expect(steps.indexOf(step)).toBeGreaterThan(install)
+    expect(steps.indexOf(step)).toBeLessThan(test)
+    expect(step.run).toMatch(/^node /)
+  }
+  const ruby = steps.find((step) => step.id === 'ruby-tools')
+  expect(ruby.uses).toBe('ruby/setup-ruby@v1')
+  expect(ruby.background).toBe(true)
+  expect(ruby.if).toBe("steps.ruby-scope.outputs.should_run != 'false'")
+  expect(ruby['continue-on-error']).toBeUndefined()
+  expect(steps.indexOf(ruby)).toBeLessThan(install)
 })

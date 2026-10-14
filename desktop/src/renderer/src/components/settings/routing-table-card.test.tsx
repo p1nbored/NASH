@@ -211,7 +211,15 @@ describe('RoutingTableCard', () => {
     fireEvent.click(within(row).getByRole('combobox', { name: 'Coordinator CLI' }))
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'Claude Code',
-      'Codex'
+      'Codex',
+      'Antigravity',
+      'Gemini',
+      'Cursor',
+      'CodeBuddy',
+      'Grok',
+      'Muse',
+      'OMP',
+      'OpenCode'
     ])
     fireEvent.click(screen.getByRole('option', { name: 'Codex' }))
     const model = within(row).getByLabelText('Coordinator model')

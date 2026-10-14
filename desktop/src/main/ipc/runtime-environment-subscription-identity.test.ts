@@ -46,7 +46,8 @@ beforeEach(() => {
   registerRuntimeEnvironmentSubscriptionHandlers({
     getUserDataPath: () => '/profile',
     remoteRuntimeSubscriptions,
-    pendingSubscriptions
+    pendingSubscriptions,
+    recordLayoutFrame: vi.fn()
   })
 })
 afterEach(() => {

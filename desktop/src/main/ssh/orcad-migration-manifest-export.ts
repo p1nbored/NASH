@@ -17,6 +17,11 @@ import type { SshTarget } from '../../shared/ssh-types'
 import type { Store } from '../persistence'
 import { collectOrcadMigrationSourceCatalog } from '../persistence/migrating-orcad-catalog/orcad-source-catalog'
 import { computeOrcadMigrationManifestSha256 } from '../orcad/orcad-migration-manifest-digest'
+import {
+  IDENTITY_ORCAD_MIGRATION_PATH_REWRITER,
+  rewriteOrcadMigrationPayloadPaths,
+  type OrcadMigrationPathRewriter
+} from './orcad-migration-path-rewrite'
 
 export type OrcadMigrationExportStore = Pick<
   Store,
@@ -26,18 +31,23 @@ export type OrcadMigrationExportStore = Pick<
   | 'getRepos'
 >
 
+export type OrcadMigrationManifestExportOptions = {
+  migrationId?: string
+  now?: () => Date
+  destinationEnvironmentId?: string
+  /** Only these rows: a re-export of what earlier migrations of the host already moved. */
+  onlyCatalog?: OrcadMigrationCatalogIds
+  /** Maps source paths to destination paths before signing; identity for an SSH host. */
+  rewrite?: OrcadMigrationPathRewriter
+}
+
 export function createOrcadMigrationManifest(
   store: OrcadMigrationExportStore,
   target: SshTarget,
-  options: {
-    migrationId?: string
-    now?: () => Date
-    destinationEnvironmentId?: string
-    /** Only these rows: a re-export of what earlier migrations of the host already moved. */
-    onlyCatalog?: OrcadMigrationCatalogIds
-  } = {}
+  options: OrcadMigrationManifestExportOptions = {}
 ): OrcadMigrationManifest {
-  const payload = restrictCatalog(
+  const rewrite = options.rewrite ?? IDENTITY_ORCAD_MIGRATION_PATH_REWRITER
+  const sourcePayload = restrictCatalog(
     collectOrcadMigrationSourceCatalog(store, target),
     options.onlyCatalog
   )
@@ -48,18 +58,20 @@ export function createOrcadMigrationManifest(
   }
   const dormantState = store.collectOrcadMigrationSourceDormantState(
     source,
-    payload,
+    sourcePayload,
     options.destinationEnvironmentId
+  )
+  // After collection: dormant state is selected by the source's own paths and ids.
+  const payload = rewriteOrcadMigrationPayloadPaths(
+    { ...sourcePayload, ...(hasDormantState(dormantState) ? { dormantState } : {}) },
+    rewrite
   )
   const unsigned = {
     version: ORCAD_MIGRATION_MANIFEST_VERSION,
     migrationId: options.migrationId ?? randomUUID(),
     createdAt: (options.now ?? (() => new Date()))().toISOString(),
     source,
-    payload: {
-      ...payload,
-      ...(hasDormantState(dormantState) ? { dormantState } : {})
-    },
+    payload,
     ...(options.destinationEnvironmentId
       ? { destinationEnvironmentId: options.destinationEnvironmentId }
       : {})

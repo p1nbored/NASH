@@ -10,6 +10,7 @@ const FLOATING_SELECTOR_TOKEN = /(?:^|[._:/@-])(?:auto|latest|inherit)(?=$|[._:/
 // The Claude aliases mirror Orca's session catalog; model-pin-policy.test.ts guards the drift.
 const BARE_ALIASES: ReadonlySet<string> = new Set([
   'auto',
+  'default',
   'latest',
   'inherit',
   'flash',

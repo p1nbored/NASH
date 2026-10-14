@@ -115,15 +115,27 @@ describe('ensureVirtualDisplayForHeadlessServe', () => {
   it('reports unsupported when Xvfb cannot be launched', async () => {
     setPlatform('linux')
     spawnMock.mockReturnValue({ pid: undefined, once: vi.fn(), kill: vi.fn(), killed: false })
-    const { ensureVirtualDisplayForHeadlessServe, MISSING_LINUX_DISPLAY_MESSAGE } =
-      await import('./ensure-virtual-display')
+    const {
+      ensureVirtualDisplayForHeadlessServe,
+      MISSING_LINUX_DISPLAY_MESSAGE,
+      MISSING_SERVE_DISPLAY_MESSAGE,
+      missingLinuxDisplayMessage
+    } = await import('./ensure-virtual-display')
 
     expect(ensureVirtualDisplayForHeadlessServe({ isServeMode: true })).toBe(false)
     expect(spawnMock).toHaveBeenCalledWith('Xvfb', expect.any(Array), expect.any(Object))
     expect(MISSING_LINUX_DISPLAY_MESSAGE).toContain('endpoint is unavailable')
     expect(MISSING_LINUX_DISPLAY_MESSAGE).toContain('XDG_RUNTIME_DIR')
-    expect(MISSING_LINUX_DISPLAY_MESSAGE).toContain('`xvfb` on Debian/Ubuntu')
-    expect(MISSING_LINUX_DISPLAY_MESSAGE).toContain('`xorg-x11-server-Xvfb`')
+    for (const message of [MISSING_LINUX_DISPLAY_MESSAGE, MISSING_SERVE_DISPLAY_MESSAGE]) {
+      expect(message).toContain('`xvfb` on Debian/Ubuntu')
+      expect(message).toContain('`xorg-x11-server-Xvfb`')
+      expect(message).toContain('`xorg-server-xvfb` on Arch')
+    }
+    // Why: the serve failure must not tell someone who just ran serve to run serve.
+    expect(MISSING_SERVE_DISPLAY_MESSAGE).not.toContain('orca-ide serve')
+    expect(MISSING_SERVE_DISPLAY_MESSAGE).toContain('Wayland alone is not enough')
+    expect(missingLinuxDisplayMessage(true)).toBe(MISSING_SERVE_DISPLAY_MESSAGE)
+    expect(missingLinuxDisplayMessage(false)).toBe(MISSING_LINUX_DISPLAY_MESSAGE)
   })
 
   it('leaves an externally configured stale display untouched', async () => {

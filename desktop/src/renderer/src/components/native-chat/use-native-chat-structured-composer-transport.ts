@@ -30,7 +30,11 @@ export function useNativeChatStructuredComposerTransport(args: {
 }): NativeChatStructuredComposerTransport {
   const { props, controller, sendThroughLaunch, starting, worktreeId, optionPickerRequest } = args
   const { setOptionPickerRequest, onError, onSubmitted, queuedMessages } = args
-  const acceptsImages = useStructuredAgentAcceptsImages(props.target, props.agent)
+  const acceptsImages = useStructuredAgentAcceptsImages(
+    props.target,
+    props.agent,
+    controller.acceptsImages
+  )
   return useMemo((): NativeChatStructuredComposerTransport => {
     const threadGoal = controller.threadGoal
     const setThreadGoalObjective = threadGoal
@@ -53,7 +57,7 @@ export function useNativeChatStructuredComposerTransport(args: {
           agent: props.agent,
           snapshot: controller.optionSnapshot,
           invokeAction: async (id) => {
-            setOptionPickerRequest((current) => ({ id, sequence: (current?.sequence ?? 0) + 1 }))
+            setOptionPickerRequest({ id, consume: () => setOptionPickerRequest(null) })
             return true
           },
           setOption: controller.setStructuredOption,

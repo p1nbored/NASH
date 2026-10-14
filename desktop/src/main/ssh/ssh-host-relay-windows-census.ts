@@ -19,7 +19,7 @@ import {
   windowsRelayInventoryCommand
 } from './ssh-host-relay-windows-inventory'
 import { countRelayPtysOverBridge } from './ssh-relay-endpoint-pty-count'
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execCommand } from './ssh-relay-exec-command'
 import { relaySocketNameForInstanceId } from './ssh-relay-instance-id'
 import { windowsRelayConnectCommand } from './ssh-relay-windows-launch-command'
 import { listRemoteInstallBaseDirsCommand } from './ssh-remote-commands'

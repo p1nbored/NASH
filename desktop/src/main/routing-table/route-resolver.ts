@@ -1,3 +1,4 @@
+import type { RoutingAgent } from '../../shared/routing-table/routing-cli-registry'
 import {
   ROUTING_TASK_TYPES,
   type ExecutionTarget,
@@ -75,7 +76,7 @@ export type CoordinatorResolution =
   | {
       readonly ok: true
       readonly table: RouteTableRef
-      readonly agent: 'claude' | 'codex'
+      readonly agent: RoutingAgent
       readonly coordinator: { readonly model: string; readonly reasoningLevel: string }
       readonly availability: RouteAvailabilityResult
     }

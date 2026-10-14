@@ -153,6 +153,18 @@ describe('conversation outline parity with the loaded rail', () => {
     ])
   })
 
+  // Served to clients of every version: a rejected row the transcript draws in place, as not sent,
+  // changes nothing in it, neither its own tick nor any other entry or reply.
+  it('is the same as if a rejected message had never been sent', () => {
+    const rejectedId = agentJournalSubmissionKey(REJECTED.clientMessageId)
+    expect(projectAgentSessionConversationOutline(JOURNAL, [REJECTED])).toEqual(
+      projectAgentSessionConversationOutline(
+        JOURNAL.filter((item) => item.itemId !== rejectedId),
+        []
+      )
+    )
+  })
+
   // The host serves this outline to clients of every version, so it lists what it always listed.
   it('leaves out a send a Stop took back, which the transcript still draws', () => {
     const stopped: AgentJournalSubmission = {

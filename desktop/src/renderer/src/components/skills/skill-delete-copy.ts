@@ -102,7 +102,7 @@ function parentDirectory(path: string): string {
 }
 
 /**
- * A skill whose content lives outside every Orca root is removed by its links
+ * A skill whose content lives outside every NASH root is removed by its links
  * only. Saying so is the difference between "deleted" and "gone" — the content
  * survives at its source, and the user has to be told which one happened.
  */

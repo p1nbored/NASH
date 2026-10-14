@@ -92,14 +92,6 @@ async function exists(path: string): Promise<boolean> {
   )
 }
 
-/**
- * The union across every file. The caller runs `matchKnownHosts` once over the result, so an exact
- * hit in any file wins and a disagreeing entry in another file is not a mismatch.
- */
-export async function loadKnownHostsEntries(files: readonly string[]): Promise<KnownHostsEntry[]> {
-  return (await loadKnownHostsEvidence(files)).entries
-}
-
 export type KnownHostsEvidence = {
   entries: KnownHostsEntry[]
   /**

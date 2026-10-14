@@ -6,6 +6,8 @@ import type * as ReactDomClientModule from 'react-dom/client'
 import type * as DiffCommentZoneCardModule from './diff-comment-zone-card'
 import type { NotesSendMenu } from '../editor/NotesSendMenu'
 
+vi.mock('monaco-editor', () => import('monaco-editor/esm/vs/editor/editor.api.js'))
+
 const notesMenuFixture = vi.hoisted(() => ({
   NotesSendMenu: vi.fn<typeof NotesSendMenu>(() => {
     throw new Error('Commentable-line lifecycle must not render the agent notes menu')

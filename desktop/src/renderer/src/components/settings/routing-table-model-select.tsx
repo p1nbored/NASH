@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import { translate } from '@/i18n/i18n'
 import type { RoutingModelLists } from '../../../../shared/workbench-routing-table-view'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Input } from '../ui/input'
 import type { RoutingCli } from './routing-table-effort-options'
 
 export const EMPTY_ROUTING_MODELS: RoutingModelLists = {
@@ -25,6 +26,22 @@ export function ModelSelect(props: {
 }): React.JSX.Element {
   const models = useRoutingModels(props.agent)
   const selected = models?.find((model) => model.id === props.value)
+  if (!models?.length) {
+    return (
+      <Input
+        size="sm"
+        className="w-64"
+        value={props.value}
+        aria-label={props.label}
+        aria-invalid={props.invalid || undefined}
+        placeholder={translate(
+          'auto.components.settings.routingTable.editor.exactModelId',
+          'Exact model ID'
+        )}
+        onChange={(event) => props.onChange(event.target.value)}
+      />
+    )
+  }
   return (
     <div className="w-64">
       <Select value={props.value} onValueChange={props.onChange} disabled={!models?.length}>

@@ -237,7 +237,6 @@ describe('agent session RPC methods', () => {
       launchAgent: 'codex',
       title: undefined,
       focus: false,
-      rendererBacked: false,
       activate: false,
       presentation: undefined,
       tabId: undefined,

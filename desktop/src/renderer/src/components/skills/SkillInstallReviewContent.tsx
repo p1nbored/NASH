@@ -37,7 +37,7 @@ export function SkillShareLinkInputForm({
       <Label htmlFor="skill-share-link">
         {translate(
           'auto.components.skills.SkillInstallReviewContent.93eb0fe8c7',
-          'Orca Cloud skill link'
+          'NASH Cloud skill link'
         )}
       </Label>
       <Input

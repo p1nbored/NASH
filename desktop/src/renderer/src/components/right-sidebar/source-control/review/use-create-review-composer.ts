@@ -18,7 +18,7 @@ export function useSourceControlCreateReviewComposer({
   activePullRequestGenerationRecord,
   activePullRequestGenerationSeedRestoreKey,
   activeRepo,
-  activeRepoSettings,
+  activeRepoTarget,
   activeWorktreeId,
   branchName,
   effectiveBaseRef,
@@ -41,7 +41,7 @@ export function useSourceControlCreateReviewComposer({
   activePullRequestGenerationRecord: SourceControlPullRequestGeneration['activePullRequestGenerationRecord']
   activePullRequestGenerationSeedRestoreKey: SourceControlPullRequestGeneration['activePullRequestGenerationSeedRestoreKey']
   activeRepo: SourceControlWorktreeContext['activeRepo']
-  activeRepoSettings: SourceControlWorktreeContext['activeRepoSettings']
+  activeRepoTarget: SourceControlWorktreeContext['activeRepoTarget']
   activeWorktreeId: string | null
   branchName: string
   effectiveBaseRef: string | null
@@ -96,7 +96,8 @@ export function useSourceControlCreateReviewComposer({
     eligibility: hostedReviewCreation,
     currentBaseRef: effectiveBaseRef,
     repo: activeRepo ?? null,
-    settings: activeRepoSettings,
+    settings,
+    target: activeRepoTarget,
     submitting: isCreatingPr,
     prCreationDefaults: resolvedPrCreationDefaults,
     sourceControlAiActionsVisible,

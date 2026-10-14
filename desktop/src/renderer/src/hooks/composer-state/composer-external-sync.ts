@@ -56,6 +56,7 @@ export function useComposerExternalSync(target: ComposerTargetState): ComposerEx
   const githubSourceApplication = useGitHubSourceApplication({
     branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,
     lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
+    linkedWorkItem: target.sourceContextState.linkedWorkItem,
     name: target.sourceContextState.name,
     selectedRepoGitHubSourceContext: target.sourceContextState.selectedRepoGitHubSourceContext,
     setBranchNameOverride: target.workspaceIdentityState.setBranchNameOverride,
@@ -96,8 +97,7 @@ export function useComposerExternalSync(target: ComposerTargetState): ComposerEx
     setPushTarget: target.workspaceIdentityState.setPushTarget,
     setStartFromResetHint: target.workspaceIdentityState.setStartFromResetHint,
     settings: target.composerTargetStore.settings,
-    smartGitHubPrStartPointSelectionRef:
-      target.asyncComposerState.smartGitHubPrStartPointSelectionRef
+    smartSourceSelectionRef: target.asyncComposerState.smartSourceSelectionRef
   })
   return {
     hostRuntimeEffects,

@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto'
 import { runtimeSplitPlacement } from './runtime-terminal-spawn-placement'
 import { REJECTED_SPLIT_PTY_STOP_TIMEOUT_MS, ownerSurfacing } from './orca-runtime-core'
 import type { Worktree } from '../../shared/worktree/types'
+import { spawnInAdmittedPane, withdrawRuntimePane } from './runtime-pane-admission'
 
 export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitTerminal {
   protected async splitPtyBackedTerminal(
@@ -56,13 +57,22 @@ export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitT
     const leafId = randomUUID()
     const preAllocatedHandle = this.createPreAllocatedTerminalHandle()
     const paneKey = makePaneKey(parentTabId, leafId)
-    const result = await this.ptyController.spawn({
+    const splitArgs = {
       cols: 120,
       rows: 40,
       cwd: workspace.path,
       command: opts.command,
       commandDelivery: 'provider',
-      env: await this.buildTerminalWorkspaceEnv(workspace, opts.env ?? {}, paneKey, parentTabId),
+      env: await this.buildTerminalWorkspaceEnv(
+        workspace,
+        // A split is a plain shell: it takes the host's account pointer, as every create does.
+        {
+          ...(workspace.connectionId ? {} : this.accounts.hostLaunchEnvFor(null)),
+          ...opts.env
+        },
+        paneKey,
+        parentTabId
+      ),
       envToDelete: opts.envToDelete,
       connectionId: workspace.connectionId,
       worktreeId: workspace.id,
@@ -89,7 +99,8 @@ export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitT
             }
           }
         : {})
-    })
+    }
+    const result = await spawnInAdmittedPane(this.store, this.ptyController, splitArgs)
     this.registerPreAllocatedHandleForPty(result.id, preAllocatedHandle)
     if (result.wslDistro) {
       this.preparePtyExecutionContext(result.id, result.wslDistro)
@@ -150,17 +161,6 @@ export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitT
         revalidateSourceAuthority()
       }
       if (createdPty) {
-        const persisted = this.persistHeadlessTerminalSplit({
-          worktreeId: workspace.id,
-          tabId: parentTabId,
-          leafId,
-          ptyId: createdPty.ptyId,
-          splitFromLeafId: parsedPaneKey.leafId,
-          direction
-        })
-        if (sourceAuthority.persisted && !persisted) {
-          throw new Error('workspace_session_unavailable')
-        }
         this.publishPtyBackedMobileSessionTerminal(workspace.id, createdPty, {
           tabId: parentTabId,
           leafId,
@@ -192,6 +192,7 @@ export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitT
       } catch {
         // Best-effort cleanup; preserve the original split authority error.
       }
+      await withdrawRuntimePane(this.store, splitArgs)
       throw error
     }
     const committedSourceAuthority = sourceAuthority.persisted
@@ -202,8 +203,9 @@ export class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeWithSplitT
           pty.ptyId
         )
       : null
-    if (sourceAuthority.persisted && committedSourceAuthority?.rendererMounted) {
+    if (committedSourceAuthority?.persisted && !committedSourceAuthority.rendererRunsOtherPty) {
       // Why: renderer adoption is a projection after the durable main commit; rejection cannot undo it.
+      // Not gated on the window's graph: it lags tabs the window already holds (STA-9417).
       void revealSplit().catch(() => undefined)
     }
 

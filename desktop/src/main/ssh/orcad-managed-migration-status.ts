@@ -3,7 +3,10 @@ import {
   isRetainedOrcadMigrationSourceCutover,
   type OrcadMigrationSourceCutover
 } from '../../shared/orcad-migration-source-cutover'
-import type { KnownRuntimeEnvironment } from '../../shared/runtime-environments'
+import {
+  getOrcadSshDeployment,
+  type KnownRuntimeEnvironment
+} from '../../shared/runtime-environments'
 import { listOrcadMigrationSourceCutovers } from './orcad-migration-cutover-journal'
 
 export type OrcadManagedPendingMigration = {
@@ -53,10 +56,11 @@ export function environmentMatchesManagedOrcadCutover(
   environment: KnownRuntimeEnvironment,
   cutover: OrcadMigrationSourceCutover
 ): boolean {
+  const deployment = getOrcadSshDeployment(environment)
   return (
     environment.id === cutover.destinationEnvironmentId &&
     environment.name === cutover.destinationName &&
-    environment.orcadDeployment?.sshTargetId === cutover.sshTargetId &&
-    environment.orcadDeployment.sshTargetGeneration === cutover.sshTargetGeneration
+    deployment?.sshTargetId === cutover.sshTargetId &&
+    deployment.sshTargetGeneration === cutover.sshTargetGeneration
   )
 }

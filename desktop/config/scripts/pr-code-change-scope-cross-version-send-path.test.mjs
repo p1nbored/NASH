@@ -10,7 +10,6 @@ describe('cross-version wire routing for the send path', () => {
     'src/shared/structured-agent-session-send-mutation.ts',
     'src/main/runtime/rpc/core.ts',
     'src/main/runtime/rpc/errors.ts',
-    'src/main/runtime/rpc/rpc-streaming-dispatcher.ts',
     'src/main/runtime/rpc/orchestration-contract-fence.ts',
     'src/main/runtime/rpc/orchestration-session-caller.ts',
     'src/main/runtime/rpc/orchestration-legacy-compatibility.ts',

@@ -60,7 +60,7 @@ const LAUNCH_PATH_KEY =
 const LAUNCH_PATH = process.env[LAUNCH_PATH_KEY] ?? null
 // Why: rc files that exec into a multiplexer or start a heavy prompt can outrun the
 // probe budget. This lets them detect the probe and take a fast path.
-const PROBE_MARKER_ENV_VAR = 'ORCA_SHELL_PATH_PROBE'
+export const PROBE_MARKER_ENV_VAR = 'ORCA_SHELL_PATH_PROBE'
 let launchPathOverride: { key: string; value: string } | null = null
 let configuredWindowsShell = 'powershell.exe'
 let configuredWindowsGitBashPath: string | null = null

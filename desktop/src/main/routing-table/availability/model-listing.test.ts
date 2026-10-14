@@ -31,6 +31,7 @@ describe('listingFromCatalogSuccess', () => {
     expect(listing).toEqual({
       ok: true,
       observedAtMs: AT,
+      source: 'probe',
       models: [
         {
           id: 'opus',
@@ -83,6 +84,7 @@ describe('listingFromDiscovery', () => {
     expect(listingFromDiscovery(discovered(), AT)).toEqual({
       ok: true,
       observedAtMs: AT,
+      source: 'probe',
       models: [
         {
           id: 'gemini-3.8-flash-high',

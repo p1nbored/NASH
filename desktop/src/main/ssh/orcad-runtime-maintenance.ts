@@ -19,7 +19,7 @@ import { runTargetLifecycle } from '../ipc/ssh-target-lifecycle-queue'
 import type { ServeReadiness } from '../server/serve-readiness'
 import { recoverInterruptedOrcadActivation } from './orcad-activation-recovery'
 import { probeActiveOrcadReadiness } from './orcad-active-readiness'
-import { materializeOrcadArtifact } from './orcad-artifact-materializer'
+import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
 import { CURRENT_ORCAD_DAEMON_PROTOCOL } from './orcad-daemon-protocol-crossing'
 import { ensureOrcadManagedTunnel } from './orcad-managed-tunnel'
 import {
@@ -36,7 +36,8 @@ import {
 } from './orcad-managed-runtime-context'
 import type { OrcadRemoteContext } from './orcad-remote-context'
 import { readRemoteOrcadBuildHash } from './orcad-remote-build-hash'
-import { deployOrcad } from './orcad-remote-deploy'
+import { deployOrcad, type OrcadDeployOptions } from './orcad-remote-deploy'
+import { ORCAD_ACTIVATION_POLICY_REFUSED_CODE } from './orcad-installed-activation'
 import { pruneManagedOrcadVersions } from './orcad-managed-version-gc'
 import { rollbackOrcad } from './orcad-remote-rollback'
 import { collectManagedTerminalCensus } from './orcad-terminal-census-client'
@@ -92,7 +93,12 @@ export async function runManagedOrcadUpdate(
   userDataPath: string,
   { environment, deployment }: ReturnType<typeof requireManagedOrcadEnvironment>,
   context: OrcadRemoteContext,
-  args: { force?: boolean; signal?: AbortSignal; localOrcadDir?: string }
+  args: {
+    force?: boolean
+    signal?: AbortSignal
+    localOrcadDir?: string
+    admitRecord?: OrcadDeployOptions['admitRecord']
+  }
 ): Promise<OrcadManagedDeployResult> {
   // Why release: finished automation shells would otherwise defer every update on a host with
   // schedules; the update restarts the server anyway.
@@ -112,8 +118,10 @@ export async function runManagedOrcadUpdate(
     localOrcadDir,
     target: context.serverTarget,
     census,
+    censusRecord: context.activationRecord,
     force: args.force,
-    appVersion: getAppEnvironment().getVersion()
+    appVersion: getAppEnvironment().getVersion(),
+    ...(args.admitRecord ? { admitRecord: args.admitRecord } : {})
   })
   if (result.outcome === 'installed-not-activated') {
     const deferral = {
@@ -123,7 +131,10 @@ export async function runManagedOrcadUpdate(
       reason: result.reason,
       forceable: isForceableOrcadDeferral(result.code)
     }
-    recordManagedOrcadUpdateDeferral(environment.id, deferral)
+    // A policy refusal is a decision about this host, not an update waiting to be retried.
+    if (result.code !== ORCAD_ACTIVATION_POLICY_REFUSED_CODE) {
+      recordManagedOrcadUpdateDeferral(environment.id, deferral)
+    }
     return deferral
   }
   clearManagedOrcadUpdateDeferral(environment.id)

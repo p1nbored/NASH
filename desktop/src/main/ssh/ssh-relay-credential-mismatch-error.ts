@@ -18,7 +18,3 @@ export class RelayCredentialMismatchError extends Error {
     )
   }
 }
-
-export function isRelayCredentialMismatchError(err: unknown): err is RelayCredentialMismatchError {
-  return err instanceof RelayCredentialMismatchError
-}

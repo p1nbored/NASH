@@ -1,6 +1,7 @@
 // FIXTURE_ONLY: every producer is a fake seam; nothing here spawns a CLI, opens a socket or reads a credential.
 import { describe, expect, it, vi } from 'vitest'
 import type { TuiAgent } from '../../shared/tui-agent'
+import type { AgentSessionAccountHome } from '../../shared/agent-session-account-home'
 import { createAutopilotHostPorts, type AutopilotHostSeams } from './autopilot-host-ports'
 
 const DISABLED: TuiAgent[] = ['antigravity']
@@ -9,11 +10,11 @@ const MODEL = { id: 'fixture-model', label: 'Fixture model', isDefault: true, ef
 function seams(overrides: Partial<AutopilotHostSeams> = {}) {
   const resolvers = {
     resolveBaseEnvironment: vi.fn(async () => ({ PATH: '/fixture/bin' })),
-    resolveCodexEnvironment: vi.fn(async () => ({ PATH: '/fixture/bin' })),
-    resolveClaudeInheritedEnv: vi.fn(async () => ({ PATH: '/fixture/bin' }))
+    resolveAgentEnvironment: vi.fn(async () => ({ PATH: '/fixture/bin' })),
+    refreshAfterMissingProgram: vi.fn(async () => {})
   }
-  const claudeProbe = vi.fn(async (_home: string) => ({ models: [MODEL] }))
-  const codexProbe = vi.fn(async (_home: string) => ({ models: [MODEL] }))
+  const claudeProbe = vi.fn(async (_home: AgentSessionAccountHome) => ({ models: [MODEL] }))
+  const codexProbe = vi.fn(async (_home: AgentSessionAccountHome) => ({ models: [MODEL] }))
   const all: AutopilotHostSeams = {
     resolveCodexInvocation: vi.fn(async (deps) => ({
       command: '/fixture/version-manager/codex',
@@ -21,20 +22,22 @@ function seams(overrides: Partial<AutopilotHostSeams> = {}) {
     })),
     resolveClaudeInvocation: vi.fn(async (deps, decorate = (env) => env) => ({
       command: '/fixture/version-manager/claude',
+      account: 'system' as const,
       env: decorate({ ...(await deps.resolveInheritedEnv?.()), ...(await deps.resolveEnv?.()) })
     })),
     detectInstalled: vi.fn(async () => ['claude', 'codex']),
     createEnvironmentResolvers: vi.fn(() => resolvers),
     // Why through the deps: a real probe takes its environment from them, which is what starts the shell.
-    createClaudeProbe: vi.fn((deps) => async (home: string) => {
+    createClaudeProbe: vi.fn((deps) => async (home: AgentSessionAccountHome) => {
       await deps.resolveInheritedEnv?.()
       return claudeProbe(home)
     }),
-    createCodexProbe: vi.fn((deps) => async (home: string) => {
+    createCodexProbe: vi.fn((deps) => async (home: AgentSessionAccountHome) => {
       await deps.resolveEnvironment?.()
       return codexProbe(home)
     }),
     discoverModels: vi.fn(async () => ({ success: false as const, error: 'fixture' })),
+    discoverAgentModels: vi.fn(async () => ({ success: false as const, error: 'fixture' })),
     resolveCodexExecutable: vi.fn(() => {
       throw new Error('Fixture: no codex.')
     }),
@@ -106,8 +109,11 @@ describe('createAutopilotHostPorts: listings', () => {
     const { ports, claudeProbe, codexProbe } = build()
     expect(await ports.models.claude()).toMatchObject({ ok: true, observedAtMs: 1_000 })
     expect(await ports.models.codex()).toMatchObject({ ok: true })
-    expect(claudeProbe).toHaveBeenCalledWith('/fixture/home/claude')
-    expect(codexProbe).toHaveBeenCalledWith('/fixture/home/codex')
+    expect(claudeProbe).toHaveBeenCalledWith({
+      variable: 'CLAUDE_CONFIG_DIR',
+      path: '/fixture/home/claude'
+    })
+    expect(codexProbe).toHaveBeenCalledWith({ variable: 'CODEX_HOME', path: '/fixture/home/codex' })
   })
 
   it('answers a failed probe or discovery as unobserved and never rejects', async () => {

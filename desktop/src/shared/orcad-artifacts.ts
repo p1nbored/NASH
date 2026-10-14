@@ -1,7 +1,6 @@
 /**
- * What a packaged `orcad` directory must contain, declared once — the same single-source
- * treatment `relay-artifacts.ts` gives the relay, for the same reason: the build, the
- * content hash and the remote install probe must not keep three lists that drift.
+ * What a packaged `orcad` directory must contain, declared once: the build, the content hash
+ * and the remote install probe must not keep three lists that drift.
  *
  * Order is load-bearing: the hash concatenates these files in sequence.
  *
@@ -13,6 +12,10 @@ export const ORCAD_BUN_RUNTIME_FILENAME = 'bun-runtime'
 export const ORCAD_WINDOWS_BUN_RUNTIME_FILENAME = 'bun-runtime.exe'
 export const ORCAD_BUILD_TARGET_FILENAME = '.build-target'
 export const ORCAD_WINDOWS_PROCESS_TREE_FILENAME = 'windows-process-tree.node'
+/** native/windows-security: secure-file ACLs without spawning icacls. */
+export const ORCAD_WINDOWS_SECURITY_FILENAME = 'windows-security.node'
+/** native/windows-cli-launcher: cmd.exe and .ps1 shims cannot carry every argv intact. */
+export const ORCAD_WINDOWS_CLI_LAUNCHER_FILENAME = 'bin/orca.exe'
 
 export function orcadBunRuntimeFilename(target: string): string {
   return isWindowsTarget(target) ? ORCAD_WINDOWS_BUN_RUNTIME_FILENAME : ORCAD_BUN_RUNTIME_FILENAME
@@ -59,6 +62,8 @@ export function orcadNodeRuntimeRelativePath(target: string, executableSha256: s
 export const ORCAD_ADDON_NAPI_VERSION = 8
 
 export const ORCAD_NODE_PTY_DIR = 'node_modules/node-pty'
+export const ORCAD_CLI_ENTRY_FILENAME = 'out/cli/index.js'
+export const ORCAD_CLI_PACKAGE_FILENAME = 'out/package.json'
 // Test files and sources stay out; these are every module the runtime path requires.
 export const ORCAD_NODE_PTY_JS_ARTIFACTS = [
   'package.json',
@@ -107,6 +112,8 @@ export const ORCAD_SERVER_ENTRY_FILENAME = 'orcad-server.js'
 export const ORCAD_FOREIGN_SQLITE_READER_ENTRY = 'foreign-sqlite-reader-entry.js'
 /** Worker thread that runs workspace port detection's probe commands off the event loop. */
 export const ORCAD_PORT_SCAN_COMMAND_WORKER_ENTRY = 'port-scan-command-worker-entry.js'
+// Equals AI_VAULT_SERVICE_ENTRY_FILENAME: the forked child that lists agent sessions.
+export const ORCAD_SESSION_SCANNER_SERVICE_ENTRY = 'session-scanner-service-entry.js'
 
 // Kept here because build-orcad.mjs imports this manifest directly under Node type stripping.
 export const ORCAD_RIPGREP_ARTIFACTS = [
@@ -159,6 +166,8 @@ export type OrcadArtifact = {
 }
 
 export const ORCAD_ARTIFACTS: readonly OrcadArtifact[] = [
+  { filename: ORCAD_CLI_ENTRY_FILENAME },
+  { filename: ORCAD_CLI_PACKAGE_FILENAME },
   { filename: ORCAD_LAUNCHER_FILENAME },
   { filename: ORCAD_SERVER_ENTRY_FILENAME },
   // Forked so a native @parcel/watcher fault kills the child, not the server.
@@ -170,6 +179,8 @@ export const ORCAD_ARTIFACTS: readonly OrcadArtifact[] = [
   // Worker thread that reads other apps' SQLite (the OpenCode binder and history) off the event loop.
   { filename: ORCAD_FOREIGN_SQLITE_READER_ENTRY },
   { filename: ORCAD_PORT_SCAN_COMMAND_WORKER_ENTRY },
+  // Forked so transcript parsing stays off the server's event loop; session search stays in-process.
+  { filename: ORCAD_SESSION_SCANNER_SERVICE_ENTRY },
   // Target-specific even when the JavaScript bundle is shared across packaged slots.
   { filename: ORCAD_SERVER_TARGET_FILENAME },
   // orcad never depends on a host runtime or host-installed native module.
@@ -197,7 +208,11 @@ export function orcadArtifactFilenames(target: string): string[] {
   )
   filenames.push(...orcadNodePtyNativeArtifacts(target), orcadRipgrepArtifact(target))
   if (isWindowsTarget(target)) {
-    filenames.push(ORCAD_WINDOWS_PROCESS_TREE_FILENAME)
+    filenames.push(
+      ORCAD_WINDOWS_PROCESS_TREE_FILENAME,
+      ORCAD_WINDOWS_SECURITY_FILENAME,
+      ORCAD_WINDOWS_CLI_LAUNCHER_FILENAME
+    )
   }
   return filenames
 }

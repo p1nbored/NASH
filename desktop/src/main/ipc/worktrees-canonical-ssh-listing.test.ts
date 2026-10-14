@@ -1,16 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { hydrateRepo } from '../persistence/tracking-repos/repo-hydration'
 import type { Repo } from '../../shared/repo-types'
-import {
-  getSshProviderAuthority,
-  resetSshProviderAuthorities,
-  rotateSshProviderAuthority
-} from '../ssh/ssh-provider-authority'
+import { getSshProviderAuthority, resetSshProviderAuthorities } from '../ssh/ssh-provider-authority'
 
 const mocks = vi.hoisted(() => ({
   handlers: new Map<string, (event: unknown, args?: unknown) => unknown>(),
-  provider: vi.fn(),
-  remoteList: vi.fn(),
   git: vi.fn(),
   roots: vi.fn(),
   rootsRevision: vi.fn(),
@@ -26,10 +20,6 @@ vi.mock('electron', () => ({
 vi.mock('../git/runner', async (original) => ({
   ...(await original<Record<string, unknown>>()),
   gitExecFileAsync: mocks.git
-}))
-vi.mock('../providers/ssh-git-dispatch', () => ({
-  getSshGitProvider: mocks.provider,
-  getSshGitProviderGeneration: () => 1
 }))
 vi.mock('../project-runtime-git-options', () => ({ getLocalProjectWorktreeGitOptions: () => ({}) }))
 vi.mock('./registered-worktree-roots-cache', () => ({
@@ -48,7 +38,6 @@ import { registerHostCatalogHandlers } from './worktrees/listing/register-host-c
 import {
   __resetDetectedWorktreeScanCacheForTests,
   __getDetectedWorktreeScanCacheStatsForTests,
-  invalidateDetectedWorktreeScanCache,
   listDetectedGitWorktrees,
   rememberLocalWorktreeRoots
 } from './worktrees/listing/detected-worktree-scan-cache'
@@ -114,8 +103,6 @@ beforeEach(() => {
   mocks.handlers.clear()
   __resetDetectedWorktreeScanCacheForTests()
   resetSshProviderAuthorities()
-  mocks.provider.mockReturnValue({ listWorktrees: mocks.remoteList })
-  mocks.remoteList.mockResolvedValue(rows)
   mocks.rootsRevision.mockReturnValue(1)
   mocks.git.mockRejectedValue(new Error('unexpected local Git'))
 })
@@ -124,90 +111,36 @@ describe.each([
   { hostEncoding: 'canonical', fields: { executionHostId: 'ssh:host-a' as const } },
   { hostEncoding: 'legacy', fields: { connectionId: 'host-a' } }
 ])('$hostEncoding SSH listing', ({ fields }) => {
-  it.each(channels)('keeps %s on the direct SSH boundary', async (channel) => {
+  // An `ssh:` host is not served here: every channel answers from persisted metadata.
+  it.each(channels)('answers %s from metadata, never from this machine', async (channel) => {
     fixture(fields)
     const result = await invoke(channel)
-    if (channel === 'known') {
+    if (channel === 'hostDetected') {
+      expect(result).toMatchObject({
+        status: 'non-authoritative',
+        result: { authoritative: false }
+      })
+    } else if (channel === 'known') {
       expect(result).toMatchObject({ status: 'complete', result: { authoritative: false } })
-      expect(mocks.remoteList).not.toHaveBeenCalled()
+    } else if (channel === 'legacyDetected') {
+      expect(result).toMatchObject({ authoritative: false })
     } else {
-      expect(mocks.remoteList).toHaveBeenCalledTimes(1)
-      expect(mocks.remoteList.mock.calls[0][0]).toBe(path)
-      if (channel === 'hostDetected') {
-        expect(result).toMatchObject({ status: 'complete', result: { authoritative: true } })
-      } else if (channel === 'legacyDetected') {
-        expect(result).toMatchObject({ authoritative: true })
-      } else {
-        expect(result).toHaveLength(1)
-        expect(mocks.pruneLineage).toHaveBeenCalledTimes(1)
-      }
+      expect(result).toEqual([])
     }
     expect(mocks.git).not.toHaveBeenCalled()
     expect(mocks.roots).not.toHaveBeenCalled()
+    expect(mocks.pruneLineage).not.toHaveBeenCalled()
     expect(__getDetectedWorktreeScanCacheStatsForTests()).toEqual({ cacheSize: 0, inFlightSize: 0 })
   })
 
-  it('reports disconnection without replaying an authoritative local-cache answer', async () => {
-    fixture(fields)
-    await invoke('legacyDetected')
-    mocks.provider.mockReturnValue(undefined)
-    expect(await invoke('legacyDetected')).toMatchObject({ authoritative: false })
-    expect(mocks.git).not.toHaveBeenCalled()
-  })
-
-  it('rejects a legacy listing after provider authority rotates', async () => {
-    fixture(fields)
-    let finish = (_rows: typeof rows): void => {}
-    mocks.remoteList.mockReturnValue(
-      new Promise<typeof rows>((resolve) => {
-        finish = resolve
-      })
-    )
-    const pending = invoke('legacyDetected')
-    await Promise.resolve()
-    rotateSshProviderAuthority('host-a')
-    finish(rows)
-    expect(await pending).toMatchObject({ authoritative: false })
-    expect(mocks.roots).not.toHaveBeenCalled()
-    expect(mocks.pruneLineage).not.toHaveBeenCalled()
-  })
-
-  it('bypasses local cache when the lower scan entry point is called directly', async () => {
+  it('refuses the lower scan entry point instead of listing locally', async () => {
     const { repo, store } = fixture(fields)
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Remote scan bypass only needs the mocked Git options and provider.
-    await listDetectedGitWorktrees(store as never, repo)
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Remote scan bypass only needs the mocked Git options and provider.
-    await listDetectedGitWorktrees(store as never, repo)
-    expect(mocks.remoteList).toHaveBeenCalledTimes(2)
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: The scan refuses before reading anything beyond the mocked Git options.
+    await expect(listDetectedGitWorktrees(store as never, repo)).rejects.toThrow('not connected')
     expect(__getDetectedWorktreeScanCacheStatsForTests()).toEqual({ cacheSize: 0, inFlightSize: 0 })
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: A remote row must return before reading the store.
     rememberLocalWorktreeRoots(store as never, repo, rows)
-    expect(mocks.roots).not.toHaveBeenCalled()
-  })
-
-  it.each([
-    ['list', 'mutation'],
-    ['listAll', 'mutation'],
-    ['list', 'roots revision'],
-    ['listAll', 'roots revision']
-  ] as const)('preserves lineage when %s is overtaken by a %s', async (channel, change) => {
-    const { repo } = fixture(fields)
-    let finish = (_rows: typeof rows): void => {}
-    mocks.remoteList.mockReturnValue(
-      new Promise<typeof rows>((resolve) => {
-        finish = resolve
-      })
-    )
-    const pending = invoke(channel)
-    expect(mocks.remoteList).toHaveBeenCalledTimes(1)
-    if (change === 'mutation') {
-      invalidateDetectedWorktreeScanCache(repo.id)
-    } else {
-      mocks.rootsRevision.mockReturnValue(2)
-    }
-    finish(rows)
-    expect(await pending).toHaveLength(1)
-    expect(mocks.pruneLineage).not.toHaveBeenCalled()
+    expect(mocks.git).not.toHaveBeenCalled()
     expect(mocks.roots).not.toHaveBeenCalled()
   })
 })
@@ -222,7 +155,6 @@ it.each([undefined, 'nested'])(
     )
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: A nonlocal row must return before reading the store.
     rememberLocalWorktreeRoots(store as never, repo, rows)
-    expect(mocks.provider).not.toHaveBeenCalled()
     expect(mocks.git).not.toHaveBeenCalled()
     expect(mocks.roots).not.toHaveBeenCalled()
     expect(__getDetectedWorktreeScanCacheStatsForTests()).toEqual({ cacheSize: 0, inFlightSize: 0 })

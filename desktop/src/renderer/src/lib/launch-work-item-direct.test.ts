@@ -60,16 +60,16 @@ vi.mock('@/lib/connection-context', () => ({
   getConnectionId: mocks.getConnectionId
 }))
 
-vi.mock('@/runtime/runtime-hooks-client', () => ({
-  checkRuntimeHooks: vi
-    .fn()
-    .mockResolvedValue({ hasHooks: false, hooks: null, mayNeedUpdate: false })
-}))
-
-vi.mock('@/runtime/runtime-rpc-client', () => ({
-  getActiveRuntimeTarget: vi.fn().mockReturnValue({ kind: 'local' }),
+const hostMocks = vi.hoisted(() => ({
+  checkRuntimeHooks: vi.fn(),
   callRuntimeRpc: vi.fn()
 }))
+
+vi.mock('@/runtime/runtime-hooks-client', () => ({
+  checkRuntimeHooks: hostMocks.checkRuntimeHooks
+}))
+
+vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc: hostMocks.callRuntimeRpc }))
 
 vi.mock('@/lib/new-workspace', () => ({
   CLIENT_PLATFORM: 'win32',
@@ -148,6 +148,11 @@ describe('launchWorkItemDirect', () => {
           resolvePrBase: mocks.resolvePrBase
         }
       }
+    })
+    hostMocks.checkRuntimeHooks.mockResolvedValue({
+      hasHooks: false,
+      hooks: null,
+      mayNeedUpdate: false
     })
     mocks.resolvePrBase.mockResolvedValue({
       baseBranch: 'abc123',
@@ -284,7 +289,8 @@ describe('launchWorkItemDirect', () => {
       undefined,
       undefined,
       undefined,
-      'refs/remotes/origin/main'
+      'refs/remotes/origin/main',
+      { executionHostId: 'local' }
     )
   })
 
@@ -365,7 +371,8 @@ describe('launchWorkItemDirect', () => {
       undefined,
       undefined,
       undefined,
-      undefined
+      undefined,
+      { executionHostId: 'local' }
     )
   })
 
@@ -410,7 +417,6 @@ describe('launchWorkItemDirect', () => {
       cmdOverrides: {},
       agentArgs: '--dangerously-skip-permissions',
       agentEnv: {},
-      sessionOptions: undefined,
       platform: 'win32',
       isRemote: false
     })
@@ -465,11 +471,8 @@ describe('launchWorkItemDirect', () => {
     })
     expect(mocks.seedNativeChatLaunchPrompt).not.toHaveBeenCalled()
     // Why: the draft is inside `--prefill`, so the plan sets no draftPrompt.
-    // launchDraftText is the only thing that lets the view-mode gate see a
-    // draft here — without it this tab opens in chat unconditionally.
     const startup = mocks.activateAndRevealWorktree.mock.calls.at(-1)?.[1]?.startup
     expect(startup?.draftPrompt).toBeUndefined()
-    expect(startup?.launchDraftText).toBe('https://github.com/acme/repo/issues/12')
   })
 
   it('seeds the chat-composer launch draft for a multi-line Linear draft launch', async () => {
@@ -672,7 +675,6 @@ describe('launchWorkItemDirect', () => {
       cmdOverrides: {},
       agentArgs: '--yolo',
       agentEnv: {},
-      sessionOptions: undefined,
       platform: 'linux',
       isRemote: true
     })
@@ -682,7 +684,6 @@ describe('launchWorkItemDirect', () => {
       cmdOverrides: {},
       agentArgs: '--yolo',
       agentEnv: {},
-      sessionOptions: undefined,
       platform: 'linux',
       isRemote: true,
       allowEmptyPromptLaunch: true

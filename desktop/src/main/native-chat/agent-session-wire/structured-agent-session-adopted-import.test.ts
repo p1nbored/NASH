@@ -21,7 +21,12 @@ import { StructuredAgentSessionHost } from './structured-agent-session-host'
 import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
 import { createStructuredAgentSessionLogger } from './structured-agent-session-logger'
 import { codexProviderHandle } from '../../../shared/agent-session-provider-handle-encoding'
-import { NO_STRUCTURED_AGENTS } from './structured-agent-session-adapter-router-test-support'
+import {
+  NO_STRUCTURED_AGENTS,
+  structuredAgentsDeclaringNothing
+} from './structured-agent-session-adapter-router-test-support'
+import { acpStructuredAgentDefinition } from '../../acp/acp-structured-agent-definitions'
+import { acpLaunchSpecFor } from '../../acp/acp-launch-specs'
 
 const NOW = 1_800_000_000_000
 const SESSION = 'codex_adopting_session'
@@ -59,7 +64,10 @@ async function writeCodexRollout(path: string, text: string): Promise<void> {
   await writeFile(path, `${lines.join('\n')}\n`, 'utf8')
 }
 
-function attachParams(transcriptPath?: string): AgentSessionAttachParams {
+function attachParams(
+  transcriptPath?: string,
+  overrides: Partial<AgentSessionAttachParams> = {}
+): AgentSessionAttachParams {
   const params: AgentSessionAttachParams = {
     envelope: {
       sessionId: SESSION,
@@ -78,9 +86,10 @@ function attachParams(transcriptPath?: string): AgentSessionAttachParams {
     accountHome: { variable: 'CODEX_HOME', path: '/home/dev/.codex' },
     runtimeKind: 'native',
     adopt: {
-      providerHandle: { kind: 'codex', threadId: THREAD },
+      providerHandle: codexProviderHandle(THREAD),
       ...(transcriptPath ? { transcriptPath } : {})
-    }
+    },
+    ...overrides
   }
   return {
     ...params,
@@ -121,11 +130,13 @@ function adapter(): StructuredAgentSessionAdapter {
 async function attach(
   transcriptPath: string | undefined,
   sessionAdapter: StructuredAgentSessionAdapter,
-  onAttached: AttachFlowInput['onAttached'] = () => {}
+  onAttached: AttachFlowInput['onAttached'] = () => {},
+  params: AgentSessionAttachParams = attachParams(transcriptPath),
+  agents = NO_STRUCTURED_AGENTS
 ) {
   store ??= await openTestAgentSessionRecordStore(root!)
   return performAttach({
-    agents: NO_STRUCTURED_AGENTS,
+    agents,
     logger: createStructuredAgentSessionLogger(),
     store,
     adapter: sessionAdapter,
@@ -137,7 +148,8 @@ async function attach(
       probe: { outcome: 'reservation-unused' }
     },
     callerKey: 'client-1',
-    params: attachParams(transcriptPath),
+    optionRevision: () => 0,
+    params,
     now: () => NOW,
     onAttached
   })
@@ -157,6 +169,50 @@ describe('adopting a provider conversation on create', () => {
     // conversation this session owns.
     const page = (result as { value: { page: { items: unknown[] } } }).value.page
     expect(JSON.stringify(page.items)).toContain('ORCA-ADOPT-1')
+  })
+
+  it("seeds an ACP agent's chain with the session it adopts and imports that CLI's history", async () => {
+    root = await mkdtemp(join(tmpdir(), 'orca-adopt-acp-'))
+    const transcriptPath = join(root, 'chat_history.jsonl')
+    await writeFile(
+      transcriptPath,
+      `${JSON.stringify({ type: 'user', content: [{ type: 'text', text: 'ORCA-GROK-ADOPT' }] })}\n`
+    )
+    const grok = acpLaunchSpecFor('grok')
+    if (!grok) {
+      throw new Error('this build registers no Grok chats')
+    }
+    const handle = { transport: 'acp', agent: 'grok', nativeId: THREAD }
+    const sessionAdapter = adapter()
+    vi.mocked(sessionAdapter.acquire).mockImplementation(async ({ fence, spawnToken }) => ({
+      process: { hostId: 'local', pid: 4242, processStartTimeMs: NOW, spawnToken },
+      link: {
+        linkId: 'resumed-link',
+        handle,
+        origin: 'resumed',
+        mintedAtFence: fence,
+        observedAt: NOW
+      }
+    }))
+
+    const result = await attach(
+      transcriptPath,
+      sessionAdapter,
+      () => {},
+      attachParams(transcriptPath, {
+        provider: 'grok',
+        agent: 'grok',
+        accountHome: { variable: 'GROK_HOME', path: '/home/dev/.grok' },
+        adopt: { providerHandle: handle, transcriptPath }
+      }),
+      structuredAgentsDeclaringNothing([acpStructuredAgentDefinition(grok)])
+    )
+
+    expect(result.ok && JSON.stringify(result.value.page.items)).toContain('ORCA-GROK-ADOPT')
+    expect(store?.getRecord(SESSION)?.providerHandleChain[0]).toMatchObject({
+      origin: 'adopted',
+      handle
+    })
   })
 
   it('replays create without replacing journal-only messages or rereading the source', async () => {

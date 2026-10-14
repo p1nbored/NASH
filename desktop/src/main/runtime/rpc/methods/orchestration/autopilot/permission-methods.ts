@@ -14,6 +14,7 @@ import { defineMethod } from '../../../core'
  */
 export const PERMISSION_REQUEST_METHOD = defineMethod({
   name: 'orchestration.permissionRequest',
+  permission: 'workspace',
   params: PermissionRequestParams,
   handler: (params, context) =>
     requirePermissionRelay(context.runtime).request(
@@ -24,6 +25,7 @@ export const PERMISSION_REQUEST_METHOD = defineMethod({
 
 export const PERMISSION_WAIT_METHOD = defineMethod({
   name: 'orchestration.permissionWait',
+  permission: 'workspace',
   params: PermissionWaitParams,
   handler: (params, context) =>
     requirePermissionRelay(context.runtime).wait(
@@ -35,6 +37,7 @@ export const PERMISSION_WAIT_METHOD = defineMethod({
 
 export const PERMISSION_LIST_METHOD = defineMethod({
   name: 'orchestration.permissionList',
+  permission: 'workspace',
   params: PermissionListParams,
   handler: (_params, context) =>
     requirePermissionRelay(context.runtime).listForPrimary(
@@ -43,6 +46,7 @@ export const PERMISSION_LIST_METHOD = defineMethod({
 })
 export const PERMISSION_ANSWER_METHOD = defineMethod({
   name: 'orchestration.permissionAnswer',
+  permission: 'workspace',
   params: WorkbenchPermissionAnswerParams,
   handler: (params, context) =>
     requirePermissionRelay(context.runtime).answerFromPrimary(

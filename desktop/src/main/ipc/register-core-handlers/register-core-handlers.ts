@@ -22,7 +22,11 @@ import { registerStatsHandlers } from '../stats'
 import { registerMemoryHandlers } from '../memory'
 import { registerRateLimitHandlers } from '../rate-limits'
 import { registerRuntimeHandlers } from '../runtime'
-import { registerRuntimeEnvironmentHandlers } from '../runtime-environments'
+import {
+  invalidateRuntimeEnvironmentTransport,
+  registerRuntimeEnvironmentHandlers
+} from '../runtime-environments'
+import { registerWslHostHandlers } from '../wsl-host-handlers'
 import { registerEphemeralVmHandlers } from '../ephemeral-vm'
 import { registerAiVaultHandlers } from '../ai-vault'
 import { registerAiVaultSearchHandlers } from '../ai-vault-search'
@@ -60,7 +64,7 @@ import { registerCodexAccountHandlers } from '../codex-accounts'
 import { registerClaudeAccountHandlers } from '../claude-accounts'
 import { registerAgentHookHandlers } from '../agent-hooks'
 import { registerCodexConfigSyncHandlers } from '../codex-config-sync'
-import { getPtyIdForPaneKey } from '../pty'
+import { getPtyIdForPaneKey } from '../pty/pane/key-state'
 import { registerOpenCodeGoCredentialsHandlers } from '../opencode-go-credentials'
 import { registerMiniMaxCredentialsHandlers } from '../minimax-credentials'
 import { registerClefCredentialsHandlers } from '../clef-credentials'
@@ -100,8 +104,23 @@ import { callRuntimeSessionSearch } from '../../ai-vault/runtime-session-search-
 import { ensureStructuredAgentSessionHostUnlessRefused } from '../../runtime/structured-agent-session-host-refusal'
 import type { PluginService } from '../../plugins/plugin-service'
 import type { PluginMarketplaceHandlerServices } from '../plugin-marketplaces'
+import { settleWithinMs } from '../../quit-teardown-deadline'
 
 let registered = false
+// Same cap as the restart path's auth preservation: bookkeeping must not hold Restart on a stalled disk.
+const RELAUNCH_DISMISSAL_CLOSE_TIMEOUT_MS = 2_000
+
+async function closeNotificationDismissalsBeforeRelaunch(
+  runtime: OrcaRuntimeService
+): Promise<void> {
+  const result = await settleWithinMs(
+    runtime.closeNotificationDismissals(),
+    RELAUNCH_DISMISSAL_CLOSE_TIMEOUT_MS
+  )
+  if (result.outcome === 'timed-out') {
+    console.warn('[notifications] Relaunching before dismissal recovery state finished saving')
+  }
+}
 
 type CoreHandlerLifecycleOptions = {
   onBeforeRelaunch?: () => void | Promise<void>
@@ -147,7 +166,11 @@ export function registerCoreHandlers(
   }
   registered = true
 
-  registerAppHandlers(store, { onBeforeRelaunch: lifecycleOptions.onBeforeRelaunch })
+  registerAppHandlers(store, {
+    onBeforeRelaunch: lifecycleOptions.onBeforeRelaunch,
+    // Why here, not onBeforeRelaunch: restart and profile switches quit through will-quit, which closes it.
+    onBeforeRelaunchExit: () => closeNotificationDismissalsBeforeRelaunch(runtime)
+  })
   registerCliHandlers()
   registerPreflightHandlers()
   registerUsageProviderHandlers({ claudeUsage, codexUsage, openCodeUsage, museUsage })
@@ -229,6 +252,11 @@ export function registerCoreHandlers(
   registerFilesystemWatcherHandlers()
   registerRuntimeHandlers(runtime)
   registerRuntimeEnvironmentHandlers(store)
+  registerWslHostHandlers({
+    store,
+    getUserDataPath: () => app.getPath('userData'),
+    invalidateTransport: invalidateRuntimeEnvironmentTransport
+  })
   registerEphemeralVmHandlers(store, pluginService)
   // Session history and terminal resume are not chats; a refused host leaves nothing to check.
   const ensureStructuredSessionOwnership = () =>

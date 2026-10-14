@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setupPtyIpcSuite, type PtyIpcSuiteFixtures } from '../../src/main/ipc/pty-ipc-test-harness'
 import { TerminalKilledError } from '../../src/main/daemon/daemon-pty-lifecycle-errors'
 import { makePaneKey } from '../../src/shared/stable-pane-id'
-import { registerPtyHandlers, setLocalPtyProvider } from '../../src/main/ipc/pty'
+import { registerPtyHandlers } from '../../src/main/ipc/pty/register-handlers'
+import { setLocalPtyProvider } from '../../src/main/ipc/pty/provider/registry'
 import { TerminalIntentionalStops } from '../../src/main/runtime/terminal-intentional-stops'
 
 vi.mock('electron', () =>

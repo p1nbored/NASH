@@ -39,13 +39,21 @@ describe('routing table taxonomy (taxonomy_version 2)', () => {
     }
   })
 
-  it('has exactly the five execution targets of the architecture document', () => {
+  it('keeps session targets and exposes all model-capable native CLIs', () => {
     expect([...EXECUTION_TARGETS]).toEqual([
       'claude_primary',
       'claude_subagent',
       'claude_workflow',
+      'claude_cli',
       'codex_cli',
-      'agy_cli'
+      'agy_cli',
+      'gemini_cli',
+      'cursor_cli',
+      'codebuddy_cli',
+      'grok_cli',
+      'muse_cli',
+      'omp_cli',
+      'opencode_cli'
     ])
     expect([...INHERITING_TARGETS]).toEqual(['claude_primary', 'claude_workflow'])
   })

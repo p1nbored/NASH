@@ -5,11 +5,18 @@ import type {
   ValidationReviewerTarget
 } from '../../../../shared/routing-table/routing-table-taxonomy'
 import type { Coordinator, Route } from '../../../../shared/routing-table/routing-table-schema'
+import {
+  isRoutingCliTarget,
+  routingAgentForTarget
+} from '../../../../shared/routing-table/routing-cli-registry'
+import { getAgentCatalog } from '@/lib/agent-catalog'
 
 type ReasoningLevel = Route['reasoning_level']
 
 export function primaryAgentLabel(agent: Coordinator['agent']): string {
-  return agent === 'codex' ? 'Codex' : 'Claude Code'
+  return agent === 'claude'
+    ? 'Claude Code'
+    : (getAgentCatalog().find((entry) => entry.id === agent)?.label ?? agent)
 }
 
 export function taskTypeLabel(taskType: RoutingTaskType): string {
@@ -68,6 +75,15 @@ export function taskTypeLabel(taskType: RoutingTaskType): string {
 }
 
 export function executionTargetLabel(target: ExecutionTarget): string {
+  if (isRoutingCliTarget(target)) {
+    if (target === 'codex_cli') {
+      return translate('auto.components.settings.routingTable.labels.codexCli', 'Codex CLI')
+    }
+    if (target === 'agy_cli') {
+      return translate('auto.components.settings.routingTable.labels.agyCli', 'agy CLI')
+    }
+    return primaryAgentLabel(routingAgentForTarget(target))
+  }
   switch (target) {
     case 'claude_primary':
       return translate(
@@ -84,10 +100,6 @@ export function executionTargetLabel(target: ExecutionTarget): string {
         'auto.components.settings.routingTable.labels.claudeWorkflow',
         'Claude workflow'
       )
-    case 'codex_cli':
-      return translate('auto.components.settings.routingTable.labels.codexCli', 'Codex CLI')
-    case 'agy_cli':
-      return translate('auto.components.settings.routingTable.labels.agyCli', 'agy CLI')
   }
 }
 
@@ -134,6 +146,10 @@ export function sameAsCoordinatorLabel(): string {
     'auto.components.settings.routingTable.labels.sameAsCoordinator',
     'Same as coordinator'
   )
+}
+
+export function cliDefaultEffortLabel(): string {
+  return translate('auto.components.settings.routingTable.labels.cliDefault', 'CLI default')
 }
 
 /** A route that runs with the coordinator's own model and effort. */

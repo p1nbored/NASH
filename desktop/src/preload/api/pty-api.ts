@@ -1,3 +1,4 @@
+import type { SpawnIntent } from '../../shared/host-spawn-admission'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentLaunchConfig
@@ -24,6 +25,7 @@ import type { TerminalPanePlacement } from '../../shared/terminal-pane-placement
 import type { PtyManagementApi } from './pty-management-api'
 import type { TerminalProcessInspection } from '../../shared/terminal-process-inspection'
 import type { CodexSharedServerStatus } from '../../shared/codex-shared-server-command'
+import type { NewerDaemonHeldScreen, NewerDaemonReopenResult } from '../../shared/newer-daemon-hold'
 
 export type PtyApi = {
   spawn: (opts: {
@@ -57,6 +59,8 @@ export type PtyApi = {
     replacesPtyId?: string
     // Which tab and leaf a fresh PTY joins; older mains ignore it.
     placement?: TerminalPanePlacement
+    // Visible restores are `user-resume`, hidden ones `automatic-restore`; the fork gate validates.
+    spawnIntent?: SpawnIntent
     // Why: main fires `agent_started` only on spawn success, so launch metadata rides this field (telemetry-plan.md §Agent launch semantics).
     telemetry?: { agent_kind: AgentKind; launch_source: LaunchSource; request_kind: RequestKind }
   }) => Promise<{
@@ -145,8 +149,16 @@ export type PtyApi = {
   /** Runs the fix with the pane's own Codex; true only once verified. Local panes only. */
   disableCodexSharedServerAutoStart: (id: string) => Promise<boolean>
   stopCodexSharedServer: (id: string) => Promise<boolean>
-  /** A local pane whose daemon predates per-account Claude folders; false for any other pane. */
-  openedBeforeClaudeAccounts: (id: string) => Promise<boolean>
+  /** A local pane whose daemon lacks the claude function and whose claude runs another account
+   *  than the one selected for the pane's runtime; false for any other pane. */
+  openedBeforeClaudeAccounts: (
+    id: string,
+    target: { runtime: 'host' } | { runtime: 'wsl'; wslDistro: string }
+  ) => Promise<boolean>
+  /** A held local session's last saved screen, read without spawning. */
+  readNewerDaemonHeldScreen: (sessionId: string) => Promise<NewerDaemonHeldScreen | null>
+  /** Stops the newer daemons; reopened only once each is confirmed exited. */
+  reopenNewerDaemonTerminals: () => Promise<NewerDaemonReopenResult>
   getCwd: (id: string) => Promise<string>
   getSize: (id: string) => Promise<{ cols: number; rows: number } | null>
   listSessions: (scope?: PtySessionListScope) => Promise<PtyListedSession[]>

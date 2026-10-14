@@ -38,6 +38,7 @@ function routingAdministration(context: RpcContext) {
 export const WORKBENCH_METHODS = [
   defineMethod({
     name: 'workbench.requests.submit',
+    permission: 'workspace',
     params: WorkbenchSubmitParams,
     handler: (params, context) => {
       const target = intake(context, params.workspaceId)
@@ -49,6 +50,7 @@ export const WORKBENCH_METHODS = [
   }),
   defineMethod({
     name: 'workbench.requests.list',
+    permission: 'workspace',
     params: WorkbenchListParams,
     handler: (params, context) => {
       const target = intake(context, params.workspaceId)
@@ -57,6 +59,7 @@ export const WORKBENCH_METHODS = [
   }),
   defineMethod({
     name: 'workbench.requests.cancel',
+    permission: 'workspace',
     params: WorkbenchCancelParams,
     handler: (params, context) => {
       const target = intake(context, params.workspaceId)
@@ -68,16 +71,19 @@ export const WORKBENCH_METHODS = [
   }),
   defineMethod({
     name: 'workbench.routing.status',
+    permission: 'workspace',
     params: null,
     handler: (_params, context) => routingAdministration(context).routingStatusView()
   }),
   defineMethod({
     name: 'workbench.clef.verify',
+    permission: 'host-admin',
     params: WorkbenchClefVerifyParams,
     handler: (_params, context) => routingAdministration(context).verifyClef()
   }),
   defineMethod({
     name: 'workbench.clef.profile.pin',
+    permission: 'host-admin',
     params: WorkbenchClefProfilePinParams,
     handler: (params, context) => routingAdministration(context).pinClefProfile(params.reportSha256)
   })

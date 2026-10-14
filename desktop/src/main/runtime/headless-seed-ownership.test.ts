@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest'
 import { HeadlessEmulator } from '../daemon/headless-emulator'
 import { deferred, makeDeferred, syncSinglePty } from './orca-runtime-test-fixtures.spec'
-import type { PtyProviderBufferSnapshot } from '../providers/types'
+import type { PtyProviderBufferSnapshot } from '../providers/pty-provider-contract'
 import {
   createHydrationRuntime,
   EMPTY_RETAINED_STATE,

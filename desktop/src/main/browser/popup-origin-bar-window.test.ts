@@ -64,16 +64,31 @@ const { fakeElectron } = vi.hoisted(() => {
     }
   }
 
+  class FakeContentView {
+    private handlers = new Map<string, Handler[]>()
+    addChildView = vi.fn()
+    on(event: string, handler: Handler): void {
+      this.handlers.set(event, [...(this.handlers.get(event) ?? []), handler])
+    }
+    emit(event: string): void {
+      for (const handler of this.handlers.get(event) ?? []) {
+        handler()
+      }
+    }
+  }
+
   class FakeBaseWindow {
     static instances: FakeBaseWindow[] = []
     options: Record<string, unknown>
     private handlers = new Map<string, Handler[]>()
-    contentView = { addChildView: vi.fn() }
+    contentView = new FakeContentView()
+    contentSize: { width: number; height: number }
     setTitle = vi.fn()
     isDestroyed = vi.fn(() => false)
     close = vi.fn(() => this.emit('closed'))
     constructor(options: Record<string, unknown>) {
       this.options = options
+      this.contentSize = { width: Number(options.width), height: Number(options.height) }
       FakeBaseWindow.instances.push(this)
     }
     on(event: string, handler: Handler): void {
@@ -83,12 +98,7 @@ const { fakeElectron } = vi.hoisted(() => {
       this.on(event, handler)
     }
     getContentBounds(): { x: number; y: number; width: number; height: number } {
-      return {
-        x: 0,
-        y: 0,
-        width: this.options.width as number,
-        height: this.options.height as number
-      }
+      return { x: 0, y: 0, ...this.contentSize }
     }
     emit(event: string, ...args: unknown[]): void {
       for (const handler of this.handlers.get(event) ?? []) {
@@ -203,7 +213,8 @@ describe('openPopupWithOriginBar', () => {
 
     expect(lastWindow().options).toMatchObject({
       width: 500,
-      height: 400 + POPUP_ORIGIN_BAR_HEIGHT
+      height: 400 + POPUP_ORIGIN_BAR_HEIGHT,
+      autoHideMenuBar: true
     })
     const { bar, content } = lastViews()
     expect(bar.setBounds).toHaveBeenCalledWith({
@@ -217,6 +228,24 @@ describe('openPopupWithOriginBar', () => {
       y: POPUP_ORIGIN_BAR_HEIGHT,
       width: 500,
       height: 400
+    })
+  })
+
+  it('re-lays out when the revealed menu bar shrinks the content area', () => {
+    openPopupWithOriginBar(
+      { webContents: createFakeWebContents() as never, width: 500, height: 400 },
+      'https://example.com/'
+    )
+    const window = lastWindow()
+    const menuBarHeight = 25
+    window.contentSize = { width: 500, height: 400 + POPUP_ORIGIN_BAR_HEIGHT - menuBarHeight }
+    window.contentView.emit('bounds-changed')
+
+    expect(lastViews().content.setBounds).toHaveBeenLastCalledWith({
+      x: 0,
+      y: POPUP_ORIGIN_BAR_HEIGHT,
+      width: 500,
+      height: 400 - menuBarHeight
     })
   })
 

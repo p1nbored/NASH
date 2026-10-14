@@ -25,9 +25,12 @@ export class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPt
   ): RuntimeTerminalSummary {
     const worktree = worktreesById.get(pty.worktreeId)
 
-    const title = getLatestPtyTitle(this.getPtyDisplayRecord(pty))
     const pane = parsePaneKey(pty.paneKey ?? '')
     const orphaned = !ptyHoldsRecordedSurface(pty, this.ptySurfaceTopology())
+    // A restarted host's terminal has no title yet; until it has one, its tab's saved name stands in.
+    const title =
+      getLatestPtyTitle(this.getPtyDisplayRecord(pty)) ??
+      (orphaned ? null : this.getSavedTerminalTabCustomTitle(pty.worktreeId, pty.tabId))
     // A live process awaiting its pane binding is not evidence of an orphan.
     if (
       orphaned &&
@@ -63,6 +66,16 @@ export class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPt
         pty.paneKey ?? null
       )
     }
+  }
+
+  protected getSavedTerminalTabCustomTitle(
+    worktreeId: string,
+    tabId: string | null
+  ): string | null {
+    const tab = this.getWorkspaceSessionForWorktree(worktreeId)?.tabsByWorktree[worktreeId]?.find(
+      (candidate) => candidate.id === tabId
+    )
+    return tab?.customTitle?.trim() || null
   }
 
   protected getLiveLeafForHandle(handle: string): {

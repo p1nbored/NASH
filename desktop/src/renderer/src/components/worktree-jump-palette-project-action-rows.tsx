@@ -12,6 +12,7 @@ import type {
 } from './worktree-jump-palette-model'
 import type { WorktreeJumpPaletteController } from './use-worktree-jump-palette-controller'
 import { PaletteHostBadgeChip } from './worktree-jump-palette-primitives'
+import { getRepoExecutionHostId } from '../../../shared/execution-host'
 
 export function WorktreeJumpPaletteProjectRow({
   entry,
@@ -25,7 +26,11 @@ export function WorktreeJumpPaletteProjectRow({
   const result = entry.result
   const isProject = result.kind === 'project'
   const hostBadge = isProject
-    ? getPaletteHostBadge(result.repo, controller.hostOptions, controller.hostFilterActive)
+    ? getPaletteHostBadge(
+        getRepoExecutionHostId(result.repo),
+        controller.hostOptions,
+        controller.hostFilterActive
+      )
     : null
   const badgeLabel = isProject
     ? translate('auto.components.WorktreeJumpPalette.projectBadge', 'Project')

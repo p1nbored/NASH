@@ -18,14 +18,17 @@ import {
   type SubmissionRejectionKind
 } from './agent-session-failure'
 import type { AgentSessionConversationCommand } from './agent-session-conversation-command'
+import { cliMissingSentence, notSignedInSentence } from './agent-session-availability-sentences'
 import {
+  codexInstallationFailureWords,
   sayAgentSessionFailureEnglish,
   type AgentSessionFailureCopyId,
   type AgentSessionFailureCopyValues,
   type AgentSessionFailureSay
 } from './agent-session-failure-copy'
-import type { AgentSessionWireRefusalCode } from './agent-session-wire-refusals'
+import { START_REFUSAL_RESUMABLE } from './agent-session-start-refusal-resumable'
 import { providerRetryWords, withRetryCause } from './agent-session-provider-retry-words'
+import { commandRefusedByReason } from './agent-session-command-refusal-words'
 import { joinSentences } from './sentence-joining'
 import {
   DISPATCH_REJECTED_CANCELLED,
@@ -66,29 +69,8 @@ export type AgentSessionFailureWordsContext = {
   /** The surface retries for the person — its own Retry beside the words, or a read that reconnects
    *  on its own — so they leave out sending or trying again. */
   retryControl?: boolean
-}
-
-/**
- * Whether a refused start leaves the chat anything to start again from. `false`: this host has
- * nothing to restart it from — no record, or none it can run — so only a new chat continues.
- * A new wire code does not compile until it is classified here.
- */
-export const START_REFUSAL_RESUMABLE: Record<AgentSessionWireRefusalCode, boolean> = {
-  execution_owner_reconciling: true,
-  agent_session_conflict: true,
-  agent_session_checkpoint_stale: true,
-  agent_session_ownership_unknown: true,
-  agent_session_operation_capacity: true,
-  structured_agent_session_unsupported: false,
-  agent_session_operation_conflict: true,
-  agent_session_operation_expired: true,
-  agent_session_operation_invalid: true,
-  agent_session_operation_unknown: true,
-  agent_session_item_revision_stale: true,
-  agent_session_already_resolved: true,
-  agent_session_identity_required: false,
-  agent_session_journal_unreadable: true,
-  agent_session_owner_restart_failed: true
+  /** A direct create has no submitted message to send again. */
+  messageSubmitted?: boolean
 }
 
 /** Person-facing provider text is quoted, but bounded so the sentence stays one. */
@@ -126,17 +108,25 @@ function quotingPersonDetail(
 /** The next step after a start or restart that failed: the command, or the message, again. */
 function startRetry(
   say: AgentSessionFailureSay,
-  { command, retryControl }: AgentSessionFailureWordsContext,
+  { command, retryControl, messageSubmitted }: AgentSessionFailureWordsContext,
   sendAgain: 'sendToTryAgain' | 'sendAgainToTryOnceMore' = 'sendToTryAgain'
 ): string[] {
   if (retryControl) {
     return []
   }
-  return [command ? say('runCommandAgain', { command }) : say(sendAgain)]
+  return [
+    command
+      ? say('runCommandAgain', { command })
+      : say(messageSubmitted === false ? 'sendToTryAgain' : sendAgain)
+  ]
 }
 
 function couldNot(verb: 'couldNotStart' | 'couldNotRestart'): Sentence {
   return (context, fact, _surface, say) => {
+    const installationFailure = codexInstallationFailureWords(fact.refusal, say)
+    if (installationFailure) {
+      return installationFailure
+    }
     const failed = say(verb, agent(say, context))
     if (fact.argumentProblem) {
       const problemCopy = {
@@ -205,16 +195,8 @@ const FAILURE_SENTENCES = {
   providerStartFailed: (context, _fact, _surface, say) =>
     joinSentences([say('providerStartFailed', agent(say, context)), ...startRetry(say, context)]),
   startFailed: couldNot('couldNotStart'),
-  // Beside a Retry the resend is the button, but signing in is still a step to take first.
-  notSignedIn: (context, _fact, _surface, say) =>
-    joinSentences([
-      say('notSignedIn', agent(say, context)),
-      context.retryControl
-        ? say('signInFirst')
-        : context.command
-          ? say('signInThenRunCommand', { command: context.command })
-          : say('signInThenSend')
-    ]),
+  notSignedIn: (context, fact, surface, say) => notSignedInSentence(context, fact, say, surface),
+  cliMissing: (context, _fact, _surface, say) => cliMissingSentence(context, say),
   historyTooLarge: (_context, _fact, _surface, say) =>
     joinSentences([say('historyTooLarge'), say('startNewChat')]),
   managedAccountEnvOverride: (_context, _fact, _surface, say) => say('managedAccountEnvOverride'),
@@ -228,7 +210,7 @@ const FAILURE_SENTENCES = {
   managedAccountUnsupported: (context, _fact, _surface, say) =>
     joinSentences([
       say('managedAccountUnsupported'),
-      context.retryControl
+      context.retryControl || context.messageSubmitted === false
         ? say('chooseClaudeAccount')
         : context.command
           ? say('chooseClaudeAccountThenRunCommand', { command: context.command })
@@ -237,8 +219,14 @@ const FAILURE_SENTENCES = {
   providerExited: (context, _fact, surface, say) =>
     say(surface === 'row' ? 'providerExitedRow' : 'providerExitedRejection', agent(say, context)),
   restartFailed: couldNot('couldNotRestart'),
-  providerRejected: (_context, fact, _surface, say) =>
-    quotingPersonDetail(say, 'providerRejected', 'providerRejectedQuoted', fact.detail),
+  providerRejected: (context, fact, _surface, say) =>
+    quotingPersonDetail(
+      say,
+      'providerRejected',
+      'providerRejectedQuoted',
+      fact.detail,
+      agent(say, context)
+    ),
   attachmentInvalid: (context, fact, _surface, say) =>
     fact.attachment
       ? ATTACHMENT_SENTENCES[fact.attachment.reason](say, context, fact.attachment)
@@ -252,8 +240,9 @@ const FAILURE_SENTENCES = {
   hostRestarted: (_context, _fact, _surface, say) => say('hostRestarted'),
   notDelivered: ({ retryControl }, _fact, _surface, say) =>
     say(retryControl ? 'notDelivered' : 'notDeliveredSendAgain'),
-  commandRefused: ({ retryControl }, _fact, _surface, say) =>
-    say(retryControl ? 'commandRefused' : 'commandRefusedTryAgain'),
+  commandRefused: (context, fact, _surface, say) =>
+    commandRefusedByReason(say, context, fact) ??
+    say(context.retryControl ? 'commandRefused' : 'commandRefusedTryAgain'),
   compactionFailed: (_context, fact, _surface, say) =>
     quotingPersonDetail(say, 'compactionFailed', 'compactionFailedQuoted', fact.detail),
   compactionUnconfirmed: (_context, _fact, _surface, say) => say('compactionUnconfirmed'),
@@ -269,6 +258,11 @@ const FAILURE_SENTENCES = {
           agent(say, context)
         )
       : say('noTurnToStop', agent(say, context)),
+  // Mid-sentence, so an unnamed agent is not capitalized.
+  stopFailed: ({ agentName }, _fact, _surface, say) =>
+    agentName ? say('couldNotStop', { agent: agentName }) : say('couldNotStopTheAgent'),
+  backgroundTaskNotStopped: (_context, fact, _surface, say) =>
+    say(fact.backgroundStop === 'task' ? 'backgroundTaskNotStopped' : 'backgroundTasksNotStopped'),
   answerUnconfirmed: (_context, _fact, _surface, say) => say('answerUnconfirmed'),
   hostFault: ({ retryControl }, _fact, _surface, say) =>
     say(retryControl ? 'hostFault' : 'hostFaultTryAgain'),

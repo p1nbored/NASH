@@ -145,12 +145,7 @@ describe('ready-for-review required check reuse', () => {
       )
     }
     expect(detector.outputs.should_run).toBe('${{ steps.filter.outputs.should_run }}')
-    for (const name of [
-      'test_files',
-      'ssh_source_changed',
-      'native_ime_source_changed',
-      'wsl_source_changed'
-    ]) {
+    for (const name of ['test_files', 'native_ime_source_changed', 'wsl_source_changed']) {
       expect(detector.outputs[name]).toBe(`\${{ steps.e2e_filter.outputs.${name} }}`)
     }
     expect(detector.steps.find((step) => step.id === 'e2e_filter').if).toBe(
@@ -160,7 +155,11 @@ describe('ready-for-review required check reuse', () => {
     expect(workflow.jobs.verify.needs).toEqual([
       'code_paths',
       'preflight',
-      ...PR_CHECK_JOBS.filter((job) => job !== 'static_analysis' && job !== 'typecheck')
+      ...new Set(
+        PR_CHECK_JOBS.filter((job) => job !== 'static_analysis' && job !== 'typecheck').map(
+          (job) => (job === 'orcad_browser' ? 'test' : job)
+        )
+      )
     ])
   })
 

@@ -172,33 +172,7 @@ describe('connectPanePty', () => {
     await restoreTerminalTestGlobals()
   })
 
-  describe('reconcileIfSessionDead', () => {
-    it('closes a split pane bound to a dead local session (same teardown as onExit)', async () => {
-      const { connectPanePty } = await import('./pty-connection')
-      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-      const transport = createMockTransport('pty-pane-2')
-      transport.connect.mockImplementation(
-        async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-          capturedDataCallback.current = callbacks.onData ?? null
-          return 'pty-pane-2'
-        }
-      )
-      transportFactoryQueue.push(transport)
-      const manager = createManager(2)
-      const deps = createDeps({
-        restoredLeafId: LEAF_2,
-        paneTransportsRef: { current: new Map([[1, createMockTransport('pty-pane-1')]]) }
-      })
-
-      const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
-      // Why: clear the freshly-split early-return guard so onExit reaches the close branch (established, used split pane).
-      capturedDataCallback.current?.('shell prompt')
-
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']))
-
-      expect(manager.closePane).toHaveBeenCalledWith(2)
-    })
-
+  describe('reconcileIfSessionMissing', () => {
     it('closes a split pane when targeted liveness says its local session is missing', async () => {
       const { connectPanePty } = await import('./pty-connection')
       const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
@@ -276,8 +250,8 @@ describe('connectPanePty', () => {
       expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
     })
 
-    it('does NOT tear down a newborn pane when the snapshot was requested before it bound', async () => {
-      // Why (regression): a snapshot requested before the spawn bound cannot prove the fresh ptyId dead (boundAt wiring).
+    it('does NOT tear down a newborn pane when liveness was requested before it bound', async () => {
+      // Why (regression): a liveness request made before the spawn bound cannot prove the fresh ptyId dead (boundAt wiring).
       const { connectPanePty } = await import('./pty-connection')
       const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
       const transport = createMockTransport('pty-pane-2')
@@ -306,14 +280,15 @@ describe('connectPanePty', () => {
       const beforeSpawn = performance.now()
       onPtySpawn?.('pty-pane-2')
 
-      // requestedAt < boundAt: stale snapshot can't prove the fresh pane dead.
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']), beforeSpawn - 1)
+      // requestedAt < boundAt: a stale liveness answer can't prove the fresh pane dead.
+      binding.reconcileIfSessionMissing(async () => false, beforeSpawn - 1)
+      await flushAsyncTicks()
 
       expect(manager.closePane).not.toHaveBeenCalled()
       expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
     })
 
-    it('tears down the pane when the snapshot was requested after it bound', async () => {
+    it('tears down the pane when liveness was requested after it bound', async () => {
       const { connectPanePty } = await import('./pty-connection')
       const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
       const transport = createMockTransport('pty-pane-2')
@@ -341,8 +316,9 @@ describe('connectPanePty', () => {
       onPtySpawn?.('pty-pane-2')
       const afterSpawn = performance.now()
 
-      // requestedAt > boundAt: the snapshot postdates the bind, so absence is real.
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']), afterSpawn + 1)
+      // requestedAt > boundAt: the request postdates the bind, so absence is real.
+      binding.reconcileIfSessionMissing(async () => false, afterSpawn + 1)
+      await flushAsyncTicks()
 
       expect(manager.closePane).toHaveBeenCalledWith(2)
     })
@@ -356,29 +332,13 @@ describe('connectPanePty', () => {
 
       const binding = connectPanePty(createPane(1) as never, manager as never, deps as never)
 
-      // The last pane reattaches to the tab's persisted ptyId ('tab-pty').
-      binding.reconcileIfSessionDead(new Set(['some-other-live']))
+      // The last pane reattaches to the tab's persisted ptyId ('tab-pty'); let that bind first.
+      await flushAsyncTicks()
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
 
       expect(deps.onPtyExitRef.current).toHaveBeenCalledWith('tab-pty', 0)
       expect(manager.closePane).not.toHaveBeenCalled()
-    })
-
-    it('is a no-op when the bound session is still live', async () => {
-      const { connectPanePty } = await import('./pty-connection')
-      const transport = createMockTransport('pty-pane-2')
-      transportFactoryQueue.push(transport)
-      const manager = createManager(2)
-      const deps = createDeps({
-        restoredLeafId: LEAF_2,
-        paneTransportsRef: { current: new Map([[1, createMockTransport('pty-pane-1')]]) }
-      })
-
-      const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
-
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1', 'pty-pane-2']))
-
-      expect(manager.closePane).not.toHaveBeenCalled()
-      expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
     })
 
     it('is a no-op for remote: web-runtime ids', async () => {
@@ -395,7 +355,8 @@ describe('connectPanePty', () => {
 
       const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
 
-      binding.reconcileIfSessionDead(new Set())
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
 
       expect(manager.closePane).not.toHaveBeenCalled()
       expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
@@ -414,7 +375,8 @@ describe('connectPanePty', () => {
 
       const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
 
-      binding.reconcileIfSessionDead(new Set())
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
 
       expect(manager.closePane).not.toHaveBeenCalled()
       expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
@@ -433,7 +395,8 @@ describe('connectPanePty', () => {
 
       const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
 
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']))
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
 
       expect(deps.consumeSuppressedPtyExit).toHaveBeenCalledWith('pty-pane-2')
       expect(manager.closePane).not.toHaveBeenCalled()
@@ -482,26 +445,6 @@ describe('connectPanePty', () => {
       expect(manager.closePane).toHaveBeenCalledWith(2)
     })
 
-    it('does not act on a stale id after a reattach changed the bound id', async () => {
-      const { connectPanePty } = await import('./pty-connection')
-      const transport = createMockTransport('pty-pane-2')
-      transportFactoryQueue.push(transport)
-      const manager = createManager(2)
-      const deps = createDeps({
-        restoredLeafId: LEAF_2,
-        paneTransportsRef: { current: new Map([[1, createMockTransport('pty-pane-1')]]) }
-      })
-
-      const binding = connectPanePty(createPane(2) as never, manager as never, deps as never)
-
-      // Reattach between snapshot and apply: snapshot marked the OLD id dead, but getPtyId now returns the new live id.
-      transport.getPtyId.mockReturnValue('pty-pane-2-reattached')
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1', 'pty-pane-2-reattached']))
-
-      expect(manager.closePane).not.toHaveBeenCalled()
-      expect(deps.onPtyExitRef.current).not.toHaveBeenCalled()
-    })
-
     it('closes a split pane exactly once across reconcile + a racing real exit', async () => {
       const { connectPanePty } = await import('./pty-connection')
       const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
@@ -526,7 +469,8 @@ describe('connectPanePty', () => {
         | undefined
       expect(onPtyExit).toBeTypeOf('function')
 
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']))
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
       // A racing real/synthetic pty:exit for the SAME id must not close twice.
       onPtyExit?.('pty-pane-2')
 
@@ -559,7 +503,8 @@ describe('connectPanePty', () => {
         | ((ptyId: string) => void)
         | undefined
 
-      binding.reconcileIfSessionDead(new Set(['pty-pane-1']))
+      binding.reconcileIfSessionMissing(async () => false)
+      await flushAsyncTicks()
       onPtyExit?.('pty-pane-2')
 
       // Observable outcome: single close, pane was treated as dead (closed).

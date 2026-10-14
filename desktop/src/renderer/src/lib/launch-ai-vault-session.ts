@@ -1,18 +1,16 @@
 import { useAppStore } from '@/store'
-import { reconcileTabOrder } from '@/components/tab-bar/reconcile-order'
+import { persistAgentLaunchTabOrder } from '@/lib/launch-agent-tab-order'
 import { tuiAgentToAgentKind } from '@/lib/telemetry'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import {
-  createWebRuntimeSessionTerminal,
-  isWebRuntimeSessionActive
-} from '@/runtime/web-runtime-session'
+import { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-terminal-creation'
+import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session-environment'
 import type { AiVaultAgent } from '../../../shared/ai-vault-types'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentLaunchConfig
 } from '../../../shared/agent-session-resume'
 import type { TabSplitDirection } from '@/store/slices/tabs'
-import type { WebRuntimeTerminalCreateOutcome } from '@/runtime/web-runtime-session'
+import type { WebRuntimeTerminalCreateOutcome } from '@/runtime/web-runtime-session-types'
 
 export type LaunchAiVaultSessionInNewTabResult =
   | { tabId: string; groupId?: string }
@@ -32,6 +30,12 @@ export function launchAiVaultSessionInNewTab(args: {
 }): LaunchAiVaultSessionInNewTabResult {
   const store = useAppStore.getState()
   let targetGroupId = args.targetGroupId
+  // Why before both paths: the runtime path used to return first and drop the split (#22791).
+  const splitGroupId =
+    args.splitDirection && targetGroupId
+      ? store.createEmptySplitGroup(args.worktreeId, targetGroupId, args.splitDirection)
+      : null
+  targetGroupId = splitGroupId ?? targetGroupId
   const runtimeEnvironmentId = getRuntimeEnvironmentIdForWorktree(store, args.worktreeId)
   if (isWebRuntimeSessionActive(runtimeEnvironmentId)) {
     const runtimeLaunch = createWebRuntimeSessionTerminal({
@@ -52,6 +56,9 @@ export function launchAiVaultSessionInNewTab(args: {
     const observedRuntimeLaunch = runtimeLaunch.then((outcome) => {
       if (outcome.status === 'created') {
         useAppStore.getState().setActiveTabType('terminal', args.worktreeId)
+      } else if (splitGroupId) {
+        // A refused or failed drop must not leave a blank pane behind.
+        useAppStore.getState().closeEmptyGroup(args.worktreeId, splitGroupId)
       }
       return outcome
     })
@@ -60,12 +67,6 @@ export function launchAiVaultSessionInNewTab(args: {
       ...(targetGroupId ? { groupId: targetGroupId } : {}),
       runtimeLaunch: observedRuntimeLaunch
     }
-  }
-
-  if (args.splitDirection && targetGroupId) {
-    targetGroupId =
-      store.createEmptySplitGroup(args.worktreeId, targetGroupId, args.splitDirection) ??
-      targetGroupId
   }
 
   const tab = args.cwd
@@ -85,19 +86,7 @@ export function launchAiVaultSessionInNewTab(args: {
   })
   store.setActiveTabType('terminal', args.worktreeId)
 
-  const fresh = useAppStore.getState()
-  const termIds = (fresh.tabsByWorktree[args.worktreeId] ?? []).map((t) => t.id)
-  const editorIds = fresh.openFiles.filter((f) => f.worktreeId === args.worktreeId).map((f) => f.id)
-  const browserIds = (fresh.browserTabsByWorktree?.[args.worktreeId] ?? []).map((t) => t.id)
-  const base = reconcileTabOrder(
-    fresh.tabBarOrderByWorktree[args.worktreeId],
-    termIds,
-    editorIds,
-    browserIds
-  )
-  const order = base.filter((id) => id !== tab.id)
-  order.push(tab.id)
-  fresh.setTabBarOrder(args.worktreeId, order)
+  persistAgentLaunchTabOrder(args.worktreeId, tab.id)
 
   return { tabId: tab.id, groupId: targetGroupId }
 }

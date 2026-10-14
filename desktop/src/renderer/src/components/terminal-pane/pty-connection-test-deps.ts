@@ -103,38 +103,3 @@ export function buildPaneConnectionDeps(
     ...overrides
   }
 }
-
-export type DirectSshSplitRetryCommit = Mock<
-  (tabId: string, ptyId: string, replacedPtyId?: string, directSshRetryAttemptId?: string) => void
->
-
-export function buildDirectSshSplitRetryCommit(
-  getState: () => StoreState
-): DirectSshSplitRetryCommit {
-  return vi.fn(
-    (tabId: string, ptyId: string, _replacedPtyId?: string, directSshRetryAttemptId?: string) => {
-      const currentPtyIds = getState().ptyIdsByTabId?.[tabId] ?? []
-      getState().ptyIdsByTabId = {
-        ...getState().ptyIdsByTabId,
-        [tabId]: currentPtyIds.includes(ptyId) ? currentPtyIds : [...currentPtyIds, ptyId]
-      }
-      const pending = getState().directSshPaneRetryByTabId?.[tabId]
-      if (!pending || pending.attemptId !== directSshRetryAttemptId) {
-        return
-      }
-      const tab = getState().tabsByWorktree['wt-1'].find((candidate) => candidate.id === tabId)
-      if (tab && !tab.ptyId) {
-        tab.ptyId = ptyId
-      }
-      getState().directSshPaneRetryByTabId = {}
-      getState().directSshLivePtyBindingByTabId = {
-        [tabId]: {
-          attemptId: pending.attemptId,
-          authority: pending.authority,
-          tabGeneration: pending.tabGeneration,
-          ptyId: tab?.ptyId ?? ptyId
-        }
-      }
-    }
-  )
-}

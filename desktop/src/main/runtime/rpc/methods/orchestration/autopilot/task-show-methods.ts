@@ -80,6 +80,8 @@ async function showTask(
  */
 export const TASK_SHOW_METHOD = defineMethod({
   name: 'orchestration.taskShow',
+
+  permission: 'workspace',
   params: TaskShowParams,
   handler: (params, context): Promise<TaskShowResult> => {
     const api = requireAutopilotTaskApi(context.runtime)

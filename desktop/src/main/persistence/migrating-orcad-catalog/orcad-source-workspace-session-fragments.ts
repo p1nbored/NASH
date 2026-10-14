@@ -66,6 +66,10 @@ function agreesOnOwner(
   keyedValues: ReadonlyMap<string, string>
 ): boolean {
   return OWNER_KEYED_FIELDS.every((field) => {
+    // A fence, not a choice: mergeWorkspaceSessions keeps the highest revision.
+    if (field === 'terminalTopologyRevisionByRepoId') {
+      return true
+    }
     const value: unknown = Object.getOwnPropertyDescriptor(fragment[field] ?? {}, ownerKey)?.value
     const seen = keyedValues.get(`${field}\0${ownerKey}`)
     return value === undefined || seen === undefined || seen === serializeOrcadMigrationValue(value)

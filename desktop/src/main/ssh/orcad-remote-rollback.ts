@@ -14,7 +14,7 @@
  * the newer state, and the journal under the activation fence, make each step undoable.
  */
 import { logOrcadActivationOutcome } from './orcad-activation-outcome-log'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import type { OrcadActivationRecord } from './orcad-activation-record'
 import type { OrcadTerminalCensus } from './orcad-update-plan'
 import type { OrcadActivationVerdict } from './orcad-activation-gate'
@@ -31,7 +31,7 @@ import { ORCAD_STARTUP_READINESS_TIMEOUT_MS } from '../../shared/orcad-profile-p
 import { rollbackOrcadLocked } from './orcad-rollback-transition'
 
 export type OrcadRollbackOptions = {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   remoteHome: string
   record: OrcadActivationRecord

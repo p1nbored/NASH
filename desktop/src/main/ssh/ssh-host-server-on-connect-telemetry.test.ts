@@ -3,7 +3,7 @@ import type { SshTarget } from '../../shared/ssh-types'
 import {
   OrcadHostUnsupportedError,
   OrcadStdioBridgeUnavailableError
-} from './orcad-host-unavailable'
+} from '../orcad/orcad-host-unavailable'
 import type { ManagedOrcadAutoUpdateOutcome } from './orcad-managed-auto-update'
 import type { HostServerConnectEvent } from './ssh-host-server-connect-events'
 import {
@@ -155,7 +155,7 @@ describe('connect-decision telemetry', () => {
       })
     })
     await expect(resolveHostServerOnConnect(target, d)).resolves.toEqual({
-      route: 'relay',
+      route: 'unserved',
       reason: 'deferred',
       detail: reason
     })

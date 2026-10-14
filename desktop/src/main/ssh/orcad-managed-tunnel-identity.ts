@@ -3,7 +3,11 @@
  * runtime still accepts the connection, so a forward that opened proves nothing; only a status
  * call that completes the pairing handshake and reports the paired runtime id does.
  */
-import { parsePairingCode, type PairingOffer } from '../../shared/pairing'
+import { parsePairingCode } from '../../shared/pairing'
+import {
+  pairedRuntimeConnectionFromOffer,
+  type PairedRuntimeConnection
+} from '../../shared/paired-runtime-connection'
 import { ORCAD_MANAGED_REMOTE_PORT } from '../../shared/orcad-managed-runtime'
 import {
   isRecoverableRemoteRuntimeConnectionError,
@@ -11,7 +15,7 @@ import {
 } from '../../shared/remote-runtime-client-error-classification'
 import { RemoteRuntimeClientError } from '../../shared/remote-runtime-client-error'
 import {
-  getPreferredPairingOffer,
+  getPreferredPairedRuntimeConnection,
   type KnownRuntimeEnvironment
 } from '../../shared/runtime-environments'
 import { verifyRuntimePairingIdentity } from '../runtime/runtime-environment-identity-verification'
@@ -51,11 +55,11 @@ export function classifyOrcadTunnelIdentityFailure(error: unknown): OrcadTunnelI
 }
 
 export async function verifyOrcadPairingIdentity(
-  pairing: PairingOffer,
+  connection: PairedRuntimeConnection,
   expected: Pick<KnownRuntimeEnvironment, 'runtimeId' | 'pairedDeviceId'>
 ): Promise<OrcadTunnelIdentity> {
   try {
-    await verifyRuntimePairingIdentity(pairing, expected)
+    await verifyRuntimePairingIdentity(connection, expected)
     return { verdict: 'verified' }
   } catch (error) {
     return classifyOrcadTunnelIdentityFailure(error)
@@ -73,7 +77,9 @@ export function verifyManagedOrcadTunnelIdentity(
   // was away, changes it. The E2EE handshake with our pinned host key and our token being accepted
   // prove the server; the first authenticated status reply records the new id. Why no device id:
   // one left stale by a racing reply must not block it either.
-  return verifyOrcadPairingIdentity(getPreferredPairingOffer(environment), { runtimeId: null })
+  return verifyOrcadPairingIdentity(getPreferredPairedRuntimeConnection(environment), {
+    runtimeId: null
+  })
 }
 
 /**
@@ -95,7 +101,9 @@ export function deployedOrcadTunnelChecks(
     verify: async (localPort: number): Promise<OrcadTunnelIdentity> => {
       const pairing = parsePairingCode(tunneledOrcadPairingCode(readiness, localPort))
       return pairing
-        ? verifyOrcadPairingIdentity(pairing, { runtimeId: readiness.runtimeId || null })
+        ? verifyOrcadPairingIdentity(pairedRuntimeConnectionFromOffer(pairing), {
+            runtimeId: readiness.runtimeId || null
+          })
         : { verdict: 'foreign', detail: 'The managed Orca server published an invalid pairing.' }
     }
   }

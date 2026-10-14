@@ -86,7 +86,7 @@ export function launchNewTabPromptThroughHost(
     if (launched.kind === 'started') {
       return pasted
     }
-    // The pane, or this notice for a tab that went, already says why: never a second notice.
+    // This notice says why, once; a tab the user closed says nothing.
     showLaunchNotStartedNotice(launched, args.prompt)
     return { delivered: false, failureNotified: true }
   })

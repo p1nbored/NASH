@@ -1,6 +1,5 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { OrcaRuntimeWithPreparePtyExecutionContext } from './orca-runtime-prepare-pty-execution-context'
-import type { TerminalOutputSourceRange } from '../../shared/terminal-output-source-range'
 import { advertisedUrlWatcher } from '../ports/advertised-url-watcher'
 import { appendNormalizedToTailBuffer } from './terminal-tail-buffer'
 import { normalizeTerminalChunk } from './terminal-ansi-normalization'
@@ -30,9 +29,7 @@ export class OrcaRuntimeWithOnPtyData extends OrcaRuntimeWithPreparePtyExecution
     data: string,
     at: number,
     sequenceChars = data.length,
-    transformed = false,
-    captureModelReceipt?: (completion: Promise<void>) => void,
-    sourceRanges?: readonly TerminalOutputSourceRange[]
+    transformed = false
   ): number {
     const outputSequence = (this.ptyOutputSequenceById.get(ptyId) ?? 0) + sequenceChars
     this.ptyOutputSequenceById.set(ptyId, outputSequence)
@@ -65,13 +62,7 @@ export class OrcaRuntimeWithOnPtyData extends OrcaRuntimeWithPreparePtyExecution
     // applyTrackedPtyTitle) in byte order, superseding main's inline
     // extractLastOscTitleForPty block (#7880/#7852 title/status semantics are
     // preserved via the tracker + detectAgentStatusFromTitle path).
-    const modelCompletion = this.trackHeadlessTerminalData(
-      ptyId,
-      data,
-      outputSequence,
-      forwardQueryReplies
-    )
-    captureModelReceipt?.(modelCompletion)
+    this.trackHeadlessTerminalData(ptyId, data, outputSequence, forwardQueryReplies)
 
     const pty = this.getOrCreatePtyWorktreeRecord(ptyId)
     const ptyTailBefore = pty
@@ -86,11 +77,13 @@ export class OrcaRuntimeWithOnPtyData extends OrcaRuntimeWithPreparePtyExecution
         }
       : null
     let ptyTailAfter: ReturnType<typeof appendNormalizedToTailBuffer> | null = null
+    let ptyNormalized: ReturnType<typeof normalizeTerminalChunk> | null = null
     if (pty) {
       pty.connected = true
       pty.disconnectedAt = null
       pty.lastOutputAt = at
       const normalized = normalizeTerminalChunk(data, pty.tailPendingAnsi)
+      ptyNormalized = normalized
       pty.tailPendingAnsi = normalized.pendingAnsi
       observeTerminalCommandPaint(pty, data, normalized.text)
       const nextTail = appendNormalizedToTailBuffer(
@@ -162,7 +155,11 @@ export class OrcaRuntimeWithOnPtyData extends OrcaRuntimeWithPreparePtyExecution
         // mismatch branch below recomputes an exact state on its next chunk.
         leaf.tailWaitState = pty.tailWaitState
       } else {
-        const normalized = normalizeTerminalChunk(data, leaf.tailPendingAnsi)
+        // Why: the same carried escape prefix normalizes the same chunk identically.
+        const normalized =
+          ptyNormalized && ptyTailBefore?.pendingAnsi === leaf.tailPendingAnsi
+            ? ptyNormalized
+            : normalizeTerminalChunk(data, leaf.tailPendingAnsi)
         leaf.tailPendingAnsi = normalized.pendingAnsi
         const previousWaitState =
           leaf.tailWaitState?.fromTail === true
@@ -274,8 +271,7 @@ export class OrcaRuntimeWithOnPtyData extends OrcaRuntimeWithPreparePtyExecution
       seq: outputSequence,
       rawLength: sequenceChars,
       ...(transformed ? { transformed: true } : {}),
-      ...(cwdChanged && cwd !== null ? { cwd } : {}),
-      ...(sourceRanges && sourceRanges.length > 0 ? { sourceRanges } : {})
+      ...(cwdChanged && cwd !== null ? { cwd } : {})
     }))
     return outputSequence
   }

@@ -196,7 +196,7 @@ export function SkillBundleInstallFlow(props: {
           operation.status === 'reconnect-required'
             ? translate(
                 'auto.components.skills.install.reconnectBeforeInstalling',
-                'Reconnect your Orca cloud account before installing.'
+                'Reconnect your NASH cloud account before installing.'
               )
             : operation.message
         )

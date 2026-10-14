@@ -104,7 +104,6 @@ export async function setupTerminalCreateSurfacing(
     settings: {
       terminalFontSize: 13,
       experimentalNativeChat: false,
-      openAgentTabsInChatByDefault: false,
       activeRuntimeEnvironmentId: undefined as string | undefined
     }
   }
@@ -179,17 +178,21 @@ export async function setupTerminalCreateSurfacing(
     createFloatingWorkspaceTerminalTab,
     isFloatingWorkspacePanelFocused: () => isFloatingPanelFocused()
   }))
-  vi.doMock('@/runtime/web-runtime-session', () => ({
+  vi.doMock('@/runtime/web-runtime-session-tab-lifecycle', () => ({
     activateWebRuntimeSessionTab: vi.fn(),
-    closeWebRuntimeSessionTab: vi.fn(),
-    createWebRuntimeSessionBrowserTab: vi.fn().mockResolvedValue(false),
-    createWebRuntimeSessionTerminal,
+    closeWebRuntimeSessionTab: vi.fn()
+  }))
+  vi.doMock('@/runtime/web-runtime-browser-creation', () => ({
+    createWebRuntimeSessionBrowserTab: vi.fn().mockResolvedValue(false)
+  }))
+  vi.doMock('@/runtime/web-runtime-terminal-creation', () => ({ createWebRuntimeSessionTerminal }))
+  vi.doMock('@/runtime/web-runtime-session-environment', () => ({
     isWebRuntimeSessionActive: vi.fn(() => false)
   }))
   vi.doMock('@/lib/focus-terminal-tab-surface', () => ({
     focusTerminalTabSurface
   }))
-  vi.doMock('@/runtime/sync-runtime-graph', () => ({
+  vi.doMock('@/runtime/mounted-terminal-tab-registry', () => ({
     focusRuntimeTerminalSurface
   }))
   vi.doMock('@/lib/activate-tab-and-focus-pane', () => ({

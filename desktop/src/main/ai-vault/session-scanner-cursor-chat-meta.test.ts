@@ -9,6 +9,8 @@ let failNextChatsReaddir = false
 let failNextChatsRootReaddir = false
 let failMetaJsonReads = false
 let failMetaJsonStats: false | true | 'eacces' = false
+// Stands in for the WSL gate rejecting a read the scan cancelled.
+let cancelMetaJsonReads: AbortController | null = null
 let chatsRootReads = 0
 vi.mock('../native-chat/wsl-transcript-fs-access', async (importOriginal) => {
   const actual = await importOriginal<typeof WslTranscriptFsAccess>()
@@ -36,6 +38,10 @@ vi.mock('../native-chat/wsl-transcript-fs-access', async (importOriginal) => {
       if (failMetaJsonReads && String(args[0]).endsWith('meta.json')) {
         return Promise.reject(new WslTranscriptFsError('timeout', 'wsl fs timed out'))
       }
+      if (cancelMetaJsonReads && String(args[0]).endsWith('meta.json')) {
+        cancelMetaJsonReads.abort()
+        return Promise.reject(new DOMException('This operation was aborted', 'AbortError'))
+      }
       return actual.wslGatedReadFile(...args)
     },
     wslGatedStat: (
@@ -60,7 +66,11 @@ import {
   withCursorChatMetaScan
 } from './session-scanner-cursor-chat-meta'
 import { parseCursorSessionContent } from './session-scanner-cursor-parser'
-import type { AiVaultScanIssue, AiVaultSession } from '../../shared/ai-vault-types'
+import {
+  isAiVaultScanCancelledError,
+  type AiVaultScanIssue,
+  type AiVaultSession
+} from '../../shared/ai-vault-types'
 import { AI_VAULT_AGENT_SOURCES } from './session-scanner-agent-sources'
 import { discoverFiles } from './session-scanner-discovery'
 import { scanAiVaultSessions } from './session-scanner'
@@ -101,6 +111,7 @@ afterEach(async () => {
   failNextChatsRootReaddir = false
   failMetaJsonReads = false
   failMetaJsonStats = false
+  cancelMetaJsonReads = null
   await Promise.all(tempRoots.map((root) => rm(root, { recursive: true, force: true })))
   tempRoots = []
 })
@@ -399,6 +410,43 @@ describe('cursor sidecar enrichment', () => {
     // never do this, because the cached cwd is already non-null.
     expect(session?.cwd).toBe('/repo/second')
     expect(session?.resumeCommand).toContain('/repo/second')
+  })
+
+  it('keeps the stored merge when a sidecar-only re-merge is cancelled', async () => {
+    const cursorHome = await createCursorHome()
+    await writeChatMeta(cursorHome, 'workspace-hash', 'chat-9', { cwd: '/repo/first' })
+    await writeTranscript(cursorHome, 'slug', 'chat-9', [
+      JSON.stringify({ role: 'user', message: { content: 'hi' } })
+    ])
+    resetSessionParseCacheForTests()
+    await parseCursorCached(await cursorCandidate(cursorHome))
+    const future = new Date(Date.now() + 10_000)
+    await writeChatMeta(cursorHome, 'workspace-hash', 'chat-9', { cwd: '/repo/second' })
+    await utimes(join(cursorHome, 'chats', 'workspace-hash', 'chat-9', 'meta.json'), future, future)
+    const candidate = await cursorCandidate(cursorHome)
+    const before = getSessionParseCacheEntry(candidate.path)
+
+    const controller = new AbortController()
+    cancelMetaJsonReads = controller
+    await expect(
+      withCursorChatMetaScan(() =>
+        parseAgentSessionFileCached(
+          { agent: 'cursor', file: candidate, codexHome: null },
+          'darwin',
+          undefined,
+          undefined,
+          controller.signal
+        )
+      )
+    ).rejects.toSatisfy(isAiVaultScanCancelledError)
+    cancelMetaJsonReads = null
+
+    // Not cached as "no metadata" under the new sidecar stat.
+    expect(getSessionParseCacheEntry(candidate.path)?.session?.cwd).toBe('/repo/first')
+    expect(getSessionParseCacheEntry(candidate.path)?.sidecar).toEqual(before?.sidecar)
+    const { session, stats } = await parseCursorCached(candidate)
+    expect(stats.fullParses).toBe(0)
+    expect(session?.cwd).toBe('/repo/second')
   })
 
   it('treats a persisted entry with no sidecar as unknown and enriches once', async () => {

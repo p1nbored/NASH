@@ -1,9 +1,11 @@
 import type { RuntimeRpcResponse } from '../../shared/runtime-rpc-envelope'
-import { withRemoteRuntimeTailscaleHint } from '../../shared/remote-runtime-tailscale-hint'
+import type { KnownRuntimeEnvironment } from '../../shared/runtime-environments'
+import { withRuntimeUnreachableHint } from './runtime-environment-unreachable-hint'
 
 export function withTailscaleHintForResponse<TResult>(
   response: RuntimeRpcResponse<TResult>,
-  endpoint: string
+  endpoint: string,
+  environment: Pick<KnownRuntimeEnvironment, 'orcadDeployment'>
 ): RuntimeRpcResponse<TResult> {
   if (response.ok === true) {
     return response
@@ -12,7 +14,7 @@ export function withTailscaleHintForResponse<TResult>(
     ...response,
     error: {
       ...response.error,
-      message: withRemoteRuntimeTailscaleHint(response.error.message, endpoint)
+      message: withRuntimeUnreachableHint(environment, response.error.message, endpoint)
     }
   }
 }

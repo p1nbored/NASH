@@ -27,8 +27,7 @@ vi.mock('@/runtime/structured-agent-session-client', () => ({
   callStructuredAgentSession: mocks.call
 }))
 
-vi.mock('@/runtime/local-structured-session-tabs-sync', () => ({
-  LOCAL_STRUCTURED_SESSION_OWNER: 'local',
+vi.mock('@/runtime/local-structured-session-tabs-sync/inventory-refresh', () => ({
   refreshLocalStructuredSessionTabs: mocks.refresh
 }))
 

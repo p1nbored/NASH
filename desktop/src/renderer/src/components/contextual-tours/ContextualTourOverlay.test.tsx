@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContextualTourId } from '../../../../shared/contextual-tours'
-import { getContextualTourCleanupOutcome } from './ContextualTourOverlay'
+import { getContextualTourCleanupOutcome } from './contextual-tour-overlay-measurement'
 import {
   ContextualTourOverlaySurface,
   handleContextualTourGlobalKeyDown,

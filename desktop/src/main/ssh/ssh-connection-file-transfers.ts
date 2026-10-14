@@ -1,6 +1,6 @@
 import type { SFTPWrapper } from 'ssh2'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { FileUploadSession } from '../providers/types'
+import type { FileUploadSession } from '../providers/filesystem-provider-contract'
 import {
   resolveSftpTransferPathIfMapped,
   type SftpNamespacePathMapping
@@ -42,7 +42,7 @@ export async function uploadSshDirectory(
 ): Promise<void> {
   await withLinkedSftpTransfer(host, remoteDir, options, {
     sftp: async (sftp, targetDir, signal) => {
-      const { uploadDirectory } = await import('./ssh-relay-deploy-helpers')
+      const { uploadDirectory } = await import('./sftp-upload')
       await uploadDirectory(sftp, localDir, targetDir, localDir, { signal })
     },
     system: (signal) =>

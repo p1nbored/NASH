@@ -14,5 +14,18 @@ export function replaceAgentSessionRecordOptions(
   if (lease.runtimeFence !== replacement.fence || (lease.claimStatus !== 'live' && !atRest)) {
     throw agentSessionRefusalError('agent_session_ownership_unknown', { reason: 'leaseMoved' })
   }
-  return { ...record, options: { ...replacement.options }, updatedAt: replacement.now }
+  return 'options' in replacement
+    ? {
+        ...record,
+        options: {
+          ...replacement.options,
+          // Provider option reports cannot change the task's launch authority.
+          ...(record.options?.taskAccess ? { taskAccess: record.options.taskAccess } : {}),
+          ...(record.options?.routeValidated
+            ? { routeValidated: record.options.routeValidated }
+            : {})
+        },
+        updatedAt: replacement.now
+      }
+    : { ...record, permissionMode: replacement.permissionMode, updatedAt: replacement.now }
 }

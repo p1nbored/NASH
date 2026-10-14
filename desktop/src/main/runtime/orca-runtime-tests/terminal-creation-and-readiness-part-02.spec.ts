@@ -362,6 +362,65 @@ describe('OrcaRuntimeService', () => {
     )
   })
 
+  it("forwards a paired client's declared spawn intent to the fork gate", async () => {
+    const spawn = vi.fn(async (options) => ({
+      id: 'pty-intent',
+      agentSessionEnsure: {
+        disposition: 'created' as const,
+        owner: {
+          claim: options.agentSessionEnsure!.claim,
+          generation: 'generation-1',
+          phase: 'live' as const,
+          ptyId: 'pty-intent',
+          surface: options.agentSessionEnsure!.surface
+        }
+      }
+    }))
+    const runtime = new OrcaRuntimeService(store)
+    runtime.setPtyController({
+      spawn,
+      write: () => true,
+      kill: () => true,
+      getForegroundProcess: async () => null
+    })
+
+    await runtime.ensureAgentSession({
+      kind: 'explicit',
+      worktree: `id:${TEST_WORKTREE_ID}`,
+      agent: 'claude',
+      providerSession: { key: 'session_id', id: 'provider-session-intent' },
+      spawnIntent: 'automatic-restore'
+    })
+    expect(spawn).toHaveBeenLastCalledWith(
+      expect.objectContaining({ spawnIntent: 'automatic-restore' })
+    )
+
+    await runtime.ensureAgentSession({
+      kind: 'explicit',
+      worktree: `id:${TEST_WORKTREE_ID}`,
+      agent: 'claude',
+      providerSession: { key: 'session_id', id: 'provider-session-undeclared' }
+    })
+    expect(spawn.mock.lastCall?.[0]).not.toHaveProperty('spawnIntent')
+  })
+
+  it('passes a deferred fork back unchanged so the client can keep the pane sleeping', async () => {
+    const runtime = new OrcaRuntimeService(store)
+    runtime.setPtyController({
+      spawn: vi.fn().mockRejectedValue(new Error('terminal_spawn_deferred:live_cap')),
+      write: () => true,
+      kill: () => true,
+      getForegroundProcess: async () => null
+    })
+
+    await expect(
+      runtime.createTerminal(`id:${TEST_WORKTREE_ID}`, {
+        command: 'claude --resume provider-session-1',
+        spawnIntent: 'automatic-restore'
+      })
+    ).rejects.toThrow('terminal_spawn_deferred:live_cap')
+  })
+
   it('builds structured fresh drafts with supported launch preferences on the host', async () => {
     const spawn = vi.fn().mockResolvedValue({ id: 'pty-agent-draft' })
     const runtime = new OrcaRuntimeService({
@@ -647,9 +706,9 @@ describe('OrcaRuntimeService', () => {
       })
     })
 
-    await expect(
-      runtime.createTerminal(undefined, { startupAgent: 'cursor', rendererBacked: true })
-    ).rejects.toThrow(/requires a workspace selector/)
+    await expect(runtime.createTerminal(undefined, { startupAgent: 'cursor' })).rejects.toThrow(
+      /requires a workspace selector/
+    )
   })
 
   // Why: folder workspaces have no repo, so command sniffing skipped them entirely

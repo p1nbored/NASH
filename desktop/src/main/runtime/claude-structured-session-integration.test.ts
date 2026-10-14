@@ -12,7 +12,7 @@ import {
 } from '../../shared/protocol-version'
 import { fakeClaude } from './claude-structured-fake-connection-test-fixture'
 import { claudeSessionIdForOrcaSession } from '../claude/claude-structured-launch-resolution'
-import { CLAUDE_SPAWN_TOKEN_ENV } from '../claude/claude-structured-owner-identity'
+import { ORCA_AGENT_SESSION_SPAWN_TOKEN_ENV } from '../../shared/agent-session-caller-env'
 import { attachFingerprintFields } from '../native-chat/agent-session-wire/structured-agent-session-attach'
 import { getStructuredAgentSessionHost } from '../native-chat/agent-session-wire/structured-agent-session-registry'
 import type { StructuredAgentSessionStatusSink } from '../native-chat/agent-session-wire/structured-agent-session-status-feed'
@@ -208,7 +208,7 @@ function textOf(item: AgentJournalRenderItem): string {
 
 beforeEach(async () => {
   operations = 0
-  claudeAuthPolicy = { stripAuthEnv: false }
+  claudeAuthPolicy = { account: 'system' }
   shellEnv = { PATH: '/shell/bin:/usr/bin' }
   shellEnvironmentPolicy = { inheritAll: true, names: [] }
   claudeLaunchEnv = {
@@ -227,8 +227,9 @@ beforeEach(async () => {
   hookServer = new AgentHookServer()
   const runtime = {
     getRuntimeId: () => 'runtime-1',
-    getClientSettings: () => ({ experimentalStructuredNativeChat: true }),
+    getClientSettings: () => ({ experimentalNativeChat: true }),
     getStructuredAgentSessionCreateSupport: async () => ({ supported: true }),
+    structuredAgentSessionLaunchSeedOptions: () => undefined,
     resolveStructuredAgentSessionCreateIntent: async (input: { envelope: unknown }) => ({
       ...ensureParams(1),
       envelope: input.envelope,
@@ -245,7 +246,7 @@ beforeEach(async () => {
         resolveCodexCommand: () => '/usr/local/bin/codex',
         resolveClaudeCommand: () => '/usr/local/bin/claude',
         readProcessStartTime: async (pid: number) => pid * 10,
-        resolveClaudeLaunchEnv: () => claudeLaunchEnv,
+        resolveAgentLaunchEnv: (agent) => (agent === 'claude' ? claudeLaunchEnv : {}),
         // Hermetic: never the developer's real login shell.
         resolveEnvironment: async () => shellEnv,
         resolveShellEnvironmentPolicy: () => shellEnvironmentPolicy,
@@ -318,8 +319,8 @@ describe('a structured Claude session over agentSession.*', () => {
     ])
   })
 
-  it('strips ambient Anthropic auth from the child once a managed account is pinned', async () => {
-    claudeAuthPolicy = { stripAuthEnv: true }
+  it("keeps the shell's Anthropic auth with its proxy address once a managed account is pinned", async () => {
+    claudeAuthPolicy = { account: 'managed' }
     claudeLaunchEnv = { ANTHROPIC_BASE_URL: 'https://gateway.example.test' }
     shellEnv = {
       ...shellEnv,
@@ -331,9 +332,8 @@ describe('a structured Claude session over agentSession.*', () => {
     await ok<{ fence: number }>('agentSession.create', createIntentParams())
 
     const env = claude.live().launch.env
-    expect(env).not.toHaveProperty('ANTHROPIC_API_KEY')
-    expect(env).not.toHaveProperty('ANTHROPIC_AUTH_TOKEN')
     expect(env).toMatchObject({
+      ANTHROPIC_API_KEY: 'sk-ant-SHELL-LEAK',
       ANTHROPIC_BASE_URL: 'https://gateway.example.test',
       CLAUDE_CONFIG_DIR: join(root, 'claude-home')
     })
@@ -388,36 +388,6 @@ describe('a structured Claude session over agentSession.*', () => {
     expect(env).not.toHaveProperty('CODEX_LB_API_KEY')
   })
 
-  it('refuses a create whose configured env overrides the pinned managed account auth', async () => {
-    claudeAuthPolicy = { stripAuthEnv: true }
-    // The default overlay carries ANTHROPIC_AUTH_TOKEN, which the terminal path
-    // refuses at spawn-env.ts:25 rather than letting it beat the pinned account.
-    const params = createIntentParams()
-    const sentence =
-      'This Claude launch sets its own Anthropic sign-in variables. Remove them to use a managed Claude account.'
-    const refused = await call('agentSession.create', params)
-
-    // The thrown answer keeps its wire code; only its words are the ones its replay reads.
-    expect(refused).toMatchObject({
-      ok: false,
-      error: { code: 'runtime_error', message: sentence }
-    })
-    // Its replay reads the same sentence, beside the situation it names.
-    expect(await call('agentSession.create', params)).toMatchObject({
-      ok: true,
-      result: {
-        ok: false,
-        refusal: {
-          code: 'agent_session_operation_invalid',
-          details: { reason: 'managedAccountEnvOverride' },
-          message: sentence
-        }
-      }
-    })
-    // Refused before spawn: no provider child was ever opened.
-    expect(claude.connections).toHaveLength(0)
-  })
-
   it('publishes, then ends the session with sign-in guidance when initialization has no credentials', async () => {
     claude.setInitializeAccount({ apiProvider: 'firstParty', tokenSource: 'none' })
 
@@ -429,8 +399,8 @@ describe('a structured Claude session over agentSession.*', () => {
     // The adapter typed the refusal, so the row names the situation rather than quoting Orca.
     expect(guidance?.body).toMatchObject({
       kind: 'status',
-      text: 'Claude is not signed in for the selected account. Sign in, then send your message again.',
-      failure: { kind: 'notSignedIn' }
+      text: "Claude isn't signed in. Run `claude auth login`, or choose an account in Claude Accounts settings.",
+      failure: { kind: 'notSignedIn', account: 'system' }
     })
     expect(leaseOf(SESSION)).toMatchObject({ claimStatus: 'released', handoffStage: null })
     // A failed start is not auto-resumed into the same failure.
@@ -613,7 +583,7 @@ describe('a structured Claude session over agentSession.*', () => {
       ANTHROPIC_AUTH_TOKEN: 'configured-token',
       ANTHROPIC_BASE_URL: 'https://gateway.example.test',
       CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
-      [CLAUDE_SPAWN_TOKEN_ENV]: expect.any(String)
+      [ORCA_AGENT_SESSION_SPAWN_TOKEN_ENV]: expect.any(String)
     })
     // System auth: the user's own shell key is their sign-in, exactly as on the
     // terminal path, and the configured overlay still wins over it.

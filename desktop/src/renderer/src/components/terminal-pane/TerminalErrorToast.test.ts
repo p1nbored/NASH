@@ -194,17 +194,6 @@ describe('humanizeTerminalError', () => {
     expect(humanized).toContain('still running')
   })
 
-  it('says a terminal held by the previous NASH version is still running', () => {
-    const raw =
-      "Error invoking remote method 'pty:spawn': SshPtyHeldByPreviousRelayError: SSH_PTY_HELD_BY_PREVIOUS_RELAY: pty2:old-epoch:1"
-    const humanized = humanizeTerminalError(raw)
-    expect(humanized).not.toContain('SSH_PTY_HELD_BY_PREVIOUS_RELAY')
-    expect(humanized).not.toContain('pty2:old-epoch:1')
-    expect(humanized).toContain('previous NASH version')
-    expect(humanized).toContain('still running')
-    expect(isExplainedTerminalError(raw)).toBe(true)
-  })
-
   it('replaces only the unreattachable line in an aggregated error', () => {
     const humanized = humanizeTerminalError('Paste failed.\nSSH_SESSION_EXPIRED: orca:2f1c@@pty-7')
     expect(humanized.startsWith('Paste failed.\n')).toBe(true)
@@ -302,7 +291,7 @@ describe('shouldOfferDaemonRestart', () => {
   it('matches stale daemon node-pty install failures', () => {
     expect(
       shouldOfferDaemonRestart(
-        "Daemon's node-pty install is gone (worktree deleted?). Restart NASH. node-pty: posix_spawn failed: ENOENT (errno 2, No such file or directory) - helper='/Applications/Orca.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/build/Release/spawn-helper'"
+        "Daemon's node-pty install is gone (worktree deleted?). Restart NASH. node-pty: posix_spawn failed: ENOENT (errno 2, No such file or directory) - helper='/Applications/NASH.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/build/Release/spawn-helper'"
       )
     ).toBe(true)
   })
@@ -362,20 +351,6 @@ describe('TerminalErrorToast environment footer', () => {
     )
 
     await waitFor(() => expect(environmentMocks.resolveFooter).not.toHaveBeenCalled())
-  })
-
-  it('omits client details for a terminal the previous NASH version runs on the host', async () => {
-    const view = render(
-      React.createElement(TerminalErrorToast, {
-        error:
-          "Error invoking remote method 'pty:spawn': SshPtyHeldByPreviousRelayError: SSH_PTY_HELD_BY_PREVIOUS_RELAY: pty2:old-epoch:1",
-        onDismiss: vi.fn()
-      })
-    )
-
-    expect(view.container.textContent).toContain('previous NASH version')
-    await waitFor(() => expect(environmentMocks.resolveFooter).not.toHaveBeenCalled())
-    expect(view.container.textContent).not.toContain('OS:')
   })
 
   it('omits client details for a remote pane whose session cannot be reattached', async () => {

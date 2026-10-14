@@ -11,7 +11,7 @@ import type { RuntimeNavigationTarget } from './runtime-navigation'
 
 export type RuntimeClientEvent =
   | { type: 'reposChanged' }
-  | { type: 'worktreesChanged'; repoId: string }
+  | { type: 'worktreesChanged'; repoId: string; sortOrderOnly?: boolean }
   | ({ type: 'nativeChatLaunchDraftResolved' } & RuntimeNativeChatLaunchDraftResolution)
   | { type: 'terminalSideEffects'; batch: TerminalSideEffectBatch }
   // Why: SSH connections live on the runtime host; paired clients have no IPC

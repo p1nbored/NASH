@@ -19,6 +19,7 @@ import { resolveGroupTabFromVisibleId } from './tab-group-visible-id'
 import { getTabPaneBodyDroppableId, type HoveredTabInsertion } from './useTabDragSplit'
 import { tabGroupBodyAnchorName } from './tab-group-body-anchor'
 import { registerTabGroupBody } from './tab-group-body-geometry'
+import { observeTabGroupBodyGridSize } from '@/runtime/sync-runtime-graph'
 import { translate } from '@/i18n/i18n'
 import type { TabGroup } from '../../../../shared/tab-types'
 import type { ClientHostedBrowserRow } from '../../../../shared/client-hosted-browser-rows'
@@ -111,8 +112,10 @@ export default function TabGroupPanel({
         return undefined
       }
       const unregisterBody = registerTabGroupBody(groupId, node)
+      const stopGridSizeReport = observeTabGroupBodyGridSize(node)
       return () => {
         unregisterBody()
+        stopGridSizeReport()
         setBodyDropRef(null)
       }
     },

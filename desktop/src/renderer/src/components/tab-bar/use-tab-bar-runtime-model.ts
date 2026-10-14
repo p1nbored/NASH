@@ -13,7 +13,7 @@ import { getConnectionIdFromState } from '@/lib/connection-context'
 import { getLocalProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
 import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
+import { runtimeTargetForOwnerEnvironment } from '@/runtime/runtime-client-target'
 import { useOptionalShortcutLabel, useShortcutLabel } from '@/hooks/useShortcutLabel'
 import {
   getWindowsTerminalCapabilityOwnerKey,
@@ -164,7 +164,7 @@ export function useTabBarRuntimeModel({
     worktreeConnectionId
   )
   const runtimeTarget = useMemo(
-    () => getActiveRuntimeTarget({ activeRuntimeEnvironmentId }),
+    () => runtimeTargetForOwnerEnvironment(activeRuntimeEnvironmentId),
     [activeRuntimeEnvironmentId]
   )
   const shouldProbeWindowsShellCapabilities =
@@ -249,7 +249,7 @@ export function useTabBarRuntimeModel({
   )
   // Why: tab-wide launch/title hints are safe only before split; gate the view-mode toggle to the active leaf's agent.
   const toggleTabViewMode = useAppStore((s) => s.toggleTabViewMode)
-  // Why: every retained TabBar observes the same hot maps; one feature-gated selector shares their projections.
+  // Why: every retained TabBar observes the same hot maps; one selector shares their projections.
   const { nativeChatEnabled, tabAgentTypesByTabId, nativeChatTabWideFallbackUnsafeTabsById } =
     useAppStore(useShallow(selectTabBarAgentProjections))
   const nativeChatTranscriptIsLocalReadable = useAppStore((s) =>

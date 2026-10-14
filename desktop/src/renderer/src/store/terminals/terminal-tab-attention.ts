@@ -120,7 +120,7 @@ export function createTerminalTabAttentionActions(
           owningWorktreeId &&
           resolveTerminalWorktreeRoute(state, owningWorktreeId)?.runtimeEnvironmentId
         ) {
-          void import('@/runtime/web-runtime-session').then(({ setWebRuntimeTabProps }) =>
+          void import('@/runtime/web-runtime-terminal-actions').then(({ setWebRuntimeTabProps }) =>
             setWebRuntimeTabProps({ worktreeId: owningWorktreeId, tabId: item.id, color })
           )
         }

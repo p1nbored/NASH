@@ -12,6 +12,7 @@ import { runtimeWorktreeIdsEqual } from './runtime-worktree-path-identity'
 import { hasWorktreeRemovalRepoOwnerOnOtherHost } from '../worktree-removal-repo-owner'
 import { advertisedUrlWatcher } from '../ports/advertised-url-watcher'
 import { deleteWorktreeHistoryDir } from '../terminal-history-deletion'
+import { forgetFailedAgentLaunches } from '../agent-launch/agent-launch-pane-attachment'
 import { closeClientHostedBrowserPagesForWorktree } from './worktree-browser-client-page-close'
 import type {
   ForceDeleteWorktreeBranchResult,
@@ -20,11 +21,8 @@ import type {
 import type { RuntimeTerminalRename } from '../../shared/runtime-types'
 import type { TerminalWorkspaceLaunchScope } from './runtime-legacy-worker-terminal-recovery-types'
 import type { TerminalCreateOptions } from './runtime-terminal-contracts'
-import { terminalShellOverrideRefusal } from './terminal-shell-override-host-support'
-import { resolveTerminalStartupCwd } from '../../shared/terminal-startup-cwd'
-import { resolveLocalProjectRuntimeForWorktreeId } from '../local-project-runtime-resolution'
 import { LOCAL_EXECUTION_HOST_ID, parseExecutionHostId } from '../../shared/execution-host'
-import { invalidateAuthorizedRootsCache } from '../ipc/filesystem-auth'
+import { invalidateAuthorizedRootsCacheForRepo } from '../ipc/filesystem-auth'
 import {
   resumeInterruptedWorktreeRemovals,
   retryFailedWorktreeRemoval,
@@ -33,8 +31,10 @@ import {
 import { interruptedLocalWorktreeRemovalJob } from './runtime-interrupted-local-worktree-removal'
 import { retryFailedRemovalUnlessRegistered } from '../worktree-removal-table'
 import type { GitWorktreeInfo } from '../../shared/worktree/types'
-import { resolveQoderTerminalCommandForWorkspace } from './qoder-terminal-command-resolution'
-import { buildRuntimeAgentTerminalStartupOptions } from './runtime-agent-terminal-startup'
+import {
+  resolveAgentTerminalCreateOptions,
+  withHostAccountLaunchEnv
+} from './runtime-agent-terminal-startup'
 
 export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWithRemoveManagedWorktree {
   protected async resolveWorktreeRemovalTarget(
@@ -124,7 +124,7 @@ export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWith
     this.removeWorktreeMetadataAndHistory(store, worktreeId, removalHostId)
     this.invalidateResolvedWorktreeCache()
     this.invalidateWorktreeScanCacheForRepo(repoId)
-    invalidateAuthorizedRootsCache()
+    invalidateAuthorizedRootsCacheForRepo(store, repoId)
   }
 
   protected removeWorktreeMetadataAndHistory(
@@ -174,6 +174,7 @@ export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWith
       this.cancelScheduledMobileSessionTabsChanged(worktreeId)
       this.notifyMobileSessionTabsRemoved(worktreeId)
       advertisedUrlWatcher.forgetWorktree(worktreeId)
+      forgetFailedAgentLaunches(worktreeId, null)
       deleteWorktreeHistoryDir(worktreeId)
       this.closeHeadlessBrowserPagesForWorktree(worktreeId)
       closeClientHostedBrowserPagesForWorktree(this, worktreeId)
@@ -243,69 +244,14 @@ export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWith
     workspace: TerminalWorkspaceLaunchScope,
     opts: TerminalCreateOptions
   ): Promise<TerminalCreateOptions> {
-    const launch = await this.buildAgentTerminalCreateOptions(workspace, opts)
-    return resolveQoderTerminalCommandForWorkspace(
-      launch,
-      workspace,
-      this.store,
-      this.getAgentLaunchPlatformForWorkspace(workspace)
-    )
-  }
-
-  protected async buildAgentTerminalCreateOptions(
-    workspace: TerminalWorkspaceLaunchScope,
-    opts: TerminalCreateOptions
-  ): Promise<TerminalCreateOptions> {
-    // Before any early return: every create lane funnels through here, and a host that cannot
-    // apply the requested shell must refuse rather than spawn its default one.
-    const shellRefusal = terminalShellOverrideRefusal({
-      shellOverride: opts.shellOverride,
-      connectionId: workspace.connectionId,
-      platform: process.platform,
-      projectRuntime:
-        opts.shellOverride && this.store
-          ? resolveLocalProjectRuntimeForWorktreeId(this.store, workspace.id)
-          : undefined,
-      // Same resolution as the spawn lanes below, so the refusal judges the cwd the PTY gets.
-      cwd: resolveTerminalStartupCwd(workspace.path, opts.cwd) ?? workspace.path,
-      workspacePath: workspace.path
+    const launch = await resolveAgentTerminalCreateOptions(workspace, opts, {
+      store: this.store,
+      hostIdentity: this.runtimeId,
+      toSessionOptions: (preferences) => this.toAgentSessionOptions(preferences)
     })
-    if (shellRefusal) {
-      throw shellRefusal
-    }
-    // Why: raw shell commands like `codex exec` must remain user-authored shell.
-    // Only unmanaged, repo-backed, bare agent launches get Settings defaults.
-    const callerSuppliedLaunch =
-      opts.env ||
-      opts.launchConfig ||
-      opts.launchAgent ||
-      opts.startupCommandDelivery ||
-      opts.claudeAgentTeamsSourceCommand
-    const store = this.store
-    if (opts.startupAgent) {
-      // Why: falling through unresolved would spawn a bare shell that can only time
-      // out waiting for an agent. A caller-supplied launch contradicts the agent:
-      // `command` would be overwritten, `resumeProviderSession` would pair resume
-      // identity with a fresh launch.
-      if (callerSuppliedLaunch || opts.command || opts.resumeProviderSession) {
-        throw new Error(
-          `startupAgent ${opts.startupAgent} cannot combine with a caller-supplied launch.`
-        )
-      }
-      if (!store) {
-        throw new Error('runtime_unavailable')
-      }
-    } else if (callerSuppliedLaunch || !store || !opts.command || !workspace.repo) {
-      return opts
-    }
-
-    return buildRuntimeAgentTerminalStartupOptions(
-      workspace,
-      opts,
-      store.getSettings(),
-      this.getAgentLaunchPlatformForWorkspace(workspace),
-      this.toAgentSessionOptions(opts.launchPreferences),
-      this.runtimeId
-    )
+    // An SSH workspace's shell runs on that machine, where this distro's account paths mean nothing.
+    return workspace.connectionId
+      ? launch
+      : withHostAccountLaunchEnv(opts, launch, this.accounts.hostLaunchEnvFor(launch.launchAgent))
   }
 }

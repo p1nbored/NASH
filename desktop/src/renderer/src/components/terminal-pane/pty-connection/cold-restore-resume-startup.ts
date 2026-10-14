@@ -74,7 +74,7 @@ export function bindBuildColdRestoreAgentResumeStartup(session: ConnectPanePtySe
     // follow the tab's effective Windows shell, not the win32 PowerShell default.
     const resumeTarget = resolveAgentResumeLaunchTarget({
       projectRuntime: session.projectRuntime,
-      connectionId: session.connectionId,
+      connectionId: null,
       executionHostId: session.executionHostId,
       worktreePath: session.worktree?.path,
       terminalWindowsShell: state.settings?.terminalWindowsShell,

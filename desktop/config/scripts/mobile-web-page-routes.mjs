@@ -30,7 +30,12 @@ export const MOBILE_WEB_PAGE_ROUTES = [
   // `externalLink` for the one opener the census finds in this closure: `app/h/_layout.tsx` wraps
   // every `/h` route in `HostProtocolGate`, so without the grant the wall's Update Orca tap posts a
   // notify the shell refuses, with nothing on screen to say why.
-  { pathname: '/h/[hostId]', grants: ['navigate', 'storage', 'externalLink', 'haptics'] },
+  // `canOwnHostArea`: on wide layouts it draws the sidebar itself, given `ownsHostArea` in `init`.
+  {
+    pathname: '/h/[hostId]',
+    grants: ['navigate', 'storage', 'externalLink', 'haptics'],
+    canOwnHostArea: true
+  },
   // Agent session history. `navigate` because a resumed session opens the session screen, which is
   // native, and because the list above now reaches this one without leaving the page. `storage`
   // because the host layout above every page route reads the app's own sidebar width.
@@ -60,21 +65,19 @@ export const MOBILE_WEB_PAGE_ROUTES = [
   // not what makes it correct: a target this list did not cover would be handed to the shell and
   // reopened under its own grants instead. The census beside it reads that relation off this list.
   //
-  // The sidebar `HostScreen` the layout renders on a wide layout pushes to `/h/<id>/tasks` from
-  // every page route, and no other route declares the `native.clipboard.write` that one asks for.
-  // The handoff gives that hop to the shell rather than keeping it here, which is why this list
-  // does not grow a grant it has no screen for.
+  // `native.clipboard.write` covers source Copy in a preview opened inside this document.
   {
     pathname: '/h/[hostId]/files/[worktreeId]',
-    grants: ['navigate', 'storage', 'externalLink', 'haptics']
+    grants: ['navigate', 'storage', 'externalLink', 'haptics', 'native.clipboard.write']
   },
-  // The file preview. Same three. `externalLink` has a consumer inside the domain as well as the
+  // The file preview. Same five. `externalLink` has a consumer inside the domain as well as the
   // shared wall every `/h` route carries: a Markdown preview renders links and `MobileMarkdown`
   // opens them through the platform seam. That second site is what the census finds here and not in
   // the explorer, which declares the same list for the wall and for the hop into this route.
+  // `native.clipboard.write` lets source Copy write loaded Markdown to the device clipboard.
   {
     pathname: '/h/[hostId]/files/preview/[worktreeId]',
-    grants: ['navigate', 'storage', 'externalLink', 'haptics']
+    grants: ['navigate', 'storage', 'externalLink', 'haptics', 'native.clipboard.write']
   },
   // The source-control hub. `navigate` because its Back pops the native stack and its changed-file
   // rows push review; `storage` for the shared components the host layout renders above it;

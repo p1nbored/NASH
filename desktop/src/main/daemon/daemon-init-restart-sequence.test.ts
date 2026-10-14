@@ -40,7 +40,8 @@ vi.mock('./client', () => moduleFactories.client())
 vi.mock('./daemon-lifecycle-event', () => moduleFactories.daemonLifecycleEvent())
 vi.mock('./daemon-spawner', () => moduleFactories.daemonSpawner())
 vi.mock('./daemon-pty-adapter', () => moduleFactories.daemonPtyAdapter())
-vi.mock('../ipc/pty', () => moduleFactories.ipcPty())
+vi.mock('../ipc/pty/provider/registry', () => moduleFactories.ptyProviderRegistry())
+vi.mock('../ipc/pty/provider/listener-lifecycle', () => moduleFactories.ptyListenerLifecycle())
 
 describe('daemon-init: runRestartDaemon (7-step sequence)', () => {
   beforeEach(() => {
@@ -76,6 +77,28 @@ describe('daemon-init: runRestartDaemon (7-step sequence)', () => {
     expect(originalAdapter.fanoutSyntheticExits).toHaveBeenCalledWith(-1)
     // Ordering invariant: synthetic exits must reach the renderer *before* listeners are torn down (Step 1 before 2).
     expect(order).toEqual(['fanout', 'unbind'])
+  })
+
+  it('refuses a targeted restart before ending anything when another daemon owns the endpoint', async () => {
+    const mod = await importFresh()
+    await mod.initDaemonPtyProvider()
+    const originalAdapter = adapterInstances[0]
+    daemonClientMock.mockImplementation(function MockDaemonClient() {
+      return {
+        ensureConnected: vi.fn(async () => {}),
+        ensureConnectedWithin: vi.fn(async () => {}),
+        getDaemonIdentity: vi.fn(() => ({ pid: 9000, startedAtMs: 1, launchNonce: 'other' })),
+        request: vi.fn(async () => ({ sessions: [] })),
+        disconnect: vi.fn()
+      }
+    })
+
+    await expect(mod.restartDaemon({ expectedDaemonPid: 4288 })).rejects.toThrow(
+      'owned by a different daemon'
+    )
+
+    expect(originalAdapter.fanoutSyntheticExits).not.toHaveBeenCalled()
+    expect(unbindLocalProviderListenersMock).not.toHaveBeenCalled()
   })
 
   it('uses daemon-owned idle retirement after a failed manual-restart adoption', async () => {

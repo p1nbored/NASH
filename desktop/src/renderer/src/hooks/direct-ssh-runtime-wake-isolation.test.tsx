@@ -45,7 +45,7 @@ describe('runtime and direct SSH wake isolation', () => {
     delete (window as unknown as { api?: unknown }).api
   })
 
-  it('advances both runtime backoffs and one exact direct wake without rebumping a healthy pane', () => {
+  it('advances both runtime backoffs and clears only the exact direct target on wake', () => {
     const currentAuthority = authority()
     const directWorktreeId = 'repo-direct::/work/direct'
     const runtimeWorktreeId = 'repo-runtime::/work/runtime'
@@ -104,14 +104,6 @@ describe('runtime and direct SSH wake isolation', () => {
         ]
       },
       ptyIdsByTabId: { 'tab-direct': [directPtyId], 'tab-runtime': [] },
-      directSshLivePtyBindingByTabId: {
-        'tab-direct': {
-          attemptId: 'direct-attempt' as never,
-          authority: currentAuthority,
-          tabGeneration: 0,
-          ptyId: directPtyId
-        }
-      },
       sshConnectionStates: new Map([
         [
           'direct-target',
@@ -155,7 +147,9 @@ describe('runtime and direct SSH wake isolation', () => {
     const unregisterDirectWake = registerDirectSshWakeRouting({
       getConnectionStates: () => store.getState().sshConnectionStates,
       wakeAuthority: (nextAuthority) => {
-        correctedCounts.push(store.getState().retryDirectSshTargetPanes(nextAuthority, 1_000))
+        correctedCounts.push(
+          store.getState().clearDirectSshTargetPtyBindings(nextAuthority.targetId)
+        )
         wakePreparation(nextAuthority)
       },
       onSystemResumed
@@ -168,13 +162,12 @@ describe('runtime and direct SSH wake isolation', () => {
     expect(retryAllRemoteRuntimePtyRecoveriesNowMock).toHaveBeenCalledTimes(1)
     expect(wakePreparation).toHaveBeenCalledOnce()
     expect(wakePreparation).toHaveBeenCalledWith(currentAuthority)
-    expect(correctedCounts).toEqual([0])
+    expect(correctedCounts).toEqual([1])
     expect(store.getState().tabsByWorktree[directWorktreeId][0]).toMatchObject({
       generation: 0,
-      ptyId: directPtyId
+      ptyId: null
     })
     expect(store.getState().tabsByWorktree[runtimeWorktreeId][0].generation ?? 0).toBe(0)
-    expect(store.getState().directSshPaneRetryByTabId).toEqual({})
 
     unregisterDirectWake()
     unmount()

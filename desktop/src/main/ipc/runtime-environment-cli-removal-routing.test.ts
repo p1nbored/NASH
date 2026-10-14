@@ -1,3 +1,4 @@
+import { pairedRuntimeConnectionFromOffer } from '../../shared/paired-runtime-connection'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -169,7 +170,7 @@ function seedEnvironment(): KnownRuntimeEnvironment {
 function absentOutcome(environment: KnownRuntimeEnvironment) {
   const evidence = captureRuntimeEnvironmentCapabilityEvidence(
     environment.id,
-    getPreferredPairingOffer(environment)
+    pairedRuntimeConnectionFromOffer(getPreferredPairingOffer(environment))
   )
   applyRuntimeEnvironmentCapabilityVerdict({
     evidence,

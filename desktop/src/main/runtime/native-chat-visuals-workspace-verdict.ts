@@ -1,4 +1,4 @@
-// Whether the local workspace a chat ran in is provably gone, for the visuals folder sweep.
+// Whether the local workspace a chat ran in is provably gone, for the scratch folder sweep.
 // Chat records and visuals live at the user-data root, shared by every Orca profile, while each
 // profile keeps its own workspace catalog: so only absence from EVERY profile's catalog counts. A
 // worktree still in a known project is gone only when git itself no longer records it. Never runs

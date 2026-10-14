@@ -14,7 +14,6 @@ export function useMobileSessionTabSwitching(scope: MobileSessionKeyboardStateMo
     setActiveSessionTabId,
     markdownDocs,
     terminalUnsubsRef,
-    initializedHandlesRef,
     terminalDiagnosticsRef,
     activeHandleRef,
     activeSessionTabTypeRef,
@@ -43,12 +42,10 @@ export function useMobileSessionTabSwitching(scope: MobileSessionKeyboardStateMo
       setActiveHandle(handle)
       if (prev && prev !== handle) {
         unsubscribeTerminal(prev)
-        initializedHandlesRef.current.delete(prev)
       }
       // Force a fresh subscribe even if eagerly subscribed without viewport
       if (terminalUnsubsRef.current.has(handle)) {
         unsubscribeTerminal(handle)
-        initializedHandlesRef.current.delete(handle)
       }
       subscribeToTerminal(handle)
       if (client) {
@@ -88,7 +85,6 @@ export function useMobileSessionTabSwitching(scope: MobileSessionKeyboardStateMo
         const prev = activeHandleRef.current
         if (prev) {
           unsubscribeTerminal(prev)
-          initializedHandlesRef.current.delete(prev)
         }
         activeHandleRef.current = null
         setActiveHandle(null)
@@ -112,7 +108,6 @@ export function useMobileSessionTabSwitching(scope: MobileSessionKeyboardStateMo
       const prev = activeHandleRef.current
       if (prev) {
         unsubscribeTerminal(prev)
-        initializedHandlesRef.current.delete(prev)
       }
       activeHandleRef.current = null
       setActiveHandle(null)

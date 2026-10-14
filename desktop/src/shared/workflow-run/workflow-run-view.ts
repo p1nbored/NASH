@@ -1,3 +1,4 @@
+import { ROUTING_AGENTS } from '../routing-table/routing-cli-registry'
 import { z } from 'zod'
 import { WORKBENCH_OBJECTIVE_MAX_LENGTH, WorkbenchWorkspaceIdSchema } from '../workbench-request'
 
@@ -53,7 +54,7 @@ export const WORKFLOW_RUN_LIST_MAX_LIMIT = 100
 export const WorkflowRunIdSchema = z.string().regex(/^[A-Za-z0-9_.:-]{1,128}$/)
 /** Reason codes as the stores record them; never free text. */
 const ReasonCodeSchema = z.string().regex(/^[a-z][a-z0-9_]{0,63}$/)
-const ModelIdSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/)
+const ModelIdSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$/)
 const TimestampSchema = z.iso.datetime({ offset: true })
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/)
 
@@ -106,7 +107,7 @@ export const WorkflowRunViewSchema = z
     routingTable: z.object({ version: z.number().int().min(1), sha256: Sha256Schema }).strict(),
     coordinator: z
       .object({
-        agent: z.enum(['claude', 'codex']),
+        agent: z.enum(ROUTING_AGENTS),
         model: ModelIdSchema,
         effort: z.enum(WORKFLOW_RUN_VIEW_EFFORTS)
       })

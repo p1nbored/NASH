@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AgentSessionExecutionLocation } from '../../shared/agent-session-record'
 import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
 import type { StructuredAgentSessionLogger } from './agent-session-wire/structured-agent-session-logger'
-import { nativeChatVisualsFolderFor, nativeChatVisualsRootFor } from './native-chat-visuals-folder'
+import { nativeChatScratchFolderFor, nativeChatScratchRootFor } from './native-chat-scratch-folder'
 import {
   scheduleNativeChatVisualsSweep,
   sweepNativeChatVisualsFolders,
@@ -28,7 +28,7 @@ function stateDirectory(): string {
 }
 
 function visualsFor(state: string, sessionId: string): string {
-  const folder = nativeChatVisualsFolderFor(state, sessionId)
+  const folder = nativeChatScratchFolderFor(state, sessionId)
   mkdirSync(folder, { recursive: true })
   writeFileSync(join(folder, 'chart.html'), '<p>chart</p>')
   return folder
@@ -112,7 +112,7 @@ describe('the visuals folder sweep', () => {
 
   it('never touches entries it did not mint, symlinks included', async () => {
     const state = stateDirectory()
-    const root = nativeChatVisualsRootFor(state)
+    const root = nativeChatScratchRootFor(state)
     mkdirSync(join(root, 'notes'), { recursive: true })
     writeFileSync(join(root, 'f'.repeat(32)), 'a file, not a folder')
     const target = mkdtempSync(join(tmpdir(), 'orca-visuals-target-'))
@@ -140,7 +140,7 @@ describe('the visuals folder sweep', () => {
     })
     expect(result).toEqual({ removed: 1, failed: 1 })
     expect(sweep.logger.warn).toHaveBeenCalledWith(
-      'native-chat visuals folder could not be removed',
+      'native-chat scratch folder could not be removed',
       expect.objectContaining({ scope: 'nativeChatVisuals.sweep', reason: 'no-record' })
     )
   })
@@ -173,7 +173,7 @@ describe('the visuals folder sweep', () => {
     const elsewhere = mkdtempSync(join(tmpdir(), 'orca-visuals-elsewhere-'))
     scratch.push(elsewhere)
     mkdirSync(join(elsewhere, 'a'.repeat(32)))
-    symlinkSync(elsewhere, nativeChatVisualsRootFor(state))
+    symlinkSync(elsewhere, nativeChatScratchRootFor(state))
     await sweepNativeChatVisualsFolders(deps(state, []))
     expect(existsSync(join(elsewhere, 'a'.repeat(32)))).toBe(true)
   })

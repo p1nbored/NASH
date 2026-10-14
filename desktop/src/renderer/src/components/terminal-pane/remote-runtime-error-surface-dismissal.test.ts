@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { stubRuntimeEnvironmentBridge } from '../../runtime/runtime-environment-bridge-fixture'
 
 // Why: the transport suppresses a repeat of the message it last surfaced so one outage cannot spam the
 // pane. Dismissal is the only evidence the user consumed that surface, so it must re-arm the memory —
@@ -20,14 +21,7 @@ describe('remote runtime error surface dismissal', () => {
         return { unsubscribe: vi.fn(), sendBinary: subscriptionSendBinary }
       }
     )
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: {
-          call: runtimeCall,
-          subscribe: runtimeSubscribe
-        }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall, subscribe: runtimeSubscribe })
   })
 
   async function attachTransportWithFatalSends(onError: (message: string) => void) {

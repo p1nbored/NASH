@@ -1,7 +1,9 @@
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SshConnection } from './ssh-connection'
 
-vi.mock('./ssh-relay-deploy-helpers', () => ({
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn(),
   isUnconfirmedSshCommandTermination: (error: unknown) =>
     error instanceof Error &&
@@ -13,7 +15,7 @@ vi.mock('./ssh-relay-gc-claim', () => ({
   waitForRelayGcClaimRelease: vi.fn().mockResolvedValue(undefined)
 }))
 
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execCommand } from './ssh-relay-exec-command'
 import { acquireInstallLock, RemoteInstallLockBusyError } from './ssh-relay-install-lock'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 

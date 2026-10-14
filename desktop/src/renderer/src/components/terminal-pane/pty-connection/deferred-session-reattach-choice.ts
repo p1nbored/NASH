@@ -1,6 +1,7 @@
+import { isRemoteRuntimePtyId } from '../../../../../shared/remote-runtime-pty-id'
 import { scheduleRuntimeGraphSync } from '@/runtime/sync-runtime-graph'
 import { useAppStore } from '@/store'
-import { isWebTerminalSurfaceTabId } from '@/runtime/web-terminal-surface-id'
+import { isWebTerminalSurfaceTabId } from '../../../../../shared/terminal-surface-id'
 import { getEagerPtyBufferHandle } from '../pty-dispatcher'
 
 import {
@@ -9,7 +10,6 @@ import {
   recordPtyConnectDiagnostic
 } from './pty-connect-limits'
 import {
-  isRemoteRuntimePtyId,
   canRestorePairedParkedTerminal,
   isSessionOwnedByWorktree
 } from './paired-parked-terminal-restore'
@@ -162,7 +162,6 @@ export function runDeferredSessionReattachChoice(session: ConnectPanePtySession)
         return
       }
       recordPtyConnectDiagnostic(`pane=${session.pane.id} -> PENDING SPAWN`)
-      session.armDirectSshPaneRetryTimeout(pendingSpawn, session.directSshRetryAttempt)
       void pendingSpawn
         .then((spawnedPtyId) => {
           if (session.disposed) {
@@ -184,9 +183,6 @@ export function runDeferredSessionReattachChoice(session: ConnectPanePtySession)
             } else {
               session.startFreshSpawn()
             }
-            return
-          }
-          if (!session.canAdoptCapturedDirectSshRetryPty(spawnedPtyId)) {
             return
           }
           session.clearPaneMode2031State()

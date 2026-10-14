@@ -41,7 +41,7 @@ describe('workflow run store', () => {
   it('is one store per database and creates the schema on first use', () => {
     expect(getWorkflowRunStore(owner)).toBe(store)
     expect(owner.db.prepare('SELECT version FROM autopilot_runtime_schema').get()).toEqual({
-      version: 2
+      version: 4
     })
   })
 
@@ -104,7 +104,7 @@ describe('workflow run store', () => {
       ['a binding that is empty', { workspaceBinding: '' }],
       ['an unknown access level', { requestedAccess: 'admin' }],
       ['a missing primary agent', { coordinatorAgent: undefined }],
-      ['an unknown primary agent', { coordinatorAgent: 'antigravity' }],
+      ['an unknown primary agent', { coordinatorAgent: 'unknown' }],
       ['a table version of zero', { routingTableVersion: 0 }],
       ['a table hash that is not sha256 hex', { routingTableSha256: 'not-a-hash' }],
       ['an upper-case table hash', { routingTableSha256: 'A'.repeat(64) }],

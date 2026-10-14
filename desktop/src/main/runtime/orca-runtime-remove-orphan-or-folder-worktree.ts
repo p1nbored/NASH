@@ -1,7 +1,6 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService.
 import { splitWorktreeId, splitWorktreeIdForFilesystem } from '../../shared/worktree/id'
 import { parseExecutionHostId } from '../../shared/execution-host'
-import { deleteRemoteWorktreeHistory } from '../remote-worktree-history-cleanup'
 import { invalidateAuthorizedRootsCache } from '../ipc/filesystem-auth'
 import { isFolderRepo } from '../../shared/repo-kind'
 import { getRuntimeFolderWorkspaceRootId } from './runtime-folder-workspace'
@@ -30,9 +29,7 @@ export async function removeOrphanOrFolderWorktree({
         `Workspace identity for ${removalTarget.id} no longer belongs to ${cleanupHostId}. Refresh projects and try again.`
       )
     }
-    const sshPtyProvider =
-      orphanHost?.kind === 'ssh' ? runtime.getSshProviderFn?.(orphanHost.targetId) : undefined
-    const ptyProvider = sshPtyProvider ?? runtime.getLocalProvider()
+    const ptyProvider = runtime.getLocalProvider()
     const externalOrphanHost = orphanHost?.kind === 'ssh' || orphanHost?.kind === 'runtime'
     if (ptyProvider) {
       await killAllProcessesForWorktree(removalTarget.id, {
@@ -48,10 +45,7 @@ export async function removeOrphanOrFolderWorktree({
         // workspace this removal is about to forget. Closed best-effort, exactly like those PTYs.
         closeStructuredSessions: true,
         ...(externalOrphanHost
-          ? {
-              includeProviderInventory: orphanHost?.kind === 'ssh' && Boolean(sshPtyProvider),
-              includeLocalRegistry: false
-            }
+          ? { includeProviderInventory: false, includeLocalRegistry: false }
           : {})
       }).catch((error) => {
         console.warn(`[worktree-teardown] orphan cleanup failed for ${removalTarget.id}:`, error)
@@ -71,7 +65,6 @@ export async function removeOrphanOrFolderWorktree({
         .then((gate) => gate.finish(false))
         .catch(() => {})
     }
-    await deleteRemoteWorktreeHistory(sshPtyProvider, removalTarget.id)
     runtime.clearOptimisticReconcileToken(removalTarget.id)
     runtime.removeWorktreeMetadataAndHistory(
       store,
@@ -99,20 +92,15 @@ export async function removeOrphanOrFolderWorktree({
   // target is addressable only inside that environment, never from this client's SSH table.
   const folderHost = parseExecutionHostId(removalHostId)
   const folderConnectionId = folderHost?.kind === 'ssh' ? folderHost.targetId : null
-  const folderSshPtyProvider = folderConnectionId
-    ? runtime.getSshProviderFn?.(folderConnectionId)
-    : undefined
   await teardownFolderWorkspacePtys(
     {
       runtime,
-      getSshProvider: runtime.getSshProviderFn,
       getLocalProvider: () => runtime.getLocalProvider(),
       onPtyStopped: runtime.onPtyStopped
     },
     removalTarget.id,
     folderConnectionId
   )
-  await deleteRemoteWorktreeHistory(folderSshPtyProvider, removalTarget.id)
   runtime.removeWorktreeMetadataAndHistory(store, removalTarget.id, removalHostId)
   runtime.preservedBranchCleanup.delete(removalTarget.id, cleanupHostId)
   runtime.invalidateResolvedWorktreeCache()

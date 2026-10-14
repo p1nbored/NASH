@@ -30,6 +30,7 @@ function desktopTable(context: RpcContext): RoutingTableContext {
 /** Route availability from held readings only: listing starts no CLI process, network call or login read. */
 export const WORKBENCH_ROUTING_TABLE_LIST_METHOD = defineMethod({
   name: 'workbench.routingTable.list',
+  permission: 'workspace',
   params: WorkbenchRoutingTableListParams,
   handler: (_params, context) =>
     routingTableListView(desktopTable(context), routingTableAvailabilityOf(context.runtime))
@@ -37,6 +38,7 @@ export const WORKBENCH_ROUTING_TABLE_LIST_METHOD = defineMethod({
 
 export const WORKBENCH_ROUTING_TABLE_SAVE_METHOD = defineMethod({
   name: 'workbench.routingTable.save',
+  permission: 'settings-write',
   params: WorkbenchRoutingTableSaveParams,
   handler: (params, context) =>
     routingTableDecisionView(saveRoutingTable(desktopTable(context), params, DESKTOP_USER))
@@ -48,6 +50,7 @@ export const WORKBENCH_ROUTING_TABLE_SAVE_METHOD = defineMethod({
  */
 export const WORKBENCH_ROUTING_TABLE_CHECK_ROUTES_METHOD = defineMethod({
   name: 'workbench.routingTable.checkRoutes',
+  permission: 'workspace',
   params: WorkbenchRoutingTableCheckRoutesParams,
   handler: (_params, context) => {
     const ctx = desktopTable(context)

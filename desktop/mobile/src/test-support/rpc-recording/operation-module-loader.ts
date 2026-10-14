@@ -32,7 +32,7 @@ export function operationModuleLoader(
   declared: ReadonlyMap<string, unknown> = new Map()
 ) {
   const cache = new Map<string, OperationModule>()
-  const natives = new Map([...nativeMountingSubstitutes(), ...declared])
+  let natives: Map<string, unknown> | undefined
   const sharedModulePath = resolve(root, SHARED_MODULE)
   let mutationCount = 0
   function pathFor(base: string): string {
@@ -45,12 +45,11 @@ export function operationModuleLoader(
     return file
   }
   function imported(base: string, name: string): unknown {
+    // Most registered adapters are never mounted in this recording.
+    natives ??= new Map([...nativeMountingSubstitutes(), ...declared])
     const native = natives.get(name)
     if (native !== undefined) {
       return native
-    }
-    if (name.startsWith('.') && pathFor(resolve(dirname(base), name)) === sharedModulePath) {
-      return deliveryAmbiguity
     }
     if (!name.startsWith('.')) {
       return new Proxy(
@@ -69,10 +68,11 @@ export function operationModuleLoader(
         }
       )
     }
-    return new Proxy(
-      {},
-      { get: (_target, key) => load(pathFor(resolve(dirname(base), name)))[String(key)] }
-    )
+    const file = pathFor(resolve(dirname(base), name))
+    if (file === sharedModulePath) {
+      return deliveryAmbiguity
+    }
+    return new Proxy({}, { get: (_target, key) => load(file)[String(key)] })
   }
   function barrel(file: string, source: string): OperationModule {
     const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)

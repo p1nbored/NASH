@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { ProcessSpec } from '../../../shared/child-process/run-process'
+import type { ProcessSpec } from '@orca/process-host/process-spec'
 import { createClaudeReviewer } from './claude-reviewer'
 import { REVIEW_OUTPUT_SCHEMA } from './model-review-verdict'
 import type { ReviewerRequest } from './reviewer-runner'
@@ -86,7 +86,9 @@ describe('Claude reviewer using Orca native one-shot primitives', () => {
   })
   it('re-reads account preparation for each review and never launches after preparation refusal', async () => {
     const run = vi.fn()
-    const resolveInvocation = vi.fn(async () => { throw new Error('account unavailable') })
+    const resolveInvocation = vi.fn(async () => {
+      throw new Error('account unavailable')
+    })
     const review = createClaudeReviewer({ run, resolveInvocation })
     await expect(review(request)).resolves.toEqual({
       status: 'unavailable',

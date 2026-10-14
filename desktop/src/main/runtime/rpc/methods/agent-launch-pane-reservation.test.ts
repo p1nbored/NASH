@@ -17,6 +17,7 @@ import { openTestAgentSessionRecordStore } from '../../agent-session-record-stor
 import type { OrcaRuntimeService } from '../../orca-runtime'
 import type { RpcContext } from '../core'
 import { RpcDispatcher } from '../dispatcher'
+import { OrchestrationError } from '../../orchestration/orchestration-error'
 import {
   CAPABLE_CLIENT,
   STRUCTURED_PREFERENCE,
@@ -74,6 +75,19 @@ describe('a launch into an existing workspace', () => {
       leafId: LEAF_ID,
       requireFreshPane: true
     })
+  })
+
+  // An AI button's click names no operation: the host writes no record for it, so a record store
+  // that cannot open never stops it.
+  it('starts a reserved pane with no operation id even when the launch record cannot open', async () => {
+    setAgentLaunchRecordStore(null)
+    const runtime = runtimeStub({ settings: TERMINAL_ONLY })
+
+    const result = await launch({ ...EXISTING_LAUNCH, paneKey: PANE_KEY }, runtime)
+
+    expect(result.outcome.kind).toBe('terminal')
+    expect(terminalOptions(runtime)).toMatchObject({ tabId: TAB_ID, leafId: LEAF_ID })
+    expect(runtime.openAgentSessionRecordStore).not.toHaveBeenCalled()
   })
 
   it('leaves the pane to the runtime when the caller reserved none', async () => {
@@ -256,6 +270,15 @@ describe('a live-pane refusal under a named operation', () => {
     const retry = runtimeStub({ settings: TERMINAL_ONLY })
     await expect(launch(params, retry)).rejects.toThrow('agent_launch_pane_already_live')
     expect(retry.createTerminal).not.toHaveBeenCalled()
+  })
+
+  it('repeats a coded refusal in its own words on a retry', async () => {
+    const params = { ...EXISTING_LAUNCH, operationId: OPERATION_ID }
+    const words = 'No agent was started. WSL is not available.'
+    const first = runtimeStub({ settings: TERMINAL_ONLY })
+    first.createTerminal.mockRejectedValue(new OrchestrationError('repair_required', words))
+    await expect(launch(params, first)).rejects.toThrow(words)
+    await expect(launch(params, runtimeStub({ settings: TERMINAL_ONLY }))).rejects.toThrow(words)
   })
 
   it('answers agent.launchReplay with the refusal code, not operation_unknown', async () => {

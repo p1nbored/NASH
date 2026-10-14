@@ -1,10 +1,11 @@
+import type { ExecutionHostId } from '../../../../shared/execution-host'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { toast } from 'sonner'
 import type { RuntimeEnvironmentCallRequest } from '../../runtime/runtime-compatibility-test-fixture'
 import { worktreeWorkspaceKey, folderWorkspaceKey } from '../../../../shared/workspace-scope'
-import { makeLineage, makeWorktree } from './worktrees-slice-test-fixtures'
+import { TEST_REPO, makeLineage, makeWorktree } from './worktrees-slice-test-fixtures'
 import {
   createTestStore,
   mockApi,
@@ -36,7 +37,7 @@ describe('createWorktree composer parent pick', () => {
   })
 
   function createParentPickStore(parent?: Worktree) {
-    const store = createTestStore()
+    const store = createRepoTestStore()
     store.setState({ worktreesByRepo: { repo1: parent ? [parent] : [] } } as Partial<AppState>)
     return store
   }
@@ -211,7 +212,7 @@ describe('createWorktree parent pick on a remote runtime', () => {
   })
 
   function createRemoteStore() {
-    const store = createTestStore()
+    const store = createRepoTestStore()
     store.setState({
       repos: [
         {
@@ -386,3 +387,14 @@ describe('createWorktree parent pick on a remote runtime', () => {
     expect(toast.warning).not.toHaveBeenCalled()
   })
 })
+
+// Creation routes by the project row's own host, so every test seeds that row.
+function seedRepoHost(store: ReturnType<typeof createTestStore>, hostId: ExecutionHostId): void {
+  store.setState({ repos: [{ ...TEST_REPO, executionHostId: hostId }] })
+}
+
+function createRepoTestStore(): ReturnType<typeof createTestStore> {
+  const store = createTestStore()
+  seedRepoHost(store, 'local')
+  return store
+}

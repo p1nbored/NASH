@@ -20,7 +20,9 @@ function makeTab(id: string, ptyId: string | null, pendingActivationSpawn?: true
   }
 }
 
-function makeState(): DirectSshTerminalBindingState {
+function makeState(): DirectSshTerminalBindingState & {
+  lastKnownRelayPtyIdByTabId: Record<string, string>
+} {
   return {
     tabsByWorktree: {
       'repo::/ssh-work': [
@@ -55,10 +57,7 @@ function makeState(): DirectSshTerminalBindingState {
         previousAccountLabel: 'old',
         nextAccountLabel: 'new'
       }
-    },
-    directSshPaneRetryByTabId: {},
-    directSshLivePtyBindingByTabId: {},
-    directSshPaneRetryHistoryByTabId: {}
+    }
   }
 }
 
@@ -107,40 +106,6 @@ describe('clearDirectSshTerminalBindings', () => {
         nextAccountLabel: 'new'
       }
     })
-  })
-
-  it('re-arms reconnectable disconnects without erasing retry history', () => {
-    const state = makeState()
-    const authority = {
-      targetId: 'target',
-      providerEpoch: 'epoch-1',
-      connectionGeneration: 1
-    }
-    state.directSshPaneRetryByTabId['ssh-live'] = {
-      attemptId: 'attempt-1',
-      authority,
-      tabGeneration: 1,
-      startedAt: 10
-    } as never
-    state.directSshLivePtyBindingByTabId['folder-live'] = {
-      authority,
-      tabGeneration: 0,
-      ptyId: 'ssh-target@@pty-2'
-    } as never
-    state.directSshPaneRetryHistoryByTabId['ssh-live'] = {
-      authority,
-      attemptedAt: [10]
-    } as never
-
-    const result = clearDirectSshTerminalBindings(
-      state,
-      new Set(['repo::/ssh-work', 'folder::ssh-work'])
-    )
-
-    expect(result.patch?.directSshPaneRetryByTabId).toEqual({})
-    expect(result.patch?.directSshLivePtyBindingByTabId).toEqual({})
-    expect(result.patch).not.toHaveProperty('directSshPaneRetryHistoryByTabId')
-    expect(state.directSshPaneRetryHistoryByTabId['ssh-live']?.attemptedAt).toEqual([10])
   })
 
   it('clears an exact target through one Zustand publication without activity changes', () => {

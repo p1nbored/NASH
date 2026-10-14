@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { Page } from '@stablyai/playwright-test'
 import { test, expect } from './helpers/orca-app'
 import { waitForSessionReady } from './helpers/store'
-import { runProcess } from '../../src/shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
 
 test.use({ seedTestRepo: false })
 
@@ -123,7 +123,7 @@ test('keeps a collapsed group visible when an idle card below it grows', async (
     if (!member || !collapsed || !expanded) {
       throw new Error('Expected three fixture repos')
     }
-    const group = await store.getState().createProjectGroup('Research gang')
+    const group = await store.getState().createProjectGroup('Research gang', 'local')
     if (!group) {
       throw new Error('Fixture group was not created')
     }

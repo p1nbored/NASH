@@ -19,8 +19,8 @@ import { resolveLocalWindowsAgentStartupShell } from '../../shared/windows-termi
 import { resolveStartupShell, type AgentStartupShell } from '../../shared/tui-agent-startup-shell'
 import { isTuiAgent } from '../../shared/tui-agent-config'
 import { resolveConfiguredWorkerAgent } from './orchestration/configured-worker-agent-selector'
+import { resolveAgentLaunchRuntime } from './agent-launch-scope-runtime'
 import { parseWslUncPath } from '../../shared/wsl-paths'
-import { resolveLocalProjectRuntimeForRepo } from '../project-runtime-git-options'
 
 import { prepareOpenCodeModelStartupInputs } from '../opencode/opencode-model-startup-plan'
 import { resolveAgentStartupPlanInputs } from '../../shared/agent-startup-plan-inputs'
@@ -244,34 +244,30 @@ export class OrcaRuntimeWithGetTerminalInteractiveWait extends OrcaRuntimeWithAd
       return false
     }
     const store = this.requireStore()
-    const settings = store.getSettings()
     const path = workspace?.path
-    const unc = path ? parseWslUncPath(path) : null
-    const projectRuntime = executionRepo
-      ? resolveLocalProjectRuntimeForRepo(store, executionRepo)
-      : null
-    if (projectRuntime?.status === 'repair-required') {
+    if (!path) {
       return false
     }
-    const wsl = unc
-      ? { distro: unc.distro }
-      : projectRuntime?.runtime.kind === 'wsl'
-        ? { distro: projectRuntime.runtime.distro }
-        : undefined
-    if (!path) {
+    // The launch's own platform, and `isWsl` from the path alone, as main read it.
+    let launchRuntime
+    try {
+      launchRuntime = resolveAgentLaunchRuntime(store, workspace, undefined, 'opencode')
+    } catch {
       return false
     }
     try {
       await prepareOpenCodeModelStartupInputs({
         inputs: resolveAgentStartupPlanInputs({
           agent: 'opencode',
-          settings,
-          platform: wsl ? 'linux' : process.platform,
+          settings: store.getSettings(),
+          platform: launchRuntime.platform,
           isRemote: false,
+          // A yes/no model probe; nothing is typed into a shell.
+          shell: undefined,
           sessionOptions: { model: target.model }
         }),
         cwd: path,
-        isWsl: Boolean(wsl),
+        isWsl: Boolean(parseWslUncPath(path)),
         hostIdentity: this.getRuntimeId()
       })
       return true

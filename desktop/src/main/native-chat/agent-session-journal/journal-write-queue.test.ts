@@ -110,6 +110,31 @@ describe('when a journal write lands', () => {
     await inner
     expect(sequenceOf(journal, 2)).toBe(sequenceOf(journal, 1)! + 1)
   })
+
+  it('writes no row for a resolve that finds nothing, and keeps the line moving', async () => {
+    const journal = await idleJournal()
+    const before = journal.cursor().sequence
+
+    await expect(journal.appendResolvedItem(() => null, OPTIONS)).resolves.toBeNull()
+    expect(journal.cursor().sequence).toBe(before)
+    await journal.appendItem(item(1), reply('after'), OPTIONS)
+    expect(journal.itemBody(agentJournalItemKey(item(1)))).toEqual(reply('after'))
+  })
+
+  it('preserves other resolver errors even when their message matches the no-row error', async () => {
+    const journal = await idleJournal()
+    const before = journal.cursor().sequence
+    const error = new Error('journal_item_resolved_to_nothing')
+
+    await expect(
+      journal.appendResolvedItem(() => {
+        throw error
+      }, OPTIONS)
+    ).rejects.toBe(error)
+    expect(journal.cursor().sequence).toBe(before)
+    await journal.appendItem(item(1), reply('after'), OPTIONS)
+    expect(journal.itemBody(agentJournalItemKey(item(1)))).toEqual(reply('after'))
+  })
 })
 
 describe('the journal write queue', () => {

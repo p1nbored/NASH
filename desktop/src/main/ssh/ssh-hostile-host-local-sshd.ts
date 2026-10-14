@@ -11,7 +11,7 @@ import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node
 import { createServer } from 'node:net'
 import { userInfo } from 'node:os'
 import { join, posix } from 'node:path'
-import { runProcess, spawnProcess } from '../../shared/child-process/run-process'
+import { runProcess, spawnProcess } from '@orca/process-host'
 import {
   forbiddenToolShimScript,
   forbiddenToolsFor,
@@ -95,7 +95,7 @@ function freeLoopbackPort(): Promise<number> {
 export async function startLocalSshdTarget(
   cell: LocalSshdHostileHostCell
 ): Promise<LocalSshdHostileHostTarget> {
-  // Why /tmp: the remote home holds relay sockets, and macOS caps sun_path at 104 bytes.
+  // Why /tmp: the remote home holds orcad's daemon socket, and macOS caps sun_path at 104 bytes.
   const tempDir = await mkdtemp(join(await realpath('/tmp'), 'orca-hh-'))
   try {
     const home = join(tempDir, 'home')
@@ -176,7 +176,7 @@ export async function stopLocalSshdTarget(target: LocalSshdHostileHostTarget): P
     target.sshd.kill('SIGTERM')
     await exited
   }
-  // Why: the relay daemonizes out of the sshd session; it runs from the temp home, so its argv names it.
+  // Why: orcad daemonizes out of the sshd session; it runs from the temp home, so its argv names it.
   await runProcess({ program: 'pkill', args: ['-TERM', '-f', target.tempDir], timeoutMs: 10_000 })
   if (!(await waitForNoProcessMatching(target.tempDir, 10_000))) {
     await runProcess({ program: 'pkill', args: ['-KILL', '-f', target.tempDir], timeoutMs: 10_000 })

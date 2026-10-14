@@ -63,7 +63,8 @@ export function expandGroupsForWorktreeReveal(
       groupBy: args.groupBy,
       workspaceStatuses: args.workspaceStatuses,
       defaultHostId: args.defaultHostId,
-      hostScopedGroups
+      hostScopedGroups,
+      executionHostId
     }
   )
   if (folderGroupKeys.length > 0) {

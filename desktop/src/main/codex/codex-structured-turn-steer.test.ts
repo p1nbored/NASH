@@ -168,7 +168,7 @@ describe('a Codex send while a turn runs', () => {
 
     expect(await send('client-1')).toEqual({
       state: 'rejected',
-      reason: 'The provider did not accept this message: thread not found.',
+      reason: "Codex didn't accept this message: thread not found.",
       rejection: {
         kind: 'providerRejected',
         detail: { text: 'thread not found', audience: 'person' }

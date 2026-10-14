@@ -25,7 +25,6 @@ import {
   startOrcadManagedTunnel
 } from './orcad-managed-tunnel'
 import { verifyRuntimeEnvironmentSshTunnel } from './runtime-ssh-access-verification'
-import { hasRegisteredDirectSshAuthority } from './ssh-target-registry'
 
 type TargetClaims = ReturnType<typeof requireManagedOrcadInfrastructure>['claims']
 
@@ -63,9 +62,6 @@ function requireTarget(claims: TargetClaims, targetId: string): SshTarget & { ge
 
 function requireAccessOnlyTarget(claims: TargetClaims, targetId: string, environmentId: string) {
   const target = requireTarget(claims, targetId)
-  if (hasRegisteredDirectSshAuthority(targetId)) {
-    throw new Error('Disconnect direct SSH authority before linking access to this paired server.')
-  }
   // Omitting the environment bypasses the same-owner shortcut and rechecks direct authority.
   const blockers = claims
     .preflight(targetId)

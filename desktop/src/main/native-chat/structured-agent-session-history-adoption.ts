@@ -7,17 +7,16 @@
 
 import { agentSessionRefusalError } from '../../shared/agent-session-wire-refusals'
 import type { AgentSessionOperationRow } from '../../shared/agent-session-operation-ledger'
-import {
-  agentSessionWireProviderHandle,
-  type AgentSessionWireProviderHandle
-} from '../../shared/agent-session-provider-handle-encoding'
-import type { StructuredAgentId } from '../../shared/agent-session-provider-handle'
+import type {
+  AgentSessionProviderHandle,
+  StructuredAgentId
+} from '../../shared/agent-session-provider-handle'
 import type { AgentSessionLease, AgentSessionRecord } from '../../shared/agent-session-record'
 import { agentSessionLeaseAdmitsWriter } from '../../shared/agent-session-lease-adjudication'
 
 export type StructuredAgentSessionAdoptionOwnership = {
   sessionId: string
-  /** Any registered agent's chat may hold the conversation, though only Claude and Codex adopt. */
+  /** Any agent's chat may hold the conversation, though only one with an importer adopts. */
   provider: StructuredAgentId
   providerSessionId: string
   lease: AgentSessionLease
@@ -31,12 +30,12 @@ export type StructuredAgentSessionAdoption = {
 
 export type CommittedStructuredAgentSessionAdoptionReplay = {
   record: AgentSessionRecord
-  providerHandle: AgentSessionWireProviderHandle
+  providerHandle: AgentSessionProviderHandle
 }
 
 /** Exact committed-operation identity; attach still validates its fingerprint. */
 export function findCommittedStructuredAgentSessionAdoptionReplay(input: {
-  agent: 'claude' | 'codex'
+  agent: StructuredAgentId
   providerSessionId: string
   selfSessionId: string
   callerKey: string
@@ -63,12 +62,10 @@ export function findCommittedStructuredAgentSessionAdoptionReplay(input: {
   ) {
     return null
   }
-  // The replay re-sends the adoption as its create sent it, so it needs the wire's form.
-  const providerHandle = agentSessionWireProviderHandle(adopted.handle)
-  if (adopted.handle.nativeId !== input.providerSessionId || !providerHandle) {
+  if (adopted.handle.nativeId !== input.providerSessionId) {
     return null
   }
-  return { record, providerHandle }
+  return { record, providerHandle: adopted.handle }
 }
 
 /**
@@ -82,7 +79,7 @@ export function findCommittedStructuredAgentSessionAdoptionReplay(input: {
  * ownership index — without this exemption the replay refuses instead of replaying.
  */
 export function findConflictingStructuredAdoption(input: {
-  agent: 'claude' | 'codex'
+  agent: StructuredAgentId
   providerSessionId: string
   selfSessionId: string
   ownership: readonly StructuredAgentSessionAdoptionOwnership[]
@@ -122,14 +119,16 @@ export function structuredAdoptionConflictError(
  * (selected account before the system default).
  */
 export async function resolveStructuredAgentSessionAdoption(input: {
-  agent: 'claude' | 'codex'
   providerSessionId: string
   candidateAccountHomes: readonly string[]
   resolveTranscript: (args: {
-    agent: 'claude' | 'codex'
     providerSessionId: string
     accountHomePath: string
+    launchEnv: NodeJS.ProcessEnv
+    workspaceCwd: string
   }) => Promise<string | null>
+  launchEnv: NodeJS.ProcessEnv
+  workspaceCwd: string
 }): Promise<StructuredAgentSessionAdoption> {
   const seen = new Set<string>()
   for (const accountHomePath of input.candidateAccountHomes) {
@@ -139,9 +138,10 @@ export async function resolveStructuredAgentSessionAdoption(input: {
     }
     seen.add(trimmed)
     const transcriptPath = await input.resolveTranscript({
-      agent: input.agent,
       providerSessionId: input.providerSessionId,
-      accountHomePath: trimmed
+      accountHomePath: trimmed,
+      launchEnv: input.launchEnv,
+      workspaceCwd: input.workspaceCwd
     })
     if (transcriptPath) {
       return { accountHomePath: trimmed, transcriptPath }

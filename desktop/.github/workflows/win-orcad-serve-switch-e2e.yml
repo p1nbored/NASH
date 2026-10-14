@@ -11,6 +11,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'src/main/daemon/**'
+      - '!src/main/daemon/**/*.test.ts'
       - 'src/main/orcad/**'
       - 'src/cli/runtime/**'
       - 'src/shared/orcad-local-serve-selection.ts'
@@ -56,6 +57,9 @@ jobs:
       - uses: ./.github/actions/install-mobile-dependencies
         if: steps.cache-installer.outputs.cache-hit != 'true'
 
+      - uses: ./.github/actions/prepare-windows-agent-hook
+        if: steps.cache-installer.outputs.cache-hit != 'true'
+
       # Before the template exists: packaging verifies a present template for every target.
       - name: Build Windows installer (unsigned)
         if: steps.cache-installer.outputs.cache-hit != 'true'
@@ -77,12 +81,15 @@ jobs:
         with:
           resolve-windows-cache: 'true'
           restore-windows-cache: 'true'
+      - uses: ./.github/actions/prepare-windows-cli-launcher
+        with:
+          arches: x64
       - name: Build the win32-x64 orcad template
         shell: bash
         run: |
           node config/scripts/ensure-native-runtime.mjs --runtime=node
           pnpm build:orcad
-          node config/scripts/build-windows-process-tree-relay-addon.mjs --arch=x64
+          node config/scripts/build-windows-process-tree-addon.mjs --arch=x64
           node config/scripts/build-orcad-template.mjs --targets win32-x64
 
       - name: Switch serve hosts on the installed app's profile

@@ -252,12 +252,12 @@ describe('STA-9417: setup split of an unmounted tab, then first activation', () 
     await runScenario(true)
   })
 
-  // STA-9417: fails until the mirror refactor (B2-4) pushes main's split before the sweep runs.
+  // Main now always offers the split. If that offer is lost, this is the window alone.
   it.fails('ends with one tab and one owner per terminal when the split reveal never arrives', async () => {
     await runScenario(false)
   })
 
-  // STA-9417: fails until the mirror refactor (B2-4); the odd runs mint the duplicate.
+  // The window alone, as above; the odd runs mint the duplicate.
   it.fails('stays duplicate-free across 8 create-then-activate cycles, with or without the reveal', async () => {
     let duplicates = 0
     for (let run = 0; run < 8; run++) {
@@ -280,5 +280,24 @@ describe('STA-9417: setup split of an unmounted tab, then first activation', () 
       duplicates += (useAppStore.getState().tabsByWorktree[worktree.id] ?? []).length - 1
     }
     expect(duplicates).toBe(0)
+  })
+
+  it('rejects a split into a tab it lacks without switching to that workspace', () => {
+    const worktree = makeWorktree()
+    useAppStore.setState({ ...baseState(), activeWorktreeId: null })
+    const host = stubHost(`${worktree.id}@@primary`, `${worktree.id}@@setup`)
+    registerTerminalPresentationIpcBridge([])
+
+    host.reveal()({
+      ...setupSplitReveal('split-into-unknown-tab', worktree.id, `${worktree.id}@@setup`),
+      activate: true,
+      surfaceOwner: undefined
+    })
+
+    expect(useAppStore.getState().activeWorktreeId).toBeNull()
+    expect(window.api.ui.replyTerminalCreate).toHaveBeenCalledWith({
+      requestId: 'split-into-unknown-tab',
+      error: `Terminal tab ${TAB_B} not found`
+    })
   })
 })

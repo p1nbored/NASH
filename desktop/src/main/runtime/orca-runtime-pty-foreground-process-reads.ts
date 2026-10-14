@@ -9,14 +9,15 @@ import { splitWorktreeIdForFilesystem } from '../../shared/worktree/id'
 import type { WorkspaceSessionState } from '../../shared/workspace-session-state-types'
 import type { ExecutionHostId } from '../../shared/execution-host'
 import { LOCAL_EXECUTION_HOST_ID, getRepoExecutionHostId } from '../../shared/execution-host'
-import type { IPtyProvider } from '../providers/types'
+import type { IPtyProvider } from '../providers/pty-provider-contract'
 import { killAllProcessesForWorktree } from './worktree-teardown'
 import type { RuntimeCommandSurfaceHost } from './orca-runtime-core'
 import type { MemorySnapshot, StatsSummary } from '../../shared/process-stats-types'
 import { collectMemorySnapshot } from '../memory/collector'
 import type { PersistedUIState } from '../../shared/persisted-ui-state-types'
 import type { FeatureInteractionId } from '../../shared/feature-interactions'
-import type { RuntimeClientSettingsUpdate } from './runtime-client-settings'
+import type { RuntimeClientSettingsUpdate } from './runtime-client-settings-shape'
+import type { AgentLaunchSettingsMutation } from '../../shared/agent-launch-settings'
 import type { TerminalQuickCommand } from '../../shared/terminal-quick-command-types'
 import type { TerminalQuickCommandMutation } from '../../shared/terminal-quick-commands'
 import type { NativeChatSessionOptionSettingsMutation } from '../../shared/native-chat-session-options'
@@ -131,7 +132,8 @@ export class OrcaRuntimeWithPtyForegroundProcessReads extends OrcaRuntimeWithSta
     options: { connectionId?: string; allowUnverifiedStop?: boolean } = {}
   ): Promise<void> {
     const { connectionId, allowUnverifiedStop } = options
-    const provider = connectionId ? this.getSshProviderFn?.(connectionId) : this.getLocalProvider()
+    // Why: this process holds no SSH PTY provider, so an SSH workspace's terminals cannot be stopped here.
+    const provider = connectionId ? null : this.getLocalProvider()
     if (!provider) {
       throw new Error(`PTY provider unavailable for worktree deletion: ${worktreeId}`)
     }
@@ -140,14 +142,12 @@ export class OrcaRuntimeWithPtyForegroundProcessReads extends OrcaRuntimeWithSta
       // Why: `repoId::path` ids repeat across hosts, so an unfenced sweep stops a same-id
       // workspace's terminals on another connection (mirrors the IPC removal path).
       resolvedWorktreeId: worktreeId,
-      ...(connectionId ? { resolvedConnectionId: connectionId } : {}),
       localProvider: provider,
       onPtyStopped: this.onPtyStopped ?? undefined,
       requirePhysicalStop: true,
       // Why (#11960): set only by an explicit Force Delete, never by the ordinary
       // confirmation — otherwise the gate would be off on the primary delete path.
-      ...(allowUnverifiedStop ? { allowUnverifiedStop: true } : {}),
-      ...(connectionId ? { includeLocalRegistry: false } : {})
+      ...(allowUnverifiedStop ? { allowUnverifiedStop: true } : {})
     })
     // Structured sessions are counted here too, mirroring the IPC path: closing a user's chat is
     // now an ordinary outcome of this verb, and a removal that closed one but no PTY logged nothing.
@@ -207,6 +207,14 @@ export class OrcaRuntimeWithPtyForegroundProcessReads extends OrcaRuntimeWithSta
 
   getClientTerminalQuickCommands(): TerminalQuickCommand[] {
     return this.clientSettings.getTerminalQuickCommands()
+  }
+
+  getClientAgentLaunchSettings() {
+    return this.clientSettings.getAgentLaunch()
+  }
+
+  mutateClientAgentLaunchSettings(mutation: AgentLaunchSettingsMutation) {
+    return this.clientSettings.mutateAgentLaunch(mutation)
   }
 
   updateClientTerminalQuickCommands(

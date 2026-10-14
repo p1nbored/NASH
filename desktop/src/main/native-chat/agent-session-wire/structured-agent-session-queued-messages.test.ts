@@ -1,8 +1,8 @@
 // Mid-turn queueing against the real host, store and journal: a capable send
 // while the session owes work becomes a draft, the drain converts exactly one
 // draft when the work settles, Stop holds the queue (never withdrawing text)
-// until a user send starts its turn and lifts the pause, /clear carries the
-// cards to its replacement session, and a refused conversion comes back as a
+// until a user send starts its turn and lifts the pause, /clear keeps cards in
+// the same conversation, and a refused conversion comes back as a
 // returned card while a withdrawn one waits again.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -15,6 +15,7 @@ import { ConversationCommandParams } from '../../../shared/rpc-contract/structur
 import type { AgentMessageSource } from '../../../shared/agent-session-message-source'
 import { agentSessionSendBodyFingerprint } from '../../../shared/structured-agent-session-send-mutation'
 import { AgentSessionJournal } from '../agent-session-journal/journal-store'
+import { JournalStopAcceptor } from '../agent-session-journal/journal-stop-acceptance'
 import { JournalQueuedMessages } from '../agent-session-journal/journal-queued-messages'
 import {
   rotateStructuredAgentSessionHostInstanceForTests,
@@ -124,14 +125,14 @@ describe('accept', () => {
     expect(await drafts()).toHaveLength(0)
   })
 
-  it('refuses past the draft-count budget with a readable message', async () => {
+  it('accepts a human message beyond twenty retained drafts', async () => {
     await workingSend()
     for (let index = 0; index < 20; index += 1) {
       expect(await send(`draft ${index}`, 'queue-if-active').result).toMatchObject({ ok: true })
     }
-    expect(await send('one too many', 'queue-if-active').result).toMatchObject({
-      ok: false,
-      refusal: { message: expect.stringContaining('queue is full') }
+    expect(await send('another message', 'queue-if-active').result).toMatchObject({
+      ok: true,
+      value: { queued: { position: 21, state: 'waiting' } }
     })
   })
 })
@@ -519,21 +520,24 @@ describe('Stop and Delete', () => {
     })
   })
 
-  it('a Stop whose event fails to write still interrupts; only the pause is lost, and it is reported', async () => {
+  it('a Stop whose acceptance fails to write interrupts nothing and pauses nothing', async () => {
     await workingSend()
     const queued = await send('kept by the stop', 'queue-if-active').result
     if (!queued.ok || !('queued' in queued.value)) {
       throw new Error('expected a queued receipt')
     }
     const record = vi
-      .spyOn(AgentSessionJournal.prototype, 'appendStopEvent')
+      .spyOn(JournalStopAcceptor.prototype, 'accept')
       .mockRejectedValueOnce(new Error('disk full'))
     const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     try {
-      expect(await stop()).toMatchObject({ ok: true, value: { cancelled: true } })
-      expect(rig.cancelTurn).toHaveBeenCalledTimes(1)
+      expect(await stop()).toMatchObject({
+        ok: false,
+        refusal: { details: { reason: 'stopFailed' } }
+      })
+      expect(rig.cancelTurn).not.toHaveBeenCalled()
       expect(warned).toHaveBeenCalledWith(
-        expect.stringContaining("Stop's event row"),
+        expect.stringContaining('saving a Stop failed'),
         expect.anything()
       )
     } finally {
@@ -541,7 +545,7 @@ describe('Stop and Delete', () => {
       warned.mockRestore()
     }
     expect(await rig.queuePause()).toBeNull()
-    // The draft is intact (never withdrawn), merely unpaused.
+    // The draft is intact (never withdrawn), and nothing paused it.
     expect(await drafts()).toEqual([{ messageId: queued.value.queued.messageId, state: 'waiting' }])
   })
 
@@ -607,19 +611,15 @@ describe('/clear', () => {
     ).toBe(false)
   })
 
-  it('carries the drafts to the replacement session as visible cards on a paused queue — the same for every client', async () => {
+  it('preserves waiting cards in place and pauses them until user action for every client', async () => {
     const [firstId, secondId] = await pausedDrafts()
     const operationId = hostTestOperationId()
     const cleared = await clear(operationId)
     expect(cleared).toMatchObject({ ok: true, value: { command: 'clear', state: 'completed' } })
-    const replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+    const replacementId = cleared.ok ? SESSION : undefined
     if (!replacementId) {
-      throw new Error('expected a replacement session')
+      throw new Error('expected clear to succeed')
     }
-    // The source's cards are spent tombstones; the replacement shows them as plain waiting cards,
-    // held by the clear with no row (nothing runs there), until the user acts: Resume, or their
-    // next send starting its turn.
-    expect(await drafts()).toHaveLength(0)
     expect(await drafts(replacementId)).toEqual([
       { messageId: firstId, state: 'waiting' },
       { messageId: secondId, state: 'waiting' }
@@ -627,7 +627,11 @@ describe('/clear', () => {
     expect(await rig.queuePause(replacementId)).toBeNull()
     // Paused from before the first carried card lands: the idle replacement auto-sends nothing.
     await new Promise((resolve) => setTimeout(resolve, 250))
-    expect((await host.journalSnapshot(replacementId)).submissions).toHaveLength(0)
+    expect(
+      (await host.journalSnapshot(replacementId)).submissions.filter(
+        (entry) => entry.queuedMessageId !== undefined
+      )
+    ).toHaveLength(0)
     // A lost acknowledgement's replay re-runs nothing and duplicates nothing.
     const replayed = await clear(operationId)
     expect(replayed).toMatchObject({ ok: true, replayed: true })
@@ -639,7 +643,7 @@ describe('/clear', () => {
     })
   })
 
-  it("carries who each card is from on its body, fingerprinted for the replacement's echo", async () => {
+  it("preserves each card's sender and fingerprint across clear", async () => {
     const party = { address: 'term_peer', terminalHandle: 'term_peer', orcaSessionId: null }
     const from: AgentMessageSource = {
       kind: 'agent',
@@ -652,9 +656,9 @@ describe('/clear', () => {
     await stop()
     await settleAccepted(working, 'a')
     const cleared = await clear(hostTestOperationId())
-    const replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+    const replacementId = cleared.ok ? SESSION : undefined
     if (!replacementId) {
-      throw new Error('expected a replacement session')
+      throw new Error('expected clear to succeed')
     }
     const rows =
       host.collaboratorsForTests().sessions.get(replacementId)?.journal.queuedMessages.list() ?? []
@@ -665,12 +669,12 @@ describe('/clear', () => {
     )
   })
 
-  it("the replacement's unshown 'cleared' pause lifts through Resume exactly like a Stop's", async () => {
+  it("the clear pause lifts through Resume exactly like a Stop's", async () => {
     const [firstId] = await pausedDrafts()
     const cleared = await clear(hostTestOperationId())
-    const replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+    const replacementId = cleared.ok ? SESSION : undefined
     if (!replacementId) {
-      throw new Error('expected a replacement session')
+      throw new Error('expected clear to succeed')
     }
     expect(await rig.queuePause(replacementId)).toBeNull()
     const resumed = await host.queuedMessagesResume(CALLER, {
@@ -692,29 +696,19 @@ describe('/clear', () => {
     )
   })
 
-  it('a carry whose insert fails leaves no pause over the empty replacement', async () => {
-    await pausedDrafts()
-    const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const insert = vi
-      .spyOn(JournalQueuedMessages.prototype, 'insert')
-      .mockRejectedValueOnce(new Error('disk full'))
-    let replacementId: string | undefined
+  it('clears without copying or inserting any queued card', async () => {
+    const ids = await pausedDrafts()
+    const insert = vi.spyOn(JournalQueuedMessages.prototype, 'insert')
     try {
-      const cleared = await clear(hostTestOperationId())
-      replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+      expect(await clear(hostTestOperationId())).toMatchObject({ ok: true })
+      expect(insert).not.toHaveBeenCalled()
+      expect((await drafts()).map((card) => card.messageId)).toEqual(ids)
     } finally {
       insert.mockRestore()
-      warned.mockRestore()
     }
-    if (!replacementId) {
-      throw new Error('expected a replacement session')
-    }
-    expect(await drafts(replacementId)).toHaveLength(0)
-    const journal = host.collaboratorsForTests().sessions.get(replacementId)?.journal
-    expect(journal && structuredQueuePauses(journal)).toEqual([])
   })
 
-  it('a returned card carries over as a plain waiting draft on the paused replacement', async () => {
+  it('preserves a returned card and its refusal after clear', async () => {
     const working = await workingSend()
     const queued = await send('refused then cleared', 'queue-if-active').result
     if (!queued.ok || !('queued' in queued.value)) {
@@ -728,15 +722,12 @@ describe('/clear', () => {
       expect(await drafts()).toMatchObject([{ messageId: draftId, state: 'returned' }])
     )
     const cleared = await clear(hostTestOperationId())
-    const replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+    const replacementId = cleared.ok ? SESSION : undefined
     if (!replacementId) {
-      throw new Error('expected a replacement session')
+      throw new Error('expected clear to succeed')
     }
-    // The refusal belonged to the source's submissions; on the replacement the
-    // text is simply a waiting draft again, behind the replacement's pause.
-    expect(await drafts(replacementId)).toEqual([{ messageId: draftId, state: 'waiting' }])
+    expect(await drafts(replacementId)).toEqual([{ messageId: draftId, state: 'returned' }])
     expect(await rig.queuePause(replacementId)).toBeNull()
-    expect(await drafts()).toHaveLength(0)
   })
 
   it('a clear an older build left prepared holds no draft: it drains when the turn settles', async () => {
@@ -758,15 +749,15 @@ describe('/clear', () => {
     await eventually(async () => expect(await rig.handoff(draftId)).toBeDefined())
   })
 
-  it('a clear with no drafts carries nothing and answers exactly as before', async () => {
+  it('a clear with no drafts keeps the existing conversation open', async () => {
     const cleared = await clear(hostTestOperationId())
     expect(cleared).toMatchObject({ ok: true, value: { command: 'clear', state: 'completed' } })
-    const replacementId = cleared.ok ? cleared.value.replacementSessionId : undefined
+    const replacementId = cleared.ok ? SESSION : undefined
     if (!replacementId) {
-      throw new Error('expected a replacement session')
+      throw new Error('expected clear to succeed')
     }
-    // Nothing to carry, so nothing opened the new conversation.
-    expect(host.hasSession(replacementId)).toBe(false)
+    // The journal remains open, with no child started.
+    expect(host.hasSession(replacementId)).toBe(true)
     expect(await drafts(replacementId)).toHaveLength(0)
   })
 })

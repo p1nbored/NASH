@@ -24,7 +24,7 @@ vi.mock('@/store', () => ({
   useAppStore: { getState: () => mocks.getState() }
 }))
 
-vi.mock('@/runtime/web-runtime-session', () => ({
+vi.mock('@/runtime/web-runtime-browser-creation', () => ({
   createWebRuntimeSessionBrowserTab: (...args: unknown[]) => mocks.createRemote(...args)
 }))
 

@@ -1,9 +1,28 @@
+import {
+  existsSync,
+  readFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, relative, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   TYPECHECK_PROJECTS,
   admissibleHeapGib,
-  planTypecheckBatches
+  planTypecheckBatches,
+  resolveProjectCompiler,
+  parseTypecheckOptions,
+  typecheckBatches,
+  runTypecheckProjects
 } from './run-typecheck-projects-in-parallel.mjs'
+
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 const CI_RUNNER = { totalBytes: 16 * 1024 ** 3, parallelism: 4 }
 const DEV_LAPTOP = { totalBytes: 64 * 1024 ** 3, parallelism: 18 }
@@ -22,8 +41,8 @@ function batchOf(batches, config) {
 describe('typecheck project admission', () => {
   it('keeps the two expensive projects off the same CI runner', () => {
     const batches = planFor(CI_RUNNER)
-    expect(batchOf(batches, 'tsconfig.node.json')).not.toBe(
-      batchOf(batches, 'tsconfig.tc.web.json')
+    expect(batchOf(batches, 'config/tsconfig.node.json')).not.toBe(
+      batchOf(batches, 'config/tsconfig.tc.web.json')
     )
   })
 
@@ -70,5 +89,134 @@ describe('typecheck project admission', () => {
     // A single project over budget runs anyway, so this is the ceiling the pool cannot rescue.
     const heaviest = Math.max(...TYPECHECK_PROJECTS.map((project) => project.heapGib))
     expect(heaviest).toBeLessThanOrEqual(admissibleHeapGib(CI_RUNNER.totalBytes))
+  })
+})
+
+describe('workspace package test typecheck', () => {
+  const packagesDir = join(repoRoot, 'src', 'packages')
+  const packageTestProjects = readdirSync(packagesDir)
+    .map((name) => join(packagesDir, name, 'tsconfig.test.json'))
+    .filter((config) => existsSync(config))
+    .map((config) => relative(repoRoot, config).split(sep).join('/'))
+
+  it('type-checks every package test project, which no root project includes', () => {
+    expect(packageTestProjects).toContain('src/packages/process-host/tsconfig.test.json')
+    const scheduled = TYPECHECK_PROJECTS.map((project) => project.config)
+    expect(scheduled).toEqual(expect.arrayContaining(packageTestProjects))
+  })
+
+  it("resolves a package project's compiler from that package, not the root", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'orca-typecheck-compiler-')))
+    try {
+      const writeCompiler = (directory, version) => {
+        const compilerDir = join(root, directory, 'node_modules', 'typescript')
+        mkdirSync(join(compilerDir, 'bin'), { recursive: true })
+        writeFileSync(
+          join(compilerDir, 'package.json'),
+          JSON.stringify({ name: 'typescript', version, bin: { tsc: './bin/tsc' } })
+        )
+        return join(compilerDir, 'bin', 'tsc')
+      }
+      const rootCompiler = writeCompiler('.', '6.0.0')
+      const packageCompiler = writeCompiler('src/packages/example', '7.0.0')
+      mkdirSync(join(root, 'config'))
+
+      expect(resolveProjectCompiler('src/packages/example/tsconfig.test.json', root)).toBe(
+        packageCompiler
+      )
+      expect(resolveProjectCompiler('config/tsconfig.node.json', root)).toBe(rootCompiler)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('CI compiler selection', () => {
+  it('keeps native incremental checking as the local default', () => {
+    expect(parseTypecheckOptions([]).compiler).toBe('native')
+  })
+
+  it.each(['--compiler=typo', '--bun-concurrency=0', '--bun-threads=NaN', '--bun-concurrency=5'])(
+    'rejects unsafe or unknown options: %s',
+    (argument) => {
+      expect(() => parseTypecheckOptions([argument])).toThrow()
+    }
+  )
+
+  it('bounds Bun project concurrency and reserves memory for overlapping checks', () => {
+    const options = parseTypecheckOptions([
+      '--compiler=bun',
+      '--bun-concurrency=2',
+      '--bun-threads=2'
+    ])
+    const batches = typecheckBatches(TYPECHECK_PROJECTS, {
+      ...options,
+      memoryBytes: CI_RUNNER.totalBytes,
+      parallelism: 4
+    })
+    expect(batches.map((batch) => batch.length)).toEqual([2, 2])
+    expect(batches.flat().map((project) => project.config)).toEqual(
+      TYPECHECK_PROJECTS.map((project) => project.config)
+    )
+    expect(
+      typecheckBatches(TYPECHECK_PROJECTS, {
+        ...options,
+        memoryBytes: 4 * 1024 ** 3,
+        parallelism: 4
+      }).every((batch) => batch.length === 1)
+    ).toBe(true)
+  })
+
+  it('rejects a mismatched package compiler before invoking Bun', async () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'orca-bun-compiler-version-')))
+    try {
+      mkdirSync(join(root, 'node_modules', 'typescript'), { recursive: true })
+      writeFileSync(
+        join(root, 'node_modules', 'typescript', 'package.json'),
+        JSON.stringify({ name: 'typescript', version: '8.0.0', bin: 'compiler.cjs' })
+      )
+      const failures = await runTypecheckProjects({
+        compiler: 'bun',
+        root,
+        projects: [{ config: 'tsconfig.json', heapGib: 1 }]
+      })
+      expect(failures).toHaveLength(1)
+      expect(failures[0].message).toContain('resolves 8.0.0')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('continues to later projects after a compiler exits with an error', async () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'orca-typecheck-failure-')))
+    try {
+      const compilerDir = join(root, 'node_modules', 'typescript')
+      mkdirSync(compilerDir, { recursive: true })
+      mkdirSync(join(root, 'config'))
+      writeFileSync(
+        join(compilerDir, 'package.json'),
+        JSON.stringify({ name: 'typescript', bin: { tsc: 'compiler.cjs' } })
+      )
+      writeFileSync(
+        join(compilerDir, 'compiler.cjs'),
+        "const fs = require('node:fs'); const config = process.argv.at(-1); fs.appendFileSync('checked.txt', config + '\\n'); process.exit(config.includes('broken') ? 1 : 0)"
+      )
+      const failures = await runTypecheckProjects({
+        root,
+        projects: [
+          { config: 'config/broken.json', heapGib: 1 },
+          { config: 'config/healthy.json', heapGib: 1 }
+        ],
+        memoryBytes: 2 * 1024 ** 3,
+        parallelism: 1
+      })
+      expect(failures).toHaveLength(1)
+      expect(failures[0].message).toContain('broken.json exited with code 1')
+      expect(readFileSync(join(root, 'checked.txt'), 'utf8')).toBe(
+        'config/broken.json\nconfig/healthy.json\n'
+      )
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 })

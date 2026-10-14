@@ -3,7 +3,7 @@ import { SYNTHETIC_KILL_EXIT_DUPLICATE_WINDOW_MS } from '../ipc/pty/delivery/vis
 /**
  * Why main stopped a PTY on purpose. Both kinds keep the pane's binding through the exit:
  * - `reversible`: sleep or hibernation; the binding is the wake hint.
- * - `replaced`: a restart stops the old process so a new one can take the pane.
+ * - `replaced`: a restart stops the old process, or a reattach finds it gone; a new one takes over.
  */
 export type TerminalIntentionalStopKind = 'reversible' | 'replaced'
 

@@ -1,5 +1,9 @@
 {
   "app": {
+    "saving": {
+      "delayedTitle": "プロファイルのストレージ処理に通常より時間がかかっています",
+      "delayedDescription": "この処理が完了するまで、その後の保存が遅れる場合があります。"
+    },
     "recoverableError": {
       "rootTitle": "NASH でレンダラーエラーが発生しました。",
       "rootDescription": "アプリシェルのレンダリングを完了できませんでした。再マウントを試すか、エラーが解決しない場合は NASH を再起動してください。",
@@ -11,11 +15,61 @@
     "retrying": "再試行中…"
   },
   "settings": {
+    "chat": {
+      "permissionsTitle": "新しいチャットの権限",
+      "permissionsDescription": "新しいチャットにのみ適用されます。ターミナルで開くAgentには、設定 → Agent → Agentの権限が適用されます。",
+      "description": "チャットの外観と動作を選びます。",
+      "names": {
+        "title": "チャット名",
+        "description": "選択したツールが最初のメッセージから新規チャットの名前を生成します。名前が生成されない場合は、Claude Chat または Codex Chat のままです。",
+        "enable": "チャットに自動で名前を付ける",
+        "recipe": "チャット名",
+        "recipeDescription": "新規チャットの最初のメッセージから短い名前を生成します。",
+        "customCommandDescription": "「カスタムコマンド」を選ぶレシピで共有するコマンドです。{prompt} を使うと入力を引数として渡し、使わない場合は標準入力で渡します。",
+        "saveFailed": "チャット名の設定を保存できませんでした。",
+        "searchAgent": "Agent",
+        "searchTemplate": "コマンドテンプレート"
+      }
+    },
     "terminal": {
       "optionLayoutAlt": "ABCまたはU.S. — OptionはAlt/Escシーケンスを送信します",
       "optionLayoutCompose": "この配列ではOptionで@、€、[、]などの文字を入力します",
       "optionLayoutUnknown": "不明な配列 — Optionで文字を入力します（安全な既定値）",
-      "optionShortcutHint": "Optionショートカットには「両方」、アクセント付き文字や記号には「オフ」、用途を左右のOptionキーに分けるには「左」または「右」を選んでください。"
+      "optionShortcutHint": "Optionショートカットには「両方」、アクセント付き文字や記号には「オフ」、用途を左右のOptionキーに分けるには「左」または「右」を選んでください。",
+      "windows": {
+        "administratorApproval": "Windows が承認を求めます。普段お使いのアカウントを使用してください。",
+        "administratorDialogScope": "これによりアプリ全体の権限が変更されます。SSH と WSL はそれぞれ独自の権限を保持します。",
+        "administratorDocumentation": "ガイドを読む",
+        "administratorLabel": "管理者モード",
+        "administratorPromptCancellation": "Windows のプロンプトをキャンセルすると、保持されているターミナルとともに NASH が再び開きます。SSH と WSL の権限はそれぞれのホストで管理されたままです。",
+        "administratorRestartConsequences": "先に作業を保存してください。承認後、現在のローカルターミナルホスト上のターミナルと Agent が閉じられます。復元されたタブは新規管理者シェルを開きます。",
+        "administratorRestartFailed": "NASH を再起動できませんでした。もう一度試すか、マニュアルの手順を使用してください。",
+        "administratorScope": "NASH アプリの権限。既存のターミナルでは異なる場合があります。",
+        "administratorSearchDescription": "NASH の Windows 権限を確認するか、管理者承認で再起動します。",
+        "administratorStatus": "管理者",
+        "cancelAdministratorRestart": "キャンセル",
+        "checkingAdministrator": "確認中…",
+        "closeAdministratorHelp": "閉じる",
+        "closeLocalSessions": "作業を保存し、すべてのローカルターミナルセッションを閉じてから、NASH を終了してください。",
+        "confirmAdministratorRestart": "管理者として再起動しますか？",
+        "keywordAdmin": "管理者",
+        "keywordAdministrator": "管理者",
+        "keywordElevated": "昇格",
+        "keywordPermissions": "権限",
+        "keywordRestart": "再起動",
+        "keywordUac": "uac",
+        "launchAdministrator": "Windows のスタートメニューで NASH を右クリックし、「管理者として実行」を選択します。普段お使いのアカウントで Windows のプロンプトを承認してください。",
+        "launchStandard": "Windows のスタートメニューから NASH を通常どおり開きます。",
+        "manualAdministratorHelp": "マニュアルの手順",
+        "openManageSessions": "セッションの管理を開く",
+        "restartAdministrator": "管理者として再起動",
+        "restartingAdministrator": "再起動中…",
+        "retainedTerminalPermissions": "新規ターミナルが引き続き以前の権限を使用している場合は、セッションの管理を開き、「デーモンを再起動」を選択します。これにより、ローカルターミナルと実行中のコマンドが閉じられます。",
+        "returnStandardHelp": "標準モードガイド",
+        "runAdministratorHelp": "管理者ガイド",
+        "standardStatus": "標準ユーザー",
+        "unknownAdministrator": "判定できません"
+      }
     },
     "appearance": {
       "language": {
@@ -125,27 +179,24 @@
     },
     "agents": {
       "codexTerminalServerIsolation": {
-        "description": "NASH のステータスとタブを閉じる動作が正しく動作するようにします。 Codex の共有サーバーとその Agent の概要を使用するには、オフにします。新規ターミナルに適用されます。",
-        "title": "各 Codex ターミナルを独自のサーバー上で実行する"
+        "title": "各 Codex ターミナルを独自のサーバー上で実行する",
+        "description": "NASH のステータスとタブを閉じる動作が正しく動作するようにします。 Codex の共有サーバーとその Agent の概要を使用するには、オフにします。新規ターミナルに適用されます。"
       },
       "codexSharedServerWarning": {
         "title": "Codex タブがサーバーを共有する場合に警告する",
         "description": "自分で開始した Codex が他のタブとサーバーを共有している場合、Agent のステータスが間違っている可能性があるため、その Codex に関する通知が表示されます。"
-      }
-    },
-    "chat": {
-      "description": "チャットの外観と名前の付け方を選びます。",
-      "names": {
-        "title": "チャット名",
-        "description": "選択したツールが最初のメッセージから新規チャットの名前を生成します。名前が生成されない場合は、Claude Chat または Codex Chat のままです。",
-        "enable": "チャットに自動で名前を付ける",
-        "recipe": "チャット名",
-        "recipeDescription": "新規チャットの最初のメッセージから短い名前を生成します。",
-        "customCommandDescription": "「カスタムコマンド」を選ぶレシピで共有するコマンドです。{prompt} を使うと入力を引数として渡し、使わない場合は標準入力で渡します。",
-        "saveFailed": "チャット名の設定を保存できませんでした。",
-        "searchAgent": "Agent",
-        "searchTemplate": "コマンドテンプレート"
-      }
+      },
+      "environmentName": "環境変数名",
+      "environmentValue": "{{name}} の値",
+      "savedEnvironment": "保存済みの値 · 置き換えるには入力",
+      "newEnvironment": "値",
+      "removeEnvironment": "削除",
+      "loadingHost": "Agent設定を読み込み中…",
+      "updateHost": "Agentの起動設定を編集するには、このサーバーを更新してください。",
+      "readFailed": "Agent設定を読み込めませんでした。ホストへの接続を確認して再試行してください。",
+      "saveFailed": "Agent設定を保存できませんでした。ホストへの接続を確認して再試行してください。",
+      "hostDefaults": "選択したホストで起動する新しいAgentの既定値。",
+      "save": "保存"
     },
     "followSymlinkedDirectoriesKeywords": {
       "symlink": "シンボリックリンク",
@@ -167,6 +218,7 @@
     "reportCrash": "クラッシュを報告…",
     "file": "ファイル",
     "exit": "終了",
+    "quitApp": "{{appName}} を終了",
     "edit": "編集",
     "appearance": "外観",
     "toggleLeftSidebar": "左サイドバーの表示/非表示",
@@ -174,7 +226,7 @@
     "showStatusBar": "ステータスバーを表示",
     "showTasksButton": "タスクボタンを表示",
     "showAutomationsButton": "オートメーションボタンを表示",
-    "showMobileButton": "Orca Mobile ボタンを表示",
+    "showMobileButton": "NASH Mobile ボタンを表示",
     "showTitlebarAppName": "タイトルバーのアプリ名を表示",
     "view": "表示",
     "reload": "リロード",
@@ -238,9 +290,9 @@
     "linearIssue": {
       "createLabel": "Linear 課題 {{value0}}: {{value1}} からワークツリーを作成",
       "pendingLabel": "Linear 課題 {{value0}} からワークツリーを作成",
-      "loadingLabel": "リニア問題 {{value0}} を読み込み中",
+      "loadingLabel": "Linear Issue {{value0}} を読み込み中",
       "createHint": "Linear Issue からワークツリーを作成",
-      "loadingHint": "リニア Issue を読み込み中…"
+      "loadingHint": "Linear Issue を読み込み中…"
     },
     "renderCapOverflow": "{{value0}} 詳細",
     "seeMore": "もっと見る",
@@ -346,6 +398,18 @@
             "07f788de83": "ウェブソケット"
           }
         }
+      },
+      "pairingSecurity": {
+        "hide": "非表示",
+        "storedCodeInsecureOrigin": "このブラウザは再利用可能なペアリングコードを保持します。このページが別のマシン上の平文 http であるためです。このブラウザのストレージを読み取れる人は誰でもそれを使用できます。より安全にペアリングするには、https で、このコンピュータの localhost で、または SSH トンネル経由で NASH を開き、もう一度ペアリングしてください。",
+        "storedCodeNoEd25519": "このブラウザは再利用可能なペアリングコードを保持します。安全なサインインキー (Ed25519) を作成できないためです。より安全にペアリングするには、最新のブラウザを使用してもう一度ペアリングしてください。",
+        "sessionInsecureOrigin": "このページが別のマシン上の平文 http であるため、このペアリングはこのタブを開いている間だけ有効です。このブラウザが記憶するペアリングを行うには、https で、このコンピュータの localhost で、または SSH トンネル経由で NASH を開いてください。",
+        "sessionNoEd25519": "このブラウザは安全なサインインキー (Ed25519) を作成できないため、このペアリングはこのタブを開いている間だけ有効です。このブラウザが記憶するペアリングを行うには、最新のブラウザを使用してください。"
+      },
+      "runtimeAuth": {
+        "insecureOrigin": "NASH はこのページからのペアリングを拒否しました。このページが別のマシン上の平文 http であるため、ネットワーク経路上の誰でも置き換えてペアリングコードを奪う可能性があります。https で、このコンピュータの localhost で、または SSH トンネル経由で Web クライアントを開いてください。それでも許可するには、サーバーの管理者が ORCA_ALLOW_INSECURE_WEB_PAIRING=1 を指定して NASH を再起動できます。",
+        "deviceDowngraded": "この NASH サーバーはこのブラウザのサインインキーをサポートしなくなりました (ダウングレードされた可能性があります)。サーバーを更新するか、このブラウザを再度ペアリングしてください。",
+        "unauthorized": "未認証です。この Web クライアントを再度ペアリングしてください。"
       }
     },
     "store": {
@@ -441,7 +505,7 @@
             "worktree": {
               "meta": {
                 "persist": {
-                  "877e3638d8": "リモートランタイムを更新して、このワークスペースのリンクされた問題を変更します",
+                  "877e3638d8": "このワークスペースにリンクされた Issue を変更するには、リモートランタイムを更新してください",
                   "4367540861": "リモートランタイムを更新して Linear Issue をリンクする",
                   "github": {
                     "pr": {
@@ -490,7 +554,7 @@
             "319d7cf39b": "クラウドプロファイルが作成されました",
             "d6e764e7db": "このプロファイルを再接続してください",
             "f0c9e11a6d": "クラウドプロファイルの作成に失敗しました",
-            "8b8fa73174": "Orca Cloud へのサインインが設定されていません",
+            "8b8fa73174": "NASH Cloud へのサインインが設定されていません",
             "33290e88ed": "プロファイルの接続に失敗しました",
             "9fcb07a796": "プロファイルが接続されました",
             "2f6c78a039": "プロファイル認証の更新に失敗しました",
@@ -642,13 +706,6 @@
           "background": {
             "session": {
               "4ca0651d56": "自動化プロンプトは送信されませんでした。ワークスペースを開いて貼り付けてください。"
-            }
-          }
-        },
-        "worktree": {
-          "background": {
-            "terminals": {
-              "setupTitle": "設定"
             }
           }
         },
@@ -919,6 +976,7 @@
               "undecryptableUnknown": "{{value0}} Cookie を復号化できなかったため、スキップされました。ソースブラウザを完全に閉じて、インポートを再試行してください。",
               "unrecognizedWarning": "Cookie のインポートは、このバージョンの NASH が認識しない警告とともに終了しました。 NASH を更新して詳細を確認し、Cookie に依存する前にこのプロファイルを確認してください。",
               "undecryptableUnrecognizedReason": "{{value0}} Cookie は復号化できず、このバージョンの NASH が認識しない理由でスキップされました。 NASH を更新して詳細を確認し、インポートを再試行してください。",
+              "partitionSkippedBreakdown": "サイト パーティションを読み取れない Cookie: {{value0}}。既存のセッションを保護するためにインポートしなかった関連 Cookie: {{value1}}。これらのサイトの既存の Cookie は変更されていません。再度ログインする前に、このプロファイルでこれらのサイトを確認してください。",
               "partitionSkipped": "{{value0}} Cookie は、サイトパーティションを読み取れなかったため、インポートされませんでした。 NASH でこれらのサイトに再度サインインします。",
               "locationClientHosted": "このデバイスから読み取り、{{value0}} ワークスペース用にここに保存されます。",
               "locationRemoteHost": "{{value0}} 上のブラウザから読み取り、そこに保存されます。",
@@ -961,7 +1019,8 @@
       },
       "file": {
         "preview": {
-          "pairedOutsideWorktree": "ワークスペース外のファイルは、ペアリングされたサーバーではまだプレビューできません。"
+          "pairedOutsideWorktree": "ワークスペース外のファイルは、ペアリングされたサーバーではまだプレビューできません。",
+          "webClientUnavailable": "Web クライアントではドキュメントのプレビューを利用できません。"
         }
       },
       "clipboardWriteFailure": {
@@ -1004,7 +1063,6 @@
         "workspaceHostUnresolved": "ターゲットワークスペースは複数のホストにまたがっているため、この実行では使用する単一のホストがありません。"
       },
       "useComposerState": {
-        "7eb3f44ff7": "選択した Agent は無効です。作成する前に、有効な Agent を選択してください。",
         "b2ead86962": "PR ベースを解決できませんでした。",
         "3db83fc58a": "このホスト上に、添付に使用できるプロジェクトパスがありません。",
         "ba6cb77082": "プロジェクトへの接続に失敗しました。",
@@ -1015,7 +1073,8 @@
         "5f3d2c8a1b": "MR のベースブランチを特定できませんでした。",
         "dropPartiallyAttached": "{{count}} 個のアイテムのうち {{failureCount}} 個を接続できませんでした。",
         "dropPartiallyAttached_one": "{{count}} アイテムの {{failureCount}} を接続できませんでした。",
-        "dropPartiallyAttached_other": "{{count}} 個のアイテムのうち {{failureCount}} 個を接続できませんでした。"
+        "dropPartiallyAttached_other": "{{count}} 個のアイテムのうち {{failureCount}} 個を接続できませんでした。",
+        "7eb3f44ff7": "選択した Agent は無効です。作成する前に、有効な Agent を選択してください。"
       },
       "useGlobalFileDrop": {
         "38c9f034ff": "ドロップされたファイルのアップロードに失敗しました。",
@@ -1036,19 +1095,11 @@
         "0e3cf53060": "ブラウザタブ {{value0}} が見つかりません",
         "2f6637fe6c": "ブラウザタブ {{value0}} はピン留めされています",
         "a8d2bf8e9e": "閉じるためのアクティブなブラウザタブがありません",
-        "291c8ed902": "リモートランタイムがアクティブな間はブラウザタブは使用できません",
-        "f45fa2b03c": "リモートランタイムがアクティブな間はブラウザプロファイルを使用できません",
         "f000b2ff76": "アクティブなワークツリーがありません",
         "56d3ec4203": "無題の markdown ファイルの作成に失敗しました。",
         "f6300deb8b": "新規ブラウザタブ",
         "7a64b31991": "リモートランタイムがアクティブな間は、ローカルターミナルの作成は利用できません",
         "60428567b4": "リモートランタイムがアクティブな間は、ローカルターミナルの表示は利用できません",
-        "f8aaf2bde3": "ワークスペースがアップロードされました",
-        "2fe88c2e06": "リモートワークスペースの同期は利用できません",
-        "workspaceChangedOnAnotherDevice": "ワークスペースが別のデバイスで変更されました",
-        "2ec42e1c52": "リモートワークスペースはまだありません",
-        "88214a785b": "ワークスペースの同期はローカルセッションのハイドレーションを待機し、タイムアウトになりました",
-        "4f78ba5885": "ワークスペースが同期されました",
         "ef223fbb6b": "接続を試みたデバイスがペアリングされていません",
         "11992d0337": "お使いのスマートフォンや別の NASH クライアントの場合は、[設定] → [モバイル] から再度ペアリングしてください。",
         "6573cfe955": "モバイル設定を開く",
@@ -1277,7 +1328,7 @@
         "e31651a224": "失敗したチェックを再実行する",
         "1b56e28faa": "再実行",
         "f4b1292569": "これらのチェックでデフォルトの AI Agent を開始します",
-        "9a1004fc76": "リフレッシュチェック",
+        "9a1004fc76": "チェックを更新",
         "03e542fcfe": "失敗したチェックのため AI Agent を開始できませんでした: {{value0}}",
         "28986b3747": "失敗したチェックに対して AI Agent を開始しました。",
         "1690fd7f4a": "修正が必要なチェックはありません。",
@@ -1791,7 +1842,7 @@
         "68605516dd": "失敗したチェックを再実行する",
         "522d9353e1": "再実行",
         "0fa8b8faec": "これらのチェックでデフォルトの AI Agent を開始します",
-        "5d0f42766d": "リフレッシュチェック",
+        "5d0f42766d": "チェックを更新",
         "98583589c6": "失敗したチェックのため AI Agent を開始できませんでした: {{value0}}",
         "51c65c0265": "修正が必要なチェックはありません。",
         "788a782bb0": "チェックの再実行に失敗しました",
@@ -1947,7 +1998,7 @@
         "92b0f9d921": "認証されているので、再試行してください。",
         "cd8c34aac1": "gh",
         "cf82170065": "リポジトリにスターを付けることができませんでした。確認する",
-        "30c36231c1": "Orca はオープンソースです。今日役に立ったなら、GitHub のスターが他の開発者の発見につながります。",
+        "30c36231c1": "NASH はオープンソースです。今日役に立ったなら、GitHub のスターが他の開発者の発見につながります。",
         "b5e685e4d9": "閉じる",
         "5f6df21046": "NASH を楽しんでいますか？",
         "2d67b6c849": "GitHub でスターを付ける",
@@ -2399,8 +2450,8 @@
         "34c8fbb46e": "SSH リモート",
         "63c2be1914": "SSH が切断されました",
         "95be6587d3": "ワークツリー「{{value0}}」を作成する",
-        "worktreesHeader": "ワークツリー",
-        "recentWorktreesHeader": "最近のワークツリー",
+        "worktreesHeader": "ワークスペース",
+        "recentWorktreesHeader": "最近のワークスペース",
         "settingsBadge": "設定",
         "actionBadge": "操作",
         "paletteHostBadge": "ホスト: {{value0}}",
@@ -2409,8 +2460,8 @@
         "projectBadge": "プロジェクト",
         "repoGroupBadge": "リポジトリグループ",
         "pluginCommandFailed": "プラグインのコマンドを実行できませんでした。",
-        "27f10cca63": "チャット、ターミナル、ワークツリー、設定、操作を検索します…",
-        "2770f02910": "チャット、ターミナル、ワークツリー、設定、操作を検索します",
+        "27f10cca63": "チャット、ターミナル、ワークスペース、設定、操作を検索します…",
+        "2770f02910": "チャット、ターミナル、ワークスペース、設定、操作を検索します",
         "recentChatsTerminalsHeader": "最近のチャットとターミナル",
         "lastActiveTime": "最後にアクティブになったのは{{value0}}前です"
       },
@@ -2461,7 +2512,7 @@
           "GhAuthErrorHelp": {
             "7e800068d8": "リロード",
             "baa006f9af": "ドキュメント",
-            "3fefeebde4": "コピー・リフレッシュ・コマンド",
+            "3fefeebde4": "更新コマンドをコピー",
             "9c2da6353b": "ログインコマンドのコピー",
             "b436c586d1": "コマンドをコピー",
             "8a7f6bf5dc": "コピーに失敗しました",
@@ -2940,7 +2991,6 @@
             "efb3843e75": "ワークスペースのフィルターと並べ替え",
             "93b7381d50": "フィルター",
             "a615e24679": "並べ替え",
-            "4cc5b73efe": "非アクティブなワークスペースを検索しています…",
             "5bf2e88480": "{{value0}}/{{value1}} {{value2}} をスキャンしました",
             "searchPlaceholder": "ワークスペースの検索",
             "ageFilter": "年",
@@ -2952,7 +3002,6 @@
             "1d3503357d": "削除の続行中にこれを閉じて後で戻れます。",
             "4c2990886e": "{{value0}}/{{value1}} 件を削除済み",
             "86ba852118": "{{value0}}、{{value1}} 件が失敗",
-            "7b7bde5181": "これまでに確認したワークスペース: {{value0}}",
             "deletingCount": "削除中のワークスペース: {{value0}}",
             "deleteCount": "ワークスペースを削除しますか: {{value0}}?",
             "selectedForDeletionCount": "削除対象として選択済み: {{value0}}",
@@ -3029,7 +3078,8 @@
           }
         },
         "dialog": {
-          "f26c4baeda": "閉じる"
+          "f26c4baeda": "閉じる",
+          "minimize": "最小化"
         },
         "repo": {
           "multi": {
@@ -3119,25 +3169,25 @@
           },
           "MobileDriverOverlay": {
             "c6460cf584": "操作を取り戻す",
-            "c8f2e1a4b9": "このターミナルを取り戻す",
             "c44659e09f": "スマホ操作中",
-            "7cffad954c": "折りたたむ",
             "3eed73394f": "キーボードが一時停止しています",
-            "faa367dc74": "スマホが携帯サイズのまま残しています",
-            "54f7d6f69d": "すべてのターミナルを取り戻す",
-            "b3d8e1f42a": "このターミナルを復元",
-            "e8c4f2a91b": "すべてのターミナルを復元",
-            "f2a8b9c1d3": "スマホから",
             "c7e4a2b8f1": "スマホが操作中です",
-            "d9f3c6e2a4": "デスクトップのキーボードは一時停止中です。このターミナルを取り戻してここで入力するか、スマホが操作しているすべてのターミナルを取り戻すか、折りたたんで見続けてください。",
-            "a6b1d8f3e2": "スマホのセッションは終了しました。このターミナル、またはスマホが携帯サイズのまま残したすべてのターミナルをデスクトップサイズに復元してください。",
             "4b7e1c9a20": "スマートフォンにぴったりのサイズ",
             "9d2f6a3e58": "電話セッションが終了しました。このウィンドウに合わせて復元します。",
             "1e5c8b7d43": "復元する",
             "6a3d9f2c71": "すべて復元する",
             "8c1a5e9f36": "デスクトップの入力が一時停止されます。出力はストリーミングを続けます。",
             "2f7b4d1e95": "全部取り戻せ",
-            "3a9c5f7e12": "最小化する"
+            "3a9c5f7e12": "最小化する",
+            "c8f2e1a4b9": "このターミナルを取り戻す",
+            "7cffad954c": "折りたたむ",
+            "faa367dc74": "スマホが携帯サイズのまま残しています",
+            "54f7d6f69d": "すべてのターミナルを取り戻す",
+            "b3d8e1f42a": "このターミナルを復元",
+            "e8c4f2a91b": "すべてのターミナルを復元",
+            "f2a8b9c1d3": "スマホから",
+            "d9f3c6e2a4": "デスクトップのキーボードは一時停止中です。このターミナルを取り戻してここで入力するか、スマホが操作しているすべてのターミナルを取り戻すか、折りたたんで見続けてください。",
+            "a6b1d8f3e2": "スマホのセッションは終了しました。このターミナル、またはスマホが携帯サイズのまま残したすべてのターミナルをデスクトップサイズに復元してください。"
           },
           "TerminalAgentSessionForkDialog": {
             "17fc841e59": "コンテキストをコピーする",
@@ -3189,8 +3239,9 @@
             "sourceRestoring": "このターミナルを再接続しています — その出力が再確立されています。セッションはまだ実行中です。",
             "ptyAllocationLimit": "システムはこれ以上 pty デバイスを割り当てられません。NASH または他のプログラムで使っていないターミナルをいくつか閉じてから、もう一度お試しください。",
             "terminalProcessLimit": "システムはこれ以上ターミナルプロセスを起動できません。使っていないターミナルを閉じるか、不要なプロセスを終了してから、もう一度お試しください。",
-            "heldByPreviousRelay": "このターミナルは以前のバージョンの NASH のもとでホスト上でまだ実行中ですが、このバージョンからは接続できません。終了するまで実行され続けます。ここで作業を続けるには新しいターミナルを開いてください。",
-            "ownerHostMismatch": "このターミナルの保存済みセッションは別のホスト接続に属しているため、NASH はここで再接続できません。続行するには、新規ターミナルを開いてください。"
+            "hostTerminalCap": "ホストではすでに NASH が許可する上限までターミナルが実行されています。不要になったターミナルを閉じてから、もう一度お試しください。",
+            "ownerHostMismatch": "このターミナルの保存済みセッションは別のホスト接続に属しているため、NASH はここで再接続できません。続行するには、新規ターミナルを開いてください。",
+            "heldByPreviousRelay": "このターミナルは以前のバージョンの NASH のもとでホスト上でまだ実行中ですが、このバージョンからは接続できません。終了するまで実行され続けます。ここで作業を続けるには新しいターミナルを開いてください。"
           },
           "TerminalProcessExitOverlay": {
             "capacityTitle": "Git Bash のコンソール上限に達しました",
@@ -3281,6 +3332,7 @@
                 "ce8248b835": "ワークツリーのパスが使用できません。",
                 "internalTooManyPaths": "安全にターミナルへ貼り付けるにはドロップされたパスが多すぎます。",
                 "internalPathsTooLarge": "安全にターミナルへ貼り付けるにはパス一覧が大きすぎます。",
+                "internalHostMismatch": "このターミナルと同じホストのファイルをドロップしてください。",
                 "b4cf68e889": "{{value0}} {{value1}} をスキップしました。",
                 "writeTimeout": "ファイルドロップをキャンセルしました: 安全タイムアウト前にターミナルがパスを受け付けませんでした。",
                 "writeRejected": "ファイルドロップをキャンセルしました: ターミナルがパスを受け付けられませんでした。"
@@ -3374,6 +3426,18 @@
             "notStarted": "Agent を起動できませんでした。",
             "unconfirmed": "Agent が起動したか確認できませんでした。",
             "workspaceGone": "ワークスペースは利用できなくなりました。"
+          },
+          "TerminalSleepingPaneOverlay": {
+            "pausedDetail": "ホストが予期せず停止したため、自動復元は一時停止しています。セッションは保存されています。",
+            "liveCapDetail": "このホストではすでに十分な数の Agent が実行されています。セッションは保存されています。",
+            "pressureDetail": "ホストに高い負荷がかかっています。セッションは保存されています。",
+            "deadlineDetail": "ホストが他のターミナルの復元で忙しかったためです。セッションは保存されています。",
+            "title": "スリープ中 — クリックして再開",
+            "resume": "再開",
+            "resumeAutomaticRestores": "自動復元を再開"
+          },
+          "WslHostUnavailableBanner": {
+            "turnOn": "オンにする"
           }
         }
       },
@@ -3446,7 +3510,9 @@
             "ec2adf093e": "新規ターミナルで {{value0}} を起動",
             "465e432ef1": "{{value0}} の起動コマンドを作成できませんでした。",
             "e518f544b1": "Agent が検出されませんでした",
-            "8dea9b5cdf": "有効な Agent がありません"
+            "8dea9b5cdf": "有効な Agent がありません",
+            "needsServerUpdate": "このワークスペースの Agent を表示するには、このサーバーの NASH を更新してください",
+            "hostUnreachable": "このワークスペースのホストに接続できないため、Agent を一覧表示できません"
           },
           "RecentTabSwitcher": {
             "329638ff6f": "タブの切り替え",
@@ -3698,7 +3764,9 @@
             "b8f4a2c1d0e3": "{{value0}} 件の孤立",
             "c7e3b1a0d9f2": "孤立したターミナル {{value0}} 件を終了",
             "d8f4c2b1e0a3": "孤立したターミナル {{value0}} 件を終了",
-            "e9a5d3c2b1f0": "{{value0}} を終了しますか？"
+            "e9a5d3c2b1f0": "{{value0}} を終了しますか？",
+            "8a0472ab54": "{{value0}} に接続できませんでした。リソースは不明です。",
+            "1ea066b73f": "リソースを表示するには {{value0}} を更新してください。"
           },
           "SshStatusSegment": {
             "3ad70e0365": "リモートホストを管理…",
@@ -3727,8 +3795,6 @@
             "connectedHostCount_one": "{{count}} 台のホスト",
             "connectedHostCount_other": "{{count}} 台のホスト",
             "connecting": "接続中…",
-            "workspaceConflict": "ワークスペースの競合",
-            "workspaceSyncError": "ワークスペースの同期エラー",
             "runtime_unavailable_transport_up": "NASH は利用できません",
             "runtime_workspace_window_closed": "ワークスペースウィンドウを閉じた"
           },
@@ -3763,6 +3829,11 @@
             "54e8d6bb2d": "Fable",
             "d79c3362c4": "5時間",
             "a79c64f87e": "Fable",
+            "c98ea88392": "他のアカウントはありません",
+            "9332ba8684": "切り替え先",
+            "d450654fa2": "Claude アカウント",
+            "11e2354daf": "Claude 使用ランタイム",
+            "3dd7ddfae1": "Claude の詳細とアカウント切り替えを開く",
             "59c6e7b4e0": "表示されているセッションが再開されます。他のものは、ワークツリーがアクティブになると再起動します。",
             "c676918adc": "システムのデフォルト",
             "3325d996cb": "レート制限をリセット",
@@ -3794,17 +3865,12 @@
             "grokUsageAria": "Grok の使用状況詳細を開く",
             "grokUsageMenu": "Grok の使用状況",
             "floatingTerminalNewActivity": "{{label}}、新規アクティビティ",
+            "4fba7dc1e7": "残高 {{value0}}",
             "codexSignInSuccess": "Codex にサインインしました",
             "codexSignInError": "Codex のサインインに失敗しました。もう一度お試しください。",
             "cursorUsageMenu": "Cursor の使用状況",
             "hiddenUsageProviders": "ほかに: {{value0}}",
-            "c98ea88392": "他のアカウントはありません",
-            "9332ba8684": "切り替え先",
-            "d450654fa2": "Claude アカウント",
-            "11e2354daf": "Claude 使用ランタイム",
-            "3dd7ddfae1": "Claude の詳細とアカウント切り替えを開く",
-            "4fba7dc1e7": "残高 {{value0}}",
-            "zcodeUsageMenu": "Zコードの使用法",
+            "zcodeUsageMenu": "ZCode の使用量",
             "4025a6f62f": "無制限",
             "a95969101f": "{{value0}} クレジット"
           },
@@ -3992,14 +4058,6 @@
             "zcode": {
               "mcp": "MCP"
             },
-            "fbc80d8be2": "Zen 残高",
-            "c03c61f53f": "残高",
-            "f6a27a3c0a": "{{value0}} 利用可能",
-            "7404abbece": "利用クレジット",
-            "473d45cd0f": "残高 {{value0}}",
-            "f21b2ba897": "クレジット",
-            "56c0d70577": "無制限",
-            "87b5bda4d3": "{{value0}} クレジット利用可能",
             "claude": {
               "waiting": {
                 "label": "Claude の実行時に更新",
@@ -4009,14 +4067,31 @@
                 "label": "サインインの有効期限が切れました",
                 "message": "Claude の使用量情報の有効期限が切れました。このアカウントで Claude を起動して更新してください。"
               }
-            }
+            },
+            "fbc80d8be2": "Zen 残高",
+            "c03c61f53f": "残高",
+            "f6a27a3c0a": "{{value0}} 利用可能",
+            "7404abbece": "利用クレジット",
+            "473d45cd0f": "残高 {{value0}}",
+            "f21b2ba897": "クレジット",
+            "56c0d70577": "無制限",
+            "87b5bda4d3": "{{value0}} クレジット利用可能"
           },
           "SshTargetStatusRow": {
             "sshHost": "SSH ホスト"
           },
           "usagePercentageLabel": {
             "used": "{{value0}}% 使用済み",
-            "remaining": "残り {{value0}}%"
+            "remaining": "残り {{value0}}%",
+            "bare": "{{value0}}%"
+          },
+          "StatusBarUsageChangeNotices": {
+            "compactTitle": "使用量がコンパクト表示になりました",
+            "compactBody": "プロバイダーごとに主要な指標を1つ表示します。より多くの上限を表示するには、使用量メニューで「<detailed>詳細</detailed>」を選択してください。"
+          },
+          "usageUnitLabel": {
+            "used": "使用済み",
+            "remaining": "残り"
           },
           "UsagePercentageDisplayChangeNotice": {
             "title": "使用状況に、使用済みの割合を表示するようになりました",
@@ -4118,17 +4193,14 @@
             "checkAriaOne": "再開後に確認が必要なチャット 1 件。詳細はクリックしてください。",
             "checkAria": "再開後に確認が必要なチャット {{value0}} 件。詳細はクリックしてください。",
             "checkTooltip": "再起動後に NASH が再開できなかった、または再開を確認できなかったチャット。詳細はクリックしてください。",
-            "resumingLabelOne": "1 件のチャットを再開中",
-            "resumingLabel": "{{value0}} 件のチャットを再開中",
-            "resumingAriaOne": "1 件のチャットを再開中。詳細はクリックしてください。",
-            "resumingAria": "{{value0}} 件のチャットを再開中。詳細はクリックしてください。",
-            "resumingTooltip": "中断されたチャットを復元し、続行を依頼しています…"
-          },
-          "usageReadingSource": {
-            "claudeStatusLine": "Claude Code のステータスライン",
-            "codexAppServer": "codex app-server",
-            "agyUsage": "agy /usage",
-            "from": "取得元: {{source}}"
+            "resumingTooltip": "中断されたチャットを復元し、続行を依頼しています…",
+            "resumingProgressLabel": "チャットを再開中 {{value0}}/{{value1}}",
+            "resumingProgressAria": "チャットを再開中。{{value1}} 件中 {{value0}} 件完了。クリックすると詳細を表示します。",
+            "resumedLabelOne": "再開したチャット 1 件",
+            "resumedLabel": "再開したチャット {{value0}} 件",
+            "resumedAriaOne": "チャットを 1 件再開しました。クリックすると表示します。",
+            "resumedAria": "チャットを {{value0}} 件再開しました。クリックすると表示します。",
+            "resumedTooltip": "再起動後に NASH が再開したチャットです。クリックすると表示します。"
           },
           "provider": {
             "extra": {
@@ -4139,6 +4211,12 @@
                 }
               }
             }
+          },
+          "usageReadingSource": {
+            "claudeStatusLine": "Claude Code のステータスライン",
+            "codexAppServer": "codex app-server",
+            "agyUsage": "agy /usage",
+            "from": "取得元: {{source}}"
           }
         }
       },
@@ -4177,17 +4255,17 @@
           "268cf0af51": "キャッシュ読み取り",
           "2b8a2f14aa": "出力トークン",
           "ea71fae8fc": "入力トークン",
-          "7dde9331fd": "このスコープに対するローカル Claude の使用法はまだ見つかりません。",
+          "7dde9331fd": "このスコープのローカル Claude の使用量はまだ見つかりません。",
           "424cd50412": "Claude の使用状況分析を有効にする",
           "8d18bbb771": "更新",
-          "c5b9b344d0": "リフレッシュ Claude の使用法",
+          "c5b9b344d0": "Claude の使用量を更新",
           "505be9aac4": "範囲",
           "f61cffb9c8": "スコープ",
           "dd29209b21": "フィルター",
           "e9bf9fce0e": "Claude の使用オプション",
           "6afacbee37": "Claude の使用状況追跡",
           "0cb1a36d7d": "ローカルの Claude 使用ログを読み取り、トークン、モデル、セッションの統計を表示します。",
-          "5ce4842c2c": "すべてのローカル Claude の使用法",
+          "5ce4842c2c": "ローカル Claude のすべての使用量",
           "4f8368c272": "NASH ワークツリーのみ",
           "cfe2282ffa": "不明",
           "7765a4c3e1": "該当なし",
@@ -4229,17 +4307,17 @@
           "a9ac0f423a": "キャッシュされた入力",
           "5d8eba87bd": "出力トークン",
           "e365eaa6fd": "入力トークン",
-          "4c865393b4": "このスコープに対するローカル Codex の使用法はまだ見つかりません。",
+          "4c865393b4": "このスコープのローカル Codex の使用量はまだ見つかりません。",
           "f7c1affbd5": "Codex の使用状況分析を有効にする",
           "3022cda443": "更新",
-          "ec4d270e2c": "Codex の使用法を更新する",
+          "ec4d270e2c": "Codex の使用量を更新",
           "89162e019b": "範囲",
           "6d68e8399a": "スコープ",
           "1af1a39b2f": "フィルター",
           "70b5b8581f": "Codex の使用オプション",
           "408210470c": "Codex 使用状況の追跡",
           "13badcd8f2": "ローカルの Codex 使用ログを読み取り、トークン、モデル、セッションの統計を表示します。",
-          "4fe8820098": "すべてのローカル Codex の使用法",
+          "4fe8820098": "ローカル Codex のすべての使用量",
           "201766b754": "NASH ワークツリーのみ",
           "bf6cf2d4dd": "不明",
           "ae255c3dba": "該当なし",
@@ -4274,17 +4352,17 @@
           "603504ee3b": "キャッシュされた入力",
           "7aa4d8ce35": "出力トークン",
           "d637a892ed": "入力トークン",
-          "bb6363e08c": "このスコープではローカル OpenCode の使用法がまだ見つかりません。",
+          "bb6363e08c": "このスコープのローカル OpenCode の使用量はまだ見つかりません。",
           "f04131b3be": "OpenCode の使用状況分析を有効にする",
           "603cd138dc": "更新",
-          "bed558df0b": "OpenCode の使用法を更新する",
+          "bed558df0b": "OpenCode の使用量を更新",
           "b5ed5c9fd0": "範囲",
           "40d283c837": "スコープ",
           "01583b30aa": "フィルター",
           "230d6de108": "OpenCode の使用オプション",
           "bea80ceae0": "OpenCode の使用状況の追跡",
           "b8b3522436": "ローカルの OpenCode 使用ログを読み取り、トークン、モデル、セッションの統計を表示します。",
-          "144a6050e9": "すべてのローカル OpenCode の使用法",
+          "144a6050e9": "ローカル OpenCode のすべての使用量",
           "e04c58327c": "NASH ワークツリーのみ",
           "362231082f": "不明",
           "8095a63426": "該当なし",
@@ -4344,7 +4422,7 @@
           "6c00c46815": "プロバイダーがローカル Agent ログをスキャンし、結合されたトークン台帳を構築できるようにします。",
           "49405ccc8d": "トークンの追跡を開始する",
           "ca6bc5fded": "更新",
-          "e06d1baf5c": "リフレッシュの使用法の概要",
+          "e06d1baf5c": "使用量の概要を更新",
           "c760c481c5": "使用方法の概要",
           "55c910f4f1": "- 一部のモデルの価格は利用できません",
           "enableMuse": "Muse を有効にする",
@@ -4377,7 +4455,7 @@
             "ef8bbf7739": "PRs",
             "ce8533f02e": "Agent",
             "0bba8ca244": "統計",
-            "0e2a0b6431": "使用法",
+            "0e2a0b6431": "使用量",
             "372debfac0": "統計",
             "26bb901fcd": "NASH の統計に加え、Claude、Codex、OpenCode、Muse のトークン分析と Grok サブスクリプション使用状況。",
             "cb2430ae6a": "統計と使用状況",
@@ -4636,9 +4714,8 @@
         "SkillFreshnessRow": {
           "statusUpdateAvailable": "更新があります",
           "statusCantUpdate": "スキップ済み",
-          "cantUpdateReason": "このスキルは NASH が安全に更新できない場所にインストールされているため、npx skills update コマンドは変更しません。",
+          "cantUpdateReason": "このスキルは NASH が安全に更新できない場所にインストールされているため、更新コマンドは変更しません。",
           "chipCurrent": "現在",
-          "chipUnrecognized": "未認識",
           "chipInaccessible": "アクセス不可",
           "chipDuplicate": "重複",
           "chipExternalLink": "外部リンク",
@@ -4647,15 +4724,13 @@
           "chipInRepo": "リポジトリ内",
           "chipPluginCache": "プラグインキャッシュ",
           "tipCurrent": "ここのスキルはすでに最新です。更新しても変更されません。",
-          "tipUnrecognized": "ここのスキルの内容が公式バージョンのいずれとも一致しないため、NASH は安全に更新できません。更新を許可するには、ここにあるものを削除または置き換えてください。",
           "tipInaccessible": "NASH はここのスキルを読み取れなかったため（権限またはファイルのエラー）、確認も更新もできません。",
-          "tipDuplicate": "このスキルはメインとは別に、ここにもインストールされています。そのため npx skills update コマンドは到達できません。更新を許可するには削除してください。",
+          "tipDuplicate": "このスキルはメインとは別に、ここにもインストールされています。そのため 更新コマンドは到達できません。更新を許可するには削除してください。",
           "tipExternalLink": "これは NASH のスキルフォルダーの外を指すショートカットです。更新では追跡されません。",
           "tipBrokenLink": "これは存在しないものを指すショートカットです。削除しても問題ありません。",
           "tipReadOnly": "ここのスキルは読み取り専用の場所にあるため、権限を変更するまで更新できません。",
           "tipInRepo": "ここのスキルはグローバルスキルではなくプロジェクト内にあります。NASH はグローバルなものだけを更新します。",
           "tipPluginCache": "ここのスキルはプラグインによって管理されています。代わりにプラグインを更新してください。",
-          "skippedReasonUnrecognized": "こちらのコピーは公式版と一致しません。変更されているか、同名の別のスキルの可能性があります。上書きしないよう、NASH は更新対象から除外しました。このスキルを NASH に更新させたい場合は、コピーを削除してください。",
           "skippedReasonReadOnly": "このコピーは読み取り専用の場所にあるため、NASH は更新対象から除外しました。NASH が更新できるように、権限を変更してください。",
           "skippedReasonInaccessible": "NASH はこのコピーを読み取れなかったため、このスキルを更新対象から除外しました。",
           "skippedReasonInRepo": "これはグローバルスキルではなくプロジェクトスキルです。NASH はグローバルスキルのみを更新するため、更新対象から除外しました。",
@@ -4663,9 +4738,8 @@
           "skippedReasonExternalLink": "このコピーは NASH のスキルフォルダー外を指すショートカットのため、NASH は更新対象から除外しました。",
           "skippedReasonBrokenLink": "このコピーは存在しない対象へのショートカットのため、NASH は更新対象から除外しました。削除して問題ありません。",
           "skippedReasonDuplicate": "これは別のコピーのため、更新は反映されません。コマンドはメインのコピーのみを更新します。このコピーを削除してからスキルを再インストールすると、この場所もメインに追従します。",
+          "skippedReasonUnrecognized": "こちらのコピーは公式版と一致しません。変更されているか、同名の別のスキルの可能性があります。上書きしないよう、NASH は更新対象から除外しました。このスキルを NASH に更新させたい場合は、コピーを削除してください。",
           "skippedReasonNewer": "このコピーは、このビルドの NASH に同梱されているものより新しいバージョンです。そのため NASH はロールバックせず、そのままにしました。NASH を更新すると整合します。",
-          "skippedReasonStaleRecord": "スキル更新機能はこのコピーの記録を利用できないため、スキルは最新であると報告し、何も変更しません。記録を整合させるには再インストールしてください: {{value0}}",
-          "chipNewer": "Newer",
           "tipNewer": "このコピーは、このビルドの NASH に同梱されているものより新しいバージョンです。"
         },
         "SkillFreshnessUpdateDialog": {
@@ -4707,7 +4781,9 @@
           "scanOutsideRoot": "プラグインキャッシュの外部を指しているため、このプラグインパスをスキップしました。",
           "scanIoErrorWithCode": "このプラグインパスを読み取れませんでした（{{value0}}）。",
           "scanIoError": "このプラグインパスを読み取れませんでした。",
-          "scanIssueLimit": "スキップされたプラグインフォルダーが多すぎるため、個別に表示できません。"
+          "scanIssueLimit": "スキップされたプラグインフォルダーが多すぎるため、個別に表示できません。",
+          "unselectedForeignOne": "NASH 以外からインストールされた 1 件のスキルは選択されていません。",
+          "unselectedForeignMany": "NASH 以外からインストールされた {{value0}} 件のスキルは選択されていません。"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "更新があります",
@@ -4723,15 +4799,19 @@
         },
         "SkillUpdateRow": {
           "oneLocation": "1 件の場所",
-          "manyLocations": "{{value0}} 件の場所"
+          "manyLocations": "{{value0}} 件の場所",
+          "notFromOrca": "NASH 以外から導入",
+          "notFromOrcaSourceTip": "{{value0}} からインストールされています。選択すると NASH のバージョンに置き換えられます。",
+          "notFromOrcaNoRecordTip": "このコピーには NASH によるインストール記録がありません。選択すると NASH のバージョンに置き換えられます。",
+          "includeSkill": "{{value0}} を含める"
         },
         "host": {
           "local": "このマシン",
           "remote": "接続済みランタイム"
         },
         "SkillShareDialog": {
-          "reconnect": "共有する前に Orca アカウントを再接続してください。",
-          "unconfigured": "共有する前に Orca Cloud アカウントに接続してください。",
+          "reconnect": "共有する前に NASH アカウントを再接続してください。",
+          "unconfigured": "共有する前に NASH Cloud アカウントに接続してください。",
           "prepareFailed": "このスキルを共有用に準備できませんでした。",
           "peopleRequired": "少なくとも 1 人のチームメイトを選択してください。",
           "publishCancelled": "アップロードがキャンセルされました。準備されたコピーは引き続き再試行できます。",
@@ -4740,7 +4820,7 @@
           "preparing": "プレビューを準備しています…",
           "ready": "スキルリンク準備完了",
           "title": "スキルをシェアする",
-          "readyDescription": "受信者は Orca を検査またはインストールする前に Orca で認証します。",
+          "readyDescription": "受信者は NASH を検査またはインストールする前に NASH で認証します。",
           "newVersionDescription": "正確なファイルを確認してから、不変バージョンを既存のクラウドパッケージに公開します。",
           "description": "正確なファイルを確認し、ファイルにアクセスできるユーザーを選択して、不変バージョンを公開します。",
           "0f07fa2a79": "スキルの公開",
@@ -4834,7 +4914,7 @@
           "69236de8d6": "確認中…",
           "27672470d9": "リンクを開いても何もインストールされません。まず不変バージョンを確認してください。",
           "66cff7a804": "https://app.orca.dev/skills/share/…",
-          "93eb0fe8c7": "Orca のスキルリンク",
+          "93eb0fe8c7": "NASH のスキルリンク",
           "releaseNotes": "リリースノート:",
           "targetHeader": "インストール対象"
         },
@@ -4874,7 +4954,7 @@
           "f25429e266": "選ばれた人々",
           "0a49d901ab": "組織",
           "6817a7f6f8": "スキルアクセス",
-          "c15d90c10b": "接続された Orca Cloud アカウントが必要です。",
+          "c15d90c10b": "接続された NASH Cloud アカウントが必要です。",
           "266527d295": "{{value0}}{{value1}} として公開します。",
           "78d863235c": "アクセス",
           "b3b1d4b911": "SHA-256",
@@ -4977,18 +5057,18 @@
           "installing": "ダウンロード、検証、インストール中…",
           "selectSkill": "少なくとも 1 つのスキルを選択します。",
           "chooseWorkspace": "ワークスペースを選択します。",
-          "reconnectBeforeInstalling": "インストールする前に Orca アカウントを再接続してください。",
+          "reconnectBeforeInstalling": "インストールする前に NASH アカウントを再接続してください。",
           "bundleVerificationFailed": "NASH が要求されたバンドルを検証する前にインストールが失敗しました。",
           "destinationAlreadyFinished": "宛先はすでにこのインストールを完了していました。",
-          "enterShareLink": "Orca スキル共有リンクを入力します。",
+          "enterShareLink": "NASH スキル共有リンクを入力します。",
           "shareUnavailable": "この共有は使用できません。リンクが無効、期限切れ、または取り消されている可能性があります。",
           "requestedVersionVerificationFailed": "NASH が要求されたバージョンを確認する前にインストールが失敗しました。",
           "versionVerificationFailed": "NASH は要求されたバージョンを確認できませんでした。",
           "inspectManagedFailed": "NASH は、このマシン上の管理対象インストールを検査できませんでした。",
-          "reconnectForVersionHistory": "Orca アカウントを再接続して、バージョン履歴を読み込みます。",
+          "reconnectForVersionHistory": "NASH アカウントを再接続して、バージョン履歴を読み込みます。",
           "versionHistoryUnavailable": "このスキルではバージョン履歴は利用できません。",
           "bundleSkillsMissing": "このバージョンには、インストールされているバンドルスキルは含まれていません。",
-          "reconnectBeforeVersionChange": "バージョンを変更する前に、Orca アカウントを再接続してください。",
+          "reconnectBeforeVersionChange": "バージョンを変更する前に、NASH アカウントを再接続してください。",
           "removeFailed": "NASH はこのスキルを安全に削除できませんでした。",
           "agentsLabel": "エージェント",
           "agentsCanonical": "{{value0}} には常にインストールされ、{{value1}} と読み取られます。",
@@ -5104,8 +5184,7 @@
         "AddProjectFromFolderDialog": {
           "7d1f51678c": "プロジェクトを追加",
           "7726a16374": "キャンセル",
-          "046751dbfb": "このフォルダーを別の NASH プロジェクトとして追加します。",
-          "e643b30398": "リモートプロジェクトが追加されました"
+          "046751dbfb": "このフォルダーを別の NASH プロジェクトとして追加します。"
         },
         "AddRepoCreateStep": {
           "0ae45b8238": "my-project",
@@ -5123,8 +5202,7 @@
           "fe1e616c5b": "プロジェクトを作成するには Git が必要です。",
           "c234df77f7": "作成する前に、ホストの親フォルダーを選択または入力してください。",
           "3a13f6e88b": "場所が選択されていません",
-          "6ed14c0281": "ホストフォルダーが選択されていません",
-          "ssh_parent_manual": "SSH の親パスを入力してください。"
+          "6ed14c0281": "ホストフォルダーが選択されていません"
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "リポジトリをスキャンしています。クリックして停止します。",
@@ -5149,21 +5227,17 @@
           "e52454b7f6": "フォルダーとして開く"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "スキャンの停止",
           "6680289908": "/home/user/project",
           "ef410aa881": "ホストパス",
-          "0416bde073": "設定を追加",
-          "df6fbcf880": "SSH ターゲットが設定されていません。",
           "44637f43bd": "SSH ターゲット",
-          "80557be85a": "接続されている SSH ターゲットを選択し、Git リポジトリへのパスを入力します。",
+          "serverDescription": "{{server}} が接続する SSH ホストを選び、そのホスト上の Git リポジトリのパスを入力してください。",
+          "serverEmpty": "{{server}} にはまだ SSH ホストがありません。",
+          "serverAddHost": "SSH ホストを追加",
           "91b93a90a4": "SSH ホスト上のプロジェクトを開く",
           "007651bdf9": "ディレクトリに移動し、「選択」をクリックして選択します。",
           "dd3ff65486": "リモートファイルシステムを参照する",
           "36d427bb66": "リモートプロジェクトを追加",
-          "35831a7312": "追加中…",
-          "lockedDescription": "{{value0}} 上の Git リポジトリへのパスを入力してください。",
-          "lockedDisconnected": "{{value0}} は切断されています。",
-          "93e0221434": "接続"
+          "35831a7312": "追加中…"
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "オプションの追加に戻る",
@@ -5288,7 +5362,7 @@
         },
         "OrcaYamlTrustDialog": {
           "f3e2b868fb": "フックを実行する",
-          "43b7bec4cd": "走らないで",
+          "43b7bec4cd": "実行しない",
           "c494b3ccb1": "で",
           "79afc6772b": "orca.yaml",
           "531689199b": "常に信頼する",
@@ -5340,7 +5414,9 @@
           "b79b39d865": "プロジェクトの削除",
           "removeDescriptionSsh": "この操作は {{name}} を NASH から削除するだけです。ファイルは {{host}} に残っており、その SSH ホストを再追加すれば復元できます。",
           "removeDescriptionLocal": "この操作は {{name}} を NASH から削除するだけです。ファイルはディスクに残っています。",
-          "removeDescriptionVmRecipe": "これにより、{{name}} が NASH から削除されます。その VM レシピによって、環境とそのファイルが完全に削除されるかどうかが決まります。"
+          "removeDescriptionVmRecipe": "これにより、{{name}} が NASH から削除されます。その VM レシピによって、環境とそのファイルが完全に削除されるかどうかが決まります。",
+          "openTerminalWarningOne": "このプロジェクトで開いているターミナル 1 個が閉じられます。",
+          "openTerminalWarningMany": "このプロジェクトで開いているターミナル {{count}} 個が閉じられます。"
         },
         "ScrollToCurrentWorkspaceToolbarButton": {
           "23989bb663": "アクティブなワークスペースを表示する"
@@ -5390,7 +5466,7 @@
           "26108d3699": "Discord に参加",
           "d245c4ef6c": "GitHub Issue",
           "9b33530b3d": "その他の連絡方法",
-          "a828fa4aee": "何が機能しているのか、何が壊れているのか、Orca が次に何をすべきかを共有します。",
+          "a828fa4aee": "何が機能しているのか、何が壊れているのか、NASH が次に何をすべきかを共有します。",
           "0eb643f07f": "フィードバックを送信する",
           "60b721e857": "フィードバックの送信に失敗しました。もう一度試す。",
           "7a46c228b8": "フィードバックありがとうございます。",
@@ -5437,7 +5513,7 @@
           "80611a8b10": "検索",
           "0c3395fd32": "ワークツリーとブラウザタブを検索する",
           "c86d83b5c3": "新機能",
-          "1b5c41caee": "Orca モバイル",
+          "1b5c41caee": "NASH モバイル",
           "9c95e1ce91": "Agent",
           "f323383e9a": "自動化",
           "e7ad3c540d": "Jira タスクを開く",
@@ -5549,7 +5625,7 @@
           "allHostsDetail": "すべてのホストを表示",
           "configuredSshHost": "設定済み SSH",
           "projectSshHost": "プロジェクト SSH",
-          "activeRuntimeHost": "アクティブサーバー",
+          "activeRuntimeHost": "新規プロジェクトの既定",
           "projectRuntimeHost": "プロジェクトサーバー",
           "631b97eea9": "ホストスコープ",
           "2d4f0eb933": "デフォルト",
@@ -5833,7 +5909,8 @@
           "remotePathInvalid": "このパスは SSH ホストでは無効です。",
           "remotePathInvalidDetail": "ワークスペースを更新してから、もう一度お試しください。",
           "remoteLaunchFailed": "VS Code でパスを開けませんでした。",
-          "remoteLaunchFailedDetail": "このマシンに設定されている VS Code のコマンドを確認してください。"
+          "remoteLaunchFailedDetail": "このマシンに設定されている VS Code のコマンドを確認してください。",
+          "wsl": "WSL"
         },
         "WorktreeTitleInlineRename": {
           "2f42ae024f": "未読:",
@@ -5913,12 +5990,11 @@
                   "5f9ffac036": "リモート Git リポジトリのクローンを作成する",
                   "7edb8ebe24": "URL からクローン",
                   "a6c20dca96": "SSH ターゲットからプロジェクトを開く",
-                  "3d162cc76f": "SSH ホスト上のプロジェクト",
+                  "serverSshTitle": "このサーバーの SSH ホスト上のプロジェクト",
+                  "serverSshDescription": "このサーバーが接続する SSH ホストのプロジェクトフォルダーを開きます",
+                  "serverSshUpdate": "SSH ホストにプロジェクトを追加するには、このサーバーを更新してください",
                   "fb4fc5380e": "ローカルプロジェクト、Git リポジトリ、または多数のリポジトリを含むフォルダー",
                   "2281fdc8c7": "フォルダーを参照",
-                  "sshCreateUnavailable": "SSH ホストではまだ利用できません",
-                  "sshBrowseTitle": "SSH ホスト上のプロジェクトを開く",
-                  "sshBrowseDescription": "この SSH ホスト上の既存の Git リポジトリまたはフォルダー",
                   "runtimeBrowseDescription": "このホスト上の既存の Git リポジトリまたはフォルダー"
                 }
               }
@@ -5985,7 +6061,9 @@
               "740e8d0d46": "ホストパスには「プロジェクトの追加」を使用します",
               "e344666fb8": "サーバーランタイムがアクティブです",
               "d0f8943f8b": "プロジェクト追加フローの準備",
-              "18d3cf40e9": "フォルダーを確認中"
+              "18d3cf40e9": "フォルダーを確認中",
+              "wslFolder": "WSL フォルダーをドロップしてプロジェクトを追加",
+              "wslFolderDescription": "\\\\wsl.localhost 以下のフォルダー"
             }
           }
         },
@@ -6023,7 +6101,9 @@
           "451a4638db": "フォルダーをドロップしてプロジェクトとして追加します。",
           "5ccb56c7be": "[プロジェクトの追加] から、ホスト上のパスを入力します。",
           "849ef13dc0": "ローカルフォルダーのドロップはサーバーランタイムでは使用できません。",
-          "c0315153d1": "一度に 1 つのフォルダーをドロップします。"
+          "c0315153d1": "一度に 1 つのフォルダーをドロップします。",
+          "windowsDriveOnWslHost": "Windows ドライブ上のフォルダーは {{value0}} ではなく、このコンピュータに残ります。",
+          "windowsDriveOnWslHostDescription": "WSL の Git は Windows ドライブ上では低速です。追加するにはホストをこのコンピュータに切り替えるか、\\\\wsl.localhost\\{{value0}} からフォルダーをドロップしてください。"
         },
         "workspace": {
           "status": {
@@ -6163,7 +6243,11 @@
           "addRemoteHostTooltip": "ログインできるマシンには SSH を選択し、NASH サーバーにはリモートサーバーを選択します。",
           "addSshHostDetail": "SSH 経由で既存のマシンを使用します。",
           "addRemoteServerDetail": "別のコンピュータで実行されている NASH とペアリングします。",
-          "addRemoteHostDetail": "SSH ホストまたは NASH サーバー"
+          "addRemoteHostDetail": "SSH ホストまたは NASH サーバー",
+          "addWslHost": "WSL ディストリビューションを追加",
+          "addWslHostDetail": "WSL 2 ディストリビューション内で NASH サーバーを実行します。実験的機能。",
+          "addRemoteHostDetailWithWsl": "SSH ホスト、NASH サーバー、または WSL ディストリビューション",
+          "turnOnWslHosts": "オンにする"
         },
         "sidebarHostOptions": {
           "3e102f111c": "すべてのホスト",
@@ -6190,7 +6274,8 @@
           "alsoForgetLocal": "また、NASH からこれらの {{value0}} も削除",
           "advanced": "詳細設定",
           "alsoDeleteRemoteHint": "リモートの Git ワークツリーとそのブランチを完全に削除します。この操作は取り消せません。",
-          "alsoForgetLocalHint": "NASH からのみ削除します。リモートのファイル、ワークツリー、ブランチはそのまま残ります。"
+          "alsoForgetLocalHint": "NASH からのみ削除します。リモートのファイル、ワークツリー、ブランチはそのまま残ります。",
+          "wslHostEndsTerminals": "NASH から {{value0}} を削除し、開いているターミナルを終了して、そのディストリビューション内の NASH サーバーを停止します。ディストリビューション内のファイルは変更されません。"
         },
         "HostRenameDialog": {
           "1a2b3c4d5e": "ホスト名を変更",
@@ -6269,12 +6354,12 @@
           "3b7e4a1c96": "外部ワークツリーを非表示"
         },
         "useAddRepoHostSelection": {
-          "connectionFailed": "SSH 接続に失敗しました。"
+          "connectionFailed": "SSH 接続に失敗しました。",
+          "wslConnectionFailed": "WSL ホストを開始できませんでした。"
         },
         "AddRemoteHostDialog": {
           "sshHostRequired": "ホストまたは SSH 構成エイリアスが必要です。",
           "sshPortInvalid": "ポートは 1 ～ 65535 でなければなりません。",
-          "sshRelayGraceInvalid": "ターミナルのタイムアウトは 60 秒から {{value0}} 秒の間である必要があります。",
           "sshSaved": "SSH ホストが追加されました。",
           "sshSaveFailed": "SSH ホストの追加に失敗しました。",
           "serverFieldsRequired": "サーバー名とペアリングコードは必須です。",
@@ -6283,7 +6368,10 @@
           "serverTitle": "リモートサーバーを追加する",
           "sshTitle": "SSH ホストを追加",
           "serverDescription": "別のコンピュータで実行されている NASH とペアリングします。",
+          "serverRunsAsYou": "このデバイスは、このサーバー上であなたとしてコマンドを実行できるようになります。",
           "sshDescription": "SSH でログインできる永続的なマシンを追加します。",
+          "serverSshTitle": "{{server}} に SSH ホストを追加",
+          "serverSshDescription": "{{server}} がこのホストを保存して接続します。パスワードとパスフレーズは接続時に尋ねられます。",
           "cancel": "キャンセル",
           "saving": "保存中…",
           "save": "保存",
@@ -6360,10 +6448,10 @@
           "parkTerminal": "ターミナルを退避"
         },
         "SidebarFeedbackImageAttachments": {
+          "preparing": "添付ファイルを準備しています…",
           "attachImages": "Attach",
           "removeImage": "{{fileName}} を削除",
-          "screenshotsHint": "スクリーンショットを最大 {{count}} 件、合計 {{maxSize}} まで添付できます",
-          "preparing": "添付ファイルを準備しています…"
+          "screenshotsHint": "スクリーンショットを最大 {{count}} 件、合計 {{maxSize}} まで添付できます"
         },
         "WorkspaceKanbanSearchField": {
           "bdb753c78d": "一致するワークスペースはありません",
@@ -6377,20 +6465,20 @@
           "25852bfc59": "Linear",
           "5b440069e6": "GitHub",
           "161b2d053a": "リンクされた Issue を開く",
-          "d4785f9954": "問題のリンクはフォルダーワークスペースの作成時に設定され、ここではまだ変更できません。",
-          "964d9bc00a": "Linear 問題キーまたは Linear.app 問題 URL ではありません。",
-          "0a7a2c6efd": "GitHub Issue 番号や問題 URL ではありません。",
-          "72486800ff": "{{first}} と {{second}} のリンクを保存すると、ワークスペースが 1 つの問題を追跡します。",
-          "2c245ac134": "リンク解除の保存 {{link}} — ワークスペースが 1 つの問題を追跡します。",
-          "d8c8a30d1f": "その問題を開けませんでした。識別子とリニア接続を確認してください。",
-          "269198eeda": "その問題を開けませんでした。番号と GitHub 接続を確認してください。",
-          "f047887705": "GitHub またはリニア URL を貼り付けるか、数値を入力します。リンクを削除するには空白のままにします。",
+          "d4785f9954": "Issue のリンクはフォルダーワークスペースの作成時に設定され、ここではまだ変更できません。",
+          "964d9bc00a": "Linear の Issue キーまたは linear.app の Issue URL ではありません。",
+          "0a7a2c6efd": "GitHub の Issue 番号または Issue URL ではありません。",
+          "72486800ff": "保存すると {{first}} と {{second}} のリンクが解除されます。ワークスペースで追跡できる Issue は 1 つです。",
+          "2c245ac134": "保存すると {{link}} のリンクが解除されます。ワークスペースで追跡できる Issue は 1 つです。",
+          "d8c8a30d1f": "その Issue を開けませんでした。識別子と Linear の接続を確認してください。",
+          "269198eeda": "その Issue を開けませんでした。番号と GitHub の接続を確認してください。",
+          "f047887705": "GitHub または Linear の URL を貼り付けるか、番号を入力します。リンクを削除するには空白のままにします。",
           "ad78f9bee2": "Issue",
-          "662ae142f8": "Issue 番号、GitHub またはリニア URL",
-          "929c98d05a": "発行プロバイダー"
+          "662ae142f8": "Issue 番号、または GitHub か Linear の URL",
+          "929c98d05a": "Issue プロバイダー"
         },
         "worktreeIssueDisplacement": {
-          "3f61c0a8d2": "リニア {{value}}",
+          "3f61c0a8d2": "Linear {{value}}",
           "9c4b7e1f60": "GitHub #{{value}}"
         },
         "WorktreeCardSshHostControl": {
@@ -6473,6 +6561,49 @@
           "title": "並べ替えが手動に変更されました",
           "description": "手動では、ドロップした場所にワークスペースが保持されます。",
           "restore": "{{label}} に戻る"
+        },
+        "AddWslHostDialogBody": {
+          "added": "{{value0}} を追加しました。"
+        },
+        "AddWslHostFormPanel": {
+          "wsl1": "WSL 1 · サポート対象外",
+          "added": "すでにホストです",
+          "running": "実行中",
+          "stopped": "停止中",
+          "title": "WSL ディストリビューションを追加",
+          "description": "NASH はディストリビューション内でサーバーを実行するため、git、ファイル、ターミナルは Linux 上でネイティブに動作します。新規プロジェクトに使用してください。\\\\wsl.localhost 経由で開いたプロジェクトはそのまま動作し続けます。",
+          "distro": "ディストリビューション",
+          "loading": "WSL ディストリビューションを探しています…",
+          "placeholder": "ディストリビューションを選択",
+          "none": "WSL ディストリビューションが見つかりません。次のコマンドでインストールできます: wsl --install",
+          "stoppedHint": "{{value0}} は停止しています。追加すると起動します。",
+          "addingHint": "ディストリビューション内に NASH サーバーをインストールして起動しています。初回は 1 分ほどかかることがあります。",
+          "adding": "セットアップ中…",
+          "startAndAdd": "起動して追加",
+          "add": "ホストを追加",
+          "refresh": "更新"
+        },
+        "wslHostRowStatus": {
+          "connecting": "起動中",
+          "reconnecting": "再接続中",
+          "distroStopped": "ディストリビューション停止中",
+          "unverifiable": "確認できません",
+          "idle": "アイドル",
+          "failed": "起動に失敗しました",
+          "kind": "WSL ディストリビューション",
+          "turnedOff": "WSL ホストは設定 → 実験的機能でオフになっています",
+          "turnedOffShort": "設定 → 実験的機能でオフ",
+          "serverFilesMissing": "このビルドの NASH は WSL ホストを実行できません (サーバーファイルが見つかりません)。",
+          "serverFilesMissingShort": "このビルドは WSL ホストを実行できません"
+        },
+        "wslHostRemoval": {
+          "partial": "ホストは削除されましたが、ディストリビューション内でまだ実行中のものがあります: {{value0}}"
+        },
+        "addRepoWslHostFolderPicker": {
+          "otherDistro": "そのフォルダーは {{value1}} ではなく {{value0}} にあります。",
+          "outsideDistro": "{{value0}} 内のフォルダーを選択してください。",
+          "underDistro": "このホストで追加できるのは \\\\wsl.localhost\\{{value0}} 以下のフォルダーのみです。",
+          "windowsDrive": "Windows ドライブ上のフォルダーはこのコンピュータに残ります。追加するにはホストとしてこのコンピュータを選択してください。"
         }
       },
       "shared": {
@@ -6548,6 +6679,7 @@
         "AccountsPane": {
           "c2d2751587": "アカウントの削除",
           "dbb9626ed1": "キャンセル",
+          "63843e37e2": "Claude アカウントを削除しますか?",
           "380a7736cc": "このアカウントを削除すると、管理対象の Codex ホームと、その中に保存されているすべての Codex セッション履歴および MCP ログインが完全に削除されます。この操作は元に戻せません。アカウントが現在アクティブな場合、NASH はシステムのデフォルトの Codex ログインに戻ります。",
           "0d47394635": "Codex アカウントを削除しますか?",
           "ae3b21eb6c": "opencode.ai/workspace/wrk_…/go",
@@ -6591,8 +6723,14 @@
           "340d6f7a85": "各アカウントは、NASH で独自のローカルサインインコンテキストを保持します。アカウント認証はこのデバイスに残ります。",
           "cedfab35ab": "任意。NASH は通常の Codex ログインを使用できます。NASH 上ですばやく切り替えたい場合にのみ、アカウントを追加してください。",
           "ef91cfa06b": "Codex",
+          "3fe7862418": "{{value0}} の管理対象 Claude アカウントはありません。ここで追加するまで、NASH はその環境のシステムデフォルトの Claude ログインを使用します。",
           "3455cf43fa": "Claude のログイン。",
           "fcc4093fc1": "現在の {{value0}} Codex ログインを使用します。",
+          "8bbfd74556": "Claude アカウント",
+          "72b36ea174": "任意。NASH は通常の Claude ログインを使用できます。チャットセッションを移さずにすばやく切り替えたい場合にのみ、アカウントを追加してください。",
+          "26ef4b55be": "Claude",
+          "2743cdc0af": "Claude アカウントの更新に失敗しました。",
+          "f921d32606": "Claude アカウントが更新されました。",
           "5bf8764953": "Codex アカウントの更新に失敗しました。",
           "9baf45d071": "このデバイス",
           "2358ac71d2": "WSL のデフォルト",
@@ -6611,6 +6749,7 @@
           "75ca9b718e": "Codex は、アクティブなアカウントには新たにサインインする必要があると報告しました。新規 Codex セッションを開始する前に、再認証してください。",
           "b11078a9c2": "wsl",
           "350b2a1aa7": "現在のアカウントを使用",
+          "e05d0ff737": "現在の {{value0}} Claude ログインを使用します。",
           "2f24f244a4": "MiniMax Cookie が必要です。",
           "8e6f0cb1d8": "MiniMax Cookie は保存されませんでした。",
           "8d61637a77": "MiniMax Cookie を保存しました。",
@@ -6658,6 +6797,7 @@
           "accountScopeRemoteServerUnnamed": "リモートサーバー",
           "remoteScopeLocalAccountsKept": "このデスクトップで管理されているアカウントはそのまま残っています。デフォルトランタイムをローカルデスクトップに戻すと表示されます。",
           "remoteScopeAuthContext": "各アカウントは {{value0}} 上に独自のサインインコンテキストを保持します。",
+          "remoteEmptyClaudeAccounts": "{{value0}} に管理対象の Claude アカウントはありません。システム既定の Claude ログインを使用します。アカウントの追加はそのサーバー上で行ってください。",
           "remoteEmptyCodexAccounts": "{{value0}} に管理対象の Codex アカウントはありません。システム既定の Codex ログインを使用します。アカウントの追加はそのサーバー上で行ってください。",
           "codexSystemDefaultCustomProvider": "カスタムプロバイダー — 使用量は追跡されません。",
           "codexSystemDefaultNeedsSignIn": "{{value0}} の Codex サインインが見つかりません。",
@@ -6701,15 +6841,7 @@
               "help": "ステータスバーの OpenCode Go 使用状況表示に使います。下のセッション Cookie はレガシーコンソール (OpenCode Black) アカウントでのみ必要です。"
             }
           },
-          "63843e37e2": "Claude アカウントを削除しますか?",
-          "3fe7862418": "{{value0}} の管理対象 Claude アカウントはありません。ここで追加するまで、NASH はその環境のシステムデフォルトの Claude ログインを使用します。",
-          "8bbfd74556": "Claude アカウント",
-          "72b36ea174": "任意。NASH は通常の Claude ログインを使用できます。チャットセッションを移さずにすばやく切り替えたい場合にのみ、アカウントを追加してください。",
-          "26ef4b55be": "Claude",
-          "2743cdc0af": "Claude アカウントの更新に失敗しました。",
-          "f921d32606": "Claude アカウントが更新されました。",
-          "e05d0ff737": "現在の {{value0}} Claude ログインを使用します。",
-          "remoteEmptyClaudeAccounts": "{{value0}} に管理対象の Claude アカウントはありません。システム既定の Claude ログインを使用します。アカウントの追加はそのサーバー上で行ってください。"
+          "remoteScopeLocalAccountsKeptHostPicker": "このデスクトップで管理されているアカウントは変更されていません。表示するには、設定の上部にあるホストメニューでこのコンピュータを選択してください。"
         },
         "AdvancedPane": {
           "40b29e0bf3": "再起動",
@@ -6799,11 +6931,13 @@
           "codexSessionSourceInfo": "Codex 履歴のインポートについて",
           "codexSessionSourceTooltip": "NASH は分離されたホームで Codex を実行します。既存の Codex ホームを指定してセッション履歴をインポートします。空の場合、~/.codexを使用します。",
           "03e1a5081a": "{{value0}} 上",
-          "25a41a9aad": "アクティブなサーバーにインストールされている Agent を再検出",
+          "25a41a9aad": "このサーバーにインストールされている Agent を再検出",
           "remoteDetectionFailed": "インストールされている Agent を検出できませんでした。ホストへの接続を確認して、もう一度お試しください。",
           "retryDetection": "再試行",
           "storedDefaultUndetected": "デフォルトとして保存されていますが、現在は検出されません",
           "noAgentsDetected": "Agent が検出されませんでした。プローブがインストールされている場合、プローブがタイムアウトした可能性があります。",
+          "setupOnly": "なし",
+          "setupOnlyHint": "新規タブモードでは、余分な空白のターミナルを開かずにセットアップを実行します。分割モードではシェルペインを保持します。セットアップをスキップした場合、またはセットアップがない場合は、空白のターミナルが開きます。",
           "agentPermissionsAuto": "Auto"
         },
         "AppIconSelector": {
@@ -6815,9 +6949,9 @@
           "3057983501": "未割り当て",
           "0cd9b8228f": "Dock とウィンドウのスイッチャーに表示されるアプリのアイコンを選択します。",
           "ca1590d42f": "アプリアイコン",
-          "61d842eca0": "Orca Mobile のショートカットをサイドバーに表示します。ツールボックスから引き続き利用できます。",
-          "9da1020447": "Orca Mobile ボタンを表示",
-          "5db6ba961f": "左サイドバー上部に Orca Mobile ボタンを表示します。",
+          "61d842eca0": "NASH Mobile のショートカットをサイドバーに表示します。ツールボックスから引き続き利用できます。",
+          "9da1020447": "NASH Mobile ボタンを表示",
+          "5db6ba961f": "左サイドバー上部に NASH Mobile ボタンを表示します。",
           "fa882a3e6b": "左側のサイドバーの上部に [オートメーション] ボタンを表示します。",
           "511f270ebb": "オートメーションボタンを表示",
           "661942ab7f": "左側のサイドバーの上部に「タスク」ボタンを表示します。",
@@ -6877,14 +7011,6 @@
           "1626524572": "Nautilus",
           "0de9fda203": "破棄",
           "c71770c455": "{basePrompt}",
-          "f19a56498d": ";ブランチプレフィックス設定は引き続き適用されます。",
-          "800edb1e54": "fix-login-flow",
-          "5d569f5199": "。 NASH は次のような最後のセグメントのみを生成します。",
-          "570817d126": "と",
-          "56580dcf60": "。参考にすることもできます",
-          "9c9b54e4ea": "組み込みのブランチ名プロンプト",
-          "69bf4830c2": "NASH も含めて",
-          "9241b59bf5": "使用",
           "a869d0edd8": "ブランチ名コマンドテンプレート",
           "e784ea62dc": "詳細設定",
           "d9b65054ef": ") をタスクを要約した短い名前にします。 NASH 自身が名前を付けたブランチのみが名前変更され、プッシュされた後は名前が変更されません。",
@@ -6895,8 +7021,8 @@
           "cfd82406dd": "保存中…",
           "40e7be7850": "保存済み",
           "7c7e34a66d": "未保存の変更",
-          "a4fa380b67": "{assistantMessage}",
-          "2ee2779c05": "{firstPrompt}"
+          "commandTemplateDescription": "<basePrompt>{basePrompt}</basePrompt> を使うと、NASH の<promptLink>組み込みのブランチ名プロンプト</promptLink>を含めることができます。<firstPrompt>{firstPrompt}</firstPrompt> と <assistantMessage>{assistantMessage}</assistantMessage> も参照できます。NASH が生成するのは <example>fix-login-flow</example> のような最後のセグメントだけで、ブランチプレフィックス設定は引き続き適用されます。",
+          "5d569f5199": "。 NASH は次のような最後のセグメントのみを生成します。"
         },
         "AutoRenameBranchPromptEditor": {
           "63121132c0": "破棄",
@@ -7203,7 +7329,10 @@
           "connectionTestHost": "ホスト",
           "connectionTestPort": "ポート",
           "connectionTestRunning": "テスト中…",
-          "connectionTestAction": "テスト接続"
+          "connectionTestAction": "テスト接続",
+          "appStatus": "アプリ: ",
+          "terminalHostStatus": "ターミナルホスト: ",
+          "terminalHostRecovery": "ターミナルが保護されたファイルを読み取れない場合は、作業を保存し、ターミナル → セッションの管理で閉じてください。新規ターミナルにも影響する場合はデーモンを再起動してください。再起動すると現在のターミナルは閉じられます。"
         },
         "ExperimentalPane": {
           "9762364929": "可能な場合は macOS で APFS clone-copy を使用し、それ以外の場合は設定済みのフォルダーまたはファイルを作成済みワークツリーへシンボリックリンクします。",
@@ -7235,14 +7364,7 @@
           },
           "nativeChat": {
             "title": "Chat UI",
-            "description": "対応 Agent のターミナルセッション用デスクトップチャット画面をプレビューします。",
-            "copy": "対応 Agent のターミナルペインから切り替えられる Chat UI ビューを追加します。トランスクリプトの忠実度、ストリーミング、ターミナルとの同等性を調整しているため、試験運用中です。",
             "toggleLabel": "Chat UI の切り替え",
-            "defaultTitle": "デフォルトのビュー",
-            "defaultCopy": "対応 Agent の新規ターミナルタブを開く方法を選択します。",
-            "defaultViewLabel": "デフォルトの Chat UI ビュー",
-            "defaultViewTerminal": "ターミナルチャット",
-            "defaultViewNative": "Chat UI",
             "shellEnvNamesLabel": "シェルから渡す変数",
             "shellEnvNamePlaceholder": "変数名",
             "shellEnvNameAdd": "追加",
@@ -7252,13 +7374,12 @@
             "shellEnvTitle": "シェル環境を使用する",
             "shellEnvCopy": "Codex と Claude のチャットは、ターミナルと同じく、ログインシェルがエクスポートするすべての変数を引き継いで開始します。オフにすると、渡す変数を選択できます。",
             "shellEnvToggleLabel": "シェル環境の使用の切り替え",
-            "structuredTitle": "更新された構造化ネイティブチャットを使用する",
-            "structuredCopy": "対応している場合、新規の Agent を構造化チャットとして開きます。オフにすると、ターミナルを使用したチャットで開きます。既存のチャットはそのまま残ります。",
-            "structuredScope": "このマシンと、対応するバージョンを実行しているペアリング済みの NASH サーバーで動作します。古いサーバーはターミナルチャットのままです。WSL および SSH ホストは引き続きターミナルチャットを使用します。",
-            "structuredToggleLabel": "更新された構造化ネイティブチャットの切り替え",
             "resumeTitle": "再起動後に作業中のチャットを自動的に再開する",
             "resumeCopy": "NASH が終了するかアップデートをインストールすると、NASH が再度開かれたときに作業中だったチャットが自動的に再開されます。",
-            "resumeToggleLabel": "再起動後の自動再開の切り替え"
+            "resumeToggleLabel": "再起動後の自動再開の切り替え",
+            "structuredScope": "このマシンと、対応するバージョンを実行しているペアリング済みの NASH サーバーで動作します。古いサーバーはターミナルチャットのままです。WSL および SSH ホストは引き続きターミナルチャットを使用します。",
+            "description": "対応する新しいエージェントをチャット UI で開きます。",
+            "copy": "対応する新しいエージェントは構造化チャットで開きます。他のエージェントはターミナルで開き、既存のチャットは引き続き利用できます。"
           },
           "agentDashboard": {
             "title": "Agent ダッシュボード",
@@ -7487,13 +7608,6 @@
           "aa204f185f": "現在の GitHub CLI REST、Search、および GraphQL のレート制限。",
           "612a440e57": "GitHub API の予算",
           "2cde9044a8": "graphql",
-          "36e3de3619": "などのコマンドが古い履歴と比較されるのを防ぎます。対象のブランチにコミットしていない変更やローカルのみのコミットがある場合、NASH は更新をスキップします。",
-          "d072a12995": "git diff main...HEAD",
-          "db3a127eb1": "。これにより、",
-          "3ae3de8898": "master",
-          "5bf885be48": "または",
-          "ffba483bae": "main",
-          "976afc6b3e": "ワークスペースを作成すると、NASH はリモートベースを更新し、一致するローカルブランチを安全に fast-forward します。対象は",
           "1ec5c91e1d": "ブランチ名に Git ユーザー名を使用するか、カスタムプレフィックスを使用するか、プレフィックスを使用しないかを選択します。",
           "330f584b50": "ブランチプレフィックス",
           "1ffaadf0a0": "ワークツリーの作成時にブランチ名に追加されるプレフィックス。",
@@ -7514,7 +7628,10 @@
           "compareAgainstUpstreamTitle": "既定の比較ベース",
           "compareAgainstUpstreamDescription": "ソース管理がコミット済み変更の比較に既定で使うベースを選択します。ブランチの upstream は現在のブランチに自動的に追従し、upstream がない場合はリポジトリの既定ブランチにフォールバックします。比較ベースは各ワークツリーの Git パネルからワークツリーごとに変更できます。Pull Request やリベースの対象は変更されません。",
           "compareBaseRepositoryDefault": "リポジトリ既定",
-          "compareBaseBranchUpstream": "ブランチの upstream"
+          "compareBaseBranchUpstream": "ブランチの upstream",
+          "refreshLocalBaseDescription": "ワークスペースを作成すると、NASH はリモートのベースを更新し、<mainBranch>main</mainBranch> や <masterBranch>master</masterBranch> など、対応するローカルブランチを安全に fast-forward します。これにより、<diffCommand>git diff main...HEAD</diffCommand> などのコマンドが古い履歴と比較されるのを防ぎます。対象のブランチにコミットしていない変更やローカルのみのコミットがある場合、NASH は更新をスキップします。",
+          "36e3de3619": "などのコマンドが古い履歴と比較されるのを防ぎます。対象のブランチにコミットしていない変更やローカルのみのコミットがある場合、NASH は更新をスキップします。",
+          "976afc6b3e": "ワークスペースを作成すると、NASH はリモートベースを更新し、一致するローカルブランチを安全に fast-forward します。対象は"
         },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "このマシンで太字グリッチのキャプチャジェスチャーを有効にします。{{samplingShortcut}} でサンプリングバーストを開始し、{{captureShortcut}} でペインの証拠をディスクに保存します。",
@@ -7712,13 +7829,13 @@
           "b2fd62ea75": "新規エミュレータタブと Agent 接続コマンドのデフォルトデバイス。自動選択では、すでに実行中のデバイスが優先されます。"
         },
         "MobileNetworkInterfaceSection": {
-          "63d5e4ae1e": "QR コードを再生成し、Orca モバイルアプリからスキャンします。",
+          "63d5e4ae1e": "QR コードを再生成し、NASH モバイルアプリからスキャンします。",
           "87985ba6f5": "このネットワークインターフェースメニューで、Tailscale アドレス (通常は 100.x.y.z IP) を選択します。",
           "1f7c26d36a": "両方のデバイスで同じテールネットにサインインします。",
           "668016be7a": "コンピュータとスマートフォンで。",
           "1dc87a7fbc": "Tailscale",
           "51d29927eb": "インストール",
-          "9fc5d203ff": "Orca Mobile はこのコンピュータに直接接続します。同じ LAN から離れた場所で使用するには、コンピュータとスマートフォンを同じプライベートオーバーレイネットワーク上に配置し、そのネットワークアドレスを選択して QR コードを生成します。",
+          "9fc5d203ff": "NASH Mobile はこのコンピュータに直接接続します。同じ LAN から離れた場所で使用するには、コンピュータとスマートフォンを同じプライベートオーバーレイネットワーク上に配置し、そのネットワークアドレスを選択して QR コードを生成します。",
           "39fad211d9": "テールネットを使用して Wi-Fi の外部に接続する",
           "a9db5d771d": "ネットワークインターフェースを更新",
           "b2c384cfd6": "インターフェースが見つかりません",
@@ -7728,14 +7845,13 @@
           "1e64659126": "再生する"
         },
         "MobilePane": {
-          "dd3cd78d04": "Orca モバイルでスキャン",
-          "35100bca5d": "スマートフォンでターミナルを使用している間、NASH はスマートフォンの画面に合わせてターミナルを縮小します。アプリを閉じるか別のアプリに切り替えるときに、アプリをスマートフォンサイズのままにするか (インタラクティブ CLI ツールがリフローしないように)、サイズを変更してデスクトップに戻るかを制御します。バナーの「このターミナルを復元」または「すべてのターミナルを復元」を使えば、いつでも手動でサイズを変更できます。",
+          "dd3cd78d04": "NASH モバイルでスキャン",
           "ee56f1c7e4": "モバイルアプリを終了するとき",
           "3939fd062c": "デバイスを取り消すと、デバイスはすぐに切断されます。",
           "254a6d09e4": "ペアリング済み",
           "d7ce676270": "ペアリングされたデバイス",
           "e778ecb209": "または、次のコードをモバイルアプリに貼り付けます。",
-          "310924ad2c": "Orca モバイルアプリでこのコードをスキャンします。各コードは一意のデバイストークンを作成します。",
+          "310924ad2c": "NASH モバイルアプリでこのコードをスキャンします。各コードは一意のデバイストークンを作成します。",
           "870e1b5ca5": "デバイスの取り消しに失敗しました",
           "2e3dd0bc29": "デバイスが取り消されました",
           "711231348f": "ペアリングコードのコピーに失敗しました",
@@ -7748,14 +7864,15 @@
           "aa1263e881": "スマートフォンサイズを維持（デフォルト）",
           "6436e56546": "モバイルペアリング用のQRコード",
           "1b1b70279a": "まだデバイスがペアリングされていません。",
-          "1592afcc7a": "まだデバイスがペアリングされていません。 Orca モバイルアプリで QR コードをスキャンします。",
+          "1592afcc7a": "まだデバイスがペアリングされていません。 NASH モバイルアプリで QR コードをスキャンします。",
           "relayDegradedNotice": "Relay に接続できませんでした — このコードは LAN または Tailscale でのみ動作します。再生成してからお試しください。",
-          "pairingQrError": "このペアリングコードを QR コードとして表示できませんでした。代わりに Orca Mobile にコピーしてください。",
+          "pairingQrError": "このペアリングコードを QR コードとして表示できませんでした。代わりに NASH Mobile にコピーしてください。",
           "pairingCodeReady": "ペアリングコードの準備完了",
           "copyPairingCode": "ペアリングコードをコピーする",
           "diagnosticsCopied": "診断がコピーされました",
           "diagnosticsCopyFailed": "診断情報のコピーに失敗しました",
-          "5e2c7a1f84": "スマートフォンでターミナルを使用している間、NASH はスマートフォンの画面に合わせてターミナルを縮小します。アプリを閉じるか別のアプリに切り替えるときに、アプリをスマートフォンサイズのままにするか (インタラクティブ CLI ツールがリフローしないように)、サイズを変更してデスクトップに戻るかを制御します。バナーの [復元] または [すべて復元] を使用すると、いつでも手動でサイズを変更できます。"
+          "5e2c7a1f84": "スマートフォンでターミナルを使用している間、NASH はスマートフォンの画面に合わせてターミナルを縮小します。アプリを閉じるか別のアプリに切り替えるときに、アプリをスマートフォンサイズのままにするか (インタラクティブ CLI ツールがリフローしないように)、サイズを変更してデスクトップに戻るかを制御します。バナーの [復元] または [すべて復元] を使用すると、いつでも手動でサイズを変更できます。",
+          "35100bca5d": "スマートフォンでターミナルを使用している間、NASH はスマートフォンの画面に合わせてターミナルを縮小します。アプリを閉じるか別のアプリに切り替えるときに、アプリをスマートフォンサイズのままにするか (インタラクティブ CLI ツールがリフローしないように)、サイズを変更してデスクトップに戻るかを制御します。バナーの「このターミナルを復元」または「すべてのターミナルを復元」を使えば、いつでも手動でサイズを変更できます。"
         },
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub リリース",
@@ -7764,10 +7881,10 @@
           "c8491c17ef": "QR コードをスキャンしてスマートフォンから NASH を制御します。ベータ/早期プレビュー - バグや重大な変更が予想されます。 iOS アプリを次の場所から入手します。",
           "e7a3ae8c4e": "モバイル",
           "174f4a3c6d": "スマートフォンからターミナルと Agent を操作します。",
-          "1de96ec8a6": "Orca Mobile ボタンを表示",
-          "682293cadf": "左サイドバー上部に Orca Mobile ボタンを表示します。",
-          "d4f2b65f30": "サイドバーに Orca Mobile ショートカットを表示します。",
-          "installIntro": "Orca Mobile は",
+          "1de96ec8a6": "NASH Mobile ボタンを表示",
+          "682293cadf": "左サイドバー上部に NASH Mobile ボタンを表示します。",
+          "d4f2b65f30": "サイドバーに NASH Mobile ショートカットを表示します。",
+          "installIntro": "NASH Mobile は",
           "installOutro": "からインストールし、以下でペアリングしてください。",
           "androidApkLabel": "Android APK"
         },
@@ -7848,7 +7965,7 @@
           "2aacdb0517": "ハンドオフ、ワークツリーのハンドオーバー、および子 Agent の作業全体にわたってコーディング Agent を調整します。",
           "191ac34567": "Agent オーケストレーション",
           "nestedWorkerDepthTitle": "ネストされたワーカーの深さ",
-          "nestedWorkerDepthDescription": "派遣労働者が何世代にもわたって自らの労働者を生み出す可能性がある。 1 は Agent ツリーをフラットに保ちます。コーディネーターがワーカーを派遣し、それらのワーカーは派遣しません。"
+          "nestedWorkerDepthDescription": "起動されたワーカーが、さらに自分のワーカーを起動できる世代数です。1 にすると Agent ツリーはフラットになります。コーディネーターがワーカーを起動し、そのワーカーはワーカーを起動しません。"
         },
         "OrchestrationSetupCard": {
           "e7d2a5146c": "Agent がコンテキストを引き継ぎ、NASH を通じて作業を調整できるようにします。",
@@ -7947,18 +8064,13 @@
         },
         "RepositoryHooksSection": {
           "af49e2a19e": "ファイルは存在しますが、NASH は有効な `scripts` または `issueCommand` 定義を見つけることができませんでした。",
-          "3397879bee": "ローカルコマンドが存在する場合は、どのコマンドを実行するかを選択します。",
           "39da2ae12f": "orca.yaml",
-          "ac9038d2cc": "両方のとき",
           "32fec28f5b": "コマンドソース",
           "bbbd6e0bc4": "コマンドソースとorca.yaml",
           "c9bc1bfd8f": "詳細設定",
           "610d90fdbd": "コマンドソースと orca.yaml の詳細。",
-          "52aef29e69": "リポジトリのデフォルトを使用するには空白のままにします",
           "4084720f47": "{{artifact_url}} を完了",
           "13394103bd": "カスタム GitHub Issue コマンド",
-          "70ad20f883": "リンクされた号または PR URL をご覧ください。",
-          "b997331366": "オプションの上書き。使用",
           "2cc27dc12b": "リンクされた Issue コマンドのユーザーごとのオプションのオーバーライド。",
           "b91a0f297d": "ワークツリーがアーカイブされる前に実行されるローカルおよび共有スクリプト。",
           "9a100323ff": "アーカイブスクリプト",
@@ -8017,8 +8129,6 @@
           "e03d9a8f38": "毎回尋ねる",
           "8dbe6bedf5": "無効",
           "0e0dd5b9a5": "ロード済み",
-          "9b12f15b1e": "存在するとき。",
-          "c85c2c88a2": "{{artifact_url}}",
           "fac13f8c1e": "権威ある",
           "0518758f38": "両方",
           "d2b3016c20": "共有",
@@ -8031,7 +8141,11 @@
           "81057d5f71": "保存中…",
           "da37d6f10e": "コピー",
           "3149964b66": "コピーしました",
-          "waitForSetupBeforeAgent": "セットアップが完了するまで待ってから Agent を開始してください"
+          "waitForSetupBeforeAgent": "セットアップが完了するまで待ってから Agent を開始してください",
+          "issueCommandDescription": "任意の上書きです。リンクされた Issue または PR の URL には <artifactUrl>{{artifact_url}}</artifactUrl> を使用します。",
+          "issueCommandSharedDefault": "空欄のままにすると、<yaml>orca.yaml</yaml> のリポジトリのデフォルトを使用します。",
+          "issueCommandOptionalDefault": "空欄のままにすると、<yaml>orca.yaml</yaml> にリポジトリのデフォルトがあればそれを使用します。",
+          "commandSourceDescription": "<yaml>orca.yaml</yaml> とローカルの両方にコマンドがある場合は、どちらを実行するかを選択します。"
         },
         "RepositoryIconPicker": {
           "2b7d27b93c": "{{value0}} リポジトリカラーを使用する",
@@ -8223,16 +8337,16 @@
           "6ce4664003": "サーバーを更新する",
           "b07070ed3c": "サーバーが接続されていません",
           "78692becbd": "ローカルデスクトップ",
-          "64b6bea541": "アクティブサーバー",
+          "64b6bea541": "新規プロジェクトの既定ホスト",
           "99ac81fb43": "{{value0}} に切り替えました。",
           "b5b5114cb0": "{{value0}} を削除しました。",
           "6cb6eae14f": "実行環境の保存に失敗しました。",
-          "7b5986c8df": "{{value0}} を保存しました。準備ができたら、アクティブサーバーで切り替えてください。",
+          "7b5986c8df": "{{value0}} に接続しました。新規プロジェクトを既定でそこに作成するには、[詳細設定] > [新規プロジェクトの既定ホスト] で選択してください。",
           "5ef712f407": "「{{value0}}」という名前のサーバーはすでに存在します。",
           "0c55a47480": "名前とペアリングコードは必須です。",
           "e6410d72c3": "ランタイム環境の読み込みに失敗しました。",
           "6ef71985da": "エンドポイントなし",
-          "ed3e3f069d": "これにより、保存されたサーバーが NASH から削除されます。アクティブなサーバーは変更されません。",
+          "ed3e3f069d": "保存済みサーバーを NASH から削除します。新規プロジェクトの既定ホストは変わりません。",
           "b2fda48c39": "アクティブサーバーを削除すると、このブラウザはそのホストから切断されます。既存のホストセッションはそのまま残ります。",
           "9f7665a01b": "アクティブサーバーを削除すると、まず NASH はローカルデスクトップに戻ります。既存のホストセッションはそのまま残ります。",
           "3595fd1948": "新規リンク",
@@ -8254,7 +8368,7 @@
           "hostModelCapabilityProjectSetup": "プロジェクト設定",
           "hostModelCapabilityTaskSourceContext": "タスクソースコンテキスト",
           "hostModelCapabilityWorkspaceRunContext": "ワークスペース実行コンテキスト",
-          "3f67e8078a": "既定ではこのコンピュータを使用します。対応するプロジェクト、ファイル、ターミナル、プロバイダーチェック、ブラウザ/モバイルの引き継ぎをそのサーバー経由で実行したい場合にのみ、保存済みサーバーを選択してください。",
+          "3f67e8078a": "ここで保存済みサーバーを選ばない限り、新規プロジェクトはこのコンピューターに作成されます。既存のプロジェクト、ファイル、ターミナルはそれぞれのホストに残ります。",
           "2c85efb3e8": "保存済みサーバーを選択すると、このブラウザはペアリング済みの NASH ランタイムを既定のホストとして使用します。",
           "serverConnected": "接続済み",
           "serverChecking": "確認中…",
@@ -8262,7 +8376,7 @@
           "disconnectedServer": "{{value0}} から切断しました。",
           "connectToRemoteServers": "リモートサーバーに接続",
           "connectToRemoteServersHelp": "別の NASH ランタイムをペアリングし、ここで接続または切断します。既定のホストを変更したい場合にのみ、詳細 > アクティブサーバーを使用してください。",
-          "activeServerRowHelp": "サーバー経由のプロジェクト、ターミナル、プロバイダーチェックに使うアクティブサーバーです。",
+          "activeServerRowHelp": "新規プロジェクトの既定ホストです。既存のプロジェクトはそれぞれのホストに残ります。",
           "disconnect": "切断",
           "connect": "接続",
           "advanced": "詳細設定",
@@ -8276,8 +8390,8 @@
           "updateServer": "更新",
           "reviewServerUpdates": "サーバーの更新を確認",
           "orcaVersion": "NASH v{{value0}}",
-          "removeActiveServerBlocked": "このサーバーを削除する前に、[詳細設定] で別のアクティブサーバーを選択してください。",
-          "removeActiveServerDescription": "このサーバーを削除する前に、[詳細設定] で別のアクティブサーバーを選択してください。既存のホストセッションはそのまま残ります。",
+          "removeActiveServerBlocked": "このサーバーは新規プロジェクトの既定ホストです。削除する前に [詳細設定] で別のホストを選択してください。",
+          "removeActiveServerDescription": "このサーバーは新規プロジェクトの既定ホストです。削除する前に [詳細設定] で別のホストを選択してください。既存のホストセッションはそのまま残ります。",
           "updatingServers": "サーバーを更新しています…",
           "workflow": "リモートサーバーワークフロー",
           "connectWorkflow": "ホストに接続",
@@ -8317,6 +8431,7 @@
           "de6d5cff95": "このコンピュータ (",
           "de77eb1b65": "接続アドレス",
           "ff80904fc4": "ブラウザまたはデスクトップクライアントに対する取り消し可能なアクセス許可を作成します。",
+          "pairedRunsAsYou": "ペアリングしたクライアントは、このコンピュータ上であなたとしてコマンドを実行できます。",
           "f8500e134a": "この NASH サーバーを共有する",
           "d6c081adf4": "URLのコピーに失敗しました。",
           "df0aa45a86": "ペアリング URL をコピーしました。",
@@ -8561,13 +8676,8 @@
           "a7d28dff81": "NASH で接続するリモートホストを追加します。",
           "94c5284560": "ターゲット",
           "f495689b82": "インポートに失敗しました",
-          "f8050f6307": "{{value0}} サーバー{{value1}} を同期しました",
           "68c13b4589": "テストが失敗しました",
           "81d08bcddf": "接続成功",
-          "2c4ee7332b": "リモートリレーのリセットに失敗しました",
-          "db2e48975e": "リモートリレーリセット",
-          "025e107643": "リモートターミナルの終了に失敗しました",
-          "90e308c98b": "リモートターミナルが終了しました",
           "a43de1d3ee": "切断に失敗しました",
           "e95d5ae10e": "接続に失敗しました",
           "c2a69510e3": "ターゲットの削除に失敗しました",
@@ -8575,12 +8685,12 @@
           "2227ce47b6": "ターゲットの保存に失敗しました",
           "f602009125": "ターゲットが追加されました",
           "b4ba0ce33d": "ターゲットが更新されました",
-          "3879cbaa52": "ターミナルのタイムアウトは 60 ～ {{value0}} 秒にする必要があります。そうでない場合は、リセットされるまでターミナルをアクティブにしておく必要があります。",
           "4db9afce1c": "ポートは 1 ～ 65535 でなければなりません",
           "0e5aa04161": "ホストまたは SSH 構成エイリアスが必要です",
           "f1fc50dad2": "SSH ターゲットのロードに失敗しました",
           "0cda732f43": "接続テストに失敗しました",
-          "terminateUnverifiable": "{{terminals}} リモートターミナルに到達できませんでした。再接続して終了します。"
+          "syncedServerSingular": "{{count}} 台のサーバーを同期しました",
+          "syncedServerPlural": "{{count}} 台のサーバーを同期しました"
         },
         "SshPassphraseDialog": {
           "d5a234456f": "キャンセル",
@@ -8609,30 +8719,17 @@
           "7f7b3d7ab4": "ターゲットの削除",
           "3d21a22d0e": "ターゲットの削除",
           "3d8af2949f": "ターゲットの編集",
-          "762a48c662": "リモートリレーをリセットする",
-          "97dea4e8cf": "リモートリレーのリセット",
-          "da16e108e6": "リモートターミナルを終了する",
-          "c77f1abfe3": "リモートターミナルの終了",
           "18968ede9e": "エラー",
           "f0871e6bfb": "接続",
-          "47e94bd6ba": "接続されています",
-          "a883f5a00f": "ターミナルタイムアウト: {{value0}}",
-          "8ce71262f4": "リセットするまでターミナルを維持"
+          "47e94bd6ba": "接続されています"
         },
         "SshTargetDestructiveActions": {
-          "7e66942808": "これにより、この SSH ターゲット上のアクティブなターミナルセッションが停止されます。再接続しても復元されません。",
-          "accf177a03": "リモートターミナルを終了しますか?",
-          "26be00392d": "これにより、この SSH ターゲットのリモートリレーが強制的に停止されます。このターゲットに対するアクティブなリモートターミナルとポート転送が終了します。",
-          "570a7a0574": "リモートリレーをリセットしますか?",
           "3bb0cf0ee4": "これによりターゲットが削除され、アクティブなリモートターミナルがすべて終了します。",
           "4808966c41": "SSH ターゲットの削除"
         },
         "SshTargetForm": {
           "fea9cb402e": "キャンセル",
-          "1b19b00e93": "制限付きタイムアウトは 60 秒から 7 日間にする必要があります。",
           "137e88ce8d": "NASH がこのホストから切断された後も、リモートターミナルは実行を続けます。",
-          "b574994adc": "停止したい場合は「リモートターミナルを終了」または「リレーをリセット」を使用してください。",
-          "71fc546097": "リセットするまでターミナルを維持",
           "92f80edbfd": "リモートターミナルの永続化",
           "feae1d1e69": "オプション。 ProxyJump / ssh -J と同等。",
           "11bcb4507a": "bastion.example.com",
@@ -8654,8 +8751,6 @@
           "a62b4cb39a": "変更を保存",
           "29af933cd5": "新規 SSH ターゲット",
           "f2331ce599": "SSH ターゲットの編集",
-          "7c13f58c91": "リセットまで",
-          "55c56cf2c7": "切断後のタイムアウト（秒）",
           "4a342f44c1": "詳細接続",
           "e9609ddca6": "プロキシ、ジャンプホスト、接続の再利用",
           "8c922dffba": "より速いセットアップのため SSH 接続を再利用",
@@ -8665,11 +8760,9 @@
           "editDescription": "このマシンの接続詳細を更新します。変更は次回の接続時に適用されます。",
           "addDescription": "SSH でログインできる永続的なマシンを追加します。",
           "editingPrefix": "編集中",
-          "remoteRuntimeHelp": "このホスト上で NASH を実行する Node.js。 NASH 管理ノードは独自のノードをアップロードするため、npm は必要ありません。ホストノードは、そこにすでにインストールされている Node.js を使用します。",
-          "remoteRuntimePinnedNode": "NASH 管理ノード",
-          "remoteRuntime": "ランタイム",
-          "remoteRuntimeAuto": "自動",
-          "remoteRuntimeHostNode": "ホストノード"
+          "allowRemoteCliControl": "このホストの orca CLI による NASH の操作を許可する",
+          "allowRemoteCliControlHelp": "オフの場合、このホストで実行される orca コマンドは、このホスト自身のターミナルにのみアクセスできます。オンにすると、このコンピュータ上の他のホスト、オーケストレーション、ファイル、連携にもアクセスできるようになります。",
+          "remoteRuntimeHelp": "このホスト上で NASH を実行する Node.js。 NASH 管理ノードは独自のノードをアップロードするため、npm は必要ありません。ホストノードは、そこにすでにインストールされている Node.js を使用します。"
         },
         "TasksPane": {
           "f71d8a9dd3": "タスクプロバイダー",
@@ -8847,8 +8940,6 @@
             "tui": "TUI",
             "tuiDescription": "全画面ターミナルアプリ向けの離散的なホイール通知。"
           },
-          "defaultShellDescription": "NASH が新規ローカルターミナルペインで開くシェルを選択します。",
-          "customShellHelp": "PATH 上のシェル名または実行ファイルのパスを入力します。NASH はログインシェルとして起動します。",
           "8dbe0bc942": "シェル引数、1 行に 1 つ",
           "f58cb71f53": "--rcfile\n/path/to/rcfile",
           "48b91a3ed2": "カスタム引数",
@@ -8879,7 +8970,9 @@
           "a909136b3f": "シェル",
           "1c29734248": "新規ターミナルペインで使用するシェル",
           "9589abc009": "デフォルトのシェル",
-          "5a5eac2f44": "シェルが見つかりません: {{value0}}"
+          "5a5eac2f44": "シェルが見つかりません: {{value0}}",
+          "defaultShellDescription": "NASH が新規ローカルターミナルペインで開くシェルを選択します。",
+          "customShellHelp": "PATH 上のシェル名または実行ファイルのパスを入力します。NASH はログインシェルとして起動します。"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "{{value0}} テーマのプレビュー",
@@ -8991,13 +9084,8 @@
           "1ba81c0ff0": "推奨",
           "cfde55c7b0": "モデルのダウンロードに失敗しました。",
           "43fd4f454b": "音声モデル",
-          "7cf715f891": "が開催されます。",
-          "295d84b849": "一度開始し、もう一度停止します。ホールド: 言いながら言い続ける",
-          "ff9a680010": "トグル: 押す",
           "ba4a900d1d": "ディクテーションモード",
           "0121960365": "音声ディクテーションを有効にする",
-          "366e1b4f36": "フォーカスされたペインにテキストを書き込むことができます。",
-          "4465596675": "プレス",
           "62d2a84d31": "OpenAI APIキーのクリアに失敗しました",
           "37aba8bb63": "OpenAI APIキーがクリアされました",
           "8572bbb537": "OpenAI APIキーの保存に失敗しました",
@@ -9017,7 +9105,9 @@
           "1eac933202": "macOS のプライバシーとセキュリティを開きました。アクセスを許可した後、ディクテーションを再度有効にします。",
           "cd9fe37556": "マイクの許可が与えられました",
           "6fa734ed95": "{{value0}} を削除",
-          "openAiKeyName": "OpenAI 転写キー"
+          "openAiKeyName": "OpenAI 転写キー",
+          "dictationShortcutDescription": "{{shortcut}} を押すと、フォーカスされているペインにテキストを音声入力できます。",
+          "dictationModesDescription": "トグル: {{shortcut}} を1回押すと開始し、もう一度押すと停止します。ホールド: {{shortcut}} を押している間、音声入力します。"
         },
         "WorktreeSymlinksSection": {
           "1c1e35b219": "{{value0}} を削除",
@@ -9097,6 +9187,8 @@
             "b40d5b6570": "Codex およびライブレート制限取得のためのオプションのアカウント切り替え。",
             "17c5d244eb": "Codex アカウント",
             "e14049e1a8": "claude",
+            "dd75a73991": "共有チャットコンテキストを維持しながら、Claude のオプションのアカウント切り替え。",
+            "75682e1b62": "Claude アカウント",
             "e02c136ad0": "認証",
             "9f70aa706c": "プロバイダー",
             "488a7e9206": "リナックス",
@@ -9131,8 +9223,6 @@
               },
               "title": "Cursor の使用状況"
             },
-            "dd75a73991": "共有チャットコンテキストを維持しながら、Claude のオプションのアカウント切り替え。",
-            "75682e1b62": "Claude アカウント",
             "zcodePlan": {
               "title": "GLMコーディングプラン",
               "description": "Z.AI または Zhipu (BigModel) GLM コーディングプランの使用状況を追跡します。サイトを選択し、プラン API キーを保存します。",
@@ -9261,8 +9351,8 @@
             "5bff6a2ef0": "サイドバー",
             "5e5b8878bf": "スマートフォン",
             "74618577c7": "モバイル",
-            "682293cadf": "左サイドバー上部に Orca Mobile ボタンを表示します。",
-            "1de96ec8a6": "Orca Mobile ボタンを表示",
+            "682293cadf": "左サイドバー上部に NASH Mobile ボタンを表示します。",
+            "1de96ec8a6": "NASH Mobile ボタンを表示",
             "4c920ab2d1": "スケジュール",
             "58f4e22fa2": "オートメーション",
             "b186f3cefb": "自動化",
@@ -9327,7 +9417,7 @@
             "57fb424c56": "リモートホスト",
             "35565867cb": "ムーンショット",
             "de586def95": "サブスクリプション",
-            "00a028f25f": "使用法",
+            "00a028f25f": "使用量",
             "40e5c3c285": "kimi",
             "c927a155d5": "ステータスバーに Kimi サブスクリプションの使用状況を表示します。",
             "3a6c028ea8": "Kimi 使用量",
@@ -9416,7 +9506,7 @@
               },
               "title": "Cursor の使用状況"
             },
-            "zcodeUsageTitle": "Zコードの使用法",
+            "zcodeUsageTitle": "ZCode の使用量",
             "zcodeUsageDescription": "ZCode コーディングプランのクォータの使用状況をステータスバーに表示します。",
             "zcode": "zコード",
             "zai": "ザイ",
@@ -9738,17 +9828,17 @@
             },
             "nativeChat": {
               "title": "Chat UI",
-              "description": "対応 Agent のターミナルセッション用デスクトップチャット画面をプレビューします。",
               "grok": "grok",
               "native": "ネイティブ",
               "chat": "チャット",
               "claude": "claude",
               "codex": "codex",
-              "openclaude": "オープンクロード",
+              "openclaude": "openclaude",
               "omp": "ああ",
               "terminal": "ターミナル",
               "agent": "Agent",
-              "queue": "キュー"
+              "queue": "キュー",
+              "description": "対応する新しいエージェントをチャット UI で開きます。"
             },
             "agentDashboard": {
               "title": "Agent ダッシュボード",
@@ -9954,7 +10044,7 @@
             "867dddea41": "固定された",
             "5250cf0e48": "ピン",
             "afa37a34e1": "近い",
-            "running_terminal": "走っている",
+            "running_terminal": "実行中",
             "terminal": "ターミナル",
             "agent": "Agent",
             "command": "コマンド",
@@ -10243,8 +10333,8 @@
               "f213400800": "モバイル",
               "671eb4173c": "スマートフォンからターミナルと Agent を操作します。",
               "ffd52a96e4": "モバイル",
-              "1de96ec8a6": "Orca Mobile ボタンを表示",
-              "682293cadf": "左サイドバー上部に Orca Mobile ボタンを表示します。",
+              "1de96ec8a6": "NASH Mobile ボタンを表示",
+              "682293cadf": "左サイドバー上部に NASH Mobile ボタンを表示します。",
               "e4f4daea0e": "リレー",
               "5d5af8e041": "iPhone",
               "74618577c7": "モバイル",
@@ -10349,7 +10439,7 @@
             "27a27b2f63": "身を引く",
             "4d4bb76bf4": "オプトインする",
             "b021b9cb81": "匿名",
-            "79c319948b": "使用法",
+            "79c319948b": "使用量",
             "77d3180def": "テレメトリー",
             "b707cc3981": "匿名の機能使用イベントを送信して、NASH の改善にご協力ください。",
             "57b283461a": "匿名の使用状況データを共有する",
@@ -10367,7 +10457,7 @@
               "b86c727100": "npm",
               "b949a7c0a0": "pnpm",
               "0b78c4a165": "起動",
-              "2d8aff42be": "走る",
+              "2d8aff42be": "実行",
               "1c5bdcd0f2": "repos",
               "89d2a9ad9f": "repo",
               "f58b92a48f": "プロジェクト",
@@ -10540,12 +10630,15 @@
               "ebd5369acf": "環境",
               "d198440ce3": "ランタイム",
               "baec27aa8f": "このブラウザを保存された NASH サーバーに接続します。",
-              "3517fb2ec0": "アクティブサーバー",
+              "3517fb2ec0": "リモート NASH サーバー",
               "c6e5a03aa0": "開発ボックス",
               "f1575f1e09": "ウェブクライアント",
               "81444c4102": "ペアリングURL",
               "104f4d7dbd": "ペアリング",
-              "4575341c77": "ローカルデスクトップを選択するか、保存されたリモート NASH サーバーを追加するか、ペアリング URL を生成します。"
+              "4575341c77": "保存済みのリモート NASH サーバーを追加したり、ペアリング URL を生成したり、新規プロジェクトの既定ホストを選択したりします。",
+              "defaultHostKeyword": "既定ホスト",
+              "newProjectsKeyword": "新規プロジェクト",
+              "activeServerKeyword": "アクティブサーバー"
             }
           }
         },
@@ -10843,7 +10936,7 @@
             "tui": "トゥイ",
             "a0c44061ee": "確認",
             "close_terminal": "近い",
-            "running": "走っている",
+            "running": "実行中",
             "command": "コマンド",
             "agent": "Agent",
             "process": "プロセス",
@@ -10974,8 +11067,8 @@
           "a42f6fbdd8": "Agent が作業している間、このコンピュータとディスプレイを起きたままにします。NASH は電源ポリシーに従い、蓋が閉じているときもこのデバイスを起きたままにするよう要求します。",
           "modeTitle": "コンピュータをスリープさせない",
           "modeDescriptionWindows": "[オン]、[Agent]、または [オフ] を選択します。Agent モードは、Agent が動作している間は起動したままになります。蓋を閉じる動作は、このデバイスの電源設定に従います。",
-          "modeDescriptionDefault": "[オン]、[Agent]、または [オフ] を選択します。Agent が動作している間、Agent モードは起動したままになります。 NASH はまた、電源ポリシーに従って、蓋が閉じられているときにこのデバイスが起動したままになるように要求します。",
           "modeDescriptionMac": "[オン]、[Agent]、または [オフ] を選択します。Agent モードは Agent の作業中のアイドルスリープを防止するため、蓋を開けたまま長時間の実行を完了できます。蓋を閉じると、この Mac はスリープします。",
+          "modeDescriptionDefault": "[オン]、[Agent]、または [オフ] を選択します。Agent が動作している間、Agent モードは起動したままになります。 NASH はまた、電源ポリシーに従って、蓋が閉じられているときにこのデバイスが起動したままになるように要求します。",
           "lidNoteMac": "蓋を開けたままアイドルスリープを防止します。蓋を閉じると、この Mac はスリープします。",
           "lidNoteWindows": "蓋を閉じる動作は、このデバイスの電源設定に従います。",
           "lidNoteDefault": "NASH はまた、電源ポリシーに従って、蓋が閉じられているときにデバイスが起動したままになるようにこのデバイスに要求します。"
@@ -11078,21 +11171,23 @@
                 "60996beda6": "Jira サイトを追加",
                 "7ca5ffffdb": "Jira Cloud の Issue を閲覧・作成し、そこから作業を開始します。",
                 "a1093a06c7": "セットアップ操作を表示する前に、Jira へのアクセスを確認しています。",
-                "9fa04a032e": "{{value0}} サイト{{value1}} が接続されました",
                 "cef18762a2": "Linear の設定で発行した個人用 API キーでアクセスを追加します。フルアクセスキーでは、キーの所有者が参照できるすべてのチームが見えます。",
                 "6224fe9d34": "接続された各 Linear ワークスペースには、アクティブなランタイムが保存したキーが 1 つあります。フルアクセスキーはキー所有者がアクセスできるすべてのチームを対象にできます。制限付きキーはいつでも置き換えられます。",
                 "1a12e33fe5": "Linear アクセスを追加",
                 "622c224082": "ワークスペースへのアクセスを追加",
                 "eae4a9f16b": "Linear アクセスを追加して、Issue を閲覧およびリンクします。",
                 "fe9231215b": "セットアップ操作を表示する前に Linear アクセスを確認中。",
-                "e1f5e6424c": "{{value0}} ワークスペース{{value1}} が接続されました",
                 "disconnect_all": "切断",
                 "account_scope_prefix": "アカウントスコープ",
                 "2d60ec7921": "APIトークンを使用して Jira Cloudサイトに接続するか、パーソナルアクセストークンまたはユーザー名とパスワードを使用してセルフホスト Jira に接続します。認証情報は選択されたリモートランタイムに送信され、ランタイムがサポートする暗号化で保存されます。",
                 "977e360b71": "APIトークンを使用して Jira Cloudサイトに接続するか、パーソナルアクセストークンまたはユーザー名とパスワードを使用してセルフホスト Jira に接続します。認証情報はローカルに保存され、ローカルランタイムストレージがサポートする場合は暗号化されます。",
                 "statusConnected": "接続済み",
                 "statusNotConnected": "接続されていません",
-                "linearTokenName": "リニア API トークン"
+                "linearTokenName": "Linear API トークン",
+                "connectedSiteSingular": "{{count}} 件のサイトに接続済み",
+                "connectedSitePlural": "{{count}} 件のサイトに接続済み",
+                "connectedWorkspaceSingular": "{{count}} 件のワークスペースに接続済み",
+                "connectedWorkspacePlural": "{{count}} 件のワークスペースに接続済み"
               }
             }
           }
@@ -11173,18 +11268,18 @@
         },
         "providerAccountScope": {
           "remoteServer": "リモートサーバー: {{value0}}",
-          "remoteServerCredentials": "このプロバイダーの認証情報とアカウント確認は、このリモートサーバーが管理します。別の既定ランタイムスコープを編集するには、[設定] > [リモート NASH サーバー] > [詳細設定] を使用してください。",
+          "remoteServerCredentials": "このプロバイダーの認証情報とアカウントチェックは、このリモートサーバーが管理しています。別のホストを使うには、設定 > リモート NASH サーバー > 詳細 > 新規プロジェクトの既定ホスト を変更してください。",
           "localMac": "ローカルの Mac",
-          "localCredentials": "このプロバイダーの認証情報とアカウント確認は、このデスクトップクライアントが管理します。サーバーが管理する認証情報を編集するには、[設定] > [リモート NASH サーバー] > [詳細設定] を使用してください。",
-          "remoteServerRateLimit": "{{value0}} の API 予算は、このリモートサーバー上の CLI から取得されます。別の既定ランタイムの予算を確認するには、[設定] > [リモート NASH サーバー] > [詳細設定] を使用してください。",
-          "localRateLimit": "{{value0}} の API 予算は、このデスクトップクライアント上の CLI から取得されます。サーバーが管理する予算を確認するには、[設定] > [リモート NASH サーバー] > [詳細設定] を使用してください。"
+          "localCredentials": "このプロバイダーの認証情報とアカウントチェックは、このデスクトップクライアントが管理しています。サーバーを使うには、設定 > リモート NASH サーバー > 詳細 > 新規プロジェクトの既定ホスト を変更してください。",
+          "remoteServerRateLimit": "{{value0}} の API 予算はこのリモートサーバー上の CLI から取得しています。別のホストの予算を見るには、設定上部のホストメニューで選択してください。",
+          "localRateLimit": "{{value0}} の API 予算はこのデスクトップクライアント上の CLI から取得しています。サーバーの予算を見るには、設定上部のホストメニューで選択してください。"
         },
         "settingOwnership": {
           "clientDefault": "クライアントのデフォルト",
           "sourceControlAiDefaults": "レシピ、プロンプト、ホスト型レビューの既定値は、このクライアントで共有されます。モデルの選択と検出は、Agent が実行されるホストの範囲に限定されます。",
           "projectOnThisHost": "このホスト上のプロジェクト",
           "repositorySourceControlAi": "これらの上書き設定はこのプロジェクトのセットアップに適用され、変更するまではクライアントのソース管理 AI 既定値を継承します。",
-          "agentLaunchDefaults": "既定の Agent、コマンドの上書き、CLI 引数、起動時の環境変数はクライアントの設定です。SSH やリモートサーバーでの起動時には、実行時にホストの利用可否を確認します。",
+          "agentLaunchDefaults": "既定のAgent、コマンドの上書き、CLI 引数、起動環境は選択したホストに保存されます。",
           "clientDefaultProjectScopes": "クライアントの既定値とプロジェクトのスコープ",
           "terminalQuickCommands": "コマンドはこのクライアントに保存され、全体またはプロジェクトのセットアップにスコープを設定して、選択したターミナルのコンテキストで実行されます。",
           "hostOverride": "ホストごとの上書き",
@@ -11353,13 +11448,13 @@
           "notificationPlayground": "通知プレイグラウンド",
           "notificationPlaygroundDescription": "トーストレイアウト、復元操作、長文コピーの折り返しを確認するための開発専用トリガー。",
           "devOnly": "開発専用",
-          "orcaCloud": "Orca Cloud",
+          "orcaCloud": "NASH Cloud",
           "orcaCloudDescription": "ファーストパーティクラウドサインインの開発者限定プレビュー。本番環境では非表示。開発環境では、ORCA_CLOUD_API_URLとORCA_CLOUD_CLIENT_IDを設定するとサイドバーのアカウント切替にも表示されます。",
           "orcaCloudStatus": "状態",
           "orcaCloudSignOut": "サインアウト",
           "orcaCloudConnect": "プロファイルを接続",
           "orcaCloudRefresh": "ステータスを更新",
-          "orcaCloudNotConfigured": "ORCA_CLOUD_API_URLとORCA_CLOUD_CLIENT_IDを設定して、この開発ビルドで Orca Cloudのサインインをプレビューします。",
+          "orcaCloudNotConfigured": "ORCA_CLOUD_API_URLとORCA_CLOUD_CLIENT_IDを設定して、この開発ビルドで NASH Cloudのサインインをプレビューします。",
           "deleteAnywayClicked": "とにかく削除をクリックしました"
         },
         "EphemeralVmRecipeRow": {
@@ -11470,7 +11565,7 @@
                 "tickets": "チケット",
                 "issues": "Issue",
                 "skill": "スキル",
-                "orcaLinear": "シャチリニア"
+                "orcaLinear": "orca-linear"
               }
             }
           }
@@ -11509,7 +11604,7 @@
           "connecting": "接続中",
           "reconnecting": "再接続中",
           "offline": "オフライン",
-          "title": "Orca Relay",
+          "title": "NASH Relay",
           "automatic": "スマートフォンをペアリングすると、どこからでも接続できます",
           "signInPrompt": "どこからでも接続するには、このデスクトップでサインインしてください",
           "directStillAvailable": "LAN と Tailscale の接続は引き続き利用できます。",
@@ -11527,21 +11622,21 @@
           "signIn": "Relay にサインイン",
           "localDescription": "スマートフォンがこの Wi‑Fi または Tailscale に接続されている必要があります。アカウントは不要です。",
           "pathGroup": "スマートフォンがこのコンピュータに到達する方法",
-          "anywhereTitle": "Orca Relay",
+          "anywhereTitle": "NASH Relay",
           "anywhereDescription": "スマートフォンはモバイル回線または任意の Wi‑Fi から接続できます。サインインが必要なのは Relay のみです。",
-          "signInRequired": "Relay のみ — LAN にはアカウントは不要です。",
-          "relayUnavailable": "このビルドでは Orca Relay を利用できません。LAN をご利用ください。",
+          "relayUnavailable": "このビルドでは NASH Relay を利用できません。LAN をご利用ください。",
           "signInAgain": "Relay に再サインイン",
           "localTitle": "LAN",
           "retrying": "再試行中",
-          "relayCell": "リレーセル"
+          "relayCell": "リレーセル",
+          "relaySignInDetail": "このデスクトップを NASH にサインインさせ、スマートフォンの通信を NASH のサーバー経由でルーティングします。LAN ではアカウントは不要です。"
         },
         "MobilePairingSetupSection": {
           "title": "スマートフォンをペアリング",
           "regenerate": "再生成",
           "generate": "QRコードを生成",
           "refresh": "ネットワークインターフェースを更新",
-          "overview": "QR コードを生成し、Orca Mobile の Pair Desktop でスキャンしてください。",
+          "overview": "QR コードを生成し、NASH Mobile の Pair Desktop でスキャンしてください。",
           "step1Title": "接続方法",
           "step2Title": "このコンピュータのアドレス",
           "step2LocalDescription": "スマートフォンが Tailscale または Wi‑Fi でこのアドレスに到達できる必要があります。",
@@ -11555,7 +11650,7 @@
           "placeholder": "自動検出"
         },
         "MobileRelayBetaAvailability": {
-          "about": "Orca Relay ベータについて",
+          "about": "NASH Relay ベータについて",
           "beta": "ベータ",
           "availability": "で利用可能",
           "testFlight": "TestFlight",
@@ -11580,8 +11675,8 @@
           "manageConnectionLink": "連携"
         },
         "MobileRelayBetaNotice": {
-          "notice": "Orca Relay はベータ版です。",
-          "nashUnavailable": "NASH ビルドでは Orca Relay とモバイルのプッシュ通知は利用できません。"
+          "notice": "NASH Relay はベータ版です。",
+          "nashUnavailable": "NASH ビルドでは NASH Relay とモバイルのプッシュ通知は利用できません。"
         },
         "EditorFontFamilySetting": {
           "title": "エディターフォント",
@@ -11637,7 +11732,7 @@
           "failed": "更新に失敗しました",
           "serviceManagerHelp": "このサーバーを開始するサービスマネージャーを通じて NASH を更新してください。",
           "unpackedHelp": "開発ビルドはソースチェックアウトから更新する必要があります。",
-          "legacyHelp": "リモート更新を有効にするには、このサーバーを一度手動で更新してください。"
+          "legacyHelp": "このサーバーではリモート更新を利用できません。サーバー上で NASH を更新してください。"
         },
         "BrowserLinkRoutingSetting": {
           "description": "ターミナル、Markdown、エディターの http(s) リンクを NASH の組み込みブラウザで開きます。{{shortcut}} は常にシステムブラウザを使用します。",
@@ -11755,7 +11850,7 @@
           "official": "公式",
           "installed": "インストール済み",
           "noDescription": "説明はありません。",
-          "blocked": "Orca の安全リストによりブロック: {{value0}}",
+          "blocked": "NASH の安全リストによりブロック: {{value0}}",
           "blockedAction": "ブロック中",
           "checkUpdate": "更新を確認",
           "install": "インストール"
@@ -11779,7 +11874,7 @@
           "noContributions": "マニフェストメタデータのみ",
           "capabilities": "要求されたアクセス",
           "workerWarning": "機能はこのプラグインが NASH APIを使用する方法を制限します。ワーカーは引き続きコンピュータで通常のプロセスとして実行され、ファイル、ネットワーク、その他のプロセスへの完全なアクセス権を持ちます。",
-          "blocked": "Orca の安全リストがこのプラグインをブロック: {{value0}}",
+          "blocked": "NASH の安全リストがこのプラグインをブロック: {{value0}}",
           "current": "このプラグインコンテンツはすでにインストールされています。",
           "close": "閉じる",
           "cancel": "キャンセル",
@@ -11838,8 +11933,8 @@
           "description": "NASH プラグインをインストールおよび管理。SSH ワークスペースでもこのコンピュータでプラグインが実行されます。",
           "logsFailed": "プラグインログをロードできませんでした。",
           "rollbackFailed": "このプラグインをロールバックできませんでした。以前の不変バージョンが利用できない可能性があります。",
-          "orcaCatalogLabel": "Orca のプラグインカタログを使用",
-          "orcaCatalogDescription": "Orca の公式プラグイン一覧とプラグイン安全リストを Orca のサーバーからダウンロードします。"
+          "orcaCatalogLabel": "NASH のプラグインカタログを使用",
+          "orcaCatalogDescription": "NASH の公式プラグイン一覧とプラグイン安全リストを NASH のサーバーからダウンロードします。"
         },
         "PluginSettingsRow": {
           "blocked": "ブロック中",
@@ -11858,7 +11953,7 @@
           "dev": "開発",
           "bundled": "同梱",
           "noDescription": "説明はありません。",
-          "killListMessage": "Orca の安全リストがこのプラグインを無効にしました: {{value0}}",
+          "killListMessage": "NASH の安全リストがこのプラグインを無効にしました: {{value0}}",
           "viewAdvisory": "アドバイザリーを表示",
           "runtimeError": "プラグインが有効化またはワーカーエラー後に停止しました。",
           "restartCount": " · {{value0}}回再起動",
@@ -11899,9 +11994,9 @@
             "permissions": "プラグイン権限",
             "logs": "プラグインログ",
             "development": "開発プラグイン",
-            "orcaCatalogTitle": "Orca のプラグインカタログを使用",
-            "orcaCatalogDescription": "Orca の公式プラグイン一覧とプラグイン安全リストを Orca のサーバーからダウンロードします。",
-            "orcaMarketplace": "Orca マーケットプレイス",
+            "orcaCatalogTitle": "NASH のプラグインカタログを使用",
+            "orcaCatalogDescription": "NASH の公式プラグイン一覧とプラグイン安全リストを NASH のサーバーからダウンロードします。",
+            "orcaMarketplace": "NASH マーケットプレイス",
             "safetyList": "プラグイン安全リスト"
           }
         },
@@ -12033,7 +12128,6 @@
         },
         "BrowserTerminalLinkActionsSetting": {
           "title": "ターミナル URL のクリック数",
-          "description": "ターミナル内のリンクまたはチャット記録をクリックしたときに利用可能な操作を表示します。ターミナルで {{modifier}} クリックを要求するには、これをオフにします。",
           "descriptionV2": "ターミナルペインおよびチャットトランスクリプトに出力される検出された URL のクリックを制御します。",
           "plainClickLabel": "プレーンクリック",
           "plainClickDescription": "左クリックで操作を表示するか、URL を開くか、ターミナルに任せるかを選択します。 Cmd/Ctrl キーを押しながらクリックすると、常に直接開きます。",
@@ -12088,10 +12182,10 @@
         "artifacts": {
           "enable": "アーティファクトを有効にする",
           "enableDescription": "サイドバーにアーティファクトを追加すると、共有ファイルを開いたり削除したりできるようになります。",
-          "account": "Orca アカウント",
+          "account": "NASH アカウント",
           "connected": "接続済み",
           "signInRequired": "アーティファクトをアップロードして管理するには、サインインが必要です。",
-          "signIn": "Orca にサインインする",
+          "signIn": "NASH にサインインする",
           "title": "アーティファクト",
           "description": "HTML および Markdown ファイルをチームと共有し、パブリックリンクを管理します。",
           "howToTitle": "アーティファクトの使用方法",
@@ -12108,7 +12202,7 @@
           "showButtonDescription": "サイドバーにアーティファクトのショートカットを表示します。",
           "openArtifactsDescriptionV2": "アカウントを通じて共有されたリンクをプレビュー、コピー、管理します。",
           "signInTitle": "サインインして成果物を共有する",
-          "signInDescription": "Orca アカウントを使用して、アーティファクトをアップロードし、そのパブリックリンクを管理します。",
+          "signInDescription": "NASH アカウントを使用して、アーティファクトをアップロードし、そのパブリックリンクを管理します。",
           "signInAgain": "再度サインインしてください",
           "enableStepTitle": "アーティファクトの共有を有効にする",
           "enableStepWebDescription": "ホストデバイスの NASH デスクトップアプリで [設定] → [アーティファクト] を開き、公開を有効にします。",
@@ -12130,21 +12224,21 @@
         "orcaAccount": {
           "connected": "接続済み",
           "reconnectRequired": "セッションの有効期限が切れました。クラウド機能を使用するには、再度サインインします。",
-          "unavailable": "このビルドでは Orca サインインは利用できません。",
-          "signedOut": "サインインして、Artifacts や Orca Relay などのクラウド機能を使用して NASH を拡張します。",
+          "unavailable": "このビルドでは NASH サインインは利用できません。",
+          "signedOut": "サインインして、Artifacts や NASH Relay などのクラウド機能を使用して NASH を拡張します。",
           "checking": "アカウントのステータスを確認しています…",
-          "account": "Orca アカウント",
+          "account": "NASH アカウント",
           "signOut": "サインアウト",
           "signInAgain": "再度サインインしてください",
-          "signIn": "Orca にサインインする",
-          "title": "Orca アカウント",
-          "description": "作業を即座に共有し、どこにいても Orca Mobile からデスクトップにアクセスできます。",
-          "searchDescription": "Artifacts と Orca Relay で使用されるアカウントにサインインまたはサインアウトします。",
+          "signIn": "NASH にサインインする",
+          "title": "NASH アカウント",
+          "description": "作業を即座に共有し、どこにいても NASH Mobile からデスクトップにアクセスできます。",
+          "searchDescription": "Artifacts と NASH Relay で使用されるアカウントにサインインまたはサインアウトします。",
           "benefitsTitle": "アカウントに含まれています",
           "artifactsTitle": "成果物の共有",
           "artifactsDescription": "HTML ファイルと Markdown ファイルを公開し、NASH からのすべての共有リンクを管理します。",
-          "relayTitle": "Orca リレー",
-          "relayDescription": "Orca Mobile を携帯電話または Wi-Fi 経由でこのデスクトップに接続します。",
+          "relayTitle": "NASH リレー",
+          "relayDescription": "NASH Mobile を携帯電話または Wi-Fi 経由でこのデスクトップに接続します。",
           "skillsTitle": "スキルの共有",
           "skillsDescription": "1 つのスキルまたはスキルセット全体を非公開リンクで共有し、使用するマシンにインストールします。",
           "keywordAccount": "アカウント",
@@ -12154,7 +12248,7 @@
           "keywordSignOut": "サインアウト",
           "keywordRelay": "リレー",
           "keywordCloud": "雲",
-          "nashUnavailable": "NASH ビルドでは Orca Cloud へのサインインは利用できません。"
+          "nashUnavailable": "NASH ビルドでは NASH Cloud へのサインインは利用できません。"
         },
         "automations": {
           "showButton": "オートメーションボタンを表示",
@@ -12174,7 +12268,7 @@
           "keywordAutomations": "自動化",
           "keywordSchedule": "スケジュール",
           "keywordAgent": "Agent",
-          "keywordRuns": "走る"
+          "keywordRuns": "実行"
         },
         "shareSkills": {
           "title": "スキルを共有する",
@@ -12194,9 +12288,9 @@
           "linkDescription": "共有バンドルは NASH で検索したりリストしたりすることはできません。リンクは認証情報なので、信頼できる人にのみ送信してください。",
           "signInTitle": "サインインしてスキルを共有する",
           "signInWebDescription": "公開とリンク管理は NASH デスクトップアプリで利用できます。",
-          "signInDescription": "Orca アカウントを使用してバンドルを公開し、そのリンクを管理します。受信者にはアカウントは必要ありません。",
+          "signInDescription": "NASH アカウントを使用してバンドルを公開し、そのリンクを管理します。受信者にはアカウントは必要ありません。",
           "signInAgain": "再度サインインしてください",
-          "signIn": "Orca にサインインする",
+          "signIn": "NASH にサインインする",
           "howToTitle": "スキルを共有する方法",
           "howToDescription": "1 つのスキル、または 30 個のスキルのコレクションなどのバンドルを 1 つのリンクで公開します。",
           "openSkills": "オープンスキル",
@@ -12325,13 +12419,15 @@
           "usageLabel": "使用量",
           "usageTitle": "月間プラン使用状況"
         },
+        "NotificationHostToggles": {
+          "offCount": "{{count}} 台オフ",
+          "machines": "マシン",
+          "machinesDescription": "このコンピューターに通知を表示できるマシンを選択します。ペアリングしたサーバーのスイッチは、そのサーバー経由の作業にも適用されます。"
+        },
         "UnsealedCredentialNotice": {
           "body": "{{credential}} は暗号化されずに保存されます。このシステムには NASH が使用できる OS キーリングがありません。ディスクまたはそのバックアップを読み取ることができる人は誰でも、認証情報を読み取ることができます。 gnome-keyring または kwallet をインストールしてロックを解除し、再度保存して封印します。"
         },
         "ZcodePlanAccountsSection": {
-          "usingCliHelp": "NASH は、~/.zcode/cli/config.json からコーディングプランキーを読み取ります。代わりにここでプランをリンクするには、以下の API キーを保存します。",
-          "hostOnly": "NASH を実行しているコンピュータ上のデスクトップアプリでプランサイトと API キーを変更します。",
-          "detailsUnavailable": "プランの認証情報の詳細は、NASH を実行しているコンピュータでのみ読み取ることができます。",
           "site": {
             "bigmodel": "Zhipu・BigModel (open.bigmodel.cn)",
             "zai": "Z.AI（ゼットアイ）"
@@ -12351,9 +12447,10 @@
           "keyStored": "API キーが保存されました · {{value0}}",
           "keyStoredHelp": "ローカルに保存され、使用状況を更新するために選択したサイトにのみ送信されます。これは、ZCode CLI サインインよりも優先されます。",
           "usingCli": "ZCode CLI サインインの使用",
+          "usingCliHelp": "NASH は、このコンピュータ上の ZCode CLI の認証情報ストアから選択したコーディングプランを読み取ります。代わりにここでプランをリンクするには、以下に API キーを保存してください。",
           "notConfigured": "GLM コーディングプランがリンクされていません",
           "notConfiguredHelp": "以下のプラン API キーを保存するか、このコンピュータ上の ZCode CLI を使用してサインインします。",
-          "refreshUsage": "リフレッシュの使用法",
+          "refreshUsage": "使用量を更新",
           "siteTitle": "企画サイト",
           "siteDescription": "コーディングプランが属するコンソールを選択します。国際サイトの場合は Z.AI、本土サイトの場合は Zhipu BigModel です。",
           "keyTitle": "APIキー",
@@ -12368,7 +12465,204 @@
           "usageTitle": "プランの使用状況",
           "usageDescription": "リンクされたコーディングプランのライブクォータウィンドウ。ステータスバーの使用サイクルに応じて更新されます。",
           "planLevel": "計画: {{value0}}",
+          "hostOnly": "NASH を実行しているコンピュータ上のデスクトップアプリでプランサイトと API キーを変更します。",
+          "detailsUnavailable": "プランの認証情報の詳細は、NASH を実行しているコンピュータでのみ読み取ることができます。",
           "siteUnavailable": "ホストプランサイトが利用できない"
+        },
+        "managedServers": {
+          "row": {
+            "notRunning": "実行していません",
+            "refresh": "ステータスを更新",
+            "migration": "移行: {{phase}}",
+            "update": "更新",
+            "rollback": "ロールバック",
+            "recover": "回復",
+            "cancelStop": "停止をキャンセル",
+            "confirmStop": "サーバーを停止して削除",
+            "keep": "実行を継続",
+            "stop": "停止…",
+            "deferredVersion": "{{version}} への更新は延期されました。",
+            "confirmRestore": "スナップショットを復元して再起動",
+            "keepState": "状態を保持",
+            "statusUnknown": "ステータス不明",
+            "checking": "確認中…",
+            "forget": "登録を解除…",
+            "confirmForget": "このデスクトップから登録を解除",
+            "keepLinked": "リンクを維持",
+            "forgetDescription": "ホストに接続せずに、このサーバーのリンクをここで解除します。ホストが復帰した場合、サーバーはまだそこで動作している可能性があります。"
+          },
+          "title": "管理対象サーバー",
+          "description": "NASH は空の SSH ホストにサーバーをインストールして実行し、最新の状態に保ちます。",
+          "deploy": {
+            "host": "SSH ホスト",
+            "hostPlaceholder": "空の SSH ホストを選択",
+            "name": "サーバー名",
+            "submit": "サーバーをデプロイ",
+            "running": "デプロイ中…"
+          },
+          "pending": {
+            "resume": "再開"
+          },
+          "access": {
+            "title": "ペアリングされたサーバーの SSH アクセス",
+            "linked": "{{name}}（SSH 経由）",
+            "unlink": "SSH の使用を停止",
+            "target": "SSH ホスト経由で接続",
+            "port": "サーバーポート",
+            "link": "SSH を使用",
+            "linking": "接続中…"
+          },
+          "search": {
+            "title": "管理対象サーバー",
+            "keywordSsh": "ssh"
+          },
+          "phase": {
+            "fenced": "ホストのロック完了",
+            "staged": "コピーのステージング完了",
+            "committed": "コピーのコミット完了",
+            "retired": "完了"
+          },
+          "recovery": {
+            "activate": "更新が中断されました",
+            "rollback": "ロールバックが中断されました",
+            "decommission": "停止が中断されました"
+          },
+          "terminals": {
+            "unknown": "実行中のターミナル: 不明",
+            "count": "実行中のターミナル: {{count}}"
+          },
+          "blocker": {
+            "notFound": "SSH ホストが存在しません。",
+            "owned": "この SSH ホストはすでに管理対象サーバーに属しています。",
+            "catalog": "このホスト上のプロジェクトはまだ移動できません。",
+            "terminals": "このホスト上のターミナルがまだ実行中です（{{count}}）。先に閉じてください。",
+            "portForwards": "保存済みのポート転送は SSH ホストに残ります。",
+            "dependents": "まだ移動できない状態: {{kinds}}。",
+            "unverifiable": "NASH は保存済みの {{sources}} を読み取れなかったため、何が移動するかを判別できません。"
+          },
+          "kind": {
+            "portForward": "ポート転送",
+            "terminalLease": "ターミナル",
+            "terminalRecovery": "ターミナル回復記録",
+            "workspaceSession": "開いているタブとレイアウト",
+            "worktreeMetadata": "ワークツリーの詳細",
+            "worktreeLineage": "ワークツリーの履歴",
+            "workspaceLineage": "ワークスペースの履歴",
+            "sparsePreset": "スパースチェックアウトプリセット",
+            "retiredWorktreeName": "廃止されたワークツリー名",
+            "automation": "オートメーション",
+            "automationRun": "オートメーション実行",
+            "mobileTabSelection": "モバイルのタブ選択",
+            "uiRouting": "サイドバーとフィルターの設定"
+          },
+          "loadFailed": "NASH は SSH ホストと未完了の移動を読み込めませんでした。設定を開き直して、もう一度お試しください。",
+          "outcome": {
+            "activeServer": "実行されませんでした: このサーバーは新規プロジェクトの既定ホストです。停止する前に [詳細設定] で別のホストを選択してください。",
+            "live": "未完了: このサーバー上のターミナルがまだ実行中です。閉じてから、もう一度お試しください。",
+            "unverifiable": "未完了: NASH はこのサーバーで何が実行中かを確認できませんでした。ホストに到達できるときに、もう一度お試しください。",
+            "migration": "未完了: このサーバーへの移動が終わっていません。先に再開してください。",
+            "deferred": "まだ未完了です: サーバーはこの操作の準備ができていません。しばらくしてから、もう一度お試しください。",
+            "failed": "NASH はサーバー上でこれを完了できませんでした。もう一度お試しください。"
+          }
+        },
+        "sshHostServer": {
+          "sourceChanged": "古いバージョンの NASH がこのホストのプロジェクトを変更しました。再接続するには、その変更を管理対象サーバーに移動するか、サーバーのバージョンを維持してください。",
+          "deploying": "管理対象の NASH サーバーをセットアップ中…",
+          "converting": "このホストのプロジェクトを管理対象の NASH サーバーに移動中…",
+          "connecting": "管理対象の NASH サーバーに接続中…",
+          "updating": "管理対象サーバーを更新中…",
+          "starting": "管理対象サーバーを起動中…",
+          "notServing": "NASH は管理対象サーバーが応答していることを確認できませんでした。",
+          "hostNewer": "より上位バージョンの NASH で管理対象 NASH サーバーを実行しています。そのバージョンが維持されます。",
+          "failureDetails": "詳細",
+          "cause": {
+            "unsupportedHost": "NASH にはこのシステム用のサーバービルドがありません",
+            "artifactsUnavailable": "この NASH ビルドにはサーバーが含まれていません",
+            "libcUnidentified": "NASH はホストのシステムライブラリを特定できませんでした",
+            "runtimeSelfTest": "サーバーのランタイムが自己テストに失敗しました",
+            "securitySoftware": "セキュリティソフトウェアがサーバーのランタイムを変更しました",
+            "nativePreflight": "ホストにサーバーが必要とするシステムライブラリがありません"
+          },
+          "updateDeferredLater": "管理対象の NASH サーバーを実行しています。次回の接続時に更新されます。",
+          "updateFailedPrevious": "管理対象の NASH サーバーを以前のバージョンで実行しています。更新に失敗しました。",
+          "refusedBlocked": "管理対象サーバーに移動されませんでした: このホスト上の何かが移動を妨げています。",
+          "unsupported": "このバージョンの NASH はこのホストをサポートしていません（{{reason}}）。引き続き使用するには、以前のバージョンの NASH をインストールしてください。",
+          "unsupportedUnknown": "このバージョンの NASH はこのホストをサポートしていません。引き続き使用するには、以前のバージョンの NASH をインストールしてください。",
+          "tunnelUnsupported": "このバージョンの NASH はこのホストをサポートしていません。ホストの SSH サーバーがポート転送を許可しておらず、SSH セッション経由でも NASH のサーバーに接続できませんでした。引き続き使用するには、以前のバージョンの NASH をインストールしてください。",
+          "setupRetry": "NASH はこのホストでサーバーを起動できませんでした。もう一度接続してください。",
+          "olderTerminalsUncounted": "以前のバージョンの NASH で開始されたターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの NASH で閉じるか、ホスト上で終了してから再接続してください。",
+          "olderTerminalsUnverifiable": "以前のバージョンの NASH で開始されたターミナルが終了したことを確認できませんでした。再接続してもう一度お試しください。",
+          "olderTerminals_one": "以前のバージョンの NASH で開始された {{count}} 個のターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの NASH で閉じるか、ホスト上で終了してから再接続してください。",
+          "olderTerminals_other": "以前のバージョンの NASH で開始された {{count}} 個のターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの NASH で閉じるか、ホスト上で終了してから再接続してください。",
+          "olderTerminals": "以前のバージョンの NASH で開始された {{count}} 個のターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの NASH で閉じるか、ホスト上で終了してから再接続してください。",
+          "unavailable": "リレーを実行します: このホストでは管理対象の NASH サーバーを実行できません（{{reason}}）。",
+          "tunnelUnavailable": "リレーを実行します: このホストの SSH サーバーがポート転送を許可しておらず、NASH は SSH セッション経由でも管理対象サーバーに到達できませんでした。",
+          "terminalsUnverifiable": "リレーを実行します: NASH はターミナルが閉じられたことを確認できませんでした。次回の接続時に移動します。",
+          "unavailableUnknown": "リレーを実行します: このホストでは管理対象の NASH サーバーを実行できません。",
+          "terminalsElsewhere": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
+          "terminalsElsewhere_one": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
+          "terminalsElsewhere_other": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
+          "terminalsElsewhereUncounted": "別の NASH デスクトップまたはセッションがこのホストで開いたターミナルが実行中である間は、リレーを実行します。"
+        },
+        "deltaMove": {
+          "action": "新規プロジェクトを移動…",
+          "title": "新規プロジェクトを移動",
+          "description": "このホストは、管理対象サーバーに移動したあとに古いバージョンの NASH によって変更されました。これは作成されたものをサーバーに追加するもので、サーバーにすでにあるものをマージして上書きすることはありません。",
+          "added": "サーバーに追加されました",
+          "nothingNew": "新規に追加するものはありません。",
+          "notReflected": "古いバージョンで変更または削除されました。サーバーは自身のコピーを保持します",
+          "cancel": "キャンセル",
+          "confirm": "新規プロジェクトを移動",
+          "kind": {
+            "repository": "リポジトリ {{name}}",
+            "folder": "フォルダー {{name}}",
+            "group": "プロジェクトグループ {{name}}"
+          }
+        },
+        "keepServer": {
+          "action": "サーバーのバージョンを保持…",
+          "title": "サーバーのバージョンを保持",
+          "description": "このホストはそのまま管理対象サーバーに戻ります。古いバージョンの NASH がここに追加または変更したものは移動されず、クリーンアップされるまでこのコンピュータの保存済み設定にのみ残ります。",
+          "cancel": "キャンセル",
+          "confirm": "サーバーのバージョンを保持"
+        },
+        "ZcodeCliSetupSection": {
+          "title": "ZCode で GLM を使用する",
+          "description": "コーディング Agent として GLM を使用するにはサインインしてください。上記のクォータ API キーは使用状況の監視のみに使用されます。サインインとモデル選択は ZCode が独自に管理します。",
+          "help": "ご利用のプランサイトのブラウザサインインを選択するか、ZCode のマスクされた API キー設定を使用してください。サインイン後、ZCode を起動し、/model で GLM モデルを選択します。",
+          "zai": "Z.AI ブラウザサインイン",
+          "bigmodel": "BigModel ブラウザサインイン",
+          "apiKey": "ZCode API キー設定",
+          "close": "セットアップターミナルを閉じる",
+          "loading": "サインインターミナルを読み込んでいます…",
+          "terminalTitle": "ZCode サインイン",
+          "terminalLabel": "ZCode サインインターミナル",
+          "apiKeyInstructions": "Enter を押して ZCode を起動し、/login を入力して、ご利用のプランサイトの API キーオプションを選択します。ZCode のマスクされたプロンプトにキーを入力してください。",
+          "oauthInstructions": "Enter を押してサインインコマンドを実行し、ZCode が出力した認証 URL を開きます。サインインはこのターミナルの実行ホストに保存されます。"
+        },
+        "SettingsHostScopePicker": {
+          "label": "ホスト",
+          "unavailable": "{{value0}} (利用不可)",
+          "description": "以下のアカウント、検出された Agent、ターミナルオプションはこのホストのものです。",
+          "unavailableNotice": "このサーバーは保存されていないため、表示できるものがありません。設定の上部で別のホストを選択してください。"
+        },
+        "wslHostsExperimental": {
+          "toggleLabel": "WSL ディストリビューションをホストとして切り替え",
+          "title": "WSL ディストリビューションをホストとして使用",
+          "description": "WSL 2 ディストリビューションをホストとして追加します。NASH はディストリビューション内でサーバーを実行するため、そこでの新規プロジェクトの git、ファイル、ターミナルは Linux 上でネイティブに動作します。",
+          "keywordWsl": "wsl",
+          "keywordLinux": "linux",
+          "keywordDistro": "ディストリビューション"
+        },
+        "wslHosts": {
+          "title": "WSL ホスト",
+          "experimental": "実験的機能",
+          "description": "NASH は各ディストリビューション内でサーバーを実行します。停止中のディストリビューションは、そのプロジェクトを開くか、ここで接続したときにのみ起動します。",
+          "add": "WSL ディストリビューションを追加",
+          "connect": "接続",
+          "remove": "削除",
+          "turnOn": "実験的機能でオンにする",
+          "forceUpdate": "強制更新"
         },
         "clef": {
           "clear": {
@@ -12577,7 +12871,8 @@
             "rowInvalid": "この行は無効です。対象、モデル、推論レベルを確認してください。",
             "nothingChanged": "このままでは有効なテーブルは変更されません。先に少なくとも 1 つのルートを編集してください。",
             "primaryCli": "コーディネーター CLI",
-            "coordinatorModel": "コーディネーターのモデル"
+            "coordinatorModel": "コーディネーターのモデル",
+            "exactModelId": "正確なモデル ID"
           },
           "notices": {
             "saved": "保存しました。"
@@ -12625,7 +12920,8 @@
             "ultra": "ウルトラ",
             "inherit": "継承",
             "whenSupported": "（対応している場合）",
-            "sameAsCoordinator": "コーディネーターと同じ"
+            "sameAsCoordinator": "コーディネーターと同じ",
+            "cliDefault": "CLI のデフォルト"
           },
           "inline": {
             "edit": "編集",
@@ -12872,159 +13168,6 @@
             "effort": "推論レベル",
             "agent": "Agent"
           }
-        },
-        "NotificationHostToggles": {
-          "offCount": "{{count}} 台オフ",
-          "machines": "マシン",
-          "machinesDescription": "このコンピューターに通知を表示できるマシンを選択します。ペアリングしたサーバーのスイッチは、そのサーバー経由の作業にも適用されます。"
-        },
-        "managedServers": {
-          "row": {
-            "notRunning": "実行していません",
-            "refresh": "ステータスを更新",
-            "migration": "移行: {{phase}}",
-            "update": "更新",
-            "rollback": "ロールバック",
-            "recover": "回復",
-            "cancelStop": "停止をキャンセル",
-            "confirmStop": "サーバーを停止して削除",
-            "keep": "実行を継続",
-            "stop": "停止…",
-            "deferredVersion": "{{version}} への更新は延期されました。",
-            "confirmRestore": "スナップショットを復元して再起動",
-            "keepState": "状態を保持",
-            "statusUnknown": "ステータス不明",
-            "checking": "確認中…"
-          },
-          "title": "管理対象サーバー",
-          "description": "NASH は空の SSH ホストにサーバーをインストールして実行し、最新の状態に保ちます。",
-          "deploy": {
-            "host": "SSH ホスト",
-            "hostPlaceholder": "空の SSH ホストを選択",
-            "name": "サーバー名",
-            "submit": "サーバーをデプロイ",
-            "running": "デプロイ中…"
-          },
-          "pending": {
-            "resume": "再開"
-          },
-          "access": {
-            "title": "ペアリングされたサーバーの SSH アクセス",
-            "linked": "{{name}}（SSH 経由）",
-            "unlink": "SSH の使用を停止",
-            "target": "SSH ホスト経由で接続",
-            "port": "サーバーポート",
-            "link": "SSH を使用",
-            "linking": "接続中…"
-          },
-          "search": {
-            "title": "管理対象サーバー",
-            "keywordSsh": "ssh"
-          },
-          "phase": {
-            "fenced": "ホストのロック完了",
-            "staged": "コピーのステージング完了",
-            "committed": "コピーのコミット完了",
-            "retired": "完了"
-          },
-          "recovery": {
-            "activate": "更新が中断されました",
-            "rollback": "ロールバックが中断されました",
-            "decommission": "停止が中断されました"
-          },
-          "terminals": {
-            "unknown": "実行中のターミナル: 不明",
-            "count": "実行中のターミナル: {{count}}"
-          },
-          "blocker": {
-            "notFound": "SSH ホストが存在しません。",
-            "owned": "この SSH ホストはすでに管理対象サーバーに属しています。",
-            "catalog": "このホスト上のプロジェクトはまだ移動できません。",
-            "terminals": "このホスト上のターミナルがまだ実行中です（{{count}}）。先に閉じてください。",
-            "portForwards": "保存済みのポート転送は SSH ホストに残ります。",
-            "dependents": "まだ移動できない状態: {{kinds}}。",
-            "unverifiable": "NASH は保存済みの {{sources}} を読み取れなかったため、何が移動するかを判別できません。"
-          },
-          "kind": {
-            "portForward": "ポート転送",
-            "terminalLease": "ターミナル",
-            "terminalRecovery": "ターミナル回復記録",
-            "workspaceSession": "開いているタブとレイアウト",
-            "worktreeMetadata": "ワークツリーの詳細",
-            "worktreeLineage": "ワークツリーの履歴",
-            "workspaceLineage": "ワークスペースの履歴",
-            "sparsePreset": "スパースチェックアウトプリセット",
-            "retiredWorktreeName": "廃止されたワークツリー名",
-            "automation": "オートメーション",
-            "automationRun": "オートメーション実行",
-            "mobileTabSelection": "モバイルのタブ選択",
-            "uiRouting": "サイドバーとフィルターの設定"
-          },
-          "loadFailed": "NASH は SSH ホストと未完了の移動を読み込めませんでした。設定を開き直して、もう一度お試しください。",
-          "outcome": {
-            "live": "未完了: このサーバー上のターミナルがまだ実行中です。閉じてから、もう一度お試しください。",
-            "unverifiable": "未完了: NASH はこのサーバーで何が実行中かを確認できませんでした。ホストに到達できるときに、もう一度お試しください。",
-            "migration": "未完了: このサーバーへの移動が終わっていません。先に再開してください。",
-            "deferred": "まだ未完了です: サーバーはこの操作の準備ができていません。しばらくしてから、もう一度お試しください。",
-            "failed": "NASH はサーバー上でこれを完了できませんでした。もう一度お試しください。"
-          }
-        },
-        "sshHostServer": {
-          "sourceChanged": "古い NASH で変更されました: 管理対象サーバーに再び移動されるまでリレーを実行します。",
-          "unavailable": "リレーを実行します: このホストでは管理対象の NASH サーバーを実行できません（{{reason}}）。",
-          "tunnelUnavailable": "リレーを実行します: このホストの SSH サーバーがポート転送を許可しておらず、NASH は SSH セッション経由でも管理対象サーバーに到達できませんでした。",
-          "deploying": "管理対象の NASH サーバーをセットアップ中…",
-          "converting": "このホストのプロジェクトを管理対象の NASH サーバーに移動中…",
-          "connecting": "管理対象の NASH サーバーに接続中…",
-          "updating": "管理対象サーバーを更新中…",
-          "starting": "管理対象サーバーを起動中…",
-          "notServing": "管理対象の NASH サーバーが実行されておらず、起動できませんでした。",
-          "hostNewer": "より上位バージョンの NASH で管理対象 NASH サーバーを実行しています。そのバージョンが維持されます。",
-          "terminalsLive": "開いている {{count}} 個のターミナルが閉じられるまでリレーを実行し、その後、管理対象サーバーに移動します。",
-          "terminalsLive_one": "開いている {{count}} 個のターミナルが閉じられるまでリレーを実行し、その後、管理対象サーバーに移動します。",
-          "terminalsLive_other": "開いている {{count}} 個のターミナルが閉じられるまでリレーを実行し、その後、管理対象サーバーに移動します。",
-          "terminalsUnverifiable": "リレーを実行します: NASH はターミナルが閉じられたことを確認できませんでした。次回の接続時に移動します。",
-          "retry": "このセッションではリレーを実行します。次回の接続時に管理対象サーバーに移動します。",
-          "failureDetails": "詳細",
-          "unavailableUnknown": "リレーを実行します: このホストでは管理対象の NASH サーバーを実行できません。",
-          "cause": {
-            "unsupportedHost": "NASH にはこのシステム用のサーバービルドがありません",
-            "artifactsUnavailable": "この NASH ビルドにはサーバーが含まれていません",
-            "libcUnidentified": "NASH はホストのシステムライブラリを特定できませんでした",
-            "runtimeSelfTest": "サーバーのランタイムが自己テストに失敗しました",
-            "securitySoftware": "セキュリティソフトウェアがサーバーのランタイムを変更しました",
-            "nativePreflight": "ホストにサーバーが必要とするシステムライブラリがありません"
-          },
-          "updateDeferredLater": "管理対象の NASH サーバーを実行しています。次回の接続時に更新されます。",
-          "updateFailedPrevious": "管理対象の NASH サーバーを以前のバージョンで実行しています。更新に失敗しました。",
-          "terminalsLiveUncounted": "開いているターミナルが閉じられるまでリレーを実行し、その後、管理対象サーバーに移動します。",
-          "refusedBlocked": "管理対象サーバーに移動されませんでした: このホスト上の何かが移動を妨げています。",
-          "terminalsElsewhere": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
-          "terminalsElsewhere_one": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
-          "terminalsElsewhere_other": "別の NASH デスクトップまたはセッションがこのホストで開いた {{count}} 個のターミナルが実行中である間は、リレーを実行します。",
-          "terminalsElsewhereUncounted": "別の NASH デスクトップまたはセッションがこのホストで開いたターミナルが実行中である間は、リレーを実行します。"
-        },
-        "deltaMove": {
-          "action": "新規プロジェクトを移動…",
-          "title": "新規プロジェクトを移動",
-          "description": "このホストは、管理対象サーバーに移動したあとに古いバージョンの NASH によって変更されました。これは作成されたものをサーバーに追加するもので、サーバーにすでにあるものをマージして上書きすることはありません。",
-          "added": "サーバーに追加されました",
-          "nothingNew": "新規に追加するものはありません。",
-          "notReflected": "古いバージョンで変更または削除されました。サーバーは自身のコピーを保持します",
-          "cancel": "キャンセル",
-          "confirm": "新規プロジェクトを移動",
-          "kind": {
-            "repository": "リポジトリ {{name}}",
-            "folder": "フォルダー {{name}}",
-            "group": "プロジェクトグループ {{name}}"
-          }
-        },
-        "keepServer": {
-          "action": "サーバーのバージョンを保持…",
-          "title": "サーバーのバージョンを保持",
-          "description": "このホストはそのまま管理対象サーバーに戻ります。古いバージョンの NASH がここに追加または変更したものは移動されず、クリーンアップされるまでこのコンピュータの保存済み設定にのみ残ります。",
-          "cancel": "キャンセル",
-          "confirm": "サーバーのバージョンを保持"
         }
       },
       "right": {
@@ -13291,7 +13434,8 @@
             "740aca88ab": "ワークスペースのポートスキャンに失敗しました。",
             "5be4f7f727": "ポート {{value0}} メニュー",
             "7550998473": "コピー",
-            "1004af16ab": "{{value0}}をコピー"
+            "1004af16ab": "{{value0}}をコピー",
+            "153d3a8026": "ワークスペースのホストが不明です"
           },
           "Search": {
             "1abfb25a66": "ファイル内を検索するために入力します",
@@ -13392,7 +13536,7 @@
             "6b122529d4": "コミットメッセージの生成",
             "e48caaf0dd": "競合の解決のために AI Agent を開始しました。",
             "901140f47d": "Agent を開始する前に、プロンプトを確認してください。",
-            "19652ddd76": "AI で対立を解決する",
+            "19652ddd76": "AI で競合を解決する",
             "c9ad22888e": "このリポジトリのブランチ比較ターゲットを選択します。",
             "574d2f4413": "ノートをクリア",
             "05bb8f4a48": "キャンセル",
@@ -13568,7 +13712,6 @@
             "38b899cc02": "すべてのリポジトリ"
           },
           "SourceControlAgentActionDialogForm": {
-            "1bc0bdbb5e": "起動：",
             "7ec6abbf2a": "リセット",
             "f4f3c9ca4a": "コマンドテンプレート",
             "fe119187bb": "--model sonnet",
@@ -13590,7 +13733,8 @@
             "b0da3a4d3e": "起動レシピはすでに保存されています",
             "bff4795a6d": "保存済みのレシピを更新するには、Agent、引数、またはプロンプトテンプレートを変更してください。",
             "5c75b24735": "NASH が起動する前に Agent が受け取る内容をカスタマイズします。",
-            "repoAgentOverrideNote": "このリポジトリはグローバルの既定値 ({{global}}) を上書きしており、現在は {{effective}} で実行されています。ここでの実行内容を変更するには、このリポジトリに保存してください。"
+            "repoAgentOverrideNote": "このリポジトリはグローバルの既定値 ({{global}}) を上書きしており、現在は {{effective}} で実行されています。ここでの実行内容を変更するには、このリポジトリに保存してください。",
+            "1bc0bdbb5e": "起動："
           },
           "SourceControlTextGenerationDialog": {
             "c5b7fa7cb6": "グローバルデフォルトとして保存",
@@ -13865,7 +14009,8 @@
                   "title": "ここでは {{reviewLabelCap}} はサポートされていません",
                   "body": "このリポジトリプロバイダーは、NASH からの {{reviewLabel}} の作成をサポートしていません。"
                 }
-              }
+              },
+              "loadFailedOnMachine": "{{machine}} から読み込めませんでした: {{detail}}"
             }
           },
           "gitlab": {
@@ -14236,7 +14381,10 @@
             "sessionDeleteFailed": "セッションを削除できませんでした",
             "resumeInChatConflict": "別のチャットですでにこの会話が行われています。",
             "resumeInChatTranscriptMissing": "この会話の履歴を読み込めなかったため、チャットで再開できません。",
-            "resumeInChatFailed": "新規チャットでこのセッションを再開できませんでした。"
+            "resumeInChatFailed": "新規チャットでこのセッションを再開できませんでした。",
+            "resumeInNewCliUnavailable": "このセッションは CLI で開けません。",
+            "resumeInNewCliHostTooOld": "このチャットを新しい CLI で再開するには、チャットを実行しているホストの NASH を更新してください。",
+            "folderWorkspaceUnavailable": "フォルダーワークスペースは利用できなくなりました。"
           },
           "AiVaultPanelControls": {
             "scanningSessions": "セッションをスキャンしています",
@@ -14338,7 +14486,9 @@
             "copied": "コピーしました",
             "copy": "コピー",
             "noFirstPromptAvailable": "最初のプロンプトはありません",
-            "loadingFirstPrompt": "最初のプロンプトを読み込み中…"
+            "loadingFirstPrompt": "最初のプロンプトを読み込み中…",
+            "folder": "フォルダー",
+            "resumeInFolder": "フォルダーで再開"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "{{value0}} セッションを再開",
@@ -14372,7 +14522,10 @@
             "deleteReasonNonLocalHost": "このデバイス上のセッションのみ削除できます。",
             "deleteReasonSyntheticPath": "このセッションは NASH では削除できません。",
             "deleteReasonUnsupportedAgent": "{{value0}} のセッションは NASH では削除できません。",
-            "resumeInNewChat": "新規チャットで再開"
+            "resumeInNewNativeChat": "新規ネイティブチャットで再開",
+            "resumeInNewCli": "新規 CLI で再開",
+            "resumeInNewCliTooltipFork": "この会話を新しい CLI セッションにフォークします。",
+            "resumeInNewCliTooltipChat": "ネイティブチャットはそのまま残ります。"
           },
           "AiVaultSessionDeleteDialog": {
             "title": "このセッションを削除しますか?",
@@ -14431,7 +14584,12 @@
             "noRecordedWorktree": "このセッションに記録されたワークツリーはありません。",
             "archivedJumpUnavailable": "このセッションはアーカイブされたワークツリーにあります。",
             "noActiveWorktreeMatch": "このセッションに一致するアクティブなワークツリーはありません。",
-            "noActiveWorktreeTarget": "利用可能なアクティブなワークツリーはありません。"
+            "noActiveWorktreeTarget": "利用可能なアクティブなワークツリーはありません。",
+            "activeFolder": "フォルダー",
+            "archivedFolder": "アーカイブされたフォルダー",
+            "archivedFolderJumpUnavailable": "このセッションはアーカイブされたフォルダーにあります。",
+            "currentFolder": "現在のフォルダー",
+            "jumpToFolder": "フォルダーにジャンプ"
           },
           "AiVaultSessionSubagents": {
             "subagentsCount": "サブ Agent ({{value0}})",
@@ -14440,8 +14598,8 @@
           },
           "aiVaultSessionLogOpen": {
             "workspaceGone": "ログを開けませんでした。ワークスペースが利用できなくなっています。",
-            "notAuthorized": "ログを開けませんでした。このパスは許可されていません。",
-            "alreadyEditable": "ログはすでに編集用に開かれています。"
+            "alreadyEditable": "ログはすでに編集用に開かれています。",
+            "notAuthorized": "ログを開けませんでした。このパスは許可されていません。"
           },
           "github": {
             "refresh": {
@@ -14821,7 +14979,7 @@
             "jiraMode": "Jira",
             "jiraSelectBindFailed": "この Jira Issue をリンクできませんでした。該当するサイトを選択するか Jira に再接続してから、もう一度お試しください。",
             "emoji": "絵文字",
-            "loadingLinearIssue": "リニア Issue を読み込み中…"
+            "loadingLinearIssue": "Linear Issue を読み込み中…"
           },
           "ProjectCombobox": {
             "empty": "検索条件に一致するプロジェクトはありません。",
@@ -14863,22 +15021,22 @@
           "dfd2aa9d5d": "ネットワーク",
           "2f077ef4eb": "をクリックしてコードをスキャンします。",
           "3aa7bb2d8b": "デスクトップのペアリング",
-          "d1495e5e64": "Orca モバイルを開き、 をタップします",
+          "d1495e5e64": "NASH モバイルを開き、 をタップします",
           "3960f5c339": "ステップ 2/2",
           "3241f3c26a": "QRをインストールする",
           "7af266b80d": "QRコードをインストールする",
           "aa97420ba4": "インストールリンクをコピーする",
           "ac1eb64952": "Android",
           "711e6f4b47": "iOS",
-          "e75647ace0": "スマートフォンで QR をスキャンするか、インストールリンクを開いて Orca Mobile を取得します。",
+          "e75647ace0": "スマートフォンで QR をスキャンするか、インストールリンクを開いて NASH Mobile を取得します。",
           "0d9b33299e": "アプリを入手してください。",
           "92ddfdfa1f": "ステップ 1/2",
           "ff48d9d520": "別のデバイスをペアリングする",
           "f9cbf4bb53": "デバイスを取り消します",
           "34f878d04f": "{{value0}}を取り消す",
           "94829abdb1": "ペアリング済み",
-          "266c18c105": "Orca Mobile を開いて中断したところから再開するか、別のデバイスをペアリングします。",
-          "5410d55d79": "Orca モバイル",
+          "266c18c105": "NASH Mobile を開いて中断したところから再開するか、別のデバイスをペアリングします。",
+          "5410d55d79": "NASH モバイル",
           "10d27b4cba": "始めましょう",
           "da1d5e5ed0": "で利用可能",
           "ec0607bf66": "サポートされているモバイルプラットフォーム",
@@ -14894,7 +15052,7 @@
             "stable": "安定版"
           },
           "relayDegradedNotice": "Relay に接続できませんでした — このコードは LAN または Tailscale でのみ動作します。",
-          "pairingQrError": "このペアリングコードを QR コードとして表示できませんでした。代わりに Orca Mobile にコピーしてください。",
+          "pairingQrError": "このペアリングコードを QR コードとして表示できませんでした。代わりに NASH Mobile にコピーしてください。",
           "directAddressDisclosure": "より速いローカル経路も使う",
           "directAddressHint": "任意。近く（同じ Wi‑Fi または Tailscale）にいるときにスマホが使うアドレスを選びます。通常は Relay より高速です。外出中は引き続き Relay が使われます。",
           "noRelayCode": "利用可能なペアリングコードがありません",
@@ -14927,7 +15085,7 @@
         },
         "MobilePageToolbar": {
           "ad2284a9e2": "閉じる・Esc",
-          "9883b58693": "Orca モバイルを閉じる",
+          "9883b58693": "NASH モバイルを閉じる",
           "fb5f28330e": "サイドバーに表示",
           "c669abcf8f": "サイドバーから非表示",
           "e1c7b4a92d": "[設定] > [モバイル] で設定します。",
@@ -14938,7 +15096,7 @@
         "PhoneCarousel": {
           "96d651cb87": "ターミナルセッション",
           "93217b41c1": "ワークツリーリスト",
-          "89c7713645": "Orca モバイルのホーム画面"
+          "89c7713645": "NASH モバイルのホーム画面"
         },
         "mobile": {
           "platform": {
@@ -15044,24 +15202,24 @@
           "remove-custom": "{{address}} を削除"
         },
         "WindowsFirewallNotice": {
-          "repair-success": "Windows ファイアウォールで、プライベートネットワーク上の Orca Mobile を許可しました",
+          "repair-success": "Windows ファイアウォールで、プライベートネットワーク上の NASH Mobile を許可しました",
           "repair-failed": "Windows ファイアウォールのルールを更新できませんでした",
           "public-title": "Windows は、このネットワークをパブリックとして扱っています",
           "missing-title": "Windows ファイアウォールでスマートフォンからの接続を許可",
-          "public-description": "Orca モバイル接続を許可する前に、この信頼されたWi-Fiネットワークをプライベートに変更してください。",
+          "public-description": "NASH モバイル接続を許可する前に、この信頼されたWi-Fiネットワークをプライベートに変更してください。",
           "missing-description": "Windowsがペアリングサーバーをブロックする可能性があります。プライベートネットワーク上のこの NASH アプリとTCPポート{{port}}のルールを追加してください。",
           "open-settings": "ネットワーク設定を開く",
           "waiting": "Windowsを待機中…",
           "allow": "電話接続を許可",
           "repair-unverified": "Windows ファイアウォールのアクセスを確認できませんでした",
-          "blocked-title": "Windowsが Orca モバイルをブロックしている可能性があります",
+          "blocked-title": "Windowsが NASH モバイルをブロックしている可能性があります",
           "blocked-description": "既存のインバウンドブロックルールがペアリング例外を上書きする可能性があります。修復はこの NASH アプリの競合するTCPルールを削除し、プライベートネットワーク上のポート{{port}}を許可します。",
           "repair": "ファイアウォールアクセスを修復",
-          "relay-note": "ペアリングは Orca Relay 経由で引き続き機能します。許可すると、より高速なローカル接続が追加されるだけです。"
+          "relay-note": "ペアリングは NASH Relay 経由で引き続き機能します。許可すると、より高速なローカル接続が追加されるだけです。"
         },
         "MobileRelayMintFailureNotice": {
-          "retryingTitle": "Orca リレーを再試行しています…",
-          "unavailableTitle": "Orca Relay はこのデスクトップでは使用できません。",
+          "retryingTitle": "NASH リレーを再試行しています…",
+          "unavailableTitle": "NASH Relay はこのデスクトップでは使用できません。",
           "title": "リレーペアリングコードを作成できませんでした。",
           "retryingBody": "新規ペアリングコードを作成します。リモート接続ではこれに少し時間がかかる場合があります。",
           "unavailableBody": "LAN を使用して、Tailscale または同じ Wi-Fi 経由でペアリングします。",
@@ -15070,8 +15228,10 @@
           "retrying": "再試行中…",
           "retry": "リトライリレー",
           "copyDiagnostics": "コピー診断",
-          "reconnectTitle": "Orca アカウントのセッションが期限切れになりました。",
-          "reconnectBody": "もう一度サインインして Orca Relay を使用するか、LAN を使用して Tailscale または同じ Wi-Fi 経由でペアリングします。"
+          "reconnectTitle": "NASH アカウントのセッションが期限切れになりました。",
+          "reconnectBody": "もう一度サインインして NASH Relay を使用するか、LAN を使用して Tailscale または同じ Wi-Fi 経由でペアリングします。",
+          "notEntitledTitle": "NASH Relay はこの NASH アカウントには含まれていません。",
+          "rateLimitedBody": "NASH Relay が混雑しています。1 分待って再試行するか、LAN を使用して Tailscale または同じ Wi‑Fi 経由でペアリングしてください。"
         }
       },
       "gitlab": {
@@ -15116,19 +15276,19 @@
             "88ffb502e5": "Markdown ノートを開く",
             "629528690b": "新規 Markdown ノート",
             "3215fc73e9": "新規ターミナル",
-            "da508bd7f5": "保存",
-            "918c2139f3": "保存しないでください",
-            "e7bf09d4d4": "キャンセル",
-            "690b6fb98a": "未保存の変更",
             "bbc177f98f": "有効化",
             "adc281394d": "閉じる",
             "8cf80db43b": "Agent が NASH を通じて調整できるように、NASH CLI と Agent スキルをセットアップします。",
             "2a3c5ddf5e": "オーケストレーションを有効にする",
-            "d6b563ae24": "エディターを読み込み中…",
             "8b14ba6c17": "新規ブラウザタブ",
+            "25d7817f79": "ターミナル",
+            "da508bd7f5": "保存",
+            "918c2139f3": "保存しないでください",
+            "e7bf09d4d4": "キャンセル",
+            "690b6fb98a": "未保存の変更",
+            "d6b563ae24": "エディターを読み込み中…",
             "b085fb58b5": "このファイルには保存されていない変更が含まれています。",
-            "5ddc688c52": "「{{value0}}」には未保存の変更があります。閉じる前に保存しますか?",
-            "25d7817f79": "ターミナル"
+            "5ddc688c52": "「{{value0}}」には未保存の変更があります。閉じる前に保存しますか?"
           },
           "FloatingTerminalToggleButton": {
             "3b04b065b5": "フローティングワークスペースを表示",
@@ -15487,13 +15647,13 @@
               },
               "UsageAccountsCard": {
                 "6986b36708": "表面レート制限とインラインのスワップ口座。",
+                "d90d2e1f6d": "セッションと毎週の使用状況を追跡します。",
                 "8919321417": "Codex のサインインに失敗しました。",
                 "c7b90c140b": "Codex アカウントが追加されました。",
+                "9ddeb558f9": "Claude アカウントが追加されました。",
                 "29d0653961": "サインイン",
                 "945865332e": "サインインする",
                 "accountStatusUnknown": "アカウントのステータスが不明です",
-                "d90d2e1f6d": "セッションと毎週の使用状況を追跡します。",
-                "9ddeb558f9": "Claude アカウントが追加されました。",
                 "4e71d72912": "Claude へのサインインに失敗しました。"
               },
               "UsagePage": {
@@ -15809,7 +15969,7 @@
           "6e459867ad": "セッションローカルの継続状態。 Git は、このファイルがマージされていないと報告しなくなりました。",
           "9c2901ef8a": "次の競合",
           "41d9af2e7a": "前の競合",
-          "55d61a0ccd": "対立 ・",
+          "55d61a0ccd": "競合 ·",
           "da539359b6": "この競合に対して編集できる作業ツリーファイルはありません。"
         },
         "ConflictReviewFileTree": {
@@ -16034,8 +16194,16 @@
           "7b458e0b7f": "Markdown テンプレートを選択します。",
           "1829437fce": "新規 Markdown"
         },
+        "DiagramViewerModal": {
+          "title": "図",
+          "zoomOut": "ズームアウト",
+          "zoomIn": "ズームイン",
+          "fit": "画面に合わせる",
+          "close": "閉じる"
+        },
         "MermaidBlock": {
-          "dcc132e691": "図のエラー:"
+          "dcc132e691": "図のエラー:",
+          "expand": "図を拡大"
         },
         "MonacoEditor": {
           "68cb83f4a7": "選択したテキストにメモを追加する",
@@ -16659,7 +16827,7 @@
                 "deleteWorktree": "ワークツリーを削除する",
                 "deleteCurrentWorktree": "現在のワークツリーを削除する",
                 "removeWorktree": "ワークツリーを削除する",
-                "trashWorktree": "ゴミ箱ワークツリー",
+                "trashWorktree": "ワークツリーをゴミ箱へ移動",
                 "addQuickCommand": "クイックコマンドを追加",
                 "newQuickCommand": "新規クイックコマンド",
                 "splitChatRight": "チャットを右に分割",
@@ -16762,7 +16930,6 @@
             "deb5293610": "ブラウザの注釈はリモートランタイムでは使用できません",
             "90d021f2ad": "追加",
             "0cb3bd6221": "注釈の意図",
-            "8f87e6c2e5": "意図",
             "532bac48c5": "Agent がここで何を変更する必要があるかを説明してください…",
             "d2a7092e6e": "注釈コメント",
             "b472c5fe03": "ブラウザの注釈を追加する",
@@ -16842,14 +17009,14 @@
             "effd75e330": "近くのコンテキスト",
             "7d1480fbf1": "HTML",
             "9098b118ab": "ページ",
+            "accessibleNameOpenQuote": "「",
             "eb98a0971a": "」",
             "d053db279d": "役割=",
             "a759d8f866": "選択した要素",
             "9c6ce0632a": "選択した要素のスクリーンショット",
             "50f7114f99": "添付する前に確認してください。取得したページのコンテキストには、表示中のサイトの内容が含まれる場合があります。",
             "f3575229df": "取得",
-            "405bb315da": "無題",
-            "accessibleNameOpenQuote": "「"
+            "405bb315da": "無題"
           },
           "browser": {
             "address": {
@@ -16884,7 +17051,9 @@
                     "09a7c1df70": "注釈 {{value0}} を編集",
                     "c16f932cb3": "保存",
                     "024467ceac": "キャンセル",
-                    "449d2c2629": "注釈の意図"
+                    "449d2c2629": "注釈の意図",
+                    "38d320108c": "注釈を折りたたむ",
+                    "9f209891a7": "注釈を展開"
                   }
                 }
               }
@@ -17041,7 +17210,7 @@
           "e5ad263ae5": "30分",
           "529dc6c0b7": "猶予なし",
           "3d70c185c8": "NASH または実行ホストがスケジュールされた時刻に利用できなかった場合、NASH はこのウィンドウ内で利用可能になったときに、欠落したオカレンスを 1 つ実行します。失敗した古い実行はスキップされます。",
-          "3df53d554a": "逃走猶予ヘルプ",
+          "3df53d554a": "実行漏れの猶予時間のヘルプ",
           "fc089e5fde": "グレース"
         },
         "AutomationPrecheckFields": {
@@ -17097,7 +17266,7 @@
           "2695883141": "削除",
           "c3a28c9793": "実行を表示するオートメーションを選択します。",
           "295698292f": "再実行",
-          "0e110a3469": "走る",
+          "0e110a3469": "実行履歴",
           "bb1b2cd31e": "概要",
           "97ff587ee3": "このソースに接続すると、リモートプロファイル内の Hermes オートメーションを確認できます。",
           "aaa007846f": "ソースが利用できない",
@@ -17163,7 +17332,7 @@
           "dd0bc7a1ba": "実行ごとの新規",
           "7b2e285552": "このクライアントでは SSH 接続は利用できません。",
           "d441032f7e": "一時停止",
-          "5918020edc": "走る",
+          "5918020edc": "回",
           "a21f6c33ad": "オートメーションのソースを更新しました。",
           "53f06f0ad5": "ソースを再試行",
           "pendingAutomationMissing": "自動化は利用できなくなりました。",
@@ -17218,8 +17387,8 @@
           "5524365227": "OpenClaw",
           "766abf833c": "Hermes",
           "bf5f67b590": "Hermes",
-          "e66091daf4": "走る",
-          "8e9165af08": "走る",
+          "e66091daf4": "回",
+          "8e9165af08": "回",
           "2b0adbce21": "一時停止中",
           "b3feba84c7": "アクティブ",
           "92405f1431": "利用不可",
@@ -17236,11 +17405,11 @@
           "be551397ca": "状態",
           "a813df9808": "プレビュー",
           "d4b34feb66": "実行時間",
-          "2d4388a908": "走る",
+          "2d4388a908": "実行履歴",
           "9c080765ff": "Hermes のランはまだ見つかりません。",
           "8ea934cacf": "実行を読み込み中…",
-          "d5527d8fe7": "走る",
-          "872d032d05": "走る"
+          "d5527d8fe7": "回",
+          "872d032d05": "回"
         },
         "HermesCronOutputView": {
           "e27c716b43": "プロンプト",
@@ -17461,6 +17630,16 @@
         "runHistory": {
           "occurrencesWithLatest": "{{times}} 回、最近では {{date}}",
           "occurrences": "{{times}}回"
+        },
+        "extraAgentArgs": {
+          "advanced": "詳細設定",
+          "clear": "引数をクリア",
+          "unsupported": "この Agent は追加の引数にまだ対応していません。",
+          "label": "追加の Agent 引数",
+          "needsFreshSession": "追加の引数を使うには、実行ごとに新しいセッションが必要です。",
+          "useFreshSessions": "新しいセッションを使用",
+          "helper": "新しいセッションごとに、このホストのデフォルト引数に追加されます。",
+          "detailLabel": "追加の引数"
         }
       },
       "agent": {
@@ -17470,7 +17649,8 @@
           "579c768bde": "検索に一致する Agent はありません。",
           "48c6a5a9b4": "Agent を検索…",
           "9c6b59fe58": "デフォルトとして設定",
-          "1b0d6965fa": "現在のデフォルト"
+          "1b0d6965fa": "現在のデフォルト",
+          "setupOnly": "なし"
         },
         "AgentSettingsDialog": {
           "50cdb57c03": "AI Agent を管理し、デフォルトを設定し、コマンドをカスタマイズします。",
@@ -17499,7 +17679,6 @@
           "770d458144": "グループ化",
           "795cbf26e2": "フィルター…",
           "4616ea39fd": "ワークスペースにジャンプ",
-          "threadListOptionsFiltered": "スレッドリストのオプション、フィルターが有効",
           "showSearch": "検索を表示",
           "markThreadRead": "スレッドを既読としてマーク",
           "59b131fbd9": "スレッドを未読としてマークする",
@@ -17529,7 +17708,8 @@
           "filtersSection": "フィルター",
           "viewSection": "表示",
           "threadListOptionsActive": "スレッドリストのオプション（{{value0}} 件アクティブ）",
-          "activityOptionsActive": "アクティビティのオプション（{{value0}}）"
+          "activityOptionsActive": "アクティビティのオプション（{{value0}}）",
+          "threadListOptionsFiltered": "スレッドリストのオプション、フィルターが有効"
         },
         "ActivityScopeFilterControls": {
           "resetScope": "すべてのホストとプロジェクトを表示",
@@ -17776,7 +17956,7 @@
                 "issue": {
                   "dialog": {
                     "dialogTitle": "新規 Linear Issue",
-                    "dialogDescription": "選択したチームのリニア Issue を作成します。"
+                    "dialogDescription": "選択したチームの Linear Issue を作成します。"
                   }
                 }
               }
@@ -17838,9 +18018,9 @@
                   },
                   "session": {
                     "resume": {
-                      "savedLinearProjectMissing": "保存されたリニアプロジェクトが見つかりませんでした。",
-                      "savedLinearProjectRestoreFailed": "保存されたリニアプロジェクトの復元に失敗しました。",
-                      "savedLinearViewMissing": "保存されたリニアビューが見つかりませんでした。",
+                      "savedLinearProjectMissing": "保存された Linear プロジェクトが見つかりませんでした。",
+                      "savedLinearProjectRestoreFailed": "保存された Linear プロジェクトの復元に失敗しました。",
+                      "savedLinearViewMissing": "保存された Linear ビューが見つかりませんでした。",
                       "savedLinearViewRestoreFailed": "保存された Linear ビューを復元できませんでした。"
                     }
                   }
@@ -17852,7 +18032,7 @@
             "linear": {
               "connect": {
                 "empty": {
-                  "3e00e8ebd4": "リニア荷重"
+                  "3e00e8ebd4": "Linear を読み込み中"
                 }
               }
             }
@@ -17904,8 +18084,8 @@
         "profiles": {
           "signout": {
             "confirm": {
-              "title": "Orca からログアウトしますか？",
-              "description": "このデバイスで Orca からログアウトします。ローカルのプロジェクトとワークツリーには影響しません。",
+              "title": "NASH からログアウトしますか？",
+              "description": "このデバイスで NASH からログアウトします。ローカルのプロジェクトとワークツリーには影響しません。",
               "cancel": "キャンセル",
               "action": "サインアウト"
             }
@@ -17960,11 +18140,11 @@
           "tool": {
             "arrow": "矢印",
             "ellipse": "楕円",
+            "eraser": "消しゴム",
             "highlight": "ハイライト",
             "pen": "ペン",
             "rect": "四角形",
-            "text": "テキスト",
-            "eraser": "消しゴム"
+            "text": "テキスト"
           },
           "undo": "元に戻す",
           "widthOption": "{{value0}} px"
@@ -18003,14 +18183,14 @@
           "deleteTitle": "成果物を削除しますか？",
           "deleteDescription": "「{{name}}」は公開リンクで利用できなくなります。",
           "delete": "削除",
-          "signInAgain": "再度 Orca にサインインして、アーティファクトをロードします。",
+          "signInAgain": "再度 NASH にサインインして、アーティファクトをロードします。",
           "loadFailed": "アーティファクトをロードできませんでした。",
           "deleteFailed": "アーティファクトを削除できませんでした。",
           "title": "アーティファクト",
           "refresh": "更新",
-          "signInHeading": "Orca にサインインする",
+          "signInHeading": "NASH にサインインする",
           "signInCopy": "サインインして、アカウントを通じて共有されたアーティファクトを表示および管理します。",
-          "signIn": "Orca にサインインする",
+          "signIn": "NASH にサインインする",
           "empty": "共有アーティファクトなし",
           "emptyCopy": "HTML または Markdown ファイルを開き、[成果物として共有] を選択するか、Agent に共有するように依頼します。",
           "openArtifact": "開いたアーティファクト",
@@ -18022,17 +18202,17 @@
           "publishingOffCopy": "このデバイスにはまだパブリックアーティファクトリンクを作成できるものはありません。 [設定] → [アーティファクト] で公開を許可し、開いている HTML または Markdown ファイルから共有するか、Agent に問い合わせてください。",
           "openArtifactsSettings": "「設定」→「アーティファクト」を開きます",
           "retry": "再試行",
-          "reconnectHeading": "Orca に再度サインインします",
+          "reconnectHeading": "NASH に再度サインインします",
           "reconnectCopy": "アカウントを通じて共有されたアーティファクトを表示および管理するには、再度サインインします。",
           "signInAgainAction": "再度サインインしてください",
-          "unconfiguredCopy": "このマシンでは Orca アカウントのサインインがまだ設定されていません。",
+          "unconfiguredCopy": "このマシンでは NASH アカウントのサインインがまだ設定されていません。",
           "openAccountSettings": "アカウント設定を開く"
         },
         "ArtifactPublishButton": {
           "a4a49da6af": "成果物として共有",
           "confirmTitle": "成果物として共有",
           "confirmDescription": "これにより、現在のファイルが URL を知っている誰でも閲覧できるリンクに公開されます。",
-          "accountTitle": "Orca アカウント",
+          "accountTitle": "NASH アカウント",
           "accountDescription": "このリンクを作成・管理するにはサインインしてください。",
           "signInAgain": "再度サインイン",
           "signIn": "サインイン",
@@ -18048,7 +18228,7 @@
         },
         "artifact-publish-flow": {
           "9a078a0c65": "成果物の共有は利用できません",
-          "bba20daa6d": "Orca にサインインしてもう一度お試しください。",
+          "bba20daa6d": "NASH にサインインしてもう一度お試しください。",
           "54b1805328": "成果物を共有できませんでした",
           "430019efd0": "成果物を共有しました",
           "2fc727c831": "成果物を更新しました",
@@ -18137,19 +18317,15 @@
         "selectAgent": "{{value0}} チャット「{{value1}}」を {{value2}} で再開します",
         "resumeSelected": "{{value0}} チャットを再開",
         "resumeSelectedOne": "1 チャットを再開",
-        "continueUnconfirmed": "{{value0}}チャットについては継続配信は未確認です。別のメッセージを送信する前に、それらを開いて確認してください。",
-        "continueUnconfirmed_one": "{{value0}}チャットは継続配信未確認です。別のメッセージを送信する前に、開いて確認してください。",
-        "continueUnconfirmed_other": "{{value0}}チャットについては継続配信は未確認です。別のメッセージを送信する前に、それらを開いて確認してください。",
         "dismissAll": "すべて閉じる",
-        "dismissUnconfirmed": "履歴書のオファーの拒否は確認されていません。ステータスバーにまだ表示されている可能性があります。",
         "notContinuedOne": "1 件のチャットを再開できませんでした",
         "notContinuedMany": "{{value0}} 件のチャットを再開できませんでした",
         "notConfirmedOne": "1 件のチャットが再開されたことを確認できませんでした",
         "notConfirmedMany": "{{value0}} 件のチャットが再開されたことを確認できませんでした",
         "notConfirmedOtherOne": "他のチャット 1 件が再開されたことを確認できませんでした",
         "notConfirmedOtherMany": "他のチャット {{value0}} 件が再開されたことを確認できませんでした",
-        "show": "表示",
-        "dismiss": "閉じる",
+        "viewChats": "チャットを表示",
+        "review": "確認",
         "activityUnnamed": "名前なし",
         "activityApproval": "承認待ち: {{value0}}",
         "activityQuestion": "回答待ち: {{value0}}",
@@ -18157,7 +18333,24 @@
         "activitySubagentOne": "サブ Agent 実行中: {{value0}}",
         "activitySubagentMany": "{{value0}} 個のサブ Agent が実行中",
         "activityMonitorOne": "監視中: {{value0}}",
-        "activityMonitorMany": "{{value0}} 個のバックグラウンドタスクを監視中"
+        "activityMonitorMany": "{{value0}} 個のバックグラウンドタスクを監視中",
+        "selectWorkspace": "{{value0}} のチャットをすべて選択",
+        "workspaceSelectedCount": "{{value0}}/{{value1}}",
+        "selectAll": "すべてのチャットを選択",
+        "selectAllLabel": "すべて選択",
+        "selectedCount": "{{value1}} 件中 {{value0}} 件を選択",
+        "selectProject": "{{value0}} のチャットをすべて選択",
+        "collapseNode": "{{value0}} を折りたたむ",
+        "expandNode": "{{value0}} を展開します",
+        "selectMachine": "{{value0}} のチャットをすべて選択",
+        "sshHost": "SSH",
+        "done": "完了",
+        "resultListLabel": "今回再開したチャット",
+        "continueUnconfirmed": "{{value0}}チャットについては継続配信は未確認です。別のメッセージを送信する前に、それらを開いて確認してください。",
+        "continueUnconfirmed_one": "{{value0}}チャットは継続配信未確認です。別のメッセージを送信する前に、開いて確認してください。",
+        "continueUnconfirmed_other": "{{value0}}チャットについては継続配信は未確認です。別のメッセージを送信する前に、それらを開いて確認してください。",
+        "dismissUnconfirmed": "履歴書のオファーの拒否は確認されていません。ステータスバーにまだ表示されている可能性があります。",
+        "dismiss": "閉じる"
       },
       "linear-issue-attribute-filter-coverage-notice": {
         "statusPartialTeamCoverage": "{{value0}}/{{value1}} チームステータスをフィルタリングしています。残りのチームからの問題は含まれません。",
@@ -18185,7 +18378,8 @@
         "streamConnectionLost": "リモートサーバーへの接続が失われました。",
         "streamConnectionUnreachable": "リモートサーバーにアクセスできません。",
         "streamRestartFailed": "リモートブラウザストリームの再起動に失敗しました。",
-        "streamCapabilityUnsupported": "選択したランタイムは、リモートブラウザストリーミングをサポートしていません。"
+        "streamCapabilityUnsupported": "選択したランタイムは、リモートブラウザストリーミングをサポートしていません。",
+        "streamBrowserUnavailable": "リモートブラウザを利用できません。サーバーでのセットアップを確認してください。"
       },
       "BrowserCookieImportMachineNotice": {
         "clientLabel": "このデバイス上のブラウザ",
@@ -18195,15 +18389,15 @@
       },
       "native": {
         "chat": {
-          "NativeChatStructuredSession": {
-            "1f772bb5d0": "メッセージの配信は未確認です。",
-            "93ef441197": "メッセージは送信されませんでした。",
-            "a5e7f14068": "再試行"
-          },
           "NativeChatLaunchRetry": {
             "failed": "チャットを開始できませんでした。",
             "unknown": "チャット接続が確認できませんでした。",
             "retry": "再試行"
+          },
+          "NativeChatStructuredSession": {
+            "1f772bb5d0": "メッセージの配信は未確認です。",
+            "93ef441197": "メッセージは送信されませんでした。",
+            "a5e7f14068": "再試行"
           }
         }
       },
@@ -18221,16 +18415,16 @@
       "UnexpectedSignoutCard": {
         "9f2c1a4b7d": "サインアウトされました",
         "3e8f5c2a91": "閉じる",
-        "7b4d9e1f2a": "アーティファクトの共有、Orca Relay、およびスキルの共有を復元するには、{{value0}} として再度サインインします。",
-        "5a1c8d3e6f": "再度サインインして、アーティファクトの共有、Orca Relay、およびスキルの共有を復元します。",
+        "7b4d9e1f2a": "アーティファクトの共有、NASH Relay、およびスキルの共有を復元するには、{{value0}} として再度サインインします。",
+        "5a1c8d3e6f": "再度サインインして、アーティファクトの共有、NASH Relay、およびスキルの共有を復元します。",
         "1f6b2c9d4e": "何が戻ってくるか",
         "8d2e4f7a1b": "成果物の共有",
         "2c9a5b6e8d": "HTML ファイルと Markdown ファイルを公開し、NASH からのすべての共有リンクを管理します。",
-        "6e3f1a9c5b": "Orca リレー",
-        "4b7d2e8f1a": "Orca Mobile を携帯電話または Wi-Fi 経由でこのデスクトップに接続します。",
+        "6e3f1a9c5b": "NASH リレー",
+        "4b7d2e8f1a": "NASH Mobile を携帯電話または Wi-Fi 経由でこのデスクトップに接続します。",
         "9a4c6b2d7e": "スキルの共有",
         "3d8e5f1b9c": "非公開リンクでスキルを共有し、使用するマシンにインストールします。",
-        "c5b3e8a17d": "Orca にサインインする"
+        "c5b3e8a17d": "NASH にサインインする"
       },
       "NativeChatResumeOutcomeRow": {
         "openChat": "チャットを開く",
@@ -18256,8 +18450,47 @@
         "preloadApi": {
           "cursorAccounts": {
             "hostOnly": "Cursor のサインイン詳細は、NASH を実行しているコンピュータでのみ読み取れます。"
+          },
+          "accounts": {
+            "signInHostOnly": "アカウントの追加や再サインインは、NASH を実行しているコンピュータのデスクトップアプリでのみ利用できます。",
+            "claudeWslDefaultUnavailable": "WSL のアカウントをシステムのデフォルトに戻す操作は、デスクトップアプリでのみ利用できます。"
           }
         }
+      },
+      "NativeChatResumeRunPanel": {
+        "resumedTitle": "{{value1}} 件中 {{value0}} 件のチャットを再開しました",
+        "resumedTitleOne": "1 件中 {{value0}} 件のチャットを再開しました",
+        "resumingTitleOne": "1 件のチャットを再開中",
+        "resumingTitle": "{{value0}} 件のチャットを再開中",
+        "description": "各チャットは全コンテキストとともに復元され、中断した箇所を確認するよう依頼されます。このダイアログは閉じても構いません。進行状況はステータスバーで確認できます。",
+        "finished": "これらのチャットは NASH が終了したときに作業中でした。NASH は各チャットを停止した時点から、すべてのコンテキストとともに復元し、続行する前に何をしていたかを確認するよう Agent に依頼しました。あなた自身のプロンプトは再送信されていません。",
+        "finishedUpdate": "これらのチャットは NASH がアップデートをインストールしたときに作業中でした。NASH は各チャットを停止した時点から、すべてのコンテキストとともに復元し、続行する前に何をしていたかを確認するよう Agent に依頼しました。あなた自身のプロンプトは再送信されていません。",
+        "finishedPartial": "これらのチャットは NASH が終了したときに作業中でした。NASH が再開したチャットは停止した時点から、すべてのコンテキストとともに復元され、続行する前に何をしていたかを確認するよう依頼されました。あなた自身のプロンプトは再送信されていません。対応が必要なチャットや再開できるチャットは、この一覧で確認してください。",
+        "finishedPartialUpdate": "これらのチャットは NASH がアップデートをインストールしたときに作業中でした。NASH が再開したチャットは停止した時点から、すべてのコンテキストとともに復元され、続行する前に何をしていたかを確認するよう依頼されました。あなた自身のプロンプトは再送信されていません。対応が必要なチャットや再開できるチャットは、この一覧で確認してください。"
+      },
+      "NativeChatResumeRunStatusIcon": {
+        "waitingForReply": "返信を待っています",
+        "starting": "起動中",
+        "waitingToStart": "起動待ち",
+        "inFlight": "{{value0}} · {{value1}}",
+        "resumed": "再開しました"
+      },
+      "NativeChatResumeRunSummary": {
+        "done": "{{value1}} 件中 {{value0}} 件完了",
+        "starting": "{{value0}} 件起動中",
+        "waitingForReply": "{{value0}} 件が返信待ち",
+        "waitingToStart": "{{value0}} 件が起動待ち",
+        "all": "すべて",
+        "inProgress": "進行中",
+        "resumed": "再開済み",
+        "attention": "要対応",
+        "running": "経過 {{value0}}",
+        "filter": "表示するチャット"
+      },
+      "NativeChatResumeAutoNote": {
+        "resuming": "再起動後に自動で再開しています。",
+        "resumed": "再起動後に自動で再開しました。",
+        "changeInSettings": "設定で変更"
       }
     },
     "i18n": {
@@ -18299,6 +18532,10 @@
       },
       "gitlabIpcTimeout": {
         "timedOut": "GitLab との通信でタイムアウトになりました。"
+      },
+      "forgeCredentialTarget": {
+        "unknownHost": "このリポジトリを所有するマシンはまだ判明していません。再接続して再試行してください。",
+        "thisComputer": "このコンピュータ"
       }
     },
     "ssh": {
@@ -18383,6 +18620,7 @@
       }
     },
     "native-chat": {
+      "reasoning": "推論",
       "contextMenu": {
         "copyOrcaSessionId": "NASH セッション ID をコピー",
         "orcaSessionIdCopied": "NASH セッション ID をコピーしました",
@@ -18394,9 +18632,17 @@
         "providerStartFailed": "{{agent}} は起動が完了する前に停止しました。",
         "runCommandAgain": "/{{command}} をもう一度実行してください。",
         "sendToTryAgain": "もう一度試すには、メッセージを送信してください。",
+        "sendAgainToTryOnceMore": "メッセージをもう一度送信して、再度お試しください。",
         "couldNotStart": "{{agent}} を起動できませんでした。",
+        "editSavedArguments": "設定 > Agent > 引数で編集してください。",
         "couldNotRestart": "{{agent}} を再起動できませんでした。",
-        "notSignedIn": "{{agent}} は選択したアカウントでサインインしていません。",
+        "codexCliTooOld": "Codex {{installedVersion}} はチャットには古すぎます。{{minimumVersion}} 以降に更新してください。",
+        "notSignedIn": "{{agent}} にサインインしていません。",
+        "claudeSystemNotSignedIn": "Claude にサインインしていません。`{{loginCommand}}` を実行するか、Claude アカウント設定でアカウントを選択してください。",
+        "claudeManagedNotSignedIn": "この Claude アカウントにサインインしていません。設定の Claude アカウントで再度サインインしてください。",
+        "codexSystemNotSignedIn": "Codex にサインインしていません。`{{loginCommand}}` を実行してください。",
+        "codexManagedNotSignedIn": "この Codex アカウントにサインインしていません。設定の Codex アカウントで再度サインインしてください。",
+        "cliMissing": "このチャットを実行しているコンピューターで {{agent}} が見つかりませんでした。インストールするか、[設定] → [Agent] の [コマンド] を確認してください。",
         "signInFirst": "先にサインインしてください。",
         "signInThenRunCommand": "サインインしてから、/{{command}} をもう一度実行してください。",
         "signInThenSend": "サインインしてから、メッセージをもう一度送信してください。",
@@ -18404,13 +18650,18 @@
         "managedAccountEnvOverride": "この Claude の起動では独自の Anthropic サインイン変数が設定されています。管理対象の Claude アカウントを使用するには、それらを削除してください。",
         "accountSwitchInProgress": "Claude アカウントの切り替え中です。完了してからもう一度お試しください。",
         "managedAccountUnsupported": "WSL に Claude アカウントが追加されている間、Claude チャットには Windows の Claude アカウントが必要です。",
+        "launchFolderMissing": "このチャットが実行されていたフォルダーは存在しなくなりました。このチャットを続けるには、フォルダーを復元してください。",
+        "historyInOtherAccount": "このチャットの履歴は別の Claude アカウントにあります。続けるには、そのアカウントに切り替えてください。",
+        "claudeAccountFolderMissing": "選択した Claude アカウントのフォルダーが見つかりません。もう一度サインインするか、別のアカウントを選択してください。",
+        "claudeAccountSetupFailed": "選択した Claude アカウントを設定できませんでした。もう一度試すか、別のアカウントを選択してください。",
+        "agentCommandNotRunnable": "[設定] → [Agent] にある {{agent}} の [コマンド] には、NASH が見つけられるプログラムのパスまたは名前を、引数や変数なしで指定する必要があります。変更するか、[リセット] してください。",
         "chooseClaudeAccount": "Claude アカウントの設定で選択または追加してください。",
         "chooseClaudeAccountThenRunCommand": "Claude アカウントの設定で選択または追加してから、/{{command}} をもう一度実行してください。",
         "chooseClaudeAccountThenSend": "Claude アカウントの設定で選択または追加してから、メッセージをもう一度送信してください。",
         "providerExitedRow": "この応答の途中で {{agent}} が停止しました。この会話で続けることができます。",
         "providerExitedRejection": "このメッセージが送信される前に {{agent}} が停止しました。",
-        "providerRejected": "プロバイダーはこのメッセージを受け付けませんでした。",
-        "providerRejectedQuoted": "プロバイダーはこのメッセージを受け付けませんでした: {{detail}}。",
+        "providerRejected": "{{agent}} はこのメッセージを受け付けませんでした。",
+        "providerRejectedQuoted": "{{agent}} はこのメッセージを受け付けませんでした: {{detail}}。",
         "attachmentEmpty": "このメッセージの画像が空のため、メッセージは送信されませんでした。",
         "attachmentTooLarge": "このメッセージの画像が大きすぎるため、メッセージは送信されませんでした。",
         "attachmentLargerThan": "このメッセージの画像が {{size}} MB を超えているため、メッセージは送信されませんでした。",
@@ -18437,32 +18688,35 @@
         "compactionFailedQuoted": "圧縮に失敗しました: {{detail}}。",
         "compactionUnconfirmed": "圧縮の完了は確認されていません。",
         "cancelUnconfirmed": "キャンセルは確認されませんでした。",
+        "backgroundTaskNotStopped": "バックグラウンドタスクは停止されませんでした。",
+        "backgroundTasksNotStopped": "バックグラウンドタスクは停止されませんでした。",
         "stopRefused": "{{agent}} は停止しませんでした。",
         "stopRefusedQuoted": "{{agent}} は停止しませんでした: {{detail}}。",
+        "couldNotStop": "{{agent}} を停止できませんでした。",
+        "couldNotStopTheAgent": "Agent を停止できませんでした。",
         "noTurnToStop": "{{agent}} には停止できる実行中のターンがありませんでした。",
         "answerUnconfirmed": "回答は記録されましたが、Agent は確認しませんでした。",
+        "argumentsMissingValue": "保存された引数の {{option}} に値が必要です。",
+        "argumentsMultipleValues": "保存された引数の {{option}} に複数の値が指定されています。",
+        "argumentsPositionalPrompt": "保存された引数にプロンプトが含まれています。",
+        "argumentsUnsupportedOption": "保存された引数に未対応のオプション（{{option}}）が含まれています。",
         "hostFault": "NASH で問題が発生したため、この操作は完了しませんでした。",
         "hostFaultTryAgain": "NASH で問題が発生したため、この操作は完了しませんでした。もう一度お試しください。",
         "hostStopped": "{{agent}} の起動が完了しなかったため、NASH が停止しました。",
         "providerRateLimited": "{{agent}} はレート制限を受けているため、再試行しています。",
         "providerRetrying": "{{agent}} で一時的な問題が発生したため、再試行しています。",
         "providerRetryingQuoted": "{{agent}} は再試行しています: {{detail}}。",
-        "previousExitUnverifiable": "以前の {{agent}} を停止できませんでした。",
-        "sendAgainToTryOnceMore": "メッセージをもう一度送信して、再度お試しください。",
-        "editSavedArguments": "設定 > Agent > 引数で編集してください。",
-        "launchFolderMissing": "このチャットが実行されていたフォルダーは存在しなくなりました。このチャットを続けるには、フォルダーを復元してください。",
-        "historyInOtherAccount": "このチャットの履歴は別の Claude アカウントにあります。続けるには、そのアカウントに切り替えてください。",
-        "claudeAccountFolderMissing": "選択した Claude アカウントのフォルダーが見つかりません。もう一度サインインするか、別のアカウントを選択してください。",
-        "claudeAccountSetupFailed": "選択した Claude アカウントを設定できませんでした。もう一度試すか、別のアカウントを選択してください。",
-        "agentCommandNotRunnable": "[設定] → [Agent] にある {{agent}} の [コマンド] には、NASH が見つけられるプログラムのパスまたは名前を、引数や変数なしで指定する必要があります。変更するか、[リセット] してください。",
-        "argumentsMissingValue": "保存された引数の {{option}} に値が必要です。",
-        "argumentsMultipleValues": "保存された引数の {{option}} に複数の値が指定されています。",
-        "argumentsPositionalPrompt": "保存された引数にプロンプトが含まれています。",
-        "argumentsUnsupportedOption": "保存された引数に未対応のオプション（{{option}}）が含まれています。",
         "providerRetryNumber": "{{attempt}} 回目の再試行です。",
         "providerRetryNumberOf": "{{maxRetries}} 回中 {{attempt}} 回目の再試行です。",
         "providerRetryLastError": "直近のエラー: {{detail}}。",
-        "sessionNotRestored": "{{agent}} は以前のセッションを再開できなかったため、このチャットは新しいセッションで続行します。{{agent}} は以前のメッセージを覚えていません。"
+        "previousExitUnverifiable": "以前の {{agent}} を停止できませんでした。",
+        "sessionNotRestored": "{{agent}} は以前のセッションを再開できなかったため、このチャットは新しいセッションで続行します。{{agent}} は以前のメッセージを覚えていません。",
+        "agentCommandNotSignedIn": "このチャットを実行しているコンピューターで `{{loginCommand}}` を使って {{agent}} にサインインしてください。",
+        "interactiveAgentNotSignedIn": "このチャットを実行しているコンピューターで `{{loginCommand}}` を起動し、`{{slashCommand}}` を使って {{agent}} にサインインしてください。",
+        "agentNotSignedIn": "{{agent}} にサインインしてください。",
+        "thenSendAgain": "その後、メッセージをもう一度送信してください。",
+        "runCommandWhenDone": "終わったら /{{command}} を実行してください。",
+        "commandAfterAnswer": "Agent の質問または承認に回答してから、/{{command}} を実行してください。"
       },
       "writeNotice": {
         "notDoneReadHistory": "このチャットの履歴を読み込めませんでした。",
@@ -18477,19 +18731,25 @@
         "notDoneCommand": "コマンドは実行されませんでした。",
         "notDoneGoal": "目標は変更されませんでした。",
         "restartFailed": "Agent を再起動できませんでした。",
-        "capacity": "NASH が過去 1 日に受け取ったリクエストが多すぎます。",
+        "capacity": "このチャットを実行しているコンピューターの NASH がリクエストの上限に達しました。そのコンピューターで NASH を更新してから、もう一度お試しください。",
         "outcomeUnknown": "NASH は何が起きたかを確認できませんでした。チャットを確認してください。",
         "sendOutcomeLost": "NASH はメッセージが Agent に届いたことを確認できませんでした。チャットを確認し、必要であればもう一度送信してください。",
         "questionChanged": "この質問はすでに回答済みか、変更されています。",
+        "cancelNotSaved": "この質問または承認をキャンセルできませんでした。",
         "historyUnreadable": "NASH はこのチャットの保存済み履歴を読み取れませんでした。",
         "historyUnusable": "このチャットを読み込めません。",
         "historyUnavailable": "NASH は現在このチャットの履歴を開けませんでした。",
         "savedByNewerOrca": "チャットは新しいバージョンの NASH で保存されました。",
         "updateOrcaToKeepUsing": "引き続き使用するには、NASH を更新してください。",
+        "chatSavedByNewerOrca": "このチャットは新しいバージョンの NASH で保存されました。",
+        "updateOrcaToOpenChat": "開くには NASH を更新してください。",
         "unsupported": "このチャットを実行しているコンピューターに新しいバージョンの NASH が必要です。そのコンピューターで NASH を更新してから、もう一度お試しください。",
         "notAvailable": "このチャットでは利用できません。",
+        "cannotRunHere": "NASH はここでこの Agent をチャットで実行できません。",
         "unreachable": "NASH は Agent に接続できませんでした。",
         "recordFailed": "NASH はこれをチャットの履歴に保存できませんでした。",
+        "attachmentExpired": "この添付ファイルは期限切れです。",
+        "reattachFile": "削除してから、もう一度添付してください。",
         "conversationCleared": "この会話はクリアされました。",
         "openCurrentConversation": "続けるには、現在の会話を開いてください。",
         "clearUnfinished": "前回の /clear は完了しませんでした。",
@@ -18505,6 +18765,8 @@
         "waitForBackgroundTasks": "バックグラウンドタスクが終わるまでお待ちください。",
         "messagesUnsettled": "以前に送信したメッセージはまだ確認されていません。",
         "settleEarlierMessage": "以前のメッセージが届くまで待つか、再試行してください。",
+        "queueTooLarge": "キューで待機中のテキストが多すぎます。",
+        "shrinkQueue": "キュー内のメッセージを削除するか、送信されるまで待ってから、もう一度お試しください。",
         "optionRejected": "Agent はこの設定を受け入れませんでした。",
         "goalsUnsupported": "この Agent は目標に対応していません。",
         "agentRefused": "Agent がこれを拒否しました。",
@@ -18518,11 +18780,15 @@
         "chatNotFound": "NASH はこのチャットを見つけられません。",
         "startNewChat": "続けるには、新しいチャットを開始してください。",
         "tryAgain": "もう一度お試しください。",
-        "chatSavedByNewerOrca": "このチャットは新しいバージョンの NASH で保存されました。",
-        "updateOrcaToOpenChat": "開くには NASH を更新してください。",
-        "cannotRunHere": "NASH はここでこの Agent をチャットで実行できません。",
-        "attachmentExpired": "この添付ファイルは期限切れです。",
-        "reattachFile": "削除してから、もう一度添付してください。"
+        "agentStillWorking": "Agent はまだ作業中です。",
+        "runClearWhenDone": "終わったら /clear を実行してください。",
+        "clearAfterAnswer": "Agent の質問または承認に回答してから、/clear を実行してください。",
+        "runCompactWhenDone": "終わったら /compact を実行してください。",
+        "compactAfterAnswer": "Agent の質問または承認に回答してから、/compact を実行してください。",
+        "clearAfterRetry": "以前のメッセージを再試行してから、/clear を実行してください。",
+        "compactAfterRetry": "以前のメッセージを再試行してから、/compact を実行してください。",
+        "clearAfterSending": "以前のメッセージはまだ送信中です。送信が終わったら /clear を実行してください。",
+        "compactAfterSending": "以前のメッセージはまだ送信中です。送信が終わったら /compact を実行してください。"
       },
       "composer": {
         "imageUnsupported": "この Agent では画像の貼り付けはサポートされていません。",
@@ -18530,25 +18796,38 @@
         "noPty": "ライブターミナルがありません - 再接続するには元に切り替えてください。",
         "locked": "入力は別のデバイスによって保持されます。",
         "placeholder": "何でも質問、@ でファイルをメンション、/ でコマンド",
-        "mentionHint": "参照ファイル:",
+        "loadingFiles": "ファイルを読み込み中…",
+        "noFiles": "一致するファイルがありません",
+        "filesLoadFailed": "ファイルを読み込めませんでした",
         "attach": "ファイルを添付する",
         "startDictation": "ディクテーションを開始する",
         "stopDictation": "ディクテーションを停止する",
         "noSkills": "一致するスキルがありません",
         "localAttachmentUnsupported": "ローカル添付ファイルはリモートセッションでは使用できません。",
+        "attachFailed": "{{files}} を添付できませんでした。",
+        "attachFailedBecause": "{{files}} を添付できませんでした。{{reason}}",
+        "uploadingFile": "{{name}} をアップロードしています…",
         "removeAttachment": "添付ファイルを削除する",
         "pastedImageLabel": "貼り付けた画像",
+        "draftNotSaved": "この下書きはまだ保存できていません。NASH は保存を再試行し続けます。",
+        "imageNotBroughtBack": "{{name}} をこの下書きと一緒に復元できませんでした。もう一度添付するか、削除してください。",
+        "pastedImageNotBroughtBack": "この貼り付けた画像をこの下書きと一緒に復元できませんでした。削除して、必要であればもう一度貼り付けてください。",
+        "removeImageToSend": "復元できなかった画像があります。送信するには削除してください。",
+        "removeImagesToSend": "復元できなかった画像があります。送信するには削除してください。",
+        "imageAttachAgainLabel": "もう一度添付",
+        "pastedImageNotKeptLabel": "保持されていません",
         "imagePasteFailed": "画像の貼り付けに失敗しました。",
         "worktreeNotReady": "ワークツリーが準備できていません — しばらくしてから再試行してください。",
         "pasteUnavailable": "貼り付けできません — このチャットは現在入力を受け付けていません。",
-        "uploadingAttachments": "{{value0}}個のファイルをリモートにアップロード中…",
         "model": "モデル",
         "effort": "推論レベル",
         "fastMode": "高速モード",
+        "speed": "速度",
         "thinking": "思考",
-        "options": "オプション",
         "sessionOptions": "セッションオプション",
         "chooseInAgentPicker": "Agent の選択画面で選ぶ…",
+        "searchModels": "モデルを検索…",
+        "noModelsMatch": "検索に一致するモデルはありません。",
         "toggleOption": "{{value0}}を切り替える",
         "pillAccessibleName": "{{value0}} {{value1}}",
         "sentNotConfirmed": "Agent に送信済み — 未確認",
@@ -18563,12 +18842,14 @@
           "high": "高",
           "xhigh": "最高",
           "max": "最大",
-          "ultra": "ウルトラ"
+          "ultra": "ウルトラ",
+          "standard": "標準"
         },
         "noCommandsOrSkills": "一致するコマンドやスキルがありません",
         "commands": "コマンド",
         "skills": "スキル",
         "loadingSkills": "スキルを読み込み中…",
+        "clearDescription": "会話のコンテキストをクリア",
         "skillsUnavailableHost": "SSH チャットではスキルを一覧表示できません",
         "skillsLoadFailed": "スキルを読み込めませんでした",
         "retrySkills": "再試行",
@@ -18585,31 +18866,35 @@
         "viewAttachment": "画像を見る",
         "imagePreview": "フルサイズの画像プレビュー",
         "imagePreviewUnavailable": "プレビューは利用できません",
-        "workspaceAttachmentMismatch": "ファイルはソースワークスペースにのみ添付できます。",
-        "attachmentOwnerChanged": "このワークスペースは接続中にホストを変更しました。ファイルを再度ドロップしてください。",
-        "attachmentUnreadable": "ドロップされたファイルを読み取れませんでした。",
-        "loadingFiles": "ファイルを読み込み中…",
-        "noFiles": "一致するファイルがありません",
-        "filesLoadFailed": "ファイルを読み込めませんでした",
-        "attachFailed": "{{files}} を添付できませんでした。",
-        "attachFailedBecause": "{{files}} を添付できませんでした。{{reason}}",
-        "uploadingFile": "{{name}} をアップロードしています…",
-        "draftNotSaved": "この下書きはまだ保存できていません。NASH は保存を再試行し続けます。",
-        "imageNotBroughtBack": "{{name}} をこの下書きと一緒に復元できませんでした。もう一度添付するか、削除してください。",
-        "pastedImageNotBroughtBack": "この貼り付けた画像をこの下書きと一緒に復元できませんでした。削除して、必要であればもう一度貼り付けてください。",
-        "removeImageToSend": "復元できなかった画像があります。送信するには削除してください。",
-        "removeImagesToSend": "復元できなかった画像があります。送信するには削除してください。",
-        "imageAttachAgainLabel": "もう一度添付",
-        "pastedImageNotKeptLabel": "保持されていません",
-        "searchModels": "モデルを検索…",
-        "noModelsMatch": "検索に一致するモデルはありません。",
         "copyImage": "画像をコピー",
         "copyImageFailed": "画像をコピーできませんでした",
         "copyImageTooLarge": "画像が大きすぎるためコピーできません。",
         "imageCopied": "画像をコピーしました",
+        "workspaceAttachmentMismatch": "ファイルはソースワークスペースにのみ添付できます。",
+        "attachmentOwnerChanged": "このワークスペースは接続中にホストを変更しました。ファイルを再度ドロップしてください。",
+        "attachmentUnreadable": "ドロップされたファイルを読み取れませんでした。",
         "tooManyAttachments": "一度に添付できるファイルは {{value0}} 個以下です。",
+        "permissions": "権限",
+        "permissionAsk": "承認を求める",
+        "permissionAskDescription": "設定で許可されていない編集やコマンドの前に確認します",
+        "permissionAskCodexDescription": "このワークスペース内でファイルを編集しコマンドを実行します。それ以外の操作の前に確認します",
+        "permissionAskSharedDescription": "まだ許可されていない編集やコマンドの前に確認します",
+        "permissionAcceptEdits": "編集を許可",
+        "permissionAcceptEditsDescription": "ファイルの編集とファイル操作コマンドを承認し、それ以外は確認します",
+        "permissionAuto": "代わりに承認",
+        "permissionAutoDescription": "承認リクエストを代わりに審査します",
+        "permissionFullAccess": "フルアクセス",
+        "permissionFullAccessDescription": "編集やコマンドの前に確認しません",
+        "permissionFullAccessCodexDescription": "確認しません。任意のファイルを編集し、ネットワークを使用できます",
+        "permissionFullAccessSharedDescription": "編集やコマンドの前に確認しません",
         "pasteFailed": "貼り付けに失敗しました。",
-        "commandAttachmentsUnsupported": "チャットセッションのコマンドを使う前に添付ファイルを削除してください。"
+        "commandAttachmentsUnsupported": "チャットセッションのコマンドを使う前に添付ファイルを削除してください。",
+        "optionValueShort": {
+          "minimal": "最小",
+          "medium": "中",
+          "xhigh": "最高"
+        },
+        "mentionHint": "参照ファイル:"
       },
       "tool": {
         "running": "実行中…",
@@ -18621,6 +18906,8 @@
         "moreCalls": "+{{value0}} 詳細",
         "failedCount": "{{value0}} 件失敗",
         "failedCallsLabel": "失敗したツール呼び出し: {{value0}}",
+        "interruptedCount": "{{value0}} 件中断",
+        "interruptedCallsLabel": "中断されたツール呼び出し: {{value0}}",
         "runningPreview": "{{preview}} を実行中",
         "runningCommand": "コマンドの実行",
         "runningNamedPreview": "{{toolName}} {{preview}} を実行中",
@@ -18631,13 +18918,35 @@
         "ranCommandsManyToolsSummary": "{{commandCount}} コマンドを実行し、{{toolCount}} ツールを使用しました",
         "usedOneSummary": "使用した工具 1 個",
         "usedManySummary": "使用した{{toolCount}}ツール",
-        "editedFile": "編集したファイル",
-        "addedFile": "追加されたファイル",
-        "deletedFile": "削除されたファイル",
-        "renamedFile": "名前変更されたファイル",
         "copyDiff": "差分をコピー",
         "diffGap": "線は表示されません",
         "diffTruncated": "差分切り捨て",
+        "row": {
+          "running": "実行中",
+          "reading": "読み取り中",
+          "editing": "編集中",
+          "searching": "検索中",
+          "searchingWeb": "ウェブ検索中",
+          "fetching": "取得中",
+          "listed": "一覧表示",
+          "listing": "一覧表示中",
+          "ran": "実行",
+          "read": "読み取り",
+          "edited": "編集",
+          "searched": "検索",
+          "searchedWeb": "ウェブ検索",
+          "fetched": "取得",
+          "added": "追加",
+          "deleted": "削除",
+          "renamed": "名前変更",
+          "subagent": "サブエージェント",
+          "triedRead": "読み取りを試行",
+          "triedEdit": "編集を試行",
+          "triedSearch": "検索を試行",
+          "triedList": "一覧表示を試行",
+          "triedFetch": "取得を試行",
+          "triedSearchWeb": "ウェブ検索を試行"
+        },
         "runReadOne": "1ファイルを読み込む",
         "runReadMany": "{{value0}} ファイルを読み取る",
         "runSearchOne": "1 回検索されました",
@@ -18680,52 +18989,39 @@
         "runLivePlanMany": "計画を{{value0}}回更新しています",
         "runLiveToolOne": "1つのツールを使用する",
         "runLiveToolMany": "{{value0}} ツールの使用",
-        "interruptedCount": "{{value0}} 件中断",
-        "interruptedCallsLabel": "中断されたツール呼び出し: {{value0}}",
-        "row": {
-          "running": "実行中",
-          "reading": "読み取り中",
-          "editing": "編集中",
-          "searching": "検索中",
-          "searchingWeb": "ウェブ検索中",
-          "fetching": "取得中",
-          "listed": "一覧表示",
-          "listing": "一覧表示中",
-          "ran": "実行",
-          "read": "読み取り",
-          "edited": "編集",
-          "searched": "検索",
-          "searchedWeb": "ウェブ検索",
-          "fetched": "取得",
-          "added": "追加",
-          "deleted": "削除",
-          "renamed": "名前変更",
-          "subagent": "サブエージェント",
-          "triedRead": "読み取りを試行",
-          "triedEdit": "編集を試行",
-          "triedSearch": "検索を試行",
-          "triedList": "一覧表示を試行",
-          "triedFetch": "取得を試行",
-          "triedSearchWeb": "ウェブ検索を試行"
-        }
+        "editedFile": "編集したファイル",
+        "addedFile": "追加されたファイル",
+        "deletedFile": "削除されたファイル",
+        "renamedFile": "名前変更されたファイル"
       },
       "status": {
         "responding": "Agent が応答中です",
         "working": "処理中…",
+        "stopping": "停止中…",
+        "queueAfterStop": "停止後に実行するメッセージをキューに追加",
+        "sendAfterStop": "停止後に実行するメッセージを送信",
         "thinking": "考え",
         "workingFor": "{{value0}} 処理中",
         "workedFor": "{{value0}} で完了",
         "interruptedAfter": "{{value0}} 後に中断",
         "failedAfter": "{{value0}} 後に失敗",
-        "toggleDetails": "ターンの詳細を切り替えます",
-        "stopping": "停止中…",
-        "queueAfterStop": "停止後に実行するメッセージをキューに追加",
-        "sendAfterStop": "停止後に実行するメッセージを送信"
+        "toggleDetails": "ターンの詳細を切り替えます"
       },
       "jumpToLatest": "最新にジャンプ",
+      "find": {
+        "label": "チャット内を検索",
+        "noResults": "結果はありません",
+        "previousMatch": "前の一致",
+        "nextMatch": "次の一致",
+        "close": "閉じる"
+      },
+      "transcriptLabel": "会話",
       "toggle": {
-        "showTerminal": "ターミナルを表示",
-        "showChat": "チャットビューを表示"
+        "showTerminal": "ターミナルを表示"
+      },
+      "resumeInNewChat": {
+        "notSavedYet": "{{agent}} はまだこの会話を保存していません。応答してから再度お試しください。",
+        "cannotResume": "この {{agent}} の会話はネイティブチャットで再開できません。"
       },
       "state": {
         "loading": {
@@ -18737,7 +19033,6 @@
           "title": "会話を読み込めませんでした",
           "subtitle": "トランスクリプトを読み取ることができませんでした。作業を続けるには、ターミナルに切り替えてください。"
         },
-        "reconnecting": "このチャットに再接続しています…",
         "pairHost": "ホストをペアリングして、Agent のチャット履歴を表示します。",
         "notAgent": {
           "title": "ここでは会話はありません",
@@ -18746,7 +19041,8 @@
         "empty": {
           "title": "{{value0}} とチャットを開始する",
           "subtitle": "{{value0}} にコードの検査、出力の説明、または変更を依頼してください。"
-        }
+        },
+        "reconnecting": "このチャットに再接続しています…"
       },
       "stop": "Agent を停止",
       "copyMessage": {
@@ -18757,6 +19053,10 @@
       "loadingEarlier": "読み込み中…",
       "loadEarlier": "以前のメッセージをロードする",
       "loadingEarlierMessages": "以前のメッセージを読み込み中…",
+      "prompt": {
+        "collapse": "折りたたむ",
+        "expand": "展開"
+      },
       "question": {
         "step": "ステップ {{value0}}",
         "other": "他の…",
@@ -18768,18 +19068,18 @@
         "sending": "送信中…"
       },
       "approval": {
+        "needsNewerOrca": "このリクエストには新しいバージョンの NASH が必要です。",
         "title": "{{value0}} を許可しますか?",
         "allow": "許可する",
         "deny": "拒否",
         "cancel": "キャンセル",
         "reason": "理由",
-        "blockedPath": "ブロックされたパス",
-        "askRule": "質問ルール",
+        "needsAccess": "アクセスが必要なパス",
         "plan": {
           "file": "計画ファイル"
         },
-        "needsNewerOrca": "このリクエストには新しいバージョンの NASH が必要です。",
-        "needsAccess": "アクセスが必要なパス"
+        "blockedPath": "ブロックされたパス",
+        "askRule": "質問ルール"
       },
       "launchPromptNotDelivered": "配信されませんでした — ターミナルを確認してください",
       "taskList": {
@@ -18802,17 +19102,19 @@
         "one": "1 つの変更されたファイル",
         "many": "{{count}} がファイルを変更しました",
         "partial": "部分的な差分",
-        "recorded": "このターンに記録された編集の合計。"
+        "showDiff": "差分を表示",
+        "hideDiff": "差分を非表示"
       },
       "receipt": {
         "unavailable": "選択した回答は利用できません",
+        "emptyAnswer": "空の回答",
         "cancelled": "キャンセル",
         "resolved": "解決済み",
         "resolver": "{{device}} に回答しました",
-        "cancelledBy": "{{device}}にキャンセルされました",
-        "emptyAnswer": "空の回答"
+        "cancelledBy": "{{device}}にキャンセルされました"
       },
       "notices": {
+        "contextCleared": "コンテキストをクリアしました",
         "compaction": "圧縮されたコンテキスト",
         "details": "詳細",
         "plan": "プラン",
@@ -18824,7 +19126,9 @@
         "orcaStopUpdate": "この応答の途中で、{{machine}} の NASH がアップデートのため再起動しました。",
         "orcaStopQuit": "この応答の途中で、{{machine}} の NASH が終了しました。",
         "orcaStopCrash": "この応答の途中で、{{machine}} の NASH が予期せず停止しました。",
-        "orcaStopCanContinue": "この会話で続行できます。"
+        "orcaStopRemote": "この応答の途中で、{{machine}} の NASH が停止しました。",
+        "orcaStopCanContinue": "この会話で続行できます。",
+        "orcaStopUnnamedServer": "リモートサーバー"
       },
       "providerFrame": {
         "byteLength": "{{value0}}バイト"
@@ -18854,11 +19158,17 @@
         "countTasksMany": "{{value0}} タスク",
         "headerTotal": "{{value0}} バックグラウンドタスク",
         "stateWorking": "実行中",
+        "stateWorkingCount": "{{value0}} 実行中",
         "stateMonitoring": "監視",
+        "stateMonitoringCount": "{{value0}} 監視",
         "stateWaiting": "待機中",
+        "stateWaitingCount": "{{value0}} 待機中",
         "stateBlocked": "ブロックされました",
+        "stateBlockedCount": "{{value0}} ブロックされました",
         "stateDone": "終わり",
+        "stateDoneCount": "{{value0}} 終わり",
         "stateIdle": "止まった",
+        "stateIdleCount": "{{value0}} 止まった",
         "stateUnverifiable": "状態を取得できません",
         "stateUnverifiableCount": "{{value0}} は状態を取得できません",
         "reasonWaiting": "承認が必要です",
@@ -18867,13 +19177,7 @@
         "groupShell": "シェル",
         "groupMonitors": "モニター",
         "groupWorkflows": "ワークフロー",
-        "groupTasks": "タスク",
-        "stateWorkingCount": "{{value0}} 実行中",
-        "stateMonitoringCount": "{{value0}} 監視",
-        "stateWaitingCount": "{{value0}} 待機中",
-        "stateBlockedCount": "{{value0}} ブロックされました",
-        "stateDoneCount": "{{value0}} 終わり",
-        "stateIdleCount": "{{value0}} 止まった"
+        "groupTasks": "タスク"
       },
       "railLabel": "あなたのメッセージ",
       "railImageMessage": "画像添付",
@@ -18913,6 +19217,18 @@
         "subtitle": "ファイルは、Agent が読み取ることができるパスとしてメッセージに追加されます。"
       },
       "copyCode": "コードをコピーする",
+      "wrapLines": "行を折り返す",
+      "disableLineWrap": "行の折り返しを無効にする",
+      "context": {
+        "unavailable": "コンテキストの使用量はまだ不明です。Agent が次に応答すると表示されます。",
+        "summary": "コンテキスト: {{used}} / {{window}} トークン ({{percent}}%)、最後の応答から推定。",
+        "used": "コンテキスト: {{used}} トークン使用済み、最後の応答から推定。",
+        "unreported": "このセッションではコンテキストの使用量を表示できません。"
+      },
+      "agentMessage": {
+        "messageFrom": "送信元:",
+        "unnamedSender": "Agent"
+      },
       "goal": {
         "placeholder": "目標を説明し、最良の結果を得るために測定可能な結果を​​定義する",
         "clear": "明確な目標",
@@ -18940,14 +19256,18 @@
         "estimated": "最後の応答から推定。"
       },
       "dismissDeliveryNotice": "閉じる",
+      "addSelectionToChat": "チャットに追加",
       "messageNotSent": "メッセージは送信されませんでした",
       "deliveryUnconfirmed": "配信を確認できません — 再試行する前にチャットを確認してください",
+      "messageSending": "送信中…",
+      "userMessage": {
+        "showFull": "メッセージ全体を表示",
+        "showLess": "折りたたむ"
+      },
       "queuedMessages": {
         "alreadySent": "このメッセージはすでに送信されています。",
-        "editAlreadySent": "すでに送信されています — テキストは入力欄に残っています。",
         "listLabel": "キュー内のメッセージ",
         "behindReturnedHold": "待機中 — 前のメッセージの対応が必要です",
-        "awaitingAnswerHold": "回答を待っています",
         "steer": "今すぐ送信",
         "send": "送信",
         "steerHint": "モデルを中断せずに送信します",
@@ -18955,13 +19275,13 @@
         "delete": "削除",
         "moreActions": "その他の操作",
         "editMessage": "メッセージを編集",
+        "showFullMessage": "メッセージ全体を表示",
+        "showLess": "折りたたむ",
         "turnOffQueueing": "キューへの追加をオフにする",
         "withdrawnHold": "送信前に停止されました",
         "pausedSendFailed": "送信できませんでした。「送信」を押して再試行してください。",
         "paused": "一時停止中",
         "queuePausedStopped": "中断したため、キューを一時停止しました",
-        "queuePausedRestarted": "NASH が再起動したため、キューを一時停止しました",
-        "queuePausedCleared": "会話を消去したため、キューを一時停止しました",
         "queuePaused": "キューは一時停止中です",
         "resume": "再開",
         "sendConfirmTitle": "メッセージを送信しますか？",
@@ -18970,36 +19290,25 @@
         "sendConfirmBody_other": "メッセージを送信しようとしています。キューに入っている {{count}} 件のメッセージを消去しますか？",
         "sendConfirmClear": "キューを消去",
         "sendConfirmSend": "メッセージを送信",
-        "from": "送信元: {{names}}"
+        "fromSender": "送信元:",
+        "pausedSendFailedWaiting": "送信できませんでした。Agent の処理が終わったら「送信」を押して再試行してください。",
+        "save": "保存",
+        "editingMessage": "メッセージを編集中",
+        "cancelEditing": "編集をキャンセル",
+        "editChanged": "編集中にこのメッセージが変更されました。編集したテキストはチャット入力欄にあります。",
+        "editChangedPrompt": "編集中にこのメッセージが変更されました。Agent に回答すると、編集したテキストがチャット入力欄に表示されます。",
+        "editFailed": "このメッセージは編集できません。",
+        "editGone": "このメッセージはすでに送信または削除されています。編集したテキストはチャット入力欄にあります。",
+        "editGonePrompt": "このメッセージはすでに送信または削除されています。Agent に回答すると、編集したテキストがチャット入力欄に表示されます。",
+        "queuePausedRestarted": "NASH が再起動したため、キューを一時停止しました",
+        "queuePausedCleared": "会話を消去したため、キューを一時停止しました"
       },
+      "thought": "考えました",
+      "thoughtForDuration": "{{duration}} 考えました",
       "structuredSessionHostDeclined": "{{value0}} をターミナルで開きました",
       "structuredSessionHostDeclinedDescription": "このサーバーはこのワークスペースで {{value0}} チャットを実行できません。",
       "structuredSessionHostUnreachable": "{{value0}} に接続できませんでした",
       "structuredSessionHostUnreachableDescription": "NASH は {{value0}} チャットを開きませんでした。サーバーへの接続を確認して、もう一度お試しください。",
-      "reasoning": "推論",
-      "transcriptLabel": "会話",
-      "prompt": {
-        "collapse": "折りたたむ",
-        "expand": "展開"
-      },
-      "context": {
-        "unavailable": "コンテキストの使用量はまだ不明です。Agent が次に応答すると表示されます。",
-        "summary": "コンテキスト: {{used}} / {{window}} トークン ({{percent}}%)、最後の応答から推定。",
-        "used": "コンテキスト: {{used}} トークン使用済み、最後の応答から推定。",
-        "unreported": "このセッションではコンテキストの使用量を表示できません。"
-      },
-      "agentMessage": {
-        "messageFrom": "送信元:",
-        "unnamedSender": "Agent"
-      },
-      "addSelectionToChat": "チャットに追加",
-      "messageSending": "送信中…",
-      "userMessage": {
-        "showFull": "メッセージ全体を表示",
-        "showLess": "折りたたむ"
-      },
-      "thought": "考えました",
-      "thoughtForDuration": "{{duration}} 考えました",
       "hostOutage": {
         "offline": "{{hostName}} はオフラインです",
         "reconnecting": "{{hostName}} に再接続しています…",
@@ -19033,8 +19342,7 @@
       },
       "visualUnavailable": "ビジュアライゼーションを利用できません",
       "visualLoading": "ビジュアライゼーションを読み込み中",
-      "visualOpenInSidebar": "サイドバーで開く",
-      "visualClose": "ビジュアライゼーションを閉じる",
+      "visualOpenInNewTab": "新しいタブで開く",
       "claudeSignIn": {
         "signingIn": "サインイン中…"
       }
@@ -19053,6 +19361,11 @@
         "EditorFileTabContextMenu": {
           "closeOthers": "その他を閉じる",
           "closeTabsToLeft": "左側のタブを閉じる"
+        },
+        "CopyTabIdMenuItem": {
+          "copied": "タブ ID をコピーしました",
+          "failed": "タブ ID をコピーできませんでした",
+          "copy": "タブ ID をコピー"
         }
       }
     },
@@ -19310,8 +19623,8 @@
       }
     },
     "agentSessionContinuation": {
-      "continueInNewSession": "新規セッションで続ける…",
-      "dialogTitle": "新規セッションで続ける",
+      "handOffToAnotherAgent": "別の Agent に引き継ぐ",
+      "dialogTitle": "別の Agent に引き継ぐ",
       "dialogDescription": "この時点から新しい Agent セッションを開始します。元のセッションは変更されません。",
       "untitledSession": "現在のセッション",
       "originalAgent": "元の Agent: {{agent}}",
@@ -19375,7 +19688,7 @@
             "gutter": "側溝",
             "indent": "インデント",
             "margin": "マージン",
-            "leading": "先頭に立って",
+            "leading": "先頭",
             "whitespace": "空白",
             "spaces": "スペース"
           }
@@ -19384,7 +19697,18 @@
       "nativeChat": {
         "queueFollowUpsTitle": "フォローアップをキューに入れる",
         "queueFollowUpsCopy": "Agent の作業中に送信したメッセージは、今すぐ送信・編集・削除できるカードとして待機します。画像付きのメッセージはすぐに送信されます。",
-        "queueFollowUpsToggleLabel": "フォローアップのキューを切り替え"
+        "queueFollowUpsToggleLabel": "フォローアップのキューを切り替え",
+        "inlineVisualsTitle": "インライン表示",
+        "inlineVisualsCopy": "Agent が返信内でグラフ、図、モックアップを表示できるようにします。新しく開始したチャットに適用されます。",
+        "inlineVisualsToggleLabel": "インライン表示を切り替え",
+        "behaviorTitle": "動作",
+        "resumeSearchUpdate": "更新",
+        "resumeSearchRelaunch": "再起動",
+        "queueSearchQueue": "キュー",
+        "queueSearchSteer": "今すぐ送信",
+        "shellEnvSearchVariables": "環境変数",
+        "shellEnvSearchPath": "PATH",
+        "shellEnvSearchProxy": "プロキシ"
       }
     },
     "agentChildRow": {
@@ -19401,6 +19725,9 @@
       "important": "重要",
       "warning": "警告",
       "caution": "注意"
+    },
+    "automations": {
+      "runTerminalUnavailable": "実行ターミナルを利用できません。"
     }
   },
   "dashboardPopout": {
@@ -19524,6 +19851,8 @@
       "preparationFailed": "このデスクトップ上でリモートブラウザを起動できませんでした。ペアリングされた接続を確認して、もう一度試してください。",
       "unavailableTitle": "クライアントホスト型ブラウザは利用不可",
       "unavailableDescription": "このページは現在このデスクトップでは利用できません。",
+      "unavailableOtherDesktopDescription": "このページは別のデスクトップで開かれています。",
+      "unavailableHostOfflineDescription": "{{host}} はオフラインです。再接続されると、このページはここで再読み込みされます。",
       "download": {
         "started": "{{filename}}をダウンロード中…",
         "completed": "{{filename}}をダウンロードしました",
@@ -19541,9 +19870,7 @@
       "hostRowOfflineNamed": "オフライン — {{device}} にホストされました",
       "hostRowOffline": "オフライン — ホストしているデバイスが終了しました",
       "hostRowNamed": "{{device}} で開催",
-      "hostRow": "別のデバイスでホストされている",
-      "unavailableOtherDesktopDescription": "このページは別のデスクトップで開かれています。",
-      "unavailableHostOfflineDescription": "{{host}} はオフラインです。再接続されると、このページはここで再読み込みされます。"
+      "hostRow": "別のデバイスでホストされている"
     },
     "navigation": {
       "back": "戻る",
@@ -19591,6 +19918,9 @@
       "description": "プロファイルごとのユーザー Agent 設定が削除されました。ブラウザ設定でクリーンまたはネイティブを選択します。変更は再起動後に有効になります。",
       "title": "ブラウザ ID がアプリ全体に適用されるようになりました",
       "openSettings": "設定を開く"
+    },
+    "request": {
+      "pairedServerWorkspace": "このワークスペースはペアリングされたサーバーで実行されています。そのサーバーのブラウザタブを使用してください。"
     }
   },
   "runtimeRpc": {
@@ -19662,6 +19992,19 @@
     }
   },
   "featureTips": {
+    "nativeChatUpgrade": {
+      "eyebrow": "新機能",
+      "title": "ネイティブチャットを刷新",
+      "intro": "対応 Agent の新しいチャットはアップグレード版のチャットビューで開きます。チャットと CLI の切り替えは右サイドバーの{{panel}}から:",
+      "resumeInNativeChat": "{{action}}: 対応する CLI の会話をネイティブチャットで開きます。",
+      "resumeInCli": "{{action}}: Claude/Codex のチャットを新しい CLI セッションに複製します。元のチャットは残ります。",
+      "settingsInstruction": "Chat UI の管理:",
+      "settingsLink": "設定 → 実験的機能",
+      "gotIt": "OK",
+      "leaveOff": "オフのままにする",
+      "enableNow": "今すぐ有効にする",
+      "enableError": "チャットモードを有効にできませんでした。"
+    },
     "voice": {
       "demoPrompt": "特殊なケースについてはこの差分を確認し、見つかったものについてはテストを追加してください。",
       "startDictation": "ディクテーションを開始する",
@@ -19757,9 +20100,9 @@
     "launchFailedDetail": "NASH は {{recoveryCount}} 回再試行しましたが、成功しませんでした。",
     "processLimitDetail": "ユーザーアカウントのプロセス数が上限に達したため、システムが新しいプロセスの作成を拒否しました。暴走したターミナル、開発サーバー、Agent が原因であることがよくあります。いくつか終了してから「再試行」をクリックしてください。",
     "launchFailedGenericDetail": "システムが起動を拒否しました。メモリを空けるか他のアプリを終了してから「再試行」をクリックしてください。繰り返し発生する場合は NASH を再インストールしてください。",
-    "lowCommitAdvice": "未使用のアプリまたは NASH ワークスペースを閉じてメモリを解放するか、Windows ページファイルサイズを増やして、[再読み込み] をクリックします。",
     "lowCommitMessage": "Windows のメモリが不足しています。",
-    "lowCommitDetail": "Windows にはアプリ用に {{availableMB}} MB のメモリしか残っていないため、再ロード後にウィンドウが再びメモリ不足になりました。"
+    "lowCommitDetail": "Windows にはアプリ用に {{availableMB}} MB のメモリしか残っていないため、再ロード後にウィンドウが再びメモリ不足になりました。",
+    "lowCommitAdvice": "未使用のアプリまたは NASH ワークスペースを閉じてメモリを解放するか、Windows ページファイルサイズを増やして、[再読み込み] をクリックします。"
   },
   "sessionSearch": {
     "panel": {
@@ -19774,6 +20117,7 @@
       "sortResultsAriaLabel": "ソート結果: {{value0}}",
       "consent": "全文検索を有効にしますか? NASH は、完全な会話とツール出力ごとに最大 3,072 文字を含む、ローカル Agent のトランスクリプトからこのコンピュータ上にインデックスを作成します。内容は編集されていません。認証されたペアリングされたクライアントは検索できます。",
       "remoteDisabled": "このコンピュータでは検索が無効になっています。そのコンピュータ上でトランスクリプトのインデックス作成を有効にして、セッションを検索します。",
+      "titleOnly": "このコンピュータでは全文検索がオフのため、セッションのタイトルのみが照合されます。",
       "notReady": "検索インデックスはまだ準備ができていません。しばらくしてからもう一度お試しください。",
       "noService": "このコンピュータでは検索を利用できません。 NASH アップデートまたは検索サポートを備えたランタイムが必要な場合があります。",
       "failed": "このコンピュータを検索できませんでした。接続を確認して、再試行してください。",
@@ -19911,6 +20255,10 @@
     "removePath": "Remove {{name}}"
   },
   "accounts": {
+    "wslAccountNotApplied": {
+      "title": "{{distro}} ではアカウントの選択が適用されていません",
+      "description": "WSL 内の NASH が更新されるまで、そこの Agent はディストリビューションの既定の Claude と Codex アカウントを使用します。"
+    },
     "managedData": {
       "description": "NASH ホストのターミナルでこのコマンドを実行してアカウントを追加します。選択はそのホストでの新規 Agent 起動に適用されます。直接 SSH 接続とWindows上の WSL は独自の認証情報を使用します。",
       "copied": "コピーしました",
@@ -19935,7 +20283,7 @@
       "changed": "ネイティブアカウントが変更されました。AGYを起動する前に、保存したアカウントを再度選択してください。",
       "save": "現在のアカウントを保存",
       "refresh": "アカウントを更新する",
-      "usage": "リフレッシュの使用法",
+      "usage": "使用量を更新",
       "working": "アカウントの更新",
       "usageReading": "セッション： {{session}} ·毎週： {{weekly}}",
       "saved": "保存されたGoogleアカウント",
@@ -19966,62 +20314,64 @@
       "usageSignInLabel": "再度サインインしてください",
       "usageSignInMessage": "選択した Claude アカウントに再度サインインする必要があります。「設定」>「AI プロバイダーアカウント」を開くか、「システムのデフォルト」を選択してください。",
       "signIn": "サインイン",
-      "signInNotice": {
-        "title": "Claude アカウントの設定を完了する",
-        "description": "保存済みの各アカウントに一度サインインすれば、いつでも切り替えられます。",
-        "action": "{{value0}} にサインイン"
-      }
+      "moreSignInOptions": "その他のサインインオプション",
+      "copySignInLink": "代わりにサインインリンクをコピー",
+      "signInLinkCopied": "サインインリンクをコピーしました。別のアカウントでサインインするには、プライベートウィンドウで開いてください。",
+      "signInLinkCopyFailed": "リンクをコピーできませんでした。"
     }
+  },
+  "osDocumentOpen": {
+    "failed": "ファイルを開けませんでした。"
   },
   "terminal": {
     "sessionSaveFailure": {
-      "unknown": "NASH はターミナル状態を保存できませんでした。再試行。これが続く場合は、原因を特定できるよう、NASH ログをサポートと共有してください。",
       "title": "ターミナルセッションを保存できませんでした",
-      "capacity": "このターミナルを保存しているデバイスから、ストレージがいっぱいであるか、ストレージクォータを超えていることが報告されました。そのデバイス上のスペースを解放してから、再試行してください。"
+      "capacity": "このターミナルを保存しているデバイスから、ストレージがいっぱいであるか、ストレージクォータを超えていることが報告されました。そのデバイス上のスペースを解放してから、再試行してください。",
+      "unknown": "NASH はターミナル状態を保存できませんでした。再試行。これが続く場合は、原因を特定できるよう、NASH ログをサポートと共有してください。"
     },
     "codexTerminalServerIsolationNotice": {
       "title": "NASH は共有サーバーなしで Codex を実行できるようになりました",
       "description": "これにより、Agent のステータスの信頼性が高まります。 [設定] で再度オンにできます。",
       "openSettings": "設定を開く"
     },
+    "codexSharedSettingsNotice": {
+      "title": "NASH の Codex は ~/.codex を使用するようになりました",
+      "description": "Codex は、フォルダーを信頼するか、コマンドを承認するかを再度要求する場合があります。 NASH のみに追加した MCP サーバーを再度追加します。"
+    },
     "codexSharedServerBanner": {
-      "openedBeforeUpdateBody": "このターミナルは、NASH が各 Codex に独自のサーバーを提供し始める前にオープンされました。",
-      "dialogDescription": "ターミナルで直接開始された Codex セッションは、1 つのバックグラウンドサーバーを共有します。 NASH は、開始する Codex セッションを個別に保持します。セッションがサーバーを共有している場合、1 つを閉じると他のセッションも終了し、Agent のステータスが不正になる可能性があります。",
-      "step1Note": "これにより Codex 設定が変更されるため、NASH の外部にも適用されます。",
-      "turnOffFailed": "NASH はこれをオフにすることができませんでした。",
-      "stopFailed": "NASH はサーバーを停止できませんでした。",
-      "confirmStopDescription": "これにより、NASH 外部のものも含め、それを共有している開いている Codex セッションがすべて閉じられます。",
       "title": "この Codex は他の Codex タブとサーバーを共有しています",
       "body": "セッションが予期せず終了したり、Agent のステータスが間違ったりする可能性があります。",
+      "openedBeforeUpdateBody": "このターミナルは、NASH が各 Codex に独自のサーバーを提供し始める前にオープンされました。",
       "oldTerminalDialogTitle": "この Codex がサーバーを共有する理由",
       "oldTerminalDialogRisk": "サーバーを共有する Codex セッションが同時に終了する可能性があり、Agent のステータスが間違っている可能性があります。",
       "oldTerminalDialogCause": "古いターミナルは依然として Codex サーバーを共有しています。新規ターミナルを開いて、別のサーバーで Codex を実行します。",
       "fix": "修理",
       "dialogTitle": "各 Codex タブに独自のサーバーを与える",
+      "dialogDescription": "ターミナルで直接開始された Codex セッションは、1 つのバックグラウンドサーバーを共有します。 NASH は、開始する Codex セッションを個別に保持します。セッションがサーバーを共有している場合、1 つを閉じると他のセッションも終了し、Agent のステータスが不正になる可能性があります。",
       "copy": "コピー",
       "copied": "コピーしました",
       "done": "完了",
       "step1Title": "Codex サーバー共有をオフにする",
+      "step1Note": "これにより Codex 設定が変更されるため、NASH の外部にも適用されます。",
       "step2Title": "稼働中の共有サーバーを停止します",
       "undo": "元に戻すには、codex features enable daemon_auto_start を実行します。",
       "step2Warning": "サーバーを共有している開いている Codex セッションをすべて閉じます。",
       "turnOff": "消す",
       "turningOff": "オフにしています…",
       "turnedOff": "オフになっています",
+      "turnOffFailed": "NASH はこれをオフにすることができませんでした。",
       "stopServer": "サーバーを停止する",
       "stopping": "停止中…",
       "stopped": "停止しました",
+      "stopFailed": "NASH はサーバーを停止できませんでした。",
       "confirmStopTitle": "共有サーバーを停止しますか?",
+      "confirmStopDescription": "これにより、NASH 外部のものも含め、それを共有している開いている Codex セッションがすべて閉じられます。",
       "cancel": "キャンセル",
-      "runs": "走る",
+      "runs": "実行コマンド",
       "openNewTerminal": "新規ターミナルを開く",
       "dontShowAgain": "今後表示しない",
       "dismiss": "閉じる",
       "learnMore": "詳しく見る"
-    },
-    "codexSharedSettingsNotice": {
-      "title": "NASH の Codex は ~/.codex を使用するようになりました",
-      "description": "Codex は、フォルダーを信頼するか、コマンドを承認するかを再度要求する場合があります。 NASH のみに追加した MCP サーバーを再度追加します。"
     },
     "paneMove": {
       "failed": "ペインを新規タブに移動できませんでした。"
@@ -20037,7 +20387,202 @@
       "dialogTitle": "ここでの claude が選択したアカウントを使わない理由",
       "dialogDescription": "NASH は各 Claude アカウントを個別のフォルダーに保存するようになりました。新しいターミナルの claude は、選択したアカウントを使用します。",
       "dialogCause": "この更新前に開いたターミナルには反映されず、ここでの claude は「システムのデフォルト」のログイン情報を使用します。選択したアカウントを使うには、新しいターミナルを開いてください。"
+    },
+    "newerDaemonBanner": {
+      "failedTitle": "このターミナルを再度開けませんでした",
+      "title": "このターミナルは新規バージョンの NASH で開かれました",
+      "resumableBody": "作業を続けるには、ここで再度開いてください。Agent セッションが再開されます。",
+      "reopening": "再度開いています…",
+      "tryAgain": "再試行",
+      "reopenTerminal": "{{count}} 個のターミナルを再度開く",
+      "reopenTerminal_one": "ターミナルを再度開く",
+      "reopenTerminal_other": "{{count}} 個のターミナルを再度開く",
+      "reopened": "{{count}} 個のターミナルを再度開きました",
+      "reopened_one": "{{count}} 個のターミナルを再度開きました",
+      "reopened_other": "{{count}} 個のターミナルを再度開きました",
+      "resumed": "{{count}} 個の Agent セッションを再開しました。",
+      "resumed_one": "{{count}} 個の Agent セッションを再開しました。",
+      "resumed_other": "{{count}} 個の Agent セッションを再開しました。"
+    },
+    "severedDaemonBanner": {
+      "unknownCount": "実行中のターミナル",
+      "count": "実行中のターミナル {{count}} 個",
+      "unverifiable": "NASH はターミナルサービスのプロセスを確認できなかったため、何も停止していません。",
+      "alreadyReplaced": "ターミナルサービスはすでに置き換えられていたため、何も停止していません。",
+      "restarted": "ターミナルサービスを再起動しました。",
+      "failed": "再起動に失敗しました。",
+      "title": "ターミナルサービスがプログラムファイルなしで実行されています",
+      "body": "このコンピュータのターミナルサービスは、マウントされなくなった AppImage から起動しました。現在も {{sessions}} を実行していますが、いつクラッシュしてもおかしくありません。再起動するまで、NASH を終了しても新規ターミナルは保持されません。",
+      "restart": "ターミナルデーモンを再起動",
+      "dismiss": "閉じる",
+      "confirmTitle": "ターミナルデーモンを再起動しますか?",
+      "confirmBody": "再起動すると、{{sessions}} で実行中のすべてのプロセスが終了します。再開に対応している Agent は後で再開できますが、シェルなどのジョブは再開できず、再度開始する必要があります。Agent がアイドル状態のときに行ってください。",
+      "cancel": "キャンセル",
+      "confirm": "再起動してプロセスを終了"
     }
+  },
+  "fileSearch": {
+    "failed": "検索失敗。もう一度お試しください"
+  },
+  "csv": {
+    "detectingDelimiter": "デリミタを検出中…",
+    "indexProgress": "CSV をインデックス作成中… {{percent}}%",
+    "loadingCell": "読み込み中…",
+    "nextRows": "次の行",
+    "previousRows": "前の行",
+    "readOnlyPreview": "大きなファイルのプレビュー · 読み取り専用",
+    "resizeColumn": "列 {{column}} のサイズを変更",
+    "rowWindow": "行 {{first}}–{{last}}",
+    "editor": "CSV エディター",
+    "editCell": "行 {{row}}、列 {{column}} を編集",
+    "filterRows": "行を絞り込む",
+    "edit": "セルを編集",
+    "copy": "コピー",
+    "paste": "貼り付け",
+    "rows": "行",
+    "insertRowAbove": "上に行を挿入",
+    "insertRowBelow": "下に行を挿入",
+    "deleteRows": "選択した行を削除",
+    "columns": "列",
+    "newColumn": "列 {{column}}",
+    "insertColumnBefore": "前に列を挿入",
+    "insertColumnAfter": "後に列を挿入",
+    "moveColumnLeft": "列を左に移動",
+    "moveColumnRight": "列を右に移動",
+    "deleteColumns": "選択した列を削除",
+    "sort": "並べ替え",
+    "sortAscending": "選択した列を昇順に並べ替え",
+    "sortDescending": "選択した列を降順に並べ替え",
+    "originalOrder": "元の行順",
+    "save": "保存",
+    "inspectionOnly": "検査のみ · ファイルの行順は変更されません"
+  },
+  "worktree": {
+    "nestedRemoval": {
+      "refreshFailed": "ワークスペースリストを更新できませんでした",
+      "review": "ネストされたワークツリーと共に削除…",
+      "title": "ワークスペースとネストされたワークツリーを削除しますか？",
+      "description": "これにより「{{name}}」、以下に表示されるすべてのネストされたワークツリー、およびそれら内のすべてのファイル（コミットされていない変更を含む）が完全に削除されます。それらのターミナルと Agent は停止されます。",
+      "detached": "分離 HEAD",
+      "loading": "ネストされたワークツリーを確認中…",
+      "order": "ネストされたワークツリーが先に削除されます。1つでも失敗すると削除は停止し、親は保持されます。ブランチは既存の削除設定に従います。",
+      "cancel": "キャンセル",
+      "retry": "再確認",
+      "deleting": "削除中…",
+      "confirm": "一覧表示されたすべてのワークツリーを削除",
+      "preservedBranches": "一部のネストされたワークツリーブランチは保持されました"
+    }
+  },
+  "mediaPreview": {
+    "unavailable": "このメディアファイルを再生できません。ファイルが利用できないか、コーデックが対応していない可能性があります。",
+    "openFailed": "既定のアプリでファイルを開けませんでした。",
+    "openDefault": "既定のアプリで開く"
+  },
+  "projectBoard": {
+    "noColumnField": "このボードビューにはグループ化に使える単一選択フィールドまたは反復フィールドがないため、代わりに NASH が項目を一覧表示します。",
+    "noField": "{{field}} なし"
+  },
+  "projectBoardCard": {
+    "restrictedItem": "制限された項目",
+    "itemLabel": "{{number}} — {{title}}"
+  },
+  "projectViews": {
+    "layout": {
+      "board": "ボード"
+    },
+    "unsupported": {
+      "switchLayout": "NASH でこのプロジェクトを操作するには、テーブル、ボード、またはロードマップビューに切り替えます。",
+      "description": "NASH はテーブル、ボード、ロードマップのプロジェクトビューをレンダリングします。このビューは、まだレンダリングできないレイアウトを使用しています。"
+    }
+  },
+  "projectField": {
+    "updateFailed": "プロジェクトフィールドを更新できませんでした"
+  },
+  "workspaceDeletion": {
+    "preferenceSaveFailed": "削除の設定を保存できませんでした",
+    "alwaysForceDelete": "常に強制削除",
+    "moreActions": "その他の強制削除オプション",
+    "alwaysForceDeleteTooltip": "今後のすべてのワークスペース削除に適用されます。"
+  },
+  "workspace": {
+    "links": {
+      "foreignReview": "このレビューは別のリポジトリに属しています。このワークスペースのリポジトリのレビューを追加してください。",
+      "repositoryLoading": "リポジトリの識別情報をまだ読み込んでいます。利用可能になってから再試行してください。",
+      "duplicate": "このリンクはすでに添付されています。",
+      "title": "リンクされた作業",
+      "count": "{{count}} 件リンク済み",
+      "empty": "このワークスペースのすべてのレビューとタスクをまとめて管理します。",
+      "reviews": "レビュー",
+      "tasks": "Issue とタスク",
+      "openItem": "{{label}} を開く",
+      "open": "リンクを開く",
+      "unlinkItem": "{{label}} のリンクを解除",
+      "unlink": "ワークスペースからリンクを解除",
+      "show": "リンク済みのレビューとタスク {{count}} 件を表示",
+      "manage": "リンクを管理…",
+      "details": "ワークスペースの詳細",
+      "description": "このワークスペースにレビューとタスクを添付し、ノートを保管します。",
+      "commentHelp": "Markdown に対応しています。保存するには Enter または {{shortcut}} を押します · 改行するには Shift+Enter を押します。",
+      "kind": {
+        "github_pr": "GitHub PR",
+        "github_issue": "GitHub Issue",
+        "linear_task": "Linear タスク",
+        "gitlab_mr": "GitLab MR",
+        "gitlab_issue": "GitLab Issue",
+        "jira_task_url": "Jira タスク (URL)",
+        "bitbucket_pr": "Bitbucket PR",
+        "azure_devops_pr": "Azure DevOps PR",
+        "gitea_pr": "Gitea PR"
+      },
+      "mrReference": "MR !{{number}}",
+      "prReference": "PR #{{number}}",
+      "issueReference": "Issue #{{number}}",
+      "foreignIssue": "この Issue は別のリポジトリに属しています。このワークスペースのリポジトリの Issue を追加してください。",
+      "linkedResult": "リンク済み",
+      "addReference": "参照を追加",
+      "searchLabel": "参照を検索",
+      "searchReferences": "レビューやタスクを検索、またはリンクを貼り付け",
+      "noReferences": "一致する参照がありません。タイトル、番号、または URL を試してください。",
+      "addItem": "{{label}} を追加",
+      "referenceType": "参照の種類",
+      "clearSearch": "検索をクリア",
+      "inlineSearchHint": "結果を選択すると添付されます。",
+      "nameHelp": "サイドバーに表示されます。フォルダー名は変わりません。",
+      "notes": "ノート",
+      "addNotes": "ノートを追加",
+      "notesOptional": "任意 · Markdown",
+      "saveHint": "変更は保存時に適用されます",
+      "terminal": "ターミナル",
+      "seenIn": "{{label}} で確認済み",
+      "unavailableTab": "タブを利用できません",
+      "sessions": "セッションとターミナル",
+      "jiraModeRequired": "この Issue を読み込むには Smart または Jira を選択してください。",
+      "linearModeRequired": "この Issue を読み込むには Smart または Linear を選択してください。",
+      "loadingLinear": "Linear Issue を読み込んでいます…",
+      "linearConnectRequired": "この Issue をリンクするには、設定で Linear に接続してください。",
+      "linearReadFailed": "この Linear Issue を読み込めませんでした。URL と接続されているワークスペースを確認してください。",
+      "retrySource": "再試行",
+      "lastKnownStatus": "最後に確認されたステータス",
+      "reviewTarget": "対象: {{branch}}",
+      "reviewUrlRequired": "レビューの URL を貼り付けて、リポジトリとプロバイダーを確認してください。",
+      "stackSummary": "{{count}} 件リンク済み: {{references}}",
+      "sessionsForItem": "{{label}} のセッションとターミナル · {{count}}",
+      "checksFailed": "失敗",
+      "checksPending": "保留中",
+      "checksPassing": "成功",
+      "checksUnknown": "不明",
+      "checksNeutral": "中立",
+      "allReviewChecks": "レビュー: {{count}} · チェック: {{status}}"
+    },
+    "attachments": {
+      "updateRuntime": "ワークスペースのリンクを変更するには、リモートランタイムを更新してください",
+      "updateRuntimeSafely": "ワークスペースのリンクを安全に変更するには、リモートランタイムを更新してください"
+    }
+  },
+  "tabHoverCard": {
+    "browser": "ブラウザ",
+    "editor": "エディター",
+    "terminal": "ターミナル"
   },
   "workbench": {
     "tasks": {
@@ -20348,86 +20893,6 @@
       "copyFailed": "コピーできませんでした",
       "copy": "詳細をコピー"
     }
-  },
-  "osDocumentOpen": {
-    "failed": "ファイルを開けませんでした。"
-  },
-  "fileSearch": {
-    "failed": "検索失敗。もう一度お試しください"
-  },
-  "csv": {
-    "detectingDelimiter": "デリミタを検出中…",
-    "indexProgress": "CSV をインデックス作成中… {{percent}}%",
-    "loadingCell": "読み込み中…",
-    "nextRows": "次の行",
-    "previousRows": "前の行",
-    "readOnlyPreview": "大きなファイルのプレビュー · 読み取り専用",
-    "resizeColumn": "列 {{column}} のサイズを変更",
-    "rowWindow": "行 {{first}}–{{last}}",
-    "editor": "CSV エディター",
-    "editCell": "行 {{row}}、列 {{column}} を編集",
-    "filterRows": "行を絞り込む",
-    "edit": "セルを編集",
-    "copy": "コピー",
-    "paste": "貼り付け",
-    "rows": "行",
-    "insertRowAbove": "上に行を挿入",
-    "insertRowBelow": "下に行を挿入",
-    "deleteRows": "選択した行を削除",
-    "columns": "列",
-    "newColumn": "列 {{column}}",
-    "insertColumnBefore": "前に列を挿入",
-    "insertColumnAfter": "後に列を挿入",
-    "moveColumnLeft": "列を左に移動",
-    "moveColumnRight": "列を右に移動",
-    "deleteColumns": "選択した列を削除",
-    "sort": "並べ替え",
-    "sortAscending": "選択した列を昇順に並べ替え",
-    "sortDescending": "選択した列を降順に並べ替え",
-    "originalOrder": "元の行順",
-    "save": "保存",
-    "inspectionOnly": "検査のみ · ファイルの行順は変更されません"
-  },
-  "worktree": {
-    "nestedRemoval": {
-      "refreshFailed": "ワークスペースリストを更新できませんでした",
-      "review": "ネストされたワークツリーと共に削除…",
-      "title": "ワークスペースとネストされたワークツリーを削除しますか？",
-      "description": "これにより「{{name}}」、以下に表示されるすべてのネストされたワークツリー、およびそれら内のすべてのファイル（コミットされていない変更を含む）が完全に削除されます。それらのターミナルと Agent は停止されます。",
-      "detached": "分離 HEAD",
-      "loading": "ネストされたワークツリーを確認中…",
-      "order": "ネストされたワークツリーが先に削除されます。1つでも失敗すると削除は停止し、親は保持されます。ブランチは既存の削除設定に従います。",
-      "cancel": "キャンセル",
-      "retry": "再確認",
-      "deleting": "削除中…",
-      "confirm": "一覧表示されたすべてのワークツリーを削除",
-      "preservedBranches": "一部のネストされたワークツリーブランチは保持されました"
-    }
-  },
-  "mediaPreview": {
-    "unavailable": "このメディアファイルを再生できません。ファイルが利用できないか、コーデックが対応していない可能性があります。",
-    "openFailed": "既定のアプリでファイルを開けませんでした。",
-    "openDefault": "既定のアプリで開く"
-  },
-  "projectBoard": {
-    "noColumnField": "このボードビューにはグループ化に使える単一選択フィールドまたは反復フィールドがないため、代わりに NASH が項目を一覧表示します。",
-    "noField": "{{field}} なし"
-  },
-  "projectBoardCard": {
-    "restrictedItem": "制限された項目",
-    "itemLabel": "{{number}} — {{title}}"
-  },
-  "projectViews": {
-    "layout": {
-      "board": "ボード"
-    },
-    "unsupported": {
-      "switchLayout": "NASH でこのプロジェクトを操作するには、テーブル、ボード、またはロードマップビューに切り替えます。",
-      "description": "NASH はテーブル、ボード、ロードマップのプロジェクトビューをレンダリングします。このビューは、まだレンダリングできないレイアウトを使用しています。"
-    }
-  },
-  "projectField": {
-    "updateFailed": "プロジェクトフィールドを更新できませんでした"
   },
   "crashReport": {
     "githubDescription": "GitHub でクラッシュレポートを確認して送信します。「詳細をコピー」には診断テキスト全体が含まれます。",

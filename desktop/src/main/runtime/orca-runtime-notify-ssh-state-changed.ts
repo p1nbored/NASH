@@ -157,6 +157,7 @@ export class OrcaRuntimeWithNotifySshStateChanged extends OrcaRuntimeWithGetStat
     this.emitClientEvent({ type: 'reposChanged' })
   }
 
+  /** `setup` and `defaultTabs` go to the host window only: main tried and failed to start them. */
   protected notifyActivateWorktree(
     repoId: string,
     worktreeId: string,
@@ -170,14 +171,7 @@ export class OrcaRuntimeWithNotifySshStateChanged extends OrcaRuntimeWithGetStat
       this.notifyHostActivateWorktree(repoId, worktreeId, setup, startup, defaultTabs)
     }
     if (navigationTargetsClients(navigation)) {
-      this.notifyClientsActivateWorktree(
-        repoId,
-        worktreeId,
-        setup,
-        startup,
-        defaultTabs,
-        navigation
-      )
+      this.notifyClientsActivateWorktree(repoId, worktreeId, startup, navigation)
     }
   }
 
@@ -194,13 +188,11 @@ export class OrcaRuntimeWithNotifySshStateChanged extends OrcaRuntimeWithGetStat
   protected notifyClientsActivateWorktree(
     repoId: string,
     worktreeId: string,
-    setup?: CreateWorktreeResult['setup'],
     startup?: WorktreeStartupLaunch,
-    defaultTabs?: CreateWorktreeResult['defaultTabs'],
     navigation: RuntimeNavigationTarget = 'clients'
   ): void {
     this.emitClientEvent(
-      toRuntimeActivateWorktreeEvent(repoId, worktreeId, setup, startup, defaultTabs, navigation)
+      toRuntimeActivateWorktreeEvent(repoId, worktreeId, undefined, startup, undefined, navigation)
     )
   }
 

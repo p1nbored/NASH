@@ -127,7 +127,7 @@ describe('orcad migration manifest export', () => {
       { migrationId: 'migration-legacy', now: () => new Date('2026-08-30T12:00:00.000Z') }
     )
 
-    expect(manifest.source.sshTargetGeneration).toBeNull()
+    expect(manifest.source).toMatchObject({ sshTargetGeneration: null })
     expect(target.generation).toBeUndefined()
   })
 

@@ -8,7 +8,11 @@ import { isFresh, withBoundedCacheEntry } from './cache-policy'
 import { debouncedSaveCache } from './cache-persistence'
 import { inflightIssueRequests } from './request-coordination'
 import { findRepoForGitHubOwner } from './repository-routing'
-import { getGitHubRepoSourceSettings, getGitHubWorkItemRequestContext } from './work-item-routing'
+import {
+  getGitHubRepoSourceSettings,
+  getGitHubSourceTarget,
+  getGitHubWorkItemRequestContext
+} from './work-item-routing'
 
 export const createIssueActions = (
   set: Parameters<StateCreator<AppState>>[0],
@@ -17,11 +21,7 @@ export const createIssueActions = (
   fetchIssue: async (repoPath, number, options) => {
     const repo = findRepoForGitHubOwner(get(), options?.repoId, repoPath)
     const repoId = options?.repoId ?? repo?.id
-    const requestSettings = getGitHubRepoSourceSettings(
-      get().settings,
-      repo,
-      options?.sourceContext
-    )
+    const requestSettings = getGitHubRepoSourceSettings(get(), repo, options?.sourceContext)
     const cacheKey = sourceScopedRepoCacheKey(
       repoPath,
       repoId,
@@ -46,7 +46,7 @@ export const createIssueActions = (
       try {
         const requestContext = getGitHubWorkItemRequestContext(
           get(),
-          requestSettings,
+          getGitHubSourceTarget(get(), repo, options?.sourceContext),
           repoId ?? repoPath,
           repoPath,
           options?.sourceContext

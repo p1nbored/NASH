@@ -1,6 +1,5 @@
 // @ts-nocheck -- mechanically split class members.
 import { RuntimeFileCommandsWithReadMobileFile } from './runtime-file-commands-read-mobile-file'
-import { RuntimeFileCommandsWithActiveRuntimeTextSearches as RuntimeFileCommands } from './runtime-file-commands-active-runtime-text-searches'
 import type {
   RuntimeNativeChatFileContext,
   RuntimeTerminalPathResolution
@@ -12,13 +11,12 @@ import {
   provenancePathCandidate,
   resolveTerminalAbsolutePath
 } from './runtime-file-commands-terminal-file-paths'
-import { stat } from 'node:fs/promises'
-import { runtimeFileRouteForTarget } from './runtime-file-command-target'
+import {
+  requireRuntimeFileProvider,
+  runtimeFileRouteForTarget
+} from './runtime-file-command-target'
 import { isSafeMobileRelativePath } from './runtime-file-command-host'
-import { resolveAuthorizedPath } from '../ipc/filesystem-auth'
 import { isENOENT } from '../ipc/filesystem-path-containment'
-import type { RuntimeFileStatLike } from './runtime-file-commands-mobile-file-list-limit'
-import { requireSshFilesystemProvider } from '../providers/ssh-filesystem-dispatch'
 
 export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileCommandsWithReadMobileFile {
   // Resolves a mobile terminal tap to a worktree-relative path; relatives resolve against cwd, else the worktree root.
@@ -31,7 +29,8 @@ export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileComma
     crossWorkspace?: boolean,
     nativeChatContext?: RuntimeNativeChatFileContext | null
   ): Promise<RuntimeTerminalPathResolution> {
-    const store = this.host.requireStore()
+    // Why: an absent store fails as runtime_unavailable before target resolution.
+    this.host.requireStore()
     const target = await this.host.resolveRuntimeFileTarget(worktreeSelector)
     const { worktree } = target
     const route = runtimeFileRouteForTarget(target)
@@ -87,17 +86,19 @@ export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileComma
         ownedRelativePath !== null &&
         (ownedRelativePath === '' || isSafeMobileRelativePath(ownedRelativePath))
       ) {
-        const stats =
-          ownedRoute.kind === 'ssh'
-            ? await this.statRemoteTerminalPath(absolutePath, ownedRoute.connectionId)
-            : await stat(await resolveAuthorizedPath(absolutePath, store))
+        const isDirectory =
+          (
+            await requireRuntimeFileProvider(knownWorkspaceTarget ?? target, this.host).stat(
+              absolutePath
+            )
+          ).type === 'directory'
         return {
           worktree: ownedWorktree.id,
           relativePath: ownedRelativePath,
           absolutePath,
           exists: true,
-          isDirectory: stats.isDirectory(),
-          openTarget: stats.isDirectory()
+          isDirectory,
+          openTarget: isDirectory
             ? undefined
             : {
                 kind: 'worktree-file',
@@ -121,7 +122,6 @@ export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileComma
         return await this.resolveAbsoluteFileGrant({
           worktreeId: worktree.id,
           artifactPath,
-          connectionId,
           clientId,
           readOnly: true,
           provenance: 'native-chat'
@@ -161,15 +161,11 @@ export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileComma
         worktreeId: worktree.id,
         artifactPath,
         rejectedAbsolutePath: absolutePath,
-        connectionId,
         clientId
       })
     } catch (error) {
       // Report genuine not-found as missing; let transport/permission errors surface so remote taps aren't all reported missing.
-      if (
-        isENOENT(error) ||
-        (ownedRoute.kind === 'ssh' && RuntimeFileCommands.isRemoteNotFoundErrorMessage(error))
-      ) {
+      if (isENOENT(error)) {
         return {
           ...empty,
           worktree: ownedWorktree.id,
@@ -179,15 +175,5 @@ export class RuntimeFileCommandsWithResolveTerminalPath extends RuntimeFileComma
       }
       throw error
     }
-  }
-
-  // Leaf helper: only ever reached from a route already resolved to `ssh`, so the id it takes is
-  // this client's dialable target rather than a repo row's raw `connectionId`.
-  protected async statRemoteTerminalPath(
-    absolutePath: string,
-    connectionId: string
-  ): Promise<RuntimeFileStatLike & { isDirectory: () => boolean }> {
-    const stats = await requireSshFilesystemProvider(connectionId).stat(absolutePath)
-    return { ...stats, isDirectory: () => stats.type === 'directory' }
   }
 }

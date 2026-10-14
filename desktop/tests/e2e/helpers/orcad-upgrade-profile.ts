@@ -1,7 +1,7 @@
 /**
  * The profile a relay-era build (v1.4.218, the last before auto-conversion) leaves behind for an
  * SSH host: the target without a fence, its repository and remote folder workspace, and an editor
- * tab in the host's session partition. Seeded into a stopped profile, so the next launch is the
+ * tab (optionally beside a terminal tab) in the host's session partition. Seeded into a stopped profile, so the next launch is the
  * user's first on a converting build.
  */
 import type { FolderWorkspace } from '../../../src/shared/folder-workspace-types'
@@ -10,15 +10,20 @@ import type { Repo } from '../../../src/shared/repo-types'
 import type { SshTarget, SshTargetCreateInput } from '../../../src/shared/ssh-types'
 import { getDefaultWorkspaceSession } from '../../../src/shared/constants'
 import { toSshExecutionHostId } from '../../../src/shared/execution-host'
+import { toAppSshPtyId } from '../../../src/shared/ssh-pty-id'
 import { normalizeSshTarget } from '../../../src/main/persistence/leasing-ssh-ptys/ssh-normalization'
 import { mutateStoppedProfileState } from './persisted-profile-state'
 
 export type RelayEraProfile = {
   targetId: string
+  repoId: string
   worktreeId: string
   repoPath: string
   folderPath: string
   sessionFilePath: string
+  /** Set only when the seed asked for a relay-era terminal tab. */
+  terminalTabId: string | null
+  terminalLeafId: string
 }
 
 function pushRow(state: Record<string, unknown>, field: string, row: unknown): void {
@@ -77,10 +82,16 @@ export function seedRelayEraTarget(
 export function seedRelayEraProfile(
   userDataDir: string,
   input: SshTargetCreateInput,
-  paths: { repoPath: string; folderPath: string }
+  paths: { repoPath: string; folderPath: string },
+  options: {
+    terminalTab?: boolean
+    targetId?: string
+    /** COMPAT(legacy-relay-bridge): the terminal tab still runs this PTY in the host's relay. */
+    relayPtyId?: string
+  } = {}
 ): RelayEraProfile {
   const now = Date.now()
-  const targetId = `ssh-upgrade-${now}`
+  const targetId = options.targetId ?? `ssh-upgrade-${now}`
   const hostId = toSshExecutionHostId(targetId)
   const repo: Repo = {
     id: `repo-upgrade-${now}`,
@@ -123,6 +134,9 @@ export function seedRelayEraProfile(
   const sessionFilePath = `${paths.repoPath}/README.md`
   const tabId = `tab-upgrade-${now}`
   const groupId = `tab-group-upgrade-${now}`
+  const terminalTabId = options.terminalTab || options.relayPtyId ? `terminal-upgrade-${now}` : null
+  const terminalLeafId = '00000000-0000-4000-8000-000000000001'
+  const appPtyId = options.relayPtyId ? toAppSshPtyId(targetId, options.relayPtyId) : null
   // The shape the relay-era renderer persisted for one open editor (CI capture of a live profile).
   const session = {
     ...getDefaultWorkspaceSession(),
@@ -156,16 +170,62 @@ export function seedRelayEraProfile(
           createdAt: now,
           lastFocusedAt: now,
           isPreview: false
-        }
+        },
+        ...(terminalTabId
+          ? [
+              {
+                id: terminalTabId,
+                entityId: terminalTabId,
+                groupId,
+                worktreeId,
+                executionHostId: hostId,
+                contentType: 'terminal',
+                label: 'Terminal 1',
+                customLabel: null,
+                color: null,
+                sortOrder: 2,
+                createdAt: now
+              }
+            ]
+          : [])
       ]
     },
+    ...(terminalTabId
+      ? {
+          // Without a relay PTY the tab names no live session by the time this build runs.
+          tabsByWorktree: {
+            [worktreeId]: [
+              {
+                id: terminalTabId,
+                ptyId: appPtyId,
+                worktreeId,
+                title: 'Terminal 1',
+                defaultTitle: 'Terminal 1',
+                customTitle: null,
+                color: null,
+                sortOrder: 2,
+                createdAt: now
+              }
+            ]
+          },
+          ptyIdsByTabId: { [terminalTabId]: appPtyId ? [appPtyId] : [] },
+          terminalLayoutsByTabId: {
+            [terminalTabId]: {
+              root: { type: 'leaf', leafId: terminalLeafId },
+              activeLeafId: terminalLeafId,
+              expandedLeafId: null,
+              ...(appPtyId ? { ptyIdsByLeafId: { [terminalLeafId]: appPtyId } } : {})
+            }
+          }
+        }
+      : {}),
     tabGroups: {
       [worktreeId]: [
         {
           id: groupId,
           worktreeId,
           activeTabId: tabId,
-          tabOrder: [tabId],
+          tabOrder: terminalTabId ? [tabId, terminalTabId] : [tabId],
           recentTabIds: [tabId]
         }
       ]
@@ -178,6 +238,20 @@ export function seedRelayEraProfile(
     pushRow(state, 'repos', repo)
     pushRow(state, 'projectGroups', group)
     pushRow(state, 'folderWorkspaces', folder)
+    if (options.relayPtyId && terminalTabId) {
+      // As the relay-era client recorded the shell it left running when it quit.
+      pushRow(state, 'sshRemotePtyLeases', {
+        targetId,
+        ptyId: options.relayPtyId,
+        worktreeId,
+        tabId: terminalTabId,
+        leafId: terminalLeafId,
+        state: 'detached',
+        createdAt: now,
+        updatedAt: now,
+        lastDetachedAt: now
+      })
+    }
     const partitions = state.workspaceSessionsByHostId
     state.workspaceSessionsByHostId = {
       ...(partitions && typeof partitions === 'object' ? partitions : {}),
@@ -186,9 +260,12 @@ export function seedRelayEraProfile(
   })
   return {
     targetId,
+    repoId: repo.id,
     worktreeId,
     repoPath: paths.repoPath,
     folderPath: paths.folderPath,
-    sessionFilePath
+    sessionFilePath,
+    terminalTabId,
+    terminalLeafId
   }
 }

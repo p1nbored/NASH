@@ -4,6 +4,7 @@ import { detectLanguage } from '@/lib/language-detect'
 import { runSleepWorktree } from '@/components/sidebar/sleep-worktree-flow'
 import { buildWorkspaceSessionPayload } from '@/lib/workspace-session'
 import { persistWorkspaceSessionByHost } from '@/lib/workspace-session-host-persistence'
+import { revealWorkspaceSurface } from '@/lib/workspace-surface-reveal'
 import { useAppStore } from '../../store'
 import type { AppState } from '../../store/types'
 import type { EditorTabSelection } from '../../store/slices/editor/types/open-file'
@@ -25,12 +26,9 @@ function openRuntimeEditorTab(
     open(store, worktreeId === store.activeWorktreeId ? 'none' : 'background')
     return
   }
-  store.setActiveWorktree(worktreeId)
-  store.markWorktreeVisited(worktreeId)
-  store.setActiveView('terminal')
+  revealWorkspaceSurface(store, worktreeId)
   open(store, 'focus')
   store.setActiveTabType('editor', worktreeId)
-  store.revealWorktreeInSidebar(worktreeId)
 }
 
 export function registerMobileAndTerminalCloseIpcBridge(

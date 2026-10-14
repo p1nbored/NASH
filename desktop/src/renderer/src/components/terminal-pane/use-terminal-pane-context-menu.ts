@@ -1,11 +1,11 @@
 import { useCallback, useRef } from 'react'
 import type { ManagedPane, PaneManager } from '@/lib/pane-manager/pane-manager'
-import type { PtyTransport } from './pty-transport'
+import type { PtyTransport } from './pty-transport-types'
 import type { PaneCwdMap } from './resolve-split-cwd'
 import type { TerminalQuickCommand } from '../../../../shared/terminal-quick-command-types'
 import { isTerminalAgentQuickCommand } from '../../../../shared/terminal-quick-commands'
 import { sendTerminalQuickCommandToPane } from './terminal-quick-command-dispatch'
-import type { TerminalPasteSource } from './terminal-paste-coordinator'
+import type { TerminalPasteSource } from './terminal-paste-model'
 import { runQuickCommandInNewTab } from '@/lib/run-quick-command-in-new-tab'
 import type { PreparedAgentSessionFork } from './terminal-agent-session-fork'
 import type { AgentSessionContinuationRequest } from '@/lib/agent-session-continuation'
@@ -174,8 +174,11 @@ export function useTerminalPaneContextMenu({
   const onCopyPaneId = async (): Promise<void> =>
     copyTerminalPaneMenuPaneId(resolveMenuPane(), tabId)
 
-  const onCopyTerminalId = async (): Promise<void> =>
-    copyTerminalPaneMenuTerminalId(resolveMenuPane(), tabId)
+  const onCopyTerminalId = async (): Promise<void> => {
+    const pane = resolveMenuPane()
+    const ptyId = pane ? (paneTransportsRef.current?.get(pane.id)?.getPtyId() ?? null) : null
+    return copyTerminalPaneMenuTerminalId(pane, tabId, ptyId)
+  }
 
   const onCopyAgentSessionId = async (): Promise<void> => {
     const pane = resolveMenuPane()

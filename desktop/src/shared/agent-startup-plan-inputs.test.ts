@@ -17,7 +17,8 @@ describe('resolveAgentStartupPlanInputs', () => {
         agentDefaultEnv: { claude: { FOO: 'bar' } }
       },
       platform: 'darwin',
-      isRemote: false
+      isRemote: false,
+      shell: undefined
     })
 
     expect(inputs.cmdOverrides).toEqual({ claude: 'my-claude' })
@@ -28,7 +29,8 @@ describe('resolveAgentStartupPlanInputs', () => {
         agent: 'claude',
         settings: EMPTY_SETTINGS,
         platform: 'darwin',
-        isRemote: false
+        isRemote: false,
+        shell: undefined
       }).cmdOverrides
     ).toEqual({})
   })
@@ -39,7 +41,8 @@ describe('resolveAgentStartupPlanInputs', () => {
       agent: 'claude' as const,
       settings,
       platform: 'darwin' as const,
-      isRemote: false
+      isRemote: false,
+      shell: undefined
     }
 
     expect(resolveAgentStartupPlanInputs(base).agentArgs).toBe('--verbose')
@@ -57,7 +60,8 @@ describe('resolveAgentStartupPlanInputs', () => {
         agent: 'claude',
         settings,
         platform: 'win32',
-        isRemote: false
+        isRemote: false,
+        shell: undefined
       }).shell
     ).toBe('posix')
     // Remote targets need their own shell signal before quoting can be overridden.
@@ -66,7 +70,8 @@ describe('resolveAgentStartupPlanInputs', () => {
         agent: 'claude',
         settings,
         platform: 'win32',
-        isRemote: true
+        isRemote: true,
+        shell: undefined
       }).shell
     ).toBeUndefined()
     expect(
@@ -74,18 +79,19 @@ describe('resolveAgentStartupPlanInputs', () => {
         agent: 'claude',
         settings,
         platform: 'darwin',
-        isRemote: false
+        isRemote: false,
+        shell: undefined
       }).shell
     ).toBeUndefined()
   })
 
-  it('lets a requested shell override the configured one', () => {
+  it("lets the host's resolved shell override the configured one", () => {
     const inputs = resolveAgentStartupPlanInputs({
       agent: 'claude',
       settings: { terminalWindowsShell: 'git-bash' },
       platform: 'win32',
       isRemote: false,
-      windowsShellOverride: 'cmd.exe'
+      shell: 'cmd'
     })
 
     expect(inputs.shell).toBe('cmd')
@@ -96,7 +102,8 @@ describe('resolveAgentStartupPlanInputs', () => {
       agent: 'codex' as const,
       settings: EMPTY_SETTINGS,
       platform: 'darwin' as const,
-      isRemote: false
+      isRemote: false,
+      shell: undefined
     }
 
     const without = resolveAgentStartupPlanInputs(base)
@@ -123,6 +130,7 @@ describe('a picked session option outranks configured launch arguments', () => {
         settings,
         platform: 'darwin',
         isRemote: false,
+        shell: undefined,
         sessionOptions: { model: 'gpt-5' }
       }),
       prompt: '',
@@ -171,6 +179,7 @@ it.each([
       settings,
       platform: 'win32',
       isRemote: false,
+      shell: undefined,
       sessionOptions: { model: 'model-exact', taskAccess }
     })
     expect(inputs.agentArgs).toBe(expected)

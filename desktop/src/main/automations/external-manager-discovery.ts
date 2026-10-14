@@ -6,12 +6,9 @@ import type {
   ExternalAutomationManager,
   ExternalAutomationProvider
 } from '../../shared/automations-types'
-import type { SshTarget } from '../../shared/ssh-types'
-import { getActiveMultiplexer } from '../ssh/ssh-target-registry'
 import { mapHermesJobs, mapOpenClawJobs } from './external-job-mappers'
 import { readHermesCronOutputRunsPage } from './hermes-cron-output'
 import { isExternalAutomationCommandOnPath } from './external-manager-local-command'
-import { externalAutomationRelayErrorMessage } from './external-manager-relay'
 
 const HERMES_HOME = process.env.HERMES_HOME?.trim() || join(homedir(), '.hermes')
 const HERMES_CRON_DIR = join(HERMES_HOME, 'cron')
@@ -102,62 +99,5 @@ export async function listLocalManager(
         : `${providerLabel} jobs were found, but the ${provider} CLI is not on PATH.`),
     canManage: !readError && available,
     jobs: mapProviderJobs(provider, managerId, jobs)
-  }
-}
-
-export async function listRemoteManager(
-  target: SshTarget,
-  provider: ExternalAutomationProvider
-): Promise<ExternalAutomationManager> {
-  const providerLabel = PROVIDER_LABELS[provider]
-  const managerProviderId = `${provider}:ssh:${target.id}`
-  const mux = getActiveMultiplexer(target.id)
-  if (!mux || mux.isDisposed()) {
-    return {
-      id: managerProviderId,
-      provider,
-      label: `${providerLabel} on ${target.label}`,
-      targetLabel: target.label,
-      target: { type: 'ssh', connectionId: target.id },
-      status: 'unavailable',
-      error: 'SSH target is not connected.',
-      canManage: false,
-      jobs: []
-    }
-  }
-  try {
-    const result = (await mux.request('externalAutomations.list', { provider })) as {
-      jobs?: unknown[]
-      hermesAvailable?: boolean
-      openclawAvailable?: boolean
-      error?: string | null
-    }
-    const commandAvailable =
-      provider === 'hermes' ? result.hermesAvailable === true : result.openclawAvailable === true
-    const readError = result.error ?? null
-    return {
-      id: managerProviderId,
-      provider,
-      label: `${providerLabel} on ${target.label}`,
-      targetLabel: target.label,
-      target: { type: 'ssh', connectionId: target.id },
-      status: readError ? 'unavailable' : 'available',
-      error:
-        readError ?? (commandAvailable ? null : `${providerLabel} CLI is not on the remote PATH.`),
-      canManage: !readError && commandAvailable,
-      jobs: mapProviderJobs(provider, managerProviderId, result.jobs ?? [])
-    }
-  } catch (error) {
-    return {
-      id: managerProviderId,
-      provider,
-      label: `${providerLabel} on ${target.label}`,
-      targetLabel: target.label,
-      target: { type: 'ssh', connectionId: target.id },
-      status: 'unavailable',
-      error: externalAutomationRelayErrorMessage(error),
-      canManage: false,
-      jobs: []
-    }
   }
 }

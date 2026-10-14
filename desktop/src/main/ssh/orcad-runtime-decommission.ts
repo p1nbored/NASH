@@ -4,13 +4,14 @@
  */
 import type {
   OrcadManagedCancelStopResult,
+  OrcadManagedForgetResult,
   OrcadManagedStopResult
 } from '../../shared/orcad-managed-runtime'
 import type { OrcadDaemonRetirementVerdict } from '../../shared/orcad-stop-request'
 import { removeManagedOrcadEnvironment } from '../../shared/runtime-environment-managed-orcad-store'
 import type {
   KnownRuntimeEnvironment,
-  OrcadDeploymentLink
+  OrcadSshDeploymentLink
 } from '../../shared/runtime-environments'
 import { recoverInterruptedOrcadActivation } from './orcad-activation-recovery'
 import { withStaleOrcadActivationRecoveryLock } from './orcad-activation-lock'
@@ -25,7 +26,7 @@ import {
 import { closeOrcadManagedTunnel, ensureOrcadManagedTunnel } from './orcad-managed-tunnel'
 import { clearManagedOrcadUpdateDeferral } from './orcad-managed-update-deferrals'
 import { removeOrcadMigrationJournalsForDestination } from './orcad-migration-cutover-journal'
-import { decommissionRemoteOrcad } from './orcad-remote-stop'
+import { decommissionRemoteOrcad } from './orcad-remote-decommission'
 import { withManagedOrcadLifecycle } from './orcad-runtime-maintenance'
 import { collectManagedTerminalCensus } from './orcad-terminal-census-client'
 import { RemoteInstallLockBusyError } from './ssh-relay-install-lock'
@@ -54,14 +55,14 @@ export function stopManagedOrcadEnvironment(
       return refuse(
         'live',
         'orcad_stop_active_environment',
-        'Choose another Active Server in Advanced before stopping this server.'
+        'This server is the default host for new projects. Choose another one in Advanced before stopping it.'
       )
     }
     const stopped = await stopRemote(userDataPath, environment, deployment, args.signal)
     if ('outcome' in stopped) {
       return stopped
     }
-    await unlinkStoppedEnvironment(userDataPath, environment, deployment, policy)
+    await unlinkEnvironmentLocally(userDataPath, environment, deployment, policy)
     return {
       outcome: 'unlinked',
       verdict: 'exited',
@@ -73,11 +74,39 @@ export function stopManagedOrcadEnvironment(
   })
 }
 
+/**
+ * Stop's local half alone, for a host that can no longer answer (P1-E). Nothing on the host is
+ * touched or assumed: a server still running there keeps running, and a later connect relinks it.
+ */
+export function forgetManagedOrcadEnvironment(
+  userDataPath: string,
+  args: { selector: string },
+  policy: ManagedOrcadStopPolicy
+): Promise<OrcadManagedForgetResult> {
+  return withManagedOrcadLifecycle(userDataPath, args.selector, async (managed) => {
+    const { environment, deployment } = managed
+    if (policy.isActiveEnvironment(environment.id)) {
+      return refuse(
+        'live',
+        'orcad_forget_active_environment',
+        'This server is the default host for new projects. Choose another one in Advanced before forgetting it.'
+      )
+    }
+    await unlinkEnvironmentLocally(userDataPath, environment, deployment, policy)
+    return {
+      outcome: 'forgotten',
+      verdict: 'unverifiable',
+      environmentId: environment.id,
+      sshTargetId: deployment.sshTargetId
+    }
+  })
+}
+
 /** Proven exit, or the refusal that keeps the server linked. */
 async function stopRemote(
   userDataPath: string,
   environment: KnownRuntimeEnvironment,
-  deployment: OrcadDeploymentLink,
+  deployment: OrcadSshDeploymentLink,
   signal?: AbortSignal,
   retried = false
 ): Promise<Stopped | Refusal> {
@@ -132,10 +161,10 @@ async function stopRemote(
   return { version: result.version, retirement: result.retirement }
 }
 
-async function unlinkStoppedEnvironment(
+async function unlinkEnvironmentLocally(
   userDataPath: string,
   environment: KnownRuntimeEnvironment,
-  deployment: OrcadDeploymentLink,
+  deployment: OrcadSshDeploymentLink,
   policy: ManagedOrcadStopPolicy
 ): Promise<void> {
   // Environment first: a crash before the claim is released leaves a hidden target to resume,

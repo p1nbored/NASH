@@ -12,7 +12,6 @@ import type {
   DirectSshDetectedWorktreeRequest
 } from '../../../../shared/detected-worktree-provider-contract'
 import { isCurrentSshProviderAuthority } from '../../../ssh/ssh-provider-authority'
-import { getSshGitProvider } from '../../../providers/ssh-git-dispatch'
 import {
   hasValidDirectSshAuthority,
   listDetectedWorktreesForCapturedRepo
@@ -75,7 +74,6 @@ export async function listHostQualifiedDetectedWorktrees(
   ) {
     return rejected('rejected')
   }
-  const provider = parsedHost.kind === 'ssh' ? getSshGitProvider(parsedHost.targetId) : undefined
   const isCurrent = (): boolean => {
     if (!isCapturedRepoCurrent(store, repo, args.executionHostId)) {
       return false
@@ -89,19 +87,9 @@ export async function listHostQualifiedDetectedWorktrees(
     if (parsedHost.kind !== 'ssh') {
       return true
     }
-    return (
-      capturedAuthority !== null &&
-      getSshGitProvider(parsedHost.targetId) === provider &&
-      isCurrentSshProviderAuthority(capturedAuthority)
-    )
+    return capturedAuthority !== null && isCurrentSshProviderAuthority(capturedAuthority)
   }
-  const result = await listDetectedWorktreesForCapturedRepo(
-    store,
-    repo,
-    isCurrent,
-    provider,
-    providerAbort
-  )
+  const result = await listDetectedWorktreesForCapturedRepo(store, repo, isCurrent, providerAbort)
   if (!result) {
     return rejected('stale')
   }

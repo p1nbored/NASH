@@ -1,5 +1,5 @@
 import type WebSocket from 'ws'
-import type { PairingOffer } from './pairing'
+import type { PairedRuntimeConnection } from './paired-runtime-connection'
 import type { RemoteRuntimeClientError } from './remote-runtime-client-error'
 import { remoteRuntimeUnavailableError } from './remote-runtime-request-frames'
 import {
@@ -13,7 +13,7 @@ import {
 } from './remote-runtime-socket-liveness'
 
 export function openSharedControlSocket(
-  pairing: PairingOffer,
+  connection: PairedRuntimeConnection,
   callbacks: {
     getCurrentSocket: () => WebSocket | null
     onClose: (close: { code: number; reason: string }, error: RemoteRuntimeClientError) => void
@@ -29,7 +29,7 @@ export function openSharedControlSocket(
   }
 ): { ok: true; socket: RemoteRuntimeWebSocket } | { ok: false; error: RemoteRuntimeClientError } {
   let noteActivity: () => void = () => {}
-  const opened = openRemoteRuntimeWebSocket(pairing, {
+  const opened = openRemoteRuntimeWebSocket(connection, {
     onClose: (ws, code, reason) => {
       if (callbacks.getCurrentSocket() === ws) {
         callbacks.onClose(
@@ -64,7 +64,7 @@ export function openSharedControlSocket(
     return opened
   }
 
-  const { ws, sharedKey, cleanup } = opened.socket
+  const { ws, handshake, cleanup } = opened.socket
   const liveness = callbacks.liveness
   const monitor = startRemoteRuntimeSocketLiveness({
     ping: () => {
@@ -96,7 +96,7 @@ export function openSharedControlSocket(
     ok: true,
     socket: {
       ws,
-      sharedKey,
+      handshake,
       cleanup: () => {
         monitor.stop()
         cleanup()

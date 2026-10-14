@@ -1,6 +1,6 @@
 import { sendRemoteRuntimeRequest } from '../../shared/remote-runtime-client'
 import {
-  getPreferredPairingOffer,
+  getPreferredPairedRuntimeConnection,
   type KnownRuntimeEnvironment,
   type RuntimeSshTunnelLink
 } from '../../shared/runtime-environments'
@@ -269,7 +269,7 @@ export async function probeManagedOrcadTunnel(
 ): Promise<boolean> {
   try {
     await sendRemoteRuntimeRequest(
-      getPreferredPairingOffer(environment),
+      getPreferredPairedRuntimeConnection(environment),
       'status.get',
       undefined,
       timeoutMs

@@ -7,6 +7,7 @@ import type {
 import type { SshRepoReadoption, SshTarget, SshTargetCreateInput } from '../../shared/ssh-types'
 import { EphemeralVmRecipeSshTargetSchema } from '../../shared/ephemeral-vm-recipes'
 import { listEnvironments } from '../../shared/runtime-environment-store'
+import { getOrcadSshDeployment } from '../../shared/runtime-environments'
 import { normalizeSshConfigAlias } from '../../shared/ssh-config-alias'
 import { runTargetLifecycle } from '../ipc/ssh-target-lifecycle-queue'
 import { normalizeSshTarget } from '../persistence/leasing-ssh-ptys/ssh-normalization'
@@ -29,8 +30,8 @@ export function listPendingOrcadSshProvisioning(
   userDataPath: string
 ): OrcadSshPendingProvisioning[] {
   const deployed = new Set(
-    listEnvironments(userDataPath).flatMap((environment) =>
-      environment.orcadDeployment ? [environment.orcadDeployment.sshTargetId] : []
+    listEnvironments(userDataPath).flatMap(
+      (environment) => getOrcadSshDeployment(environment)?.sshTargetId ?? []
     )
   )
   return requireManagedOrcadTargetStore()

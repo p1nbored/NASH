@@ -24,7 +24,7 @@ import {
 } from './host-session-mirror-frame-fixtures'
 import { resetHostSessionMirrorHydrationForTests } from './host-session-mirror-hydration'
 import { replaceRuntimeEnvironmentRevisions } from './runtime-environment-revision'
-import { resetWebSessionTabsSnapshotFreshnessForTests } from './web-session-tabs-sync'
+import { resetWebSessionTabsSnapshotFreshnessForTests } from './web-session-tabs-sync/tracking-lifecycle'
 
 const initialState = useAppStore.getInitialState()
 

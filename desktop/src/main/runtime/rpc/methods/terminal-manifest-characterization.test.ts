@@ -4,7 +4,6 @@ import { TERMINAL_METHODS } from './terminal'
 import { eraseRpcMethods } from '../core'
 import {
   TerminalMultiplexLegacyAckFrame,
-  TerminalMultiplexSourceRangeAckFrame,
   TerminalMultiplexSubscribeFrame
 } from './terminal/stream-schemas'
 
@@ -122,13 +121,6 @@ describe('terminal RPC manifest characterization', () => {
     expect(TerminalMultiplexLegacyAckFrame.safeParse({ bytes: 1, future: true }).success).toBe(
       false
     )
-    expect(
-      TerminalMultiplexSourceRangeAckFrame.safeParse({
-        streamGeneration: 'generation',
-        ackedEndByte: 1,
-        future: true
-      }).success
-    ).toBe(false)
     expect(
       TerminalMultiplexSubscribeFrame.parse({
         streamId: 1,

@@ -5,13 +5,19 @@ Current source guide. See [architecture](architecture-direction.md), [Dot integr
 ## Install and configure
 
 1. Download the Windows x64 installer from [NASH releases](https://github.com/p1nbored/NASH/releases/latest). Verify it against the release's `SHA256SUMS.txt`. Builds before `v1.4.218` need one manual upgrade because their update feed was disabled.
-2. Install and sign in to the official Claude Code, Codex or AGY CLI you want to use. NASH does not bundle or patch those CLIs.
+2. Install and sign in to the CLI you want to run on the execution host. Routing supports Claude Code, Codex, AGY, Gemini CLI, Cursor, CodeBuddy, Grok, Muse, OMP and OpenCode. These choices remain configurable before the CLI is installed. NASH does not bundle those CLIs.
 3. In **Settings → Agents → Agent Permissions**, choose **Auto** for coordinator/Dot review or **Manual** for native confirmation. Yolo remains the native bypass preset where supported. Auto does not mean automatic model selection.
-4. In **Settings → Task routing**, click **Refresh model list** to read the CLI catalogs, then choose a coordinator and the CLI/model for each task type. Reviewers are editable. Claude workflow offers a Claude model and its supported effort; it has no CLI selector.
+4. In **Settings → Task routing**, click **Refresh model list**, then choose the coordinator CLI, model and effort and the corresponding choices for each task type. Changing CLI clears the previous model. AGY effort choices switch to the matching listed model variant. CLIs without an effort launch control show **CLI default**; CLIs without a model listing allow an exact model ID. Reviewers remain Claude/Codex one-shot reviews.
 5. Configure **Classifier** credentials and run its verification, then use the verified result. Clef is the current provider. Verification and classification make real provider calls.
 6. Open a repository or folder workspace. Submit work in **Workbench**, or enable Dot for the intended workspace.
 
 Running tasks and provider verification use the user's configured accounts. Browsing a route is not proof that its model is available.
+
+Gemini CLI includes `gemini-4-argon`. Its API supports low/medium/high thinking, but Gemini CLI's current launch adapter has no per-launch effort flag, so the route uses the CLI's configured thinking level. AGY model availability and effort variants come from the selected account's live listing. Saved user routing tables are preserved during updates.
+
+New workflow runs may use any supported routing CLI as coordinator. Attaching an already-running coordinator through Dot remains limited to Claude Code and Codex. Database version 4 migrates existing version 2/3 workflows and task routes without discarding their history.
+
+Read-only runs require a native read-only control. Muse, OMP and OpenCode currently support workspace-write runs only; Grok read-only requires macOS or Linux. Unsupported read-only launches stop before dispatch. Other CLI permissions continue through their native confirmation controls.
 
 ## Updates, plugins and reports
 

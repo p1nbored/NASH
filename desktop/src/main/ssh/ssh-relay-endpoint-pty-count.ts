@@ -8,8 +8,9 @@
  */
 import type { SshConnection } from './ssh-connection'
 import { SshChannelMultiplexer } from './ssh-channel-multiplexer'
-import { legacyRelayBridge } from './ssh-legacy-relay-route'
-import { waitForSentinel } from './ssh-relay-deploy-helpers'
+import { shellEscape } from './ssh-connection-utils'
+import { SHORT_RELAY_SOCKET_DIR_PREFIX } from './relay-socket-path-limit'
+import { waitForSentinel } from './ssh-relay-sentinel'
 
 const RELAY_PTY_COUNT_TIMEOUT_MS = 10_000
 
@@ -20,8 +21,29 @@ export async function countRelayEndpointPtys(
   sockPath: string,
   signal?: AbortSignal
 ): Promise<number | null> {
-  const bridge = legacyRelayBridge(nodePath, sockPath)
-  return bridge ? countRelayPtysOverBridge(conn, bridge.connectCommand, signal) : null
+  const connectCommand = relayBridgeConnectCommand(nodePath, sockPath)
+  return connectCommand ? countRelayPtysOverBridge(conn, connectCommand, signal) : null
+}
+
+/**
+ * The relay's own `relay.js --connect`, run from its own `relay-<version>` directory. A socket
+ * relocated under the short `/tmp` base names no build, so that relay is left unasked, not guessed at.
+ */
+export function relayBridgeConnectCommand(nodePath: string, sockPath: string): string | null {
+  const slash = sockPath.lastIndexOf('/')
+  const relayDir = sockPath.slice(0, slash)
+  const dirName = relayDir.slice(relayDir.lastIndexOf('/') + 1)
+  if (
+    slash <= 0 ||
+    !dirName.startsWith('relay-') ||
+    sockPath.startsWith(SHORT_RELAY_SOCKET_DIR_PREFIX)
+  ) {
+    return null
+  }
+  return (
+    `cd ${shellEscape(relayDir)} && ${shellEscape(nodePath)} relay.js --connect ` +
+    `--sock-path ${shellEscape(sockPath)} --credential-file ${shellEscape(`${sockPath}.credential`)}`
+  )
 }
 
 /** The same question over an already-built bridge command, such as a Windows relay's PowerShell. */

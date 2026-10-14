@@ -9,16 +9,16 @@ import { getRepoExecutionHostId, parseExecutionHostId } from '../../../../shared
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import type { Repo } from '../../../../shared/repo-types'
 import { isFolderRepo } from '../../../../shared/repo-kind'
-import { getSshPtyProvider, getLocalPtyProvider, clearProviderPtyState } from '../../pty'
+import { getLocalPtyProvider } from '../../pty/provider/registry'
+import { clearProviderPtyState } from '../../pty/provider/state-cleanup'
 import { killAllProcessesForWorktree } from '../../../runtime/worktree-teardown'
 import { invalidateAuthorizedRootsCache } from '../../registered-worktree-roots-cache'
 import { preservedBranchCleanupScopeKey } from '../../../../shared/preserved-branch-cleanup'
 import {
   notifyWorktreesChanged,
-  cleanupUnusedWorktreePushTargetRemoteSsh,
   cleanupUnusedWorktreePushTargetRemote
 } from '../../worktree-remote'
-import { requireSshGitProvider } from '../../../providers/ssh-git-dispatch'
+import { SshHostNotServedError } from '../../../providers/ssh-host-not-served-error'
 import { getLocalProjectWorktreeGitOptions } from '../../../project-runtime-git-options'
 import { forceDeleteLocalBranch } from '../../../git/worktree'
 import { gitExecFileAsync } from '../../../git/runner'
@@ -90,8 +90,6 @@ export function registerWorktreeForgetHandlers(context: WorktreeIpcContext): voi
           args.hostId
         )
         const ownerHost = parseExecutionHostId(ownerHostId)
-        const sshPtyProvider =
-          ownerHost?.kind === 'ssh' ? getSshPtyProvider(ownerHost.targetId) : undefined
         const externalHost = ownerHost?.kind === 'ssh' || ownerHost?.kind === 'runtime'
         // External host inventories must never sweep a same-id local workspace.
         await killAllProcessesForWorktree(args.worktreeId, {
@@ -101,17 +99,12 @@ export function registerWorktreeForgetHandlers(context: WorktreeIpcContext): voi
           ...(ownerHost?.kind === 'runtime'
             ? { resolvedRuntimeEnvironmentId: ownerHost.environmentId }
             : {}),
-          localProvider: sshPtyProvider ?? getLocalPtyProvider(),
+          localProvider: getLocalPtyProvider(),
           onPtyStopped: clearProviderPtyState,
           // Forgetting an orphan still purges its workspace metadata, so retire structured chat
           // tabs even when no provider child is attached to the workspace.
           closeStructuredSessions: true,
-          ...(externalHost
-            ? {
-                includeProviderInventory: ownerHost?.kind === 'ssh' && Boolean(sshPtyProvider),
-                includeLocalRegistry: false
-              }
-            : {})
+          ...(externalHost ? { includeProviderInventory: false, includeLocalRegistry: false } : {})
         }).catch((err) => {
           console.warn(`[worktree-teardown] forget-local failed for ${args.worktreeId}:`, err)
         })
@@ -178,40 +171,26 @@ export function registerWorktreeForgetHandlers(context: WorktreeIpcContext): voi
       }
 
       if (repo.connectionId) {
-        const provider = requireSshGitProvider(repo.connectionId)
-        // Why: SSH needs the write-capable relay RPC; the read-only git.exec allowlist rejects these worktree/update-ref/config writes.
-        await provider.forceDeletePreservedBranch(
-          repo.path,
-          cleanupTarget.branchName,
-          cleanupTarget.head
-        )
-        await cleanupUnusedWorktreePushTargetRemoteSsh(
-          provider,
-          repo.path,
-          args.worktreeId,
-          cleanupTarget.pushTarget,
-          store
-        )
-      } else {
-        const localWorktreeGitOptions = getLocalProjectWorktreeGitOptions(store, repo)
-        const hasLocalWorktreeGitOptions = Object.keys(localWorktreeGitOptions).length > 0
-        await (hasLocalWorktreeGitOptions
-          ? forceDeleteLocalBranch(
-              repo.path,
-              cleanupTarget.branchName,
-              cleanupTarget.head,
-              (argv, cwd) => gitExecFileAsync(argv, { cwd, ...localWorktreeGitOptions }),
-              localWorktreeGitOptions
-            )
-          : forceDeleteLocalBranch(repo.path, cleanupTarget.branchName, cleanupTarget.head))
-        await cleanupUnusedWorktreePushTargetRemote(
-          repo.path,
-          args.worktreeId,
-          cleanupTarget.pushTarget,
-          store,
-          localWorktreeGitOptions
-        )
+        throw new SshHostNotServedError(repo.connectionId)
       }
+      const localWorktreeGitOptions = getLocalProjectWorktreeGitOptions(store, repo)
+      const hasLocalWorktreeGitOptions = Object.keys(localWorktreeGitOptions).length > 0
+      await (hasLocalWorktreeGitOptions
+        ? forceDeleteLocalBranch(
+            repo.path,
+            cleanupTarget.branchName,
+            cleanupTarget.head,
+            (argv, cwd) => gitExecFileAsync(argv, { cwd, ...localWorktreeGitOptions }),
+            localWorktreeGitOptions
+          )
+        : forceDeleteLocalBranch(repo.path, cleanupTarget.branchName, cleanupTarget.head))
+      await cleanupUnusedWorktreePushTargetRemote(
+        repo.path,
+        args.worktreeId,
+        cleanupTarget.pushTarget,
+        store,
+        localWorktreeGitOptions
+      )
 
       preservedBranchCleanupByScope.delete(
         preservedBranchCleanupScopeKey({

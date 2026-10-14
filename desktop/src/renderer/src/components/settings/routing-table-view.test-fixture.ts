@@ -49,13 +49,12 @@ export const FIXTURE_MODEL_LISTS: RoutingModelLists = {
       ...(id === 'gpt-5.6-luna' ? [] : ['ultra'])
     ]
   })),
-  agy: [
-    {
-      id: 'gemini-3.8-flash-high',
-      label: 'gemini-3.8-flash-high',
-      efforts: ['low', 'medium', 'high']
-    }
-  ]
+  agy: ['low', 'medium', 'high'].map((effort) => ({
+    id: `gemini-3.8-flash-${effort}`,
+    label: `gemini-3.8-flash-${effort}`,
+    efforts: [effort]
+  })),
+  gemini: [{ id: 'gemini-3.1-pro-preview', label: 'gemini-3.1-pro-preview', efforts: [] }]
 }
 
 export function renderRouting(

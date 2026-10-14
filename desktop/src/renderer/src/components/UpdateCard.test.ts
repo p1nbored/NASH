@@ -4,9 +4,9 @@ import { getDefaultUIState } from '../../../shared/constants'
 import type { ChangelogData, UpdateStatus } from '../../../shared/update-status-types'
 import { createUISlice } from '../store/slices/ui'
 import type { AppState } from '../store/types'
-import { isHttp2ProtocolError } from './UpdateCard'
 import {
   getUpdateCardAriaLabel,
+  isHttp2ProtocolError,
   isUpdateCardVisible
 } from './maintenance/update-card/update-card-visibility'
 

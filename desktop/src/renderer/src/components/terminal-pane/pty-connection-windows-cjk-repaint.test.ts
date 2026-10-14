@@ -432,49 +432,6 @@ describe('connectPanePty', () => {
     }
   })
 
-  it('applies the Windows CJK repaint path to SSH panes on Windows clients after terminal input', async () => {
-    const restoreNavigator = temporarilySetNavigatorUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    )
-    try {
-      const { connectPanePty } = await import('./pty-connection')
-      const transport = createMockTransport()
-      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-      transport.connect.mockImplementation(
-        async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-          capturedDataCallback.current = callbacks.onData ?? null
-          return 'pty-id'
-        }
-      )
-      transportFactoryQueue.push(transport)
-      // Why: missing-glyph workaround is renderer-scoped, not PTY-scoped — SSH moves byte origin but Windows still paints locally.
-      mockStoreState = {
-        ...mockStoreState,
-        repos: [{ id: 'repo1', connectionId: 'conn-1', displayName: 'orca' }]
-      }
-
-      const pane = createPane(1)
-      const refresh = vi.fn()
-      const terminal = pane.terminal as typeof pane.terminal & {
-        _core?: { refresh: typeof refresh }
-      }
-      terminal._core = { refresh }
-      terminal.write = vi.fn((_data: string, callback?: () => void) => {
-        callback?.()
-      })
-
-      connectPanePty(pane as never, createManager(1) as never, createDeps() as never)
-      await flushAsyncTicks(6)
-      sendTerminalInputThroughPane(pane, '已经安装完成，软件已更新后重启。')
-
-      capturedDataCallback.current?.('已经安装完成，软件已更新后重启。')
-
-      expect(refresh).toHaveBeenCalledWith(0, 39, true)
-    } finally {
-      restoreNavigator()
-    }
-  })
-
   it('does not repaint ordinary non-ASCII output on non-Windows clients', async () => {
     const restoreNavigator = temporarilySetNavigatorUserAgent('Mozilla/5.0 (Macintosh)')
     try {

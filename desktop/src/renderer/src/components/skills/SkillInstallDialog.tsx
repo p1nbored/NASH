@@ -89,7 +89,7 @@ export function SkillInstallDialog({
       setError(
         translate(
           'auto.components.skills.install.enterShareLink',
-          'Enter an Orca Cloud skill share link.'
+          'Enter an NASH Cloud skill share link.'
         )
       )
       return
@@ -214,7 +214,7 @@ export function SkillInstallDialog({
           operation.status === 'reconnect-required'
             ? translate(
                 'auto.components.skills.install.reconnectBeforeInstalling',
-                'Reconnect your Orca cloud account before installing.'
+                'Reconnect your NASH cloud account before installing.'
               )
             : operation.message
         )

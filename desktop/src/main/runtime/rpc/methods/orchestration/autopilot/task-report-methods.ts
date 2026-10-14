@@ -102,6 +102,7 @@ function announce(api: AutopilotTaskApi, context: RpcContext, settled: AppAttemp
  */
 export const TASK_REPORT_METHOD = defineMethod({
   name: 'orchestration.taskReport',
+  permission: 'workspace',
   params: TaskReportParams,
   handler: (params, context): TaskReportResult => {
     const api = requireAutopilotTaskApi(context.runtime)

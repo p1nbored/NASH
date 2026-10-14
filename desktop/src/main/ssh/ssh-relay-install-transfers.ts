@@ -1,18 +1,8 @@
-// Relay-install SFTP writes. Each helper prefers the SshConnection transfer
-// method and otherwise drives one SFTP session itself, because deploy and
-// native-dependency tests pass partial connection doubles. Both routes share the
-// same namespace resolution, abort race, and one-shot session teardown. When the
-// host definitively refuses SFTP, POSIX hosts fall back to exec-channel stdin.
+// Relay-install file writes over the host transport's own transfer methods (SFTP on SSH). When
+// the host definitively refuses SFTP, POSIX hosts fall back to exec-channel stdin.
 
-import type { SFTPWrapper } from 'ssh2'
-import type { SshConnection } from './ssh-connection'
-import { writeStringViaSftp } from './sftp-upload'
-import { uploadDirectory } from './ssh-relay-deploy-helpers'
-import { raceSftpFileTransferWithAbort } from './ssh-file-transfer-abort'
-import {
-  resolveSftpTransferPathIfMapped,
-  type SftpNamespacePathMapping
-} from './sftp-namespace-resolution'
+import type { RemoteInstallTransport } from './remote-install-transport'
+import type { SftpNamespacePathMapping } from './sftp-namespace-resolution'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
 import {
   uploadDirectoryViaExecStdin,
@@ -21,9 +11,9 @@ import {
 import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import {
   describeSandboxedSftpFailure,
-  isSandboxedSftpNamespaceError,
-  latchLateSftpSessionErrors
+  isSandboxedSftpNamespaceError
 } from './sftp-stream-late-error'
+import { isSftpHandshakeCorruption } from './sftp-handshake-corruption'
 
 export type RelayTransferOptions = {
   signal?: AbortSignal
@@ -31,7 +21,7 @@ export type RelayTransferOptions = {
 }
 
 export async function uploadRelayDirectory(
-  conn: SshConnection,
+  conn: RemoteInstallTransport,
   localRelayDir: string,
   shellRemoteDir: string,
   hostPlatform: RemoteHostPlatform,
@@ -42,7 +32,12 @@ export async function uploadRelayDirectory(
     hostPlatform,
     shellRemoteDir,
     options?.signal,
-    () => uploadRelayDirectoryTransfer(conn, localRelayDir, shellRemoteDir, hostPlatform, options),
+    () =>
+      conn.uploadDirectory(localRelayDir, shellRemoteDir, {
+        hostPlatform,
+        signal: options?.signal,
+        sftpNamespace: options?.sftpNamespace
+      }),
     () =>
       uploadDirectoryViaExecStdin(conn, localRelayDir, shellRemoteDir, hostPlatform, {
         signal: options?.signal
@@ -50,35 +45,8 @@ export async function uploadRelayDirectory(
   )
 }
 
-async function uploadRelayDirectoryTransfer(
-  conn: SshConnection,
-  localRelayDir: string,
-  shellRemoteDir: string,
-  hostPlatform: RemoteHostPlatform,
-  options?: RelayTransferOptions
-): Promise<void> {
-  if (typeof conn.uploadDirectory === 'function') {
-    await conn.uploadDirectory(localRelayDir, shellRemoteDir, {
-      hostPlatform,
-      signal: options?.signal,
-      sftpNamespace: options?.sftpNamespace
-    })
-    return
-  }
-  await runSftpFallbackTransfer(conn, options, async (sftp) => {
-    const targetDir = await resolveSftpTransferPathIfMapped(sftp, shellRemoteDir, {
-      hostPlatform,
-      sftpNamespace: options?.sftpNamespace
-    })
-    options?.signal?.throwIfAborted()
-    await uploadDirectory(sftp, localRelayDir, targetDir, localRelayDir, {
-      signal: options?.signal
-    })
-  })
-}
-
 export async function writeRelayFile(
-  conn: SshConnection,
+  conn: RemoteInstallTransport,
   hostPlatform: RemoteHostPlatform,
   shellRemotePath: string,
   contents: string,
@@ -89,63 +57,14 @@ export async function writeRelayFile(
     hostPlatform,
     shellRemotePath,
     options?.signal,
-    () => writeRelayFileTransfer(conn, hostPlatform, shellRemotePath, contents, options),
+    () =>
+      conn.writeFile(shellRemotePath, contents, {
+        hostPlatform,
+        signal: options?.signal,
+        sftpNamespace: options?.sftpNamespace
+      }),
     () => writeStringViaExecStdin(conn, shellRemotePath, contents, { signal: options?.signal })
   )
-}
-
-async function writeRelayFileTransfer(
-  conn: SshConnection,
-  hostPlatform: RemoteHostPlatform,
-  shellRemotePath: string,
-  contents: string,
-  options?: RelayTransferOptions
-): Promise<void> {
-  if (typeof conn.writeFile === 'function') {
-    await conn.writeFile(shellRemotePath, contents, {
-      hostPlatform,
-      signal: options?.signal,
-      sftpNamespace: options?.sftpNamespace
-    })
-    return
-  }
-  await runSftpFallbackTransfer(conn, options, async (sftp) => {
-    const targetPath = await resolveSftpTransferPathIfMapped(sftp, shellRemotePath, {
-      hostPlatform,
-      sftpNamespace: options?.sftpNamespace
-    })
-    options?.signal?.throwIfAborted()
-    await writeStringViaSftp(sftp, targetPath, contents)
-  })
-}
-
-async function runSftpFallbackTransfer(
-  conn: SshConnection,
-  options: RelayTransferOptions | undefined,
-  transfer: (sftp: SFTPWrapper) => Promise<void>
-): Promise<void> {
-  const sftp = await conn.sftp(options?.signal)
-  let sftpEndRequested = false
-  const endSftp = (): void => {
-    if (!sftpEndRequested) {
-      sftpEndRequested = true
-      sftp.end()
-    }
-  }
-  latchLateSftpSessionErrors(sftp)
-  try {
-    await raceSftpFileTransferWithAbort(
-      transfer(sftp),
-      options?.signal ?? new AbortController().signal,
-      (onClose) => {
-        sftp.once('close', onClose)
-        endSftp()
-        return () => sftp.removeListener('close', onClose)
-      }
-    )
-  } finally {
-    endSftp()
-  }
 }
 
 export type SftpExecFallbackReason = 'sftp-unavailable' | 'sftp-sandboxed'
@@ -166,6 +85,10 @@ export function classifySftpFailureForExecFallback(error: unknown): SftpExecFall
   if (/^Received exit code \d+ while establishing SFTP session$/.test(error.message)) {
     return 'sftp-unavailable'
   }
+  // Startup-file output corrupted the handshake; it recurs on every subsystem start.
+  if (isSftpHandshakeCorruption(error)) {
+    return 'sftp-unavailable'
+  }
   // A shell-created path the SFTP view cannot see: a chrooted subsystem (#15479).
   if (isSandboxedSftpNamespaceError(error)) {
     return 'sftp-sandboxed'
@@ -174,20 +97,23 @@ export function classifySftpFailureForExecFallback(error: unknown): SftpExecFall
 }
 
 /** Exec stdin needs a POSIX shell; the system-SSH transport never used SFTP for these writes. */
-function canFallBackToExecStdin(conn: SshConnection, hostPlatform: RemoteHostPlatform): boolean {
+function canFallBackToExecStdin(
+  conn: RemoteInstallTransport,
+  hostPlatform: RemoteHostPlatform
+): boolean {
   return !isWindowsRemoteHost(hostPlatform) && conn.usesSystemSshTransport?.() !== true
 }
 
 // Why per connect generation: a refused subsystem is a host verdict, but a reconnect may reach
 // a different host behind the same alias.
-const sftpUnavailableGeneration = new WeakMap<SshConnection, number>()
+const sftpUnavailableGeneration = new WeakMap<RemoteInstallTransport, number>()
 
-function connectGeneration(conn: SshConnection): number {
+function connectGeneration(conn: RemoteInstallTransport): number {
   return conn.getConnectGeneration?.() ?? 0
 }
 
 async function transferWithExecStdinFallback(
-  conn: SshConnection,
+  conn: RemoteInstallTransport,
   hostPlatform: RemoteHostPlatform,
   remotePath: string,
   signal: AbortSignal | undefined,

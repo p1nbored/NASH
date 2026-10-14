@@ -26,7 +26,6 @@ import {
   type AsyncLimiter
 } from './workspace-space-scan-control'
 import { createUnavailableWorkspaceSpaceRow } from './workspace-space-worktree-row'
-import { scanRemoteWorkspaceSpaceWorktree } from './workspace-space-remote-scan'
 import {
   scanLocalWorkspaceSpaceWorktree,
   type ReadLocalDuDepthOne
@@ -46,7 +45,6 @@ export type WorkspaceSpaceAnalyzeOptions = {
 
 export type WorkspaceSpaceScanLimiters = {
   localWorktree: AsyncLimiter
-  remoteFallbackTraversal: AsyncLimiter
 }
 
 export type WorkspaceSpaceRepoScanResult = {
@@ -102,16 +100,11 @@ async function listWorktreesForSpaceScan(
       }
     }
     if (route.kind === 'ssh') {
-      if (!route.provider) {
-        return {
-          ok: false,
-          status: 'unavailable',
-          error: `SSH connection "${route.connectionId}" is not connected.`
-        }
+      return {
+        ok: false,
+        status: 'unavailable',
+        error: `SSH connection "${route.connectionId}" is not connected.`
       }
-      const worktrees = await route.provider.listWorktrees(repo.path, { signal })
-      throwIfWorkspaceSpaceScanAborted(signal)
-      return { ok: true, worktrees }
     }
     const worktrees = await listRepoWorktrees(repo, {
       ...getLocalProjectWorktreeGitOptions(store, repo),
@@ -217,24 +210,15 @@ export async function scanWorkspaceSpaceRepo(args: {
     )
     const row =
       filesystemRoute.kind !== 'local'
-        ? filesystemRoute.kind === 'ssh' && filesystemRoute.provider
-          ? await scanRemoteWorkspaceSpaceWorktree(
-              repo,
-              worktree,
-              scannedAt,
-              filesystemRoute.provider,
-              limiters.remoteFallbackTraversal,
-              options.signal
-            )
-          : createUnavailableWorkspaceSpaceRow(
-              repo,
-              worktree,
-              scannedAt,
-              'unavailable',
-              filesystemRoute.kind === 'ssh'
-                ? `SSH filesystem for "${filesystemRoute.connectionId}" is not connected.`
-                : `Host ${filesystemRoute.hostId} is not reachable from this process.`
-            )
+        ? createUnavailableWorkspaceSpaceRow(
+            repo,
+            worktree,
+            scannedAt,
+            'unavailable',
+            filesystemRoute.kind === 'ssh'
+              ? `SSH filesystem for "${filesystemRoute.connectionId}" is not connected.`
+              : `Host ${filesystemRoute.hostId} is not reachable from this process.`
+          )
         : await limiters.localWorktree(() =>
             scanLocalWorkspaceSpaceWorktree(
               repo,

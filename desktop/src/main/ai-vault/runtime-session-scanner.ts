@@ -18,6 +18,7 @@ import type {
 } from '../../shared/ai-vault-session-title'
 import { parseAiVaultListResult } from './session-list-result-validation'
 import { parseAiVaultSessionTitlesResult } from './session-title-result-validation'
+import { isGatedOffWslHost } from '../wsl/wsl-host-gate'
 
 export type RuntimeAiVaultHostInfo = {
   environmentId: string
@@ -38,10 +39,12 @@ const aiVaultPrepareSessionResumeResultSchema = z.object({
 export function getSavedRuntimeAiVaultHostInfos(
   userDataPath: string
 ): readonly RuntimeAiVaultHostInfo[] {
-  return listEnvironments(userDataPath).map((environment) => ({
-    environmentId: environment.id,
-    executionHostId: toRuntimeExecutionHostId(environment.id)
-  }))
+  return listEnvironments(userDataPath)
+    .filter((environment) => !isGatedOffWslHost(environment))
+    .map((environment) => ({
+      environmentId: environment.id,
+      executionHostId: toRuntimeExecutionHostId(environment.id)
+    }))
 }
 
 export async function scanRuntimeAiVaultSessions(
@@ -60,6 +63,7 @@ export async function scanRuntimeAiVaultSessions(
       limit: args.limit,
       unlimited: args.unlimited,
       force: args.force,
+      ...(args.afterFingerprint !== undefined ? { afterFingerprint: args.afterFingerprint } : {}),
       // Why: cap here so the set of scanned paths is explicit on this side —
       // the RPC schema CLAMPS to the same bound anyway (older hosts had no
       // cap). Dropped paths only lose the older-than-recency-cap guarantee,
@@ -71,10 +75,14 @@ export async function scanRuntimeAiVaultSessions(
   )
   if (response.ok === true) {
     try {
-      const result = withRuntimeExecutionHost(
-        parseAiVaultListResult(response.result),
-        executionHostId
-      )
+      const parsed = parseAiVaultListResult(response.result)
+      if (parsed.unchanged) {
+        if (parsed.fingerprint !== args.afterFingerprint) {
+          throw new Error('Unchanged response did not match the requested fingerprint')
+        }
+        return parsed
+      }
+      const result = withRuntimeExecutionHost(parsed, executionHostId)
       if (!args.scopePaths || args.scopePaths.length <= AI_VAULT_SCOPE_PATHS_MAX_COUNT) {
         return result
       }
@@ -159,7 +167,8 @@ function withRuntimeExecutionHost(
   return {
     sessions: result.sessions.map((session) => retagRuntimeSession(session, executionHostId)),
     issues: result.issues.map((issue) => ({ ...issue, executionHostId })),
-    scannedAt: result.scannedAt
+    scannedAt: result.scannedAt,
+    ...(result.fingerprint ? { fingerprint: result.fingerprint } : {})
   }
 }
 

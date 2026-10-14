@@ -453,6 +453,43 @@ describe('connectPanePty', () => {
     expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('csi-u')
   })
 
+  it('confirms a delayed Claude from fresh startup output after the first read window expires', async () => {
+    vi.useFakeTimers()
+    const { connectPanePty } = await import('./pty-connection')
+    let foreground = 'sleep'
+    vi.mocked(window.api.pty.getForegroundProcess).mockImplementation(async () => foreground)
+    vi.mocked(window.api.pty.confirmForegroundProcess).mockImplementation(async () => foreground)
+    const tabId = 'tab-delayed-claude'
+    const ptyId = 'pty-delayed-claude'
+    const paneKey = makePaneKey(tabId, LEAF_1)
+    transportFactoryQueue.push(createMockTransport(ptyId))
+    const binding = connectPanePty(
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: The pane fixture implements the terminal APIs exercised by this connection test.
+      createPane(1) as never,
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: The manager fixture supplies this single pane and its connection callbacks.
+      createManager(1) as never,
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: The connection dependency fixture supplies all APIs used by the test with the explicit startup override.
+      createDeps({ tabId, startup: { command: 'sleep 30 && claude' } }) as never
+    )
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]?.agent).not.toBe('claude')
+
+    foreground = 'claude'
+    const onTitleChange = createdTransportOptions[0]?.onTitleChange
+    if (typeof onTitleChange !== 'function') {
+      throw new Error('Missing live title consumer')
+    }
+    // Captured with capture-agent-pty-transcript.mjs from a real delayed Claude launch.
+    onTitleChange('✳ Claude Code', '✳ Claude Code')
+    await vi.advanceTimersByTimeAsync(350)
+    expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toMatchObject({
+      agent: 'claude',
+      agentEvidence: 'process-read',
+      routingTrusted: true
+    })
+    binding.dispose()
+  })
+
   it('revokes trusted Droid after accepted no-OSC exit input until shell confirmation', async () => {
     vi.useFakeTimers()
     const { connectPanePty } = await import('./pty-connection')

@@ -1,6 +1,10 @@
-import { runtimeTargetForExecutionHostId } from '@/runtime/runtime-client-target'
+import { runtimeRpcTargetForAuthorityKey } from '@/runtime/runtime-client-target'
 import { repoHostId } from '../listing/worktree-host-ownership'
-import { toRuntimeExecutionHostId } from '../../../../../../shared/execution-host'
+import {
+  isUnresolvedOwnerHostId,
+  toRuntimeExecutionHostId
+} from '../../../../../../shared/execution-host'
+import { adoptFromEndpoint } from '../../../adopt-from-endpoint'
 import type { WorktreeSlice } from '../../worktree-helpers'
 import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-slice-types'
 import type { CreateWorktreeResult } from '../../../../../../shared/worktree/create-types'
@@ -12,15 +16,16 @@ import {
 } from '../../../../../../shared/new-workspace/worktree-create-retry-policy'
 import {
   assertRuntimeEnvironmentCapability,
-  callRuntimeRpc,
-  getActiveRuntimeTarget
+  callRuntimeRpc
 } from '../../../../runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../../../shared/runtime-client-target'
+import { runtimeTargetForRepoOwner } from '@/lib/repo-runtime-owner'
 import { WORKTREE_LINKED_WORK_ITEM_CONTEXT_RUNTIME_CAPABILITY } from '../../../../../../shared/protocol-version'
 import { showLocalBaseRefUpdateSuggestionToast } from '@/components/sidebar/local-base-ref-suggestion-toast'
 import { requestWorktreeBaseFallbackNotice } from '@/components/worktree-base-fallback-notice'
 import { showLocalBaseRefRefreshToast } from './local-base-ref-refresh-toast'
-import { settingsForRepoOwner } from '../listing/worktree-owner-settings'
 import { applyCreatedWorktree } from './created-worktree-state-merge'
+import { adoptRuntimeProvisionedRoot } from './runtime-provisioned-root-adoption'
 import { isRuntimeLineageParentMissingError } from '../listing/runtime-worktree-rpc-errors'
 import {
   buildLocalWorktreeCreateArgs,
@@ -34,7 +39,7 @@ import {
   type WorktreeCreateParentPick
 } from './worktree-create-parent-pick'
 
-type RuntimeTarget = ReturnType<typeof getActiveRuntimeTarget>
+type RuntimeTarget = RuntimeClientTarget
 
 type CreateAttemptOutcome = {
   result: CreateWorktreeResult
@@ -52,10 +57,17 @@ async function runCreateAttempt(
     parentWorkspace: WorktreeCreateAttempt['parentWorkspace']
   ): Promise<CreateWorktreeResult> =>
     provisionedRoot
-      ? await window.api.worktrees.adoptProvisionedRoot({
-          ...buildLocalWorktreeCreateArgs(request, { ...attempt, parentWorkspace }),
-          ...provisionedRoot
-        })
+      ? target.kind === 'environment'
+        ? await adoptRuntimeProvisionedRoot(
+            target,
+            request,
+            { ...attempt, parentWorkspace },
+            provisionedRoot
+          )
+        : await window.api.worktrees.adoptProvisionedRoot({
+            ...buildLocalWorktreeCreateArgs(request, { ...attempt, parentWorkspace }),
+            ...provisionedRoot
+          })
       : target.kind === 'local'
         ? // Why local can still reject on the parent: paired web clients route this API to their host.
           await window.api.worktrees.create(
@@ -172,15 +184,22 @@ export function createCreateWorktree(
       }
       // Why: manual sort is user-authored order; stamp new workspaces at the top rather than relying on sortOrder fallback.
       const manualOrder = get().sortBy === 'manual' ? Date.now() : undefined
+      if (isUnresolvedOwnerHostId(options?.executionHostId)) {
+        // Why: the direct-SSH fallback below would otherwise create it on this machine.
+        throw new Error('The workspace host is unresolved. Choose a host and retry.')
+      }
       // Direct SSH still uses desktop IPC; paired runtimes use their captured environment.
       const target = options?.executionHostId
-        ? (runtimeTargetForExecutionHostId(options.executionHostId) ?? { kind: 'local' as const })
-        : getActiveRuntimeTarget(settingsForRepoOwner(get(), repoId))
-      const creationHostId =
-        options?.executionHostId ??
-        (target.kind === 'environment'
-          ? toRuntimeExecutionHostId(target.environmentId)
-          : repoHostId(get(), repoId))
+        ? (runtimeRpcTargetForAuthorityKey(options.executionHostId) ?? { kind: 'local' as const })
+        : runtimeTargetForRepoOwner(get(), repoId)
+      if (!target) {
+        throw new Error('The project host is unresolved. Choose a host and retry.')
+      }
+      const creationHostId = adoptFromEndpoint(target, {
+        kind: 'createdWorktree',
+        requestedHostId: options?.executionHostId,
+        resolveOwnHostId: () => repoHostId(get(), repoId)
+      })
       if (
         target.kind === 'environment' &&
         (options?.linkedWorkItem?.provider === 'jira' ||
@@ -192,8 +211,12 @@ export function createCreateWorktree(
           'Update the remote runtime to link Jira'
         )
       }
-      if (options?.provisionedRoot && target.kind !== 'local') {
-        throw new Error('Provisioned-root recipes currently require a direct SSH connection.')
+      if (
+        options?.provisionedRoot &&
+        target.kind === 'environment' &&
+        options.provisionedRoot.executionHostId !== toRuntimeExecutionHostId(target.environmentId)
+      ) {
+        throw new Error("The provisioned root's host does not match the workspace host.")
       }
       for (let attempt = 0; attempt < CLIENT_WORKTREE_CREATE_MAX_ATTEMPTS; attempt += 1) {
         try {

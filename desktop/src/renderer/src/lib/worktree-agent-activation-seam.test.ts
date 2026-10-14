@@ -317,12 +317,14 @@ describe('worktree agent activation seam', () => {
     expect(listSessions).not.toHaveBeenCalled()
   })
 
-  it('blocks seeding while detached and allows activation after the owning relay answers', async () => {
+  it('blocks seeding while detached and allows activation once the SSH target is connected', async () => {
     const worktree = makeWorktree()
     useAppStore.setState({
       ...baseState(),
       worktreesByRepo: { [worktree.repoId]: [{ ...worktree, hostId: 'ssh:box' }] },
-      remoteWorkspaceSyncStatusByTargetId: { box: { phase: 'offline' } as never }
+      sshConnectionStates: new Map([
+        ['box', { targetId: 'box', status: 'connected', error: null, reconnectAttempt: 0 }]
+      ])
     })
     const { listSessions } = stubInventory()
     listSessions.mockImplementation(async (scope?: unknown) => {

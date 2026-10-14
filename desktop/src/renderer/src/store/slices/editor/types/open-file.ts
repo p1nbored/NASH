@@ -1,43 +1,22 @@
 import type { RecentlyClosedTabPosition } from '../../recently-closed-tabs'
 import type { EditorFileOperationProvenance } from '@/lib/editor-file-operation-owner'
-import type { OpenCheckRunDetailsState } from '@/components/editor/check-run-details-tab'
 import type {
   GitBranchChangeEntry,
   GitBranchCompareSummary,
   GitCommitCompareSummary
 } from '../../../../../../shared/git-diff-compare-types'
+import type { GitStatusEntry } from '../../../../../../shared/git-status-types'
 import type {
-  GitConflictKind,
-  GitConflictResolutionStatus,
-  GitConflictStatusSource,
-  GitStatusEntry
-} from '../../../../../../shared/git-status-types'
-
-export type DiffSource =
-  | 'unstaged'
-  | 'staged'
-  | 'branch'
-  | 'commit'
-  | 'combined-all'
-  | 'combined-uncommitted'
-  | 'combined-branch'
-  | 'combined-commit'
-
-export type BranchCompareSnapshot = Pick<
-  GitBranchCompareSummary,
-  'baseRef' | 'baseOid' | 'compareRef' | 'headOid' | 'mergeBase'
-> & {
-  compareVersion: string
-}
-
-export type CommitCompareSnapshot = Pick<
-  GitCommitCompareSummary,
-  'commitOid' | 'parentOid' | 'compareRef' | 'baseRef'
-> & {
-  compareVersion: string
-  subject?: string
-  message?: string
-}
+  BranchCompareSnapshot,
+  CombinedDiffAlternate,
+  CombinedDiffSkippedConflict,
+  CommitCompareSnapshot,
+  ConflictReviewState,
+  DiffSource,
+  OpenCheckRunDetailsState,
+  OpenChatVisualTabState,
+  OpenConflictMetadata
+} from '../../../../../../shared/editor-tab-view-types'
 
 export type BranchCompareLike = Pick<
   GitBranchCompareSummary,
@@ -50,37 +29,6 @@ export type CommitCompareLike = Pick<
 > & {
   subject?: string
   message?: string
-}
-
-export type CombinedDiffAlternate = {
-  source: 'combined-all' | 'combined-branch'
-  branchCompare?: BranchCompareSnapshot
-}
-
-export type OpenConflictMetadata = {
-  kind: 'conflict-editable' | 'conflict-placeholder'
-  conflictKind: GitConflictKind
-  conflictStatus: GitConflictResolutionStatus
-  conflictStatusSource: GitConflictStatusSource
-  message?: string
-  guidance?: string
-}
-
-export type ConflictReviewEntry = {
-  path: string
-  conflictKind: GitConflictKind
-}
-
-export type ConflictReviewState = {
-  source: 'live-summary' | 'combined-diff-exclusion'
-  snapshotTimestamp: number
-  entries: ConflictReviewEntry[]
-  selectedFileId?: string
-}
-
-export type CombinedDiffSkippedConflict = {
-  path: string
-  conflictKind: GitConflictKind
 }
 
 // OpenFile is one type (not a `mode` union); consumers reading `filePath` must check `mode` first — conflict-review tabs use the worktree root, not a real file.
@@ -97,6 +45,8 @@ export type OpenFile = {
   runtimeEnvironmentId?: string | null
   /** SSH target that owns an absolute path outside the worktree. */
   externalSshTargetId?: string
+  /** Host grant for a read-only file outside every workspace on `runtimeEnvironmentId`; never persisted. */
+  terminalArtifactGrantId?: string
   /** Host provenance captured when the tab opened; mutations reject replacement owners. */
   operationProvenance?: EditorFileOperationProvenance
   /** Why: preview tabs mirror a source file's live draft; storing its ID lets the preview follow unsaved edits without becoming editable. */
@@ -138,6 +88,8 @@ export type OpenFile = {
   fileContentReloadNonce?: number
   /** Why: CI check-details tabs are virtual editor tabs backed by fetched PR check-run metadata, not a file on disk. */
   checkRunDetails?: OpenCheckRunDetailsState
+  /** Why: chat-visual tabs are virtual editor tabs showing a chat's visual, not a file on disk. */
+  chatVisual?: OpenChatVisualTabState
   /** Why: web-client tab mirrored from the host snapshot; only mirrored tabs may be culled when they vanish, locally-opened tabs must survive. */
   mirroredFromRuntimeSession?: boolean
   /** Why: orthogonal to `mode` — an edit-mode tab that must never accept edits/autosave/rename (AI Vault View Log). Persisted only when true. */
@@ -146,7 +98,7 @@ export type OpenFile = {
   csvPreviewOnly?: boolean
   /** Why: explicit live tail, only meaningful for a read-only local log. */
   liveTail?: boolean
-  mode: 'edit' | 'diff' | 'conflict-review' | 'markdown-preview' | 'check-details'
+  mode: 'edit' | 'diff' | 'conflict-review' | 'markdown-preview' | 'check-details' | 'chat-visual'
 }
 
 export type ActivityBarPosition = 'top' | 'side'

@@ -211,7 +211,8 @@ describe('work runs with an edit in their turn', () => {
         added: 1,
         removed: 1,
         truncated: false,
-        target: { messageId: 'a', editKey: 'Diff:0', fileIndex: 0 }
+        target: { messageId: 'a', editKey: 'Diff:0', fileIndex: 0 },
+        edits: []
       }
     ],
     added: 1,

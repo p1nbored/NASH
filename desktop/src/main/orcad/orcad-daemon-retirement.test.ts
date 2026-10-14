@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('../daemon/daemon-init', () => ({
+vi.mock('../daemon/daemon-provider-state', () => ({
   requestIdleDaemonRetirement: vi.fn(),
   listLiveDaemonSessions: vi.fn(),
   releaseDaemonRetirementFence: vi.fn()

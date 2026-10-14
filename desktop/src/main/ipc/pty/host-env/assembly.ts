@@ -8,6 +8,7 @@ import { ensureOpenCodeStartupPromptForLaunch } from '../../../opencode/opencode
 import { mimoCodeHookService } from '../../../mimo/hook-service'
 import { agentHookServer } from '../../../agent-hooks/server'
 import { wslHookRelayManager } from '../../../agent-hooks/wsl-hook-relay-manager'
+import { wslInteropHealthMonitor } from '../../../wsl/wsl-interop-health'
 import { piTitlebarExtensionService } from '../../../pi/titlebar-extension-service'
 import { prependOrcaCliDirToChildPath } from '../../../cli/orca-cli-child-path'
 import { getManagedWslCliDir, getWslCliCommandName } from '../../../cli/wsl-managed-cli'
@@ -31,6 +32,7 @@ import {
 import { AGENT_HOOK_RUNTIME_ENV_KEYS } from './spawn-env-keys'
 import { applyManagedDataAccountEnvironment } from '../../../managed-data-accounts/launch-environment'
 import { applyOpenCodeStatusPluginEnv, captureOpenCodeSourceConfig } from './opencode-config'
+import { applyCodexRemoteViewerClipboardEnv } from './codex-terminal-clipboard'
 
 /**
  * Mutates `baseEnv` in place with all host-local PTY env vars and returns it.
@@ -265,6 +267,7 @@ export function buildPtyHostEnv(
   delete baseEnv.ORCA_WSL_CLI_DIR
   // Why: WSL shells need the managed userData root for shell-ready wrappers; dev-mode terminals need the same export so `orca` targets the live dev instance.
   if (opts.isWsl) {
+    wslInteropHealthMonitor.noteActivity(opts.wslDistro ?? null)
     baseEnv.ORCA_USER_DATA_PATH = opts.userDataPath
     // Why: managed WSL registration uses `orca-ide`; exposing that literal scopes agent guidance to WSL without a bare-orca shim.
     baseEnv.ORCA_CLI_COMMAND = getWslCliCommandName(opts.isPackaged)
@@ -292,6 +295,11 @@ export function buildPtyHostEnv(
     const cliCommand = opts.isWsl ? getWslCliCommandName(opts.isPackaged) : 'orca'
     baseEnv.BROWSER = `${cliCommand} open-url --url %s`
   }
+  // Why the browser-relay flag: both mean a headless runtime whose viewer is another machine.
+  applyCodexRemoteViewerClipboardEnv(baseEnv, {
+    launchAgent: opts.launchAgent,
+    viewerIsRemote: opts.routeBrowserOpensToClient === true
+  })
 
   // Why: must run after the prepends above — they re-read PATH from the unscrubbed
   // process.env when baseEnv carries none, which is the daemon path's normal shape.

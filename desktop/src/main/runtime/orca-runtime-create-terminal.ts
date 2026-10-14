@@ -22,15 +22,9 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
       dependencies.setPairedViewerColors(callerColors)
     }
     const presentation = dependencies.resolveTerminalPresentation(opts)
-    const requiresRendererFocus = opts.presentation === 'focused' || opts.focus === true
-    const availableAuthoritativeWindow = this.getAvailableAuthoritativeWindow()
-    const rendererWindow = opts.rendererBacked === true ? availableAuthoritativeWindow : null
-    const shouldCreateInBackground =
-      worktreeSelector !== undefined &&
-      (Boolean(opts.agentSessionClaim) ||
-        (!requiresRendererFocus && opts.rendererBacked !== true) ||
-        availableAuthoritativeWindow === null)
-    if (shouldCreateInBackground) {
+    // Why: this process starts every terminal it can place, so a slow window only delays showing
+    // it; a window-made create that timed out here still ran later, and a retry duplicated it.
+    if (worktreeSelector !== undefined) {
       if (!this.ptyController?.spawn) {
         throw new Error('runtime_unavailable')
       }
@@ -39,6 +33,23 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
       const reportPtySpawnCommitted = createPtySpawnCommitReporter(launchOpts.onPtySpawnCommitted)
       const cwd =
         this.resolveWorkspaceTerminalStartupCwd(workspace, launchOpts.cwd) ?? workspace.path
+      const session = this.getWorkspaceSessionForWorktree(workspace.id)
+      // The window's latest published active group is where its reveal places the tab.
+      const groupId =
+        launchOpts.targetGroupId ??
+        this.mobileSessionTabsByWorktree.get(workspace.id)?.activeGroupId ??
+        session?.activeGroupIdByWorktree?.[workspace.id]
+      // A workspace not shown since launch has no measured group; with at most one group, its tab
+      // opens in a lone group, which every workspace sizes alike.
+      const singleGroupSize =
+        (session?.tabGroups?.[workspace.id]?.length ?? 0) <= 1
+          ? this.singleGroupWorkspaceGridSize
+          : undefined
+      // Why 120x40: no window measured the group the tab opens in: none attached (serve, orcad), a
+      // multi-group workspace not shown since launch, or no pane at the default font mounted yet.
+      // #1707's original size.
+      const initialSize = (groupId && this.terminalGroupGridSizes?.[groupId]) ||
+        singleGroupSize || { cols: 120, rows: 40 }
       let preAllocatedHandle =
         launchOpts.preAllocatedHandle ?? this.createPreAllocatedTerminalHandle()
       let { tabId, leafId, paneKey } = dependencies.allocateTerminalPaneIdentity(launchOpts)
@@ -61,8 +72,7 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
           throw new Error('client_disconnected')
         }
         const adoptedBeforeLaunch = await this.ptyController.adoptStablePane?.({
-          cols: 120,
-          rows: 40,
+          ...initialSize,
           cwd,
           connectionId: workspace.connectionId,
           worktreeId: workspace.id,
@@ -123,9 +133,8 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
         try {
           const { launchAgent } = launchOpts
           launchOpts.onPtySpawnDispatched?.({ launchConfig: effectiveLaunchConfig, launchAgent })
-          result = await this.ptyController.spawn({
-            cols: 120,
-            rows: 40,
+          result = await dependencies.spawnInAdmittedPane(this.store, this.ptyController, {
+            ...initialSize,
             cwd,
             command: sequencedStartupCommand
               ? launchOpts.command
@@ -145,7 +154,7 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
             preAllocatedHandle,
             tabId,
             leafId,
-            ...(launchOpts.shellOverride ? { shellOverride: launchOpts.shellOverride } : {}),
+            ...dependencies.spawnShellInputs(launchOpts),
             ...(terminalColorQueryReplies ? { terminalColorQueryReplies } : {}),
             terminalKittyKeyboardProtocol: launchOpts.terminalKittyKeyboardProtocol,
             ...(launchOpts.agentSessionClaim
@@ -164,12 +173,12 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
             ...(launchOpts.agentSessionCreateOperationId
               ? { agentSessionCreateOperationId: launchOpts.agentSessionCreateOperationId }
               : {}),
-            ...(launchOpts.signal ? { signal: launchOpts.signal } : {}),
+            ...dependencies.callerSpawnScope(launchOpts),
             ...(launchOpts.onPtySpawnCommitted
               ? { onPtySpawnCommitted: reportPtySpawnCommitted }
               : {}),
             ...(adoptedBeforeLaunch ? { adoptedStablePane: adoptedBeforeLaunch } : {}),
-            placement: dependencies.runtimeNewTabPlacement(),
+            ...dependencies.newTabIn(launchOpts),
             ...(launchOpts.sessionId ? { sessionId: launchOpts.sessionId } : {}),
             ...(!adoptedBeforeLaunch && launchOpts.isNewSession ? { isNewSession: true } : {}),
             ...dependencies.BACKGROUND_TERMINAL_SPAWN_FLAGS
@@ -260,7 +269,7 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
               ...(launchOpts.viewMode ? { viewMode: launchOpts.viewMode } : {}),
               activate: presentation === 'focused',
               ...(presentation ? { presentation } : {}),
-              ...dependencies.ownerSurfacing(opts.surfaceOwner !== false),
+              ...dependencies.terminalRevealViewerOptions(opts),
               tabId,
               leafId
             })
@@ -294,13 +303,6 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
     }
     // The renderer owns this spawn, so this process cannot see when it is requested.
     opts.onPtySpawnDispatched?.()
-    return createDesktopTerminal(
-      this,
-      worktreeSelector,
-      opts,
-      presentation,
-      rendererWindow,
-      created
-    )
+    return createDesktopTerminal(this, opts, presentation)
   }
 }

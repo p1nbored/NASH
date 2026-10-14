@@ -5,6 +5,7 @@ import { assertNoOpenAppRunBeforeReset } from '../../../../workflow-run/app-run-
 export const ORCHESTRATION_RESET_METHODS = [
   defineMethod({
     name: 'orchestration.reset',
+    permission: 'workspace',
     params: ResetParams,
     handler: (params, { runtime }) => {
       const db = runtime.getOrchestrationDb()

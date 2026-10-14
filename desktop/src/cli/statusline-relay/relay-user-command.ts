@@ -1,10 +1,7 @@
 import { posix, win32 } from 'node:path'
 import type { ClaudeStatusLineRelayRequest } from '../../shared/claude-statusline-relay-contract'
-import {
-  runProcess,
-  type ProcessResult,
-  type ProcessSpec
-} from '../../shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
+import type { ProcessSpec, ProcessResult } from '@orca/process-host/process-spec'
 
 /**
  * Why a short bound: Claude Code 2.1.289's local docs give no status-line timeout, and a status line

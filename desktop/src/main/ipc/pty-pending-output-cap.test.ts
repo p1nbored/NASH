@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { spawnMock } from './pty-ipc-mock-registry'
 import { setupPtyIpcSuite } from './pty-ipc-test-harness'
-import { acceptSshPtyOutputData } from './ssh-pty-output-intake-registry'
-import { registerPtyHandlers, getPtyRendererDeliveryDebugSnapshot } from './pty'
+import { registerPtyHandlers } from './pty/register-handlers'
+import { getPtyRendererDeliveryDebugSnapshot } from './pty/delivery/debug'
 
 vi.mock('electron', () => import('./pty-ipc-mock-registry').then((m) => m.electronModuleMock()))
 vi.mock('fs', () => import('./pty-ipc-mock-registry').then((m) => m.fsModuleMock()))
@@ -227,72 +227,6 @@ describe('registerPtyHandlers', () => {
       expect(provider.pauseProducer).toHaveBeenCalledTimes(1)
       expect(getPtyRendererDeliveryDebugSnapshot()).toMatchObject({ pendingChars: 0 })
     } finally {
-      vi.useRealTimers()
-    }
-  })
-  it('keeps negotiated source-credit overflow off the legacy PTY-global pause path', async () => {
-    vi.useFakeTimers()
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    try {
-      const provider = installObservableDaemonTestProvider()
-      let modelSequence = 0
-      const runtime = {
-        setPtyController: vi.fn(),
-        setRemoteTerminalSourceRangeConsumerHooks: vi.fn(),
-        getPtyOutputSequence: vi.fn(() => modelSequence),
-        onPtyData: vi.fn(
-          (_id: string, data: string, _at: number, rawLength = data.length) =>
-            (modelSequence += rawLength)
-        ),
-        acceptPtyDataBounded: vi.fn(
-          (_id: string, _data: string, _at: number, rawLength: number) => {
-            modelSequence += rawLength
-            return { sequence: modelSequence, completion: Promise.resolve() }
-          }
-        )
-      }
-      registerPtyHandlers(mainWindow as never, runtime as never)
-      mainWindow.webContents.send.mockClear()
-
-      const sourceChunk = 's'.repeat(128 * 1024)
-      for (let index = 0; index < 17; index++) {
-        const sourceStartSu = index * sourceChunk.length
-        await acceptSshPtyOutputData({
-          id: 'source-credit-pty',
-          data: sourceChunk,
-          providerGeneration: 41,
-          ptyIncarnation: 'source-incarnation',
-          rawLength: sourceChunk.length,
-          transformed: false,
-          source: {
-            relayPtyId: 'relay-source-pty',
-            spanId: `source-token:${sourceStartSu}:${sourceStartSu + sourceChunk.length}`,
-            clientGeneration: 2,
-            ownerGeneration: 3,
-            deliveryToken: 'source-token',
-            sourceStartSu,
-            sourceEndSu: sourceStartSu + sourceChunk.length
-          }
-        })
-      }
-
-      expect(getPtyRendererDeliveryDebugSnapshot()).toMatchObject({
-        pendingPtyCount: 1,
-        pendingChars: 0
-      })
-      expect(provider.pauseProducer).not.toHaveBeenCalledWith('source-credit-pty')
-      expect(provider.resumeProducer).not.toHaveBeenCalledWith('source-credit-pty')
-
-      provider.emitData('legacy-pty', 'l'.repeat(320 * 1024))
-      expect(provider.pauseProducer).toHaveBeenCalledTimes(1)
-      expect(provider.pauseProducer).toHaveBeenCalledWith('legacy-pty')
-      expect(provider.pauseProducer).not.toHaveBeenCalledWith('unrelated-pty')
-
-      vi.runAllTimers()
-      expect(provider.resumeProducer).toHaveBeenCalledTimes(1)
-      expect(provider.resumeProducer).toHaveBeenCalledWith('legacy-pty')
-    } finally {
-      errorSpy.mockRestore()
       vi.useRealTimers()
     }
   })

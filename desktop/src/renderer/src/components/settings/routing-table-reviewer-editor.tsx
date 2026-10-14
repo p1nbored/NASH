@@ -5,7 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { EditActions, EffortSelect, type EditorCallbacks } from './routing-table-inline-editor'
 import { ModelSelect, useRoutingModels } from './routing-table-model-select'
 import { reviewerTargetLabel } from './routing-table-labels'
-import { routingCli, routingEffortFor, routingEffortOptions } from './routing-table-effort-options'
+import {
+  routingCli,
+  routingEffortFor,
+  routingEffortOptions,
+  routingModelForEffort
+} from './routing-table-effort-options'
 
 export function ReviewerChoiceEditor(
   props: EditorCallbacks & {
@@ -90,7 +95,13 @@ export function ReviewerChoiceEditor(
                 task: label
               }
             )}
-            onChange={(reasoning_level) => onChange({ ...reviewer, reasoning_level })}
+            onChange={(reasoning_level) =>
+              onChange({
+                ...reviewer,
+                reasoning_level,
+                model: routingModelForEffort(agent, reviewer.model, reasoning_level, models)
+              })
+            }
           />
         ) : null}
       </div>

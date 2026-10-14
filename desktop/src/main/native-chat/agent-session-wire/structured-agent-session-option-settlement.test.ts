@@ -1,4 +1,4 @@
-import { createCodexStructuredLaunchResolver } from '../../codex/codex-structured-launch-resolution'
+import { createCodexStructuredLaunchResolver } from '../../runtime/structured-agent-launch-composition.test-support'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -177,8 +177,7 @@ describe('structured session options and close', () => {
       resolveWorkspacePath: async () => root,
       resolveCommand: () => 'fixture-codex',
       resolveRollout: vi.fn().mockResolvedValue('/fixture/rollout.jsonl'),
-      resolveLaunchArgs: () => [],
-      resolvePermissionPolicy: () => ({ approvalPolicy: 'never', sandbox: 'danger-full-access' })
+      resolveLaunchArgs: () => []
     })
     const launch = await resolveLaunch({
       identity: {
@@ -189,7 +188,11 @@ describe('structured session options and close', () => {
         providerHandle: { transport: 'codex-app-server', agent: 'codex', nativeId: THREAD }
       }
     })
-    expect(launch.permissionPolicy).toEqual({ approvalPolicy: 'on-request', sandbox: 'read-only' })
+    expect(launch.permissionPolicy).toEqual({
+      approvalPolicy: 'on-request',
+      sandbox: 'read-only',
+      approvalsReviewer: 'user'
+    })
   })
 
   it('publishes an acknowledged model without waiting for journal traffic', async () => {

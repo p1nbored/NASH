@@ -15,9 +15,7 @@ import type { AgentLaunchIntent, AgentLaunchResult } from '../../shared/agent-la
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../shared/constants'
 
 const STRUCTURED_PREFERENCE = {
-  experimentalNativeChat: true,
-  experimentalStructuredNativeChat: true,
-  openAgentTabsInChatByDefault: true
+  experimentalNativeChat: true
 }
 
 function harness(options: {
@@ -30,6 +28,8 @@ function harness(options: {
   /** Whether the surface reports that its typed line took the offered prompt. */
   lineCarriesPrompt?: boolean
   onSurfacePublished?: AgentLaunchExecution['onSurfacePublished']
+  /** A worktree-only factory, as orchestration workers and `worktree.create` pass. */
+  worktreeOnlyFactory?: boolean
 }) {
   const calls: string[] = []
   const carried = (startupPrompt: string | undefined) =>
@@ -49,6 +49,10 @@ function harness(options: {
       }
     }
   )
+  const createFolderWorkspace = vi.fn(async (_args: { create: Record<string, unknown> }) => {
+    calls.push('createFolderWorkspace')
+    return { worktreeId: 'folder:fw-new', connectionId: null }
+  })
   const getStructuredAgentSessionCreateSupport = vi.fn(async () => {
     calls.push('createSupport')
     if (options.createSupportThrows) {
@@ -83,6 +87,7 @@ function harness(options: {
   return {
     calls,
     createWorktree,
+    createFolderWorkspace,
     createStructuredSession,
     createTerminalAgent,
     deliverStructuredPrompt,
@@ -98,7 +103,9 @@ function harness(options: {
           deliverStructuredPrompt,
           deliverTerminalPrompt
         },
-        workspaces: { createWorktree },
+        workspaces: options.worktreeOnlyFactory
+          ? { createWorktree }
+          : { createWorktree, createFolderWorkspace },
         ...(options.onSurfacePublished ? { onSurfacePublished: options.onSurfacePublished } : {})
       })
   }
@@ -222,6 +229,41 @@ describe('a structured launch that creates its own worktree', () => {
     ])
   })
 
+  it('creates a folder workspace, then opens its structured session there', async () => {
+    const h = harness({})
+    const result = await h.run({
+      agent: 'claude',
+      target: { kind: 'create-folder-workspace', create: { projectGroupId: 'group-1' } }
+    })
+
+    expect(h.calls).toEqual(['createFolderWorkspace', 'createSupport', 'createStructuredSession'])
+    expect(h.createFolderWorkspace).toHaveBeenCalledWith({ create: { projectGroupId: 'group-1' } })
+    expect(result.worktreeId).toBe('folder:fw-new')
+    expect(result.outcome.kind).toBe('structured')
+  })
+
+  it('starts a terminal agent in a new folder workspace, not agent-first', async () => {
+    const h = harness({ settings: null })
+    const result = await h.run({
+      agent: 'claude',
+      target: { kind: 'create-folder-workspace', create: { projectGroupId: 'group-1' } }
+    })
+
+    expect(h.calls).toEqual(['createFolderWorkspace', 'createTerminalAgent'])
+    expect(result).toMatchObject({ worktreeId: 'folder:fw-new', outcome: { kind: 'terminal' } })
+  })
+
+  it('refuses a folder create from a factory that cannot make one, before anything is created', async () => {
+    const h = harness({ worktreeOnlyFactory: true })
+    await expect(
+      h.run({
+        agent: 'claude',
+        target: { kind: 'create-folder-workspace', create: { projectGroupId: 'group-1' } }
+      })
+    ).rejects.toThrow('agent_launch_workspace_factory_required')
+    expect(h.calls).toEqual([])
+  })
+
   it('strips a stale startupAgent out of a migrated create payload', async () => {
     const h = harness({})
     await h.run({
@@ -249,6 +291,32 @@ describe('a launch the user did not ask to be structured', () => {
     expect(h.calls).toEqual(['createWorktree(startupAgent=claude)'])
     expect(result.outcome).toEqual({ kind: 'terminal', handle: 'term_agent_first' })
     expect(result.receipt).toMatchObject({ mode: 'terminal', reason: 'user_default' })
+  })
+})
+
+describe("a caller's chat default in place of the host's", () => {
+  const EXISTING: AgentLaunchIntent = {
+    agent: 'claude',
+    target: { kind: 'existing', worktree: 'wt-7' }
+  }
+
+  it('opens a chat when the caller says so, though the host setting is off', async () => {
+    const h = harness({ settings: null })
+    const result = await h.run({ ...EXISTING, nativeChatDefault: true })
+    expect(result.outcome.kind).toBe('structured')
+  })
+
+  it('opens a terminal when the caller says so, though the host setting is on', async () => {
+    const h = harness({})
+    const result = await h.run({ ...EXISTING, nativeChatDefault: false })
+    expect(result.outcome.kind).toBe('terminal')
+    expect(h.calls).not.toContain('createSupport')
+  })
+
+  it('still lets the host refuse a chat it cannot create', async () => {
+    const h = harness({ settings: null, createSupport: { supported: false, reason: 'agent' } })
+    const result = await h.run({ ...EXISTING, nativeChatDefault: true })
+    expect(result.outcome.kind).toBe('terminal')
   })
 })
 
@@ -732,7 +800,7 @@ describe('the surface is published as the launch stands, before its prompt is de
 describe('a new local worktree whose startup terminal did not come up', () => {
   it('opens its agent in the view a local workspace allows, as an existing one would', async () => {
     const h = harness({
-      settings: { experimentalNativeChat: true, openAgentTabsInChatByDefault: true }
+      settings: { experimentalNativeChat: true }
     })
     h.createWorktree.mockImplementationOnce(async () => ({
       worktreeId: 'wt-new',
@@ -742,8 +810,7 @@ describe('a new local worktree whose startup terminal did not come up', () => {
 
     await h.run({ ...CREATE_INTENT, agent: 'opencode' })
 
-    expect(h.createTerminalAgent).toHaveBeenCalledWith(
-      expect.objectContaining({ viewMode: 'chat' })
-    )
+    expect(h.createStructuredSession).toHaveBeenCalled()
+    expect(h.createTerminalAgent).not.toHaveBeenCalled()
   })
 })

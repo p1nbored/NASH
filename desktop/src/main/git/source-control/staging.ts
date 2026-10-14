@@ -4,6 +4,15 @@ import { gitExecFileAsync } from '../runner'
 import { invalidateGitReadCaches } from './git-read-cache-invalidation'
 import { literalPathspec } from './git-pathspec'
 import { encodeGitPathspecs } from '../../../shared/git-pathspec-stdin'
+import {
+  stageGitWorktreeScope,
+  type GitStageWorktreeScope,
+  type GitStageWorktreeScopeReceipt
+} from '../../../shared/git-stage-worktree-scope'
+import { findExistingWorktreeSymlinkPaths } from '../worktree-symlink-detection'
+import { redoWriteForDriveCheckoutSuspects } from './drive-checkout-suspect-writes'
+
+const STAGE_WRITE = ['add', '--update'] as const
 
 /**
  * Stage a file.
@@ -19,6 +28,7 @@ export async function stageFile(
       ['add', '--', literalPathspec(filePath, options)],
       gitOptionsForWorktree(worktreePath, options)
     )
+    await redoWriteForDriveCheckoutSuspects(worktreePath, [filePath], STAGE_WRITE, options)
   } finally {
     invalidateGitReadCaches()
   }
@@ -60,6 +70,39 @@ export async function bulkStageFiles(
       ...gitOptionsForWorktree(worktreePath, options),
       stdin: encodeGitPathspecs(filePaths.map((filePath) => literalPathspec(filePath, options)))
     })
+    await redoWriteForDriveCheckoutSuspects(worktreePath, filePaths, STAGE_WRITE, options)
+  } finally {
+    invalidateGitReadCaches()
+  }
+}
+
+/**
+ * Stage every change in the worktree when the capped listing cannot name them all.
+ */
+export async function stageWorktreeChanges(
+  worktreePath: string,
+  scope: GitStageWorktreeScope,
+  options: GitRuntimeOptions & { sharedLinkPaths?: readonly string[] } = {}
+): Promise<GitStageWorktreeScopeReceipt> {
+  invalidateGitReadCaches()
+  try {
+    const gitOptions = gitOptionsForWorktree(worktreePath, options)
+    // Why: Git cannot ignore Orca's shared symlinks under a directory-only rule (`node_modules/`),
+    // so `add --all` would commit a machine-specific link the listing hides (see status-read).
+    const excludedUntrackedPaths =
+      scope === 'all' && options.sharedLinkPaths && options.sharedLinkPaths.length > 0
+        ? await findExistingWorktreeSymlinkPaths(worktreePath, options.sharedLinkPaths, {
+            wslDistro: options.wslDistro
+          })
+        : []
+    const receipt = await stageGitWorktreeScope(
+      scope,
+      (args, stdin) =>
+        gitExecFileAsync(args, stdin === undefined ? gitOptions : { ...gitOptions, stdin }),
+      { excludedUntrackedPaths }
+    )
+    await redoWriteForDriveCheckoutSuspects(worktreePath, ['.'], STAGE_WRITE, options)
+    return receipt
   } finally {
     invalidateGitReadCaches()
   }

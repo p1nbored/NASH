@@ -8,37 +8,13 @@ import {
   makeWindowsPublishStagedFileCommand,
   makeWindowsWriteFileCommand
 } from './system-ssh-windows-file-write'
-import {
-  cleanupOwnedRelayUploadStageCommand,
-  promoteOwnedRelayUploadStageCommand,
-  recoverOneStaleRelayUploadStageCommand,
-  reserveRelayUploadStageCommand,
-  type RelayUploadStageSlot
-} from './ssh-relay-upload-stage-commands'
 
 const windows = getRemoteHostPlatform('win32-x64')
-const owner = '.sftp-namespace-123e4567e89b12d3a456426614174000'
-const pool = 'C:\\Users\\orca\\.nash-remote\\.upload-stages'
-const stage: RelayUploadStageSlot = {
-  poolDir: pool,
-  slotName: 'slot-0',
-  slotDir: `${pool}\\slot-0`,
-  claimDir: `${pool}\\claim-0`,
-  deleteDir: `${pool}\\delete-0`
-}
-
 // Why: sshd runs an exec request through its DefaultShell, which is cmd.exe on a
 // stock Windows OpenSSH install, and cmd.exe refuses a longer line with exit 1
 // and a localized "The command line is too long" — the whole connect dies there.
 describe('Windows remote command line limit', () => {
   it.each([
-    ['recover stale upload stage', recoverOneStaleRelayUploadStageCommand(windows, pool)],
-    ['reserve upload stage', reserveRelayUploadStageCommand(windows, pool, owner)],
-    [
-      'promote upload stage',
-      promoteOwnedRelayUploadStageCommand(windows, stage, owner, 'C:\\Users\\orca\\.nash-remote')
-    ],
-    ['cleanup upload stage', cleanupOwnedRelayUploadStageCommand(windows, stage, owner)],
     [
       'steal stale install lock',
       tryStealInstallLockCommand(windows, 'C:\\Users\\orca\\.nash-remote\\relay', 1_200)
@@ -47,14 +23,14 @@ describe('Windows remote command line limit', () => {
       'steal an exited holder\u2019s install lock',
       tryStealInstallLockCommand(
         windows,
-        'C:\\Users\\orca\\.orca-remote\\orcad-1.4.214+0123456789abcdef\\.install-lock',
+        'C:\\Users\\orca\\.nash-remote\\orcad-1.4.214+0123456789abcdef\\.install-lock',
         1_200,
         { fileName: '.orca-fence-owner', token: '123e4567-e89b-12d3-a456-426614174000' },
         {
           fileName: '.orca-fence-owner',
           token: '123e4567-e89b-12d3-a456-426614174001',
           quietSeconds: 180,
-          mutationLock: 'C:\\Users\\orca\\.orca-remote\\orcad-state-mutation.lock'
+          mutationLock: 'C:\\Users\\orca\\.nash-remote\\orcad-state-mutation.lock'
         }
       )
     ],

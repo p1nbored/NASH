@@ -6,8 +6,6 @@ import {
 } from './availability/route-availability-evaluator'
 import type { AvailabilityFs } from './availability/route-availability-fs'
 import { createRouteAvailabilityStore } from './availability/route-availability-store'
-import type { RouteProvider } from './availability/route-availability-types'
-import type { ModelListingPort } from './availability/model-listing'
 import type { AgentDetectionSources } from './availability/route-cli-detection-check'
 import { resolveActiveRoutingTable, type ResolvedRoutingTable } from './routing-table-activation'
 import type { RoutingTableContext } from './routing-table-context'
@@ -30,8 +28,8 @@ export type RoutingTableRuntimePorts = {
   readonly files: { readonly paths: RoutingTablePathPort; readonly fs: AvailabilityFs }
   /** Agent detection plus the user's disabled-agents setting. */
   readonly agents: AgentDetectionSources
-  /** One session-less model listing per CLI; each never rejects. */
-  readonly models: Readonly<Record<RouteProvider, ModelListingPort>>
+  /** One session-less model listing per CLI. */
+  readonly models: AvailabilityPorts['models']
   /** The rate-limit service: its state, and its refresh (bounded and rate-limited by the runtime). */
   readonly rateLimits: AvailabilityPorts['rateLimits']
   /** `resolveCodexExecutable` bound exactly as the Codex runner resolves it. */

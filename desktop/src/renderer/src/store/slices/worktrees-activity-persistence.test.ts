@@ -39,7 +39,12 @@ describe('worktree remote runtime mutations', () => {
   it('does not surface remote selector misses while persisting activity timestamps', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const store = createTestStore()
-    const wt = makeWorktree({ id: 'repo1::/path/wt1', repoId: 'repo1', path: '/path/wt1' })
+    const wt = makeWorktree({
+      id: 'repo1::/path/wt1',
+      repoId: 'repo1',
+      path: '/path/wt1',
+      hostId: 'runtime:env-1'
+    })
     runtimeEnvironmentCall.mockResolvedValue({
       id: 'rpc-set',
       ok: false,

@@ -1,13 +1,19 @@
 import type {
+  ClaudeManagedAccountRuntimeSelection,
+  ClaudeRateLimitAccountsState,
   CodexManagedAccountRuntimeSelection,
   CodexRateLimitAccountsState
 } from '../../../../shared/managed-account-types'
 
-type ProviderAccount = CodexRateLimitAccountsState['accounts'][number]
+type ProviderAccount =
+  | ClaudeRateLimitAccountsState['accounts'][number]
+  | CodexRateLimitAccountsState['accounts'][number]
 
 type ProviderAccountSelection = {
   activeAccountId: string | null
-  activeAccountIdsByRuntime?: CodexManagedAccountRuntimeSelection
+  activeAccountIdsByRuntime?:
+    | ClaudeManagedAccountRuntimeSelection
+    | CodexManagedAccountRuntimeSelection
 }
 
 export type ProviderAccountRuntimeView = {
@@ -24,7 +30,10 @@ export function getProviderAccountRuntime(account: ProviderAccount): {
   wslDistro: string | null
 } {
   return {
-    runtime: account.managedHomeRuntime ?? 'host',
+    runtime:
+      'authMethod' in account
+        ? (account.managedAuthRuntime ?? 'host')
+        : (account.managedHomeRuntime ?? 'host'),
     wslDistro: account.wslDistro ?? null
   }
 }

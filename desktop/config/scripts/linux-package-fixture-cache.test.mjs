@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
-import { runProcessSync } from '../../src/shared/child-process/run-process'
+import { runProcessSync } from '@orca/process-host'
 
 const action = parse(
   readFileSync('.github/actions/prepare-linux-package-fixture/action.yml', 'utf8')
@@ -121,7 +121,8 @@ it('uses exact context/platform keys and the same restore-only action in package
     { fixture: 'headless-serve-shutdown' },
     { fixture: 'cli-launch-contract' }
   ])
-  const warm = workflow('ci-cache-warmup').jobs['warm-linux-package-fixtures']
+  const platformSource = workflow('ci-cache-warmup-platforms').jobs['warm-platforms'].uses
+  const warm = parse(readFileSync(platformSource, 'utf8')).jobs['warm-linux-package-fixtures']
   expect(warm.steps.slice(1).map((step) => step.with.fixture)).toEqual(
     prepared.map((step) => step.with.fixture)
   )

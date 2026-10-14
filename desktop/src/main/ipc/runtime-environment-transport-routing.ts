@@ -1,5 +1,5 @@
 import { getRuntimeEnvironmentStatus } from './runtime-environment-status-probe'
-import { getPreferredPairingOffer } from '../../shared/runtime-environments'
+import { getPreferredPairedRuntimeConnection } from '../../shared/runtime-environments'
 import { ELECTRON_REMOTE_RUNTIME_CLIENT_CAPABILITIES } from '../../shared/electron-remote-runtime-client-capabilities'
 import { resolveEnvironment, markEnvironmentUsed } from '../../shared/runtime-environment-store'
 import { resolveManagedRuntimeEnvironment } from './runtime-environment-managed-tunnel'
@@ -12,7 +12,7 @@ import {
   subscribeRemoteRuntimeRequest,
   type RemoteRuntimeSubscription
 } from '../../shared/remote-runtime-client'
-import { withRemoteRuntimeTailscaleHint } from '../../shared/remote-runtime-tailscale-hint'
+import { withRuntimeUnreachableHint } from './runtime-environment-unreachable-hint'
 import { enqueueRuntimeCall } from './runtime-environment-call-queue'
 import {
   sendRemoteRuntimeConnectionRequestAbortable,
@@ -59,7 +59,7 @@ export async function callRuntimeEnvironment(
   // value would miss the in-use connect/timeout case the toast surfaces.
   // Track the endpoint the queued closure actually used: it re-resolves the
   // environment, so a re-pair between enqueue and dispatch can change it.
-  let endpoint = getPreferredPairingOffer(environment).endpoint
+  let endpoint = getPreferredPairedRuntimeConnection(environment).endpoint
   try {
     return await enqueueRuntimeCall(
       environment.id,
@@ -78,13 +78,13 @@ export async function callRuntimeEnvironment(
         if (revisionFailure) {
           return revisionFailure
         }
-        const pairing = getPreferredPairingOffer(currentEnvironment)
-        endpoint = pairing.endpoint
+        const pairedConnection = getPreferredPairedRuntimeConnection(currentEnvironment)
+        endpoint = pairedConnection.endpoint
         const effectiveTimeoutMs = timeoutMs ?? DEFAULT_REMOTE_RUNTIME_TIMEOUT_MS
         const sharedControlEnvelope = shouldUseSharedControlEnvelope(method, params, envelope)
         if (envelope && !sharedControlEnvelope) {
           const response = await sendRemoteRuntimeRequestAbortable(
-            pairing,
+            pairedConnection,
             method,
             params,
             effectiveTimeoutMs,
@@ -98,7 +98,7 @@ export async function callRuntimeEnvironment(
         if (shouldUseCachedRequestConnection(method)) {
           const response = await sendRemoteRuntimeConnectionRequestAbortable(
             currentEnvironment.id,
-            pairing,
+            pairedConnection,
             method,
             params,
             effectiveTimeoutMs,
@@ -122,7 +122,7 @@ export async function callRuntimeEnvironment(
         // Why: startup/control-plane RPCs use the proven one-shot path so repo
         // hydration cannot be coupled to a stale terminal-control connection.
         const response = await sendRemoteRuntimeRequestAbortable(
-          pairing,
+          pairedConnection,
           method,
           params,
           effectiveTimeoutMs,
@@ -137,7 +137,7 @@ export async function callRuntimeEnvironment(
     )
   } catch (error) {
     if (error instanceof Error && error.name !== 'AbortError') {
-      error.message = withRemoteRuntimeTailscaleHint(error.message, endpoint)
+      error.message = withRuntimeUnreachableHint(environment, error.message, endpoint)
     }
     throw error
   }
@@ -163,7 +163,7 @@ export async function subscribeRuntimeEnvironment(
   signal?: AbortSignal
 ): Promise<RemoteRuntimeSubscription> {
   const environment = await resolveManagedRuntimeEnvironment(userDataPath, selector)
-  const pairing = getPreferredPairingOffer(environment)
+  const pairedConnection = getPreferredPairedRuntimeConnection(environment)
   const effectiveTimeoutMs = timeoutMs ?? DEFAULT_REMOTE_RUNTIME_TIMEOUT_MS
   let markedUsed = false
   const markUsedOnce = (runtimeId: string): void => {
@@ -186,7 +186,7 @@ export async function subscribeRuntimeEnvironment(
       callbacks.onEvent({
         type: 'error' as const,
         code: error.code,
-        message: withRemoteRuntimeTailscaleHint(error.message, pairing.endpoint)
+        message: withRuntimeUnreachableHint(environment, error.message, pairedConnection.endpoint)
       }),
     onClose: () => {
       callbacks.onEvent({ type: 'close' as const })
@@ -209,7 +209,7 @@ export async function subscribeRuntimeEnvironment(
       })
     }
     return await subscribeRemoteRuntimeRequest(
-      pairing,
+      pairedConnection,
       method,
       params,
       effectiveTimeoutMs,
@@ -218,7 +218,11 @@ export async function subscribeRuntimeEnvironment(
     )
   } catch (error) {
     if (error instanceof Error) {
-      error.message = withRemoteRuntimeTailscaleHint(error.message, pairing.endpoint)
+      error.message = withRuntimeUnreachableHint(
+        environment,
+        error.message,
+        pairedConnection.endpoint
+      )
     }
     throw error
   }

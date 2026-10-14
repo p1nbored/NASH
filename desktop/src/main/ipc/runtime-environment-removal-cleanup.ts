@@ -3,16 +3,27 @@ import { retireBrowserRoutePartitionStorageForEnvironment } from '../browser/bro
 import { clearRuntimeEnvironmentCapabilityEvidence } from './runtime-environment-capability-evidence'
 import { clearRuntimeEnvironmentManualDisconnect } from './runtime-environment-manual-disconnect'
 import { toRuntimeExecutionHostId, type ExecutionHostId } from '../../shared/execution-host'
+import {
+  forgetRemoteLayoutSnapshot,
+  type RemoteLayoutSnapshotStore
+} from '../remote-layout-snapshot'
+
+/** What a removed server leaves in the profile. */
+export type RemovedServerStore = RemoteLayoutSnapshotStore & {
+  /** Drops the unlinked server's workspace session partition. */
+  removeWorkspaceSessionHost: (hostId: ExecutionHostId) => void
+}
 
 /** Retires a removed server's client-side state; resolves once its transport is invalidated. */
 export function retireRemovedRuntimeEnvironment(
   environmentId: string,
   invalidateTransport: (environmentId: string) => Promise<void> | void,
-  forgetHostSession?: (hostId: ExecutionHostId) => void
+  store: RemovedServerStore
 ): Promise<void> {
   clearRuntimeEnvironmentCapabilityEvidence(environmentId)
   // Why: listings enumerate session partitions as known hosts, so a kept one names a dead server.
-  forgetHostSession?.(toRuntimeExecutionHostId(environmentId))
+  store.removeWorkspaceSessionHost(toRuntimeExecutionHostId(environmentId))
+  forgetRemoteLayoutSnapshot(store, environmentId)
   clearRuntimeEnvironmentManualDisconnect(environmentId)
   const retiring = Promise.resolve(invalidateTransport(environmentId))
   // Why: removal is an explicit lifecycle decision, so its client-hosted browser storage goes

@@ -48,11 +48,12 @@ export async function publishArtifactFromSurface(
   createRequest: () => Promise<ArtifactWriteRequest>
 ): Promise<ArtifactPublishResult | null> {
   try {
+    // Why first and once: the click captures what is shared; a sign-in or retry must not re-read it.
+    const request = validateArtifactPublishRequest(await createRequest())
     if (!(await ensureArtifactAccountConnected())) {
       return null
     }
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const request = validateArtifactPublishRequest(await createRequest())
       const result = await callRuntimeRpc<ArtifactCloudOperation<ArtifactPublishResult>>(
         LOCAL_RUNTIME,
         'artifacts.publish',

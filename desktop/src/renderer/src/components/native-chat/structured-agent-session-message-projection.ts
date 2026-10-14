@@ -1,3 +1,4 @@
+import { agentSessionCurrentContextRows } from '../../../../shared/agent-session-context-clear'
 import type {
   AgentJournalRenderItem,
   AgentJournalSubmission
@@ -13,13 +14,7 @@ export function projectStructuredAgentSessionMessages(
   optimistic: readonly StructuredAgentSessionOptimisticMessage[],
   submissions: readonly AgentJournalSubmission[]
 ) {
-  return projectMessages(
-    items,
-    optimistic,
-    submissions,
-    { rejectedInPlace: true },
-    projectStructuredQuestionMessages
-  )
+  return projectMessages(items, optimistic, submissions, projectStructuredQuestionMessages)
 }
 
 export type StructuredPromptItem = AgentJournalRenderItem & {
@@ -29,7 +24,7 @@ export type StructuredPromptItem = AgentJournalRenderItem & {
 export function pendingStructuredSessionPrompts(
   items: AgentJournalRenderItem[]
 ): StructuredPromptItem[] {
-  return items.filter(
+  return agentSessionCurrentContextRows(items).items.filter(
     (item): item is StructuredPromptItem =>
       (item.body.kind === 'approval' || item.body.kind === 'question') &&
       item.body.resolution.state === 'pending'

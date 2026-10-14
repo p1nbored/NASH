@@ -1,7 +1,8 @@
 import { showNestedWorktreePreservedBranchesToast } from '@/components/sidebar/nested-worktree-preserved-branches-toast'
 import { parseExecutionHostId, type ExecutionHostId } from '../../../../../../shared/execution-host'
 import type { RemoveWorktreeResult } from '../../../../../../shared/worktree/create-types'
-import { callRuntimeRpc, type getActiveRuntimeTarget } from '../../../../runtime/runtime-rpc-client'
+import { callRuntimeRpc } from '../../../../runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../../../shared/runtime-client-target'
 import { toRuntimeWorktreeSelector } from '../../../../runtime/runtime-worktree-selector'
 import type { RemoveWorktreeOptions } from '../../worktree-removal-options'
 import type { WorktreeSliceGet } from '../listing/worktree-slice-types'
@@ -24,7 +25,7 @@ export async function dispatchWorktreeRemoval(args: {
   force: boolean | undefined
   skipArchive: boolean
   get: WorktreeSliceGet
-  target: ReturnType<typeof getActiveRuntimeTarget>
+  target: RuntimeClientTarget
   options: RemoveWorktreeOptions | undefined
   /** Re-checks mid-flight ownership immediately before the destructive call. */
   assertCurrent: () => void
@@ -102,7 +103,7 @@ async function requestWorktreeRemoval(
 }
 
 function qualifyRuntimeCallHost(
-  target: ReturnType<typeof getActiveRuntimeTarget>,
+  target: RuntimeClientTarget,
   hostId: ExecutionHostId | undefined
 ): ExecutionHostId | undefined {
   const parsedHost = parseExecutionHostId(hostId)

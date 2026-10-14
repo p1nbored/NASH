@@ -7,7 +7,7 @@
  * retry budget, while an unreachable or slow host must.
  */
 
-import { hasRuntimeRpcErrorCode } from '@/runtime/runtime-rpc-client'
+import { hasRuntimeRpcErrorCode } from '@/runtime/runtime-rpc-result'
 import {
   AUTOMATION_OWNER_CONFLICT_CODES,
   stripAutomationOwnerConflictCode

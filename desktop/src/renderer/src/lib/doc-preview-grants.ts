@@ -5,7 +5,12 @@ import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner
 import { toRuntimeWorktreeSelector } from '@/runtime/runtime-worktree-selector'
 import type { AppState } from '@/store/types'
 
-export type DocPreviewGrantHandle = { grantId: string; url: string }
+/** `location` is what the grant was minted for, so its readers and its share key stay on that host. */
+export type DocPreviewGrantHandle = {
+  grantId: string
+  url: string
+  location: DocPreviewGrantLocation
+}
 
 /**
  * Grants are keyed by preview tab id, never by effect mount: React StrictMode
@@ -64,6 +69,7 @@ export function ensureDocPreviewGrant(
   }
   const pending: Promise<DocPreviewGrantHandle> = window.api.docPreview
     .mintGrant({ ...location, browserPageId: previewId })
+    .then((minted) => ({ ...minted, location }))
     .catch((error: unknown) => {
       // Why the identity check: a release and a fresh ensure can both land before this rejects, and
       // an unconditional delete would evict the newer entry, leaving its grant unrevokable.

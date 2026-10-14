@@ -21,7 +21,7 @@ import {
   clearWebAgentSessionHandoff
 } from '../web-agent-session-handoff'
 import { toRemoteRuntimePtyId } from '../runtime-terminal-stream'
-import { toWebTerminalSurfaceTabId } from '../web-runtime-session'
+import { toWebTerminalSurfaceTabId } from '../../../../shared/terminal-surface-id'
 import {
   isReadyTerminalTab,
   isTerminalSurfaceTab,
@@ -145,7 +145,8 @@ export function prepareWebSessionTabsSnapshotBase(
             environmentId,
             nextRemotePtyIds,
             nextMirroredTerminalIds,
-            exactProvisionalHandoffs
+            exactProvisionalHandoffs,
+            state.terminalLayoutsByTabId[tab.id]?.ptyIdsByLeafId
           )
       )
     : currentTerminalTabs

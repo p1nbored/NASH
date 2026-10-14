@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
-import { MessageSquarePlus } from 'lucide-react'
+import { Quote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { addViewportSizeChangeListener } from '@/hooks/viewport-size-change-listener'
@@ -144,7 +144,7 @@ export function NativeChatSelectionQuote({
                 setRequest(null)
               }}
             >
-              <MessageSquarePlus />
+              <Quote />
               {translate('components.native-chat.addSelectionToChat', 'Add to chat')}
             </Button>
           </div>

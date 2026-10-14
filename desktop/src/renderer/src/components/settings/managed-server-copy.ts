@@ -141,6 +141,12 @@ export function managedServerOutcomeLabel(result: {
   verdict?: string
 }): string {
   const code = result.code ?? ''
+  if (code === 'orcad_stop_active_environment') {
+    return translate(
+      'auto.components.settings.managedServers.outcome.activeServer',
+      'Not done: this server is the default host for new projects. Choose another one in Advanced before stopping it.'
+    )
+  }
   if (result.verdict === 'live' || LIVE_TERMINAL_CODES.has(code)) {
     return translate(
       'auto.components.settings.managedServers.outcome.live',

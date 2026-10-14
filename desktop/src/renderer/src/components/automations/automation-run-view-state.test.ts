@@ -105,6 +105,29 @@ describe('automation run view state', () => {
     })
   })
 
+  it.each([
+    'skipped_precheck',
+    'skipped_unavailable',
+    'skipped_needs_interactive_auth',
+    'dispatch_failed',
+    'pending',
+    'dispatching'
+  ] as const)('offers no workspace resume for a %s run that never dispatched', (status) => {
+    expect(
+      getAutomationRunViewState({
+        run: makeRun({
+          status,
+          terminalSessionId: null,
+          terminalPaneKey: null,
+          terminalPtyId: null,
+          dispatchedAt: null
+        }),
+        workspaceExists: true,
+        terminalTargetExists: false
+      })
+    ).toMatchObject({ availability: 'metadata', actionLabel: 'View run', canOpen: false })
+  })
+
   it('keeps skipped or missing-workspace runs as metadata-only history', () => {
     expect(
       getAutomationRunViewState({

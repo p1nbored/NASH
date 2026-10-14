@@ -1,3 +1,7 @@
+import {
+  ROUTING_AGENTS,
+  type RoutingAgent
+} from '../../../../shared/routing-table/routing-cli-registry'
 import { z } from 'zod'
 import type Database from '../../../sqlite/sync-database'
 import { OrchestrationError } from '../orchestration-error'
@@ -31,7 +35,7 @@ export const WorkflowRunCreateSchema = z
     requestedAccess: AutopilotAccessSchema,
     routingTableVersion: z.number().int().positive(),
     routingTableSha256: Sha256HexSchema,
-    coordinatorAgent: z.enum(['claude', 'codex']),
+    coordinatorAgent: z.enum(ROUTING_AGENTS),
     coordinatorModel: AutopilotModelIdSchema,
     coordinatorEffort: AutopilotEffortSchema,
     timestamp: UtcTimestampSchema
@@ -61,7 +65,7 @@ const WorkflowRunRowSchema = z.object({
   requested_access: z.enum(WORKFLOW_RUN_ACCESS_LEVELS),
   routing_table_version: z.number(),
   routing_table_sha256: z.string(),
-  coordinator_agent: z.enum(['claude', 'codex']),
+  coordinator_agent: z.enum(ROUTING_AGENTS),
   coordinator_model: z.string(),
   coordinator_effort: z.enum(AUTOPILOT_EFFORT_LEVELS),
   end_reason: z.string().nullable(),
@@ -80,7 +84,7 @@ export type WorkflowRunRecord = {
   requestedAccess: (typeof WORKFLOW_RUN_ACCESS_LEVELS)[number]
   routingTableVersion: number
   routingTableSha256: string
-  coordinatorAgent: 'claude' | 'codex'
+  coordinatorAgent: RoutingAgent
   coordinatorModel: string
   coordinatorEffort: (typeof AUTOPILOT_EFFORT_LEVELS)[number]
   endReason: string | null

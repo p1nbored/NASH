@@ -10,9 +10,12 @@ import type { SshConnection } from './ssh-connection'
 import { shellEscape } from './ssh-connection-utils'
 import { RELAY_REMOTE_DIR } from './relay-protocol'
 import { SHORT_RELAY_SOCKET_DIR_PREFIX } from './relay-socket-path-limit'
-import { execCommand } from './ssh-relay-deploy-helpers'
-import { probeRelayEndpointIncumbent } from './ssh-relay-endpoint-incumbent'
-import { classifySupersededRelay } from './ssh-relay-superseded-endpoints'
+import { execCommand } from './ssh-relay-exec-command'
+import {
+  isReapableRelayHusk,
+  probeRelayEndpointIncumbent,
+  type RelayEndpointIncumbent
+} from './ssh-relay-endpoint-incumbent'
 import { countRelayEndpointPtys } from './ssh-relay-endpoint-pty-count'
 import { readRelayDaemonRuntimes } from './ssh-relay-endpoint-runtime'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
@@ -111,20 +114,35 @@ async function classifyEndpoint(
   endpoint: string,
   signal: AbortSignal | undefined
 ): Promise<'idle' | 'live' | 'unverifiable'> {
-  let outcome: ReturnType<typeof classifySupersededRelay>
+  let reading: RelayEndpointProbeReading
   try {
-    outcome = classifySupersededRelay(
+    reading = readRelayEndpointProbe(
       await probeRelayEndpointIncumbent(conn, host, nodePath, endpoint, { signal })
     )
   } catch {
-    outcome = 'unverifiable'
+    reading = 'unverifiable'
   }
-  if (outcome === 'reap-candidate' || outcome === 'stale-endpoint-removed') {
+  if (reading === 'idle') {
     return 'idle'
   }
   const ptys = await countRelayEndpointPtys(conn, nodePath, endpoint, signal)
   if (ptys !== null) {
     return ptys > 0 ? 'live' : 'idle'
   }
-  return outcome === 'retained-live-work' ? 'live' : 'unverifiable'
+  return reading === 'holds-work' ? 'live' : 'unverifiable'
+}
+
+type RelayEndpointProbeReading = 'idle' | 'holds-work' | 'unverifiable'
+
+/** `idle`: a socket nothing holds, or a relay proven to hold nothing but its own services. */
+export function readRelayEndpointProbe(
+  incumbent: RelayEndpointIncumbent
+): RelayEndpointProbeReading {
+  if (incumbent.verdict === 'exited') {
+    return incumbent.socketPresent ? 'idle' : 'unverifiable'
+  }
+  if (incumbent.verdict !== 'live') {
+    return 'unverifiable'
+  }
+  return isReapableRelayHusk(incumbent) ? 'idle' : 'holds-work'
 }

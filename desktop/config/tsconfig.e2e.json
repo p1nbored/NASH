@@ -16,6 +16,7 @@
   ],
   "exclude": ["../tests/e2e/.cross-version-checkouts/**"],
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     // Why: specs run browser code inside page.evaluate, so the DOM lib has to be visible here
     // even though the harness itself is Node.
     "lib": ["ESNext", "DOM", "DOM.Iterable"],

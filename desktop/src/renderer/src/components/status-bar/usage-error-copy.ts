@@ -35,7 +35,14 @@ export function getProviderDisplayName(provider: ProviderRateLimits['provider'])
   return provider
 }
 
-function isUsageRateLimitError(message: string | null): boolean {
+function isUsageRateLimitError(p: ProviderRateLimits): boolean {
+  const failureKind = p.usageMetadata?.failureKind
+  // Why: a structured kind beats wording; "failed to fetch codex rate limits: error
+  // sending request" is a network failure that only names what it was reading.
+  if (failureKind && failureKind !== 'unknown') {
+    return failureKind === 'rate-limited'
+  }
+  const message = p.error
   // Why: Codex app-server's "chatgpt authentication required to read rate
   // limits" mentions rate limits only as the thing it could not read; treat
   // authentication-required failures as auth, never as the user being limited.
@@ -117,8 +124,6 @@ export function getProviderUsageStatusLabel(p: ProviderRateLimits): string {
       case 'refreshable-credentials-without-token':
       case 'delegated-refresh-required':
         return translate('auto.components.status.bar.tooltip.1804cd8c3f', 'Refreshing sign-in')
-      case 'network':
-        return translate('auto.components.status.bar.tooltip.f8f0f9d8cc', 'Network issue')
       case 'keychain-unavailable':
         return translate('auto.components.status.bar.tooltip.bf2e739f18', 'Sign-in unavailable')
       case 'cli-unavailable':
@@ -128,6 +133,7 @@ export function getProviderUsageStatusLabel(p: ProviderRateLimits): string {
       case 'missing-credentials':
         return translate('accounts.claude.usageSignInLabel', 'Sign in again')
       case 'missing-scope':
+      case 'network':
       case 'no-subscription':
       case 'parse':
       case 'rate-limited':
@@ -136,6 +142,9 @@ export function getProviderUsageStatusLabel(p: ProviderRateLimits): string {
       case undefined:
         break
     }
+  }
+  if (p.usageMetadata?.failureKind === 'network') {
+    return translate('auto.components.status.bar.tooltip.f8f0f9d8cc', 'Network issue')
   }
   // Why: MiniMax reports credential expiry through the payload, not an HTTP status,
   // so it needs its own copy rather than the generic refresh-failure label.
@@ -155,7 +164,7 @@ export function getProviderUsageStatusLabel(p: ProviderRateLimits): string {
       'No subscription'
     )
   }
-  if (isUsageRateLimitError(p.error)) {
+  if (isUsageRateLimitError(p)) {
     return translate('auto.components.status.bar.tooltip.7ad719c4bf', 'Limited')
   }
   return translate('auto.components.status.bar.tooltip.e740f92596', 'Refresh failed')
@@ -244,7 +253,7 @@ export function getProviderUsageErrorMessage(p: ProviderRateLimits): string {
         break
     }
   }
-  if (isUsageRateLimitError(p.error)) {
+  if (isUsageRateLimitError(p)) {
     return p.error
   }
   if (p.provider === 'minimax' && p.usageMetadata?.failureKind === 'stale-token') {

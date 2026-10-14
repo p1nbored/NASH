@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { SshHostNotServedError } from '../providers/ssh-host-not-served-error'
 import { EventEmitter } from 'node:events'
-import type { FsChangeEvent } from '../../shared/filesystem-entry-types'
 import {
-  getSshFilesystemProviderMock,
   resolveAuthorizedPathMock,
   statMock,
   watchInWatcherProcessMock,
@@ -12,7 +11,6 @@ import {
   createRuntimeFileCommands,
   useRuntimeFileCommandsLifecycle
 } from './orca-runtime-files-test-harness'
-import { getSshFilesystemProvider } from '../providers/ssh-filesystem-dispatch'
 import { awaitRuntimeFileWatcherUnsubscribes } from './orca-runtime-files'
 
 vi.mock('fs', async () => (await import('./orca-runtime-files-mock-registry')).fsModuleMock())
@@ -32,10 +30,6 @@ vi.mock('../git/runner', async () =>
 vi.mock(
   '../ipc/local-worktree-runtime-options',
   async () => (await import('./orca-runtime-files-mock-registry')).localWorktreeRuntimeOptionsMock
-)
-vi.mock(
-  '../providers/ssh-filesystem-dispatch',
-  async () => (await import('./orca-runtime-files-mock-registry')).sshFilesystemDispatchMock
 )
 
 describe('RuntimeFileCommands', () => {
@@ -102,80 +96,14 @@ describe('RuntimeFileCommands', () => {
     expect(dispose).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps SSH runtime watches on the remote filesystem provider', async () => {
-    const remoteDispose = vi.fn()
-    const providerWatch = vi.fn(
-      (_rootPath: string, _callback: (events: FsChangeEvent[]) => void) => remoteDispose
-    )
-    vi.mocked(getSshFilesystemProvider).mockReturnValue({ watch: providerWatch } as never)
+  it('refuses an SSH runtime watch without watching this machine', async () => {
     const { commands, store } = createRuntimeFileCommands({ path: '/remote/repo' })
     store.getRepo.mockReturnValue({ connectionId: 'ssh-1' })
-    const onEvents = vi.fn()
 
-    const unsubscribe = await commands.watchFileExplorer('id:wt-1', onEvents)
-
-    expect(providerWatch).toHaveBeenCalledWith('/remote/repo', expect.any(Function), {
-      signal: undefined,
-      onTerminalError: expect.any(Function)
-    })
-    const callback = providerWatch.mock.calls[0]?.[1]
-    callback?.([{ kind: 'update', absolutePath: '/remote/repo/current.ts' }])
-    expect(onEvents).toHaveBeenCalledWith([
-      { kind: 'update', absolutePath: '/remote/repo/current.ts' }
-    ])
+    await expect(commands.watchFileExplorer('id:wt-1', vi.fn())).rejects.toThrow(
+      SshHostNotServedError
+    )
     expect(watchInWatcherProcessMock).not.toHaveBeenCalled()
-    await unsubscribe()
-    expect(remoteDispose).toHaveBeenCalledTimes(1)
-  })
-
-  it('indexes SSH runtime watches so remote deletion can await them', async () => {
-    let resolveDispose: () => void = () => {}
-    const remoteDispose = vi.fn(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveDispose = resolve
-        })
-    )
-    vi.mocked(getSshFilesystemProvider).mockReturnValue({
-      watch: vi.fn(() => remoteDispose)
-    } as never)
-    const { commands, store } = createRuntimeFileCommands({ path: '/remote/repo' })
-    store.getRepo.mockReturnValue({ connectionId: 'ssh-1' })
-    await commands.watchFileExplorer('id:wt-1', vi.fn())
-
-    let closed = false
-    const close = commands.closeFileExplorerWatchersForPath('/remote/repo', 'ssh-1').then(() => {
-      closed = true
-    })
-    await Promise.resolve()
-    expect(remoteDispose).toHaveBeenCalledTimes(1)
-    expect(closed).toBe(false)
-
-    resolveDispose()
-    await close
-  })
-
-  it('scopes same-path runtime watcher teardown to its SSH execution host', async () => {
-    const firstDispose = vi.fn()
-    const secondDispose = vi.fn()
-    const firstProvider = { watch: vi.fn(() => firstDispose) }
-    const secondProvider = { watch: vi.fn(() => secondDispose) }
-    getSshFilesystemProviderMock.mockImplementation((connectionId) =>
-      connectionId === 'ssh-1' ? firstProvider : secondProvider
-    )
-    const first = createRuntimeFileCommands({ path: '/same/repo' })
-    const second = createRuntimeFileCommands({ path: '/same/repo' })
-    first.store.getRepo.mockReturnValue({ connectionId: 'ssh-1' })
-    second.store.getRepo.mockReturnValue({ connectionId: 'ssh-2' })
-
-    await first.commands.watchFileExplorer('id:wt-1', vi.fn())
-    await second.commands.watchFileExplorer('id:wt-1', vi.fn())
-    await first.commands.closeFileExplorerWatchersForPath('/same/repo', 'ssh-1')
-
-    expect(firstDispose).toHaveBeenCalledTimes(1)
-    expect(secondDispose).not.toHaveBeenCalled()
-
-    await second.commands.closeFileExplorerWatchersForPath('/same/repo', 'ssh-2')
-    expect(secondDispose).toHaveBeenCalledTimes(1)
+    expect(watchMock).not.toHaveBeenCalled()
   })
 })

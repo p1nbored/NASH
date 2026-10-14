@@ -86,6 +86,8 @@ const KNOWN_PREEXISTING_I2_FAILURES: Record<string, number> = {
   // regression, by replaying it against the previous build
   // (`build-serialize-addon-at-ref.mjs --ref origin/main`): I1 and I3 both hold.
   'dsh-tui-ready-no-key': 10,
+  // Capacity capture (#28231): identical attribute leaks with the pre-capture serializer.
+  'codex-model-capacity-fullscreen': 12,
   // Hermes banner cells restore with an extra bold bit under the jitter schedule.
   'hermes-tui-ready': 2,
   // STA-8741 agy/Cline/Prime captures, serializer untouched: the same true-colour background

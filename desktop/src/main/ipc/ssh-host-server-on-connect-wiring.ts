@@ -1,12 +1,14 @@
 /** The live collaborators behind each connect's server decision. */
 import { getAppEnvironment } from '../../shared/app-environment'
-import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
+import {
+  getManagedOrcadFenceEnvironmentId,
+  managedOrcadServerName
+} from '../../shared/managed-orcad-ssh-owner'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import { findOrcadMigrationSourceCutoverForTarget } from '../ssh/orcad-migration-cutover-journal'
-import { orcadMigrationRelayPtyLister } from '../ssh/orcad-migration-relay-pty-lister'
 import { abandonOrcadConversion } from '../ssh/orcad-conversion-abandon'
 import { retainOrcadMigrationSource } from '../ssh/orcad-migration-source-retention'
-import { hasOrcadTemplate } from '../ssh/orcad-artifact-materializer'
+import { hasOrcadTemplate } from '../orcad/orcad-artifact-materializer'
 import { managedServerUpdateDeps } from '../ssh/managed-server-update-deps'
 import { ensureOrcadManagedTunnel } from '../ssh/orcad-managed-tunnel'
 import { verifyOrcadManagedServing } from '../ssh/orcad-managed-serving-verify'
@@ -24,15 +26,12 @@ import { setSshHostServerStatus } from '../ssh/ssh-host-server-status'
 import { trackSshHostServerEvent } from '../ssh/ssh-host-server-telemetry'
 import { knownSshHostPlatform } from '../ssh/ssh-host-platform-memo'
 import { knownOrcadTunnelTransport } from '../ssh/orcad-tunnel-transport-memo'
-import {
-  getSshTargetRegistryStore,
-  hasRegisteredDirectSshAuthority
-} from '../ssh/ssh-target-registry'
+import { getSshTargetRegistryStore } from '../ssh/ssh-target-registry'
 import { releaseUnreachableOrcadSetup } from '../ssh/orcad-unreachable-setup-release'
 import { getCurrentMainWindow } from './ssh-ipc-context'
 import { broadcastSshState } from './ssh-renderer-broadcast'
-import { disconnectRegisteredSshTarget } from './ssh-session-teardown'
 import { connectInFlight } from './ssh-connect-attempt-registry'
+import { startLegacyRelayBridge } from '../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
 
 export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConnectDeps {
   const registry = getSshTargetRegistryStore()!
@@ -80,7 +79,6 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
       relayTerminalsOnConnect({
         store,
         targetId: target.id,
-        listRelayPtyIds: orcadMigrationRelayPtyLister(target.id),
         censusHost: async () =>
           censusSshHostRelaysBeforeSession(
             await requireManagedOrcadInfrastructure().connectionManager.connect(target),
@@ -89,26 +87,24 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
       }),
     deploy: (target) =>
       createManagedOrcadEnvironment(userDataPath, {
-        name: target.orcadProvisioning?.name ?? target.label,
+        name: target.orcadProvisioning?.name ?? managedOrcadServerName(target),
         sshTargetId: target.id
       }),
-    convert: (target, hostProof) =>
-      convertSshTargetToManagedOrcad(userDataPath, {
+    convert: async (target, hostProof) => {
+      // COMPAT(legacy-relay-bridge): find the panes old relays still run before the tabs remount.
+      if (hostProof?.bridged) {
+        await startLegacyRelayBridge(target.id)
+      }
+      return convertSshTargetToManagedOrcad(userDataPath, {
         sshTargetId: target.id,
-        name: target.label,
-        listRelayPtyIds: orcadMigrationRelayPtyLister(target.id),
+        name: managedOrcadServerName(target),
         // The connect's own census already answered; a conversion before any session reuses it.
         censusHost: (host) =>
           hostProof ? Promise.resolve(hostProof) : censusHostRelayTerminalsFor(host)(),
-        destinationFor: orcadMigrationDestinationFor,
-        // Why guarded: this runs before the connect registers a session, and an unconditional
-        // disconnect would cancel the very connect attempt that asked for the conversion.
-        releaseDirectSession: async (targetId) => {
-          if (hasRegisteredDirectSshAuthority(targetId)) {
-            await disconnectRegisteredSshTarget(targetId)
-          }
-        }
-      }),
+        // Why no releaseDirectSession: a disconnect here would cancel the connect that asked for it.
+        destinationFor: orcadMigrationDestinationFor
+      })
+    },
     abandonDeploy: async (target) => {
       const environmentId =
         getManagedOrcadFenceEnvironmentId(target) ??

@@ -39,6 +39,8 @@ export type AgentLaunchSurfaceFactory = {
     paneKey?: string
     /** The tab's first view, derived on the host by the window's own rule. */
     viewMode?: 'terminal' | 'chat'
+    /** Account routing env merged over the agent's own (`agent.launch`'s `accountEnv`). */
+    accountEnv?: Readonly<Record<string, string>>
   }): Promise<{
     handle: string
     /** The pane this create minted; a factory whose runtime reports none omits it, never invents. */
@@ -111,6 +113,9 @@ export type AgentLaunchWorkspaceFactory = {
     /** Offered only alongside a `startupAgent` whose CLI takes the prompt on argv: agent-first
      *  creation builds the startup command, so that is where the typed line is measured. */
     startupPrompt?: string
+    /** Set instead of `startupPrompt` under the `legacy-host` prompt policy: this create owns the
+     *  text for any agent and length, as `worktree.create` always has. */
+    legacyPrompt?: AgentLaunchPrompt
     /** Inputs needed when this terminal is created as the worktree's startup surface. */
     agentArgs?: string | null
     cwd?: string
@@ -118,10 +123,13 @@ export type AgentLaunchWorkspaceFactory = {
     paneKey?: string
     /** The launch's session options, read as the startup terminal's model/effort/mode preferences. */
     options?: Readonly<Record<string, unknown>>
+    /** Account routing env merged over the startup agent's own. */
+    accountEnv?: Readonly<Record<string, string>>
   }): Promise<{
     worktreeId: string
-    /** The new workspace's SSH connection; `null` is local. Decides what its agent tab can show. */
-    connectionId: string | null
+    /** The new workspace's SSH connection; `null` is local. The executor carries it but nothing
+     *  reads it yet; absent when the factory did not resolve it. */
+    connectionId?: string | null
     startupTerminalHandle: string | undefined
     /** The pane minted with the startup terminal, when the runtime reported one. */
     startupTerminalPaneKey?: string
@@ -130,4 +138,9 @@ export type AgentLaunchWorkspaceFactory = {
     /** Reported by the create that built the startup command's typed line. */
     promptRodeLaunchCommand?: boolean
   }>
+  /** A folder workspace has no startup terminal: the launch starts its agent there afterwards.
+   *  Only `agent.launch` creates folders; callers that only create worktrees omit it. */
+  createFolderWorkspace?(args: {
+    create: Readonly<Record<string, unknown>>
+  }): Promise<{ worktreeId: string; connectionId: string | null }>
 }

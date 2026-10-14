@@ -1,4 +1,4 @@
-// Reading one visual out of a chat's visuals folder. This is the boundary, not the renderer: the
+// Reading one visual out of a chat's scratch folder. This is the boundary, not the renderer: the
 // file must sit directly in the folder both lexically and canonically, be a regular file reached
 // without a symlink, and be UTF-8 text within the byte cap.
 

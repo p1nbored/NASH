@@ -1,5 +1,6 @@
-import { net, session, type Session } from 'electron'
+import { session, type Session } from 'electron'
 import type { MiniMaxEndpoint } from '../../../shared/global-settings-types'
+import { getMainHttpClient } from '../../network/http-client'
 
 const MINIMAX_USAGE_PATH = '/v1/api/openplatform/coding_plan/remains'
 const MINIMAX_OVERSEAS_BASE = 'https://platform.minimax.io'
@@ -233,13 +234,13 @@ export async function fetchMiniMaxWithApiKey(args: {
   endpoint: string
   signal: AbortSignal
 }): Promise<MiniMaxFetchResponse> {
-  // Why: net.fetch routes through Electron's URL stack, matching the cookie
+  // Why: the desktop client routes through Electron's URL stack, matching the cookie
   // transport's surface area and avoiding Node's TLS quirks for CN routing.
   const headers: Record<string, string> = {
     Authorization: `Bearer ${args.apiKey}`,
     Accept: 'application/json'
   }
-  const response = await net.fetch(args.endpoint, {
+  const response = await getMainHttpClient().fetch(args.endpoint, {
     method: 'GET',
     headers,
     signal: args.signal

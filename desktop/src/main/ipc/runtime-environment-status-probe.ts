@@ -1,5 +1,5 @@
 import { resolveEnvironment } from '../../shared/runtime-environment-store'
-import { getPreferredPairingOffer } from '../../shared/runtime-environments'
+import { getPreferredPairedRuntimeConnection } from '../../shared/runtime-environments'
 import type { RuntimeRpcResponse } from '../../shared/runtime-rpc-envelope'
 import type { RuntimeStatus } from '../../shared/runtime-types'
 import { getRuntimeEnvironmentCapabilityIncarnation } from './runtime-environment-capability-evidence'
@@ -36,7 +36,11 @@ export async function getRuntimeEnvironmentStatus(
     return runtimeEnvironmentChangedFailure(environment, 'status.get')
   }
   return attachRemoteControlDiagnostics(
-    withTailscaleHintForResponse(response, getPreferredPairingOffer(environment).endpoint),
+    withTailscaleHintForResponse(
+      response,
+      getPreferredPairedRuntimeConnection(environment).endpoint,
+      environment
+    ),
     environment.id
   )
 }

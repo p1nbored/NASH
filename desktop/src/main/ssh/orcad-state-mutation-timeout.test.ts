@@ -5,13 +5,13 @@
  * command shape) runs beside it, as the two restores did on a real host.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as DeployHelpers from './ssh-relay-deploy-helpers'
+import type * as ExecCommandModule from './ssh-relay-exec-command'
 import type * as RecordFile from './orcad-remote-record-file'
 import type * as InstallLock from './ssh-relay-install-lock'
-import type * as VersionedInstall from './ssh-relay-versioned-install'
+import type * as VersionedInstall from './remote-versioned-install'
 
-vi.mock('./ssh-relay-deploy-helpers', async (importOriginal) => ({
-  ...(await importOriginal<typeof DeployHelpers>()),
+vi.mock('./ssh-relay-exec-command', async (importOriginal) => ({
+  ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
 vi.mock('./ssh-connection-utils', () => ({ shellEscape: (s: string) => `'${s}'` }))
@@ -23,7 +23,7 @@ vi.mock('./orcad-remote-record-file', async (importOriginal) => ({
   ...(await importOriginal<typeof RecordFile>()),
   writeAtomicOrcadRemoteRecord: vi.fn()
 }))
-vi.mock('./ssh-relay-versioned-install', async (importOriginal) => ({
+vi.mock('./remote-versioned-install', async (importOriginal) => ({
   ...(await importOriginal<typeof VersionedInstall>()),
   readLocalFullVersion: () => '0.2.0+bb01'
 }))
@@ -33,15 +33,18 @@ vi.mock('./orcad-local-build-hash', () => ({
   computeLocalOrcadBuildHash: () => 'abc123def4567890'
 }))
 
-import { execCommand } from './ssh-relay-deploy-helpers'
+import {
+  execCommand,
+  SSH_EXEC_TIMEOUT_CODE,
+  isUnconfirmedSshCommandTermination
+} from './ssh-relay-exec-command'
 import { acquireInstallLock } from './ssh-relay-install-lock'
 import { writeAtomicOrcadRemoteRecord } from './orcad-remote-record-file'
 import { deployOrcad } from './orcad-remote-deploy'
 import { rollbackOrcad } from './orcad-remote-rollback'
 import { recoverInterruptedOrcadActivation } from './orcad-activation-recovery'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import { SSH_EXEC_TIMEOUT_CODE, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { BUILD_HASH, FakeOrcadHost, NEW, OLD } from './orcad-activation-host-test-harness'
 import { isSnapshotCaptureCommand } from './orcad-snapshot-capture-command'
 
@@ -52,7 +55,7 @@ let running = false
 
 const slot = {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: execCommand is mocked, so nothing reads the connection.
-  conn: {} as SshConnection,
+  conn: {} as OrcadHostTransport,
   host: getRemoteHostPlatform('linux-x64'),
   remoteHome: '/home/u',
   nodePath: '/usr/bin/node',
@@ -158,6 +161,13 @@ describe('a state mutation that outlives the client’s wait', () => {
     await deploy().catch(() => undefined)
     host.crashAt = null
     expect(host.alive.has(NEW)).toBe(true)
+    // An unhealthy candidate, so recovery undoes the activation instead of committing it.
+    vi.mocked(execCommand).mockImplementation(async (_conn, command) => {
+      const answer = await exec(command)
+      return command.includes(`orcad-${NEW}/`)
+        ? answer.replace('"state":"live"', '"state":"absent"')
+        : answer
+    })
     slow = 'restore'
     const first = await recoverInterruptedOrcadActivation({ ...slot, acceptChangedState: true })
     expect(first).toMatchObject({ outcome: 'refused', verdict: 'unverifiable' })

@@ -6,6 +6,8 @@ import type { AutomationOwnerRef } from '../../shared/automation-owner-ref'
 import type { SshTarget } from '../../shared/ssh-types'
 import type { AutomationService } from '../automations/service'
 import type { Store } from '../persistence'
+import type * as Fs from 'node:fs'
+import { SSH_HOST_NOT_SERVED_MESSAGE } from '../providers/ssh-host-not-served-error'
 
 type IpcHandler = (event: unknown, ...args: unknown[]) => unknown
 
@@ -19,14 +21,15 @@ vi.mock('electron', () => ({
   }
 }))
 
-// The relay is the only seam a scoped SSH probe crosses, so it stands in for the host.
-const relay = {
-  request: vi.fn<(method: string, params: unknown) => Promise<unknown>>(),
-  isDisposed: () => false
-}
-vi.mock('../ssh/ssh-target-registry', () => ({
-  getActiveMultiplexer: () => relay
+// This computer's `which` lookup is the one process a scoped probe starts, so it counts probes.
+const probeCommand = vi.hoisted(() => vi.fn())
+vi.mock('@orca/process-host', () => ({ runProcess: probeCommand }))
+// Why: keep the local job read off the developer's real ~/.hermes and ~/.openclaw.
+vi.mock('node:fs', async (importOriginal) => ({
+  ...(await importOriginal<typeof Fs>()),
+  existsSync: () => false
 }))
+const PROBE_FOUND = { code: 0, signal: null, stdout: '', stderr: '', timedOut: false }
 
 function sshTarget(overrides: Partial<SshTarget> = {}): SshTarget {
   return {
@@ -37,6 +40,11 @@ function sshTarget(overrides: Partial<SshTarget> = {}): SshTarget {
     generation: 3,
     ...overrides
   } as SshTarget
+}
+
+const desktopSelf: AutomationOwnerRef = {
+  authority: { kind: 'desktop' },
+  selector: { kind: 'self' }
 }
 
 function desktopSsh(targetId = 't1', targetGeneration = 3): AutomationOwnerRef {
@@ -66,8 +74,8 @@ async function invoke(channel: string, payload?: unknown): Promise<unknown> {
 
 beforeEach(async () => {
   ipcHandlers.clear()
-  relay.request.mockReset()
-  relay.request.mockResolvedValue({ jobs: [], hermesAvailable: true, error: null })
+  probeCommand.mockReset()
+  probeCommand.mockResolvedValue(PROBE_FOUND)
   state.targets = [sshTarget()]
   state.service = { externalProbePriority: null }
   const { registerAutomationHandlers } = await import('./automations')
@@ -86,15 +94,15 @@ afterEach(() => {
 
 describe('scoped external-manager IPC', () => {
   it('derives the target from the captured owner rather than the payload', async () => {
-    const entry = (await invoke('automations:listExternalManagerForOwner', {
+    const entry = await invoke('automations:listExternalManagerForOwner', {
       owner: desktopSsh(),
-      provider: 'hermes'
-    })) as { manager: { id: string; target: unknown } | null; error: string | null }
+      provider: 'hermes',
+      target: { type: 'local' }
+    })
 
-    expect(relay.request).toHaveBeenCalledWith('externalAutomations.list', { provider: 'hermes' })
-    expect(entry.manager?.id).toBe('hermes:ssh:t1')
-    expect(entry.manager?.target).toEqual({ type: 'ssh', connectionId: 't1' })
-    expect(entry.error).toBeNull()
+    // Why: an SSH owner is never served here, and a payload target must not reroute it locally.
+    expect(entry).toMatchObject({ manager: null, error: SSH_HOST_NOT_SERVED_MESSAGE })
+    expect(probeCommand).not.toHaveBeenCalled()
   })
 
   it('refuses a request with no captured owner without probing', async () => {
@@ -104,7 +112,7 @@ describe('scoped external-manager IPC', () => {
     await expect(invoke('automations:runExternalActionForOwner', {})).rejects.toThrow(
       /automation owner is required/i
     )
-    expect(relay.request).not.toHaveBeenCalled()
+    expect(probeCommand).not.toHaveBeenCalled()
   })
 
   it('refuses a runtime authority, so runtime hosts are never tunnelled', async () => {
@@ -117,7 +125,7 @@ describe('scoped external-manager IPC', () => {
         provider: 'hermes'
       })
     ).rejects.toThrow(EXTERNAL_AUTOMATION_SCOPE_CODES.authorityNotSupported)
-    expect(relay.request).not.toHaveBeenCalled()
+    expect(probeCommand).not.toHaveBeenCalled()
   })
 
   it('refuses a runtime-owned SSH target as hidden rather than as a probe failure', async () => {
@@ -125,7 +133,7 @@ describe('scoped external-manager IPC', () => {
     await expect(
       invoke('automations:listExternalManagerForOwner', { owner: desktopSsh(), provider: 'hermes' })
     ).rejects.toThrow(EXTERNAL_AUTOMATION_SCOPE_CODES.targetHidden)
-    expect(relay.request).not.toHaveBeenCalled()
+    expect(probeCommand).not.toHaveBeenCalled()
   })
 
   it('refuses a stale host incarnation with the shared conflict vocabulary', async () => {
@@ -136,21 +144,21 @@ describe('scoped external-manager IPC', () => {
         provider: 'hermes'
       })
     ).rejects.toThrow(AUTOMATION_OWNER_CONFLICT_CODES.ownerChanged)
-    expect(relay.request).not.toHaveBeenCalled()
+    expect(probeCommand).not.toHaveBeenCalled()
   })
 
   it('keeps one cache across requests, so a repeat read costs no second probe', async () => {
-    const request = { owner: desktopSsh(), provider: 'hermes' }
+    const request = { owner: desktopSelf, provider: 'hermes' }
     await invoke('automations:listExternalManagerForOwner', request)
     await invoke('automations:listExternalManagerForOwner', request)
-    expect(relay.request).toHaveBeenCalledTimes(1)
+    expect(probeCommand).toHaveBeenCalledTimes(1)
 
     await invoke('automations:listExternalManagerForOwner', { ...request, refresh: true })
-    expect(relay.request).toHaveBeenCalledTimes(2)
+    expect(probeCommand).toHaveBeenCalledTimes(2)
   })
 
   it('invalidates that host after a mutation through the scoped path', async () => {
-    const request = { owner: desktopSsh(), provider: 'hermes' }
+    const request = { owner: desktopSelf, provider: 'hermes' }
     await invoke('automations:listExternalManagerForOwner', request)
     await invoke('automations:createExternalForOwner', {
       ...request,
@@ -162,23 +170,23 @@ describe('scoped external-manager IPC', () => {
     await invoke('automations:listExternalManagerForOwner', request)
 
     // create + the re-probe after invalidation, on top of the first list.
-    expect(relay.request).toHaveBeenCalledTimes(3)
+    expect(probeCommand).toHaveBeenCalledTimes(3)
   })
 })
 
 describe('probe scope retention', () => {
   it('cancels an in-flight probe once its host leaves the retained set', async () => {
     const probe: { release: () => void } = { release: () => undefined }
-    relay.request.mockImplementation(
+    probeCommand.mockImplementation(
       () =>
         new Promise((resolve) => {
-          probe.release = () => resolve({ jobs: [], hermesAvailable: true, error: null })
+          probe.release = () => resolve(PROBE_FOUND)
         })
     )
     const pending = invoke('automations:listExternalManagerForOwner', {
-      owner: desktopSsh(),
+      owner: desktopSelf,
       provider: 'hermes'
-    }) as Promise<unknown>
+    })
     const settled = pending.catch((error: unknown) => error)
     await Promise.resolve()
 
@@ -205,17 +213,17 @@ describe('Orca automation traffic priority', () => {
     )
 
     const probe = invoke('automations:listExternalManagerForOwner', {
-      owner: desktopSsh(),
+      owner: desktopSelf,
       provider: 'hermes'
-    }) as Promise<unknown>
+    })
     await Promise.resolve()
     // Why: the probe is queued, not started — this is the only thing keeping
     // external discovery from competing with the work the user is waiting on.
-    expect(relay.request).not.toHaveBeenCalled()
+    expect(probeCommand).not.toHaveBeenCalled()
 
     finish()
     await dispatch
     await probe
-    expect(relay.request).toHaveBeenCalledTimes(1)
+    expect(probeCommand).toHaveBeenCalledTimes(1)
   })
 })

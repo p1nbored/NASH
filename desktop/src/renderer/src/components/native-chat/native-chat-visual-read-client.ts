@@ -5,7 +5,7 @@
 // cached; the next mount or retry asks again.
 
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
-import type { RuntimeClientTarget } from '@/runtime/runtime-client-target'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import {
   AGENT_SESSION_VISUAL_READ_ERRORS,
   type AgentSessionReadVisualResult,

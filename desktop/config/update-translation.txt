@@ -157,3 +157,46 @@ Method (reproducible):
   R3 sign-off clean on all five locales (0 errors, 0 warns; placeholders byte-identical,
   0 untranslated leftovers, agent/proxy terminology verified).
 
+## Scan 2026-10-13
+
+- HEAD scanned: 4d65146f2d (origin/main; branch fast-forwarded onto it). Base: de4ee59cba
+  (the 2026-10-07 scan's HEAD). Window: de4ee59cba .. HEAD (648 commits).
+- Note: this branch arrived with an uncommitted partial run (at a9458b5d14, 648 commits
+  behind origin/main): 81 keys x5 added plus a stale `settings.chat.description`. It was
+  saved as a draft seed (it also wrongly kept the 3 pinned Chat UI keys) and superseded by
+  this full scan against current origin/main.
+- Gates before fix: catalog verify PASS, coverage --check PASS (13 allowlisted), extraction
+  PASS, runtime-catalog PASS. No unkeyed strings and en.json in sync; the gap was
+  target-locale coverage only.
+- Delta since base: ~500 new en keys, 161 removed (mostly `auto.*.<hash>` renames),
+  35 changed en values. All five locales were missing the same delta set
+  (es 262, fr 261, ja 262, ko 238, zh 250); that set includes the 3 pinned Chat UI keys
+  (`native-chat-locales.test.ts`). Add the 11 pinned provider-credit-balance keys
+  (`provider-credit-balance-locales.test.ts`) and all 14 stay English-fallback by design.
+- Applied 259/258/259/235/247 new keys (es/fr/ja/ko/zh) via apply-translation-delta.mjs
+  (pipeline repaired ja 新しい->新規, zh 忽略->关闭). Strictly additive: +1258 keys, 0 removed.
+- Changed-value review: `settings.chat.description` was stale in all five ("get their names"
+  -> "behave"); es `TerminalRemoteRuntimeReconnectBanner.retryingBody` was still English;
+  es/fr/ja `ZcodePlanAccountsSection.usingCliHelp` still named the removed
+  `~/.zcode/cli/config.json` path; zh had 9 agent-sense 代理 that the 智能体 standard requires.
+  Fixed all 18.
+- Gates after fix: catalog verify PASS (all five 15902/15916; the 14 omissions are the 11
+  pinned balance + 3 pinned Chat UI keys), coverage --check PASS, extraction PASS,
+  runtime-catalog PASS, locale vitest suites PASS (17 i18n files/209 tests + 14 policy
+  files/79 tests).
+- Reviews (4 of max 4 rounds; round 0 = 5 parallel translators, then 5 reviewers/round):
+  R1 applied 20 (es distro gender x2; fr Maj+Entrée + count/stackSummary plural; ja
+  runtimeAuth modal + checksPassing 成功; ko plain-http calques x3 + state marker; zh
+  注释->笔记 x3, 标注->注释 x2, pronoun/label fixes).
+  R2 applied 11 (es copySignInLink "instead" + WSL lane->cuenta; fr http non chiffré x3 +
+  deviceDowngraded pronoun; ja queueSearchSteer 今すぐ送信 + seenIn 確認済み; ko
+  signInLinkCopied 비공개 창; zh claudeRemoveFolder + waiting.label).
+  R3 applied 4 (fr distro-feminine x3; zh keywordDistro 发行版); es/ja/ko signed off clean.
+  R4 re-verified fr/zh and applied 1 (fr queueSearchQueue file d'attente); zh clean; rejected
+  the fr réouvrir->rouvrir rewrite as churn (the catalog mixes 18 réouvrir / 30 rouvrir and
+  this same feature already ships "Réouvrir").
+- Out-of-delta findings left for a future pass (pre-existing, not from this window's PRs):
+  zh `components.workspace.cleanup.browse.*` bad MT (host->主持人, path->小路, ticket->票,
+  blockers->阻碍者); 7 zh keys still use Latin "Agent"; zh ZCode TUI title/description left
+  English; fr search keywords "indigène"/"procuration".
+

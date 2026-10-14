@@ -115,14 +115,6 @@ const {
   forceDeleteLocalBranchMock,
   computeWorktreePathMock,
   ensurePathWithinWorkspaceMock,
-  sshGitProviders,
-  sshProviderGenerations,
-  getSshGitProviderMock,
-  getSshGitProviderGenerationMock,
-  registerSshGitProviderMock,
-  unregisterSshGitProviderMock,
-  getActiveMultiplexerMock,
-  muxRequestMock,
   invalidateAuthorizedRootsCacheMock,
   prepareLocalWorktreeRootForRepoMock,
   createHostedReviewMock,
@@ -163,7 +155,6 @@ const {
   listGitHubAssignableUsersMock,
   applyAgentStatusHooksEnabledMock,
   detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgentsMock,
   markCodexProjectTrustedMock,
   markCopilotFolderTrustedMock,
   markCursorWorkspaceTrustedMock,
@@ -192,10 +183,6 @@ const {
   getIssueMock,
   deleteWorktreeHistoryDirMock
 } = vi.hoisted(() => {
-  // Why: SSH runtime tests register providers via the public dispatcher API, so the mock needs the same registry semantics as the real module.
-  const sshGitProviders = new Map<string, unknown>()
-  const sshProviderGenerations = new Map<string, number>()
-
   return {
     MOCK_GIT_WORKTREES: [
       {
@@ -212,26 +199,6 @@ const {
     forceDeleteLocalBranchMock: vi.fn() as TestMock,
     computeWorktreePathMock: vi.fn() as TestMock,
     ensurePathWithinWorkspaceMock: vi.fn() as TestMock,
-    sshGitProviders,
-    sshProviderGenerations,
-    getSshGitProviderMock: vi.fn((connectionId: string) => sshGitProviders.get(connectionId)),
-    getSshGitProviderGenerationMock: vi.fn(
-      (connectionId: string) => sshProviderGenerations.get(connectionId) ?? 0
-    ),
-    registerSshGitProviderMock: vi.fn((connectionId: string, provider: unknown) => {
-      sshGitProviders.set(connectionId, provider)
-      sshProviderGenerations.set(connectionId, (sshProviderGenerations.get(connectionId) ?? 0) + 1)
-    }),
-    unregisterSshGitProviderMock: vi.fn((connectionId: string) => {
-      if (sshGitProviders.delete(connectionId)) {
-        sshProviderGenerations.set(
-          connectionId,
-          (sshProviderGenerations.get(connectionId) ?? 0) + 1
-        )
-      }
-    }),
-    getActiveMultiplexerMock: vi.fn() as TestMock,
-    muxRequestMock: vi.fn() as TestMock,
     invalidateAuthorizedRootsCacheMock: vi.fn() as TestMock,
     prepareLocalWorktreeRootForRepoMock: vi.fn() as TestMock,
     createHostedReviewMock: vi.fn() as TestMock,
@@ -274,7 +241,6 @@ const {
     listGitHubAssignableUsersMock: vi.fn() as TestMock,
     applyAgentStatusHooksEnabledMock: vi.fn() as TestMock,
     detectInstalledAgentsWithShellPathHydrationMock: vi.fn() as TestMock,
-    detectRemoteAgentsMock: vi.fn() as TestMock,
     markCodexProjectTrustedMock: vi.fn() as TestMock,
     markCopilotFolderTrustedMock: vi.fn() as TestMock,
     markCursorWorkspaceTrustedMock: vi.fn() as TestMock,
@@ -325,34 +291,13 @@ vi.mock('../../terminal-history-deletion', () => ({
   deleteWorktreeHistoryDir: deleteWorktreeHistoryDirMock
 }))
 
-vi.mock('../../providers/ssh-git-dispatch', () => ({
-  getSshGitProvider: getSshGitProviderMock,
-  getSshGitProviderGeneration: getSshGitProviderGenerationMock,
-  SSH_GIT_PROVIDER_UNAVAILABLE_MESSAGE:
-    'Remote connection dropped. Click Reconnect on the SSH target before retrying.',
-  requireSshGitProvider: (connectionId: string) => {
-    const provider = getSshGitProviderMock(connectionId)
-    if (!provider) {
-      throw new Error(
-        'Remote connection dropped. Click Reconnect on the SSH target before retrying.'
-      )
-    }
-    return provider
-  },
-  registerSshGitProvider: registerSshGitProviderMock,
-  unregisterSshGitProvider: unregisterSshGitProviderMock
-}))
-
 vi.mock('../../ssh/ssh-target-registry', () => ({
-  getActiveMultiplexer: getActiveMultiplexerMock,
-  getRegisteredSshState: () => ({ remotePlatform: 'linux' }),
-  setSshActiveMultiplexerResolver: vi.fn()
+  getRegisteredSshState: () => ({ remotePlatform: 'linux' })
 }))
 
 vi.mock('../../preflight/agent-detection', () => ({
   detectAgentCommandsOnHost: vi.fn(async () => new Set(['qodercli'])),
-  detectInstalledAgentsWithShellPathHydration: detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgents: detectRemoteAgentsMock
+  detectInstalledAgentsWithShellPathHydration: detectInstalledAgentsWithShellPathHydrationMock
 }))
 
 vi.mock('../../agent-hooks/managed-agent-hook-controls', () => ({
@@ -597,14 +542,6 @@ export {
   forceDeleteLocalBranchMock,
   computeWorktreePathMock,
   ensurePathWithinWorkspaceMock,
-  sshGitProviders,
-  sshProviderGenerations,
-  getSshGitProviderMock,
-  getSshGitProviderGenerationMock,
-  registerSshGitProviderMock,
-  unregisterSshGitProviderMock,
-  getActiveMultiplexerMock,
-  muxRequestMock,
   invalidateAuthorizedRootsCacheMock,
   prepareLocalWorktreeRootForRepoMock,
   createHostedReviewMock,
@@ -645,7 +582,6 @@ export {
   listGitHubAssignableUsersMock,
   applyAgentStatusHooksEnabledMock,
   detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgentsMock,
   markCodexProjectTrustedMock,
   markCopilotFolderTrustedMock,
   markCursorWorkspaceTrustedMock,

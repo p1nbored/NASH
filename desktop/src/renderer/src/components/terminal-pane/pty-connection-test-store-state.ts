@@ -58,6 +58,7 @@ export type StoreState = {
       | { kind: 'wsl'; distro: string }
   }[]
   sshConnectionStates: Map<string, { status: string }>
+  sshTargetLabels?: Map<string, string>
   transientClearedAgentStatusConnectionIds: Record<string, true>
   cacheTimerByKey: Record<string, number | null>
   settings: {
@@ -108,6 +109,9 @@ export type StoreState = {
   >
   getAgentLaunchConfigForStatusEntry: ReturnType<typeof vi.fn>
   clearSleepingAgentSession: ReturnType<typeof vi.fn>
+  rememberSleepingAgentSession?: ReturnType<typeof vi.fn>
+  pendingStartupByTabId?: Record<string, unknown>
+  automaticAgentResumeClaimsByTabId?: Record<string, unknown>
   registerAgentLaunchConfig: ReturnType<typeof vi.fn>
   clearAgentLaunchConfig: ReturnType<typeof vi.fn>
   markWorktreeUnread: ReturnType<typeof vi.fn>
@@ -123,33 +127,6 @@ export type StoreState = {
   markTerminalTabUnread: ReturnType<typeof vi.fn>
   markTerminalPaneUnread: ReturnType<typeof vi.fn>
   markAgentCompletionPaneUnread: ReturnType<typeof vi.fn>
-  directSshPaneRetryByTabId?: Record<
-    string,
-    {
-      attemptId: string
-      authority: {
-        targetId: string
-        providerEpoch: string
-        connectionGeneration: number
-      }
-      tabGeneration: number
-      startedAt: number
-    }
-  >
-  directSshLivePtyBindingByTabId?: Record<
-    string,
-    {
-      attemptId: string
-      authority: {
-        targetId: string
-        providerEpoch: string
-        connectionGeneration: number
-      }
-      tabGeneration: number
-      ptyId: string
-    }
-  >
-  settleDirectSshPaneRetry?: ReturnType<typeof vi.fn>
 }
 
 export type WindowsShiftEnterPaneState = Parameters<

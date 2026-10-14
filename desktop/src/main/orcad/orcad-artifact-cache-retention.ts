@@ -10,7 +10,7 @@ import { readdir, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { nodeRuntimeAsset } from '../../shared/node-runtime-pin'
 import { ORCAD_LOCK_FILE_NAME, readOrcadInstanceLockRecord } from './orcad-instance-lock'
-import { materializedOrcadArtifactVersions } from '../ssh/orcad-artifact-materializer'
+import { materializedOrcadArtifactVersions } from './orcad-artifact-materializer'
 import { isProcessAlive } from '../daemon/daemon-process-inspection'
 import { liveDaemonOrcadSlots } from './orcad-daemon-slot-pins'
 

@@ -34,6 +34,8 @@ function requireClassifier(api: AutopilotTaskApi) {
  */
 export const TASK_PROPOSE_METHOD = defineMethod({
   name: 'orchestration.taskPropose',
+
+  permission: 'workspace',
   params: TaskProposeParams,
   handler: (params, context): TaskProposeResult => {
     const api = requireAutopilotTaskApi(context.runtime)

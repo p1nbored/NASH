@@ -1,7 +1,5 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { OrcaRuntimeWithRegisterPty } from './orca-runtime-register-pty'
-import type { TerminalOutputSourceRange } from '../../shared/terminal-output-source-range'
-import type { RuntimePtyDataAdmission } from './runtime-terminal-contracts'
 
 export class OrcaRuntimeWithPreparePtyExecutionContext extends OrcaRuntimeWithRegisterPty {
   preparePtyExecutionContext(
@@ -53,40 +51,5 @@ export class OrcaRuntimeWithPreparePtyExecutionContext extends OrcaRuntimeWithRe
     if (trimmed.length > 0) {
       this.terminalSpawnCommandsByPtyId.set(ptyId, trimmed)
     }
-  }
-
-  resetPtyModelAfterMigrationFailure(ptyId: string): void {
-    this.providerSnapshotPreferredPtys.add(ptyId)
-    this.disposeHeadlessTerminal(ptyId)
-  }
-
-  /**
-   * Handles incoming data from a PTY process, running agent detection,
-   * updating terminal tail buffers, and triggering foreground agent refreshes.
-   */
-  acceptPtyDataBounded(
-    ptyId: string,
-    data: string,
-    at: number,
-    sequenceChars = data.length,
-    transformed = false,
-    sourceRanges?: readonly TerminalOutputSourceRange[]
-  ): RuntimePtyDataAdmission {
-    let completion: Promise<void> | null = null
-    const sequence = this.onPtyData(
-      ptyId,
-      data,
-      at,
-      sequenceChars,
-      transformed,
-      (receipt) => {
-        completion = receipt
-      },
-      sourceRanges
-    )
-    if (!completion) {
-      throw new Error('PTY model admission receipt was not captured')
-    }
-    return Object.freeze({ sequence, completion })
   }
 }

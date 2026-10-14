@@ -44,10 +44,7 @@ export function claudeDeliveryFor(
     case 'claude_workflow':
       return inheritsCoordinator ? 'claude_inherited' : 'claude_workflow_definition'
     // Why listed: only Claude targets reach this, and the others are named so the switch stays exhaustive.
-    case 'claude_primary':
-    case 'claude_headless':
-    case 'codex_cli':
-    case 'agy_cli':
+    default:
       return 'claude_effort_flag'
   }
 }
@@ -75,6 +72,9 @@ export function mapClaudeEffort(input: {
   const { level, requirement, delivery, listedEfforts } = input
   if (listedEfforts === null) {
     return UNVERIFIED
+  }
+  if (level === 'none' && listedEfforts.length === 0) {
+    return resolved(null, 'omitted', 'applied')
   }
   const flagCarries =
     delivery !== 'claude_effort_flag' || CLAUDE_SESSION_FLAG_LEVELS.some((known) => known === level)

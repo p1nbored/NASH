@@ -20,20 +20,10 @@ import {
   buildAiVaultProjectContext,
   buildAiVaultSessionProjectById
 } from './ai-vault-session-projects'
-import {
-  resolveAiVaultSessionResumeActions,
-  resolveAiVaultHistorySessionResumeState
-} from './ai-vault-session-resume'
 import { useAiVaultSessionLaunchActions } from './ai-vault-session-launch-actions'
-import type { AiVaultResumeInChatEligibility } from './ai-vault-session-resume-in-chat'
-import { resolveAiVaultSessionResumeInChatForWorkspace } from './ai-vault-session-resume-in-chat-workspace'
-import {
-  useAiVaultSessionWorktreeMap,
-  withAiVaultCurrentWorktreeStatus
-} from './ai-vault-session-worktree'
 import { openAiVaultSessionLogInOrca } from './ai-vault-session-log-open'
+import { revealAiVaultSessionPath } from './ai-vault-session-path-actions'
 import { useAiVaultOriginalPaneActions } from './ai-vault-original-pane-actions'
-import type { AiVaultSession } from '../../../../shared/ai-vault-types'
 import { translate } from '@/i18n/i18n'
 import { AiVaultPanelHeader } from './AiVaultPanelHeader'
 import {
@@ -45,11 +35,7 @@ import { aiVaultBrowseSortMenu, aiVaultSearchSortMenu } from './ai-vault-sort-op
 import { AiVaultShowMoreSessionsRow } from './AiVaultShowMoreSessionsRow'
 import { AiVaultSessionVirtualList } from './AiVaultSessionVirtualList'
 import { useAiVaultSessionRefresh } from './ai-vault-session-refresh'
-import {
-  buildAiVaultHostScopeOptions,
-  buildRuntimeAiVaultHostScopeOptions,
-  useAiVaultExecutionHostScope
-} from './ai-vault-host-scope'
+import { useAiVaultPanelHostScope } from './ai-vault-host-scope'
 import { useAiVaultPanelScope } from './use-ai-vault-panel-scope'
 import { useAiVaultSearchFocusRequest } from './use-ai-vault-search-focus-request'
 import { usePersistedAiVaultViewOptions } from './use-persisted-ai-vault-view-options'
@@ -59,6 +45,7 @@ import { useAiVaultSessionDeleteAction } from './ai-vault-session-delete-action'
 import { useAiVaultPanelSearch } from './use-ai-vault-search'
 import { aiVaultSearchScopeIdentity } from './ai-vault-search-scope-identity'
 import { AiVaultPanelSearch } from './AiVaultPanelSearch'
+import { useAiVaultPanelSessionResume } from './use-ai-vault-panel-session-resume'
 export default function AiVaultPanel(): React.JSX.Element {
   const activeWorktreeId = useActiveWorktreeId()
   const activeWorktree = useActiveWorktree()
@@ -77,7 +64,6 @@ export default function AiVaultPanel(): React.JSX.Element {
     }))
   )
   const settings = useAppStore((s) => s.settings)
-  const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
   const agentCmdOverrides = settings?.agentCmdOverrides
   const paneActions = useAiVaultOriginalPaneActions()
   const [query, setQuery] = useState('')
@@ -99,28 +85,8 @@ export default function AiVaultPanel(): React.JSX.Element {
     resetViewOptions
   } = usePersistedAiVaultViewOptions()
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
-  const runtimeHostOptions = useMemo(
-    () => buildRuntimeAiVaultHostScopeOptions(runtimeEnvironments),
-    [runtimeEnvironments]
-  )
-  const availableExecutionHostScopes = useMemo(
-    () => runtimeHostOptions.map((option) => option.id),
-    [runtimeHostOptions]
-  )
-  const { executionHostScope, activeExecutionHostScope, onExecutionHostScopeChange } =
-    useAiVaultExecutionHostScope({
-      activeWorktreeId: activeWorktreeId ?? null,
-      resumeTargetState,
-      availableExecutionHostScopes
-    })
-  const hostScopeOptions = useMemo(
-    () =>
-      buildAiVaultHostScopeOptions({
-        activeExecutionHostScope,
-        runtimeHostOptions
-      }),
-    [activeExecutionHostScope, runtimeHostOptions]
-  )
+  const { executionHostScope, onExecutionHostScopeChange, hostScopeOptions } =
+    useAiVaultPanelHostScope(activeWorktreeId ?? null, resumeTargetState)
   const activeWorktreePath = activeWorktree?.path ?? null
   // Why: AI Vault ownership is cwd-based, so we must consider live worktrees across all repos.
   const activeWorktreePaths = useMemo(
@@ -184,21 +150,20 @@ export default function AiVaultPanel(): React.JSX.Element {
       }),
     [allWorktrees, projectHostSetupProjection, repos, sessions]
   )
-  const sessionWorktreeById = useAiVaultSessionWorktreeMap({
+  const effectiveActiveWorktreeId = activeWorktreeId ?? activeWorktree?.id ?? null
+  const {
+    getSessionWorktreeInfo,
+    getSessionResumeState,
+    getSessionResumeActions,
+    getSessionResumeInChat
+  } = useAiVaultPanelSessionResume({
     sessions,
     repos,
-    worktrees: allWorktrees
+    allWorktrees,
+    workspaceId: effectiveActiveWorktreeId,
+    resumeTargetState,
+    settings
   })
-  const effectiveActiveWorktreeId = activeWorktreeId ?? activeWorktree?.id ?? null
-  // `current` is stamped per row at read time so the map above stays cached.
-  const getSessionWorktreeInfo = useCallback(
-    (session: AiVaultSession) =>
-      withAiVaultCurrentWorktreeStatus(
-        sessionWorktreeById.get(session.id) ?? null,
-        effectiveActiveWorktreeId
-      ),
-    [effectiveActiveWorktreeId, sessionWorktreeById]
-  )
   const launchActions = useAiVaultSessionLaunchActions({
     activeWorktree: activeWorktree ?? null,
     activeWorktreeId: effectiveActiveWorktreeId,
@@ -232,49 +197,6 @@ export default function AiVaultPanel(): React.JSX.Element {
       })
     )
   }, [])
-
-  const getSessionResumeState = useCallback(
-    (session: AiVaultSession) =>
-      resolveAiVaultHistorySessionResumeState({
-        session,
-        worktreeInfo: getSessionWorktreeInfo(session),
-        activeWorktreeId: effectiveActiveWorktreeId,
-        worktrees: allWorktrees,
-        repos,
-        targetState: resumeTargetState
-      }),
-    [allWorktrees, effectiveActiveWorktreeId, getSessionWorktreeInfo, repos, resumeTargetState]
-  )
-
-  const getSessionResumeActions = useCallback(
-    (session: AiVaultSession) =>
-      resolveAiVaultSessionResumeActions({
-        sessionFilePath: session.filePath,
-        sessionExecutionHostId: session.executionHostId,
-        worktreeInfo: getSessionWorktreeInfo(session),
-        activeWorktreeId: effectiveActiveWorktreeId,
-        worktrees: allWorktrees,
-        repos,
-        targetState: resumeTargetState
-      }),
-    [allWorktrees, effectiveActiveWorktreeId, getSessionWorktreeInfo, repos, resumeTargetState]
-  )
-
-  // Resuming into a chat asks a different question from resuming into a terminal: not "can this
-  // workspace host a PTY" but "will the provider still find this conversation from the workspace we
-  // would run it in". The workspace it targets is the session's own when that is open, because
-  // Claude looks its transcript up under a directory derived from the launch cwd.
-  const getSessionResumeInChat = useCallback(
-    (session: AiVaultSession): AiVaultResumeInChatEligibility =>
-      resolveAiVaultSessionResumeInChatForWorkspace({
-        session,
-        resumeState: getSessionResumeState(session),
-        activeWorkspaceId: effectiveActiveWorktreeId,
-        targetState: resumeTargetState,
-        settings
-      }),
-    [effectiveActiveWorktreeId, getSessionResumeState, resumeTargetState, settings]
-  )
 
   // Settings asks for "everything, ready to type".
   const focusSearchRequestId = useAiVaultSearchFocusRequest(
@@ -376,6 +298,7 @@ export default function AiVaultPanel(): React.JSX.Element {
             getSessionResumeInChat={getSessionResumeInChat}
             onContinueInNewSession={launchActions.handleContinueInNewSession}
             onResumeInNewChat={launchActions.handleResumeInNewChat}
+            onResumeInNewCli={launchActions.handleResumeInNewCli}
             onCopyResume={(session, worktreeId) =>
               void launchActions.copyResumeCommand(session, worktreeId)
             }
@@ -392,12 +315,8 @@ export default function AiVaultPanel(): React.JSX.Element {
               )
             }
             onOpenLog={(session) => void openAiVaultSessionLogInOrca(session)}
-            onRevealLog={(session) => void window.api.shell.openPath(session.filePath)}
-            onOpenCwd={(session) => {
-              if (session.cwd) {
-                void window.api.shell.openPath(session.cwd)
-              }
-            }}
+            onRevealLog={(session) => void revealAiVaultSessionPath(session, session.filePath)}
+            onOpenCwd={(session) => void revealAiVaultSessionPath(session, session.cwd)}
             onRequestDelete={(session) => void requestDelete(session)}
           />
         )}

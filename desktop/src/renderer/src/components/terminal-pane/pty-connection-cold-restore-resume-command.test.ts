@@ -1,7 +1,7 @@
 import type * as React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
-import { flushAsyncTicks, createDeferred } from './pty-connection-test-async'
+import { flushAsyncTicks } from './pty-connection-test-async'
 import { UUID_RE } from './pty-connection-test-constants'
 import { temporarilySetNavigatorUserAgent } from './pty-connection-test-dom'
 import {
@@ -9,7 +9,6 @@ import {
   createMockTransport,
   createPane,
   createManager,
-  type ConnectCallbacks,
   type MockTransport
 } from './pty-connection-test-pane-fixtures'
 import { buildPaneConnectionDeps } from './pty-connection-test-deps'
@@ -144,98 +143,6 @@ describe('connectPanePty', () => {
 
   afterEach(async () => {
     await restoreTerminalTestGlobals()
-  })
-
-  it('delegates a cold-restore resume command after SSH expired-session fallback', async () => {
-    const pendingTimeouts: (() => void)[] = []
-    const originalSetTimeout = globalThis.setTimeout
-    globalThis.setTimeout = vi.fn((fn: () => void) => {
-      pendingTimeouts.push(fn)
-      return 999 as unknown as ReturnType<typeof setTimeout>
-    }) as unknown as typeof setTimeout
-
-    try {
-      const { connectPanePty } = await import('./pty-connection')
-      const paneKey = makePaneKey('tab-1', LEAF_2)
-      const transport = createMockTransport()
-      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-      transport.connect.mockImplementation(
-        async (opts: { sessionId?: string; callbacks?: ConnectCallbacks }) => {
-          if (opts.sessionId) {
-            opts.callbacks?.onError?.('SSH_SESSION_EXPIRED: restored-session')
-            return undefined
-          }
-          capturedDataCallback.current = opts.callbacks?.onData ?? null
-          const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as
-            | ((ptyId: string) => void)
-            | undefined
-          onPtySpawn?.('fresh-ssh-pty')
-          return 'fresh-ssh-pty'
-        }
-      )
-      transportFactoryQueue.push(transport)
-      mockStoreState = {
-        ...mockStoreState,
-        tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: 'restored-session' }] },
-        repos: [{ id: 'repo1', connectionId: 'conn-1' }],
-        sshConnectionStates: new Map([['conn-1', { status: 'connected' }]]),
-        settings: {
-          ...mockStoreState.settings,
-          agentCmdOverrides: {}
-        },
-        sleepingAgentSessionsByPaneKey: {
-          [paneKey]: {
-            paneKey,
-            tabId: 'tab-1',
-            worktreeId: 'wt-1',
-            agent: 'codex',
-            providerSession: { key: 'session_id', id: 'codex-session-1' },
-            prompt: 'finish the task',
-            state: 'working',
-            capturedAt: 1,
-            updatedAt: 1
-          }
-        }
-      } as StoreState
-      const pane = createPane(2)
-      const manager = createManager(2)
-      const deps = createDeps({
-        restoredLeafId: LEAF_2,
-        restoredPtyIdByLeafId: { [LEAF_2]: 'restored-session' }
-      })
-
-      connectPanePty(pane as never, manager as never, deps as never)
-      await flushAsyncTicks(20)
-      capturedDataCallback.current?.('user@remote $ ')
-      expect(transport.sendInput).not.toHaveBeenCalled()
-
-      capturedDataCallback.current?.('\x1b]777;orca-shell-ready\x07user@remote $ ')
-      for (const fn of pendingTimeouts.splice(0)) {
-        fn()
-      }
-
-      expect(transport.connect).toHaveBeenCalledTimes(2)
-      expect(transport.connect).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          command: "codex '--dangerously-bypass-approvals-and-sandbox' 'resume' 'codex-session-1'",
-          commandDelivery: 'provider',
-          startupCommandDelivery: 'shell-ready',
-          env: expect.objectContaining({
-            ORCA_PANE_KEY: paneKey,
-            ORCA_TAB_ID: 'tab-1',
-            ORCA_WORKTREE_ID: 'wt-1',
-            ORCA_WORKSPACE_ID: 'wt-1',
-            ORCA_AGENT_LAUNCH_TOKEN: expect.stringMatching(new RegExp(`^${UUID_RE}$`))
-          })
-        })
-      )
-      expect(transport.sendInput).not.toHaveBeenCalledWith(
-        "codex '--dangerously-bypass-approvals-and-sandbox' 'resume' 'codex-session-1'\r"
-      )
-    } finally {
-      globalThis.setTimeout = originalSetTimeout
-    }
   })
 
   it('re-runs the resume command when a hibernated local session reattaches with no payload', async () => {
@@ -568,45 +475,5 @@ describe('connectPanePty', () => {
     expect(transport.disconnect).not.toHaveBeenCalled()
     expect(deps.syncPanePtyLayoutBinding).toHaveBeenCalledWith(2, 'restored-session')
     expect(mockStoreState.clearSleepingAgentSession).not.toHaveBeenCalled()
-  })
-
-  it('clears the pending serializer when disposed before non-deferred SSH reattach expiry resolves', async () => {
-    const { connectPanePty } = await import('./pty-connection')
-    const reattach = createDeferred<undefined>()
-    const transport = createMockTransport()
-    transport.connect.mockImplementation(
-      (opts: { sessionId?: string; callbacks?: ConnectCallbacks }) => {
-        if (opts.sessionId) {
-          opts.callbacks?.onError?.('SSH_SESSION_EXPIRED: restored-session')
-          return reattach.promise
-        }
-        return Promise.resolve('fresh-ssh-pty')
-      }
-    )
-    transportFactoryQueue.push(transport)
-    mockStoreState = {
-      ...mockStoreState,
-      tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: 'restored-session' }] },
-      repos: [{ id: 'repo1', connectionId: 'conn-1' }],
-      sshConnectionStates: new Map([['conn-1', { status: 'connected' }]])
-    } as StoreState
-    const pane = createPane(2)
-    const manager = createManager(2)
-    const deps = createDeps({
-      restoredLeafId: LEAF_2,
-      restoredPtyIdByLeafId: { [LEAF_2]: 'restored-session' }
-    })
-
-    const binding = connectPanePty(pane as never, manager as never, deps as never)
-    await flushAsyncTicks(6)
-    binding.dispose()
-    reattach.resolve(undefined)
-    await flushAsyncTicks(10)
-
-    expect(window.api.pty.clearPendingPaneSerializer).toHaveBeenCalledWith(
-      makePaneKey('tab-1', LEAF_2),
-      1
-    )
-    expect(transport.connect).toHaveBeenCalledTimes(1)
   })
 })

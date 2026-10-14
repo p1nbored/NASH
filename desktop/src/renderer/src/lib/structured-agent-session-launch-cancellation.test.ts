@@ -13,7 +13,7 @@ import {
 } from './structured-agent-session-launch-registry'
 import { beginStructuredAgentSessionAuthoritativeInventory } from './structured-agent-session-launch-cancellation'
 import { resetStructuredAgentLaunchPersistenceForTests } from './structured-agent-session-launch-persistence'
-import { refreshLocalStructuredSessionTabs } from '@/runtime/local-structured-session-tabs-sync'
+import { refreshLocalStructuredSessionTabs } from '@/runtime/local-structured-session-tabs-sync/inventory-refresh'
 
 const WORKTREE_ID = 'repo-1::worktree-1'
 const SESSION_ID = 'session-close-race'
@@ -82,7 +82,7 @@ describe('structured launch cancellation retirement', () => {
       promptDelivery: 'auto-submit',
       callers: {
         outcome: 'pending',
-        attempt: { kind: 'first', requestId: 'plus-pick', blank: true, stagedPrompt: null },
+        attempt: { kind: 'first', requestId: 'plus-pick', stagedPrompt: null },
         entries: new Set(),
         promptDeliveryResults: new Set(),
         onSettled: () => undefined
@@ -162,7 +162,7 @@ describe('structured launch cancellation retirement', () => {
       promptDelivery: 'auto-submit',
       callers: {
         outcome: 'pending',
-        attempt: { kind: 'first', requestId: 'plus-pick', blank: true, stagedPrompt: null },
+        attempt: { kind: 'first', requestId: 'plus-pick', stagedPrompt: null },
         entries: new Set(),
         promptDeliveryResults: new Set(),
         onSettled: () => undefined

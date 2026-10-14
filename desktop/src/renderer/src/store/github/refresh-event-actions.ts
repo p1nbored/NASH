@@ -177,6 +177,8 @@ export const createRefreshEventActions = (
             hasRepoOwner: true,
             pr: data,
             fetchedAt: event.outcome.fetchedAt,
+            rejectedPRUrls:
+              event.outcome.kind === 'no-pr' ? event.outcome.rejectedPRUrls : undefined,
             fetchedHeadOid: alias.currentHeadOid,
             state: s,
             worktreeId: alias.worktreeId,

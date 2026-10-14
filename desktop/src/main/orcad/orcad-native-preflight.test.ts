@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  ORCAD_NATIVE_PRECONDITION_EXIT_CODE,
-  runOrcadNativePreflight
-} from './orcad-native-preflight'
+import { runOrcadNativePreflight } from './orcad-native-preflight'
+import { ORCAD_EXIT_CONFIGURATION } from './orcad-configuration-exit'
 import {
   runtimeTerminalDegradation,
   setRuntimeTerminalUnavailableCause
@@ -50,7 +48,7 @@ describe('runOrcadNativePreflight', () => {
       verdict({ status: 'blocked', reason: 'libc_floor', detail: 'the binary requires GLIBC_2.34' })
     )
 
-    expect(exit).toHaveBeenCalledWith(ORCAD_NATIVE_PRECONDITION_EXIT_CODE)
+    expect(exit).toHaveBeenCalledWith(ORCAD_EXIT_CONFIGURATION)
     expect(warn).not.toHaveBeenCalled()
     const message = fail.mock.calls[0][0] as string
     expect(message).toContain('newer C library')
@@ -61,8 +59,8 @@ describe('runOrcadNativePreflight', () => {
   })
 
   it('exits with EX_CONFIG so a supervisor does not restart an unequippable host forever', () => {
-    expect(ORCAD_NATIVE_PRECONDITION_EXIT_CODE).toBe(78)
-    expect(ORCAD_NATIVE_PRECONDITION_EXIT_CODE).not.toBe(1)
+    expect(ORCAD_EXIT_CONFIGURATION).toBe(78)
+    expect(ORCAD_EXIT_CONFIGURATION).not.toBe(1)
   })
 
   it('publishes the blocked cause as a status degradation', () => {

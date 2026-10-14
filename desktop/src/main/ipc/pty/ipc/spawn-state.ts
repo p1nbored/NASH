@@ -1,4 +1,8 @@
-import type { IPtyProvider, PtySpawnOptions, PtySpawnResult } from '../../../providers/types'
+import type {
+  IPtyProvider,
+  PtySpawnOptions,
+  PtySpawnResult
+} from '../../../providers/pty-provider-contract'
 import type { CodexPaneHomeRoute } from '../../../codex/codex-pane-account-registry'
 import type { CodexAccountSelectionTarget } from '../../../codex-accounts/runtime-selection'
 import type { SleepingAgentLaunchConfig } from '../../../../shared/agent-session-resume'
@@ -49,7 +53,6 @@ export type PtyIpcSpawnState = {
   isMintedSessionId: boolean
   effectiveSessionId: string | undefined
   effectiveSessionAppId: string | undefined
-  effectiveSessionRelayId: string | undefined
   expectedWslDistro: string | null
   baseEnv: Record<string, string> | undefined
   effectiveLaunchConfig: SleepingAgentLaunchConfig | undefined
@@ -125,7 +128,6 @@ export function createPtyIpcSpawnState(
     isMintedSessionId: false,
     effectiveSessionId: undefined,
     effectiveSessionAppId: undefined,
-    effectiveSessionRelayId: undefined,
     expectedWslDistro: null,
     baseEnv: undefined,
     effectiveLaunchConfig: undefined,

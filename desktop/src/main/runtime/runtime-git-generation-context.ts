@@ -9,28 +9,16 @@ import type { SourceControlAiOperation } from '../../shared/source-control-ai-ty
 import type { CommitMessageAgentRuntimeTarget } from '../text-generation/commit-message-agent-environment'
 import type { CommitMessageGenerationTarget } from '../text-generation/commit-message-text-generation'
 import type { PullRequestLinkedIssueMeta } from '../source-control/pull-request-linked-issue'
-import { execSshReviewDraft } from '../providers/ssh-review-draft-context'
 import {
   localGitOptionsForTarget,
   type RuntimeGitCommandHost,
-  type RuntimeGitRoute,
   type RuntimeGitTarget
 } from './runtime-git-command-target'
 
 type PullRequestDraftGitExec = Parameters<typeof getPullRequestDraftContext>[0]
 
-/** Runs the PR draft-context probes on whichever host `route` resolved to. */
-export function pullRequestDraftGitExec(
-  target: RuntimeGitTarget,
-  route: RuntimeGitRoute
-): PullRequestDraftGitExec {
-  if (route.kind === 'ssh') {
-    const provider = route.provider
-    if (!provider) {
-      throw new Error('ssh_git_provider_unavailable')
-    }
-    return (argv, options) => execSshReviewDraft(provider, argv, target.worktree.path, options)
-  }
+/** Runs the PR draft-context probes on a local target. */
+export function pullRequestDraftGitExec(target: RuntimeGitTarget): PullRequestDraftGitExec {
   return (argv, options) =>
     gitExecFileAsync(argv, {
       cwd: target.worktree.path,

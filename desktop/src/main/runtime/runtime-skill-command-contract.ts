@@ -15,7 +15,6 @@ import type {
   SkillUploadBeginRequest,
   SkillUploadChunkRequest
 } from '../../shared/skill-upload-session-contract'
-import type { IPtyProvider } from '../providers/types'
 import type { SkillUploadSessionService } from '../skills/skill-upload-session-service'
 import type { RuntimeSkillCommands } from './runtime-skill-command-surface'
 import type {
@@ -156,7 +155,6 @@ export type RuntimeSkillCommandHost = {
   resolveProjectRuntimeForWorktree?(
     worktreeId: string
   ): { status: string; runtime?: { kind: string; distro?: string } } | undefined
-  getSshProvider(connectionId: string): IPtyProvider | undefined
   getClaudeConfigDirectory?(
     target: { runtime: 'host' } | { runtime: 'wsl'; wslDistro: string }
   ): string | null

@@ -1,3 +1,5 @@
+import { readRoutingModelLists } from './routing-model-list-batch'
+import { checkNativeRoute } from './native-route-checks'
 import {
   workspaceKindForWorktreeId,
   type WorkspaceLaunchKind
@@ -12,7 +14,7 @@ import { createBoundedRateLimitRead } from './route-rate-limit-refresh'
 import { checkAgyRoute } from './agy-route-checks'
 import { checkClaudeRoute } from './claude-route-checks'
 import { checkCodexRoute, readCodexExecutable } from './codex-route-checks'
-import type { ModelListing } from './model-listing'
+import { modelListingProbeTimestamp, type ModelListing } from './model-listing'
 import { limitsForProvider } from './route-auth-quota-checks'
 import type { RouteAvailabilityStore } from './route-availability-store'
 import {
@@ -21,6 +23,7 @@ import {
   type EvaluateFreshness,
   type LatchKind,
   type LiveRunPrimary,
+  type ModelListings,
   type RouteAvailabilityResult,
   type RouteProvider,
   type RouteSubject
@@ -42,8 +45,11 @@ import { applyLatches } from './route-latch-check'
 export type AvailabilityPorts = {
   readonly now: () => number
   readonly detection: AgentDetectionSources
-  /** One session-less listing per provider; never rejects (a failure is `ok: false`). */
-  readonly models: Readonly<Record<RouteProvider, () => Promise<ModelListing>>>
+  /** One session-less listing per provider; probe errors become unavailable readings here. */
+  readonly models: Readonly<
+    Partial<Record<RouteProvider, () => Promise<ModelListing>>> &
+      Record<'claude' | 'codex' | 'agy', () => Promise<ModelListing>>
+  >
   readonly rateLimits: {
     /** The rate-limit service state; observation only. */
     read(): RateLimitHeadroomState | null
@@ -74,7 +80,7 @@ export type EvaluatorWaits = {
 }
 
 export type RouteAvailabilityEvaluator = {
-  listModels(freshness: 'cached' | 'recheck'): Promise<Record<RouteProvider, ModelListing>>
+  listModels(freshness: 'cached' | 'recheck'): Promise<ModelListings>
   evaluate(
     subjects: readonly RouteSubject[],
     options: EvaluateOptions
@@ -130,6 +136,8 @@ function checkRoute(
       return checkAgyRoute(subject, observations)
     case 'claude':
       return checkClaudeRoute(subject, observations)
+    default:
+      return checkNativeRoute(provider, subject, observations)
   }
 }
 
@@ -160,7 +168,7 @@ export function createRouteAvailabilityEvaluator(deps: {
     const startedAt = epoch
     // Why stored even after a wait gave up: the next evaluation then finds the late answer in the store.
     const run = Promise.resolve()
-      .then(() => ports.models[provider]())
+      .then(() => ports.models[provider]?.() ?? { ok: false as const, observedAtMs: ports.now() })
       .catch((): ModelListing => ({ ok: false, observedAtMs: ports.now() }))
       .then((listing) => {
         if (startedAt === epoch) {
@@ -250,11 +258,8 @@ export function createRouteAvailabilityEvaluator(deps: {
   }
 
   return {
-    async listModels(freshness) {
-      const [claude, codex, agy] = await Promise.all(
-        (['claude', 'codex', 'agy'] as const).map((provider) => obtainListing(provider, freshness))
-      )
-      return { claude, codex, agy }
+    listModels(freshness) {
+      return readRoutingModelLists(ports.models, (provider) => obtainListing(provider, freshness))
     },
     async evaluate(subjects, options) {
       if (subjects.length === 0) {
@@ -298,7 +303,7 @@ export function createRouteAvailabilityEvaluator(deps: {
           latches: store.latchesFor(key),
           freshness,
           limitsUpdatedAtMs,
-          cliAnsweredAtMs: listing.ok ? listing.observedAtMs : null
+          cliAnsweredAtMs: modelListingProbeTimestamp(listing, provider)
         })
         for (const kind of latched.cleared) {
           store.clearLatch(key, kind)

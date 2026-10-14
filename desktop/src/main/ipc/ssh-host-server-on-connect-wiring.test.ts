@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SshTarget } from '../../shared/ssh-types'
 import { closeTestStores, createSqliteTestStore } from '../persistence-test-harness'
 import { Store } from '../persistence/loading-store/store'
-import { OrcadHostUnsupportedError } from '../ssh/orcad-host-unavailable'
+import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 import { allowsDirectSshRelay, SshConnectionStore } from '../ssh/ssh-connection-store'
 import { resolveHostServerOnConnect } from '../ssh/ssh-host-server-on-connect'
 
@@ -23,15 +23,14 @@ vi.mock('../../shared/app-environment', () => ({
   getAppEnvironment: () => ({ getVersion: () => '1.5.0', getPath: () => '/tmp/unused' })
 }))
 vi.mock('../ssh/ssh-target-registry', () => ({
-  getSshTargetRegistryStore: () => mocks.registry.current,
-  hasRegisteredDirectSshAuthority: () => false
+  getSshTargetRegistryStore: () => mocks.registry.current
 }))
 vi.mock('../ssh/orcad-runtime-deployment', () => ({ createManagedOrcadEnvironment: mocks.deploy }))
 vi.mock('../ssh/orcad-runtime-conversion', () => ({
   convertSshTargetToManagedOrcad: mocks.convert
 }))
 vi.mock('../ssh/orcad-managed-tunnel', () => ({ ensureOrcadManagedTunnel: mocks.tunnel }))
-vi.mock('../ssh/orcad-artifact-materializer', () => ({ hasOrcadTemplate: () => true }))
+vi.mock('../orcad/orcad-artifact-materializer', () => ({ hasOrcadTemplate: () => true }))
 vi.mock('./ssh-renderer-broadcast', () => ({ broadcastSshState: mocks.broadcast }))
 vi.mock('./ssh-ipc-context', () => ({ getCurrentMainWindow: () => null }))
 vi.mock('./ssh-session-teardown', () => ({ disconnectRegisteredSshTarget: vi.fn() }))
@@ -81,7 +80,11 @@ describe('connect-time server decision against the real profile', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     await expect(
       resolveHostServerOnConnect(target(), hostServerOnConnectDeps(userDataPath))
-    ).resolves.toEqual({ route: 'relay', reason: 'orcad_unavailable', detail: 'unsupported_host' })
+    ).resolves.toEqual({
+      route: 'unserved',
+      reason: 'orcad_unavailable',
+      detail: 'unsupported_host'
+    })
     warn.mockRestore()
     expect(target().orcadFence).toBeUndefined()
     expect(target().managedServerUnavailable).toEqual({
@@ -104,7 +107,8 @@ describe('connect-time server decision against the real profile', () => {
     expect(deps.recordedUnavailable(target())).toBeNull()
   })
 
-  it('keeps the relay while a saved relay terminal is unproven, without converting', async () => {
+  // COMPAT(legacy-relay-bridge): the terminal is left running and the bridge serves its pane.
+  it('converts while a saved relay terminal is unproven, never stopping it', async () => {
     store.addRepo({
       id: 'repo-1',
       path: '/srv/app',
@@ -114,11 +118,17 @@ describe('connect-time server decision against the real profile', () => {
       kind: 'git',
       connectionId: TARGET.id
     })
-    store.upsertSshRemotePtyLease({ targetId: TARGET.id, ptyId: 'pty-1', state: 'expired' })
+    // Saved by a relay-era build; this build only reads it.
+    vi.spyOn(store, 'getSshRemotePtyLeases').mockReturnValue([
+      { targetId: TARGET.id, ptyId: 'pty-1', state: 'expired', createdAt: 1, updatedAt: 1 }
+    ])
+    mocks.convert.mockResolvedValue({ outcome: 'converted', environment: { id: 'env-1' } })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     await expect(
       resolveHostServerOnConnect(target(), hostServerOnConnectDeps(userDataPath))
-    ).resolves.toEqual({ route: 'relay', reason: 'relay_terminals_unverifiable', terminals: 1 })
-    expect(mocks.convert).not.toHaveBeenCalled()
+    ).resolves.toEqual({ route: 'managed', environmentId: 'env-1' })
+    warn.mockRestore()
+    expect(mocks.convert).toHaveBeenCalledTimes(1)
   })
 
   it('drops progress from a decision whose connect was cancelled', () => {

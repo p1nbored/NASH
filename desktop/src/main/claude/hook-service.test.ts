@@ -1,3 +1,4 @@
+import { getManagedStatusLineScript } from './statusline-script'
 // Why: locks in the remote-install contract so a refactor cannot silently
 // drift the produced settings.json shape, the wrapper-quoted command path,
 // or the script body that lands on the remote box. Local install behavior
@@ -438,7 +439,7 @@ describe('ClaudeHookService.install', () => {
       vi.stubEnv('HOME', tmpHome)
       vi.stubEnv('USERPROFILE', tmpHome)
       try {
-        expect(new ClaudeHookService().install().state).toBe('installed')
+        expect(new ClaudeHookService().install(CURRENT_CLAUDE).state).toBe('installed')
 
         const settings = JSON.parse(
           readFileSync(join(tmpHome, '.claude', 'settings.json'), 'utf-8')
@@ -580,7 +581,7 @@ describe('ClaudeHookService.install', () => {
         )
 
         expect(new ClaudeHookService().getStatus().state).toBe('not_installed')
-        expect(new ClaudeHookService().install().state).toBe('installed')
+        expect(new ClaudeHookService().install(CURRENT_CLAUDE).state).toBe('installed')
 
         const settings = JSON.parse(readFileSync(settingsPath, 'utf-8')) as {
           hooks: Record<string, { hooks: TestHook[] }[]>
@@ -648,16 +649,7 @@ describe('backgrounded-session pane guard (#9236)', () => {
       vi.stubEnv('HOME', tmpHome)
       vi.stubEnv('USERPROFILE', tmpHome)
       try {
-        expect(new ClaudeHookService().install().state).toBe('installed')
-        const script = readFileSync(
-          join(
-            tmpHome,
-            '.nash',
-            'agent-hooks',
-            target === 'win32' ? 'claude-statusline.cmd' : 'claude-statusline.sh'
-          ),
-          'utf-8'
-        )
+        const script = getManagedStatusLineScript('local')
         const guard = script
           .split(target === 'win32' ? '\r\n' : '\n')
           .find((line) => line.includes('CLAUDE_JOB_DIR'))

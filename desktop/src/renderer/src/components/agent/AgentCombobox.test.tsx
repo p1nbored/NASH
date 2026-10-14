@@ -11,6 +11,40 @@ import AgentCombobox from './AgentCombobox'
 afterEach(cleanup)
 
 describe('AgentCombobox', () => {
+  it('lets a blank selection replace the saved None default', () => {
+    const onSetDefault = vi.fn()
+    render(
+      <AgentCombobox
+        agents={[]}
+        value={null}
+        onValueChange={vi.fn()}
+        allowBlankTerminal
+        defaultAgent="blank"
+        onSetDefault={onSetDefault}
+        setupOnly={{ selected: false, isDefault: true, onSelect: vi.fn() }}
+      />
+    )
+    fireEvent.contextMenu(screen.getByRole('combobox'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Set as default' }))
+    expect(onSetDefault).toHaveBeenCalledWith('blank')
+  })
+
+  it('shows None without a suffix and saves it through its own default action', () => {
+    const onSetDefault = vi.fn()
+    render(
+      <AgentCombobox
+        agents={[]}
+        value={null}
+        onValueChange={vi.fn()}
+        allowBlankTerminal
+        setupOnly={{ selected: true, isDefault: false, onSelect: vi.fn(), onSetDefault }}
+      />
+    )
+    expect(screen.getByRole('combobox').textContent).toBe('None')
+    fireEvent.contextMenu(screen.getByRole('combobox'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Set as default' }))
+    expect(onSetDefault).toHaveBeenCalledOnce()
+  })
   it('sets the closed trigger selection as the default agent', () => {
     const onSetDefault = vi.fn()
     render(
@@ -38,6 +72,7 @@ describe('AgentCombobox', () => {
         agents={AGENT_CATALOG}
         value={null}
         onValueChange={vi.fn()}
+        allowBlankTerminal
         defaultAgent="codex"
         onSetDefault={onSetDefault}
       />
@@ -52,14 +87,7 @@ describe('AgentCombobox', () => {
   it('does not offer a default action for an Agent-only empty state', () => {
     const onSetDefault = vi.fn()
     render(
-      <AgentCombobox
-        agents={[]}
-        value={null}
-        onValueChange={vi.fn()}
-        allowBlankTerminal={false}
-        emptyLabel="Select an Agent"
-        onSetDefault={onSetDefault}
-      />
+      <AgentCombobox agents={[]} value={null} onValueChange={vi.fn()} onSetDefault={onSetDefault} />
     )
 
     fireEvent.contextMenu(screen.getByRole('combobox'))
@@ -162,19 +190,39 @@ describe('AgentCombobox', () => {
     }
   })
 
-  it('supports an Agent-only empty state without presenting a blank terminal', () => {
+  it('defaults to an Agent-only empty state without presenting a blank terminal', () => {
     const markup = renderToStaticMarkup(
-      <AgentCombobox
-        agents={[]}
-        value={null}
-        onValueChange={vi.fn()}
-        allowBlankTerminal={false}
-        emptyLabel="Select an Agent"
-      />
+      <AgentCombobox agents={[]} value={null} onValueChange={vi.fn()} />
     )
 
     expect(markup).toContain('Select an Agent')
     expect(markup).not.toContain('Blank Terminal')
+  })
+
+  it('hides Blank Terminal from the list unless the caller opts in', () => {
+    render(<AgentCombobox agents={AGENT_CATALOG} value="codex" onValueChange={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('combobox'))
+
+    expect(screen.getByRole('option', { name: 'Claude' })).toBeTruthy()
+    expect(screen.queryByRole('option', { name: 'Blank Terminal' })).toBeNull()
+  })
+
+  it('offers Blank Terminal and reports null when the caller opts in', () => {
+    const onValueChange = vi.fn()
+    render(
+      <AgentCombobox
+        agents={AGENT_CATALOG}
+        value="codex"
+        onValueChange={onValueChange}
+        allowBlankTerminal
+      />
+    )
+
+    fireEvent.click(screen.getByRole('combobox'))
+    fireEvent.click(screen.getByRole('option', { name: 'Blank Terminal' }))
+
+    expect(onValueChange).toHaveBeenCalledWith(null)
   })
 
   it('uses the bundled OpenClaude favicon crop instead of Claude or GitHub artwork', () => {
@@ -194,6 +242,13 @@ describe('AgentCombobox', () => {
     expect(markup).not.toContain('/resources/opencode.webp')
     expect(markup).not.toContain('https://www.google.com/s2/favicons')
     expect(markup).not.toContain('<img')
+  })
+
+  it('uses the bundled DeepSeek whale for observed DeepSeek Build sessions without adding it to the launch catalog', () => {
+    const markup = renderToStaticMarkup(<AgentIcon agent="dsb" />)
+
+    expect(markup).toContain(AGENT_FAVICON_ASSETS.dsh)
+    expect(AGENT_CATALOG.map((agent) => agent.id)).not.toContain('dsb')
   })
 
   it('renders bundled favicons for favicon-domain agents instead of the remote Google service', () => {

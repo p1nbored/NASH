@@ -14,7 +14,6 @@ import {
   resolveNativeChatAttachmentOwner,
   resolveNativeChatAttachmentOwnerForWorktree,
   resolveNativeChatRuntimeSessionAttachmentOwner,
-  uploadNativeChatAttachmentPaths,
   type NativeChatAttachmentOwner,
   type NativeChatStructuredAttachmentSession
 } from './native-chat-attachment-upload'
@@ -149,7 +148,7 @@ export function useNativeChatExternalAttachments({
           setNotice(nativeChatWorktreeNotReadyNotice())
           return
         }
-        if (owner.kind === 'runtime') {
+        if (owner.kind === 'remote') {
           setNotice(nativeChatLocalAttachmentUnsupportedNotice())
           return
         }
@@ -170,24 +169,6 @@ export function useNativeChatExternalAttachments({
             isAbandoned: () => disabledRef.current,
             ownerStillCurrent,
             setNotice
-          })
-          return
-        }
-        if (owner.kind === 'ssh') {
-          const remotePaths = await uploadNativeChatAttachmentPaths(paths, owner)
-          if (disabledRef.current || !mountedRef.current) {
-            return
-          }
-          if (!ownerStillCurrent()) {
-            setNotice(nativeChatAttachmentOwnerChangedNotice())
-            return
-          }
-          if (!remotePaths || remotePaths.length === 0) {
-            setNotice(nativeChatAttachmentUnreadableNotice())
-            return
-          }
-          attachResolvedPaths(remotePaths, owner.connectionId, {
-            destinationIsCurrent: ownerStillCurrent
           })
           return
         }

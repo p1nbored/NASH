@@ -1,9 +1,9 @@
-// Managed orcad on a real Win32-OpenSSH host, one cell per DefaultShell: prove the conversion's
-// terminal gate against the pinned relay already serving the host, then resolve the context
+// Managed orcad on a real Win32-OpenSSH host, one cell per DefaultShell: resolve the context
 // (pinned node.exe, host script), deploy and activate, prove readiness and liveness, reach orcad
-// through the stdio bridge (this account's sshd refuses forwarding), decommission
-// through the instance-bound stop request, prove exit, and run a GC pass. config/ci/windows-ssh-provider/invoke-pinned-relay-cells.ps1
-// provisions the account and runs this file for `orcad-*` cells; ssh-windows-hosts.yml runs that.
+// through the stdio bridge (this account's sshd refuses forwarding), decommission through the
+// instance-bound stop request, prove exit, and run a GC pass.
+// config/ci/windows-ssh-provider/invoke-windows-host-cells.ps1 provisions the account and runs this
+// file for `orcad-*` cells; ssh-windows-hosts.yml runs that.
 //
 // Run: ORCA_RUN_SSH_WINDOWS_HOST=1 ORCA_SSH_WINDOWS_HOST_CELL=<descriptor.json> pnpm test <this file>
 import { randomUUID } from 'node:crypto'
@@ -18,15 +18,16 @@ import {
   installHostileHostAppEnvironment
 } from './ssh-hostile-host-test-harness'
 import { resolveOrcadRemoteContext } from './orcad-remote-context'
-import { proveWindowsRelayTerminalGate } from './orcad-windows-relay-terminal-gate-test-cell'
 import { proveWindowsStdioBridge } from './orcad-windows-stdio-bridge-test-cell'
 import { deployOrcad } from './orcad-remote-deploy'
 import { orcadLivenessProbeCommand, parseOrcadLiveness } from './orcad-remote-launch'
 import { orcadSlotDir, type OrcadSlotOptions } from './orcad-recovery-slot'
-import { decommissionRemoteOrcad } from './orcad-remote-stop'
+import { decommissionRemoteOrcad } from './orcad-remote-decommission'
 import { readOrcadActivationRecord } from './orcad-activation-record-store'
 import { gcOldOrcadVersions } from './orcad-remote-gc'
 import { execOrcadRemote } from './orcad-remote-runtime-control'
+import { orcadWindowsNodeCommandLine } from './orcad-remote-windows-node'
+import { joinRemotePath } from './ssh-remote-platform'
 import {
   isWindowsOrcadCellId,
   readWindowsHostCellDescriptor,
@@ -57,21 +58,14 @@ describe.runIf(RUN)('managed orcad on a Windows OpenSSH host', () => {
     async () => {
       const descriptor = readWindowsHostCellDescriptor(process.env.ORCA_SSH_WINDOWS_HOST_CELL ?? '')
       if (!isWindowsOrcadCellId(descriptor.cell)) {
-        throw new Error(`${descriptor.cell} runs in ssh-relay-windows-host-lane.test.ts`)
+        throw new Error(`${descriptor.cell} is not a managed orcad cell`)
       }
-      const sshTarget = windowsHostSshTarget(
-        descriptor,
-        { id: descriptor.cell, remoteRuntime: 'pinned-node' },
-        randomUUID()
-      )
+      const sshTarget = windowsHostSshTarget(descriptor, randomUUID())
       let exec: MockInstance<SshConnection['exec']> | null = null
       const receipt: Record<string, unknown> = { cell: descriptor.cell, target: descriptor.target }
       let conn: SshConnection | null = null
       try {
         conn = await connectHostileHost(sshTarget)
-        // A relay-hosted source first: conversion may proceed only once its terminals exited.
-        Object.assign(receipt, await proveWindowsRelayTerminalGate(conn, sshTarget.id))
-        // After the prelude: its relay deploy re-spies `exec`, which is the same spy, and restores it.
         exec = vi.spyOn(SshConnection.prototype, 'exec')
         const context = await resolveOrcadRemoteContext(sshTarget, conn)
         expect(context.host.os).toBe('win32')
@@ -97,6 +91,14 @@ describe.runIf(RUN)('managed orcad on a Windows OpenSSH host', () => {
             await execOrcadRemote(options, orcadLivenessProbeCommand(options.host, slotDir))
           )
         expect(await liveness()).toBe('LIVE')
+        // Managed terminals' `orca`: the native launcher orcad installed in its profile.
+        const cli = joinRemotePath(options.host, context.userDataDir, 'cli', 'bin', 'orca.exe')
+        const status = JSON.parse(
+          await execOrcadRemote(options, orcadWindowsNodeCommandLine(cli, ['status', '--json']))
+        )
+        receipt.cliStatus = status.result
+        expect(status.result.runtime).toMatchObject({ reachable: true })
+        expect(status.result.app.desktopWindowStatus).toBe('blocked')
         // The managed tunnel picks the stdio bridge on this account and reaches orcad through it.
         receipt.stdioBridge = await proveWindowsStdioBridge(conn, options.host, slotDir)
         expect(receipt.stdioBridge).toMatchObject({

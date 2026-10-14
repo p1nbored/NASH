@@ -17,6 +17,7 @@ import {
   writeFakeWindowsProcessTree,
   writeFakeWindowsProcessTreeWithNodeAddonApi,
   writeFakeWindowsRegistry,
+  writeFakeWindowsSecurity,
   writeNodePtyPatchFile,
   writePatchedNodePtyBuildArtifacts,
   writeWindowsProcessTreePatchFile
@@ -34,6 +35,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir)
         writeFakeWindowsProcessTree(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
         const env = {
@@ -81,6 +83,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeWindowsRegistry(projectDir)
         writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
         const result = runRebuildScript(projectDir, {
@@ -293,6 +296,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeLoadableNodePty(projectDir)
         writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
         const result = runRebuildScript(projectDir, {
@@ -322,6 +326,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeElectronRebuild(projectDir, { logPathEnv: 'ORCA_REBUILD_TEST_LOG' })
         writeFakeLoadableNodePty(projectDir)
         writeFakeWindowsRegistry(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeWindowsProcessTree(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
@@ -356,6 +361,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeWindowsRegistry(projectDir)
         writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
 
         const result = runRebuildScript(projectDir, {
@@ -391,6 +397,7 @@ describe('rebuild-native-deps patched node-pty rebuild', () => {
         writeFakeWindowsRegistry(projectDir)
         writeFakeWindowsCredentials(projectDir)
         writeFakeWindowsProcessTree(projectDir)
+        writeFakeWindowsSecurity(projectDir)
         writeFakeNodePtyConptyPayload(projectDir, process.arch)
         writeFakeNodePtyConptySource(projectDir)
 

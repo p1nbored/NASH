@@ -48,7 +48,7 @@ vi.mock('@/components/terminal-pane/pty-pre-handler-buffer', () => ({
 vi.mock('@/runtime/runtime-terminal-inspection', () => ({
   isRemoteRuntimePtyId: () => false,
   inspectRuntimeTerminalProcess: vi.fn(async () => null),
-  sendRuntimePtyInputVerified: async (_settings: unknown, _ptyId: string, data: string) => {
+  sendRuntimePtyInputVerified: async (_ptyId: string, data: string) => {
     testState.writes.push({ at: Date.now(), data })
     return true
   }
@@ -145,7 +145,7 @@ describe('an AI button whose agent is ready before the host answers', () => {
 
     attachHostPty('pty-1')
     testState.ptyWatchers.get('pty-1')?.('\x1b[?2004h> ')
-    answer({ kind: 'pane-says' })
+    answer({ kind: 'not-started', unconfirmed: true })
     await vi.advanceTimersByTimeAsync(10_000)
 
     await expect(promptDeliveryResult).resolves.toEqual({ delivered: false, failureNotified: true })

@@ -2,13 +2,6 @@ import { isTuiAgent } from '../../../shared/tui-agent-config'
 import { filterEnabledTuiAgents } from '../../../shared/tui-agent-selection'
 import type { CheckOutcome, RouteProvider } from './route-availability-types'
 
-/** Orca's agent ids for the three CLIs; agy is detected as `antigravity` (detectCmd `agy`). */
-const PROVIDER_AGENT_IDS: Readonly<Record<RouteProvider, string>> = {
-  claude: 'claude',
-  codex: 'codex',
-  agy: 'antigravity'
-}
-
 export type AgentDetectionReading =
   | {
       readonly ok: true
@@ -54,7 +47,7 @@ export function cliCheckOf(reading: AgentDetectionReading, provider: RouteProvid
   if (!reading.ok) {
     return { check: 'cli', result: 'unobserved', reason: 'cli_unobserved' }
   }
-  const agent = PROVIDER_AGENT_IDS[provider]
+  const agent = provider === 'agy' ? 'antigravity' : provider
   const evidence = { agent }
   if (!reading.installed.has(agent)) {
     return { check: 'cli', result: 'fail', reason: 'cli_missing', evidence }

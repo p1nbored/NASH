@@ -2,9 +2,9 @@ import { useCallback } from 'react'
 import { getConnectionId } from '@/lib/connection-context'
 import {
   cancelRuntimeGeneratePullRequestFields,
-  generateRuntimePullRequestFields,
-  type RuntimeGeneratePullRequestFieldsOverrides
-} from '@/runtime/runtime-git-client'
+  generateRuntimePullRequestFields
+} from '@/runtime/runtime-git-generation-client'
+import type { RuntimeGeneratePullRequestFieldsOverrides } from '@/runtime/runtime-git-client-context'
 import type { PullRequestGenerationOutcome } from '../../create-pull-request-dialog-field-model'
 import { settlePullRequestGenerationRequest } from '../../pull-request-generation-request-outcome'
 import { useAppStore } from '@/store'
@@ -34,7 +34,7 @@ import type { SourceControlStatusRefresh } from '../sync/use-status-refresh'
  */
 export function useSourceControlPullRequestGeneration({
   activeRepo,
-  activeRepoSettings,
+  activeRepoTarget,
   activeWorktreeId,
   allocatePullRequestGenerationRequestId,
   branchName,
@@ -47,7 +47,7 @@ export function useSourceControlPullRequestGeneration({
   worktreePath
 }: {
   activeRepo: SourceControlWorktreeContext['activeRepo']
-  activeRepoSettings: SourceControlWorktreeContext['activeRepoSettings']
+  activeRepoTarget: SourceControlWorktreeContext['activeRepoTarget']
   activeWorktreeId: string | null
   allocatePullRequestGenerationRequestId: SourceControlStoreActions['allocatePullRequestGenerationRequestId']
   branchName: string
@@ -86,7 +86,13 @@ export function useSourceControlPullRequestGeneration({
       overrides?: RuntimeGeneratePullRequestFieldsOverrides,
       options?: PullRequestGenerationOptions
     ): Promise<PullRequestGenerationOutcome | undefined> => {
-      if (!activeRepo || !activePullRequestGenerationKey || !worktreePath || !branchName) {
+      if (
+        !activeRepo ||
+        !activeRepoTarget ||
+        !activePullRequestGenerationKey ||
+        !worktreePath ||
+        !branchName
+      ) {
         return undefined
       }
       const generationKey = activePullRequestGenerationKey
@@ -103,7 +109,7 @@ export function useSourceControlPullRequestGeneration({
         requestId,
         repoId: activeRepo.id,
         branch: branchName,
-        runtimeTargetSettings: activeRepoSettings
+        runtimeTarget: activeRepoTarget
       }
       const seed = { ...fields }
       // Why: SourceControl can unmount on tab switches; the persisted record lets the PR composer resume on return.
@@ -117,7 +123,8 @@ export function useSourceControlPullRequestGeneration({
           const result = await generateRuntimePullRequestFields(
             {
               // Why: route generation by the repo OWNER host, not the focused runtime.
-              settings: context.runtimeTargetSettings,
+              target: context.runtimeTarget,
+              prefs: useAppStore.getState().settings,
               worktreeId: context.worktreeId,
               worktreePath: context.worktreePath,
               connectionId: context.connectionId
@@ -177,7 +184,7 @@ export function useSourceControlPullRequestGeneration({
     [
       activePullRequestGenerationKey,
       activeRepo,
-      activeRepoSettings,
+      activeRepoTarget,
       activeWorktreeId,
       allocatePullRequestGenerationRequestId,
       branchName,
@@ -207,7 +214,7 @@ export function useSourceControlPullRequestGeneration({
     })
     void cancelRuntimeGeneratePullRequestFields({
       // Why: the user can switch hosts while generation runs; cancel the original request owner, not the focused host.
-      settings: record.context.runtimeTargetSettings,
+      target: record.context.runtimeTarget,
       worktreeId: record.context.worktreeId,
       worktreePath: record.context.worktreePath,
       connectionId: record.context.connectionId

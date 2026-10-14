@@ -95,12 +95,14 @@ const now = (): string => new Date().toISOString()
 export const WORKBENCH_DOT_INGRESS_METHODS = [
   defineMethod({
     name: 'workbench.dotIngress.settings.get',
+    permission: 'workspace',
     params: null,
     handler: (_params, context) =>
       settingsResult(desktopDb(context), endpointStatus(context.runtime))
   }),
   defineMethod({
     name: 'workbench.dotIngress.settings.setEnabled',
+    permission: 'host-admin',
     params: WorkbenchDotIngressSetEnabledParams,
     handler: async (params, context) => {
       const db = desktopDb(context)
@@ -112,6 +114,7 @@ export const WORKBENCH_DOT_INGRESS_METHODS = [
   }),
   defineMethod({
     name: 'workbench.dotIngress.settings.setRateLimits',
+    permission: 'settings-write',
     params: WorkbenchDotIngressSetRateLimitsParams,
     handler: (params, context) => {
       const db = desktopDb(context)
@@ -121,6 +124,7 @@ export const WORKBENCH_DOT_INGRESS_METHODS = [
   }),
   defineMethod({
     name: 'workbench.dotIngress.workspaces.enable',
+    permission: 'host-admin',
     params: WorkbenchDotIngressEnableWorkspaceParams,
     handler: (params, context) => {
       const db = desktopDb(context)
@@ -137,6 +141,7 @@ export const WORKBENCH_DOT_INGRESS_METHODS = [
   }),
   defineMethod({
     name: 'workbench.dotIngress.workspaces.disable',
+    permission: 'host-admin',
     params: WorkbenchDotIngressDisableWorkspaceParams,
     handler: (params, context) => {
       const db = desktopDb(context)
@@ -149,6 +154,7 @@ export const WORKBENCH_DOT_INGRESS_METHODS = [
   }),
   defineMethod({
     name: 'workbench.dotIngress.requests.list',
+    permission: 'workspace',
     params: WorkbenchDotIngressRequestsListParams,
     handler: (params, context) => requestsResult(desktopDb(context), params)
   })

@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { OrchestrationDb } from './orchestration-db'
 import {
-  AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS,
-  ensureAutopilotRuntimeSchema
+  ensureAutopilotRuntimeSchema,
+  legacyAutopilotDefinitions
 } from './autopilot-runtime-schema'
 import {
   FIXTURE_HASH_A,
@@ -38,13 +38,13 @@ const V2_PERMISSION_SQL = `CREATE TABLE permission_decisions (
     OR (status = 'expired' AND decided_by IS NULL AND decided_at IS NOT NULL)
   )
 )`
-const V2_DEFINITIONS = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) => ({
+const V2_DEFINITIONS = legacyAutopilotDefinitions(2).map((definition) => ({
   ...definition,
   sql: definition.name === 'permission_decisions' ? V2_PERMISSION_SQL : definition.sql
 }))
 const V2_SCHEMA_SHA256 = '97b3d23e255d5e3511c0b93b402e2008fe8f082ae9f97f65cc34dbb747295621'
 
-describe('autopilot runtime v2 to v3 migration', () => {
+describe('autopilot runtime v2 to v4 migration', () => {
   let owner: OrchestrationDb
   beforeEach(() => {
     owner = new OrchestrationDb(':memory:')
@@ -119,7 +119,7 @@ describe('autopilot runtime v2 to v3 migration', () => {
     ensureAutopilotRuntimeSchema(owner.db)
 
     const after = snapshot()
-    expect(after.version).toEqual([{ id: 1, version: 3 }])
+    expect(after.version).toEqual([{ id: 1, version: 4 }])
     expect(after.decisions).toEqual(before.decisions)
     expect(after.sequences).toEqual(before.sequences)
     expect(after.runs).toEqual(before.runs)
@@ -128,8 +128,16 @@ describe('autopilot runtime v2 to v3 migration', () => {
     expect(after.schema.filter((entry) => entry.type === 'index')).toEqual(
       before.schema.filter((entry) => entry.type === 'index')
     )
-    expect(after.schema.filter((entry) => entry.tbl_name !== 'permission_decisions')).toEqual(
-      before.schema.filter((entry) => entry.tbl_name !== 'permission_decisions')
+    expect(
+      after.schema.filter(
+        (entry) =>
+          !['permission_decisions', 'workflow_runs', 'task_routes'].includes(entry.tbl_name)
+      )
+    ).toEqual(
+      before.schema.filter(
+        (entry) =>
+          !['permission_decisions', 'workflow_runs', 'task_routes'].includes(entry.tbl_name)
+      )
     )
     expect(owner.db.prepare('PRAGMA foreign_key_check(permission_decisions)').all()).toEqual([])
     expect(() => ensureAutopilotRuntimeSchema(owner.db)).not.toThrow()
@@ -189,7 +197,7 @@ describe('autopilot runtime v2 to v3 migration', () => {
     expect(snapshot()).toEqual(before)
   })
 
-  it('rolls back copied rows and staging objects when replacing the old table fails', () => {
+  it('preserves external foreign key references while replacing old tables', () => {
     insertDecision(3, 'decision_referenced')
     owner.db.exec(`CREATE TABLE migration_reference (
       decision_id TEXT REFERENCES permission_decisions(decision_id)
@@ -197,8 +205,10 @@ describe('autopilot runtime v2 to v3 migration', () => {
     owner.db.exec("INSERT INTO migration_reference VALUES ('decision_referenced')")
     const before = snapshot()
 
-    expect(() => ensureAutopilotRuntimeSchema(owner.db)).toThrow()
-    expect(snapshot()).toEqual(before)
+    ensureAutopilotRuntimeSchema(owner.db)
+    expect(snapshot().decisions).toEqual(before.decisions)
+    expect(owner.db.prepare('PRAGMA foreign_key_check').all()).toEqual([])
+    expect(owner.db.pragma('foreign_keys', { simple: true })).toBe(1)
     expect(owner.db.prepare('SELECT * FROM migration_reference').all()).toEqual([
       { decision_id: 'decision_referenced' }
     ])

@@ -93,58 +93,6 @@ describe('SQLite durability barriers with another selective write pending', () =
     })
   })
 
-  it('commits SSH lease admission before returning', () => {
-    const state = fixture()
-    state.pendSession()
-    state.store.upsertSshRemotePtyLease({ targetId: 'ssh-test', ptyId: 'pty-1', state: 'attached' })
-    expect(state.read('sshRemotePtyLeases')).toMatchObject({
-      kind: 'value',
-      value: [{ targetId: 'ssh-test', ptyId: 'pty-1', state: 'attached' }]
-    })
-  })
-
-  it.each(['async', 'shutdown'] as const)(
-    'persists SSH detachment through the %s barrier',
-    async (barrier) => {
-      const state = fixture()
-      state.store.upsertSshRemotePtyLease({
-        targetId: 'ssh-test',
-        ptyId: 'pty-1',
-        state: 'attached'
-      })
-      state.pendSession()
-      if (barrier === 'async') {
-        await state.store.markSshRemotePtyLeasesAsync('ssh-test', 'detached')
-      } else {
-        state.store.markSshRemotePtyLeasesForShutdown('ssh-test', 'detached')
-        await state.store.flushAsync()
-      }
-      expect(state.read('sshRemotePtyLeases')).toMatchObject({
-        kind: 'value',
-        value: [{ targetId: 'ssh-test', ptyId: 'pty-1', state: 'detached' }]
-      })
-    }
-  )
-
-  it('persists sealed SSH consumer recovery before relay setup continues', async () => {
-    const state = fixture()
-    state.pendSession()
-    await state.store.upsertSshPtyConsumerRecovery({
-      targetId: 'ssh-test',
-      clientInstanceId: 'client-test',
-      serverBuildId: 'build-test',
-      clientGeneration: 1,
-      ownerGeneration: 1,
-      ownerLease: 'secret-owner-lease'
-    })
-    const stored = state.read('sshPtyConsumerRecoveries')
-    expect(stored).toMatchObject({ kind: 'value', value: [{ targetId: 'ssh-test' }] })
-    expect(JSON.stringify(stored)).not.toContain('secret-owner-lease')
-    state.pendSession()
-    await state.store.removeSshPtyConsumerRecovery('ssh-test')
-    expect(state.read('sshPtyConsumerRecoveries')).toMatchObject({ kind: 'value', value: [] })
-  })
-
   it('deletes an automation and its retained runs in the same commit', () => {
     const state = fixture(buildProfileStateCutoverFixture())
     const automation = state.store.listAutomations()[0]

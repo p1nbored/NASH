@@ -2,6 +2,7 @@ import {
   closeTestStores,
   testState,
   createStore,
+  createStoreWithSshRemotePtyLeases,
   writeDataFile,
   readDataFile,
   makeRepo,
@@ -107,7 +108,7 @@ describe('Store', () => {
     expect(isLocalWorktreeScanGenerationCurrent(repoId, beforeAdd)).toBe(false)
 
     const beforeRemove = getLocalWorktreeScanGeneration(repoId)
-    store.removeProject(repoId)
+    store.removeProjectForHost(repoId, 'local')
     expect(isLocalWorktreeScanGenerationCurrent(repoId, beforeRemove)).toBe(false)
 
     const beforeReAdd = getLocalWorktreeScanGeneration(repoId)
@@ -121,7 +122,7 @@ describe('Store', () => {
     for (let index = 0; index < 200; index += 1) {
       const repoId = `scan-churn-${index}`
       store.addRepo(makeRepo({ id: repoId }))
-      store.removeProject(repoId)
+      store.removeProjectForHost(repoId, 'local')
     }
 
     expect(_getLocalWorktreeScanGenerationCacheSize()).toBe(initialCacheSize)
@@ -278,9 +279,9 @@ describe('Store', () => {
     expect(store.getRepo('nonexistent')).toBeUndefined()
   })
 
-  // ── 6. removeProject cleans up worktree meta ──────────────────────────
+  // ── 6. removeProjectForHost cleans up worktree meta ──────────────────────────
 
-  it('removeProject deletes the repo and its worktree meta', async () => {
+  it('removeProjectForHost deletes the repo and its worktree meta', async () => {
     const store = await createStore()
     store.addRepo(makeRepo({ id: 'r1' }))
     store.addRepo(makeRepo({ id: 'r2', path: '/repo2' }))
@@ -289,7 +290,7 @@ describe('Store', () => {
     store.setWorktreeMeta('r1::/path/wt2', { displayName: 'wt2' })
     store.setWorktreeMeta('r2::/other', { displayName: 'other' })
 
-    store.removeProject('r1')
+    store.removeProjectForHost('r1', 'local')
 
     expect(store.getRepo('r1')).toBeUndefined()
     expect(store.getWorktreeMeta('r1::/path/wt1')).toBeUndefined()
@@ -308,13 +309,13 @@ describe('Store', () => {
         ...store.getWorkspaceSession(),
         terminalTopologyRevisionByRepoId: { [repoId]: 1 }
       })
-      store.removeProject(repoId)
+      store.removeProjectForHost(repoId, 'local')
     }
 
     expect(store.getWorkspaceSession().terminalTopologyRevisionByRepoId).toEqual({})
   })
 
-  it('removeProject prunes the repo worktrees from workspace session state', async () => {
+  it('removeProjectForHost prunes the repo worktrees from workspace session state', async () => {
     const store = await createStore()
     store.addRepo(makeRepo({ id: 'r1' }))
     store.addRepo(makeRepo({ id: 'r2', path: '/repo2' }))
@@ -327,14 +328,14 @@ describe('Store', () => {
       lastVisitedAtByWorktreeId: { 'r1::/path/wt1': 111, 'r2::/other': 222 }
     })
 
-    store.removeProject('r1')
+    store.removeProjectForHost('r1', 'local')
 
     const session = store.getWorkspaceSession()
     expect(session.lastVisitedAtByWorktreeId?.['r1::/path/wt1']).toBeUndefined()
     expect(session.lastVisitedAtByWorktreeId?.['r2::/other']).toBe(222)
   })
 
-  it('removeProject prunes the repo worktrees from per-host workspace session partitions', async () => {
+  it('removeProjectForHost prunes the repo worktrees from per-host workspace session partitions', async () => {
     const store = await createStore()
     store.addRepo(makeRepo({ id: 'r1' }))
 
@@ -349,7 +350,7 @@ describe('Store', () => {
       hostId
     )
 
-    store.removeProject('r1')
+    store.removeProjectForHost('r1', 'local')
 
     const hostSession = store.getWorkspaceSession(hostId)
     expect(hostSession.lastVisitedAtByWorktreeId?.['r1::/path/wt1']).toBeUndefined()
@@ -370,18 +371,18 @@ describe('Store', () => {
     ])
   })
 
-  it('removeProject removes the derived project host setup compatibility record', async () => {
+  it('removeProjectForHost removes the derived project host setup compatibility record', async () => {
     const store = await createStore()
     store.addRepo(makeRepo({ id: 'r1' }))
     store.addRepo(makeRepo({ id: 'r2', path: '/repo2' }))
 
-    store.removeProject('r1')
+    store.removeProjectForHost('r1', 'local')
 
     expect(store.getProjects().map((project) => project.id)).toEqual(['repo:r2'])
     expect(store.getProjectHostSetups().map((setup) => setup.id)).toEqual(['r2'])
   })
 
-  it('removeProject deletes child and parent lineage for the repo', async () => {
+  it('removeProjectForHost deletes child and parent lineage for the repo', async () => {
     const store = await createStore()
     store.addRepo(makeRepo({ id: 'r1' }))
     store.addRepo(makeRepo({ id: 'r2', path: '/repo2' }))
@@ -408,7 +409,7 @@ describe('Store', () => {
       })
     )
 
-    store.removeProject('r1')
+    store.removeProjectForHost('r1', 'local')
 
     expect(store.getWorktreeLineage('r1::/path/child')).toBeUndefined()
     expect(store.getWorktreeLineage('r2::/other-child')).toBeUndefined()
@@ -783,7 +784,7 @@ describe('Store', () => {
 
   it('reassignSshTargetId re-points a repo that only carries connectionId (no executionHostId)', async () => {
     const store = await createStore()
-    // SSH repos created via addRemoteRepoFromPath leave executionHostId unset.
+    // Legacy SSH repo rows carry only connectionId and leave executionHostId unset.
     store.addRepo(makeRepo({ id: 'r1', connectionId: 'ssh-old' }))
 
     const repoIds = store.reassignSshTargetId('ssh-old', 'ssh-new')
@@ -812,7 +813,9 @@ describe('Store', () => {
   })
 
   it('reassignSshTargetId migrates session pty ids, reconnect list, leases, and host scope', async () => {
-    const store = await createStore()
+    const store = createStoreWithSshRemotePtyLeases([
+      { targetId: 'ssh-old', ptyId: 'pty-2', state: 'detached' }
+    ])
     store.addRepo(makeRepo({ id: 'r1', connectionId: 'ssh-old', executionHostId: 'ssh:ssh-old' }))
     store.setWorkspaceSession({
       activeRepoId: 'r1',
@@ -825,7 +828,6 @@ describe('Store', () => {
       remoteSessionIdsByTabId: { tab1: 'ssh:ssh-old@@pty-2' },
       activeConnectionIdsAtShutdown: ['ssh-old']
     })
-    store.upsertSshRemotePtyLease({ targetId: 'ssh-old', ptyId: 'pty-2', state: 'detached' })
     store.updateUI({
       workspaceHostScope: 'ssh:ssh-old',
       visibleWorkspaceHostIds: ['local', 'ssh:ssh-old'],

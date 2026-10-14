@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import {
-  getPreferredPairingOffer,
+  getPreferredPairedRuntimeConnection,
   redactRuntimeEnvironment,
   type KnownRuntimeEnvironment,
   type PublicKnownRuntimeEnvironment
@@ -14,7 +14,7 @@ import {
 export function publicRuntimeEnvironmentWithHostKey(
   environment: KnownRuntimeEnvironment
 ): PublicKnownRuntimeEnvironment {
-  const publicKey = getPreferredPairingOffer(environment).publicKeyB64
+  const publicKey = getPreferredPairedRuntimeConnection(environment).hostPublicKeyB64
   return {
     ...redactRuntimeEnvironment(environment),
     ...(publicKey

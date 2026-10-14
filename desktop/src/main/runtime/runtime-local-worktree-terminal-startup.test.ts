@@ -89,6 +89,26 @@ describe('startRuntimeLocalWorktreeTerminals reserved startup pane', () => {
 
 describe('startRuntimeLocalWorktreeTerminals default shell seeding', () => {
   it.each([false, true])(
+    'passes the submitted setup-only choice to the host (%s)',
+    async (setupOnly) => {
+      const { ports } = createPorts()
+      await startRuntimeLocalWorktreeTerminals({
+        request: {
+          repoSelector: `id:${repo.id}`,
+          name: 'choice',
+          setupOnly,
+          awaitTerminalProvisioning: true
+        },
+        repo,
+        worktree,
+        setup: { runnerScriptPath: '/repo/setup.sh', envVars: {} },
+        ports
+      })
+      expect(ports.provision).toHaveBeenCalledWith(expect.objectContaining({ setupOnly }))
+    }
+  )
+
+  it.each([false, true])(
     'provisions a headless activated workspace without a viewer (setup=%s)',
     async (withSetup) => {
       const { ports } = createPorts()

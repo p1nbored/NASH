@@ -10,7 +10,10 @@ import {
   AGY_ROUTE,
   SUBAGENT_ROUTE,
   availableResult,
-  seedRoutedAppTask
+  seedRoutedAppTask,
+  FIXTURE_NOW_MS,
+  createAppRunHarness,
+  type AppRunHarness
 } from './task-execution.test-fixture'
 import type { DelegatedRoute } from './task-start-route'
 const nativeStart = vi.hoisted(() => vi.fn())
@@ -20,11 +23,6 @@ vi.mock('../rpc/methods/orchestration/worker/local-worker-start', () => ({
 // FIXTURE_ONLY: synthetic ports in a temporary data folder; no CLI, model or credential is used.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createTaskExecutionRuntime } from './task-execution-runtime'
-import {
-  FIXTURE_NOW_MS,
-  createAppRunHarness,
-  type AppRunHarness
-} from './task-execution.test-fixture'
 
 describe('task execution runtime', () => {
   it('wires current task starts and native report reads', async () => {

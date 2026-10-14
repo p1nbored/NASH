@@ -2,9 +2,36 @@ import { emitPtyListeners, createPtyExitPayload } from './daemon-pty-listener-em
 import { DaemonPtyDaemonRecovery } from './daemon-pty-daemon-recovery'
 import { supportsMode2031UnsubscribeFact, type DaemonEvent } from './types'
 import type { DaemonEndpointIdentity } from './daemon-hello-protocol'
-import type { IPtyProvider } from '../providers/types'
+import type { IPtyProvider } from '../providers/pty-provider-contract'
+import type { DeveloperPermissionStatus } from '../../shared/developer-permissions-types'
+import {
+  AUTOMATIC_WORK_RESUME_UNSUPPORTED,
+  type AutomaticWorkResumeOutcome,
+  type AutomaticWorkResumeResult,
+  type AutomaticWorkStatus
+} from '../../shared/host-spawn-admission'
+import { isUnknownRequestTypeError } from './daemon-endpoint-errors'
+import type { AutomaticWorkRequestType } from './daemon-automatic-work-protocol'
 
 export class DaemonPtyAdapter extends DaemonPtyDaemonRecovery implements IPtyProvider {
+  async getFullDiskAccessStatus(): Promise<DeveloperPermissionStatus> {
+    if (!this.client.isConnected()) {
+      return 'unknown'
+    }
+    try {
+      const result = await this.client.request<unknown>('fullDiskAccessStatus', undefined, 3000)
+      if (result && typeof result === 'object' && 'status' in result) {
+        const { status } = result
+        if (status === 'granted' || status === 'denied' || status === 'unsupported') {
+          return status
+        }
+      }
+    } catch {
+      // Older daemons and lost host contact cannot establish a permission verdict.
+    }
+    return 'unknown'
+  }
+
   /** Identity of the daemon behind this adapter; null until hello completes or after a disconnect. */
   getDaemonIdentity(): DaemonEndpointIdentity | null {
     return this.client.getDaemonIdentity()
@@ -108,6 +135,30 @@ export class DaemonPtyAdapter extends DaemonPtyDaemonRecovery implements IPtyPro
         )
       }
     })
+  }
+
+  async getAutomaticWorkStatus(): Promise<AutomaticWorkStatus | null> {
+    const status = await this.requestAutomaticWork<AutomaticWorkStatus>('automaticWorkStatus')
+    return status === AUTOMATIC_WORK_RESUME_UNSUPPORTED ? null : status
+  }
+
+  resumeAutomaticWork(): Promise<AutomaticWorkResumeOutcome> {
+    return this.requestAutomaticWork<AutomaticWorkResumeResult>('resumeAutomaticWork')
+  }
+
+  private async requestAutomaticWork<T>(
+    type: AutomaticWorkRequestType
+  ): Promise<T | typeof AUTOMATIC_WORK_RESUME_UNSUPPORTED> {
+    await this.ensureConnected()
+    try {
+      return await this.client.request<T>(type, undefined)
+    } catch (error) {
+      // Why not "no gate": a daemon from before these requests may still hold a recorded pause.
+      if (isUnknownRequestTypeError(error)) {
+        return AUTOMATIC_WORK_RESUME_UNSUPPORTED
+      }
+      throw error
+    }
   }
 
   async closeStartupQueryAuthority(id: string): Promise<number> {

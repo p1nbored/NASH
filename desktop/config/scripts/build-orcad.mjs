@@ -4,10 +4,13 @@ import { fork, spawnSync } from 'node:child_process'
 import { build } from 'esbuild'
 import {
   buildOrcadEntry,
+  buildOrcadCli,
   buildOrcadLauncher,
   externalNativeAddons,
   ORCAD_EXTERNAL_MODULES,
-  ORCAD_CHILD_ENTRY_POINTS
+  ORCAD_CHILD_ENTRY_POINTS,
+  ORCAD_COMMONJS_MODULE_OPTIONS,
+  orcadChildOutputFilename
 } from './orcad-entry-build.mjs'
 import { createRequire } from 'node:module'
 import {
@@ -17,6 +20,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync
 } from 'node:fs'
@@ -25,12 +29,15 @@ import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { smokeProfileStateWorkers } from './profile-state-worker-smoke.mjs'
 import { smokeForeignSqliteReaderWorker } from './foreign-sqlite-reader-worker-smoke.mjs'
+import { smokeSessionScannerService } from './session-scanner-service-smoke.mjs'
 import { materializeWatcherPackage } from './orcad-watcher-package.mjs'
 import { stageOrcadWindowsProcessTree } from './orcad-windows-process-tree.mjs'
+import { stageOrcadWindowsCliLauncher } from './orcad-windows-cli-launcher.mjs'
+import { stageOrcadWindowsSecurity } from './orcad-windows-security.mjs'
 import {
   ORCAD_EMOJI_SHORTCODE_DATASET,
-  ORCAD_FOREIGN_SQLITE_READER_ENTRY,
-  ORCAD_PORT_SCAN_COMMAND_WORKER_ENTRY,
+  ORCAD_CLI_ENTRY_FILENAME,
+  ORCAD_CLI_PACKAGE_FILENAME,
   ORCAD_LAUNCHER_FILENAME,
   ORCAD_SERVER_ENTRY_FILENAME,
   ORCAD_NODE_PTY_DIR,
@@ -47,29 +54,20 @@ import { computeOrcadFullVersion } from './orcad-artifact-version.mjs'
 import { NODE_RUNTIME_ASSETS, NODE_RUNTIME_PIN } from '../../src/shared/node-runtime-pin.ts'
 import { findSlotProblems, readManifest } from './orcad-prebuild-slot-contents.mjs'
 import { orcadAgentBrowserNativeName } from '../../src/shared/orcad-agent-browser-name.ts'
+import { runProcessSync } from '@orca/process-host'
+import { describeProcessFailure } from './process-failure-message.mjs'
 
 const ROOT = join(import.meta.dirname, '..', '..')
 const OUT_DIR = process.env.ORCAD_OUT_DIR
   ? resolve(process.env.ORCAD_OUT_DIR)
   : join(ROOT, 'out', 'orcad')
-// Why beside orcad.js: the watcher runs in a forked child so a native @parcel/watcher
-// fault crashes that child instead of the server, and `resolveWatcherProcessEntryPath`
-// looks for it in the app root. A deployment has no desktop out/main to fall back to.
-const WATCHER_ENTRY = join(ROOT, ORCAD_CHILD_ENTRY_POINTS.watcher)
-const WATCHER_OUT_FILE = join(OUT_DIR, 'parcel-watcher-process-entry.js')
-// Why beside orcad.js: orcad forks the terminal daemon so PTYs outlive the runtime process,
-// and `getDaemonEntryPath()` probes the app root for this exact filename. Without it every
-// orcad restart would SIGKILL every running terminal.
-const DAEMON_ENTRY = join(ROOT, ORCAD_CHILD_ENTRY_POINTS.daemon)
-const DAEMON_OUT_FILE = join(OUT_DIR, 'daemon-entry.js')
-// Why beside orcad.js: the hook server's OpenCode binder and the OpenCode history scanner
-// start this worker from the module dir, since orcad has no Electron resources tree.
-const FOREIGN_SQLITE_READER_ENTRY = join(ROOT, ORCAD_CHILD_ENTRY_POINTS.foreignSqliteReader)
-const FOREIGN_SQLITE_READER_OUT_FILE = join(OUT_DIR, ORCAD_FOREIGN_SQLITE_READER_ENTRY)
-// Why beside orcad.js: workspace port detection runs its probe commands on this worker thread,
-// and `resolveWorkerEntryPath` looks for it next to the running bundle.
-const PORT_SCAN_WORKER_ENTRY = join(ROOT, ORCAD_CHILD_ENTRY_POINTS.portScanCommandWorker)
-const PORT_SCAN_WORKER_OUT_FILE = join(OUT_DIR, ORCAD_PORT_SCAN_COMMAND_WORKER_ENTRY)
+// Why beside orcad.js: every forked child and worker resolves its entry in the app root, and a
+// deployment has no desktop out/main to fall back to. A missing one only shows on a host as a
+// feature that never starts (the daemon's absence makes every restart kill every terminal).
+const childOutFile = (role) =>
+  join(OUT_DIR, orcadChildOutputFilename(ORCAD_CHILD_ENTRY_POINTS[role]))
+const WATCHER_OUT_FILE = childOutFile('watcher')
+const DAEMON_OUT_FILE = childOutFile('daemon')
 const OUT_FILE = join(OUT_DIR, ORCAD_LAUNCHER_FILENAME)
 const SERVER_OUT_FILE = join(OUT_DIR, ORCAD_SERVER_ENTRY_FILENAME)
 const BUILD_TARGET = process.env.ORCAD_BUILD_TARGET
@@ -105,6 +103,7 @@ async function stageParcelWatcher(target) {
   const wrapperSource = requireFromWatcher.resolve('@parcel/watcher/wrapper.js')
   mkdirSync(WATCHER_MODULE_DIR, { recursive: true })
   await build({
+    ...ORCAD_COMMONJS_MODULE_OPTIONS,
     stdin: {
       contents:
         `const {createWrapper}=require(${JSON.stringify(wrapperSource)});` +
@@ -164,6 +163,8 @@ writeFileSync(
 stageNodePty(BUILD_TARGET)
 await stageParcelWatcher(BUILD_TARGET)
 stageOrcadWindowsProcessTree(ROOT, OUT_DIR, BUILD_TARGET)
+stageOrcadWindowsCliLauncher(ROOT, OUT_DIR, BUILD_TARGET)
+stageOrcadWindowsSecurity(ROOT, OUT_DIR, BUILD_TARGET)
 const emojiDatasetOutput = join(OUT_DIR, ORCAD_EMOJI_SHORTCODE_DATASET)
 mkdirSync(dirname(emojiDatasetOutput), { recursive: true })
 copyFileSync(
@@ -202,6 +203,7 @@ cpSync(join(ROOT, 'resources', 'native-chat-visuals'), join(OUT_DIR, 'native-cha
  *  their runtime resolvers look for them. */
 function buildForkedChild(entryPoint, outfile) {
   return build({
+    ...ORCAD_COMMONJS_MODULE_OPTIONS,
     entryPoints: [entryPoint],
     bundle: true,
     platform: 'node',
@@ -214,26 +216,26 @@ function buildForkedChild(entryPoint, outfile) {
     minify: true,
     sourcemap: false,
     define: {
+      ...ORCAD_COMMONJS_MODULE_OPTIONS.define,
       'process.env.NODE_ENV': '"production"'
     },
     logLevel: 'error'
   })
 }
 
-const childResults = await Promise.all([
-  buildForkedChild(WATCHER_ENTRY, WATCHER_OUT_FILE),
-  buildForkedChild(DAEMON_ENTRY, DAEMON_OUT_FILE),
-  buildForkedChild(FOREIGN_SQLITE_READER_ENTRY, FOREIGN_SQLITE_READER_OUT_FILE),
-  buildForkedChild(PORT_SCAN_WORKER_ENTRY, PORT_SCAN_WORKER_OUT_FILE),
-  ...['writer', 'backup'].map((role) =>
-    buildForkedChild(
-      join(ROOT, ORCAD_CHILD_ENTRY_POINTS[role]),
-      join(OUT_DIR, `profile-state-${role}-worker-entry.js`)
-    )
+const childResults = await Promise.all(
+  Object.values(ORCAD_CHILD_ENTRY_POINTS).map((entryPoint) =>
+    buildForkedChild(join(ROOT, entryPoint), join(OUT_DIR, orcadChildOutputFilename(entryPoint)))
   )
-])
+)
 
 const result = await buildOrcadEntry(SERVER_OUT_FILE)
+const cliResult = await buildOrcadCli(join(OUT_DIR, ORCAD_CLI_ENTRY_FILENAME))
+const { version: cliVersion } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+writeFileSync(
+  join(OUT_DIR, ORCAD_CLI_PACKAGE_FILENAME),
+  `${JSON.stringify({ type: 'commonjs', private: true, version: cliVersion })}\n`
+)
 const launcherResult = await buildOrcadLauncher(OUT_FILE)
 
 const output = Object.values(result.metafile.outputs).find(
@@ -262,6 +264,7 @@ function collectImporters(metafiles, matches) {
 const metafiles = [
   launcherResult.metafile,
   result.metafile,
+  cliResult.metafile,
   ...childResults.map((child) => child.metafile)
 ]
 const electronImporters = collectImporters(
@@ -317,6 +320,17 @@ if (graphErrors.length > 0) {
     )
     process.exitCode = 1
   }
+  const providerSmoke = runProcessSync({
+    program: process.execPath,
+    args: [SERVER_OUT_FILE, '--orcad-structured-provider-load-check'],
+    timeoutMs: 60_000
+  })
+  if (providerSmoke.code !== 0 || providerSmoke.timedOut || providerSmoke.outputTruncated) {
+    console.error(
+      `[build-orcad] the packaged structured provider failed to load.\n${describeProcessFailure(providerSmoke)}`
+    )
+    process.exitCode = 1
+  }
   // Why require + parseArgs and not a real daemon: requiring the bundle evaluates every
   // top-level import, and calling its exported argv parser proves the entry's own code is
   // there rather than a graph that merely resolved. Booting one would need a socket, a
@@ -355,24 +369,23 @@ if (graphErrors.length > 0) {
   }
 }
 
-try {
-  await smokeProfileStateWorkers(OUT_DIR)
-  if (nodeRuntimePath) {
-    await smokeProfileStateWorkers(OUT_DIR, { runtimePath: nodeRuntimePath })
+/** @type {{ label: string, smoke: (outDir: string, options?: { runtimePath?: string }) => unknown }[]} */
+const workerSmokes = [
+  { label: 'profile state worker', smoke: smokeProfileStateWorkers },
+  { label: 'foreign SQLite reader worker', smoke: smokeForeignSqliteReaderWorker },
+  { label: 'session scanner service', smoke: smokeSessionScannerService }
+]
+// Each shipped child is checked under the build's Node and, when set, the pinned runtime.
+for (const { label, smoke } of workerSmokes) {
+  try {
+    await smoke(OUT_DIR)
+    if (nodeRuntimePath) {
+      await smoke(OUT_DIR, { runtimePath: nodeRuntimePath })
+    }
+  } catch (error) {
+    console.error(`[build-orcad] ${label} check failed:`, error)
+    process.exitCode = 1
   }
-} catch (error) {
-  console.error('[build-orcad] profile state worker check failed:', error)
-  process.exitCode = 1
-}
-
-try {
-  smokeForeignSqliteReaderWorker(OUT_DIR)
-  if (nodeRuntimePath) {
-    smokeForeignSqliteReaderWorker(OUT_DIR, { runtimePath: nodeRuntimePath })
-  }
-} catch (error) {
-  console.error('[build-orcad] foreign SQLite reader worker check failed:', error)
-  process.exitCode = 1
 }
 
 // Why a content hash and not ORCAD_VERSION alone: the remote install directory is keyed on

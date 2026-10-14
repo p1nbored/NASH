@@ -287,4 +287,87 @@ describe('AgentBrowserBridge keypress input', () => {
     })
     expect(keyEventCalls(wc)).toHaveLength(0)
   })
+  describe.each(['a', 'MediaPlayPause'])('target admission for %s', (key) => {
+    function registerTwoWorkspaces(): MockWebContents {
+      const otherPage = mockWebContents(200)
+      otherPage.debugger.sendCommand.mockResolvedValue({})
+      bridge = new AgentBrowserBridge(
+        mockBrowserManager(
+          new Map([
+            ['tab-1', 100],
+            ['tab-2', 200]
+          ]),
+          new Map([
+            ['tab-1', 'workspace-1'],
+            ['tab-2', 'workspace-2']
+          ])
+        )
+      )
+      bridge.setActiveTab(200)
+      webContentsFromIdMock.mockImplementation((id: number) =>
+        id === 100 ? wc : id === 200 ? otherPage : null
+      )
+      return otherPage
+    }
+
+    it('rejects unscoped input before dispatch or helper startup across workspaces', async () => {
+      const otherPage = registerTwoWorkspaces()
+      succeedWith({ pressed: key })
+
+      await expect(bridge.keypress(key)).rejects.toMatchObject({
+        code: 'browser_target_ambiguous'
+      })
+
+      expect(wc.debugger.sendCommand).not.toHaveBeenCalled()
+      expect(otherPage.debugger.sendCommand).not.toHaveBeenCalled()
+      expect(execFileMock).not.toHaveBeenCalled()
+      expect(CdpWsProxyMock.instances).toHaveLength(0)
+    })
+
+    it.each([
+      { worktreeId: undefined, browserPageId: 'tab-1' },
+      { worktreeId: 'workspace-1', browserPageId: undefined }
+    ])('targets the selected workspace despite another active page: %j', async (target) => {
+      const otherPage = registerTwoWorkspaces()
+      succeedWith({ pressed: key })
+
+      await expect(bridge.keypress(key, target.worktreeId, target.browserPageId)).resolves.toEqual({
+        pressed: key
+      })
+
+      expect(otherPage.debugger.sendCommand).not.toHaveBeenCalled()
+      if (key === 'a') {
+        expect(keyEventCalls(wc)).toHaveLength(2)
+        expect(execFileMock).not.toHaveBeenCalled()
+      } else {
+        const argumentsList = execFileMock.mock.calls.map(([, args]) => args).filter(isStringArray)
+        expect(argumentsList.some((args) => args.includes('orca-tab-tab-1'))).toBe(true)
+        expect(argumentsList.some((args) => args.includes('orca-tab-tab-2'))).toBe(false)
+      }
+    })
+
+    it('rejects a page belonging to another workspace before input or helper startup', async () => {
+      const otherPage = registerTwoWorkspaces()
+      succeedWith({ pressed: key })
+
+      await expect(bridge.keypress(key, 'workspace-2', 'tab-1')).rejects.toMatchObject({
+        code: 'browser_tab_not_found'
+      })
+      expect(wc.debugger.sendCommand).not.toHaveBeenCalled()
+      expect(otherPage.debugger.sendCommand).not.toHaveBeenCalled()
+      expect(execFileMock).not.toHaveBeenCalled()
+      expect(CdpWsProxyMock.instances).toHaveLength(0)
+    })
+
+    it('preserves unscoped input when only one live page is available', async () => {
+      succeedWith({ pressed: key })
+      await expect(bridge.keypress(key)).resolves.toEqual({ pressed: key })
+      if (key === 'a') {
+        expect(keyEventCalls(wc)).toHaveLength(2)
+        expect(execFileMock).not.toHaveBeenCalled()
+      } else {
+        expect(execFileMock).toHaveBeenCalled()
+      }
+    })
+  })
 })

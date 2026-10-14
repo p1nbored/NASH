@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 import type { RpcContext } from '../../core'
 import type {
+  TerminalInputAckKind,
   TerminalStreamFrame,
   TerminalStreamOpcode
 } from '../../../../../shared/terminal-stream-protocol'
@@ -10,7 +11,6 @@ import type {
   TerminalMultiplexSubscribeFrame
 } from './stream-schemas'
 import type { TerminalMultiplexStream } from './terminal-stream-types'
-import type { TerminalSourceRangeRegistry } from '../../terminal-source-range-registry'
 import type { TerminalStreamEndVerdict } from '../../../../../shared/terminal-stream-end-verdict'
 
 export type MultiplexSubscribeRequest = z.infer<typeof TerminalMultiplexSubscribeFrame>
@@ -27,7 +27,6 @@ export type TerminalMultiplexConnectionBase = {
   closed: boolean
   cursor: number
   streams: Map<number, TerminalMultiplexStream>
-  sourceRangeRegistry: TerminalSourceRangeRegistry
   pendingPtyWaitControllers: Map<number, Set<AbortController>>
   ackTotalInFlightBytes: number
   ackTotalWindowBytes: number
@@ -42,13 +41,18 @@ export type TerminalMultiplexFrameDelivery = {
     streamId: number,
     opcode: TerminalStreamOpcode,
     payload?: Uint8Array<ArrayBufferLike>,
-    frameSeq?: number,
-    onRejected?: () => void
+    frameSeq?: number
   ) => boolean
   sendStreamError: (streamId: number, message: string) => void
   notifyStreamWriteUnavailable: (
     stream: TerminalMultiplexStream,
     outcome: 'delivered' | 'rejected' | 'failed'
+  ) => void
+  /** Cumulative ack of sequenced input through `appliedSeq`; `resend` also asks for everything after it. */
+  sendInputAck: (
+    stream: TerminalMultiplexStream,
+    appliedSeq: number,
+    kind: TerminalInputAckKind
   ) => void
   sendResizedFrame: (
     stream: TerminalMultiplexStream,
@@ -64,12 +68,6 @@ export type TerminalMultiplexFlowControl = {
   flushAckPendingOutput: (stream: TerminalMultiplexStream, maxChunks?: number) => number
   flushAllAckPendingOutput: () => void
   acknowledgeOutput: (stream: TerminalMultiplexStream, bytes: number) => void
-  acknowledgeSourceRanges: (
-    stream: TerminalMultiplexStream,
-    streamGeneration: string,
-    ackedEndByte: number
-  ) => void
-  detachSourceRangeConsumer: (stream: TerminalMultiplexStream, reason: string) => void
 }
 
 export type TerminalMultiplexCleanup = {
@@ -95,17 +93,16 @@ export type TerminalMultiplexSubscribeFrame = {
   handleSubscribeFrame: (payload: Uint8Array<ArrayBufferLike>) => Promise<void>
 }
 
-export type TerminalMultiplexFrameDeliveryStage = TerminalMultiplexConnectionBase &
-  TerminalMultiplexFrameDelivery
-
-export type TerminalMultiplexFlowControlStage = TerminalMultiplexFrameDeliveryStage &
-  TerminalMultiplexFlowControl
-
-export type TerminalMultiplexCleanupStage = TerminalMultiplexFlowControlStage &
-  TerminalMultiplexCleanup
-
-export type TerminalMultiplexSlotFramesStage = TerminalMultiplexCleanupStage &
-  TerminalMultiplexSlotFrames
-
-export type TerminalMultiplexConnection = TerminalMultiplexSlotFramesStage &
+export type TerminalMultiplexConnection = TerminalMultiplexConnectionBase &
+  TerminalMultiplexFrameDelivery &
+  TerminalMultiplexFlowControl &
+  TerminalMultiplexCleanup &
+  TerminalMultiplexSlotFrames &
   TerminalMultiplexSubscribeFrame
+
+export function isMultiplexStreamAttached(
+  state: Pick<TerminalMultiplexConnection, 'closed' | 'streams'>,
+  stream: TerminalMultiplexStream
+): boolean {
+  return !state.closed && state.streams.get(stream.streamId) === stream
+}

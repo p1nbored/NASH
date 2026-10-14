@@ -32,12 +32,12 @@ vi.mock('../ssh/orcad-migration-delta-move', () => ({
 vi.mock('../ssh/orcad-runtime-conversion-wiring', () => ({
   orcadMigrationDestinationFor: () => ({})
 }))
-vi.mock('../ssh/orcad-migration-relay-pty-lister', () => ({
-  orcadMigrationRelayPtyLister: () => null
+vi.mock('../ssh/orcad-managed-tunnel', () => ({
+  ensureOrcadManagedTunnel: vi.fn()
 }))
-vi.mock('../ssh/orcad-managed-tunnel', () => ({ ensureOrcadManagedTunnel: vi.fn() }))
-vi.mock('../ssh/ssh-target-registry', () => ({ hasRegisteredDirectSshAuthority: () => false }))
-vi.mock('./ssh-session-teardown', () => ({ disconnectRegisteredSshTarget: vi.fn() }))
+vi.mock('./ssh-session-teardown', () => ({
+  disconnectRegisteredSshTarget: vi.fn()
+}))
 vi.mock('./runtime-environment-managed-tunnel', () => ({
   publishResolvedChangedHostStatus: mocks.publish
 }))

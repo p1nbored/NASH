@@ -17,6 +17,7 @@ function desktopReader(context: RpcContext) {
 /** D-024: a run's tasks and each attempt's state, for the Workbench task list. */
 export const WORKBENCH_RUN_TASKS_METHOD = defineMethod({
   name: 'workbench.runs.tasks',
+  permission: 'workspace',
   params: WorkbenchRunTasksParams,
   handler: (params, context): Promise<WorkbenchRunTasksResult> =>
     readRunTasks(desktopReader(context), params.runId)

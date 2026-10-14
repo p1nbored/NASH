@@ -38,7 +38,7 @@ export function PaneBannerLearnMore({ onClick }: { onClick: () => void }): React
   )
 }
 
-/** The warning strip across the top of a terminal pane, with its actions and Dismiss. */
+/** The warning strip across the top of a terminal pane, with its actions and optional Dismiss. */
 export function PaneTopWarningBanner({
   title,
   body,
@@ -48,9 +48,9 @@ export function PaneTopWarningBanner({
   onShown
 }: {
   title: string
-  body: React.ReactNode
+  body?: React.ReactNode
   primaryAction: React.ReactNode
-  onDismiss: () => void
+  onDismiss?: () => void
   onDontShowAgain?: () => void
   onShown?: () => void
 }): React.JSX.Element {
@@ -76,7 +76,7 @@ export function PaneTopWarningBanner({
           />
           <div className="min-w-0 leading-5">
             <p className="font-medium text-foreground">{title}</p>
-            <p className="text-muted-foreground">{body}</p>
+            {body ? <p className="text-muted-foreground">{body}</p> : null}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1 @[44rem]:shrink-0 @max-[44rem]:mt-1.5 @max-[44rem]:pl-6.5">
@@ -86,9 +86,11 @@ export function PaneTopWarningBanner({
               {translate('terminal.paneTopBanner.dontShowAgain', "Don't show again")}
             </Button>
           ) : null}
-          <Button type="button" variant="ghost" size="xs" onClick={onDismiss}>
-            {translate('terminal.paneTopBanner.dismiss', 'Dismiss')}
-          </Button>
+          {onDismiss ? (
+            <Button type="button" variant="ghost" size="xs" onClick={onDismiss}>
+              {translate('terminal.paneTopBanner.dismiss', 'Dismiss')}
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

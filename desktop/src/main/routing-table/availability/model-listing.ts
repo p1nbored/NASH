@@ -1,5 +1,6 @@
 import type { AgentSessionModelOption } from '../../../shared/agent-session-wire'
 import type { DiscoverCommitMessageModelsResult } from '../../text-generation/source-control-text-generation-types'
+import type { RouteProvider } from './route-availability-types'
 
 /** One row of a CLI's model listing, reduced to what a route check compares. */
 export type ListedModel = {
@@ -13,8 +14,26 @@ export type ListedModel = {
 
 /** A failed or empty listing never admits a model: only `ok` with at least one row is evidence. */
 export type ModelListing =
-  | { readonly ok: true; readonly models: readonly ListedModel[]; readonly observedAtMs: number }
+  | {
+      readonly ok: true
+      readonly models: readonly ListedModel[]
+      readonly observedAtMs: number
+      /** Only a probe is evidence that the CLI answered; a catalog can be regenerated offline. */
+      readonly source?: 'probe' | 'catalog'
+      readonly acceptsUnlistedModels?: true
+    }
   | { readonly ok: false; readonly observedAtMs: number }
+
+/** The original three listing ports predate the source tag and only return live CLI answers. */
+export function modelListingProbeTimestamp(
+  listing: ModelListing,
+  provider: RouteProvider
+): number | null {
+  const legacyProbe = ['claude', 'codex', 'agy'].includes(provider)
+  return listing.ok && (listing.source === 'probe' || (listing.source === undefined && legacyProbe))
+    ? listing.observedAtMs
+    : null
+}
 
 /** The part of Orca's probe answer a listing needs; the Claude probe adds the resolved-id map. */
 export type CatalogProbeSuccess = {
@@ -33,6 +52,7 @@ export function listingFromCatalogSuccess(
   return {
     ok: true,
     observedAtMs,
+    source: 'probe',
     models: success.models.map((model) => ({
       id: model.id,
       resolvedModel: success.resolvedModelByModel?.get(model.id) ?? null,
@@ -61,15 +81,17 @@ export function listingFromDiscovery(
       label: model.label,
       efforts: []
     }))
-  return models.length === 0 ? { ok: false, observedAtMs } : { ok: true, observedAtMs, models }
+  return models.length === 0
+    ? { ok: false, observedAtMs }
+    : { ok: true, observedAtMs, source: 'probe', models }
 }
 
 export type ModelListingPort = () => Promise<ModelListing>
 
 /** Wraps a catalog probe (Orca's `AgentModelCatalogProbe`, or the Claude one) as a never-rejecting port. */
-export function modelListingPortFromProbe(deps: {
-  probe: (accountHomePath: string) => Promise<CatalogProbeSuccess>
-  resolveAccountHome: () => Promise<string>
+export function modelListingPortFromProbe<AccountHome>(deps: {
+  probe: (accountHome: AccountHome) => Promise<CatalogProbeSuccess>
+  resolveAccountHome: () => Promise<AccountHome>
   now: () => number
 }): ModelListingPort {
   return async () => {

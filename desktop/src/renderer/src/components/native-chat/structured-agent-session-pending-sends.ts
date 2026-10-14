@@ -1,15 +1,16 @@
 // Each chat's sends the host has not answered yet, in memory only: what the sender keeps and the
 // chat's view reads.
 
-import type { AgentJournalMessageItem } from '../../../../shared/agent-session-journal-types'
+import type { structuredAgentSessionSendBody } from '../../../../shared/structured-agent-session-send-mutation'
 
 export type StructuredAgentSessionPendingSend = {
   clientMessageId: string
   sessionId: string
-  body: AgentJournalMessageItem
+  body: ReturnType<typeof structuredAgentSessionSendBody>
   previewUris: readonly string[]
   queuedAt: number
   delivery?: 'queue-if-active'
+  options?: Readonly<Record<string, string>>
   /**
    * `sending`: on its way, its one request out or about to be; the chat takes no other send meanwhile.
    * `recorded`: the host holds it; an open chat draws it until the host's row or card arrives.

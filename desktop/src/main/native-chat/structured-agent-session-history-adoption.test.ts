@@ -117,7 +117,7 @@ describe('findCommittedStructuredAgentSessionAdoptionReplay', () => {
   it('returns the record-pinned account and adopted handle for the exact committed operation', () => {
     expect(committedReplay()).toMatchObject({
       record: { accountHome: { path: '/home/dev/.codex-original' } },
-      providerHandle: { kind: 'codex', threadId: 'thread-1' }
+      providerHandle: codexProviderHandle('thread-1')
     })
   })
 
@@ -156,11 +156,7 @@ describe('findCommittedStructuredAgentSessionAdoptionReplay', () => {
         ]
       })
     ).toMatchObject({
-      providerHandle: {
-        kind: 'claude',
-        sessionId: 'provider-session-alpha-1',
-        leafUuid: 'leaf-1'
-      }
+      providerHandle: claudeProviderHandle('provider-session-alpha-1', 'leaf-1')
     })
   })
 })
@@ -193,10 +189,11 @@ describe('resolveStructuredAgentSessionAdoption', () => {
 
     await expect(
       resolveStructuredAgentSessionAdoption({
-        agent: 'codex',
         providerSessionId: 'thread-1',
         candidateAccountHomes: ['/home/dev/.orca-codex', '/home/dev/.codex', '/never/probed'],
-        resolveTranscript
+        resolveTranscript,
+        launchEnv: {},
+        workspaceCwd: '/repo'
       })
     ).resolves.toEqual({
       accountHomePath: '/home/dev/.codex',
@@ -210,10 +207,11 @@ describe('resolveStructuredAgentSessionAdoption', () => {
 
     await expect(
       resolveStructuredAgentSessionAdoption({
-        agent: 'claude',
         providerSessionId: 'session-1',
         candidateAccountHomes: ['', '   ', '/home/dev/.claude', ' /home/dev/.claude ', ''],
-        resolveTranscript
+        resolveTranscript,
+        launchEnv: {},
+        workspaceCwd: '/repo'
       })
     ).rejects.toThrow('agent_session_identity_required')
     expect(resolveTranscript.mock.calls.map(([args]) => args.accountHomePath)).toEqual([
@@ -225,10 +223,11 @@ describe('resolveStructuredAgentSessionAdoption', () => {
     // A resume under the wrong home lands in a blank chat wearing the old chat's name.
     await expect(
       resolveStructuredAgentSessionAdoption({
-        agent: 'claude',
         providerSessionId: 'session-1',
         candidateAccountHomes: ['/home/dev/.claude-work', '/home/dev/.claude'],
-        resolveTranscript: async () => null
+        resolveTranscript: async () => null,
+        launchEnv: {},
+        workspaceCwd: '/repo'
       })
     ).rejects.toThrow('agent_session_identity_required')
   })

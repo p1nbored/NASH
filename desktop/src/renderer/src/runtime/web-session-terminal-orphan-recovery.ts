@@ -43,7 +43,7 @@ import {
   clearTerminalRecoveryRpcLaneForTests,
   runInTerminalRecoveryRpcLane
 } from './web-session-terminal-orphan-recovery-rpc-lane'
-import { isWebTerminalSurfaceTabId, toHostSessionTabId } from './web-terminal-surface-id'
+import { isWebTerminalSurfaceTabId, toHostSessionTabId } from '../../../shared/terminal-surface-id'
 import { buildWebTerminalOrphanTopologyProposal } from './web-session-terminal-orphan-topology'
 import {
   clearRetainedTerminalRetirementProofsForTests,

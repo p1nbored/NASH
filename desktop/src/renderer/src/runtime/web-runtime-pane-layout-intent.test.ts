@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { UpdatePaneLayout } from '../../../shared/rpc-contract/session-tabs-schemas-params'
 import { updateWebRuntimePaneLayout } from './web-runtime-terminal-actions'
+import { stubRuntimeEnvironmentBridge } from './runtime-environment-bridge-fixture'
 
 const ENVIRONMENT_ID = 'web-env-1'
 const WORKTREE_ID = 'repo::/worktree'
@@ -29,7 +30,7 @@ async function sentParams(
   args: Parameters<typeof updateWebRuntimePaneLayout>[0]
 ): Promise<Record<string, unknown>> {
   const runtimeCall = vi.fn().mockResolvedValue({ id: 'p', ok: true, result: { updated: true } })
-  vi.stubGlobal('window', { api: { runtimeEnvironments: { call: runtimeCall } } })
+  stubRuntimeEnvironmentBridge({ call: runtimeCall })
   await expect(updateWebRuntimePaneLayout(args)).resolves.toBe(true)
   expect(runtimeCall).toHaveBeenCalledOnce()
   return runtimeCall.mock.calls[0][0].params

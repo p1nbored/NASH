@@ -14,12 +14,11 @@
  * - `exited` is a claim about **this endpoint**, not about every relay on the host. It means
  *   nothing holds this socket path, established positively (a connect that was refused *and*
  *   an enumeration that found no holder). A relay whose socket was already unlinked is
- *   invisible to this probe by construction — that is what the superseded sweep is for.
+ *   invisible to this probe by construction.
  * - a probe that could not run, a host without `lsof`, or a connect that failed for any other
- *   reason is `unverifiable`. It cannot authorize client cleanup; guarded launch still
- *   delegates socket takeover checks to the daemon.
+ *   reason is `unverifiable`. It never authorizes client cleanup.
  */
-import { RELAY_LSOF_PROBE_JS } from '../../shared/child-process/posix-lsof-probe'
+import { RELAY_LSOF_PROBE_JS } from '@orca/process-host/posix-lsof-probe'
 import type { SshConnection } from './ssh-connection'
 import { shellEscape } from './ssh-connection-utils'
 import {
@@ -27,14 +26,13 @@ import {
   RELAY_UNRECOGNIZED_CHILD_COUNT_VAR,
   relayDaemonChildCensusShell
 } from './relay-daemon-service-children'
-import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-deploy-helpers'
+import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
 
-export type RelayEndpointVerdict = 'live' | 'unverifiable' | 'exited'
+type RelayEndpointVerdict = 'live' | 'unverifiable' | 'exited'
 
 export type RelayEndpointEvidence =
   | 'accepted-connection'
-  | 'handshake-refusal'
   | 'holder-process'
   | 'no-holder'
   | 'inconclusive'
@@ -69,7 +67,7 @@ const PROBE_END = 'ORCA-INCUMBENT-END'
 const CONNECT_PROBE_TIMEOUT_MS = 1000
 
 // Why ES5 syntax: nodePath may be a host-resolved system node, not the bundled one.
-export const RELAY_CONNECT_PROBE_JS = [
+const RELAY_CONNECT_PROBE_JS = [
   'var s=require("net").connect(process.argv[1]);',
   'var done=false;',
   'function say(v){if(done)return;done=true;try{s.destroy()}catch(e){};',
@@ -255,31 +253,6 @@ export async function probeRelayEndpointIncumbent(
 }
 
 /**
- * A relay that told us its version over the wire is `live` by positive host evidence, even on
- * a host where nothing can enumerate socket holders.
- */
-export function withHandshakeRefusalEvidence(
-  incumbent: RelayEndpointIncumbent
-): RelayEndpointIncumbent {
-  if (incumbent.verdict === 'live') {
-    return incumbent
-  }
-  return { ...incumbent, verdict: 'live', evidence: 'handshake-refusal' }
-}
-
-/**
- * May a fresh relay be launched onto this path?
- *
- * Only `live` forbids it. `unverifiable` is permitted because the *daemon* — not the client —
- * performs the takeover: `RelaySocketOwnership.listen` re-probes on EADDRINUSE, refuses to
- * steal a path that accepts connections, and only unlinks an inode whose identity is
- * unchanged. That check is atomic with the bind, which a client-side `rm -f` can never be.
- */
-export function mayLaunchOverRelayEndpoint(incumbent: RelayEndpointIncumbent): boolean {
-  return incumbent.verdict !== 'live'
-}
-
-/**
  * A live relay that provably holds nothing: identity confirmed against its argv, exactly one
  * holder, and no child the host could not account for as one of the daemon's own service
  * processes. Reaping it destroys no user work. Anything less is retained — killing the wrong
@@ -297,62 +270,4 @@ export function isReapableRelayHusk(incumbent: RelayEndpointIncumbent): boolean 
   }
   const [holder] = incumbent.holders
   return holder.matchesRelayArgv && holder.unrecognizedChildCount === 0
-}
-
-export function describeRelayEndpointIncumbent(incumbent: RelayEndpointIncumbent): string {
-  const holders = incumbent.holders
-    .map(
-      (holder) =>
-        `${holder.pid}(children=${holder.childCount ?? 'unknown'},` +
-        `unrecognized=${holder.unrecognizedChildCount ?? 'unknown'})`
-    )
-    .join(',')
-  return (
-    `${incumbent.sockPath} verdict=${incumbent.verdict} evidence=${incumbent.evidence} ` +
-    `holders=${incumbent.holdersEnumerable ? holders || 'none' : 'unenumerable'}`
-  )
-}
-
-/**
- * Thrown instead of orphaning: a live relay owns the endpoint and refused us, so the path is
- * not ours to rebind. Terminal for this attempt — the user resolves it with Reset Relay,
- * which signals the incumbent deliberately and with consent.
- */
-export class RelayEndpointHeldError extends Error {
-  readonly name = 'RelayEndpointHeldError'
-  constructor(readonly incumbent: RelayEndpointIncumbent) {
-    super(
-      `A live relay still owns ${incumbent.sockPath} and refused this connection ` +
-        `(${describeRelayEndpointIncumbent(incumbent)}). Orca will not replace it, because ` +
-        'unlinking its socket would strand its terminals. Use Reset Relay for this host to ' +
-        'stop it, then reconnect.'
-    )
-  }
-}
-
-export function isRelayEndpointHeldError(err: unknown): err is RelayEndpointHeldError {
-  return err instanceof RelayEndpointHeldError
-}
-
-/**
- * Thrown when a relay holds the endpoint but never refused us: it accepted a connection or is
- * enumerated as the holder, yet our --connect got no handshake answer. That is a stalled or
- * overloaded relay, not a decision — so unlike `RelayEndpointHeldError` this is retryable, and
- * the session routes it through the relay-lost backoff rather than the terminal error path.
- */
-export class RelayEndpointUnresponsiveError extends Error {
-  readonly name = 'RelayEndpointUnresponsiveError'
-  constructor(readonly incumbent: RelayEndpointIncumbent) {
-    super(
-      `A relay still owns ${incumbent.sockPath} but did not answer the handshake ` +
-        `(${describeRelayEndpointIncumbent(incumbent)}). Orca will retry rather than replace it; ` +
-        'if it never recovers, use Reset Relay for this host.'
-    )
-  }
-}
-
-export function isRelayEndpointUnresponsiveError(
-  err: unknown
-): err is RelayEndpointUnresponsiveError {
-  return err instanceof RelayEndpointUnresponsiveError
 }

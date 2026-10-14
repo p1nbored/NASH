@@ -13,6 +13,8 @@ import { registerWorktreeChangeInvalidator } from '../ipc/worktree-change-invali
 import type { AgentSessionRecordStore } from './agent-session-record-store'
 import { peekOpenedAgentSessionRecordStore } from './agent-session-record-store-slot'
 import { createAgentLaunchRecordWarmupGate } from './agent-launch-record-warmup-gate'
+import { WorkspaceLayoutStream } from './workspace-layout-stream'
+import type { RemoteLayoutSnapshot } from '../../shared/remote-layout-snapshot'
 import { registerDetectedWorktreeScanInvalidation } from '../ipc/worktrees/listing/register-detected-worktree-scan-invalidation'
 import { requireLocalWorkbenchWorkspace } from './workbench-local-workspace'
 import { OrchestrationError } from './orchestration/orchestration-error'
@@ -21,6 +23,16 @@ import {
   type DotIngressControl,
   type DotIngressEnabledReader
 } from './dot-ingress/dot-ingress-control'
+
+import {
+  listReferenceWorkspaces,
+  selectReferenceWorkspace,
+  listWorkspaceReferences
+} from './runtime-reference-catalog'
+import { findWorkspaceReferences } from './runtime-reference-find'
+import { createReferenceAgentIndex, referenceConnectionHosts } from './runtime-reference-agents'
+import type { RuntimeReferenceFindParams } from '../../shared/runtime-reference-contracts'
+import { getRepoExecutionHostId } from '../../shared/execution-host'
 
 class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
   /** Host-recorded launch metadata only; attaching coordination never writes to the CLI. */
@@ -50,6 +62,59 @@ class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
   // Why: whoever owns the database installs the reader of the persisted switch, so the RPC server never opens the database itself.
   installDotIngressEnabledReader(reader: DotIngressEnabledReader): void {
     getDotIngressPort(this).installEnabledReader(reader)
+  }
+
+  private async selectReferenceCatalogWorkspace(selector: string, cwd?: string) {
+    const catalog = listReferenceWorkspaces(
+      this.requireStore(),
+      this.resolvedWorktrees.peek()?.worktrees
+    )
+    try {
+      return selectReferenceWorkspace(catalog, selector, cwd)
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== 'selector_not_found') {
+        throw error
+      }
+      // Why: unsaved worktrees and cold-cache branches only resolve after a worktree scan.
+      const warmed = listReferenceWorkspaces(
+        this.requireStore(),
+        await this.listResolvedWorktrees()
+      )
+      return selectReferenceWorkspace(warmed, selector, cwd)
+    }
+  }
+
+  async listWorkspaceReferences(selector: string, cwd?: string) {
+    return listWorkspaceReferences(await this.selectReferenceCatalogWorkspace(selector, cwd))
+  }
+
+  async findWorkspaceReferences(params: RuntimeReferenceFindParams) {
+    if (params.worktree && params.repo) {
+      throw new Error('--repo and --worktree cannot be combined')
+    }
+    let workspaces = params.worktree
+      ? [await this.selectReferenceCatalogWorkspace(params.worktree, params.cwd)]
+      : listReferenceWorkspaces(this.requireStore(), this.resolvedWorktrees.peek()?.worktrees)
+    if (params.repo) {
+      const repo = await this.resolveRepoSelector(params.repo)
+      workspaces = workspaces.filter(
+        (row) =>
+          row.kind === 'worktree' &&
+          row.repoId === repo.id &&
+          row.hostId === getRepoExecutionHostId(repo)
+      )
+    }
+    return findWorkspaceReferences(params, {
+      workspaces,
+      agents: async (workspaceKeys) =>
+        createReferenceAgentIndex(
+          this,
+          this.getOrchestrationDbIfAvailable(),
+          await this.openAgentSessionRecordStore(),
+          workspaceKeys,
+          referenceConnectionHosts(this.listRepos())
+        )
+    })
   }
 
   constructor(...args: ConstructorParameters<typeof OrcaRuntimeWithMigrationCatalog>) {
@@ -106,6 +171,23 @@ class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
     return this.getPtyRecordForPaneKey(paneKey)?.connected === true
   }
 
+  private readonly workspaceLayoutStream = new WorkspaceLayoutStream({
+    store: () => this.store,
+    homeHostId: (key) => this.tryGetWorkspaceSessionHostIdForWorktree(key)
+  })
+
+  /** The read-only layout stream (`layout.subscribe`, not advertised yet). */
+  subscribeWorkspaceLayouts(
+    listener: Parameters<WorkspaceLayoutStream['subscribe']>[0]
+  ): ReturnType<WorkspaceLayoutStream['subscribe']> {
+    return this.workspaceLayoutStream.subscribe(listener)
+  }
+
+  /** This desktop's display-only copy of each paired server's layout (`layout.getRemoteSnapshots`). */
+  getRemoteLayoutSnapshots(): Record<string, RemoteLayoutSnapshot> {
+    return this.store?.getRemoteLayoutSnapshots?.() ?? {}
+  }
+
   /** The launch record when it is already open, for a reader that must not wait for it. */
   openedAgentSessionRecordStore(): AgentSessionRecordStore | null {
     return peekOpenedAgentSessionRecordStore()
@@ -128,7 +210,6 @@ export type { SubscriptionRegistration } from './runtime-subscription-registry'
 export type {
   OrchestrationCompatibilityCallerAuthority,
   OrchestrationCompatibilityTerminalAuthority,
-  RuntimePtyDataAdmission,
   RuntimeTerminalAgentStatusEvent
 } from './runtime-terminal-contracts'
 export type { MessageWaitResult } from './runtime-message-waiters'

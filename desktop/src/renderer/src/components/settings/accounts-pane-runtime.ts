@@ -75,12 +75,16 @@ export function getSelectedAccountRuntime(
   wslSupportedPlatform: boolean,
   wslAvailable: boolean,
   wslDistros: string[],
-  wslCapabilitiesLoading: boolean
+  wslCapabilitiesLoading: boolean,
+  /** A WSL host's distro: its accounts are this desktop's for that distro, with no location to pick. */
+  wslHostDistro: string | null = null
 ): LocalAccountRuntime {
   // Why: the two-option control displays the concrete target behind the persisted auto policy.
-  const resolvedRuntime = resolveLocalAccountRuntimeTarget(settings, getRendererAppPlatform())
-  if (wslSupportedPlatform && resolvedRuntime.runtime === 'wsl') {
-    if (!wslAvailable && !wslCapabilitiesLoading) {
+  const resolvedRuntime = wslHostDistro
+    ? { runtime: 'wsl' as const, wslDistro: wslHostDistro }
+    : resolveLocalAccountRuntimeTarget(settings, getRendererAppPlatform())
+  if ((wslSupportedPlatform || wslHostDistro) && resolvedRuntime.runtime === 'wsl') {
+    if (!wslHostDistro && !wslAvailable && !wslCapabilitiesLoading) {
       return {
         runtime: 'wsl',
         label: translate('auto.components.settings.AccountsPane.8619f9afa9', 'WSL')
@@ -88,9 +92,10 @@ export function getSelectedAccountRuntime(
     }
     const configuredDistro = resolvedRuntime.wslDistro?.trim() || null
     const selectedDistro =
-      configuredDistro && (wslCapabilitiesLoading || wslDistros.includes(configuredDistro))
+      wslHostDistro ??
+      (configuredDistro && (wslCapabilitiesLoading || wslDistros.includes(configuredDistro))
         ? configuredDistro
-        : null
+        : null)
     return {
       runtime: 'wsl',
       wslDistro: selectedDistro,
@@ -100,6 +105,13 @@ export function getSelectedAccountRuntime(
     }
   }
   return { runtime: 'host', label: getHostRuntimeLabel() }
+}
+
+// Why: host runtime labels are standalone UI labels; interpolated prose needs sentence casing.
+export function getRuntimeSentenceLabel(runtime: LocalAccountRuntime): string {
+  return runtime.runtime === 'host' && !navigator.userAgent.includes('Windows')
+    ? `${runtime.label.charAt(0).toLocaleLowerCase()}${runtime.label.slice(1)}`
+    : runtime.label
 }
 
 export function formatAccountTimestamp(timestamp: number): string {

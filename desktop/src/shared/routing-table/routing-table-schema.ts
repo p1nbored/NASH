@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { isEnglishText } from '../english-text'
 import { PinnedModelIdSchema } from './model-pin-policy'
+import { ROUTING_AGENTS } from './routing-cli-registry'
 import {
   CONCRETE_REASONING_LEVELS,
   COORDINATOR_TASK_TYPE,
@@ -77,7 +78,7 @@ export type Route = z.infer<typeof RouteSchema>
 /** The primary session's own launch configuration; `inherit` rows resolve to it. */
 export const CoordinatorSchema = z
   .object({
-    agent: z.enum(['claude', 'codex']),
+    agent: z.enum(ROUTING_AGENTS),
     model: PinnedModelIdSchema,
     reasoning_level: z.enum(CONCRETE_REASONING_LEVELS)
   })

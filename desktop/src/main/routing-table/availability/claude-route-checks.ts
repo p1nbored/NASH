@@ -38,7 +38,7 @@ export function checkClaudeRoute(
           level: subject.reasoningLevel,
           requirement: subject.requirement,
           delivery:
-            subject.target === 'claude_subagent' && subject.primaryAgent === 'codex'
+            subject.target === 'claude_subagent' && subject.primaryAgent !== 'claude'
               ? 'claude_effort_flag'
               : claudeDeliveryFor(subject.target, subject.inheritsCoordinator),
           listedEfforts: commonListedEfforts(model.rows, observations.listing)

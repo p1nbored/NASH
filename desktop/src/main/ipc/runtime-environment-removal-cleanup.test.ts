@@ -10,9 +10,14 @@ vi.mock('../browser/browser-route-partition-storage-retirement', () => ({
 const { retireRemovedRuntimeEnvironment } = await import('./runtime-environment-removal-cleanup')
 
 describe('retiring a removed runtime environment', () => {
-  it('forgets the server’s workspace session partition under its runtime host id', async () => {
-    const forgetHostSession = vi.fn()
-    await retireRemovedRuntimeEnvironment('env 1', vi.fn(), forgetHostSession)
-    expect(forgetHostSession).toHaveBeenCalledWith('runtime:env%201')
+  it('forgets the server’s session partition and its layout snapshot', async () => {
+    const store = {
+      removeWorkspaceSessionHost: vi.fn(),
+      getRemoteLayoutSnapshot: vi.fn(),
+      setRemoteLayoutSnapshot: vi.fn()
+    }
+    await retireRemovedRuntimeEnvironment('env 1', vi.fn(), store)
+    expect(store.removeWorkspaceSessionHost).toHaveBeenCalledWith('runtime:env%201')
+    expect(store.setRemoteLayoutSnapshot).toHaveBeenCalledWith('env 1', null, 'now')
   })
 })

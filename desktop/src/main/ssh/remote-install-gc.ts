@@ -1,17 +1,16 @@
 /**
- * The version-directory garbage collector, shared by the relay and orcad.
+ * The version-directory garbage collector orcad runs. A pass only ever sees, and only ever
+ * deletes, directories belonging to `model`.
  *
- * It lives apart from `ssh-relay-versioned-install.ts` because it is the one piece both
- * models run, and because the ownership rule below is the whole point of separating them:
- * a pass only ever sees, and only ever deletes, directories belonging to `model`.
+ * Relay version dirs (`relay-<v>/`) are never reclaimed by this build: nothing deletes them
+ * until the relay-era upgrade window closes.
  */
-import type { SshConnection } from './ssh-connection'
+import type { RemoteInstallTransport } from './remote-install-transport'
 import { RELAY_REMOTE_DIR } from './relay-protocol'
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execHostCommand } from './ssh-relay-host-exec'
 import { probeInstallLockExistsCommand } from './ssh-relay-install-lock-commands'
 import { isRelayInstallLockStale, RELAY_INSTALL_LOCK_NAME } from './ssh-relay-install-lock'
 import {
-  RELAY_INSTALL_MODEL,
   remoteInstallGcPermits,
   remoteInstallVersionDirRegex,
   type RemoteInstallModel
@@ -21,47 +20,25 @@ import {
   releaseRelayGcClaimWithRetry,
   tryAcquireRelayGcClaim
 } from './ssh-relay-gc-claim'
-import { cleanupRelayGcTombstones } from './ssh-relay-gc-tombstone'
-import { gcRelayNativeDepsCache } from './ssh-relay-native-deps-cache-gc'
+import { cleanupRemoteInstallGcTombstones } from './remote-install-gc-tombstone'
 import {
   listRemoteInstallBaseDirsCommand,
-  MAX_RELAY_GC_LISTING_ENTRIES,
+  MAX_REMOTE_INSTALL_GC_LISTING_ENTRIES,
   moveRemoteTreeCommand,
   probeFileExistsCommand,
   removeRemoteTreeCommand
 } from './ssh-remote-commands'
 import {
   getRemoteHostPlatform,
-  isWindowsRemoteHost,
   joinRemotePath,
   remoteBasename,
   type RemoteHostPlatform
 } from './ssh-remote-platform'
-import { windowsRelayPipePathsForSocketName } from './ssh-relay-endpoints'
-import type { RelayEndpointVerdict } from './ssh-relay-endpoint-incumbent'
 import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
-import { findPreviousRemoteInstall } from './remote-install-previous-version'
-import {
-  parseRelayVersionDirLiveness,
-  relayVersionDirLivenessCommand
-} from './relay-version-dir-liveness'
 
-// Legacy relay dirs predate `.install-complete`; they need a liveness-only GC check so they
-// eventually drain. There is no orcad equivalent — orcad has never shipped without one.
-const LEGACY_RELAY_DIR_REGEX = /^relay-v\d+\.\d+\.\d+$/
 const DEFAULT_REMOTE_HOST = getRemoteHostPlatform('linux-x64')
 
-function execHostCommand(
-  conn: SshConnection,
-  host: RemoteHostPlatform,
-  command: string
-): Promise<string> {
-  return execCommand(conn, command, { wrapCommand: host.commandDialect !== 'powershell' })
-}
-
 export type RemoteInstallGcOptions = {
-  windowsNodePath?: string
-  windowsSockNames?: string[]
   /**
    * Model-specific "someone is using this directory" probe. It must answer TRUE when
    * inconclusive — an unanswered probe is never evidence a tree is idle.
@@ -90,7 +67,7 @@ export type RemoteInstallGcOptions = {
  * a hand-rolled listing can make one model delete the other's live install.
  */
 export async function gcOldRemoteInstallVersions(
-  conn: SshConnection,
+  conn: RemoteInstallTransport,
   model: RemoteInstallModel,
   remoteHome: string,
   currentDirAbsPath: string,
@@ -116,9 +93,9 @@ export async function gcOldRemoteInstallVersions(
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean)
-    .slice(0, MAX_RELAY_GC_LISTING_ENTRIES)
+    .slice(0, MAX_REMOTE_INSTALL_GC_LISTING_ENTRIES)
 
-  await cleanupRelayGcTombstones(conn, baseDir, entries, host)
+  await cleanupRemoteInstallGcTombstones(conn, model, baseDir, entries, host)
 
   const versionDirRegex = remoteInstallVersionDirRegex(model)
   const pinned = new Set([currentDirName, ...(options.pinnedDirNames ?? [])])
@@ -145,7 +122,7 @@ export async function gcOldRemoteInstallVersions(
   for (const name of survivors) {
     const dir = joinRemotePath(host, baseDir, name)
     try {
-      const safe = await isCandidateSafeToRemove(conn, model, dir, name, host, options)
+      const safe = await isCandidateSafeToRemove(conn, model, dir, host, options)
       if (!safe) {
         kept.push(name)
         continue
@@ -160,7 +137,7 @@ export async function gcOldRemoteInstallVersions(
       let gcClaimReleaseNeeded = true
       try {
         // Recheck under the stable claim; installers probe it before and after creating their lock, closing both orders.
-        if (!(await isCandidateSafeToRemove(conn, model, dir, name, host, options))) {
+        if (!(await isCandidateSafeToRemove(conn, model, dir, host, options))) {
           kept.push(name)
           continue
         }
@@ -209,15 +186,12 @@ export async function gcOldRemoteInstallVersions(
 }
 
 async function isCandidateSafeToRemove(
-  conn: SshConnection,
+  conn: RemoteInstallTransport,
   model: RemoteInstallModel,
   dir: string,
-  name: string,
   host: RemoteHostPlatform = DEFAULT_REMOTE_HOST,
   options: RemoteInstallGcOptions
 ): Promise<boolean> {
-  const isLegacy = model.id === 'relay' && LEGACY_RELAY_DIR_REGEX.test(name)
-
   const lockDir = joinRemotePath(host, dir, RELAY_INSTALL_LOCK_NAME)
   let lockProbe: string
   try {
@@ -244,114 +218,21 @@ async function isCandidateSafeToRemove(
     )
   }
 
-  // Legacy dirs predate .install-complete; skip the sentinel and rely on the live-socket probe alone.
-  if (!isLegacy) {
-    const completePath = joinRemotePath(host, dir, model.installCompleteFilename)
-    const completeProbe = await execHostCommand(
-      conn,
-      host,
-      probeFileExistsCommand(host, completePath)
-    ).catch((err) => {
-      if (isUnconfirmedSshCommandTermination(err)) {
-        throw err
-      }
-      return 'PARTIAL'
-    })
-    if (completeProbe.trim() !== 'COMPLETE') {
-      // Crashed-install partial; leave for the next deploy to recover.
-      return false
-    }
-  }
-
-  return !(await options.isDirLive(dir))
-}
-
-/**
- * The relay's GC, bound to its own namespace. A version dir goes only on an `exited` verdict
- * (relay-version-dir-liveness.ts), and the previous completed build is pinned (design D5).
- */
-export async function gcOldRelayVersions(
-  conn: SshConnection,
-  remoteHome: string,
-  currentDirAbsPath: string,
-  host: RemoteHostPlatform = DEFAULT_REMOTE_HOST,
-  options?: {
-    windowsNodePath?: string
-    windowsSockNames?: string[]
-    /** Host Node that runs the connect probe once a recorded relay PID is dead. */
-    nodePath?: string
-    /**
-     * Cache entries this connection depends on, whether or not it links to them. Also the gate:
-     * a caller that could not compute a key is not using the shared-cache model on this host, and
-     * a pass only ever collects what its own model created (see `remote-install-model.ts`).
-     */
-    nativeDepsCacheKeys?: readonly string[]
-  }
-): Promise<void> {
-  await gcOldRemoteInstallVersions(conn, RELAY_INSTALL_MODEL, remoteHome, currentDirAbsPath, host, {
-    ...options,
-    resolveExtraPinnedDirNames: async () => {
-      const previous = await findPreviousRemoteInstall(
-        conn,
-        host,
-        joinRemotePath(host, remoteHome, RELAY_REMOTE_DIR),
-        RELAY_INSTALL_MODEL,
-        remoteBasename(currentDirAbsPath, host)
-      )
-      // Why null rather than a guess: without the order, any candidate could be the previous build.
-      if (previous.state !== 'ok') {
-        return null
-      }
-      return previous.dirName ? [previous.dirName] : []
-    },
-    isDirLive: async (dir) =>
-      (await probeRelayVersionDirLiveness(conn, dir, host, options)) !== 'exited'
-  })
-  // Why after and not before: version-dir removal is what turns a cache entry unreferenced, so
-  // running it second lets one pass reclaim both instead of leaving the tree for the next connect.
-  if (options?.nativeDepsCacheKeys?.length) {
-    await gcRelayNativeDepsCache(conn, host, remoteHome, {
-      pinnedKeys: options.nativeDepsCacheKeys
-    }).catch((err) => {
-      if (isUnconfirmedSshCommandTermination(err)) {
-        throw err
-      }
-    })
-  }
-}
-
-/** GC deletes a relay version dir only on `exited`; see relay-version-dir-liveness.ts. */
-export async function probeRelayVersionDirLiveness(
-  conn: SshConnection,
-  dir: string,
-  host: RemoteHostPlatform = DEFAULT_REMOTE_HOST,
-  options?: {
-    windowsNodePath?: string
-    windowsSockNames?: string[]
-    nodePath?: string
-  }
-): Promise<RelayEndpointVerdict> {
-  try {
-    const windows =
-      isWindowsRemoteHost(host) && options?.windowsNodePath
-        ? {
-            nodePath: options.windowsNodePath,
-            pipePaths: (options.windowsSockNames ?? []).flatMap((sockName) =>
-              windowsRelayPipePathsForSocketName(host, dir, sockName)
-            )
-          }
-        : undefined
-    const out = await execHostCommand(
-      conn,
-      host,
-      relayVersionDirLivenessCommand(host, dir, { nodePath: options?.nodePath, windows })
-    )
-    return parseRelayVersionDirLiveness(out)
-  } catch (err) {
+  const completePath = joinRemotePath(host, dir, model.installCompleteFilename)
+  const completeProbe = await execHostCommand(
+    conn,
+    host,
+    probeFileExistsCommand(host, completePath)
+  ).catch((err) => {
     if (isUnconfirmedSshCommandTermination(err)) {
       throw err
     }
-    // Why: an unanswered probe observes nothing; it never authorizes deletion.
-    return 'unverifiable'
+    return 'PARTIAL'
+  })
+  if (completeProbe.trim() !== 'COMPLETE') {
+    // Crashed-install partial; leave for the next deploy to recover.
+    return false
   }
+
+  return !(await options.isDirLive(dir))
 }

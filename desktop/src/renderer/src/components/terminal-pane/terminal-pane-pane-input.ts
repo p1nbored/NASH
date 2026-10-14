@@ -9,7 +9,6 @@ import {
 } from './terminal-ime-candidate-key-release-guard'
 import { installTerminalImeCompositionTracker } from './terminal-ime-composition-tracker'
 import { installTerminalImeComposerPlaceholderMask } from './terminal-ime-composer-placeholder-mask'
-import { installTerminalImeLinuxCandidateState } from './terminal-ime-linux-candidate-state'
 import { installTerminalImeNativeTextForwarder } from './terminal-ime-native-text-forwarder'
 import { installTerminalIosHangulPreedit } from './terminal-ios-hangul-preedit'
 import { createTerminalIosHangulPreeditRenderer } from './terminal-ios-hangul-preedit-overlay'
@@ -58,9 +57,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
   const isLinux =
     !isMac && navigator.userAgent.includes('Linux') && !/Android|CrOS/.test(navigator.userAgent)
   const isIosWeb = isCurrentPlatformIosWeb()
-  const linuxImeCandidateState = isLinux
-    ? installTerminalImeLinuxCandidateState(pane.terminal.element)
-    : null
   const imeCompositionTracker = installTerminalImeCompositionTracker(pane.terminal.element)
   const imeComposerPlaceholderMask = installTerminalImeComposerPlaceholderMask(pane.terminal)
   const iosHangulPreedit = isIosWeb
@@ -76,12 +72,12 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
     dispose: () => {
       imeComposerPlaceholderMask.dispose()
       imeCompositionTracker.dispose()
-      linuxImeCandidateState?.dispose()
       iosHangulPreedit?.dispose()
     }
   })
+  // Why Linux too: fcitx4 commits a candidate pick as the Space/digit keydown's insertText (#28213).
   const imeNativeTextForwarder =
-    isMac && !isIosWeb
+    (isMac || isLinux) && !isIosWeb
       ? installTerminalImeNativeTextForwarder({
           terminalElement: pane.terminal.element,
           isComposing: () => imeCompositionTracker.isActive(),
@@ -92,13 +88,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
   imeNativeTextForwarderDisposablesRef.current.set(pane.id, imeNativeTextForwarder)
 
   pane.terminal.attachCustomKeyEventHandler((event) => {
-    const linuxCandidateClassification = linuxImeCandidateState?.classifyKeyboardEvent(event) ?? {
-      candidateDigitGuardActive: false,
-      imeOwnedPreeditGuardActive: false
-    }
-    const observeLinuxCandidateEvent = (): void => {
-      linuxImeCandidateState?.observeKeyboardEvent(event, linuxCandidateClassification)
-    }
     const now = Date.now()
     const pendingCandidateReleaseGuardActive = shouldApplyTerminalImePendingCandidateKeyRelease(
       event,
@@ -110,9 +99,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
       candidateKeyGuardActive:
         imeCompositionTracker.isCandidateKeyGuardActive() || pendingCandidateReleaseGuardActive,
       pendingCandidateKeyReleaseActive: pendingCandidateReleaseGuardActive,
-      linuxOrphanCandidateDigitGuardActive: linuxCandidateClassification.candidateDigitGuardActive,
-      linuxImeOwnedPreeditGuardActive: linuxCandidateClassification.imeOwnedPreeditGuardActive,
-      hangulPreedit: imeCompositionTracker.isHangulPreedit(),
       isMac,
       isLinux
     }
@@ -122,13 +108,11 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
         event.preventDefault()
         armTerminalImePendingCandidateKeyRelease(pendingTerminalImeCandidateKeyReleases, event, now)
       }
-      observeLinuxCandidateEvent()
       return false
     }
     clearTerminalImePendingCandidateKeyRelease(pendingTerminalImeCandidateKeyReleases, event)
     if (pendingTerminalInterruptKeyup && shouldSuppressTerminalInterruptKeyup(event)) {
       pendingTerminalInterruptKeyup = false
-      observeLinuxCandidateEvent()
       return false
     }
     if (
@@ -143,23 +127,19 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
       } else {
         pendingTerminalInterruptKeyup = false
       }
-      observeLinuxCandidateEvent()
       return false
     }
     if (isNonLatinControlChordKeyup(event, claimedNonLatinControlChordCode)) {
       claimedNonLatinControlChordCode = null
-      observeLinuxCandidateEvent()
       return false
     }
     const nonLatinControlChord = resolveNonLatinControlChordInput(event)
     if (nonLatinControlChord) {
       claimedNonLatinControlChordCode = event.code
       pane.terminal.input(nonLatinControlChord)
-      observeLinuxCandidateEvent()
       return false
     }
     if (shouldSuppressTerminalModifierKeyboardEvent(event)) {
-      observeLinuxCandidateEvent()
       return false
     }
     const jisYenInput = resolveTerminalJisYenInput(event, {
@@ -170,7 +150,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
       if (jisYenInput.type === 'input') {
         pane.terminal.input(jisYenInput.data)
       }
-      observeLinuxCandidateEvent()
       return false
     }
     if (event.type === 'keydown') {
@@ -188,7 +167,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
       }
     }
     if (imeNativeTextForwarder.claimKeyEvent(event)) {
-      observeLinuxCandidateEvent()
       return false
     }
     const shouldBypass = shouldBypassXtermKeyboardEvent(event, {
@@ -197,7 +175,6 @@ export function installTerminalPaneInputHandling(context: PaneInputContext): voi
       hasSelection: pane.terminal.hasSelection(),
       kittyKeyboardFlags: paneKittyKeyboardModesRef.current.get(pane.id)?.flags ?? 0
     })
-    observeLinuxCandidateEvent()
     return !shouldBypass
   })
 }

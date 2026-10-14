@@ -37,9 +37,11 @@ export function registerRuntimeWindowLifecycle(
   })
   const send = rendererNotifications.send
   runtime.setNotifier({
-    worktreesChanged: (repoId, renamed) => {
+    worktreesChanged: (repoId, renamed, options) => {
       // Why: clear scan caches before the renderer handles this event, so it can't read stale TTL entries after a mutation.
-      runWorktreeChangeInvalidators(repoId)
+      if (options?.invalidateGitScans !== false) {
+        runWorktreeChangeInvalidators(repoId)
+      }
       send('worktrees:changed', renamed ? { repoId, renamed } : { repoId })
     },
     worktreeBaseStatus: (event) => send('worktree:baseStatus', event),
@@ -128,6 +130,7 @@ export function registerRuntimeWindowLifecycle(
           activate: opts.activate !== false,
           ...(opts.presentation ? { presentation: opts.presentation } : {}),
           ...(opts.surfaceOwner === false ? { surfaceOwner: false } : {}),
+          ...(opts.agentLaunchViewer ? { agentLaunchViewer: opts.agentLaunchViewer } : {}),
           // Why: pre-minted tabId aligns the renderer tab id with the paneKey baked into the PTY env, so hook events route right.
           ...(opts.tabId !== undefined ? { tabId: opts.tabId } : {}),
           ...(opts.leafId !== undefined ? { leafId: opts.leafId } : {}),

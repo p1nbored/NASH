@@ -171,16 +171,17 @@ describe('registerPtyHandlers', () => {
       expect(env.ORCA_MIMOCODE_HOME).toBe('/tmp/orca-mimocode-shared')
       expect(env.ORCA_MIMOCODE_SOURCE_HOME).toBeUndefined()
     })
-    it.each(['/usr/local/bin/mimo --prompt hi', '"C:\\Program Files\\MiMo\\mimo.cmd" --prompt hi'])(
-      'injects MiMo overlay env for path-qualified launch command %s',
-      async (launchCommand) => {
-        const env = await spawnAndGetEnv(undefined, undefined, undefined, undefined, launchCommand)
+    it.each([
+      '/usr/local/bin/mimo --prompt hi',
+      '"C:\\Program Files\\MiMo\\mimo.cmd" --prompt hi',
+      'sleep 30 && mimo --prompt hi'
+    ])('injects MiMo overlay env for path-qualified launch command %s', async (launchCommand) => {
+      const env = await spawnAndGetEnv(undefined, undefined, undefined, undefined, launchCommand)
 
-        expect(mimoCodeBuildPtyEnvMock).toHaveBeenCalledTimes(1)
-        expect(env.MIMOCODE_HOME).toBe('/tmp/orca-mimocode-shared')
-        expect(env.ORCA_MIMOCODE_HOME).toBe('/tmp/orca-mimocode-shared')
-      }
-    )
+      expect(mimoCodeBuildPtyEnvMock).toHaveBeenCalledTimes(1)
+      expect(env.MIMOCODE_HOME).toBe('/tmp/orca-mimocode-shared')
+      expect(env.ORCA_MIMOCODE_HOME).toBe('/tmp/orca-mimocode-shared')
+    })
     it('uses sequenced startup env as the MiMo launch hint when command is a wrapper', async () => {
       const env = await spawnAndGetEnv(
         { [SETUP_AGENT_SEQUENCE_STARTUP_COMMAND_ENV]: 'mimo --prompt hi' },

@@ -7,6 +7,7 @@ import {
   encodeTerminalStreamJson,
   encodeTerminalStreamText
 } from '../../../../shared/terminal-stream-protocol'
+import { stubRuntimeEnvironmentBridge } from '../../runtime/runtime-environment-bridge-fixture'
 
 // Client-side wire regression for #7329: the daemon's pendingEscapeTailAnsi
 // rides the SnapshotStart JSON frame. This drives REAL binary frames through
@@ -49,11 +50,7 @@ describe('remote transport snapshot escape-tail threading (#7329)', () => {
         return { unsubscribe: vi.fn(), sendBinary: subscriptionSendBinary }
       }
     )
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: { call: runtimeCall, subscribe: runtimeSubscribe }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall, subscribe: runtimeSubscribe })
   })
 
   it('delivers the SnapshotStart pendingEscapeTailAnsi to onReplayData meta', async () => {

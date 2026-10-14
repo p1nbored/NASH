@@ -109,7 +109,7 @@ describe('a Claude start whose CLI answers initialize but not a control request'
     claude.behave(SESSION, { ...LIVE_START, optionWritesHang: true, controlTimeoutMs: DEADLINE_MS })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     const host = await claude.install()
-    const saved = { model: 'sonnet', permissionMode: 'plan' }
+    const saved = { model: 'sonnet', permissionMode: 'accept-edits' }
     await expect(
       host.attach(CALLER, claude.attachParams(SESSION, null, { options: saved }))
     ).resolves.toMatchObject({ ok: true })
@@ -119,12 +119,14 @@ describe('a Claude start whose CLI answers initialize but not a control request'
     })
     expect(claude.child(SESSION).launch.options).toMatchObject({
       model: 'sonnet',
-      permissionMode: 'plan'
+      permissionMode: 'acceptEdits'
     })
     // The record keeps the saved choices through the start.
-    await vi.waitFor(() => expect(record(host)?.options).toEqual({ ...saved, effort: 'high' }), {
-      timeout: DEADLINE_MS * 40
-    })
+    await vi.waitFor(
+      () => expect(record(host)?.options).toEqual({ model: 'sonnet', effort: 'high' }),
+      { timeout: DEADLINE_MS * 40 }
+    )
+    expect(record(host)?.permissionMode).toBe('accept-edits')
     expect(host.deps.adapter.readOptionRestoreFailures?.(SESSION)).toEqual([])
     expect(await statusRows(host)).toEqual([])
     expect(claude.children(SESSION)).toHaveLength(1)
@@ -152,13 +154,15 @@ describe('a Claude start whose CLI answers initialize but not a control request'
 
     // The CLI answers again; the user sets another option on the running child.
     behavior.optionWritesHang = false
-    await setOption(host, 'permissionMode', 'plan')
-    expect(record(host)?.options).toMatchObject({ model: 'sonnet', permissionMode: 'plan' })
+    await setOption(host, 'permissionMode', 'accept-edits')
+    expect(record(host)).toMatchObject({
+      options: { model: 'sonnet' },
+      permissionMode: 'accept-edits'
+    })
   })
 
   it('launches the saved model again after a turn reports another model, another option changes, and the chat is cleared', async () => {
-    const sessions = [SESSION]
-    claude = createScriptedClaudeRuntime(sessions)
+    claude = createScriptedClaudeRuntime([SESSION])
     const behavior = { ...LIVE_START, optionWritesHang: true, controlTimeoutMs: DEADLINE_MS }
     claude.behave(SESSION, behavior)
     vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -184,8 +188,10 @@ describe('a Claude start whose CLI answers initialize but not a control request'
     expect(record(host)?.options).toEqual({ model: 'sonnet', effort: 'high' })
 
     behavior.optionWritesHang = false
-    await setOption(host, 'permissionMode', 'plan')
-    expect(record(host)?.options).toEqual({ model: 'sonnet', permissionMode: 'plan' })
+    // The permission mode is the record's alone; the running child is not asked.
+    await setOption(host, 'permissionMode', 'accept-edits')
+    expect(record(host)?.options).toEqual({ model: 'sonnet', effort: 'high' })
+    expect(record(host)?.permissionMode).toBe('accept-edits')
 
     const cleared = await host.conversationCommand(CALLER, {
       command: 'clear',
@@ -202,31 +208,29 @@ describe('a Claude start whose CLI answers initialize but not a control request'
     })
     expect(cleared, JSON.stringify(cleared)).toMatchObject({
       ok: true,
-      value: { replacementSessionId: expect.any(String) }
+      value: { command: 'clear', state: 'completed' }
     })
-    const replacement = cleared.ok ? cleared.value.replacementSessionId! : ''
-    sessions.push(replacement)
-    claude.behave(replacement, LIVE_START)
+    expect(cleared.ok && cleared.value.replacementSessionId).toBeUndefined()
+    const boundary = record(host)?.providerContextBoundary
+    expect(boundary).toBeDefined()
+    const freshProviderSessionId = claudeSessionIdForOrcaSession(SESSION, boundary?.operationId)
+    expect(freshProviderSessionId).not.toBe(claudeSessionIdForOrcaSession(SESSION))
+    claude.behave(SESSION, LIVE_START)
     // The cleared chat starts nothing until its first message.
-    expect(claude.children(replacement)).toEqual([])
-    await sendTo(host, replacement, 'first message')
-    // Started fresh under its own derived id, launched with the saved model rather than the one
-    // the turn reported.
-    await vi.waitFor(() => expect(claude.children(replacement)).toHaveLength(1))
-    expect(claude.child(replacement).launch.options).toMatchObject({
-      sessionId: claudeSessionIdForOrcaSession(replacement),
+    expect(claude.children(SESSION)).toHaveLength(1)
+    expect(claude.child(SESSION).connection.closed).toBe(true)
+    await send(host, 'first message')
+    await vi.waitFor(() => expect(claude.children(SESSION)).toHaveLength(2))
+    expect(claude.child(SESSION).launch.options).toMatchObject({
+      sessionId: freshProviderSessionId,
       model: 'sonnet',
-      permissionMode: 'plan'
+      permissionMode: 'acceptEdits'
     })
-    expect(claude.child(replacement).launch.options.resume).toBeUndefined()
+    expect(claude.child(SESSION).launch.options.resume).toBeUndefined()
     await vi.waitFor(() =>
-      expect(host.deps.store.getRecord(replacement)?.options).toEqual({
-        model: 'sonnet',
-        effort: 'high',
-        permissionMode: 'plan'
-      })
+      expect(record(host)?.options).toEqual({ model: 'sonnet', effort: 'high' })
     )
-    expect(record(host)?.options).toEqual({ model: 'sonnet', permissionMode: 'plan' })
+    expect(record(host)?.permissionMode).toBe('accept-edits')
   })
 
   it('replaces the launched saved model with the one the user then sets', async () => {

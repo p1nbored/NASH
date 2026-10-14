@@ -13,11 +13,10 @@
  * terminal daemon was forked from. Every version an in-flight activation journal names is
  * pinned too, and an unreadable journal skips the pass entirely.
  */
-import type { SshConnection } from './ssh-connection'
-import { execCommand } from './ssh-relay-deploy-helpers'
-import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
+import type { OrcadHostTransport } from './orcad-host-transport'
+import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import { ORCAD_INSTALL_MODEL } from './remote-install-model'
-import { gcOldRemoteInstallVersions } from './ssh-relay-versioned-install'
+import { gcOldRemoteInstallVersions } from './remote-install-gc'
 import { orcadGcPinnedDirNames, type OrcadActivationRecord } from './orcad-activation-record'
 import {
   ORCAD_NEVER_LAUNCHED,
@@ -28,11 +27,11 @@ import { gcRemoteNodeRuntimeStore } from './remote-node-runtime-store-gc'
 import { readOrcadGcTransactionPins } from './orcad-gc-transaction-pins'
 import { isWindowsRemoteHost, joinRemotePath, type RemoteHostPlatform } from './ssh-remote-platform'
 import { RELAY_REMOTE_DIR } from './relay-protocol'
-import { orcadRemoteBaseDir, orcadWindowsHostOpCommand } from './orcad-remote-windows-node'
+import { orcadWindowsHomeOpCommand } from './orcad-remote-windows-node'
 import { ORCAD_WINDOWS_LIVENESS_MANY_MARKER } from './orcad-windows-host-script'
 
 export type OrcadGcOptions = {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   remoteHome: string
   /** Absolute path of the version dir this client just used; never a candidate. */
@@ -119,12 +118,7 @@ async function windowsLiveCandidates(
   try {
     output = await execCommand(
       options.conn,
-      orcadWindowsHostOpCommand(
-        options.host,
-        orcadRemoteBaseDir(options.host, options.remoteHome),
-        'liveness-many',
-        dirs
-      ),
+      orcadWindowsHomeOpCommand(options.host, options.remoteHome, 'liveness-many', dirs),
       { wrapCommand: false, signal: options.signal }
     )
   } catch (error) {

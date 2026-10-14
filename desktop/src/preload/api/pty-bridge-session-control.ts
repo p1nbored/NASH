@@ -1,3 +1,4 @@
+import type { SpawnIntent } from '../../shared/host-spawn-admission'
 import { ipcRenderer } from 'electron'
 import type { ProjectExecutionRuntimeResolution } from '../../shared/project-execution-runtime'
 import type { StartupCommandDelivery } from '../../shared/codex-startup-delivery'
@@ -53,6 +54,8 @@ export const ptySessionControlApi = {
     replacesPtyId?: string
     // Which tab and leaf a fresh PTY joins; older mains ignore it.
     placement?: TerminalPanePlacement
+    // Visible restores are `user-resume`, hidden ones `automatic-restore`; the fork gate validates.
+    spawnIntent?: SpawnIntent
     // Why: loose typing on purpose — renderer owns launch metadata, main owns whether the launch happened and validates (telemetry-plan.md §Agent launch semantics).
     telemetry?: { agent_kind: AgentKind; launch_source: LaunchSource; request_kind: RequestKind }
   }): Promise<{

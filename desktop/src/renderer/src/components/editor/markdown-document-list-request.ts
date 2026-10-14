@@ -1,8 +1,6 @@
 import type { MarkdownDocument } from '../../../../shared/filesystem-entry-types'
-import {
-  listRuntimeMarkdownDocuments,
-  type RuntimeFileOperationArgs
-} from '@/runtime/runtime-file-client'
+import { listRuntimeMarkdownDocuments } from '@/runtime/runtime-file-metadata-client'
+import type { RuntimeFileOperationArgs } from '@/runtime/runtime-file-client-types'
 
 type MarkdownDocumentListLoader = (
   context: RuntimeFileOperationArgs,
@@ -11,6 +9,7 @@ type MarkdownDocumentListLoader = (
 
 type MarkdownDocumentListRequestOptions = {
   requireFresh?: boolean
+  freshAfter?: number
 }
 
 type InFlightMarkdownDocumentList = {
@@ -26,7 +25,7 @@ export function getMarkdownDocumentListRequestKey(
   rootPath: string
 ): string {
   return JSON.stringify([
-    context.settings?.activeRuntimeEnvironmentId?.trim() ?? '',
+    context.target.kind === 'environment' ? context.target.environmentId : '',
     context.connectionId ?? '',
     context.worktreeId ?? '',
     context.worktreePath ?? '',
@@ -51,7 +50,11 @@ export function requestSharedMarkdownDocumentList(
 
   const key = getMarkdownDocumentListRequestKey(context, rootPath)
   const existing = inFlightMarkdownDocumentLists.get(key)
-  if (existing && !options.requireFresh) {
+  if (
+    existing &&
+    !options.requireFresh &&
+    (options.freshAfter === undefined || existing.startedAt > options.freshAfter)
+  ) {
     return existing.request
   }
 

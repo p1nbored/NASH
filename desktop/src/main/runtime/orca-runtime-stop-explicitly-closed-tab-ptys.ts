@@ -5,11 +5,12 @@ import { SSH_PROVIDER_UNREGISTERED_REASON } from '../../shared/pty-liveness-verd
 import type { RuntimeTerminalClose } from '../../shared/runtime-types'
 import type { RuntimePtyTabCloseAuthority } from './runtime-terminal-state-records'
 import { parsePaneKey } from '../../shared/stable-pane-id'
+import { errorMessage } from '../../shared/error-message'
 
 /** How an explicit close's stop of its addressed PTY ended. */
-type ExplicitCloseStop = { stopped: boolean; pendingKillRecorded: boolean }
+type ExplicitCloseStop = { stopped: boolean }
 
-const NO_STOP: ExplicitCloseStop = { stopped: false, pendingKillRecorded: false }
+const NO_STOP: ExplicitCloseStop = { stopped: false }
 
 export class OrcaRuntimeWithStopExplicitlyClosedTabPtys extends OrcaRuntimeWithFocusTerminal {
   protected async stopExplicitlyClosedTabPtys(
@@ -22,15 +23,11 @@ export class OrcaRuntimeWithStopExplicitlyClosedTabPtys extends OrcaRuntimeWithF
       this.markPtyStopRequested(ptyId)
       const expectedIncarnationId = this.ptysById.get(ptyId)?.incarnationId
       let stopped = false
-      let pendingKillRecorded = false
       if (this.ptyController?.stopAndWait) {
         try {
           stopped = await this.ptyController.stopAndWait(ptyId, { deadlineMs })
         } catch (error) {
-          this.markPtyLivenessUnverifiable(
-            ptyId,
-            error instanceof Error ? error.message : String(error)
-          )
+          this.markPtyLivenessUnverifiable(ptyId, errorMessage(error))
         }
         // Preserve an observed exit when a broader inventory check could not finish.
         if (
@@ -47,8 +44,6 @@ export class OrcaRuntimeWithStopExplicitlyClosedTabPtys extends OrcaRuntimeWithF
             verdict?.status === 'unverifiable' &&
             verdict.reason === SSH_PROVIDER_UNREGISTERED_REASON
           if (!providerAlreadyRetiredPty) {
-            // Why before the kill: its own failure is recorded only once its RPC settles.
-            pendingKillRecorded = this.ptyController.recordUnconfirmedStop?.(ptyId) === true
             this.ptyController.kill(ptyId)
             if (!verdict || verdict.status === 'live') {
               this.markPtyLivenessUnverifiable(
@@ -62,7 +57,7 @@ export class OrcaRuntimeWithStopExplicitlyClosedTabPtys extends OrcaRuntimeWithF
         stopped = this.ptyController?.kill(ptyId) ?? false
       }
       if (ptyId === addressedPtyId) {
-        addressedPtyStop = { stopped, pendingKillRecorded }
+        addressedPtyStop = { stopped }
       }
     }
     return addressedPtyStop
@@ -74,12 +69,7 @@ export class OrcaRuntimeWithStopExplicitlyClosedTabPtys extends OrcaRuntimeWithF
     ptyId: string | null,
     stop: ExplicitCloseStop
   ): RuntimeTerminalClose {
-    const close: RuntimeTerminalClose = {
-      handle,
-      tabId,
-      ptyKilled: stop.stopped,
-      ...(stop.pendingKillRecorded ? { pendingKillRecorded: true as const } : {})
-    }
+    const close: RuntimeTerminalClose = { handle, tabId, ptyKilled: stop.stopped }
     if (stop.stopped || !ptyId) {
       return close
     }

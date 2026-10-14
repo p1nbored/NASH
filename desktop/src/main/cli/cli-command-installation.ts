@@ -14,7 +14,7 @@ import {
   type StableCommandInspection
 } from './cli-command-filesystem-transaction'
 import { buildWindowsForwarder } from './cli-dev-launcher'
-import { isPermissionError } from './cli-install-errors'
+import { isPermissionError } from '../win32-utils'
 
 export class CliCommandInstallation extends CliCommandInspection {
   protected async installSymlink(status: CliInstallStatus): Promise<void> {

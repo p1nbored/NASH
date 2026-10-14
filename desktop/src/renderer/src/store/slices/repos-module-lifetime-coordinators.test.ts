@@ -9,7 +9,7 @@ import { createTestStore } from './store-test-helpers'
 
 const { syncFork } = vi.hoisted(() => ({ syncFork: vi.fn() }))
 
-vi.mock('../../runtime/runtime-git-client', async (importOriginal) => {
+vi.mock('../../runtime/runtime-git-sync-client', async (importOriginal) => {
   const original = await importOriginal<Record<string, unknown>>()
   return {
     ...original,
@@ -34,7 +34,8 @@ beforeEach(() => {
 })
 
 describe('repo module-lifetime coordinators', () => {
-  it('lets a newer runtime fetch in another store supersede the older store request', async () => {
+  // Why same store: catalog fences are per store; another store's fetch is not this store's answer.
+  it('lets a newer runtime fetch supersede the older request', async () => {
     const { promise: olderList, resolve: resolveOlderList } = Promise.withResolvers<unknown>()
     let repoListCalls = 0
     runtimeCall.mockImplementation((args: RuntimeEnvironmentCallRequest) => {
@@ -57,10 +58,9 @@ describe('repo module-lifetime coordinators', () => {
           }
     })
     const firstStore = createTestStore()
-    const secondStore = createTestStore()
 
     const older = firstStore.getState().fetchRuntimeEnvironmentRepos('shared-env')
-    await secondStore.getState().fetchRuntimeEnvironmentRepos('shared-env')
+    await firstStore.getState().fetchRuntimeEnvironmentRepos('shared-env')
     resolveOlderList({
       id: 'rpc-older',
       ok: true,
@@ -98,11 +98,18 @@ describe('repo module-lifetime coordinators', () => {
     const firstStore = createTestStore()
     const secondStore = createTestStore()
 
-    await firstStore.getState().fetchRepos()
-    await secondStore.getState().fetchRepos()
+    await firstStore.getState().fetchRepos(catalogOwner(firstStore))
+    await secondStore.getState().fetchRepos(catalogOwner(secondStore))
 
     expect(syncFork).toHaveBeenCalledTimes(1)
     resolveSync()
     await sync
   })
 })
+
+// The catalog these tests read is the one the focused host would have shown.
+function catalogOwner(store: {
+  getState: () => { settings: { activeRuntimeEnvironmentId?: string | null } | null }
+}): { runtimeEnvironmentId: string | null } {
+  return { runtimeEnvironmentId: store.getState().settings?.activeRuntimeEnvironmentId ?? null }
+}

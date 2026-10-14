@@ -1,0 +1,79 @@
+name: Warm shared CI platform cache jobs
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  warm-linux-arm:
+    concurrency:
+      group: ci-cache-warmup-linux-arm-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: ${{ github.event_name != 'schedule' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: node
+          node-version: '24'
+          cache-electron-package: 'true'
+          cache-pnpm-store-lookup-only: 'true'
+      - name: Populate shared Electron archive
+        run: node config/scripts/install-electron-package-binary.mjs
+      - name: Verify native cache is usable
+        run: node config/scripts/ensure-native-runtime.mjs --check-only
+
+  warm-windows:
+    concurrency:
+      group: ci-cache-warmup-windows-${{ matrix.os }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: ${{ github.event_name != 'schedule' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-11-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: node
+          cache-pnpm-store-lookup-only: 'true'
+      - name: Verify native cache is usable
+        run: node config/scripts/ensure-native-runtime.mjs --check-only
+
+  warm-linux-package-fixtures:
+    concurrency:
+      group: ci-cache-warmup-linux-package-fixtures-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: ${{ github.event_name != 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/prepare-linux-package-fixture
+        with:
+          fixture: daemon-shutdown-descendants
+          save-cache: ${{ github.event_name != 'pull_request' }}
+      - uses: ./.github/actions/prepare-linux-package-fixture
+        with:
+          fixture: headless-serve-shutdown
+          save-cache: ${{ github.event_name != 'pull_request' }}
+      - uses: ./.github/actions/prepare-linux-package-fixture
+        with:
+          fixture: cli-launch-contract
+          save-cache: ${{ github.event_name != 'pull_request' }}

@@ -94,7 +94,7 @@ it('retains the opening identity in current caches without retaining full prompt
   initSessionParseCachePersistence({ filePath: cacheFile, appVersion: 'fixed' })
   const stats = createSessionParseStats()
   const original = await parseAgentSessionFileCached(input, 'linux', stats)
-  scheduleSessionParseCachePersist(stats)
+  scheduleSessionParseCachePersist()
   await flushSessionParseCachePersist()
   resetSessionParseCacheForTests()
   resetSessionParseCachePersistenceForTests()

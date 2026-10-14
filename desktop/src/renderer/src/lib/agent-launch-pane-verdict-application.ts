@@ -32,7 +32,7 @@ export function applyAgentLaunchPaneVerdict(event: AgentLaunchPaneVerdictEvent):
         state.setTabAgentLaunchPane(tabId, undefined)
         return
       }
-      // Final for this pane, for the tab's life: no later spawn needs the launch record.
+      // Final for this pane for this session.
       state.setTabAgentLaunchPane(tabId, { ...tab.agentLaunchPane, outcome: verdict })
       return
     }

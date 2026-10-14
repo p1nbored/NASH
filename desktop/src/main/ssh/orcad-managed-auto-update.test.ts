@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { emptyOrcadActivationRecord, type OrcadActivationRecord } from './orcad-activation-record'
-import { OrcadHostUnsupportedError } from './orcad-host-unavailable'
+import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 
 const mocks = vi.hoisted(() => {
   const state: { record: OrcadActivationRecord | null } = { record: null }
@@ -29,8 +29,10 @@ vi.mock('./orcad-managed-runtime-context', () => ({
 vi.mock('./orcad-managed-migration-status', () => ({
   findIncompleteManagedOrcadMigration: mocks.migrating
 }))
-vi.mock('./orcad-artifact-materializer', () => ({ materializeOrcadArtifact: mocks.materialize }))
-vi.mock('./ssh-relay-versioned-install', () => ({ readLocalFullVersion: () => '0.1.0+new' }))
+vi.mock('../orcad/orcad-artifact-materializer', () => ({
+  materializeOrcadArtifact: mocks.materialize
+}))
+vi.mock('./remote-versioned-install', () => ({ readLocalFullVersion: () => '0.1.0+new' }))
 
 import {
   autoUpdateManagedOrcadEnvironment,
@@ -117,8 +119,34 @@ describe('updating a managed orcad on connect', () => {
       '/user-data',
       expect.anything(),
       expect.anything(),
-      {}
+      { admitRecord: expect.any(Function) }
     )
+  })
+
+  it.each([
+    ['active', record({ active: '0.1.1+newer', activeAppVersion: '1.6.0' })],
+    ['stopped', record({ active: null, previous: '0.1.1+newer', activeAppVersion: '1.6.0' })]
+  ])(
+    'skips when the record under the fence names a newer %s build than the one planned on',
+    async (_name, lockedRecord) => {
+      let admitted: string | null = 'not called'
+      mocks.runUpdate.mockImplementation(async (_u, _m, _c, args) => {
+        admitted = args.admitRecord(lockedRecord)
+        return { outcome: 'deferred', code: 'orcad_activation_policy_refused', reason: 'x' }
+      })
+      await expect(run()).resolves.toEqual({ outcome: 'skipped', reason: 'host-newer' })
+      expect(admitted).toEqual(expect.any(String))
+    }
+  )
+
+  it('admits the record under the fence when it still allows this build', async () => {
+    let admitted: string | null = 'not called'
+    mocks.runUpdate.mockImplementation(async (_u, _m, _c, args) => {
+      admitted = args.admitRecord(record({ activeAppVersion: '1.4.0' }))
+      return { outcome: 'updated', activeVersion: '0.1.0+new' }
+    })
+    await expect(run()).resolves.toMatchObject({ outcome: 'updated' })
+    expect(admitted).toBeNull()
   })
 
   it('reports live terminals as a wait, and a rejected candidate as a failure', async () => {

@@ -9,7 +9,7 @@ import {
 import type { AgentSessionRefusalReference } from '../../../../shared/agent-session-wire-refusals'
 import { readAgentSessionErrorRefusal } from '../../../../shared/agent-session-write-failure'
 import { subscribeRuntimeHostContactRegained } from '@/runtime/runtime-host-contact-regained'
-import type { RuntimeClientTarget } from '@/runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { subscribeStructuredAgentSession } from '@/runtime/structured-agent-session-client'
 
 // A stream hands its failure over as the raw `{ code, message }` payload; `String()` of that is `[object Object]`.

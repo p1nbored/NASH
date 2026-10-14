@@ -1,4 +1,8 @@
-import type { NativeChatBlock } from '../../../../shared/native-chat-types'
+import type {
+  NativeChatBlock,
+  NativeChatToolCallBlock,
+  NativeChatToolResultBlock
+} from '../../../../shared/native-chat-types'
 import {
   editFilesFromToolPair,
   isEditToolName
@@ -18,16 +22,28 @@ const normalizedEdits = new WeakMap<
   }
 >()
 
-function normalizedEditFiles(
-  call: NativeChatBlock,
-  result: NativeChatBlock | undefined,
-  derive: () => NativeChatEditFile[] | null
+export function normalizedToolEditFiles(
+  call: NativeChatToolCallBlock,
+  result: NativeChatToolResultBlock | undefined
 ): NativeChatEditFile[] | null {
   const cached = normalizedEdits.get(call)
   if (cached && cached.result === result) {
     return cached.files
   }
-  const files = derive()
+  const files = editFilesFromToolPair({
+    name: call.name,
+    input: call.input,
+    ...(call.state ? { state: call.state } : {}),
+    ...(result
+      ? {
+          result: {
+            output: result.output,
+            isError: result.isError,
+            editPatch: result.editPatch
+          }
+        }
+      : {})
+  })
   normalizedEdits.set(call, { result, files })
   return files
 }
@@ -49,22 +65,7 @@ export function buildEditCards(blocks: NativeChatBlock[]): EditCardModel {
     if (!call || !isEditToolName(call.name)) {
       continue
     }
-    const files = normalizedEditFiles(call, pair.result, () =>
-      editFilesFromToolPair({
-        name: call.name,
-        input: call.input,
-        ...(call.state ? { state: call.state } : {}),
-        ...(pair.result
-          ? {
-              result: {
-                output: pair.result.output,
-                isError: pair.result.isError,
-                editPatch: pair.result.editPatch
-              }
-            }
-          : {})
-      })
-    )
+    const files = normalizedToolEditFiles(call, pair.result)
     if (!files || files.length === 0) {
       continue
     }
@@ -86,13 +87,17 @@ const diffSummaries = new WeakMap<
 
 // Only the journal's path-only Diff envelope has counts that can be read without tool normalization.
 export function buildDiffSummaries(blocks: NativeChatBlock[]): Map<
-  NativeChatBlock,
+  NativeChatToolCallBlock,
   {
     files: NativeChatEditFileSummary[]
     key: string
+    result: NativeChatToolResultBlock
   }
 > {
-  const summaries = new Map<NativeChatBlock, { files: NativeChatEditFileSummary[]; key: string }>()
+  const summaries = new Map<
+    NativeChatToolCallBlock,
+    { files: NativeChatEditFileSummary[]; key: string; result: NativeChatToolResultBlock }
+  >()
   for (const [index, pair] of pairToolBlocks(blocks).entries()) {
     const { call, result } = pair
     if (
@@ -123,7 +128,7 @@ export function buildDiffSummaries(blocks: NativeChatBlock[]): Map<
       diffSummaries.set(call, { result, files })
     }
     if (files?.length) {
-      summaries.set(call, { files, key: `${call.name}:${index}` })
+      summaries.set(call, { files, key: `${call.name}:${index}`, result })
     }
   }
   return summaries

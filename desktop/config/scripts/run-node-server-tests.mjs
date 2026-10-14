@@ -15,7 +15,8 @@ import { packagedNodeRuntimePath } from './build-orcad-node.mjs'
 import { ensurePinnedNodeExecutable } from './pinned-node-downloads.mjs'
 import { currentTarget } from './server-build-target.mjs'
 import { UNIT_INCLUDE } from './ci-unit-files.mjs'
-import { describeProcessFailure, runProcessSync } from './script-child-process.mjs'
+import { runProcessSync } from '@orca/process-host'
+import { describeProcessFailure } from './process-failure-message.mjs'
 import {
   CROSS_RUNTIME_TEST_PATHS,
   nodeServerTestPaths,
@@ -25,7 +26,7 @@ import {
 const root = resolve(import.meta.dirname, '../..')
 const target = currentTarget()
 const artifact = process.argv.includes('--artifact')
-// Lanes that provide Bun 1.4.2 and the last Bun orcad slot (design D7 upgrade and rollback).
+// Lanes that provide the pinned Bun and the last Bun orcad slot (design D7 upgrade and rollback).
 const crossRuntime = process.argv.includes('--cross-runtime')
 const testArgs = process.argv
   .slice(2)

@@ -88,12 +88,15 @@ export function collectOrcadMigrationSourceDormantState(
         return []
       }
       const worktreeId = unqualifyOrcadMigrationOwnerKey(sourceKey)
+      if (worktreeId !== lineage.worktreeId) {
+        blockedCounts['worktree-lineage'] += 1
+        return []
+      }
+      // Cross-host history belongs to the desktop and stays in its retained source profile.
       if (
-        worktreeId !== lineage.worktreeId ||
         !orcadMigrationOwnerMatchesScope(lineage.worktreeId, scope) ||
         !orcadMigrationOwnerMatchesScope(lineage.parentWorktreeId, scope)
       ) {
-        blockedCounts['worktree-lineage'] += 1
         return []
       }
       return [{ sourceKey, worktreeId, lineage: structuredClone(lineage) }]
@@ -110,12 +113,14 @@ export function collectOrcadMigrationSourceDormantState(
         return []
       }
       const childWorkspaceKey = unqualifyOrcadMigrationOwnerKey(sourceKey)
+      if (childWorkspaceKey !== lineage.childWorkspaceKey) {
+        blockedCounts['workspace-lineage'] += 1
+        return []
+      }
       if (
-        childWorkspaceKey !== lineage.childWorkspaceKey ||
         !orcadMigrationOwnerMatchesScope(lineage.childWorkspaceKey, scope) ||
         !orcadMigrationOwnerMatchesScope(lineage.parentWorkspaceKey, scope)
       ) {
-        blockedCounts['workspace-lineage'] += 1
         return []
       }
       return [

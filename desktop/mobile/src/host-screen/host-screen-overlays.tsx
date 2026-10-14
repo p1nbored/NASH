@@ -2,6 +2,8 @@ import { openExternalLink } from '../platform/external-link'
 import { Pressable, Text, View } from 'react-native'
 import { Check, Moon } from 'lucide-react-native'
 import { buildWorktreeNavigationActions } from '../agent-history/worktree-navigation-actions'
+import { workspaceRouteHref } from '../navigation/workspace-execution-host'
+import { useWorkspaceServer } from '../transport/workspace-server'
 import { ActionSheetContent } from '../components/ActionSheetModal'
 import { BottomDrawer } from '../components/BottomDrawer'
 import { ConfirmModal } from '../components/ConfirmModal'
@@ -9,7 +11,6 @@ import { NewWorktreeModalController } from '../components/NewWorktreeModalContro
 import { PickerModal } from '../components/PickerModal'
 import { colors } from '../theme/mobile-theme'
 import { hostNewWorktreeSessionRoute } from '../host-route-action-state'
-import { getWorktreeRowIdentity } from '../worktree/worktree-host-row-identity'
 import {
   WORKSPACE_GROUP_OPTIONS as GROUP_OPTIONS,
   WORKSPACE_SORT_OPTIONS as SORT_OPTIONS,
@@ -24,6 +25,7 @@ export function HostScreenOverlays({ controller }: { controller: HostScreenContr
     actions,
     catalog,
     client,
+    connState,
     existingWorktreePaths,
     hostCapabilities,
     hostId,
@@ -32,6 +34,13 @@ export function HostScreenOverlays({ controller }: { controller: HostScreenContr
     state
   } = controller
   const actionTarget = state.actionTarget
+  // A server row's screens are offered by what that server supports, not the desktop.
+  const actionServer = useWorkspaceServer({
+    client,
+    connState,
+    desktopCapabilities: hostCapabilities,
+    executionHost: actionTarget?.hostId
+  })
 
   return (
     <>
@@ -164,31 +173,29 @@ export function HostScreenOverlays({ controller }: { controller: HostScreenContr
                       hostId,
                       worktreeId: actionTarget.worktreeId,
                       worktreeName: actionTarget.displayName || actionTarget.repo,
-                      hostCapabilities,
+                      executionHost: actionServer.routeHost,
+                      hostCapabilities:
+                        actionServer.server?.gates.hostCapabilities ?? hostCapabilities,
                       navigate: actions.navigateFromHostList,
                       onDone: () => state.setActionTarget(null)
                     }),
-                    {
-                      label: 'Sleep',
-                      icon: Moon,
-                      onPress: () => {
-                        if (client) {
-                          state.setSleptIds((prev) =>
-                            new Set(prev).add(getWorktreeRowIdentity(actionTarget))
-                          )
-                          void client
-                            .sendRequest('worktree.sleep', {
-                              worktree: `id:${actionTarget.worktreeId}`
-                            })
-                            .catch(() => null)
-                        }
-                        state.setActionTarget(null)
-                      }
-                    },
+                    // Server sleep is not offered yet; the desktop would sleep its own id.
+                    ...(actionServer.server
+                      ? []
+                      : [
+                          {
+                            label: 'Sleep',
+                            icon: Moon,
+                            onPress: () => {
+                              actions.putWorktreeToSleep(actionTarget)
+                              state.setActionTarget(null)
+                            }
+                          }
+                        ]),
                     {
                       label: isWorktreePinned(actionTarget, state.pinnedIds) ? 'Unpin' : 'Pin',
                       onPress: () => {
-                        actions.togglePin(actionTarget.worktreeId)
+                        actions.togglePin(actionTarget)
                         state.setActionTarget(null)
                       }
                     },
@@ -219,7 +226,9 @@ export function HostScreenOverlays({ controller }: { controller: HostScreenContr
         ref={state.newWorktreeModalRef}
         routeVisible={showNewWorktree}
         client={client}
+        hostCapabilities={hostCapabilities}
         hostId={hostId}
+        hostLabelById={state.hostLabelById}
         existingWorktreePaths={existingWorktreePaths}
         existingWorktrees={state.worktrees}
         // The seam, not react-native's `Linking`: this screen is in the tasks page closure, and
@@ -228,10 +237,13 @@ export function HostScreenOverlays({ controller }: { controller: HostScreenContr
         onVisibleChange={(visible) => {
           state.newWorktreeModalVisibleRef.current = visible
         }}
-        onCreated={(worktreeId, worktreeName, warning) => {
+        onCreated={(worktreeId, worktreeName, warning, executionHost) => {
           void catalog.fetchWorktrees({ allowDuringModal: true })
           actions.navigateFromHostList(
-            hostNewWorktreeSessionRoute(hostId, worktreeId, worktreeName, warning)
+            workspaceRouteHref(
+              hostNewWorktreeSessionRoute(hostId, worktreeId, worktreeName, warning),
+              executionHost
+            )
           )
         }}
         onRouteVisibleChange={actions.setShowNewWorktreeVisible}

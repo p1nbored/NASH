@@ -404,7 +404,6 @@ describe('connectPanePty', () => {
     expect(createdTransportOptions[0]).toMatchObject({
       worktreeId: FLOATING_TERMINAL_WORKTREE_ID,
       executionHostId: 'local',
-      connectionId: null,
       launchAgent: 'codex'
     })
     expect(createdTransportOptions[0]?.projectRuntime).toBeUndefined()
@@ -431,7 +430,8 @@ describe('connectPanePty', () => {
         url: 'https://github.com/acme/orca/pull/42',
         slug: { owner: 'acme', repo: 'orca', host: 'github.com' },
         number: 42
-      })
+      }),
+      expect.objectContaining({ tabId: 'tab-1' })
     )
   })
 

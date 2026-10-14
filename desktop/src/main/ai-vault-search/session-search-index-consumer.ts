@@ -83,6 +83,12 @@ class SessionSearchReadConsumer implements TranscriptReadConsumer {
   }
 
   finish(outcome: TranscriptReadOutcome): void {
+    if (outcome.cancelled) {
+      // Leaves the row as it was, which already says what the next pass owes;
+      // counting it as a failure would hold a healthy file out after three cancels.
+      this.write.discard()
+      return
+    }
     const { candidate } = this.start
     let committed = false
     try {

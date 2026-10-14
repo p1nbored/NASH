@@ -56,9 +56,33 @@ describe('OrcaRuntimeRpcServer', () => {
           params: { prompt }
         })
       ).toBe('wait')
-      // Without a prompt nothing waits on the agent, so the launch stays a short call.
+      // An existing workspace without a prompt remains a short call.
       expect(
         classifyRuntimeLongPoll({ id: 'req_launch', authToken: 'token', method, params: {} })
+      ).toBeNull()
+    }
+  )
+
+  it.each(['agent.launch', 'agent.launchReplay'])(
+    'keeps unprompted %s workspace setup alive',
+    (method) => {
+      expect(
+        classifyRuntimeLongPoll({
+          id: 'req_setup',
+          authToken: 'token',
+          method,
+          params: {
+            target: { kind: 'create-worktree', create: { repo: 'id:repo-1', name: 'task' } }
+          }
+        })
+      ).toBe('wait')
+      expect(
+        classifyRuntimeLongPoll({
+          id: 'req_existing',
+          authToken: 'token',
+          method,
+          params: { target: { kind: 'existing', worktree: 'id:wt-7' } }
+        })
       ).toBeNull()
     }
   )
@@ -123,6 +147,43 @@ describe('OrcaRuntimeRpcServer', () => {
   // Exercise the real socket (not a mock) so we catch buffer/flush regressions
   // that a unit-level test would miss.
   describe('long-poll transport (§3.1)', () => {
+    it.each(['agent.launch', 'agent.launchReplay'])(
+      'emits keepalives over the socket while unprompted %s setup blocks',
+      async (method) => {
+        const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
+        const runtime = new OrcaRuntimeService()
+        const server = new OrcaRuntimeRpcServer({ runtime, userDataPath, keepaliveIntervalMs: 30 })
+        vi.spyOn(server['dispatcher'], 'dispatch').mockImplementation(async (request) => {
+          await sleep(120)
+          return {
+            id: request.id,
+            ok: true,
+            result: {},
+            _meta: { runtimeId: runtime.getRuntimeId() }
+          }
+        })
+        await server.start()
+        try {
+          const metadata = readRuntimeMetadata(userDataPath)
+          const session = openFramedSession(metadata!.transports[0]!.endpoint, {
+            id: 'req_setup',
+            authToken: metadata!.authToken,
+            method,
+            params: {
+              target: { kind: 'create-worktree', create: { repo: 'id:repo-1', name: 'task' } }
+            }
+          })
+          await session.done
+          expect(
+            session.frames.filter((frame) => frame._keepalive === true).length
+          ).toBeGreaterThanOrEqual(2)
+          expect(session.frames.filter((frame) => frame.ok !== undefined)).toHaveLength(1)
+        } finally {
+          await server.stop()
+        }
+      }
+    )
+
     it('emits keepalives while orchestration.workerStart blocks', async () => {
       const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
       const runtime = new OrcaRuntimeService()

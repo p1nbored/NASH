@@ -25,7 +25,16 @@ const correctedValues = {
     '{{value0}} 호스트{{value1}}을(를) NASH에 추가했습니다.',
   'auto.components.editor.CheckRunJobs.1c0a4d7e02': '성공',
   'components.native-chat.approval.allow': '허용',
-  'components.native-chat.approval.deny': '거부'
+  'components.native-chat.approval.deny': '거부',
+  'sessionHistory.settings.computersConsent':
+    '각 컴퓨터는 자체 에이전트 대화와 도구 출력의 검색 가능한 사본을 보관합니다. 이 데이터는 해당 컴퓨터 밖으로 전송되지 않습니다.',
+  'sessionHistory.settings.open': '열기',
+  'auto.components.settings.contrast.custom': '사용자 지정',
+  'components.settings.TerminalInteraction.copyTrimsGutterDescription':
+    '복사한 텍스트에서 에이전트 출력의 왼쪽 여백을 제거합니다. 선택한 모든 줄에 공통된 들여쓰기만 제거됩니다.',
+  'auto.components.settings.TerminalAppearanceSection.db270cc9a9': '커서 모양',
+  'auto.components.settings.TerminalAppearanceSection.b9f1804422': '커서 불투명도',
+  'auto.components.settings.TerminalWindowSection.a2d9f095a7': '커서 텍스트'
 } as const
 
 function getLocaleValue(path: string): unknown {

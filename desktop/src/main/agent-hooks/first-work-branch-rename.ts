@@ -13,8 +13,9 @@ import {
 import { getCommitMessageModelDiscoveryHostKey } from '../../shared/commit-message-host-key'
 import { computeBranchName, getConfiguredBranchPrefix } from '../ipc/worktree-logic'
 import { gitExecFileAsync } from '../git/runner'
-import { getSshGitUsername, resolveLocalGitUsername } from '../git/git-username'
-import { getSshGitProvider } from '../providers/ssh-git-dispatch'
+import { resolveLocalGitUsername } from '../git/git-username'
+import { resolveGitRouteForHost } from '../providers/execution-host-provider-dispatch'
+import { getRepoExecutionHostId } from '../../shared/execution-host'
 import {
   probeBranchUpstream,
   renameCurrentBranch,
@@ -176,13 +177,15 @@ async function runAutoRename(
   }
   const worktreePath = parsed.worktreePath
 
-  const provider = repo.connectionId ? (getSshGitProvider(repo.connectionId) ?? null) : null
-  if (repo.connectionId && !provider) {
+  // Why: a runtime row's connectionId names the server's own SSH target; that host owns the branch, never this client.
+  const route = resolveGitRouteForHost(getRepoExecutionHostId(repo))
+  if (route.kind === 'runtime') {
+    return stop(`branch is owned by ${route.hostId}`)
+  }
+  if (route.kind === 'ssh') {
     return retry('ssh provider unavailable')
   }
-  const exec: GitExec = provider
-    ? (args) => provider.exec(args, worktreePath)
-    : (args) => gitExecFileAsync(args, { cwd: worktreePath })
+  const exec: GitExec = (args) => gitExecFileAsync(args, { cwd: worktreePath })
 
   const currentBranch = (await exec(['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim()
   if (!currentBranch || currentBranch === 'HEAD') {
@@ -212,7 +215,7 @@ async function runAutoRename(
   }
 
   const settings = deps.getSettings()
-  const hostKey = getCommitMessageModelDiscoveryHostKey(repo.connectionId ?? null)
+  const hostKey = getCommitMessageModelDiscoveryHostKey(null)
   const resolvedParams = resolveTextGenerationParams(settings, hostKey, 'branchName', repo)
   if (!resolvedParams.ok) {
     // Why: a generation-step failure (vs a benign skip) is user-actionable, so surface it on the card.
@@ -221,7 +224,7 @@ async function runAutoRename(
   }
   const params = resolvedParams.params
 
-  const target = await resolveGenerationTarget(worktreePath, params.agentId, provider, deps)
+  const target = await resolveGenerationTarget(worktreePath, params.agentId, deps)
   if (!target) {
     deps.setRenameError(worktreeId, 'Could not prepare the branch-name generation environment.')
     return retry('could not prepare generation environment')
@@ -254,9 +257,7 @@ async function runAutoRename(
     )
   }
 
-  const username = provider
-    ? (await getSshGitUsername(provider, repo.path)) || null
-    : (await resolveLocalGitUsername(repo.path)) || null
+  const username = (await resolveLocalGitUsername(repo.path)) || null
   // The model sometimes echoes the configured prefix (e.g. `tmchow/...`); strip it to avoid double-prefixing.
   const slug = stripConfiguredBranchPrefix(
     generated.slug,
@@ -280,9 +281,7 @@ async function runAutoRename(
     return stop(`no distinct unique branch name for slug "${slug}"`, true)
   }
 
-  await (provider
-    ? provider.renameCurrentBranch(worktreePath, newBranch)
-    : renameCurrentBranch(exec, newBranch))
+  await renameCurrentBranch(exec, newBranch)
 
   // resolveUniqueBranchName may append a collision suffix (`-2`, …), so derive names from the resolved leaf, not the slug.
   const newBranchLeaf = newBranch.slice(newBranch.lastIndexOf('/') + 1)

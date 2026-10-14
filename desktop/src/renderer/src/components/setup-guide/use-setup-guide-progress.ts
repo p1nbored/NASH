@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { useAppStore } from '@/store'
 import { isGitRepoKind } from '../../../../shared/repo-kind'
+import { getRepoExecutionHostId } from '../../../../shared/execution-host'
 import { checkRuntimeHooks } from '@/runtime/runtime-hooks-client'
 import { getLocalPreflightContext, localPreflightContextKey } from '@/lib/local-preflight-context'
 import { hasEffectiveSetupCommand } from '@/lib/setup-script-status'
@@ -128,7 +129,9 @@ export function useSetupGuideProgress(shouldRefreshCoreState: boolean): FeatureW
 
     async function refreshSetupScriptState(): Promise<void> {
       for (const repo of orderedGitRepos) {
-        const hooksResult = await checkRuntimeHooks(settings, repo.id).catch(() => null)
+        const hooksResult = await checkRuntimeHooks(getRepoExecutionHostId(repo), repo.id).catch(
+          () => null
+        )
         if (stale) {
           return
         }

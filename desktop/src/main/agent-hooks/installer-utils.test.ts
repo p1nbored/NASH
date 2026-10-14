@@ -23,7 +23,6 @@ import {
   hookDefinitionHasManagedCommand,
   removeManagedCommands,
   wrapPosixHookCommand,
-  wrapWindowsCmdHookCommand,
   readHooksJsonWithRaw,
   wrapWindowsHookCommand,
   writeManagedScript,
@@ -235,14 +234,12 @@ describe('createManagedCommandMatcher', () => {
   const match = createManagedCommandMatcher('claude-hook.sh')
 
   it('matches commands containing the agent-hooks/<scriptFileName> path', () => {
-    expect(
-      match('/bin/sh "/Users/alice/Library/Application Support/Orca/agent-hooks/claude-hook.sh"')
-    ).toBe(true)
-    expect(match('/bin/sh "/some/other/location/agent-hooks/claude-hook.sh"')).toBe(true)
+    expect(match('/bin/sh "/Users/alice/.nash/agent-hooks/claude-hook.sh"')).toBe(true)
+    expect(match('/bin/sh "/some/other/location/.nash/agent-hooks/claude-hook.sh"')).toBe(true)
   })
 
   it('normalizes Windows backslashes so cmd-style paths still match', () => {
-    expect(match('C:\\Users\\alice\\AppData\\Roaming\\Orca\\agent-hooks\\claude-hook.sh')).toBe(
+    expect(match('C:\\Users\\alice\\AppData\\Roaming\\.nash\\agent-hooks\\claude-hook.sh')).toBe(
       true
     )
   })
@@ -257,7 +254,7 @@ describe('createManagedCommandMatcher', () => {
   })
 
   it('does not match hooks for a different agent', () => {
-    expect(match('/bin/sh "/path/agent-hooks/gemini-hook.sh"')).toBe(false)
+    expect(match('/bin/sh "/path/.nash/agent-hooks/gemini-hook.sh"')).toBe(false)
   })
 
   it('matches the guarded launcher form so wrapped commands sweep correctly', () => {
@@ -265,7 +262,7 @@ describe('createManagedCommandMatcher', () => {
     // still recognize them or reinstalling would retain a stale duplicate.
     expect(
       match(
-        'if [ -x "/Users/alice/Library/Application Support/Orca/agent-hooks/claude-hook.sh" ]; then /bin/sh "/Users/alice/Library/Application Support/Orca/agent-hooks/claude-hook.sh"; fi'
+        'if [ -x "/Users/alice/.nash/agent-hooks/claude-hook.sh" ]; then /bin/sh "/Users/alice/.nash/agent-hooks/claude-hook.sh"; fi'
       )
     ).toBe(true)
   })
@@ -305,12 +302,12 @@ describe('removeManagedCommands', () => {
       [
         {
           type: 'command',
-          bash: '/bin/sh "/Users/alice/Orca/agent-hooks/copilot-hook.sh"',
+          bash: '/bin/sh "/Users/alice/.nash/agent-hooks/copilot-hook.sh"',
           timeoutSec: 5
         },
         {
           type: 'command',
-          powershell: "& 'C:\\Users\\alice\\Orca\\agent-hooks\\copilot-hook.sh'",
+          powershell: "& 'C:\\Users\\alice\\.nash\\agent-hooks\\copilot-hook.sh'",
           timeoutSec: 5
         },
         {
@@ -332,7 +329,7 @@ describe('removeManagedCommands', () => {
           hooks: [
             {
               type: 'command',
-              command: '/bin/sh "/path/agent-hooks/copilot-hook.sh"'
+              command: '/bin/sh "/path/.nash/agent-hooks/copilot-hook.sh"'
             },
             { type: 'command', command: 'echo keep me' }
           ]
@@ -398,7 +395,7 @@ describe('hookDefinitionHasManagedCommand', () => {
 
     expect(
       hookDefinitionHasManagedCommand(
-        { bash: '/bin/sh "/Users/alice/Orca/agent-hooks/copilot-hook.sh"' },
+        { bash: '/bin/sh "/Users/alice/.nash/agent-hooks/copilot-hook.sh"' },
         match
       )
     ).toBe(true)
@@ -408,7 +405,7 @@ describe('hookDefinitionHasManagedCommand', () => {
           hooks: [
             {
               type: 'command',
-              command: '/bin/sh "/path/agent-hooks/copilot-hook.sh"'
+              command: '/bin/sh "/path/.nash/agent-hooks/copilot-hook.sh"'
             }
           ]
         },
@@ -677,36 +674,6 @@ describe('wrapWindowsHookCommand', () => {
   )
 })
 
-describe('wrapWindowsCmdHookCommand', () => {
-  it('returns the bare, directly-spawnable path for a cmd-safe managed script', () => {
-    // Direct-spawn consumers need a launchable argv[0], not a cmd builtin such as `if`.
-    const scriptPath = 'C:\\Users\\alice\\.nash\\agent-hooks\\codex-hook.cmd'
-    const command = wrapWindowsCmdHookCommand(scriptPath)
-    expect(command).toBe(scriptPath)
-    expect(command).not.toMatch(/^if\b/)
-    expect(command).not.toMatch(/powershell/i)
-  })
-
-  it.skipIf(process.platform !== 'win32')(
-    'resolves the launcher to a real executable file, not a shell fragment',
-    () => {
-      // POSIX temp paths contain `/`, which selects the encoded fallback instead.
-      const scriptPath = join(tmpDir, 'codex-hook.cmd')
-      writeFileSync(scriptPath, '@echo off\r\nexit /b 0\r\n', 'utf-8')
-      const command = wrapWindowsCmdHookCommand(scriptPath)
-      expect(command).toBe(scriptPath)
-      expect(existsSync(command)).toBe(true)
-    }
-  )
-
-  it('falls back to the encoded launcher when cmd.exe would split or expand the path', () => {
-    const scriptPath = 'C:\\Users\\Jane Doe\\%ORCA_TEST%\\codex-hook.cmd'
-    const command = wrapWindowsCmdHookCommand(scriptPath)
-    expect(command).toMatch(qualifiedWindowsPowerShellCommand)
-    expect(decodeWindowsHookCommand(command)).toBe(expectedDecodedWindowsHookCommand(scriptPath))
-  })
-})
-
 describe('wrapRuntimeHomeHookCommand', () => {
   it('selects the runtime platform variant under HOME', () => {
     const command = wrapRuntimeHomeHookCommand('claude-hook')
@@ -811,6 +778,12 @@ describe('wrapRuntimeHomeHookCommand', () => {
         ? join(process.env.ProgramFiles ?? 'C:\\Program Files', 'Git', 'bin', 'bash.exe')
         : '/bin/sh'
     const result = spawnSync(shell, ['-c', command], {
+      env: {
+        ...process.env,
+        ORCA_AGENT_HOOK_PORT: '1',
+        ORCA_AGENT_HOOK_TOKEN: 'fixture-only',
+        ORCA_PANE_KEY: 'fixture-only'
+      },
       input: Buffer.alloc(1_000_000, 'x')
     })
 
@@ -827,7 +800,13 @@ describe('wrapRuntimeHomeHookCommand', () => {
       shell,
       ['-c', wrapRuntimeHomeHookCommand('missing-orca-hook', { neutralJsonWhenMissing: true })],
       {
-        env: { ...process.env, HOME: tmpDir.replaceAll('\\', '/') },
+        env: {
+          ...process.env,
+          HOME: tmpDir.replaceAll('\\', '/'),
+          ORCA_AGENT_HOOK_PORT: '1',
+          ORCA_AGENT_HOOK_TOKEN: 'fixture-only',
+          ORCA_PANE_KEY: 'fixture-only'
+        },
         input: Buffer.alloc(1_000_000, 'x')
       }
     )

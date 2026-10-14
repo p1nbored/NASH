@@ -32,7 +32,7 @@ export function useWorktreeJumpPaletteController({
     () => ({
       query: localState.paletteSearchQuery,
       agentStatus: storeState.agentStatusByPaneKey,
-      worktrees: storeState.allWorktrees,
+      worktrees: storeState.workspaces,
       browserPages: storeState.browserPagesByWorkspace,
       browserWorkspaces: storeState.browserTabsByWorktree,
       openFiles: storeState.openFiles,
@@ -44,7 +44,7 @@ export function useWorktreeJumpPaletteController({
     [
       localState.paletteSearchQuery,
       storeState.agentStatusByPaneKey,
-      storeState.allWorktrees,
+      storeState.workspaces,
       storeState.browserPagesByWorkspace,
       storeState.browserTabsByWorktree,
       storeState.openFiles,

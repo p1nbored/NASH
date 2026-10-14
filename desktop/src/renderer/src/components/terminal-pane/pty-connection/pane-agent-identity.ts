@@ -13,8 +13,8 @@ import { inspectRuntimeTerminalProcess } from '@/runtime/runtime-terminal-inspec
 import { parseAppSshPtyId } from '../../../../../shared/ssh-pty-id'
 import { dispatchTerminalCommandFinishedEvent } from '@/hooks/terminal-command-finished-event'
 import { getExecutionHostIdForWorktree } from '@/lib/worktree-runtime-owner'
-import { resolveCommittedTitleAgentType } from '@/lib/pane-agent-evidence'
 import type { TuiAgent } from '../../../../../shared/tui-agent'
+import { titleAfterConfirmedShell } from '../../../../../shared/terminal-pane-title-reset'
 import { isTuiAgent, TUI_AGENT_CONFIG } from '../../../../../shared/tui-agent-config'
 
 import {
@@ -82,11 +82,13 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
     const tab = (state.tabsByWorktree[session.deps.worktreeId] ?? []).find(
       (entry) => entry.id === session.deps.tabId
     )
-    const title = currentTitle ?? tab?.title
-    if (!title || resolveCommittedTitleAgentType(title) === null) {
+    const neutralTitle = titleAfterConfirmedShell(
+      currentTitle ?? tab?.title,
+      session.neutralTerminalTitle()
+    )
+    if (neutralTitle === null) {
       return
     }
-    const neutralTitle = session.neutralTerminalTitle()
     session.deps.setRuntimePaneTitle(session.deps.tabId, session.pane.id, neutralTitle)
     if (session.manager.getActivePane()?.id === session.pane.id) {
       session.deps.updateTabTitle(session.deps.tabId, neutralTitle)
@@ -108,7 +110,7 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
    *  pane armed at 1 that reports exactly once more compares equal. It needs a foreign drop inside
    *  the confirm window; the relaunch case that would otherwise hit it is already discarded by
    *  onCommandStarted, and the cost is retiring a pane the process table just proved is a shell. */
-  const reconcileEndedProcessIfPaneQuiet = (armedAcceptedStatusSeq: number | undefined): void => {
+  session.reconcileEndedProcessIfPaneQuiet = (armedAcceptedStatusSeq: number | undefined): void => {
     const current = useAppStore.getState().agentStatusByPaneKey[session.cacheKey]
     if (current && current.acceptedStatusSeq !== armedAcceptedStatusSeq) {
       return
@@ -122,7 +124,7 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
   session.visibleForegroundSamplePending = false
   session.visibleForegroundSampleSettled = false
   session.settleDeferredCommandFinishedStatusDrop = (
-    options: { confirmedShell?: boolean } = {}
+    options: { confirmedShell?: boolean; processExitConfirmed?: boolean } = {}
   ): void => {
     const dropStatus = session.deferredCommandFinishedStatusDrop
     const reconcile = session.deferredConfirmedShellReconcile
@@ -145,6 +147,10 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
       session.deferredCommandFinishedStatusDrop = null
       if (!verifiable) {
         dropStatus()
+        // Why: only a process-table-confirmed exit proves the agent's main-side latches are dead.
+        if (options.processExitConfirmed) {
+          reconcile?.()
+        }
       }
     }
     void Promise.resolve(window.api?.agentStatus?.hasVerifiableAgentProcess?.(session.cacheKey))
@@ -182,11 +188,11 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
     isTrackablePtyId: session.isForegroundTrackingAllowed,
     readForegroundProcess: (id, options) =>
       isRemotePtyId(id)
-        ? inspectRuntimeTerminalProcess(useAppStore.getState().settings, id, options)
+        ? inspectRuntimeTerminalProcess(id, options)
         : window.api.pty.getForegroundProcess(id),
     confirmForegroundProcess: (id, options) =>
       isRemotePtyId(id)
-        ? inspectRuntimeTerminalProcess(useAppStore.getState().settings, id, options)
+        ? inspectRuntimeTerminalProcess(id, options)
         : window.api.pty.confirmForegroundProcess(id),
     isRemotePtyId,
     getExpectedIncarnationId: () => session.remotePtyIncarnationId ?? null,
@@ -279,7 +285,7 @@ export function installPaneAgentIdentity(session: ConnectPanePtySession): void {
       const armedAcceptedStatusSeq = entry?.acceptedStatusSeq
       session.deferredCommandFinishedStatusDrop = dropStatus
       session.deferredConfirmedShellReconcile = () =>
-        reconcileEndedProcessIfPaneQuiet(armedAcceptedStatusSeq)
+        session.reconcileEndedProcessIfPaneQuiet(armedAcceptedStatusSeq)
       return
     }
     session.deferredCommandFinishedStatusDrop = null

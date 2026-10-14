@@ -1,3 +1,4 @@
+import type { AgentSessionProviderContextBoundary } from './agent-session-provider-context'
 // ─── Canonical agent-session journal: cross-process wire shapes ─────────────
 // The host-owned timeline for a structured agent session. Everything here must
 // be plain JSON: rows are persisted verbatim and later republished to clients,
@@ -321,6 +322,7 @@ type AgentJournalStatusItemFields = {
   kind: 'status'
   /** Optional display hints; unknown values retain the ordinary text fallback. */
   presentation?: string
+  contextClear?: AgentSessionProviderContextBoundary
   tone?: string
   /** Legacy carrier of a turn record: written by hosts before v3, and published
    *  to clients that predate the `turn` item. New code reads turns through
@@ -515,6 +517,9 @@ export type AgentJournalSubmission = {
    *  card, so no surface draws this send, before or after the card is sent, edited or deleted.
    *  Recorded in the rejection's own transaction (`journal-unsent-send-hold.ts`). */
   keptAsQueuedMessageId?: string
+  /** The model and effort the person's composer sent it with, applied when it is handed over.
+   *  The host's alone: clients ignore it. */
+  options?: Readonly<Record<string, string>>
 }
 
 /** Durable answer to "did my send land?", keyed by client message id. Only an

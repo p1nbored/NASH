@@ -18,16 +18,16 @@ import {
   orcadReadinessWaitCommand,
   parseOrcadReadinessWaitOutput
 } from './orcad-remote-readiness-wait'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { errorMessage } from '../../shared/error-message'
-import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-deploy-helpers'
+import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import {
   currentOrcadFence,
   isOrcadFenceLost,
   OrcadFenceLostError,
   posixOrcadFenceGuard
 } from './orcad-activation-fence-scope'
-import { orcadRemoteBaseDir, orcadWindowsHostOpCommand } from './orcad-remote-windows-node'
+import { orcadWindowsHomeOpCommand } from './orcad-remote-windows-node'
 import { ORCAD_WINDOWS_FENCE_ARG } from './orcad-windows-host-fence-ops'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
 
@@ -35,7 +35,7 @@ import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platf
 const READINESS_RETRY_PAUSE_MS = 1_000
 
 export type OrcadRemoteExecTarget = {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   signal?: AbortSignal
   /** Locates the runtime store for host-record scripts; required on Windows, unused elsewhere. */
@@ -63,8 +63,7 @@ export async function execOrcadRemote(
     }
     // A host op checks inside the host script; anything else is checked by one op just before it.
     if (!command.includes(ORCAD_WINDOWS_FENCE_ARG) && target.remoteHome) {
-      const baseDir = orcadRemoteBaseDir(target.host, target.remoteHome)
-      await run(orcadWindowsHostOpCommand(target.host, baseDir, 'fence-check', []))
+      await run(orcadWindowsHomeOpCommand(target.host, target.remoteHome, 'fence-check', []))
     }
     return await run(command)
   } catch (error) {
@@ -118,7 +117,15 @@ export async function launchOrcadAndAwaitReadiness(
       )
     )
   } else {
-    await execOrcadRemote(target, orcadLaunchCommand(target.host, spec))
+    await execOrcadRemote(
+      target,
+      orcadLaunchCommand(
+        target.host,
+        spec,
+        target.conn.orcadLaunchDetach ?? 'nohup',
+        (await target.conn.orcadLaunchEnv?.()) ?? []
+      )
+    )
   }
   const deadline = Date.now() + (target.readinessTimeoutMs ?? ORCAD_STARTUP_READINESS_TIMEOUT_MS)
   const sleep = target.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)))
@@ -138,7 +145,11 @@ export async function launchOrcadAndAwaitReadiness(
         orcadReadinessWaitCommand(target.host, spec.remoteInstallDir, waitSeconds)
       )
     } catch (error) {
-      if (isUnconfirmedSshCommandTermination(error) || error instanceof OrcadFenceLostError) {
+      if (
+        (error instanceof Error && error.name === 'AbortError') ||
+        isUnconfirmedSshCommandTermination(error) ||
+        error instanceof OrcadFenceLostError
+      ) {
         throw error
       }
       // Why retry: a failed read (a refused channel, a timed-out wait) says nothing about the
@@ -148,6 +159,7 @@ export async function launchOrcadAndAwaitReadiness(
       await sleep(READINESS_RETRY_PAUSE_MS)
       continue
     }
+    target.signal?.throwIfAborted()
     lastWaitError = undefined
     last = parseOrcadReadinessWaitOutput(target.host, output)
     if (last.state !== 'pending') {

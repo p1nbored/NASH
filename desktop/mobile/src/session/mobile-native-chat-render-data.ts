@@ -7,6 +7,7 @@ import { isRootAgentJournalItem } from '../../../src/shared/agent-session-journa
 import { stripNoiseMessages } from '../../../src/shared/native-chat-noise'
 import { isWordlessProviderFrameMessage } from '../../../src/shared/native-chat-provider-frame-summary'
 import { foldToolMessages } from '../../../src/shared/native-chat-tool-fold'
+import { foldSubagentItems } from '../../../src/shared/native-chat-subagent-items'
 import { isImageRefBlock, type NativeChatMessage } from '../../../src/shared/native-chat-types'
 import {
   isImageSourceUserTurn,
@@ -53,7 +54,9 @@ export type MobileNativeChatPendingItem = {
   baselineTailMessageId?: string | null
 }
 
-export function foldMobileNativeChatMessages(messages: NativeChatMessage[]): NativeChatMessage[] {
+export function foldMobileNativeChatMessages(
+  messages: readonly NativeChatMessage[]
+): NativeChatMessage[] {
   // The conversation only: a subagent's rows are that subagent's, and mobile shows
   // each spawn as its roster row (one line per child) rather than the child's own rows.
   // Normalize first (desktop assembler parity): image marker turns fold into
@@ -62,9 +65,11 @@ export function foldMobileNativeChatMessages(messages: NativeChatMessage[]): Nat
   // goes too, before folding, so it never splits a tool run.
   return stripNoiseMessages(
     foldToolMessages(
-      normalizeImageTranscriptMessages(
-        messages.filter(
-          (message) => isRootAgentJournalItem(message) && !isWordlessProviderFrameMessage(message)
+      foldSubagentItems(
+        normalizeImageTranscriptMessages(
+          messages.filter(
+            (message) => isRootAgentJournalItem(message) && !isWordlessProviderFrameMessage(message)
+          )
         )
       )
     )

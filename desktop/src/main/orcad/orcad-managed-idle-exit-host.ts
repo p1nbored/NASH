@@ -1,4 +1,5 @@
 /** Binds managed idle exit to this orcad's RPC server, PTY provider and terminal daemon. */
+import { getAppEnvironment } from '../../shared/app-environment'
 import type { RuntimeRpcClientActivity } from '../runtime/runtime-rpc/runtime-rpc-shutdown'
 import type { OrcadIdleExitEvidence } from './orcad-idle-exit-monitor'
 import {
@@ -14,6 +15,7 @@ import {
 } from './orcad-idle-stop-record'
 import type { OrcadShutdownTrigger } from './orcad-lifecycle'
 import type { OrcadIdleStopRecord } from '../../shared/orcad-idle-exit'
+import { getStructuredAgentSessionHost } from '../native-chat/agent-session-wire/structured-agent-session-registry'
 
 let requestIdleShutdown: OrcadShutdownTrigger | null = null
 
@@ -47,7 +49,7 @@ export function beginOrcadIdleExit(userDataPath: string): {
   if (previousIdleStop) {
     console.error(`[orcad] the previous run stopped idle at ${previousIdleStop.stoppedAt}`)
   }
-  const version = process.env.ORCA_VERSION ?? '0.0.0-orcad'
+  const version = getAppEnvironment().getVersion()
   return {
     previousIdleStop,
     start: (ports) => startOrcadManagedIdleExit({ ...ports, config, userDataPath, version })
@@ -61,11 +63,13 @@ async function startOrcadManagedIdleExit(
     version: string
   }
 ): Promise<void> {
-  const { getLocalPtyProvider } = await import('../ipc/pty')
-  const { getDaemonEndpointFacts } = await import('../daemon/daemon-init')
+  const { getLocalPtyProvider } = await import('../ipc/pty/provider/registry')
+  const { getDaemonEndpointFacts } = await import('../daemon/daemon-provider-state')
   const { countLiveOrcadDaemonSessions, retireOrcadDaemonIfIdle } =
     await import('./orcad-daemon-retirement')
   const idleRecord = createIdleStopRecordOwnership(input.userDataPath)
+  const hasChatProviders = (): boolean =>
+    getStructuredAgentSessionHost()?.hasLoadedProviders() ?? false
   const dispose = installOrcadManagedIdleExit({
     config: input.config,
     ports: {
@@ -74,14 +78,26 @@ async function startOrcadManagedIdleExit(
       countDaemonSessions: countLiveOrcadDaemonSessions,
       hasDaemon: () => getDaemonEndpointFacts() !== null,
       agentStates: input.agentStates,
+      hasChatProviders,
       hasStagedMigration: input.hasStagedMigration,
       automationsBusy: input.automationsBusy,
       activationFenceExists
     },
-    stop: (evidence) => {
-      void stopForIdle(input, evidence, retireOrcadDaemonIfIdle).finally(() =>
-        idleRecord.requestShutdown(requestIdleShutdown)
-      )
+    stop: async (evidence) => {
+      await stopForIdle(input, evidence, retireOrcadDaemonIfIdle)
+      // Clients or providers may return while daemon retirement awaits its reply.
+      const activity = input.rpc.readClientActivity()
+      if (
+        hasChatProviders() ||
+        activity.openConnections > 0 ||
+        activity.requestsInFlight > 0 ||
+        activity.lastRequestAt > evidence.quietSince
+      ) {
+        discardOrcadIdleStopRecord(input.userDataPath)
+        return false
+      }
+      idleRecord.requestShutdown(requestIdleShutdown)
+      return true
     }
   })
   input.registerCleanup(() => {

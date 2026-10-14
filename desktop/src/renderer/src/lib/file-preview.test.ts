@@ -481,6 +481,20 @@ describe('getWorkspaceFileBrowserOpenTarget', () => {
       message: REMOTE_FILE_BROWSER_UNSUPPORTED_MESSAGE
     })
   })
+
+  it('refuses paired files even when their connection ID is null', () => {
+    mocks.environmentId = 'managed-host'
+    expect(
+      getWorkspaceFileBrowserOpenTarget({
+        filePath: '/srv/repo/report.html',
+        worktreeId: 'wt-1'
+      })
+    ).toEqual({
+      status: 'unsupported',
+      reason: 'remote-worktree',
+      message: REMOTE_FILE_BROWSER_UNSUPPORTED_MESSAGE
+    })
+  })
 })
 
 // Why the reuse case is pinned here too: the address bar's way into a document must obey the same
@@ -577,4 +591,39 @@ describe('convertBrowserPageToWorkspaceDoc', () => {
       )
     }
   )
+})
+
+// #22618: the doc preview is a desktop webview, so a web client must not create a tab it can
+// never materialize; the action hides instead of failing silently.
+describe('document previews in a paired web client', () => {
+  it('hides Open in Orca Browser and refuses with a reason instead of a silent no-op', () => {
+    vi.stubGlobal('__ORCA_WEB_CLIENT__', true)
+    try {
+      mocks.environmentId = 'runtime-1'
+      mocks.browserAvailability = { state: 'enabled', provider: 'paired-runtime' }
+
+      expect(
+        canShowWorkspaceFileBrowserAction(browserActionState(), 'wt-1', '/repo/report.html')
+      ).toBe(false)
+      const plan = openFileInBrowserTab({
+        filePath: '/srv/repo/docs/example.html',
+        worktreeId: 'wt-1'
+      })
+      expect(plan).toMatchObject({ status: 'unsupported', reason: 'no-channel' })
+      expect(mocks.createBrowserTab).not.toHaveBeenCalled()
+
+      mocks.browserPagesByWorkspace = { 'browser-1': [{ id: 'page-1', worktreeId: 'wt-1' }] }
+      expect(
+        convertBrowserPageToWorkspaceDoc('page-1', {
+          kind: 'workspace-doc',
+          worktreeId: 'wt-1',
+          filePath: '/srv/repo/docs/example.html'
+        })
+      ).toBe('failed')
+      expect(mocks.convertBrowserPage).not.toHaveBeenCalled()
+      expect(mocks.toastError).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

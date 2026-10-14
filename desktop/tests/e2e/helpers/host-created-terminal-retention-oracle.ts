@@ -15,6 +15,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { expect, type Page } from '@stablyai/playwright-test'
+import { quotePosixShell } from '../../../src/shared/wsl-login-shell-command'
 
 export type RuntimeRpcCall = <TResult>(method: string, params: unknown) => Promise<TResult>
 
@@ -90,16 +91,12 @@ export function writeRetentionFixture(directory: string): string {
   return fixturePath
 }
 
-function shellQuote(value: string): string {
-  return `'${value.replaceAll("'", `'\\''`)}'`
-}
-
 export function retentionFixtureCommand(fixturePath: string, sinkPath: string): string {
   const command = [process.execPath, fixturePath, sinkPath]
   return process.platform === 'win32'
     ? // PowerShell needs the call operator when the executable is quoted; cmd.exe also accepts it.
       `& ${command.map((value) => `"${value.replaceAll('"', '""')}"`).join(' ')}`
-    : command.map(shellQuote).join(' ')
+    : command.map(quotePosixShell).join(' ')
 }
 
 export function readSink(sinkPath: string): string {

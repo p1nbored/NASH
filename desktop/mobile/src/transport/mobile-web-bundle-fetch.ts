@@ -1,4 +1,4 @@
-import { sha256 } from '@noble/hashes/sha256'
+import { CryptoDigestAlgorithm, digest } from 'expo-crypto'
 import { mobileWebBundleManifestRead } from './mobile-web-bundle-operations'
 import type {
   MobileWebBundleAssetRead,
@@ -36,7 +36,7 @@ export type MobileWebBundleFetchResult = {
 
 type AssetReassembly = {
   readonly entry: MobileWebBundleAssetRead
-  readonly whole: Uint8Array
+  readonly whole: Uint8Array<ArrayBuffer>
   outstandingWindows: number
 }
 
@@ -86,7 +86,12 @@ export async function fetchMobileWebBundle(args: {
     asset.whole.set(bytes, offset)
     asset.outstandingWindows -= 1
     if (asset.outstandingWindows === 0) {
-      assets.set(asset.entry.path, verifyReassembledAsset(asset))
+      const verified = await verifyReassembledAsset(asset)
+      // A sibling failed while this hashed; the fetch already rejected with that failure.
+      if (stopped.signal.aborted) {
+        return
+      }
+      assets.set(asset.entry.path, verified)
     }
     // Per window, not per asset: the largest asset goes first, so asset completions bunch at the end.
     receivedBytes += bytes.byteLength
@@ -191,12 +196,13 @@ function assertWindowFillsItsSlot(
 }
 
 /** Every slot was accepted exactly once, so only the hash is left to say the bytes are right. */
-function verifyReassembledAsset(asset: AssetReassembly): Uint8Array {
-  const digest = toHex(sha256(asset.whole))
-  if (digest !== asset.entry.sha256) {
+async function verifyReassembledAsset(asset: AssetReassembly): Promise<Uint8Array> {
+  // Native: hashing in JS held the JS thread for seconds, and React's progress renders waited on it.
+  const hashed = toHex(new Uint8Array(await digest(CryptoDigestAlgorithm.SHA256, asset.whole)))
+  if (hashed !== asset.entry.sha256) {
     throw new MobileWebBundleFetchError(
       'asset-checksum-mismatch',
-      `bundle asset ${asset.entry.path} hashed ${digest}, not ${asset.entry.sha256}`
+      `bundle asset ${asset.entry.path} hashed ${hashed}, not ${asset.entry.sha256}`
     )
   }
   return asset.whole

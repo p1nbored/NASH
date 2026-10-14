@@ -19,7 +19,6 @@ import type { ExecutionHostId } from '../../shared/execution-host'
 import type { Repo } from '../../shared/repo-types'
 import type { ProjectExecutionRuntimeResolution } from '../../shared/project-execution-runtime'
 import type { RuntimeWorktreeScanResult } from './repo-worktree-resolution-scan'
-import { getSshGitProviderGeneration } from '../providers/ssh-git-dispatch'
 import {
   getRepoExecutionHostId,
   getRepoSshConnectionId,
@@ -166,7 +165,7 @@ export class OrcaRuntimeWithListKnownResolvedWorktreesForExplicitTarget extends 
         ? projectRuntime.runtime.cacheKey
         : projectRuntime.repair.cacheKey
       : sshConnectionId
-        ? `ssh:${sshConnectionId}:${getSshGitProviderGeneration(sshConnectionId)}`
+        ? `ssh:${sshConnectionId}`
         : 'local:default'
     const now = Date.now()
     const scanScopeKey = `${repo.id}\0${getRepoExecutionHostId(repo)}`

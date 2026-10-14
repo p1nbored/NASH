@@ -220,7 +220,6 @@ export function useMobileSessionTerminalSubscription(
               viewportRef,
               viewportMeasuredRef,
               subscribeSeqRef,
-              initializedHandlesRef,
               terminalUnsubsRef,
               terminalFrameRef,
               getTerminalRef,

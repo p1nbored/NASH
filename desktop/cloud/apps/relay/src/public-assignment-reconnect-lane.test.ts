@@ -58,7 +58,13 @@ describe('public assignment reconnect lane', () => {
       { userId: 'user-1', relayHostId: reconnecting },
       { classifyHomeRollIsolation: true }
     )
-    expect(assign).toHaveBeenCalledWith({ userId: 'user-1', relayHostId: reconnecting })
+    expect(assign).toHaveBeenCalledWith(
+      { userId: 'user-1', relayHostId: reconnecting },
+      undefined,
+      undefined,
+      undefined,
+      { hostRequested: true }
+    )
     expect(outcomes).toContain('sticky')
 
     pending.get(newcomerA)?.resolve(assignment('cell-a', newcomerA))

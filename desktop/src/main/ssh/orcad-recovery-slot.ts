@@ -7,7 +7,7 @@
 import type { ServeReadiness } from '../server/serve-readiness'
 import type { OrcadActivationExpectation } from './orcad-activation-gate'
 import { ORCAD_INSTALL_MODEL } from './remote-install-model'
-import { computeRemoteInstallDir } from './ssh-relay-versioned-install'
+import { computeRemoteInstallDir } from './remote-versioned-install'
 import { readRemoteOrcadBuildHash } from './orcad-remote-build-hash'
 import {
   launchOrcadSlotAndAwaitReadiness,
@@ -21,7 +21,7 @@ import {
   type OrcadStopOutcome
 } from './orcad-remote-process-control'
 import { execOrcadRemote, type OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
-import { orcadActivationTransactionRoot } from './orcad-activation-lock'
+import { orcadActivationTransactionRoot } from './orcad-activation-transaction'
 import {
   initialOrcadActivationAdmissionCommand,
   parseInitialOrcadActivationAdmission

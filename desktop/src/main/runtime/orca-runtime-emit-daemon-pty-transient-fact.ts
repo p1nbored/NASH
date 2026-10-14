@@ -1,6 +1,6 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { OrcaRuntimeWithScheduleWaitBlockedCheck } from './orca-runtime-schedule-wait-blocked-check'
-import type { PtyTransientFact } from '../providers/types'
+import type { PtyTransientFact } from '../providers/pty-provider-contract'
 import type {
   TerminalSideEffectBatch,
   TerminalSideEffectFact

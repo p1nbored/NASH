@@ -24,7 +24,8 @@ import {
 import {
   getTerminalRightClickToPasteSearchEntry,
   getTerminalWindowsPowershellImplementationSearchEntry,
-  getTerminalWindowsShellSearchEntry
+  getTerminalWindowsShellSearchEntry,
+  getTerminalWindowsAdministratorSearchEntry
 } from './terminal-windows-search'
 import {
   getManageSessionsSearchEntries,
@@ -110,6 +111,7 @@ export function getTerminalPaneSearchEntries(platform: {
   return [
     ...getTerminalRenderingSearchEntries(),
     ...getTerminalPaneInteractionSearchEntries(),
+    ...(platform.isWindows ? getTerminalWindowsAdministratorSearchEntry() : []),
     ...(!isWindowsTerminalHost
       ? [
           {

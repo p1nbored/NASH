@@ -47,7 +47,7 @@ type UpdaterModuleFactories = {
   electronUpdater: () => { autoUpdater: AutoUpdaterMock }
   electronUpdaterLoader: () => { loadElectronAutoUpdater: () => AutoUpdaterMock }
   electronToolkitUtils: () => { is: { dev: boolean } }
-  ipcPty: () => { killAllPty: UpdaterSpy }
+  ptyKillAll: () => { killAllPty: UpdaterSpy }
   linuxUpdatePackageType: () => {
     getLinuxPackageType: Mock<() => LinuxPackageType>
     getLinuxRootPackageType: Mock<() => 'deb' | 'rpm' | null>
@@ -241,7 +241,7 @@ export function createUpdaterMocks(): UpdaterMocks {
     electronUpdater: () => ({ autoUpdater: autoUpdaterMock }),
     electronUpdaterLoader: () => ({ loadElectronAutoUpdater: loadGenerationScopedAutoUpdater }),
     electronToolkitUtils: () => ({ is: isMock }),
-    ipcPty: () => ({ killAllPty: killAllPtyMock }),
+    ptyKillAll: () => ({ killAllPty: killAllPtyMock }),
     // Why: only the marker resolver is faked so the real artifact capture/redaction path stays under test.
     linuxUpdatePackageType: () => ({
       getLinuxPackageType: getLinuxPackageTypeMock,

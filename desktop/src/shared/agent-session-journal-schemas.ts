@@ -110,6 +110,15 @@ const Block = openDiscriminatedUnion(
       groupId: z.string(),
       agents: z.array(SubagentEntry)
     }),
+    // `outcomeBasis` and `background` stay open for the same reason `state` does.
+    SubagentEntry.extend({
+      type: z.literal('subagent'),
+      groupId: z.string(),
+      parentId: z.string().optional(),
+      run: z.string().optional(),
+      outcomeBasis: z.string().optional(),
+      background: z.boolean().optional()
+    }),
     // `kind` and `state` stay open strings for the same reason a child's
     // lifecycle does: a vocabulary a newer build writes must not turn the row
     // malformed. The renderer falls back on anything it cannot name.
@@ -251,6 +260,13 @@ const KnownItemBody = z.discriminatedUnion('kind', [
     kind: z.literal('status'),
     text: z.string(),
     presentation: z.string().optional(),
+    contextClear: z
+      .object({
+        operationId: z.string().min(1).max(512),
+        afterFence: z.number().int().nonnegative(),
+        clearedAt: z.number().int().nonnegative()
+      })
+      .optional(),
     tone: z.string().optional(),
     turnLifecycle: z.object(TurnLifecycleFields).optional(),
     providerFrame: ProviderFrame.optional(),

@@ -11,7 +11,7 @@ import {
   getExecutionHostIdForWorktree,
   getExplicitRuntimeEnvironmentIdForWorktree
 } from './worktree-runtime-owner'
-import { resolveExplicitWorktreeOperationRouteResult } from './worktree-operation-route'
+import { resolveExplicitWorktreeOperationRouteResult } from './worktree-operation-catalog-route'
 
 export type RuntimeWorkspaceFileRoute = {
   worktreeId: string

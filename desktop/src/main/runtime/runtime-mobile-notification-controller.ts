@@ -30,6 +30,8 @@ export type MobileNotificationDispatchEvent = {
   title: string
   body: string
   worktreeId?: string
+  /** See `NotificationDispatchRequest.executionHost`; old phones ignore it and open the desktop's. */
+  executionHost?: `runtime:${string}`
   notificationId?: string
   notificationSeq?: number
   notificationEpoch?: string
@@ -69,6 +71,15 @@ export class RuntimeMobileNotificationController {
 
   configureDismissalStore(userDataPath: string): void {
     this.dismissalStore = new MobileNotificationDismissalStore(userDataPath)
+  }
+
+  /** Waits for the pending dismissal write without closing the store. */
+  flushDismissals(): Promise<void> {
+    return this.dismissalStore?.flush() ?? Promise.resolve()
+  }
+
+  closeDismissals(): Promise<void> {
+    return this.dismissalStore?.close() ?? Promise.resolve()
   }
 
   reconcileDismissedPushes(

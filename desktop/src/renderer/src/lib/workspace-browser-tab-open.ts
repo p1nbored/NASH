@@ -1,5 +1,5 @@
 import { translate } from '@/i18n/i18n'
-import { createWebRuntimeSessionBrowserTab } from '@/runtime/web-runtime-session'
+import { createWebRuntimeSessionBrowserTab } from '@/runtime/web-runtime-browser-creation'
 import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 import {

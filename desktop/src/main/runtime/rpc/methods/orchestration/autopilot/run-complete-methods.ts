@@ -132,6 +132,7 @@ function completeRun(
  */
 export const RUN_COMPLETE_METHOD = defineMethod({
   name: 'orchestration.runComplete',
+  permission: 'workspace',
   params: RunCompleteParams,
   handler: (params, context): RunCompleteResult => {
     const api = requireAutopilotTaskApi(context.runtime)

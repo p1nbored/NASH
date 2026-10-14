@@ -141,9 +141,7 @@ describe('native chat transcript re-render cost during a streaming turn', () => 
     }
     const view = (items: AgentJournalRenderItem[]) => (
       <NativeChatMessageList
-        session={sessionWith(
-          projectStructuredAgentSessionMessages(items, [], [], { rejectedInPlace: true })
-        )}
+        session={sessionWith(projectStructuredAgentSessionMessages(items, [], []))}
         journalItems={items}
         isWorking={false}
         expandSignal={false}
@@ -173,6 +171,11 @@ describe('native chat transcript re-render cost during a streaming turn', () => 
     expect(patchCalls).toEqual({ summary: 1, detailed: 0 })
     fireEvent.click(screen.getByRole('button', { name: /1 changed file/ }))
     expect(patchCalls.detailed).toBe(0)
+    expect(screen.queryByText('Totals from recorded edits in this turn.')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Show diff' }))
+    expect(patchCalls).toEqual({ summary: 1, detailed: 1 })
+    expect(screen.getByText('new')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Hide diff' }))
     fireEvent.click(screen.getByRole('button', { name: /src\/a.ts/ }))
     expect(patchCalls).toEqual({ summary: 1, detailed: 1 })
     expect(screen.getByText('new')).toBeInTheDocument()

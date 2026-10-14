@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { RuntimeClientTarget } from '@/runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { useStructuredAgentSessionHold } from './use-structured-agent-session-hold'
 import { useStructuredAgentSessionMutate } from './use-structured-agent-session-mutate'
 import { useStructuredAgentSessionRead } from './use-structured-agent-session-read'

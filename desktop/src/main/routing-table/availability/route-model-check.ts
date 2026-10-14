@@ -34,6 +34,12 @@ export function checkModel(
   if (idViolation !== null) {
     return excluded(idViolation)
   }
+  if (listing.ok && listing.acceptsUnlistedModels) {
+    return {
+      outcome: { check: 'model', result: 'pass', evidence: { basis: 'native_model_override' } },
+      rows: []
+    }
+  }
   const match = matchListedModel(listing, model, options)
   if (match.kind === 'listing_unavailable') {
     return {

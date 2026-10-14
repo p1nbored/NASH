@@ -1,7 +1,7 @@
 import type { TerminalPaneSplitSource } from '../../../../shared/feature-education-telemetry'
 import type { ManagedPane, PaneManager } from '@/lib/pane-manager/pane-manager'
-import { splitWebRuntimeTerminal } from '@/runtime/web-runtime-session'
-import type { PtyTransport } from './pty-transport'
+import { splitWebRuntimeTerminal } from '@/runtime/web-runtime-terminal-actions'
+import type { PtyTransport } from './pty-transport-types'
 import { resolveSplitCwd, type PaneCwdMap } from './resolve-split-cwd'
 import { recordCreatedTerminalPaneSplit } from './terminal-pane-split-completion'
 

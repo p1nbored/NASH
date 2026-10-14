@@ -1,3 +1,4 @@
+import { createObserveTerminalGitHubPullRequestLink } from './worktrees/session/worktree-terminal-reference'
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'
 import type { WorktreeSlice } from './worktree-helpers'
@@ -37,8 +38,7 @@ import { createSetWorktreesPinnedAndReveal } from './worktrees/session/worktree-
 import {
   createBumpWorktreeActivity,
   createClearWorktreeUnread,
-  createMarkWorktreeUnread,
-  createObserveTerminalGitHubPullRequestLink
+  createMarkWorktreeUnread
 } from './worktrees/session/worktree-unread-activity'
 import {
   createMarkWorktreeVisited,
@@ -71,8 +71,6 @@ export {
   setDetachedHeadAutoDerivedDisplayNameForTests
 } from './worktrees/metadata/detached-head-display-name'
 export { resetAuthoritativelyRemovedWorktreeMemoryForTests } from './worktrees/listing/authoritative-worktree-removal-memory'
-export type { DirectSshDetectedWorktreeRefresh } from './worktrees/listing/known-ssh-worktree-fetch'
-export { acquireDirectSshDetectedWorktreeRefresh } from './worktrees/listing/known-ssh-worktree-fetch'
 
 export const createWorktreeSlice: StateCreator<AppState, [], [], WorktreeSlice> = (set, get) => ({
   ...worktreeSliceInitialState,
@@ -101,7 +99,7 @@ export const createWorktreeSlice: StateCreator<AppState, [], [], WorktreeSlice> 
   updateWorktreesMeta: createUpdateWorktreesMeta(set, get),
   setWorktreesPinnedAndReveal: createSetWorktreesPinnedAndReveal(set, get),
   markWorktreeUnread: createMarkWorktreeUnread(set, get),
-  observeTerminalGitHubPullRequestLink: createObserveTerminalGitHubPullRequestLink(set, get),
+  observeTerminalGitHubPullRequestLink: createObserveTerminalGitHubPullRequestLink(get),
   clearWorktreeUnread: createClearWorktreeUnread(set, get),
   bumpWorktreeActivity: createBumpWorktreeActivity(set, get),
   markWorktreeVisited: createMarkWorktreeVisited(set, get),

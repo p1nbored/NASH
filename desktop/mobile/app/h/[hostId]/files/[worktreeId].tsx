@@ -1,3 +1,8 @@
+import { withWorkspaceRoute } from '../../../../src/navigation/workspace-route'
+import {
+  useWorkspaceExecutionHost,
+  workspaceRouteParams
+} from '../../../../src/navigation/workspace-execution-host'
 import { useLocalSearchParams } from 'expo-router'
 import { MobileFileExplorerPanel } from '../../../../src/files/MobileFileExplorerPanel'
 import { firstParam } from '../../../../src/navigation/route-param-reader'
@@ -6,21 +11,18 @@ import {
   shellScreenRouteKey
 } from '../../../../src/mobile-web-shell/shell-screen-route'
 import { MobileWebShellScreen } from '../../../../src/mobile-web-shell/MobileWebShellScreen'
-import { ShellSwitchPendingScreen } from '../../../../src/mobile-web-shell/ShellSwitchPendingScreen'
-import { useShellSwitchDecision } from '../../../../src/mobile-web-shell/shell-switch-decision'
+import { shellSwitchDecision } from '../../../../src/mobile-web-shell/shell-switch-decision'
 
 /**
  * The file explorer, from the desktop's bundle or from this app.
  *
  * The shell decides, not this switch: it renders the page only for a route the bundle lists with
  * grants this app implements, and answers `native-route` otherwise, which is what `fallback` is.
- * A flag read still settling is a third answer and paints neither renderer; see
- * `shell-switch-decision.ts`.
  *
  * Encoded, not interpolated raw, for the reason `web.tsx` states: an id carrying `?`, `#` or
  * whitespace would build a pathname the page refuses and mount nothing.
  */
-export default function MobileFileExplorerScreen() {
+export default withWorkspaceRoute(function MobileFileExplorerScreen() {
   // Through `firstParam`, as the tasks and agent-history switches do: expo-router answers a
   // repeated query key with an array, and a bare read puts it straight into the template, where
   // `String(['a','b'])` is `a,b` and `encodeURIComponent` makes it the single segment `a%2Cb` —
@@ -33,6 +35,11 @@ export default function MobileFileExplorerScreen() {
   const hostId = firstParam(params.hostId)
   const worktreeId = firstParam(params.worktreeId)
   const name = firstParam(params.name)
+  const executionHost = useWorkspaceExecutionHost()
+  const routeParams = {
+    ...(name === '' ? {} : { name }),
+    ...workspaceRouteParams(executionHost)
+  }
   const native = (
     <MobileFileExplorerPanel hostId={hostId} worktreeId={worktreeId} name={name} embedded={false} />
   )
@@ -43,15 +50,12 @@ export default function MobileFileExplorerScreen() {
           pathname: `/h/${encodeURIComponent(hostId)}/files/${encodeURIComponent(worktreeId)}`,
           // Omitted rather than empty: the panel derives its own label from the worktree id when
           // the caller named none, where `name=` with nothing after it is a label.
-          ...(name === '' ? {} : { params: { name } })
+          ...(Object.keys(routeParams).length === 0 ? {} : { params: routeParams })
         })
       : null
 
-  const decision = useShellSwitchDecision(route)
+  const decision = shellSwitchDecision(route)
 
-  if (decision.kind === 'pending') {
-    return <ShellSwitchPendingScreen />
-  }
   if (decision.kind === 'native') {
     return native
   }
@@ -66,4 +70,4 @@ export default function MobileFileExplorerScreen() {
       fallback={native}
     />
   )
-}
+})

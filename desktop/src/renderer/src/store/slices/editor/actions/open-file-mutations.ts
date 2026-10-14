@@ -21,6 +21,9 @@ export function createOpenFileMutations(
 > {
   return {
     setActiveFile: (fileId, targetWorktreeId) => {
+      if (!get().openFiles.some((file) => file.id === fileId)) {
+        return
+      }
       set((s) => {
         const file = s.openFiles.find((f) => f.id === fileId)
         const worktreeId = file?.worktreeId

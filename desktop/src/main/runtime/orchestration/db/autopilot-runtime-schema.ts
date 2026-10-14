@@ -9,7 +9,7 @@ import { AUTOPILOT_MESSAGE_SCHEMA_DEFINITIONS } from './autopilot-message-schema
 import { requireIdleAutopilotConnection } from './autopilot-store-input'
 import { runLifecycleWriteTransaction } from './lifecycle-write-transaction-runner'
 
-export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 3
+export const AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT = 4
 
 /** Every current object in creation order; the exact-SQL check compares each one. */
 export const AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS: readonly AutopilotSchemaDefinition[] = [
@@ -33,7 +33,7 @@ function recoveryRequired(message: string): OrchestrationError {
 
 function schemaSignature(sql: string): string {
   return sql
-    .replace('CREATE TABLE "permission_decisions"', 'CREATE TABLE permission_decisions')
+    .replace(/CREATE TABLE "([a-z_]+)"/g, 'CREATE TABLE $1')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -68,44 +68,20 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
   }
   verifyDefinitions(db, SCHEMA_TABLE_DEFINITIONS)
   const stored = db.prepare('SELECT version FROM autopilot_runtime_schema WHERE id = 1').get()
-  if (stored?.version === 2) {
-    const previous = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) => ({
-      ...definition,
-      sql:
-        definition.name === 'permission_decisions'
-          ? definition.sql.replaceAll(", 'primary'", '')
-          : definition.sql
-    }))
-    verifyDefinitions(db, previous)
-    const sequence = db
-      .prepare("SELECT seq FROM sqlite_sequence WHERE name = 'permission_decisions'")
-      .get()?.seq
-    const permission = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.find(
-      (entry) => entry.name === 'permission_decisions'
-    )!
-    db.exec(
-      permission.sql.replace(
-        'CREATE TABLE permission_decisions',
-        'CREATE TABLE permission_decisions_next'
-      )
-    )
-    db.exec('INSERT INTO permission_decisions_next SELECT * FROM permission_decisions')
-    db.exec('DROP TABLE permission_decisions')
-    db.exec('ALTER TABLE permission_decisions_next RENAME TO permission_decisions')
-    if (typeof sequence === 'number') {
-      db.prepare(
-        "UPDATE sqlite_sequence SET seq = max(seq, ?) WHERE name = 'permission_decisions'"
-      ).run(sequence)
+  if (stored?.version === 2 || stored?.version === 3) {
+    verifyDefinitions(db, legacyAutopilotDefinitions(stored.version))
+    if (stored.version === 2) {
+      replaceFamilyTable(db, 'permission_decisions')
     }
-    for (const definition of AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS) {
-      if (definition.name.startsWith('autopilot_permission_decision_')) {
-        db.exec(definition.sql)
-      }
-    }
+    replaceFamilyTable(db, 'workflow_runs')
+    replaceFamilyTable(db, 'task_routes')
     db.prepare('UPDATE autopilot_runtime_schema SET version = ? WHERE id = 1').run(
       AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT
     )
     verifyDefinitions(db, AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS)
+    if (db.prepare('PRAGMA foreign_key_check').all().length > 0) {
+      throw recoveryRequired('Autopilot migration could not preserve foreign key references.')
+    }
     return
   }
   if (stored?.version !== AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT) {
@@ -120,6 +96,53 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
   verifyDefinitions(db, AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS)
 }
 
+/** Frozen predecessor CHECK lists; all other family definitions must still match exactly. */
+export function legacyAutopilotDefinitions(version: 2 | 3): readonly AutopilotSchemaDefinition[] {
+  return AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.map((definition) => {
+    let sql = definition.sql
+    if (definition.name === 'workflow_runs') {
+      sql = sql.replace(
+        /coordinator_agent IN \([^)]*\)/,
+        "coordinator_agent IN ('claude', 'codex')"
+      )
+    }
+    if (definition.name === 'task_routes') {
+      sql = sql.replace(
+        /target IN \([^)]*\)/,
+        "target IN ('claude_primary', 'claude_subagent', 'claude_workflow', 'codex_cli', 'agy_cli')"
+      )
+    }
+    if (version === 2 && definition.name === 'permission_decisions') {
+      sql = sql.replaceAll(", 'primary'", '')
+    }
+    return { ...definition, sql }
+  })
+}
+
+function replaceFamilyTable(db: Database.Database, name: string): void {
+  const definition = AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS.find((entry) => entry.name === name)!
+  const sequence = db.prepare('SELECT seq FROM sqlite_sequence WHERE name = ?').get(name)?.seq
+  const indexes = db
+    .prepare(
+      "SELECT sql FROM sqlite_master WHERE type IN ('index', 'trigger') AND tbl_name = ? AND sql IS NOT NULL"
+    )
+    .all(name)
+  db.exec(definition.sql.replace(`CREATE TABLE ${name}`, `CREATE TABLE ${name}_next`))
+  db.exec(`INSERT INTO ${name}_next SELECT * FROM ${name}`)
+  db.exec(`DROP TABLE ${name}`)
+  db.exec(`ALTER TABLE ${name}_next RENAME TO ${name}`)
+  if (typeof sequence === 'number') {
+    db.prepare('UPDATE sqlite_sequence SET seq = max(seq, ?) WHERE name = ?').run(sequence, name)
+  } else {
+    db.prepare('DELETE FROM sqlite_sequence WHERE name = ?').run(name)
+  }
+  for (const index of indexes) {
+    if (typeof index.sql === 'string') {
+      db.exec(index.sql)
+    }
+  }
+}
+
 /**
  * Creates the current family or verifies an existing matching layout without migration. Adds new
  * objects only: no Orca object changes and user_version is never written. The Workbench family must
@@ -127,17 +150,36 @@ function verifyExisting(db: Database.Database, present: ReadonlySet<string>): vo
  */
 export function ensureAutopilotRuntimeSchema(db: Database.Database): void {
   requireIdleAutopilotConnection(db)
-  runLifecycleWriteTransaction(db, 'autopilot_schema', () => {
-    const present = presentTables(db)
-    if (present.size > 0) {
-      verifyExisting(db, present)
-      return
+  // SQLite's table-rebuild procedure requires FK enforcement off before BEGIN; check it before commit.
+  const foreignKeys = db.pragma('foreign_keys', { simple: true })
+  const present = presentTables(db)
+  if (present.has(SCHEMA_TABLE)) {
+    verifyDefinitions(db, SCHEMA_TABLE_DEFINITIONS)
+  }
+  const version = present.has(SCHEMA_TABLE)
+    ? db.prepare('SELECT version FROM autopilot_runtime_schema WHERE id = 1').get()?.version
+    : undefined
+  const migrating = version === 2 || version === 3
+  if (migrating) {
+    db.pragma('foreign_keys = OFF')
+  }
+  try {
+    runLifecycleWriteTransaction(db, 'autopilot_schema', () => {
+      const present = presentTables(db)
+      if (present.size > 0) {
+        verifyExisting(db, present)
+        return
+      }
+      for (const definition of AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS) {
+        db.exec(definition.sql)
+      }
+      db.prepare('INSERT INTO autopilot_runtime_schema VALUES (1, ?)').run(
+        AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT
+      )
+    })
+  } finally {
+    if (migrating) {
+      db.pragma(`foreign_keys = ${foreignKeys === 1 ? 'ON' : 'OFF'}`)
     }
-    for (const definition of AUTOPILOT_RUNTIME_SCHEMA_DEFINITIONS) {
-      db.exec(definition.sql)
-    }
-    db.prepare('INSERT INTO autopilot_runtime_schema VALUES (1, ?)').run(
-      AUTOPILOT_RUNTIME_SCHEMA_VERSION_CURRENT
-    )
-  })
+  }
 }

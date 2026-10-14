@@ -15,8 +15,8 @@ export const RUNTIME_LAUNCHER_PATHS = [
   'src/main/orcad/launcher.ts',
   'config/scripts/orcad-entry-build.mjs',
   'src/shared/node-runtime-pin.ts',
-  'src/main/ssh/pinned-runtime-materializer.ts',
-  'src/main/ssh/runtime-archive-download.ts',
+  'src/main/node-runtime/pinned-runtime-materializer.ts',
+  'src/main/node-runtime/runtime-archive-download.ts',
   'src/main/ssh/orcad-remote-node-runtime.ts',
   // orcad slot layout: which runtime file a packaged slot carries.
   'src/shared/orcad-artifacts.ts',

@@ -1,3 +1,5 @@
+import { isRemoteRuntimePtyId } from '../../../../../shared/remote-runtime-pty-id'
+import { makePaneKey } from '../../../../../shared/stable-pane-id'
 import { useAppStore } from '@/store'
 import { safeFit } from '@/lib/pane-manager/pane-tree-ops'
 import { bindPanePtyId, getFitOverrideForPty } from '@/lib/pane-manager/mobile-fit-overrides'
@@ -11,8 +13,8 @@ import { registerTerminalSideEffectFactConsumer } from '../terminal-side-effect-
 
 import { isAgentTaskCompleteTrackingEnabled } from './agent-task-complete-settings'
 import { isAgentProcessInspectionCostly } from '../agent-process-inspection-cost'
-import { isRemoteRuntimePtyId } from './paired-parked-terminal-restore'
 import { isRemoteExecutionHostPtyId } from '../remote-execution-host-pty'
+import { retireLiveAgentRowOnConfirmedProcessExit } from './confirmed-process-exit-row-retire'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
 
@@ -133,7 +135,12 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
         onPrLink: (link) =>
           useAppStore
             .getState()
-            .observeTerminalGitHubPullRequestLink(session.deps.worktreeId, link),
+            .observeTerminalGitHubPullRequestLink(session.deps.worktreeId, link, {
+              tabId: session.deps.tabId,
+              paneKey: makePaneKey(session.deps.tabId, session.pane.leafId),
+              ptyId: session.transport.getPtyId(),
+              executionHostId: session.transport.getExecutionHostId?.() ?? undefined
+            }),
         // Why: the Command Code settle policy stays here — the done settle
         // timer must consult the live store row (which hook events and
         // renderer seeds also write), so main only emits scrape facts.
@@ -178,7 +185,6 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
     isRemotePtyId: (ptyId) =>
       Boolean(isRemoteExecutionHostPtyId(ptyId) || isRemoteRuntimePtyId(ptyId)),
     getExpectedIncarnationId: () => session.remotePtyIncarnationId ?? null,
-    getSettings: () => useAppStore.getState().settings,
     inspectProcess: inspectRuntimeTerminalProcess,
     dispatchHookLifecycle: (payload) =>
       dispatchAgentHookTerminalLifecycle(session.cacheKey, payload),
@@ -208,8 +214,11 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
       )
     },
     // Why: the pane's only re-derivation of a process read where the shell emits no command marks.
-    onForegroundAgentExited: (exited) =>
-      session.paneForegroundAgentTracker?.onProcessExitConfirmed(exited),
+    onForegroundAgentExited: (exited) => {
+      session.paneForegroundAgentTracker?.onProcessExitConfirmed(exited)
+      // Why: not behind the tracker's process-read guard, so hook-identified panes retire too.
+      retireLiveAgentRowOnConfirmedProcessExit(session, exited)
+    },
     dispatchCompletion: (title, meta) => {
       if (meta?.source === 'process-exit') {
         session.clearSuppressedTitleSideEffects()

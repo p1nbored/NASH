@@ -86,30 +86,6 @@ function keygenRemoveTarget(displayHost: string, port: number): string {
 const STRICT_VALUES = new Set(['true', 'yes', 'always'])
 const LAX_VALUES = new Set(['false', 'no', 'off'])
 
-/**
- * The stricter of a user-resolved and a site-resolved StrictHostKeyChecking.
- *
- * Needed only where the two were read separately: `ssh -F` makes OpenSSH ignore /etc/ssh/ssh_config,
- * so the per-user resolution cannot represent a site policy and the site has to be probed on its
- * own. Ordering is strict > accept-new > ask > lax, and anything unrecognised is left to the
- * caller's own handling by falling through to the user value.
- */
-export function strictestHostKeyChecking(
-  userValue: string | undefined,
-  siteValue: string | null
-): string {
-  const user = userValue ?? 'ask'
-  if (siteValue === null) {
-    return user
-  }
-  const site = siteValue.trim().toLowerCase()
-  if (STRICT_VALUES.has(site) && !STRICT_VALUES.has(user.trim().toLowerCase())) {
-    return site
-  }
-  // A site that is lax never loosens a user who is not: refusing to write trust is the safe side.
-  return LAX_VALUES.has(site) ? user : site === 'accept-new' && user === 'ask' ? site : user
-}
-
 const CHANGED_KEY_HINT =
   'If you rebuilt or reprovisioned this machine, remove the saved key and reconnect.'
 

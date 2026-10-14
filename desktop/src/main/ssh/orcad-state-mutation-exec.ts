@@ -12,7 +12,7 @@ import {
   ORCAD_STATE_MUTATION_DEADLINE
 } from './orcad-state-snapshot-members'
 import type { OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
-import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-deploy-helpers'
+import { execCommand, isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import { isOrcadFenceLost, OrcadFenceLostError } from './orcad-activation-fence-scope'
 
 // Longer than the host's own deadline, so the host kills the work before the client gives up.

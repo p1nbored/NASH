@@ -18,7 +18,9 @@ import {
   setHostWorkspaceSession,
   withRequiredWorkspaceSessionMaps
 } from './session-host-partitions'
+import { dropClosedTerminalTabs } from '../closed-terminal-tab-write-fence'
 import { scheduleSave } from './write-scheduling'
+import { orderTerminalRowsByTabGroups } from '../../../shared/workspace-layout/terminal-row-order'
 
 type SessionSnapshotOperationsRuntime = Pick<
   StoreRuntimeState,
@@ -96,10 +98,15 @@ export class SessionSnapshotOperations {
     if (Object.hasOwn(patch, 'browserUrlHistory')) {
       next = pruneWorkspaceSessionBrowserHistory(next)
     }
+    // Why: a unified-tabs patch skips full normalization, so it would bypass the close fence.
+    if (Object.hasOwn(patch, 'unifiedTabs')) {
+      next = dropClosedTerminalTabs(next)
+    }
     this.publishSession(next, resolved)
   }
 
   private publishSession(session: WorkspaceSessionState, hostId: ExecutionHostId): void {
+    session = orderTerminalRowsByTabGroups(session)
     const { runtime, scheduling } = this[sessionSnapshotOperationsContext]
     if (hostId === LOCAL_EXECUTION_HOST_ID) {
       runtime.state.workspaceSession = session
@@ -129,13 +136,4 @@ export class SessionSnapshotOperations {
 
 export function getSessionSnapshotOperationsContext(owner: SessionSnapshotOperations) {
   return owner[sessionSnapshotOperationsContext]
-}
-
-export function installSessionSnapshotOperationsContext(
-  target: SessionSnapshotOperations,
-  source: SessionSnapshotOperations
-): void {
-  Object.defineProperty(target, sessionSnapshotOperationsContext, {
-    value: source[sessionSnapshotOperationsContext]
-  })
 }

@@ -39,6 +39,7 @@ import {
   stopStructuredAgentSessionRuntime
 } from './structured-agent-session-runtime'
 import { createStructuredAgentSessionLogger } from '../native-chat/agent-session-wire/structured-agent-session-logger'
+import { scriptedCodexTransport } from './scripted-codex-transport.test-fixture'
 
 // The turns a send or Stop is waiting on to open, so a test knows the wait began.
 const openWaits = vi.hoisted(() => {
@@ -233,12 +234,11 @@ beforeEach(async () => {
     hostId: 'local',
     claimKeyId: 'key-1',
     resolveWorkspacePath: async () => root,
-    resolveClaudeAuthPolicy: () => ({ stripAuthEnv: true }),
+    resolveClaudeAuthPolicy: () => ({ account: 'managed' }),
     resolveCodexCommand: () => 'codex',
     resolveLaunchArgs: () => [],
     resolveEnvironment: async () => ({ PATH: process.env.PATH }),
-    openCodexConnection: openConnection,
-    readProcessStartTime: async () => 1_700_000_000_000
+    ...scriptedCodexTransport(openConnection)
   })
   const attachParams = hostTestAttachParams(null, { providerHandle: undefined })
   attachParams.envelope.clientOperationId = operationId()
@@ -259,7 +259,7 @@ async function drawn(): Promise<{ text: string; turn: string | undefined }[]> {
   await host.flushStreamedEvents(SESSION)
   const { items, submissions } = await host.journalSnapshot(SESSION)
   const rows = projectNativeChatTranscriptMessages(
-    projectStructuredAgentSessionMessages(items, [], submissions, { rejectedInPlace: true })
+    projectStructuredAgentSessionMessages(items, [], submissions)
   )
   const { drawOrder, turnKeys } = nativeChatTurnMembership(rows, { items, submissions })
   const keyed = rows.map((row, index) => ({
@@ -274,7 +274,7 @@ async function liveTurn(): Promise<string | undefined> {
   await host.flushStreamedEvents(SESSION)
   const { items, submissions } = await host.journalSnapshot(SESSION)
   const rows = projectNativeChatTranscriptMessages(
-    projectStructuredAgentSessionMessages(items, [], submissions, { rejectedInPlace: true })
+    projectStructuredAgentSessionMessages(items, [], submissions)
   )
   return nativeChatTurnMembership(rows, { items, submissions }).liveTurnKey
 }

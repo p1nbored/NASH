@@ -6,7 +6,12 @@ import { getDefaultSettings } from '../../../../shared/constants'
 import { getDefaultOnboardingState } from '../../../../shared/onboarding-defaults'
 import { useAppStore } from '@/store'
 import OnboardingFlow from './OnboardingFlow'
-import { ONBOARDING_SKIP_CONFIRMATION_COPY } from './OnboardingSkipConfirmationDialog'
+
+vi.mock('@/components/terminal-pane/TerminalPane', () => ({
+  default: () => {
+    throw new Error('This suite must not render a terminal pane')
+  }
+}))
 
 function renderOnboardingFlow(props: ComponentProps<typeof OnboardingFlow>): string {
   return renderToStaticMarkup(
@@ -226,14 +231,5 @@ describe('OnboardingFlow', () => {
     expect(html).toContain('rounded-xl')
     expect(html).not.toContain('min-h-screen')
     expect(html).not.toContain('background-color:#12181e')
-  })
-
-  it('renders concise skip confirmation copy', () => {
-    expect(ONBOARDING_SKIP_CONFIRMATION_COPY).toEqual({
-      title: 'Skip onboarding?',
-      description: "It won't take long!",
-      skipLabel: 'Skip',
-      keepGoingLabel: 'No, keep going'
-    })
   })
 })

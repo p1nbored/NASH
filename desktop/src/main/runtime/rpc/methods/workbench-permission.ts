@@ -12,6 +12,7 @@ import { defineMethod } from '../core'
  */
 export const WORKBENCH_PERMISSION_LIST_METHOD = defineMethod({
   name: 'workbench.permission.list',
+  permission: 'workspace',
   params: WorkbenchPermissionListParams,
   handler: (params, context) => {
     requireWorkbenchCaller(context.workbenchCaller)
@@ -21,6 +22,7 @@ export const WORKBENCH_PERMISSION_LIST_METHOD = defineMethod({
 
 export const WORKBENCH_PERMISSION_ANSWER_METHOD = defineMethod({
   name: 'workbench.permission.answer',
+  permission: 'workspace',
   params: WorkbenchPermissionAnswerParams,
   handler: (params, context) => {
     requireWorkbenchCaller(context.workbenchCaller)

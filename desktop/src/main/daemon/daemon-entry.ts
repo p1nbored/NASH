@@ -28,9 +28,11 @@ import { MacosLoginSessionDeathWatch } from './macos-login-session-death-watch'
 import { readCurrentProcessMacSystemResolverHealth } from '../network/macos-system-resolver-health'
 import { readCurrentDaemonReadyIdentity } from './daemon-ready-identity'
 import { publishDaemonPidFile } from './daemon-spawner'
+import { initializePtyProcessCeiling } from './pty-process-ceiling-runtime'
 import { isNativePtyException } from './daemon-native-pty-exception'
 import { startDaemonScopeDeathWatch } from './daemon-scope-death-watch'
 import { isWindowsProcessTableAvailable } from '../windows/windows-process-table'
+import { leaseAppImageGenerationForCurrentProcess } from '../cli/appimage-generation-lease'
 
 export type ParsedDaemonArgs = {
   socketPath: string
@@ -133,13 +135,17 @@ async function main(): Promise<void> {
     logFilePath
   } = parseArgs(process.argv.slice(2))
   const startedAtMs = Date.now() - process.uptime() * 1000
+  // Why: a daemon forked from an extracted AppImage copy outlives the process that launched it.
+  void leaseAppImageGenerationForCurrentProcess()
   const readyIdentity = await readCurrentDaemonReadyIdentity(startedAtMs)
   // Fail-open: a broken log path must never block daemon startup.
   const daemonLog = logFilePath ? createDaemonFileLog(logFilePath) : createNoopDaemonFileLog()
   daemonLog.log('startup', { protocolVersion: PROTOCOL_VERSION, socketPath })
+  const processCeiling = initializePtyProcessCeiling(launchNonce ?? '')
   startDaemonScopeDeathWatch({
     freshScope: freshDaemonScope === true,
     launchNonce,
+    ceilingSlice: processCeiling.state === 'on' ? processCeiling.unit : null,
     log: (event, details) => daemonLog.log(event, details)
   })
   void warmPwshAvailabilityCache()
@@ -189,6 +195,9 @@ async function main(): Promise<void> {
       return
     }
     shuttingDown = true
+    // Why before the async teardown: a scope stop kills the AppImage mount alongside us, and a
+    // teardown cut short by SIGBUS must not read as a crash that pauses the next start's restores.
+    daemon?.recordStopRequested()
     deathWatch?.stop()
     daemonLog.log('shutdown', { reason })
     try {
@@ -262,6 +271,7 @@ async function main(): Promise<void> {
           onRetire: (details) => {
             shuttingDown = true
             daemonLog.log('login-session-dead-retire', details)
+            daemon?.recordOrderlyExit()
             daemonLog.close()
             // Why: crash-style exit (no PTY teardown) keeps session meta unclean so the
             // replacement daemon cold-restores scrollback; stale socket/pid files ride
@@ -292,6 +302,7 @@ async function main(): Promise<void> {
               // where the daemon's own cgroup landed, verified from inside the process that
               // matters. See daemon-cgroup-scope.ts.
               cgroupUnit: detectOwnCgroupScopeUnit(),
+              processCeiling,
               launchNonce
             })
         }

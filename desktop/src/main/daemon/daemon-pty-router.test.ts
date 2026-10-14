@@ -4,7 +4,7 @@ import { DaemonPtyRouter } from './daemon-pty-router'
 import { stubWriteSettlement } from '../providers/settled-pty-write-stub'
 import { SessionNotFoundError, TerminalSessionOwnerUnverifiedError } from './daemon-errors'
 import type { DaemonPtyAdapter } from './daemon-pty-adapter'
-import type { PtySpawnResult } from '../providers/types'
+import type { PtySpawnResult } from '../providers/pty-provider-contract'
 import {
   AGENT_SESSION_CLAIM_DAEMON_PROTOCOL_VERSION,
   AGENT_SESSION_CREATE_OPERATION_DAEMON_PROTOCOL_VERSION
@@ -225,6 +225,8 @@ describe('DaemonPtyRouter', () => {
     const router = new DaemonPtyRouter({ current, legacy: [] })
 
     const spawning = router.spawn({ cols: 80, rows: 24, sessionId: 'raced-session' })
+    // Why: the router may await its own checks before reaching the adapter.
+    await vi.waitFor(() => expect(finishSpawn).toBeDefined())
     finishSpawn?.({
       id: 'raced-session',
       incarnationId: 'raced-incarnation',
@@ -250,6 +252,8 @@ describe('DaemonPtyRouter', () => {
     const router = new DaemonPtyRouter({ current, legacy: [] })
 
     const spawning = router.spawn({ cols: 80, rows: 24, sessionId: 'reused-session' })
+    // Why: the router may await its own checks before reaching the adapter.
+    await vi.waitFor(() => expect(finishSpawn).toBeDefined())
     current.emitExit('reused-session', 0, 'incarnation-old')
     finishSpawn?.({ id: 'reused-session', incarnationId: 'incarnation-current' })
     await spawning
@@ -277,6 +281,8 @@ describe('DaemonPtyRouter', () => {
       sessionId: 'requested-session',
       agentSessionEnsure: {} as never
     })
+    // Why: the router may await its own checks before reaching the adapter.
+    await vi.waitFor(() => expect(finishSpawn).toBeDefined())
     finishSpawn?.({
       id: 'canonical-session',
       incarnationId: 'canonical-incarnation',

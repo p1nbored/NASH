@@ -2,17 +2,12 @@ import type { BrowserWindow } from 'electron'
 import { ipcMain } from 'electron'
 import type { Store } from '../../persistence'
 import type { Project, ProjectUpdateArgs } from '../../../shared/project-types'
-import type {
-  HostRepoCatalogSnapshot,
-  ListReposForExecutionHostArgs
-} from '../../../shared/host-repo-catalog-contract'
 import { normalizeExecutionHostId } from '../../../shared/execution-host'
 import { enrichRepoGitUsernames } from '../../repo-git-username-enrichment'
 import { enrichMissingRepoGitRemoteIdentities } from '../../repo-git-remote-identity-enrichment'
 import { invalidateAuthorizedRootsCache } from '../registered-worktree-roots-cache'
 import { notifyReposChanged } from './repos-changed-notification'
 import { ProjectUpdateIpcArgs, parseProjectGroupIpcArgs } from './repo-ipc-arg-schemas'
-import { listReposForExecutionHost } from './host-repo-catalog-snapshot'
 import { visibleRepos } from '../../ssh/orcad-retained-source'
 
 export function registerRepoCatalogHandlers(mainWindow: BrowserWindow, store: Store): void {
@@ -26,12 +21,6 @@ export function registerRepoCatalogHandlers(mainWindow: BrowserWindow, store: St
     enrichRepoGitUsernames(store, { onChanged: broadcastReposChanged })
     return visibleRepos(store)
   })
-
-  ipcMain.handle(
-    'repos:listForExecutionHost',
-    (_event, args: ListReposForExecutionHostArgs): Promise<HostRepoCatalogSnapshot> =>
-      listReposForExecutionHost(store, args)
-  )
 
   ipcMain.handle('projects:list', () => {
     enrichMissingRepoGitRemoteIdentities(store, { onChanged: broadcastReposChanged })
@@ -85,12 +74,6 @@ export function registerRepoCatalogHandlers(mainWindow: BrowserWindow, store: St
       return { status: 'rejected' }
     }
   )
-
-  ipcMain.handle('repos:remove', async (_event, args: { repoId: string }) => {
-    store.removeProject(args.repoId)
-    invalidateAuthorizedRootsCache()
-    notifyReposChanged(mainWindow)
-  })
 
   // Why: forget a project on one execution host without disturbing the same repo id on other hosts (SSH-workspace forget flow).
   ipcMain.handle(

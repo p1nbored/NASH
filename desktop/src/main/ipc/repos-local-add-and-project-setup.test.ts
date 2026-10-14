@@ -21,12 +21,6 @@ vi.mock('./registered-worktree-roots-cache', () =>
 vi.mock('../worktree-root-preparation', () =>
   moduleMocks.worktreeRootPreparationModuleMock(reposMocks)
 )
-vi.mock('../providers/ssh-git-dispatch', () => moduleMocks.sshGitDispatchModuleMock(reposMocks))
-vi.mock('../providers/ssh-filesystem-dispatch', () =>
-  moduleMocks.sshFilesystemDispatchModuleMock(reposMocks)
-)
-vi.mock('./ssh', () => moduleMocks.sshModuleMock(reposMocks))
-vi.mock('../ssh/ssh-target-registry', () => moduleMocks.sshModuleMock(reposMocks))
 
 import { registerRepoHandlers } from './repos'
 import { clearGitCapabilityStateForTests } from '../git/git-capability-state'
@@ -343,8 +337,21 @@ describe('repos:add + repos:clone', () => {
       })
     ).rejects.toThrow('Imported folder does not match the selected project identity.')
 
-    expect(mockStore.removeProject).toHaveBeenCalledWith(added[0]?.id)
+    expect(mockStore.removeProjectForHost).toHaveBeenCalledWith(added[0]?.id, 'local')
     expect(invalidateAuthorizedRootsCacheMock).toHaveBeenCalled()
+  })
+
+  it('refuses project setup on an SSH target with the not-connected text and adds no repo', async () => {
+    await expect(
+      handlers.get('projectHostSetups:setupExistingFolder')!(null, {
+        projectId: 'github:acme/orca',
+        hostId: 'ssh:conn-1',
+        path: '/srv/orca',
+        kind: 'git'
+      })
+    ).rejects.toThrow('SSH connection "conn-1" not found or not connected')
+
+    expect(mockStore.addRepo).not.toHaveBeenCalled()
   })
 
   it('prepares and invalidates roots when repos:update changes worktree base path', () => {

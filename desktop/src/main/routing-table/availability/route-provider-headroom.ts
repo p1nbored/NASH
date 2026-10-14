@@ -9,7 +9,8 @@ import { STALE_THRESHOLD_MS } from '../../rate-limits/service/service-types'
 export type ProviderPool = 'claude' | 'codex' | 'agy'
 
 /** The slice of the rate-limit service state G8b reads; observation only, nothing is reserved. */
-export type RateLimitHeadroomState = Pick<RateLimitState, 'claude' | 'codex' | 'antigravity'>
+export type RateLimitHeadroomState = Pick<RateLimitState, 'claude' | 'codex' | 'antigravity'> &
+  Partial<Pick<RateLimitState, 'gemini' | 'grok' | 'cursor'>>
 
 export type ProviderHeadroomReading = {
   /** False only for a pool known to be exhausted; an unobserved pool is not a block. */

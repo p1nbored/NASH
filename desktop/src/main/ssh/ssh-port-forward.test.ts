@@ -166,7 +166,7 @@ describe('SshPortForwardManager', () => {
       3000,
       '127.0.0.1',
       8080,
-      {}
+      { logChannelFailures: true }
     )
     expect(forward.waitForStartup).toHaveBeenCalled()
     expect(entry).toMatchObject({
@@ -214,6 +214,7 @@ describe('SshPortForwardManager', () => {
       '127.0.0.1',
       8080,
       {
+        logChannelFailures: true,
         resolvedConfig: expect.objectContaining({
           hostname: 'resolved.example.com',
           proxyUseFdpass: true
@@ -410,6 +411,54 @@ describe('SshPortForwardManager', () => {
     await manager.removeAllForwards('conn-1')
     expect(manager.listForwards()).toHaveLength(1)
     expect(manager.listForwards('conn-2')).toHaveLength(1)
+  })
+
+  it('closes only the ssh2 forwards bound to a client the connection replaced', async () => {
+    const conn = createMockConn()
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the mock implements the getClient/usesSystemSshTransport surface the ssh2 provider reads.
+    const sshConn = conn as never
+    await manager.addForward('conn-1', sshConn, 3000, 'localhost', 8080)
+    await manager.addForward('conn-2', sshConn, 3002, 'localhost', 8082)
+
+    await manager.closeStaleForwards('conn-1', sshConn)
+    expect(manager.listForwards('conn-1')).toHaveLength(1)
+
+    conn.getClient.mockReturnValue({ forwardOut: vi.fn() })
+    await manager.closeStaleForwards('conn-1', sshConn)
+    expect(manager.listForwards('conn-1')).toHaveLength(0)
+    expect(manager.listForwards('conn-2')).toHaveLength(1)
+  })
+
+  it('closeAll waits for every system SSH forward to exit, across connections', async () => {
+    const onForwardClosed = vi.fn()
+    manager.setCallbacks({ onForwardClosed })
+    let resolveClose!: () => void
+    const first = createFakeSystemSshForward(3000)
+    first.close.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveClose = resolve
+      })
+    )
+    const second = createFakeSystemSshForward(3001)
+    startSystemSshPortForwardProcessMock.mockReturnValueOnce(first).mockReturnValueOnce(second)
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the mock implements the system-SSH surface the provider reads.
+    const conn = createSystemSshConn() as never
+    await manager.addForward('conn-1', conn, 3000, '127.0.0.1', 8080)
+    await manager.addForward('conn-2', conn, 3001, '127.0.0.1', 8081)
+
+    let resolved = false
+    const closing = manager.closeAll().then(() => {
+      resolved = true
+    })
+    await Promise.resolve()
+    expect(resolved).toBe(false)
+    expect(second.close).toHaveBeenCalled()
+    resolveClose()
+    await closing
+
+    expect(manager.listForwards()).toHaveLength(0)
+    first.process.emit('exit', null)
+    expect(onForwardClosed).not.toHaveBeenCalled()
   })
 
   it('dispose removes all forwards', async () => {

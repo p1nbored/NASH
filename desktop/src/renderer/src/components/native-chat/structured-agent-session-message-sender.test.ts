@@ -135,6 +135,20 @@ describe('structured agent session message sender', () => {
     })
   })
 
+  it('carries the options read at the send on its request, and nothing without them', async () => {
+    const calls = deferredCalls()
+    const a = send('a', { options: { model: 'opus', effort: 'high' } })
+    await flush()
+    expect(mocks.call.mock.calls[0][2]).toMatchObject({
+      options: { model: 'opus', effort: 'high' }
+    })
+    calls[0].resolve(okSubmission(a.clientMessageId, 'accepted'))
+    await a.outcome
+    send('b')
+    await flush()
+    expect(mocks.call.mock.calls[1][2]).not.toHaveProperty('options')
+  })
+
   it.each([
     ['recorded', (calls: Deferred[], id: string) => calls[0].resolve(okSubmission(id, 'accepted'))],
     ['refused', (calls: Deferred[]) => calls[0].resolve(refusedSend)],

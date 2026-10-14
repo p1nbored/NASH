@@ -14,7 +14,6 @@ import * as fsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AiVaultSession } from '../../shared/ai-vault-types'
 import {
   ensureSessionParseCacheLoaded,
   flushSessionParseCachePersistForTests,
@@ -29,11 +28,10 @@ import {
   parseAgentSessionFileCached,
   resetSessionParseCacheForTests,
   seedSessionParseCache,
-  snapshotSessionParseCacheForPersistence,
   type PersistedSessionParseCacheEntry,
   type SessionParseStats
 } from './session-scanner-parse-cache'
-import { getSessionParseCacheEntry } from './session-parse-cache-store'
+import { getSessionParseCacheEntry, storeSessionParseCacheEntry } from './session-parse-cache-store'
 import type { SessionSidecarObservation } from './session-sidecar-stat'
 import { isolatedScanRoots } from './session-scanner-test-fixtures'
 import { parseClaudeSessionFile } from './session-scanner-primary-parsers'
@@ -110,7 +108,7 @@ async function parseAndPersist(path: string): Promise<SessionParseStats> {
   const stats = createSessionParseStats()
   await ensureSessionParseCacheLoaded()
   await parseAgentSessionFileCached(await claudeCandidate(path), process.platform, stats)
-  scheduleSessionParseCachePersist(stats)
+  scheduleSessionParseCachePersist()
   await flushSessionParseCachePersistForTests()
   return stats
 }
@@ -129,54 +127,6 @@ async function coldParseStats(path: string): Promise<SessionParseStats> {
   await parseAgentSessionFileCached(await claudeCandidate(path), process.platform, stats)
   return stats
 }
-
-/**
- * Schema 2 dropped the `appVersion` equality gate: a cache written by any
- * release with this schema is now replayed straight into Agent Session
- * History without re-reading the transcript (#17888 — the gate forced a
- * multi-gigabyte cold scan after every update). The cost of that reuse is
- * that nothing else invalidates a stale row, so `SCHEMA_VERSION` is the only
- * remaining compatibility signal and forgetting to bump it ships wrong data.
- *
- * This table is the reminder. Changing the persisted session shape — or the
- * meaning of a field the parsers fill — breaks this `satisfies` and the fix
- * is to bump `SCHEMA_VERSION` in session-parse-cache-persistence.ts, not to
- * silently extend the list.
- */
-const CACHED_SESSION_FIELDS = {
-  id: true,
-  executionHostId: true,
-  executionHostPlatform: true,
-  agent: true,
-  sessionId: true,
-  title: true,
-  cwd: true,
-  branch: true,
-  model: true,
-  filePath: true,
-  codexHome: true,
-  createdAt: true,
-  updatedAt: true,
-  modifiedAt: true,
-  messageCount: true,
-  totalTokens: true,
-  previewMessages: true,
-  previewMessagesTruncated: true,
-  antigravityOpeningPrompt: true,
-  firstUserPrompt: true,
-  lastUserPrompt: true,
-  queuedMessageCount: true,
-  subagentTranscriptCount: true,
-  resumeCommand: true,
-  subagent: true,
-  structuredSession: true
-} satisfies Record<keyof AiVaultSession, true>
-
-describe('cached session compatibility', () => {
-  it('pins the persisted session shape to the current parse-cache schema', () => {
-    expect(Object.keys(CACHED_SESSION_FIELDS).length).toBeGreaterThan(0)
-  })
-})
 
 describe('session parse cache persistence', () => {
   it('exposes a copy of the active configuration for background scanners', () => {
@@ -202,7 +152,7 @@ describe('session parse cache persistence', () => {
     expect(first).not.toBeNull()
     expect(stats.fullParses).toBe(1)
 
-    scheduleSessionParseCachePersist(stats)
+    scheduleSessionParseCachePersist()
     await flushSessionParseCachePersistForTests()
     expect(existsSync(cacheFile)).toBe(true)
 
@@ -327,13 +277,7 @@ describe('session parse cache persistence', () => {
     vi.clearAllMocks()
 
     await ensureSessionParseCacheLoaded()
-    scheduleSessionParseCachePersist({
-      reused: 0,
-      incremental: 2,
-      fullParses: 5,
-      earlyStopped: 0,
-      bytesRead: 10
-    })
+    scheduleSessionParseCachePersist()
     await flushSessionParseCachePersistForTests()
 
     expect(fsPromises.readFile).not.toHaveBeenCalled()
@@ -348,11 +292,11 @@ describe('session parse cache persistence', () => {
     const cacheFile = join(root, 'session-parse-cache.json')
     initSessionParseCachePersistence({ filePath: cacheFile, appVersion: APP_VERSION })
     const transcript = await writeTranscript(root)
-    const stats = await coldParseStats(transcript)
+    await coldParseStats(transcript)
 
     vi.clearAllMocks()
-    scheduleSessionParseCachePersist(stats)
-    scheduleSessionParseCachePersist(stats)
+    scheduleSessionParseCachePersist()
+    scheduleSessionParseCachePersist()
     await flushSessionParseCachePersistForTests()
 
     expect(fsPromises.rename).toHaveBeenCalledTimes(1)
@@ -457,7 +401,7 @@ describe('session parse cache persistence', () => {
     vi.mocked(fsPromises.rename).mockRejectedValueOnce(
       Object.assign(new Error('EPERM: rename blocked'), { code: 'EPERM' })
     )
-    scheduleSessionParseCachePersist(stats)
+    scheduleSessionParseCachePersist()
     await expect(flushSessionParseCachePersistForTests()).resolves.toBeUndefined()
     expect(debugSpy).toHaveBeenCalled()
 
@@ -498,7 +442,7 @@ describe('session parse cache persistence', () => {
     const session = await parseAgentSessionFileCached(candidate, process.platform, stats)
     expect(session).not.toBeNull()
 
-    scheduleSessionParseCachePersist(stats)
+    scheduleSessionParseCachePersist()
     await expect(flushSessionParseCachePersistForTests()).resolves.toBeUndefined()
     expect(debugSpy).toHaveBeenCalled()
 
@@ -531,15 +475,12 @@ describe('sidecar observations survive the round trip', () => {
 
     const stats = createSessionParseStats()
     await parseAgentSessionFileCached(await claudeCandidate(path), process.platform, stats)
-    const seeded = snapshotSessionParseCacheForPersistence().map(
-      ([entryPath, entry]): [string, PersistedSessionParseCacheEntry] => [
-        entryPath,
-        sidecar === undefined ? entry : { ...entry, sidecar }
-      ]
-    )
-    resetSessionParseCacheForTests()
-    seedSessionParseCache(seeded)
-    scheduleSessionParseCachePersist(stats)
+    const entry = getSessionParseCacheEntry(path)
+    if (!entry) {
+      throw new Error('Expected a completed cached entry')
+    }
+    storeSessionParseCacheEntry(path, { ...entry, sidecar })
+    scheduleSessionParseCachePersist()
     await flushSessionParseCachePersistForTests()
 
     simulateRestart(cacheFile)

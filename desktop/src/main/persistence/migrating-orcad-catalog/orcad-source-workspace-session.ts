@@ -1,4 +1,3 @@
-import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import type {
   OrcadMigrationCatalogPayload,
   OrcadMigrationManifestSource
@@ -28,10 +27,8 @@ import {
   collectOwnedTerminalTabIds,
   dropOrcadMigrationTerminalBindings
 } from './orcad-source-workspace-session-layout'
-import {
-  mergeSessionFragments,
-  sessionPartitions
-} from './orcad-source-workspace-session-fragments'
+import { mergeSessionFragments } from './orcad-source-workspace-session-fragments'
+import { orcadMigrationSessionPartitions } from './orcad-source-session-partitions'
 import {
   hasDuplicateOrcadMigrationScrollbackDescriptors,
   projectOrcadMigrationSessionScrollback
@@ -68,15 +65,23 @@ function collectWorkspaceSession(
   const fragments: WorkspaceSessionState[] = []
   const snapshots: OrcadMigrationTerminalScrollbackSnapshot[] = []
   let blockedCount = 0
-  for (const [partitionId, session] of sessionPartitions(state, LOCAL_EXECUTION_HOST_ID)) {
-    const scope = orcadMigrationPartitionScope(sourceScope, partitionId)
-    const sourceHostPartition = partitionId === scope.hostId
-    const terminalTabIds = collectOwnedTerminalTabIds(session, scope)
+  const partitions = orcadMigrationSessionPartitions(state, sourceScope).map(
+    ([partitionId, session]) => {
+      const scope = orcadMigrationPartitionScope(sourceScope, partitionId)
+      return { session, scope, terminalTabIds: collectOwnedTerminalTabIds(session, scope) }
+    }
+  )
+  const sourceTerminalTabIds = new Set(
+    partitions.flatMap(({ terminalTabIds }) => [...terminalTabIds])
+  )
+  for (const { session, scope, terminalTabIds } of partitions) {
+    const sourceHostPartition = scope.partitionHostId === scope.hostId
     blockedCount += countUnsupportedSessionState(
       session,
       scope,
       sourceHostPartition,
-      terminalTabIds
+      terminalTabIds,
+      sourceTerminalTabIds
     )
     blockedCount += countUnrepresentableMarkdownState(session, scope, sourceHostPartition)
     const fragment = extractSessionOwnersForTransfer(session, {

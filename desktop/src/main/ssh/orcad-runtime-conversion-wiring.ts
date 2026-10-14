@@ -1,4 +1,4 @@
-/** The live collaborators a host conversion needs: the relay, the direct session and the server. */
+/** The live collaborators a host conversion needs: the census, the direct session and the server. */
 import { encodePairingOffer } from '../../shared/pairing'
 import {
   getPreferredPairingOffer,
@@ -13,7 +13,6 @@ import {
   stageRemoteOrcadMigrationCatalog,
   stageRemoteOrcadMigrationSnapshotChunk
 } from './orcad-migration-catalog-client'
-import { orcadMigrationRelayPtyLister } from './orcad-migration-relay-pty-lister'
 import { censusHostRelayTerminalsFor } from './ssh-host-relay-census-for-target'
 import type { OrcadManagedConversionArgs } from './orcad-runtime-conversion'
 
@@ -32,15 +31,12 @@ export function orcadMigrationDestinationFor(
   }
 }
 
-export function conversionCollaborators(
-  sshTargetId: string
-): Pick<
+export function conversionCollaborators(): Pick<
   OrcadManagedConversionArgs,
-  'destinationFor' | 'listRelayPtyIds' | 'censusHost' | 'releaseDirectSession'
+  'destinationFor' | 'censusHost' | 'releaseDirectSession'
 > {
   return {
     destinationFor: orcadMigrationDestinationFor,
-    listRelayPtyIds: orcadMigrationRelayPtyLister(sshTargetId),
     censusHost: (target) => censusHostRelayTerminalsFor(target)(),
     releaseDirectSession: disconnectRegisteredSshTarget
   }

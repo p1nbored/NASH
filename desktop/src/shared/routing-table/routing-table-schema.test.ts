@@ -381,7 +381,7 @@ it('requires an explicit supported primary CLI', () => {
   ).toMatchObject({ agent: 'codex' })
   expect(
     CoordinatorSchema.safeParse({
-      agent: 'antigravity',
+      agent: 'unregistered-cli',
       model: 'gemini-3.8-flash-high',
       reasoning_level: 'high'
     }).success

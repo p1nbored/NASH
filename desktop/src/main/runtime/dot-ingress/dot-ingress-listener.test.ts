@@ -428,9 +428,15 @@ describe('dot ingress listener', () => {
       hasFingerprint: context.authenticatedCallerFingerprint !== undefined,
       hasOrchestrationCaller: context.orchestrationCaller !== undefined
     }))
-    const probeMethod = defineMethod({ name: 'dotIngress.probe', params: null, handler: probe })
+    const probeMethod = defineMethod({
+      name: 'dotIngress.probe',
+      permission: 'workspace',
+      params: null,
+      handler: probe
+    })
     const boom = defineMethod({
       name: 'dotIngress.boom',
+      permission: 'workspace',
       params: null,
       handler: () => {
         throw new Error('unable to open C:\\Users\\leaked-marker\\orchestration.db')
@@ -524,15 +530,30 @@ describe('dot ingress listener', () => {
     it.each([
       [
         'a name outside the dotIngress namespace',
-        defineMethod({ name: 'status.get', params: null, handler: () => ({}) })
+        defineMethod({
+          name: 'status.get',
+          permission: 'workspace',
+          params: null,
+          handler: () => ({})
+        })
       ],
       [
         'a name that only resembles the prefix',
-        defineMethod({ name: 'dotIngressX.run', params: null, handler: () => ({}) })
+        defineMethod({
+          name: 'dotIngressX.run',
+          permission: 'workspace',
+          params: null,
+          handler: () => ({})
+        })
       ],
       [
         'a streaming method',
-        defineStreamingMethod({ name: 'dotIngress.watch', params: null, handler: async () => {} })
+        defineStreamingMethod({
+          name: 'dotIngress.watch',
+          permission: 'workspace',
+          params: null,
+          handler: async () => {}
+        })
       ]
     ])('refuses to build with %s', (_name, method) => {
       expect(thrownCodeOf(() => create({ methods: [method] }))).toBe('dot_ingress_registry_invalid')

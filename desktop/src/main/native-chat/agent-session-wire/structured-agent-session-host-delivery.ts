@@ -22,6 +22,10 @@ import type {
 import { structuredAgentSessionConversationFence } from './structured-agent-session-provider-child'
 import { structuredAgentSessionFailureWordsContext } from './structured-agent-session-send-preparation'
 import { recoverStructuredRewind } from './structured-rewind-recovery'
+import { retireOutgrownStructuredAgentSessionChild } from './structured-agent-session-outgrown-child'
+import { structuredAgentSessionLaunchPermission } from './structured-agent-session-launch-permission'
+import { applyStructuredAgentSessionMessageOptions } from './structured-agent-session-message-options'
+import type { StructuredAgentSessionMutationContext } from './structured-agent-session-mutation-context'
 
 export type StructuredAgentSessionConversationDelivery = {
   loop: StructuredAgentSessionDeliveryLoop
@@ -56,6 +60,10 @@ export function createStructuredAgentSessionConversationDelivery(input: {
     sessionId: string,
     startedFor: string
   ) => Promise<StructuredAgentSessionResumeOutcome>
+  /** Stops a child the chat outgrew, so the start after it reads a new login or permission mode. */
+  stopOutgrownAgent: (sessionId: string) => Promise<void>
+  /** Read lazily: the host's mutation context is still assembling when this is built. */
+  mutationContext: () => StructuredAgentSessionMutationContext
   clientDelivery: Pick<
     StructuredAgentSessionClientDelivery,
     'publishRestored' | 'readChildWork' | 'readStopping' | 'publishStatus'
@@ -68,7 +76,32 @@ export function createStructuredAgentSessionConversationDelivery(input: {
     agents: deps.agents,
     serialize: input.serialize,
     trackStart: input.trackStart,
-    ensureProviderChild: input.ensureProviderChild,
+    ensureProviderChild: async (sessionId, startedFor) => {
+      // A send waiting on a person's Stop is not handed over yet; the step after the Stop decides.
+      const session = input.clientDelivery.readStopping(sessionId)
+        ? undefined
+        : sessions.get(sessionId)
+      await retireOutgrownStructuredAgentSessionChild(sessionId, session, {
+        work: {
+          childWork: () => input.clientDelivery.readChildWork(sessionId),
+          hasOpenDispatch: () => {
+            const record = deps.store.getRecord(sessionId)
+            return record !== null && deps.hasOpenDispatch?.(record) === true
+          },
+          providerHoldsDispatch: () => deps.adapter.holdsDispatch?.(sessionId) === true
+        },
+        startUnavailable: () => deps.adapter.startUnavailable?.(sessionId),
+        launchPermission: async () => {
+          const record = deps.store.getRecord(sessionId)
+          return record ? structuredAgentSessionLaunchPermission(deps, record) : null
+        },
+        stopAgent: input.stopOutgrownAgent,
+        logger: deps.logger
+      })
+      return input.ensureProviderChild(sessionId, startedFor)
+    },
+    applyMessageOptions: (sessionId, options) =>
+      applyStructuredAgentSessionMessageOptions(input.mutationContext(), sessionId, options),
     conversationFence: (sessionId) =>
       structuredAgentSessionConversationFence(deps.store, sessionId),
     holdClosed: async (sessionId, which) => {

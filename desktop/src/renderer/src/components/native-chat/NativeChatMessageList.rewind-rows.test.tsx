@@ -94,9 +94,7 @@ describe('which transcript rows offer Rewind to here', () => {
         <NativeChatRewindContext.Provider value={REWIND}>
           <NativeChatMessageList
             session={{
-              messages: projectStructuredAgentSessionMessages(items, [], submissions, {
-                rejectedInPlace: true
-              }),
+              messages: projectStructuredAgentSessionMessages(items, [], submissions),
               status: 'ready',
               sessionId: 'session-1',
               agent: 'codex',

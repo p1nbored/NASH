@@ -8,7 +8,6 @@ import {
   inferFolderWorkspacePathConnection
 } from '../project-groups/folder-workspace-path-status'
 import type { TerminalWorkspaceLaunchScope } from './runtime-legacy-worker-terminal-recovery-types'
-import { getSshFilesystemProvider } from '../providers/ssh-filesystem-dispatch'
 import { folderWorkspaceKey, parseWorkspaceKey } from '../../shared/workspace-scope'
 import type { ResolvedWorktree } from './runtime-worktree-path-identity'
 import type { BrowserExecutionHostKeyResolution } from './runtime-browser-client-page-adoption'
@@ -102,11 +101,10 @@ export class OrcaRuntimeWithTransitionGraphReloadToTerminalState extends OrcaRun
     if (!this.store) {
       throw new Error('runtime_unavailable')
     }
-    const status = await getFolderWorkspacePathStatus(
-      this.store,
-      { scope: 'folder-workspace', folderWorkspaceId: workspace.id },
-      { getSshFilesystemProvider }
-    )
+    const status = await getFolderWorkspacePathStatus(this.store, {
+      scope: 'folder-workspace',
+      folderWorkspaceId: workspace.id
+    })
     assertFolderWorkspacePathUsable(status)
     return {
       id: folderWorkspaceKey(workspace.id),

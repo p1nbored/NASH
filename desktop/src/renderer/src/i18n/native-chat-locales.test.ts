@@ -5,24 +5,12 @@ import fr from './locales/fr.json'
 import ja from './locales/ja.json'
 import ko from './locales/ko.json'
 import zh from './locales/zh.json'
-import { CODEX_SESSION_OPTION_CATALOG } from '../../../shared/agent-session-option-catalog-claude-codex'
 
 const localizedCatalogs = { es, ja, ko, zh }
 const englishSetting = en.auto.components.settings.ExperimentalPane.nativeChat
 const englishSearch = en.auto.components.settings.experimental.search.nativeChat
 const englishComposer = en.components['native-chat'].composer
 const localizedEffortValues = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'] as const
-
-const codexEffortValues = new Set(
-  [
-    ...CODEX_SESSION_OPTION_CATALOG.models.flatMap((model) => model.options),
-    ...(CODEX_SESSION_OPTION_CATALOG.unknownModelOptions ?? [])
-  ].flatMap((option) =>
-    option.id === 'effort' && option.kind.type === 'select'
-      ? option.kind.choices.map((choice) => choice.value)
-      : []
-  )
-)
 
 describe('native chat locale copy', () => {
   it.each(Object.entries({ en, es, fr, ja, ko, zh }))(
@@ -40,24 +28,18 @@ describe('native chat locale copy', () => {
     }
   )
 
-  it('covers every Codex effort choice', () => {
-    expect([...codexEffortValues].sort()).toEqual([...localizedEffortValues].sort())
-  })
-
   it.each(Object.entries(localizedCatalogs))(
-    '%s keeps provider-neutral copy localized',
+    '%s falls back to current Chat UI copy until it is translated',
     (_code, catalog) => {
       const setting = catalog.auto.components.settings.ExperimentalPane.nativeChat
       const search = catalog.auto.components.settings.experimental.search.nativeChat
-      for (const [localized, english] of [
-        [setting.description, englishSetting.description],
-        [setting.copy, englishSetting.copy],
-        [setting.defaultCopy, englishSetting.defaultCopy],
-        [search.description, englishSearch.description]
-      ]) {
-        expect(localized.trim()).not.toBe('')
-        expect(localized).not.toBe(english)
-      }
+      expect(englishSetting.description).toContain('Chat UI')
+      expect(englishSetting.copy).toContain('structured chat')
+      expect(englishSearch.description).toContain('Chat UI')
+      expect(setting).not.toHaveProperty('description')
+      expect(setting).not.toHaveProperty('copy')
+      expect(setting).not.toHaveProperty('defaultCopy')
+      expect(search).not.toHaveProperty('description')
       expect(search.grok).toBe('grok')
       const composer = catalog.components['native-chat'].composer
       for (const key of [
@@ -65,7 +47,6 @@ describe('native chat locale copy', () => {
         'effort',
         'fastMode',
         'thinking',
-        'options',
         'sessionOptions',
         'chooseInAgentPicker',
         'toggleOption',
@@ -77,6 +58,32 @@ describe('native chat locale copy', () => {
       for (const key of ['fast', ...localizedEffortValues] as const) {
         expect(composer.optionValue[key].trim()).not.toBe('')
         expect(composer.optionValue[key]).not.toBe(englishComposer.optionValue[key])
+      }
+      for (const key of ['minimal', 'medium', 'xhigh'] as const) {
+        expect(composer.optionValueShort[key].trim()).not.toBe('')
+        expect(composer.optionValueShort[key]).not.toBe(englishComposer.optionValueShort[key])
+      }
+    }
+  )
+})
+
+describe('account-aware Send fixes', () => {
+  it.each(Object.entries({ en, es, fr, ja, ko, zh }))(
+    '%s includes the same fixes for Send and post-send failures',
+    (_locale, catalog) => {
+      const words = catalog.components['native-chat'].failureWords
+      expect(words.claudeSystemNotSignedIn).toContain('`{{loginCommand}}`')
+      expect(words.codexSystemNotSignedIn).toContain('`{{loginCommand}}`')
+      expect(words.claudeManagedNotSignedIn).not.toContain('/login')
+      expect(words.codexManagedNotSignedIn).not.toContain('`codex login`')
+      expect(words.claudeManagedNotSignedIn).not.toContain('{{loginCommand}}')
+      expect(words.codexManagedNotSignedIn).not.toContain('{{loginCommand}}')
+      expect(words.agentCommandNotSignedIn).toContain('{{agent}}')
+      expect(words.agentCommandNotSignedIn).toContain('`{{loginCommand}}`')
+      expect(words.interactiveAgentNotSignedIn).toContain('`{{slashCommand}}`')
+      expect(words.cliMissing).toContain('{{agent}}')
+      for (const key of ['claudeManagedNotSignedIn', 'codexManagedNotSignedIn'] as const) {
+        expect(words[key].trim()).not.toBe('')
       }
     }
   )

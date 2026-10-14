@@ -17,7 +17,7 @@ import {
 import { ptyIncarnationById, ptyOwnership } from '../ipc/pty/provider/ownership-state'
 import { getLocalPtyProvider, setLocalPtyProvider } from '../ipc/pty/provider/registry'
 import { createPtyIpcSession } from '../ipc/pty/session'
-import type { IPtyProvider } from '../providers/types'
+import type { IPtyProvider } from '../providers/pty-provider-contract'
 import { OrcaRuntimeService } from './orca-runtime'
 import {
   INCARNATION_ID,
@@ -82,7 +82,7 @@ function createHarness(opts: { lateProviderExit?: boolean; folder?: boolean } = 
     leafId: LEAF_ID,
     incarnationId: INCARNATION_ID
   })
-  ptyOwnership.set(PTY_ID, null)
+  ptyOwnership.set(PTY_ID, 'local')
   ptyIncarnationById.set(PTY_ID, INCARNATION_ID)
   let emitProviderExit:
     | ((payload: { id: string; code: number; incarnationId?: string }) => void)

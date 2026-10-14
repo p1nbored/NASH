@@ -1,17 +1,13 @@
 // Host-aware resolution for composer attachments (STA-1465). The composer's
 // attach surfaces (file drop, file picker, image paste) receive client-local
-// paths, but an SSH worktree's agent runs on the remote host — local paths must
-// be uploaded first, exactly like terminal drops (docs/terminal-drop-ssh.md). A
-// structured chat on a paired server uploads into that server's attachment store.
+// paths. A structured chat on a paired server uploads into that server's
+// attachment store; any other remote chat refuses client files.
 
-import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
-import { extractIpcErrorMessage } from '@/lib/ipc-error'
 import { findKnownWorktreeById } from '@/store/slices/worktrees/listing/detected-worktree-meta'
 import {
-  parseExecutionHostId,
+  getConnectionExecutionHostId,
   toRuntimeExecutionHostId,
-  toSshExecutionHostId,
   type ExecutionHostId
 } from '../../../../shared/execution-host'
 import { getConnectionIdFromState } from '@/lib/connection-context'
@@ -30,19 +26,8 @@ import type {
   AgentSessionAttachmentUploadTarget
 } from '../../../../shared/agent-session-attachments'
 import type { AppState } from '@/store/types'
-import { reportTerminalDropUploadSkipsAndFailures } from '../terminal-pane/terminal-drop-upload-report'
 import { NATIVE_FILE_DROP_MAX_PATHS } from '../../../../shared/native-file-drop'
 import { findTerminalTabWorktreeId } from './native-chat-file-link'
-import {
-  captureDirectSshMutationExpectation,
-  type DirectSshMutationExpectation
-} from '@/lib/ssh-mutation-expectation'
-
-export type NativeChatSshAttachmentOwner = DirectSshMutationExpectation & {
-  kind: 'ssh'
-  connectionId: string
-  worktreePath: string
-}
 
 /** A structured chat on a paired server: files upload into that server's attachment store, which
  *  checks every stored path a message names when it admits the message. */
@@ -55,11 +40,11 @@ export type NativeChatRuntimeSessionAttachmentOwner = {
 
 export type NativeChatAttachmentOwner =
   | { kind: 'local' }
-  | NativeChatSshAttachmentOwner
   | NativeChatRuntimeSessionAttachmentOwner
-  /** A terminal-backed chat on a paired server: its agent may run on that server's SSH or WSL
-   *  host, which the server's store cannot reach, so it keeps refusing client files. */
-  | { kind: 'runtime' }
+  /** Refuses client files: a terminal-backed chat on a paired server (its agent may run on that
+   *  server's SSH or WSL host, which the server's store cannot reach), or an `ssh:` host, which
+   *  only its paired server serves. */
+  | { kind: 'remote' }
   /** Store not hydrated / worktree unknown. Callers must not attach local
    *  paths in this window — the worktree may turn out to be remote, and the
    *  agent would silently receive paths it cannot read (see #6648). */
@@ -75,6 +60,7 @@ type NativeChatAttachmentOwnerState = Pick<
   | 'settings'
   | 'sshConnectionStates'
   | 'tabsByWorktree'
+  | 'unifiedTabsByWorktree'
   | 'worktreesByRepo'
 >
 
@@ -105,9 +91,7 @@ export function resolveNativeChatAttachmentHost(
   }
   const hostId = runtimeId
     ? toRuntimeExecutionHostId(runtimeId)
-    : connectionId
-      ? toSshExecutionHostId(connectionId)
-      : 'local'
+    : getConnectionExecutionHostId(connectionId)
   return findKnownWorktreeById(state, worktreeId, hostId) ? hostId : null
 }
 
@@ -119,35 +103,10 @@ export function resolveNativeChatAttachmentOwnerForWorktree(
   if (!hostId) {
     return { kind: 'not-ready' }
   }
-  if (parseExecutionHostId(hostId)?.kind === 'runtime') {
-    return { kind: 'runtime' }
-  }
   if (hostId === 'local') {
     return { kind: 'local' }
   }
-  const connectionId = getConnectionIdFromState(state, worktreeId)
-  if (connectionId === undefined) {
-    return { kind: 'not-ready' }
-  }
-  if (connectionId === null) {
-    return { kind: 'not-ready' }
-  }
-  const worktreePath = findKnownWorktreeById(state, worktreeId, hostId)?.path
-  if (!worktreePath) {
-    return { kind: 'not-ready' }
-  }
-  try {
-    return {
-      kind: 'ssh',
-      connectionId,
-      worktreePath,
-      ...captureDirectSshMutationExpectation(state, connectionId)
-    }
-  } catch {
-    // The connection's generation is gone (disconnect mid-attach). That is an
-    // unknown owner, not a reason to throw out of the drop/IME handler.
-    return { kind: 'not-ready' }
-  }
+  return { kind: 'remote' }
 }
 
 /** The chat behind a structured composer, as the attachment owner needs it. */
@@ -220,42 +179,6 @@ export function nativeChatTooManyAttachmentsNotice(): string {
 }
 
 export { nativeChatLocalAttachmentUnsupportedNotice } from './native-chat-composer-target'
-
-/**
- * Upload client-local paths into `${worktreePath}/.orca/drops` on the SSH
- * remote and return the remote paths the agent can read (input order
- * preserved). Returns null when the upload IPC itself failed; per-file
- * skips/failures surface through the shared drop toasts.
- */
-export async function uploadNativeChatAttachmentPaths(
-  paths: string[],
-  owner: NativeChatSshAttachmentOwner
-): Promise<string[] | null> {
-  const pending = toast.loading(
-    translate(
-      'components.native-chat.composer.uploadingAttachments',
-      'Uploading {{value0}} file(s) to remote…',
-      { value0: paths.length }
-    )
-  )
-  try {
-    const { resolvedPaths, skipped, failed } = await window.api.fs.resolveDroppedPathsForAgent({
-      paths,
-      worktreePath: owner.worktreePath,
-      connectionId: owner.connectionId,
-      expectedExecutionHostId: owner.expectedExecutionHostId,
-      expectedSshTargetId: owner.expectedSshTargetId,
-      expectedSshConnectionGeneration: owner.expectedSshConnectionGeneration
-    })
-    reportTerminalDropUploadSkipsAndFailures(skipped, failed)
-    return resolvedPaths
-  } catch (err) {
-    toast.error(extractIpcErrorMessage(err, 'Failed to upload files.'))
-    return null
-  } finally {
-    toast.dismiss(pending)
-  }
-}
 
 /**
  * Ask the chat's server, right before uploading, whether it keeps chat attachments, and which

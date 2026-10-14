@@ -17,11 +17,8 @@ import {
   finishAutomationWorkspaceProvenanceRequest
 } from '../../../automations/workspace-provenance'
 import { isFolderRepo } from '../../../../shared/repo-kind'
-import {
-  createRemoteWorktree,
-  createLocalWorktree,
-  notifyWorktreesChanged
-} from '../../worktree-remote'
+import { createLocalWorktree, notifyWorktreesChanged } from '../../worktree-remote'
+import { SshHostNotServedError } from '../../../providers/ssh-host-not-served-error'
 import { track } from '../../../telemetry/client'
 import { classifyWorkspaceCreateError } from '../../workspace-create-error-classifier'
 import { getCohortAtEmit } from '../../../telemetry/cohort-classifier'
@@ -78,23 +75,19 @@ export function registerWorktreeCreateHandlers(context: WorktreeIpcContext): voi
             // row read as local here and ran `git worktree add` on the client against a remote path,
             // while the runtime sibling on the same repo already resolved.
             const createRoute = requireWorktreeCreateRoute(repo)
-            result =
-              createRoute.kind === 'ssh'
-                ? await createRemoteWorktree(
-                    createArgs,
-                    createRoute.repo,
-                    store,
-                    mainWindow,
-                    telemetry.timing
-                  )
-                : await createLocalWorktree(
-                    createArgs,
-                    repo,
-                    store,
-                    mainWindow,
-                    runtime,
-                    telemetry.timing
-                  )
+            if (createRoute.kind === 'ssh') {
+              // Tagged before the refusal so the failed-create event keeps naming its host.
+              telemetry.timing.recordExecutionHost('ssh')
+              throw new SshHostNotServedError(createRoute.connectionId)
+            }
+            result = await createLocalWorktree(
+              createArgs,
+              repo,
+              store,
+              mainWindow,
+              runtime,
+              telemetry.timing
+            )
           }
         } catch (error) {
           releaseAutomationWorkspaceProvenanceRequest(args.automationProvenanceRequest)

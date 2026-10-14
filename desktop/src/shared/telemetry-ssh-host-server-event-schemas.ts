@@ -146,3 +146,22 @@ export const sshHostServerMoveSchema = z
     ...hostFields
   })
   .strict()
+
+// COMPAT(legacy-relay-bridge): revisit 2027-01-15; drop with src/main/ssh/legacy-relay-bridge/.
+export const SSH_HOST_SERVER_LEGACY_RELAY_BRIDGE_TERMINAL_VALUES = [
+  'none',
+  '1',
+  '2_4',
+  '5_9',
+  '10_plus'
+] as const
+
+/** Hosts still running terminals an older Orca's relay holds, and each one's exit. */
+export const sshHostServerLegacyRelayBridgeSchema = z
+  .object({
+    phase: z.enum(['connected', 'terminal_exited']),
+    // Bridged terminals when the host connected; `none` on an exit row.
+    terminals: z.enum(SSH_HOST_SERVER_LEGACY_RELAY_BRIDGE_TERMINAL_VALUES),
+    ...hostFields
+  })
+  .strict()

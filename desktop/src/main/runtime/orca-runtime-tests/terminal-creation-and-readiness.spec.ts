@@ -223,9 +223,9 @@ describe('OrcaRuntimeService', () => {
       webContents: { send }
     })
 
-    await expect(
-      runtime.createTerminal(undefined, { shellOverride: 'cmd.exe', rendererBacked: true })
-    ).rejects.toThrow(/--shell cmd\.exe needs a workspace/)
+    await expect(runtime.createTerminal(undefined, { shellOverride: 'cmd.exe' })).rejects.toThrow(
+      /--shell cmd\.exe needs a workspace/
+    )
     expect(send).not.toHaveBeenCalled()
     expect(spawn).not.toHaveBeenCalled()
   })

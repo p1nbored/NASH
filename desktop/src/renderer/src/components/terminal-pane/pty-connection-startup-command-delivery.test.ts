@@ -1,6 +1,6 @@
 import type * as React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { TERMINAL_PASTE_DIRECT_MAX_BYTES } from './terminal-paste-coordinator'
+import { TERMINAL_PASTE_DIRECT_MAX_BYTES } from './terminal-paste-limits'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
 import { toAppSshPtyId } from '../../../../shared/ssh-pty-id'
 import { flushAsyncTicks, drainPendingTimeouts } from './pty-connection-test-async'
@@ -183,15 +183,12 @@ describe('connectPanePty', () => {
 
   it('seeds a working status for Command Code startup prompts after spawn', async () => {
     const { connectPanePty } = await import('./pty-connection')
-    const sshPtyId = toAppSshPtyId('ssh-a', 'pty-command-code')
-    const transport = createMockTransport(sshPtyId)
-    transport.getConnectionId.mockReturnValue('ssh-a')
+    const ptyId = 'pty-command-code'
+    const transport = createMockTransport(ptyId)
     transportFactoryQueue.push(transport)
     mockStoreState = {
       ...mockStoreState,
-      tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: null }] },
-      repos: [{ id: 'repo1', connectionId: 'ssh-a' }],
-      sshConnectionStates: new Map([['ssh-a', { status: 'connected' }]])
+      tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: null }] }
     }
 
     const pane = createPane(1)
@@ -209,7 +206,7 @@ describe('connectPanePty', () => {
       | ((ptyId: string) => void)
       | undefined
     expect(onPtySpawn).toBeTypeOf('function')
-    onPtySpawn?.(sshPtyId)
+    onPtySpawn?.(ptyId)
 
     expect(mockStoreState.setAgentStatus).toHaveBeenCalledWith(
       makePaneKey('tab-1', LEAF_1),
@@ -222,23 +219,20 @@ describe('connectPanePty', () => {
       },
       undefined,
       undefined,
-      { connectionId: 'ssh-a' }
+      { connectionId: null }
     )
   })
 
   it('seeds a working status from Command Code thinking output without a startup prompt', async () => {
     const { connectPanePty } = await import('./pty-connection')
     const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-    const sshPtyId = toAppSshPtyId('ssh-a', 'pty-command-code')
-    const transport = createMockTransport(sshPtyId)
-    transport.getConnectionId.mockReturnValue('ssh-a')
+    const ptyId = 'pty-command-code'
+    const transport = createMockTransport(ptyId)
     transport.connect.mockImplementation(async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
       capturedDataCallback.current = callbacks.onData ?? null
-      return sshPtyId
+      return ptyId
     })
     transportFactoryQueue.push(transport)
-    mockStoreState.repos = [{ id: 'repo1', connectionId: 'ssh-a' }]
-    mockStoreState.sshConnectionStates = new Map([['ssh-a', { status: 'connected' }]])
 
     const pane = createPane(1)
     const manager = createManager(1)
@@ -266,7 +260,7 @@ describe('connectPanePty', () => {
       },
       undefined,
       undefined,
-      { connectionId: 'ssh-a' }
+      { connectionId: null }
     )
   })
 
@@ -476,60 +470,6 @@ describe('connectPanePty', () => {
       undefined,
       { connectionId: null }
     )
-  })
-
-  it('keeps SSH terminal-paste startup commands renderer-owned', async () => {
-    const pendingTimeouts: (() => void)[] = []
-    const originalSetTimeout = globalThis.setTimeout
-    globalThis.setTimeout = vi.fn((fn: () => void) => {
-      pendingTimeouts.push(fn)
-      return 999 as unknown as ReturnType<typeof setTimeout>
-    }) as unknown as typeof setTimeout
-
-    try {
-      const { connectPanePty } = await import('./pty-connection')
-
-      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-      const transport = createMockTransport('pty-id')
-      transport.connect.mockImplementation(
-        async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-          capturedDataCallback.current = callbacks.onData ?? null
-          return 'pty-ssh-paste'
-        }
-      )
-      transportFactoryQueue.push(transport)
-
-      mockStoreState = {
-        ...mockStoreState,
-        tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: null }] },
-        repos: [{ id: 'repo1', connectionId: 'ssh-conn-1' }],
-        sshConnectionStates: new Map([['ssh-conn-1', { status: 'connected' }]])
-      }
-
-      const pane = createPane(1)
-      pane.terminal.modes.bracketedPasteMode = true
-      pane.terminal.write.mockImplementation((_data: string, callback?: () => void) => {
-        callback?.()
-      })
-      const manager = createManager(1)
-      const command = 'cd packages\nbun run build\ncd ..'
-      const deps = createDeps({ startup: { command, delivery: 'terminal-paste' } })
-
-      connectPanePty(pane as never, manager as never, deps as never)
-      expect(createdTransportOptions[0]?.command).toBeUndefined()
-      expect(createdTransportOptions[0]?.commandDelivery).toBeUndefined()
-      expect(capturedDataCallback.current).not.toBeNull()
-
-      capturedDataCallback.current?.('user@host $ ')
-      await drainPendingTimeouts(pendingTimeouts)
-      await flushAsyncTicks()
-
-      expect(pane.terminal.paste).toHaveBeenCalledWith(command)
-      expect(transport.sendInput).toHaveBeenCalledWith('\r', 'launch')
-      expect(transport.sendInput).not.toHaveBeenCalledWith(`${command}\r`)
-    } finally {
-      globalThis.setTimeout = originalSetTimeout
-    }
   })
 
   it('chunks large terminal-paste startup commands through the PTY before submitting', async () => {

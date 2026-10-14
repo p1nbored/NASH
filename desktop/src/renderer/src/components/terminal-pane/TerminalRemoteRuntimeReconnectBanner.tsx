@@ -2,6 +2,8 @@ import { Loader2, ServerOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
 import type { PtyTransportRecoveryState } from './pty-transport-types'
+import type { WslHostUnavailableReason } from './use-wsl-host-unavailable-reason'
+import { WslHostUnavailableBanner } from './WslHostUnavailableBanner'
 
 type VisibleRecoveryPhase = Extract<
   PtyTransportRecoveryState['phase'],
@@ -10,11 +12,17 @@ type VisibleRecoveryPhase = Extract<
 
 export function TerminalRemoteRuntimeReconnectBanner({
   phase,
-  onReconnect
+  onReconnect,
+  wslHostUnavailable = null
 }: {
   phase: VisibleRecoveryPhase
   onReconnect: () => void
+  /** The pane's WSL host cannot run: nothing is retrying, so say why instead. */
+  wslHostUnavailable?: WslHostUnavailableReason | null
 }): React.JSX.Element {
+  if (wslHostUnavailable) {
+    return <WslHostUnavailableBanner reason={wslHostUnavailable} />
+  }
   const retrying = phase !== 'disconnected'
 
   return (

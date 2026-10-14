@@ -211,6 +211,9 @@ function TabBarCreateEntrySession({
     }
     if (selectedOption.kind === 'tab') {
       const outcome = activateOpenTabSearchResult(selectedOption.option)
+      if (outcome.status === 'blocked') {
+        return
+      }
       if (outcome.status === 'failed') {
         setSwitchError(outcome.message)
         return

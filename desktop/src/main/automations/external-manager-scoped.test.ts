@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createScopedExternalAutomations } from './external-manager'
 import { ExternalAutomationManagerCache } from './external-automation-manager-cache'
 import { ExternalAutomationProbeScheduler } from './external-automation-probe-scheduler'
-import { getActiveMultiplexer } from '../ssh/ssh-target-registry'
+import { SSH_HOST_NOT_SERVED_MESSAGE } from '../providers/ssh-host-not-served-error'
 import { AutomationOwnerConflictError } from '../../shared/automation-owner-conflict'
 import type { AutomationOwnerRef } from '../../shared/automation-owner-ref'
 import {
@@ -16,12 +16,11 @@ import type * as Fs from 'node:fs'
 const runProcessMock = vi.hoisted(() => vi.fn())
 const existsSyncMock = vi.hoisted(() => vi.fn(() => false))
 
-vi.mock('../../shared/child-process/run-process', () => ({ runProcess: runProcessMock }))
+vi.mock('@orca/process-host', () => ({ runProcess: runProcessMock }))
 vi.mock('fs', async () => {
   const actual = await vi.importActual<typeof Fs>('fs')
   return { ...actual, existsSync: existsSyncMock }
 })
-vi.mock('../ssh/ssh-target-registry', () => ({ getActiveMultiplexer: vi.fn() }))
 
 function sshTarget(overrides: Partial<SshTarget> = {}): SshTarget {
   return {
@@ -57,13 +56,6 @@ function buildEngine(targets: SshTarget[]) {
   })
 }
 
-function relay(response: unknown): {
-  isDisposed: () => boolean
-  request: ReturnType<typeof vi.fn>
-} {
-  return { isDisposed: () => false, request: vi.fn().mockResolvedValue(response) }
-}
-
 beforeEach(() => {
   runProcessMock.mockReset()
   runProcessMock.mockResolvedValue({
@@ -74,7 +66,6 @@ beforeEach(() => {
     timedOut: false
   })
   existsSyncMock.mockReturnValue(false)
-  vi.mocked(getActiveMultiplexer).mockReset()
 })
 
 afterEach(() => {
@@ -109,7 +100,6 @@ describe('scoped external automations', () => {
     const entry = await engine.listManager({ owner: desktopSelf, provider: 'hermes' })
 
     expect(entry.manager?.id).toBe('hermes:local')
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
     expect(runProcessMock).toHaveBeenCalledTimes(1)
     expect(runProcessMock.mock.calls[0]?.[0]).toEqual({
       program: 'which',
@@ -118,21 +108,7 @@ describe('scoped external automations', () => {
     })
   })
 
-  it('does not reach out to any SSH target from a Local view', async () => {
-    const engine = buildEngine([sshTarget(), sshTarget({ id: 'target-b', generation: 1 })])
-
-    await engine.listManager({ owner: desktopSelf, provider: 'hermes' })
-    await engine.listManager({ owner: desktopSelf, provider: 'openclaw' })
-
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
-  })
-
-  it('probes only the selected SSH host', async () => {
-    vi.mocked(getActiveMultiplexer).mockReturnValue(
-      relay({ jobs: [], hermesAvailable: true }) as unknown as ReturnType<
-        typeof getActiveMultiplexer
-      >
-    )
+  it('reports an SSH host this process does not serve without probing this computer', async () => {
     const engine = buildEngine([sshTarget(), sshTarget({ id: 'target-b', generation: 1 })])
 
     const entry = await engine.listManager({
@@ -140,9 +116,8 @@ describe('scoped external automations', () => {
       provider: 'hermes'
     })
 
-    expect(entry.manager?.id).toBe('hermes:ssh:target-a')
-    expect(getActiveMultiplexer).toHaveBeenCalledTimes(1)
-    expect(getActiveMultiplexer).toHaveBeenCalledWith('target-a')
+    expect(entry).toMatchObject({ manager: null, error: SSH_HOST_NOT_SERVED_MESSAGE })
+    expect(runProcessMock).not.toHaveBeenCalled()
   })
 
   it('fails closed on a stale generation without probing', async () => {
@@ -151,7 +126,6 @@ describe('scoped external automations', () => {
     await expect(
       engine.listManager({ owner: desktopSsh('target-a', 3), provider: 'hermes' })
     ).rejects.toBeInstanceOf(AutomationOwnerConflictError)
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
     expect(runProcessMock).not.toHaveBeenCalled()
   })
 
@@ -163,7 +137,6 @@ describe('scoped external automations', () => {
     await expect(
       engine.listManager({ owner: desktopSsh('target-a', 3), provider: 'hermes' })
     ).rejects.toBeInstanceOf(ExternalAutomationScopeError)
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
     expect(runProcessMock).not.toHaveBeenCalled()
   })
 
@@ -180,7 +153,6 @@ describe('scoped external automations', () => {
       })
     ).rejects.toThrow(EXTERNAL_AUTOMATION_SCOPE_CODES.authorityNotSupported)
     expect(runProcessMock).not.toHaveBeenCalled()
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
   })
 
   it('rejects an unknown provider before launching any command', async () => {
@@ -196,7 +168,6 @@ describe('scoped external automations', () => {
       })
     ).rejects.toThrow(EXTERNAL_AUTOMATION_SCOPE_CODES.providerNotAllowed)
     expect(runProcessMock).not.toHaveBeenCalled()
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
   })
 
   it('fails a scoped mutation closed when the host changed under the dialog', async () => {
@@ -214,14 +185,10 @@ describe('scoped external automations', () => {
       })
     ).rejects.toBeInstanceOf(AutomationOwnerConflictError)
     expect(runProcessMock).not.toHaveBeenCalled()
-    expect(getActiveMultiplexer).not.toHaveBeenCalled()
   })
 
   it('confines a manager failure to its own scope and never to Orca store health', async () => {
     const health = orcaStoreHealth()
-    vi.mocked(getActiveMultiplexer).mockReturnValue(
-      undefined as unknown as ReturnType<typeof getActiveMultiplexer>
-    )
     const engine = createScopedExternalAutomations({
       registry: {
         getSshTargets: () => {
@@ -239,30 +206,23 @@ describe('scoped external automations', () => {
     })
     const healthy = await engine.listManager({ owner: desktopSelf, provider: 'hermes' })
 
-    expect(failed.manager?.status).toBe('unavailable')
-    expect(failed.manager?.error).toBe('SSH target is not connected.')
+    expect(failed).toMatchObject({ manager: null, error: SSH_HOST_NOT_SERVED_MESSAGE })
     expect(healthy.manager?.status).toBe('available')
     expect(health.markUnavailable).not.toHaveBeenCalled()
   })
 
-  it('routes scoped runs through the selected host without accepting a target from the caller', async () => {
-    const requestMock = vi.fn().mockResolvedValue({ total: 2, runs: [] })
-    vi.mocked(getActiveMultiplexer).mockReturnValue({
-      isDisposed: () => false,
-      request: requestMock
-    } as unknown as ReturnType<typeof getActiveMultiplexer>)
+  it('refuses scoped runs on an unserved SSH host without accepting a target from the caller', async () => {
     const engine = buildEngine([sshTarget()])
 
-    const page = await engine.listRuns({
-      owner: desktopSsh('target-a', 3),
-      provider: 'hermes',
-      jobId: 'job-1',
-      page: 1,
-      pageSize: 10
-    })
-
-    expect(page.target).toEqual({ type: 'ssh', connectionId: 'target-a' })
-    expect(page.managerId).toBe('hermes:ssh:target-a')
-    expect(page.total).toBe(2)
+    await expect(
+      engine.listRuns({
+        owner: desktopSsh('target-a', 3),
+        provider: 'hermes',
+        jobId: 'job-1',
+        page: 1,
+        pageSize: 10
+      })
+    ).rejects.toThrow(SSH_HOST_NOT_SERVED_MESSAGE)
+    expect(runProcessMock).not.toHaveBeenCalled()
   })
 })

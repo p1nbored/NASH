@@ -19,6 +19,7 @@ import {
 } from '../../shared/orcad-migration-source-cutover'
 import type { Repo } from '../../shared/repo-types'
 import { listEnvironments } from '../../shared/runtime-environment-store'
+import { getOrcadSshDeployment } from '../../shared/runtime-environments'
 import type { SshTarget } from '../../shared/ssh-types'
 import type { Store } from '../persistence'
 import { collectOrcadMigrationSourceCatalog } from '../persistence/migrating-orcad-catalog/orcad-source-catalog'
@@ -195,14 +196,10 @@ export function reconcileManagedOrcadSshTargets(
 function restoreFencesFromManagedServers(userDataPath: string, store: TargetStore): void {
   const targets = new Map(store.getSshTargets().map((target) => [target.id, target]))
   for (const environment of listEnvironments(userDataPath)) {
-    const targetId = environment.orcadDeployment?.sshTargetId
-    const target = targetId ? targets.get(targetId) : undefined
+    const deployment = getOrcadSshDeployment(environment)
+    const target = deployment ? targets.get(deployment.sshTargetId) : undefined
     // Why generation-bound: a host re-created under the same id is a different registration.
-    if (
-      target &&
-      !target.orcadFence &&
-      target.generation === environment.orcadDeployment?.sshTargetGeneration
-    ) {
+    if (target && !target.orcadFence && target.generation === deployment?.sshTargetGeneration) {
       store.updateSshTarget(target.id, { orcadFence: { environmentId: environment.id } })
     }
   }

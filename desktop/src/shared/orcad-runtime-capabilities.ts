@@ -6,7 +6,18 @@ export const ORCAD_TERMINAL_CENSUS_RUNTIME_CAPABILITY = 'orcad.terminal-census.v
 // reads a catalog only on a host advertising this, and treats its absence as a refusal.
 export const ORCAD_MIGRATION_CATALOG_RUNTIME_CAPABILITY = 'orcad.migration-catalog.v1' as const
 
+// Why per kind: an older destination drops `source.kind` and cannot tell a WSL source from an SSH
+// one, so a client sends a non-SSH manifest only to a host advertising that kind. Not advertised
+// until a destination parses `source.kind: 'local-wsl'`.
+export const ORCAD_MIGRATION_LOCAL_WSL_SOURCE_RUNTIME_CAPABILITY =
+  'orcad.migration-source.local-wsl.v1' as const
+
+// Why: older hosts have no `accounts.setHostLaunchEnv`; a desktop that owns a host's accounts (a
+// WSL host's) pushes them only to a host advertising this.
+export const HOST_ACCOUNT_LAUNCH_ENV_RUNTIME_CAPABILITY = 'accounts.host-launch-env.v1' as const
+
 export const ORCAD_RUNTIME_CAPABILITIES = [
   ORCAD_TERMINAL_CENSUS_RUNTIME_CAPABILITY,
-  ORCAD_MIGRATION_CATALOG_RUNTIME_CAPABILITY
+  ORCAD_MIGRATION_CATALOG_RUNTIME_CAPABILITY,
+  HOST_ACCOUNT_LAUNCH_ENV_RUNTIME_CAPABILITY
 ] as const

@@ -3,9 +3,8 @@
  *
  * Such a pane must not spawn until the host has taken it: before that, main knows of no launch for
  * it and would give it a shell, which the host's own spawn would then be refused over. The host
- * takes the pane when it asks this window to show the launch's tab, so the hold ends there, or when
- * the launch is over. Session-only: after a reload the pane's spawn reads the launch record like any
- * launch pane.
+ * takes the pane when it reveals the agent's terminal there, so the hold ends there, or when the
+ * launch is over. Session-only: after a reload the pane spawns as any pane does.
  */
 
 type Hold = { released: Promise<void>; release: () => void }

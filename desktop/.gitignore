@@ -29,9 +29,13 @@ out/
 release/
 native/**/.build/
 native/windows-cli-launcher/target/
-# node-gyp output for the vendored Windows registry addon; generated per host and ABI.
+native/windows-agent-hook/target/
+# node-gyp output for the Windows native addons; generated per host and ABI.
 native/windows-registry/build/
 native/windows-registry/bin/
+native/windows-security/build/
+native/windows-security/bin/
+.build/windows-security/
 
 # pnpm
 .pnpm-store/
@@ -172,3 +176,5 @@ ci-shards/
 
 # Local native build outputs.
 /.build/
+
+.local/static-analysis-research/

@@ -1,6 +1,6 @@
-// A Stop's event, through the real host: written in the Stop's serialized step once it takes
-// effect, before the interrupt and before anything that ends the child, naming the turn and who
-// asked; never by a Stop that stopped nothing.
+// A Stop's event, through the real host: written in the Stop's serialized step as it is accepted,
+// before the interrupt and before anything that ends the child, naming the turn, who asked and
+// the target it captured; never by a Stop that stopped nothing.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { agentSessionFailureFact } from '../../../shared/agent-session-failure'
@@ -75,8 +75,9 @@ describe("a Stop's event", () => {
       return { cancelled: true }
     })
     const fields = { turnId: 'turn-named' }
+    const operationId = hostTestOperationId()
     const stopped = await rig.host.cancel(QUEUED_RIG_CALLER, {
-      envelope: rig.envelope(fields, 'agentSession.cancel', hostTestOperationId()),
+      envelope: rig.envelope(fields, 'agentSession.cancel', operationId),
       ...fields
     })
     expect(stopped).toMatchObject({ ok: true })
@@ -108,27 +109,36 @@ describe("a Stop's event", () => {
     expect(stopRow?.seq).toBeLessThan(turnEnd ?? 0)
   })
 
-  it('a write that throws before it is queued is reported, and the Stop still interrupts', async () => {
+  // Saved first: a Stop whose acceptance cannot be written acts on nothing and the agent runs on.
+  it('a Stop whose acceptance cannot be saved interrupts nothing and asks to try again', async () => {
     rig = await createQueuedMessageTestRig()
     await rig.workingSend()
     const warned = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    vi.spyOn(journal(), 'appendStopEvent').mockImplementation(() => {
-      throw new Error('the journal threw')
+    vi.spyOn(journal().stops, 'accept').mockRejectedValue(new Error('disk I/O error'))
+    const refused = await rig.stop()
+    expect(refused).toMatchObject({
+      ok: false,
+      refusal: {
+        code: 'agent_session_operation_invalid',
+        details: { reason: 'stopFailed' },
+        message: expect.stringMatching(/^Couldn't stop .+\. Try again\.$/)
+      }
     })
-    expect(await rig.stop()).toMatchObject({ ok: true, value: { cancelled: true } })
-    expect(rig.cancelTurn).toHaveBeenCalledTimes(1)
-    expect(warned).toHaveBeenCalledWith(
-      "[agent-session] stop-queued-bookkeeping: Stop's event row failed",
-      expect.objectContaining({ step: 'event row', error: new Error('the journal threw') })
-    )
+    expect(rig.cancelTurn).not.toHaveBeenCalled()
+    expect(rig.closeSession).not.toHaveBeenCalled()
+    expect(stopEvents()).toEqual([])
     warned.mockRestore()
   })
 
   it('at an agent still starting, reaches the journal before the start is ended, and holds a card queued before it', async () => {
     rig = await createQueuedMessageTestRig({ starting: true, restartable: true })
-    // A starting agent takes the send at once; it never proves its start.
+    // Held for a starting agent that never proves its start.
     rig.send('work on this')
-    await eventually(() => expect(rig.dispatch).toHaveBeenCalledTimes(1))
+    await eventually(() =>
+      expect(rig.host.collaboratorsForTests().sessions.get(HOST_TEST_SESSION)?.child?.phase).toBe(
+        'starting'
+      )
+    )
     const held = await queuedDraft('queued while it starts')
     let atEnd: JournalStopEvent[] | undefined
     rig.closeSession.mockImplementationOnce(async () => {
@@ -140,6 +150,7 @@ describe("a Stop's event", () => {
     expect(await rig.handoff(held)).toBeUndefined()
     expect(await rig.queuePause()).toEqual({ reason: 'stopped' })
     expect(rig.cancelTurn).not.toHaveBeenCalled()
+    expect(rig.dispatch).not.toHaveBeenCalled()
     expect(rig.closeSession).toHaveBeenCalledTimes(1)
     expect(atEnd).toEqual([
       { reason: 'user-stop', caller: QUEUED_RIG_CALLER.callerKey, at: expect.any(Number) }
@@ -245,7 +256,9 @@ describe("a Stop's event", () => {
     expect(stopEvents()).toEqual([])
   })
 
-  it('names a turn that ended while the next card is sent but shows no turn yet: writes, and holds that card', async () => {
+  // The turn it names is in the journal and over: a late Stop, an accepted no-op, even while the
+  // next card is handed over and shows no turn yet.
+  it('names a turn that ended while the next card is sent but shows no turn yet: writes nothing, and the card runs', async () => {
     rig = await createQueuedMessageTestRig()
     const working = await rig.workingSend()
     await turnRow('turn-1', 'running')
@@ -255,15 +268,15 @@ describe("a Stop's event", () => {
     await eventually(async () => expect((await rig.handoff(next))?.handedOverAt).toBeDefined())
     expect(journal().activeTurnId()).toBeNull()
     const fields = { turnId: 'turn-1' }
-    await rig.host.cancel(QUEUED_RIG_CALLER, {
+    const stopped = await rig.host.cancel(QUEUED_RIG_CALLER, {
       envelope: rig.envelope(fields, 'agentSession.cancel', hostTestOperationId()),
       ...fields
     })
-    expect(stopEvents()).toHaveLength(1)
-    await withdraw(await rig.handoffId(next))
-    await new Promise((resolve) => setTimeout(resolve, 250))
-    expect(await rig.drafts()).toEqual([{ messageId: next, state: 'waiting' }])
-    expect(await rig.queuePause()).toEqual({ reason: 'stopped' })
+    expect(stopped).toMatchObject({ ok: true, value: { turnId: 'turn-1', cancelled: false } })
+    expect(stopEvents()).toEqual([])
+    expect(rig.cancelTurn).not.toHaveBeenCalled()
+    expect(await rig.queuePause()).toBeNull()
+    expect((await rig.handoff(next))?.dispatchState).toBe('pending')
   })
 
   it("holds a card when it lands between the queue's pick and its claim", async () => {

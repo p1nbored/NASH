@@ -82,7 +82,7 @@ function sourceRows(
   return { repos: count(state.repos), folderWorkspaces: count(state.folderWorkspaces) }
 }
 
-export function targetLeases(userData: string, targetId: string): { state?: unknown }[] {
+function targetLeases(userData: string, targetId: string): { state?: unknown }[] {
   const leases = readPersistedProfileState(userData).sshRemotePtyLeases
   return (Array.isArray(leases) ? leases : []).filter((lease) => lease?.targetId === targetId)
 }

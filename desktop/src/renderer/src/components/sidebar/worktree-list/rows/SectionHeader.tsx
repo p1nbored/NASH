@@ -2,7 +2,7 @@ import React from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { VirtualItem } from '@tanstack/react-virtual'
 import { cn } from '@/lib/utils'
-import type { AppState } from '@/store/types'
+import type { RepoSshGateResolver } from '@/hooks/use-repo-ssh-gate-resolver'
 import { RepoIconGlyph } from '@/components/repo/repo-icon'
 import { RepoForkIndicator } from '@/components/repo/repo-fork-indicator'
 import type { FolderWorkspacePathStatus } from '../../../../../../shared/folder-workspace-path-status'
@@ -48,7 +48,7 @@ export type SectionHeaderRowContext = {
   collapsedGroups: Set<string>
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
   projectGroups: readonly ProjectGroup[]
-  sshConnectionStates: AppState['sshConnectionStates']
+  getRepoSshGate: RepoSshGateResolver
   highlightedRevealRowKey: string | null
   dragOverStatus: WorkspaceStatus | null
   pinDragOver: boolean
@@ -152,9 +152,7 @@ export function renderWorktreeSectionHeaderRow(args: {
     ? getRepoHeaderCreateState({
         repo: row.repo,
         label: row.label,
-        sshStatus: row.repo.connectionId
-          ? (ctx.sshConnectionStates.get(row.repo.connectionId)?.status ?? null)
-          : null
+        sshGate: ctx.getRepoSshGate(row.repo)
       })
     : null
   const folderBackedProjectGroup =

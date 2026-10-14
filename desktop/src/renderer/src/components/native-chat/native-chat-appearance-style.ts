@@ -16,11 +16,13 @@ export const NATIVE_CHAT_TRANSCRIPT_COLUMN_CLASS =
 export type NativeChatAppearanceStyle = CSSProperties &
   Record<`--${string}`, string | number> & {
     '--chat-font-size': string
+    '--chat-ui-font-size': string
     '--chat-code-font-size': string
     '--chat-content-max-width': string
     '--chat-inline-code-ratio': string
     '--chat-estimated-line-height': number
     '--chat-estimated-chars-per-line': number
+    '--chat-estimated-spacing-scale': number
   }
 
 // Width buckets keep a pixel-by-pixel resize from re-deriving the entire transcript.
@@ -66,6 +68,8 @@ export function nativeChatAppearanceStyle(
   const terminalFontSize = settings?.terminalFontSize ?? 14
   const fontSize = matching ? terminalFontSize : appearance.fontSize
   const codeFontSize = matching ? terminalFontSize : appearance.codeFontSize
+  // Message text follows the terminal (10-24); labels, controls and spacing stay in the chat's 12-20.
+  const uiFontSize = Math.max(12, Math.min(20, fontSize))
   const maxWidthPx = width === 'wide' ? 960 : width === 'full' ? Number.POSITIVE_INFINITY : 736
   const measuredWidth = nativeChatColumnWidthBucket(measuredColumnWidthPx)
   const columnWidthPx = Math.min(
@@ -75,6 +79,7 @@ export function nativeChatAppearanceStyle(
   const font = buildFontFamily(settings?.terminalFontFamily ?? '')
   const style: NativeChatAppearanceStyle = {
     '--chat-font-size': `${fontSize}px`,
+    '--chat-ui-font-size': `${uiFontSize}px`,
     '--chat-code-font-size': `${codeFontSize}px`,
     '--chat-content-max-width': width === 'full' ? 'none' : width === 'wide' ? '60rem' : '46rem',
     '--chat-inline-code-ratio': `${codeFontSize / fontSize}em`,
@@ -83,6 +88,7 @@ export function nativeChatAppearanceStyle(
       1,
       Math.floor((((96 * columnWidthPx) / 736) * 14) / fontSize)
     ),
+    '--chat-estimated-spacing-scale': uiFontSize / 14,
     '--chat-code-font-family': font
   }
   let light = settings?.theme === 'light' || (settings?.theme === 'system' && !systemPrefersDark)

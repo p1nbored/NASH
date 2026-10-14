@@ -1,5 +1,5 @@
 import { ZodError } from 'zod'
-import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-client'
+import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import {
   genericErrorMessage,
   unexpectedResponseMessage,

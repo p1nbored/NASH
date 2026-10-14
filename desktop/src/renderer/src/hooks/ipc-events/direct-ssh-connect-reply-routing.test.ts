@@ -5,7 +5,6 @@ import type {
   SshConnectionState,
   SshProviderEpoch
 } from '../../../../shared/ssh-types'
-import { createDirectSshBridgeRuntime } from './direct-ssh-bridge-runtime'
 import { registerDirectSshStateIpcBridge } from './direct-ssh-state-ipc-bridge'
 
 function connectedState(
@@ -81,29 +80,19 @@ async function createHarness(
     }
   })
   const store = useAppStore.getState()
-  const invalidate = vi.spyOn(store, 'invalidateStaleDirectSshTargetPtyBindings').mockReturnValue(1)
-  const retry = vi.spyOn(store, 'retryDirectSshTargetPanes').mockReturnValue(1)
   const clearBindings = vi.spyOn(store, 'clearDirectSshTargetPtyBindings').mockReturnValue(1)
-  const runtime = createDirectSshBridgeRuntime()
-  const requestReconnect = vi.spyOn(runtime.reconnectCoordinator, 'requestReconnect')
-  const prepareAndSync = vi.spyOn(runtime, 'prepareAndSync')
   const unsubs: (() => void)[] = []
+  const stop = registerDirectSshStateIpcBridge(unsubs)
   cleanups.push(() => {
     for (const unsubscribe of unsubs) {
       unsubscribe()
     }
-    runtime.stop()
+    stop()
   })
-  registerDirectSshStateIpcBridge(unsubs, runtime)
   await settle()
   return {
-    runtime,
     getState,
-    invalidate,
-    retry,
     clearBindings,
-    requestReconnect,
-    prepareAndSync,
     emit: (state: SshConnectionState) => {
       if (!stateListener) {
         throw new Error('SSH state listener was not registered')
@@ -130,9 +119,9 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('direct SSH connect reply routing', () => {
+describe('direct SSH connected-state routing', () => {
   it.each(['reply-first', 'push-first'] as const)(
-    'retries through the real coordinator once when connection ordering is %s',
+    'clears the target bindings once per connected push when ordering is %s',
     async (ordering) => {
       const harness = await createHarness()
       const state = connectedState()
@@ -144,53 +133,33 @@ describe('direct SSH connect reply routing', () => {
         harness.applyConnectReply(state)
       }
 
-      expect(harness.requestReconnect).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.invalidate).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.runtime.reconnectAuthorityByTarget.get(state.targetId)).toEqual(
-        authority(state)
-      )
+      expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
       await settle()
 
-      harness.retry.mockClear()
+      harness.clearBindings.mockClear()
       harness.emit({ ...state })
-
-      expect(harness.requestReconnect).toHaveBeenCalledOnce()
-      expect(harness.invalidate).toHaveBeenCalledOnce()
-      expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.prepareAndSync).toHaveBeenLastCalledWith(authority(state), 'wake-refresh')
+      expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
     }
   )
 
-  it('keeps hydration preparation-only and corrects its duplicate without requesting reconnect', async () => {
+  it('leaves bindings alone on initial hydration and clears on the next push', async () => {
     const state = connectedState()
     const harness = await createHarness([state])
 
-    expect(harness.prepareAndSync).toHaveBeenCalledExactlyOnceWith(
-      authority(state),
-      'initial-hydration'
-    )
-    expect(harness.requestReconnect).not.toHaveBeenCalled()
-    expect(harness.invalidate).not.toHaveBeenCalled()
-    expect(harness.retry).not.toHaveBeenCalled()
+    expect(harness.clearBindings).not.toHaveBeenCalled()
 
     harness.emit({ ...state })
-
-    expect(harness.requestReconnect).not.toHaveBeenCalled()
-    expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-    expect(harness.runtime.reconnectAuthorityByTarget.size).toBe(0)
+    expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
 
     const next = connectedState(state.targetId, 2)
     harness.applyConnectReply(next)
-    harness.retry.mockClear()
+    harness.clearBindings.mockClear()
     harness.emit(next)
-
-    expect(harness.requestReconnect).toHaveBeenCalledExactlyOnceWith(authority(next))
-    expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(next))
+    expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(next.targetId)
   })
 
   it.each(['disconnected', 'error'] as const)(
-    'forgets a routed authority after %s even when the next connect reply reaches the store first',
+    'clears bindings on %s and again on the next connected push',
     async (status) => {
       const state = connectedState()
       const harness = await createHarness([state])
@@ -199,17 +168,12 @@ describe('direct SSH connect reply routing', () => {
       expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
       harness.applyConnectReply(state)
       harness.emit(state)
-
-      expect(harness.requestReconnect).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.runtime.reconnectAuthorityByTarget.get(state.targetId)).toEqual(
-        authority(state)
-      )
+      expect(harness.clearBindings).toHaveBeenCalledTimes(2)
     }
   )
 
   it.each(['providerEpoch', 'connectionGeneration'] as const)(
-    'preserves initial hydration routing when %s must be reconciled',
+    'reconciles a partial %s on initial hydration without clearing',
     async (missingField) => {
       const state = connectedState()
       const partial: SshConnectionState = { ...state }
@@ -217,18 +181,10 @@ describe('direct SSH connect reply routing', () => {
       const harness = await createHarness([partial], [state])
 
       expect(useAppStore.getState().sshConnectionStates.get(state.targetId)).toEqual(state)
-      expect(harness.prepareAndSync).toHaveBeenCalledExactlyOnceWith(
-        authority(state),
-        'initial-hydration'
-      )
-      expect(harness.requestReconnect).not.toHaveBeenCalled()
-      expect(harness.retry).not.toHaveBeenCalled()
+      expect(harness.clearBindings).not.toHaveBeenCalled()
 
       harness.emit(state)
-
-      expect(harness.requestReconnect).not.toHaveBeenCalled()
-      expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.runtime.reconnectAuthorityByTarget.size).toBe(0)
+      expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
     }
   )
 
@@ -249,20 +205,18 @@ describe('direct SSH connect reply routing', () => {
       delete partial[missingField]
       harness.emit(partial)
 
-      expect(harness.requestReconnect).not.toHaveBeenCalled()
-      expect(harness.retry).not.toHaveBeenCalled()
+      expect(harness.clearBindings).not.toHaveBeenCalled()
       resolveState(state)
       await settle()
 
-      expect(harness.requestReconnect).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.invalidate).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.retry).toHaveBeenCalledWith(authority(state))
-      harness.emit(state)
-      expect(harness.requestReconnect).toHaveBeenCalledOnce()
+      expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(state.targetId)
+      expect(useAppStore.getState().sshConnectionStates.get(state.targetId)).toMatchObject(
+        authority(state)
+      )
     }
   )
 
-  it('keeps routed authorities and disconnect cleanup separate for each target', async () => {
+  it('keeps disconnect cleanup separate for each target', async () => {
     const harness = await createHarness()
     const first = connectedState('target-a')
     const second = connectedState('target-b')
@@ -271,21 +225,10 @@ describe('direct SSH connect reply routing', () => {
       harness.emit(state)
     }
     await settle()
-    expect(harness.requestReconnect.mock.calls).toEqual([[authority(first)], [authority(second)]])
+    expect(harness.clearBindings.mock.calls).toEqual([[first.targetId], [second.targetId]])
 
+    harness.clearBindings.mockClear()
     harness.emit({ ...first, status: 'disconnected' })
-    harness.retry.mockClear()
-    harness.emit(second)
-
-    expect(harness.requestReconnect).toHaveBeenCalledTimes(2)
-    expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(second))
-    expect(harness.runtime.reconnectAuthorityByTarget.get(second.targetId)).toEqual(
-      authority(second)
-    )
-    expect(harness.runtime.reconnectAuthorityByTarget.has(first.targetId)).toBe(false)
-
-    harness.applyConnectReply(first)
-    harness.emit(first)
-    expect(harness.requestReconnect).toHaveBeenNthCalledWith(3, authority(first))
+    expect(harness.clearBindings).toHaveBeenCalledExactlyOnceWith(first.targetId)
   })
 })

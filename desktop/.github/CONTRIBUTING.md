@@ -30,6 +30,13 @@ Ordinary installs include native optional dependencies for the current OS and CP
 Before a cross-architecture build (including `pnpm build:mac`, which produces both x64 and
 arm64 artifacts by default), run `pnpm install:release` to add the other CPU's variants.
 
+Linux `pnpm build`, `pnpm build:native`, and Linux packaging require a running Docker
+daemon to build the clipboard helper against Ubuntu 20.04 rather than the host's
+newer libraries. A verified cached helper can be reused without Docker. For native
+Wayland development, run `pnpm build:native` before `pnpm dev` to make text copying
+available. See the [clipboard build guide](../native/wayland-clipboard/README.md#building-and-testing).
+macOS and Windows builds do not use this helper or require Docker for it.
+
 ## Branch Naming
 
 Use a clear, descriptive branch name that reflects the change.

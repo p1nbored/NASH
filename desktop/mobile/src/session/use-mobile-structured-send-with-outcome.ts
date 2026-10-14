@@ -15,8 +15,12 @@ import type { StructuredAgentSessionState } from '../../../src/shared/structured
 import type { RpcClient } from '../transport/rpc-client'
 import type { MobileNativeChatSendOutcome } from './mobile-native-chat-send'
 import { dispatchMobileStructuredCommand } from './mobile-structured-composer-command'
+import type { MobileNativeChatSendErrorReporter } from './use-mobile-native-chat-send-error'
 import { sendMobileStructuredAgentSessionMessage } from './mobile-structured-agent-session-send'
+import type { MobileStructuredSends } from './use-mobile-structured-sends'
+import { structuredSessionOperationId } from './structured-session-operation-id'
 import { timeoutForDeadline } from './mobile-structured-agent-session-rpc'
+import { structuredAgentSessionSendSelection } from '../../../src/shared/structured-agent-session-option-view'
 import {
   pendingStructuredApproval,
   pendingStructuredQuestion
@@ -33,24 +37,29 @@ export function mobileStructuredSendQueues(
 
 export type StructuredMobileSendAttachment = StructuredAgentSessionAttachment & {
   id?: string
-  contentFingerprint?: string
 }
 
 export function useMobileStructuredSendWithOutcome(args: {
   agent: string | null
-  callerIdentity: string
   client: RpcClient | null
   sessionId: string | null
-  sessionKey: string
   enabled: boolean
   queueCapable: boolean
+  /** The host holds a /compact sent while the agent works as a card. */
+  commandsWait: boolean
   stateRef: { readonly current: StructuredAgentSessionState }
+  /** The chat reads Stopping: a send made now is drawn after the turn being stopped. */
+  stopping: boolean
+  accept: MobileStructuredSends['accept']
+  hold: MobileStructuredSends['hold']
   commandPending: { current: boolean }
   controller: Pick<
     StructuredAgentSessionComposerOptions,
     'snapshot' | 'setOption' | 'invokeAction' | 'conversationCommands'
   >
-  onSendError: (message: string) => void
+  onSendError: MobileNativeChatSendErrorReporter
+  /** Each send carries the model and effort the picker shows; an older host takes neither. */
+  carriesOptions?: boolean
 }): (
   text: string,
   images?: string[],
@@ -58,17 +67,20 @@ export function useMobileStructuredSendWithOutcome(args: {
   attachments?: readonly StructuredMobileSendAttachment[]
 ) => Promise<MobileNativeChatSendOutcome> {
   const {
+    accept,
     agent,
-    callerIdentity,
     client,
     commandPending,
+    commandsWait,
     controller,
     enabled,
+    hold,
     onSendError,
     queueCapable,
+    carriesOptions,
     sessionId,
-    sessionKey,
-    stateRef
+    stateRef,
+    stopping
   } = args
   return useCallback(
     async (
@@ -99,15 +111,20 @@ export function useMobileStructuredSendWithOutcome(args: {
         sessionId,
         fence: currentFence,
         pending: commandPending,
-        controller: {
-          agent: agent === 'claude' ? 'claude' : 'codex',
-          ...controller
-        },
-        canRun: () =>
-          !runningStructuredAgentSessionTurnId(stateRef.current) &&
-          !stateRef.current.items.some(
+        controller: { agent: agent ?? undefined, ...controller },
+        busy: () =>
+          stateRef.current.items.some(
             (item) => pendingStructuredApproval(item) || pendingStructuredQuestion(item)
-          ),
+          )
+            ? 'prompt'
+            : runningStructuredAgentSessionTurnId(stateRef.current)
+              ? 'working'
+              : null,
+        // A card waiting on a prompt nothing here can answer would hold it forever.
+        waitsInLine: (command) =>
+          command === 'compact' &&
+          commandsWait &&
+          !pendingPromptsAllUnanswerableHere(stateRef.current.items),
         onError: onSendError,
         timeoutMs
       })
@@ -118,33 +135,54 @@ export function useMobileStructuredSendWithOutcome(args: {
       if (body.blocks.length === 0) {
         return 'rejected'
       }
-      return sendMobileStructuredAgentSessionMessage({
+      // The host records it under this id, which is what settles it.
+      const send = {
+        clientMessageId: structuredSessionOperationId(),
+        body,
+        queuedAt: Date.now(),
+        ...(stopping ? { sentWhileStopping: true as const } : {})
+      }
+      // A pick on its way holds the send, so the picker shows what the chat holds.
+      const options =
+        carriesOptions && agent
+          ? structuredAgentSessionSendSelection(agent, controller.snapshot)
+          : undefined
+      const outcome = await sendMobileStructuredAgentSessionMessage({
         client,
         sessionId,
-        sessionKey,
-        callerIdentity,
         expectedRuntimeFence: currentFence,
         text,
         attachments: sendAttachments,
         ...(mobileStructuredSendQueues(queueCapable, stateRef.current.items)
           ? { delivery: 'queue-if-active' as const }
           : {}),
+        ...(options ? { options } : {}),
         deadline,
+        clientMessageId: send.clientMessageId,
         onError: onSendError
       })
+      if (outcome === 'accepted') {
+        accept(send, images)
+      } else if (outcome === 'unknown') {
+        hold(send)
+      }
+      return outcome
     },
     [
+      accept,
       agent,
-      callerIdentity,
       client,
       commandPending,
+      commandsWait,
       controller,
       enabled,
+      hold,
       onSendError,
       queueCapable,
+      carriesOptions,
       sessionId,
-      sessionKey,
-      stateRef
+      stateRef,
+      stopping
     ]
   )
 }

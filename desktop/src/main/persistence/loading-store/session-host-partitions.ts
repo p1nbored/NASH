@@ -1,3 +1,4 @@
+import { orderTerminalRowsByTabGroups } from '../../../shared/workspace-layout/terminal-row-order'
 import type { PersistedState } from '../../../shared/persisted-state-types'
 import type { WorkspaceSessionState } from '../../../shared/workspace-session-state-types'
 import { sanitizeWorkspaceSessionTerminalRetirements } from '../../runtime/mobile-session-terminal-persistence-retirement'
@@ -13,6 +14,7 @@ import { withoutRedundantGlobalFields } from '../../../shared/workspace-session-
 import { getRepoIdFromWorktreeId } from '../../../shared/worktree/id'
 import { readTerminalScrollbackSnapshotSync } from '../../terminal-scrollback-snapshots'
 import { preserveRuntimeAuthoredWorkspaceSessionFields } from '../runtime-authored-workspace-session-fields'
+import { dropClosedTerminalTabs } from '../closed-terminal-tab-write-fence'
 import { findWorktreeIdForTab } from '../restoring-sessions/pane-identity-migration'
 import { invalidateLocalWorktreeMetadataPruneInputs } from '../../local-worktree-metadata-prune-gate'
 import {
@@ -193,11 +195,14 @@ export function setHostWorkspaceSession(
   hostId: ExecutionHostId,
   session: WorkspaceSessionState
 ): void {
-  const prior =
+  const persisted =
     owner[sessionHostPartitionOperationsContext].runtime.state.workspaceSessionsByHostId?.[hostId]
+  const prior = persisted ? withRequiredWorkspaceSessionMaps(persisted) : undefined
+  // Host slices omit empty maps; retirement and rebasing need them before inspecting membership.
+  session = withRequiredWorkspaceSessionMaps(session)
   // Why here and not at the callers: the before-unload stage path writes the renderer's payload
   // straight through, so a per-caller guard leaves the quit write erasing runtime-authored rows.
-  session = preserveRuntimeAuthoredWorkspaceSessionFields(session, prior)
+  session = dropClosedTerminalTabs(preserveRuntimeAuthoredWorkspaceSessionFields(session, prior))
   // Why: each partition owns its topology fence; renderer writes omit it and must rebase locally.
   session = sanitizeWorkspaceSessionTerminalRetirements(session, prior)
   session = preserveMissingWorkspaceSessionTerminalBindings(
@@ -222,20 +227,11 @@ export function setHostWorkspaceSession(
   )
   owner[sessionHostPartitionOperationsContext].runtime.state.workspaceSessionsByHostId = {
     ...owner[sessionHostPartitionOperationsContext].runtime.state.workspaceSessionsByHostId,
-    [hostId]: withRequiredWorkspaceSessionMaps(pruned)
+    [hostId]: withRequiredWorkspaceSessionMaps(orderTerminalRowsByTabGroups(pruned))
   }
   scheduleSave(owner[sessionHostPartitionOperationsContext].scheduling, [
     'workspaceSessionsByHostId'
   ])
-}
-
-export function installSessionHostPartitionOperationsContext(
-  target: SessionHostPartitionOperations,
-  source: SessionHostPartitionOperations
-): void {
-  Object.defineProperty(target, sessionHostPartitionOperationsContext, {
-    value: source[sessionHostPartitionOperationsContext]
-  })
 }
 
 /**

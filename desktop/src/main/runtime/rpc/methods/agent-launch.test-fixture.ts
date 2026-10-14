@@ -7,19 +7,19 @@
 
 import { vi } from 'vitest'
 import { AGENT_LAUNCH_RUNTIME_CAPABILITY } from '../../../../shared/agent-launch-runtime-capability'
+import type { WorktreeLineageWarning } from '../../../../shared/worktree/lineage-types'
 import { AgentLaunchPaneAlreadyLiveError } from '../../../../shared/agent-launch-pane-already-live'
 import type { RpcContext } from '../core'
 import { resolveRpcCallerIdentity } from '../rpc-caller-identity'
 import type { AgentSessionRecordStore } from '../../agent-session-record-store'
+import type { TerminalWorkspaceLaunchScope } from '../../runtime-legacy-worker-terminal-recovery-types'
 import type {
   AgentLaunchTabPublished,
   AgentLaunchTabPublishRequest
 } from '../../../../shared/agent-launch-tab-publication'
 
 export const STRUCTURED_PREFERENCE = {
-  experimentalNativeChat: true,
-  experimentalStructuredNativeChat: true,
-  openAgentTabsInChatByDefault: true
+  experimentalNativeChat: true
 }
 
 export type AgentLaunchRuntimeStubOptions = {
@@ -32,6 +32,7 @@ export type AgentLaunchRuntimeStubOptions = {
   }
   /** What `createManagedWorktree` reports when the workspace exists but is incomplete. */
   createWarning?: string
+  createLineageWarnings?: WorktreeLineageWarning[]
   /** What `createTerminal` reports when the surface itself came up degraded. */
   terminalWarning?: string
   /** The pane `createTerminal` minted. Off by default so the existing outcome assertions keep
@@ -100,6 +101,7 @@ export function runtimeStub(options: AgentLaunchRuntimeStubOptions = {}) {
       }
     ),
     showRepo: vi.fn(async () => ({ id: 'repo-1' })),
+    createFolderWorkspace: vi.fn(async (_input: Record<string, unknown>) => ({ id: 'fw-new' })),
     createManagedWorktree: vi.fn(async (args: Record<string, unknown>) => {
       reportPromptCarry(options, args.onStartupPromptCarry, args.startupPrompt)
       if (args.startupAgent && options.startupTerminalPaneKey) {
@@ -114,7 +116,8 @@ export function runtimeStub(options: AgentLaunchRuntimeStubOptions = {}) {
             }
           : undefined,
         ...(options.setupReceipt ? { setupReceipt: options.setupReceipt } : {}),
-        ...(options.createWarning ? { warning: options.createWarning } : {})
+        ...(options.createWarning ? { warning: options.createWarning } : {}),
+        ...(options.createLineageWarnings ? { warnings: options.createLineageWarnings } : {})
       }
     }),
     // Args are declared so a test can assert what the launch asked for, not merely that it asked.
@@ -140,13 +143,15 @@ export function runtimeStub(options: AgentLaunchRuntimeStubOptions = {}) {
     })),
     // The scope resolves for every workspace kind, so unlike the worktree record above it never
     // refuses the floating sentinel — which is the whole reason the launch asks for this one.
-    showTerminalWorkspaceLaunchScope: vi.fn(async (selector: string) => ({
-      id: selector.replace(/^id:/, ''),
-      path: '/tmp/wt-7',
-      connectionId: null,
-      repo: null,
-      folderWorkspace: null
-    })),
+    showTerminalWorkspaceLaunchScope: vi.fn(
+      async (selector: string): Promise<TerminalWorkspaceLaunchScope> => ({
+        id: selector.replace(/^id:/, ''),
+        path: '/tmp/wt-7',
+        connectionId: null,
+        repo: null,
+        folderWorkspace: null
+      })
+    ),
     ensureStructuredAgentSessionHost: vi.fn(async () => {}),
     openAgentSessionRecordStore: vi.fn(async (): Promise<AgentSessionRecordStore> => {
       if (!launchRecordStore) {

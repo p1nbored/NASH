@@ -1,7 +1,6 @@
 /**
- * The connect path's terminal verdict for a host that may convert to a managed server. This
- * desktop's leases answer first; when they claim nothing and no relay session can be asked, the
- * host's own relay endpoints decide, so terminals another desktop opened there still block.
+ * The connect path's terminal verdict for a host that may convert to a managed server. The host's
+ * own relay endpoints decide, so terminals another desktop opened there still block.
  */
 import type { Store } from '../persistence'
 import type { HostServerTerminalVerdict } from './ssh-host-server-on-connect'
@@ -11,7 +10,7 @@ import {
 } from './ssh-host-relay-endpoint-census'
 import type { SshConnection } from './ssh-connection'
 import { censusWindowsHostRelays, windowsCensusNodePath } from './ssh-host-relay-windows-census'
-import { execCommand } from './ssh-relay-deploy-helpers'
+import { execCommand } from './ssh-relay-exec-command'
 import { readRemoteHomeCommand } from './ssh-remote-commands'
 import { resolveRemoteNodePath } from './ssh-remote-node-resolution'
 import { detectRemoteHostPlatform } from './ssh-remote-platform-detection'
@@ -19,30 +18,28 @@ import { isWindowsRemoteHost, normalizeRemoteHome, validateRemoteHome } from './
 import {
   assessOrcadMigrationTerminals,
   terminalsRunElsewhere,
-  type HostRelayTerminalProof,
-  type ListRelayPtyIds
+  type HostRelayTerminalProof
 } from './orcad-migration-terminal-gate'
 
 export async function relayTerminalsOnConnect(args: {
   store: Pick<Store, 'getSshRemotePtyLeases'>
   targetId: string
-  /** Null when no relay session is connected, as on a connect that has not registered one yet. */
-  listRelayPtyIds: ListRelayPtyIds | null
   censusHost: () => Promise<HostRelayEndpointCensus>
 }): Promise<HostServerTerminalVerdict> {
-  const proof = await assessOrcadMigrationTerminals(
-    args.store,
-    args.targetId,
-    args.listRelayPtyIds,
-    async () => hostTerminalProofFromCensus(await args.censusHost())
+  const proof = await assessOrcadMigrationTerminals(args.store, args.targetId, async () =>
+    hostTerminalProofFromCensus(await args.censusHost())
   )
-  return proof.verdict === 'exited'
-    ? { verdict: 'exited', count: 0 }
-    : {
-        verdict: proof.verdict,
-        count: proof.ptyIds.length || (proof.hostTerminals ?? 0),
-        ...(terminalsRunElsewhere(proof) ? { elsewhere: true } : {})
-      }
+  if (proof.verdict === 'exited') {
+    return { verdict: 'exited', count: 0 }
+  }
+  if (proof.verdict === 'bridged') {
+    return { verdict: proof.relayVerdict, count: proof.hostTerminals, bridged: true }
+  }
+  return {
+    verdict: proof.verdict,
+    count: proof.ptyIds.length || (proof.hostTerminals ?? 0),
+    ...(terminalsRunElsewhere(proof) ? { elsewhere: true } : {})
+  }
 }
 
 /** Only a listing that found no endpoint, or only idle ones, proves exit; `unenumerable` does not. */

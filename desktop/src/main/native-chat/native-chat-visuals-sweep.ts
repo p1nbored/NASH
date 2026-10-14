@@ -1,4 +1,4 @@
-// How a chat's visuals folder dies. The host never deletes a chat record, so no deletion event
+// How a chat's scratch folder dies. The host never deletes a chat record, so no deletion event
 // exists to hang cleanup on; instead each folder's life is derived from the records every run:
 //   1. a folder no chat record (readable or not) maps to is removed, so any future record
 //      deletion cleans up for free;
@@ -12,7 +12,7 @@ import type { AgentSessionExecutionLocation } from '../../shared/agent-session-r
 import { isDefinitiveAbsence } from '../../shared/definitive-filesystem-absence'
 import { yieldToEventLoop } from '../../shared/event-loop-yield'
 import type { StructuredAgentSessionLogger } from './agent-session-wire/structured-agent-session-logger'
-import { nativeChatVisualsFolderName, nativeChatVisualsRootFor } from './native-chat-visuals-folder'
+import { nativeChatScratchFolderName, nativeChatScratchRootFor } from './native-chat-scratch-folder'
 
 /** `removed` only on positive proof from the host that owns the workspace. */
 export type NativeChatVisualsWorkspaceVerdict = 'present' | 'removed' | 'unverifiable'
@@ -59,7 +59,7 @@ export async function sweepNativeChatVisualsFolders(
   isStopped: () => boolean = () => false
 ): Promise<NativeChatVisualsSweepResult> {
   const result = { removed: 0, failed: 0 }
-  const root = nativeChatVisualsRootFor(deps.stateDirectory)
+  const root = nativeChatScratchRootFor(deps.stateDirectory)
   // Listed before the records are read: a folder is created only after its chat's record, so
   // every folder seen here already has its record in the snapshot below.
   const entries = await listFolders(root)
@@ -68,7 +68,7 @@ export async function sweepNativeChatVisualsFolders(
     return result
   }
   const sessionByFolder = new Map(
-    held.map((sessionId) => [nativeChatVisualsFolderName(sessionId), sessionId])
+    held.map((sessionId) => [nativeChatScratchFolderName(sessionId), sessionId])
   )
   const remove = deps.remove ?? ((path: string) => rm(path, { recursive: true, force: true }))
   let verdict: ReturnType<NonNullable<NativeChatVisualsSweepDeps['workspaceVerdicts']>> | undefined
@@ -97,7 +97,7 @@ export async function sweepNativeChatVisualsFolders(
       result.removed += 1
     } catch (error) {
       result.failed += 1
-      deps.logger.warn('native-chat visuals folder could not be removed', {
+      deps.logger.warn('native-chat scratch folder could not be removed', {
         scope: 'nativeChatVisuals.sweep',
         reason,
         ...(sessionId ? { sessionId } : {}),

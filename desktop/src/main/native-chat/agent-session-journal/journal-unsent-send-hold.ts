@@ -146,7 +146,9 @@ export async function holdUnsentSends(
                     ),
                     hostInstance: input.hostInstance,
                     queuedAt: { epoch, sequence: submission.acceptedSequence ?? 0 },
-                    position: card.position
+                    position: card.position,
+                    // Kept with the message, so the card runs on what it was sent with.
+                    ...(submission.options ? { options: submission.options } : {})
                   }
                 : null,
               positions: moves

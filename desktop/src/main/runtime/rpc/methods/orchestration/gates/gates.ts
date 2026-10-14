@@ -26,18 +26,21 @@ export const ORCHESTRATION_GATE_METHODS = [
   // Why: the names stay registered so an old client reads orchestration_migration_required, not method_not_found.
   defineMethod({
     name: 'orchestration.run',
+    permission: 'workspace',
     params: RunParams,
     handler: refuseRetiredCoordinatorLoop
   }),
 
   defineMethod({
     name: 'orchestration.runStop',
+    permission: 'workspace',
     params: RunStopParams,
     handler: refuseRetiredCoordinatorLoop
   }),
 
   defineMethod({
     name: 'orchestration.gateCreate',
+    permission: 'workspace',
     params: GateCreateParams,
     handler: (
       params,
@@ -85,6 +88,7 @@ export const ORCHESTRATION_GATE_METHODS = [
 
   defineMethod({
     name: 'orchestration.gateResolve',
+    permission: 'workspace',
     params: GateResolveParams,
     handler: (
       params,
@@ -117,6 +121,7 @@ export const ORCHESTRATION_GATE_METHODS = [
 
   defineMethod({
     name: 'orchestration.gateList',
+    permission: 'workspace',
     params: GateListParams,
     handler: (
       params,

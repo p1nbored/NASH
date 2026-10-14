@@ -64,6 +64,7 @@ export function NativeChatApprovalCard({
       <div className="mx-auto flex h-full min-h-0 max-h-full w-full max-w-(--chat-content-max-width) px-3 pt-2 pb-1 sm:px-4">
         <div
           ref={cardRef}
+          data-native-chat-prompt-card-focus={shouldFocus || undefined}
           data-native-chat-approval-card="true"
           role="group"
           aria-label={approval.title}
@@ -105,14 +106,14 @@ export function NativeChatApprovalCard({
             <div
               data-native-chat-approval-content="true"
               tabIndex={0}
-              className="min-h-0 max-h-72 shrink space-y-2 overflow-auto text-xs text-muted-foreground scrollbar-sleek focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70"
+              className="min-h-0 max-h-72 shrink space-y-2 overflow-auto text-sm text-muted-foreground scrollbar-sleek focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
             >
               {approval.description ? (
                 <p className="whitespace-pre-wrap break-words">{approval.description}</p>
               ) : null}
               {approval.decisionReason ? (
                 <p className="whitespace-pre-wrap break-words">
-                  <span className="font-medium text-foreground/80">
+                  <span className="font-medium text-foreground">
                     {translate('components.native-chat.approval.reason', 'Reason')}:{' '}
                   </span>
                   {approval.decisionReason}
@@ -120,7 +121,7 @@ export function NativeChatApprovalCard({
               ) : null}
               {neededPath ? (
                 <p className="break-words">
-                  <span className="font-medium text-foreground/80">
+                  <span className="font-medium text-foreground">
                     {translate('components.native-chat.approval.needsAccess', 'Needs access to')}
                     :{' '}
                   </span>
@@ -140,7 +141,7 @@ export function NativeChatApprovalCard({
                   />
                   {approval.subject.filePath ? (
                     <p className="mt-2 break-all">
-                      <span className="font-medium text-foreground/80">
+                      <span className="font-medium text-foreground">
                         {translate('components.native-chat.approval.plan.file', 'Plan file')}:{' '}
                       </span>
                       <span className="font-mono">{approval.subject.filePath}</span>
@@ -151,7 +152,7 @@ export function NativeChatApprovalCard({
                 <div
                   data-native-chat-approval-detail="true"
                   data-native-chat-code-content
-                  className="whitespace-pre-wrap break-words font-mono"
+                  className="whitespace-pre-wrap break-words font-mono text-chat-code"
                 >
                   {approval.detail}
                 </div>

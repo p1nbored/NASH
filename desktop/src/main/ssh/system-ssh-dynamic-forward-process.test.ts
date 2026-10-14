@@ -98,6 +98,8 @@ describe('system SSH dynamic forward process', () => {
         '127.0.0.1:45678'
       ])
     )
+    expect(args).toEqual(expect.arrayContaining(['-o', 'ExitOnForwardFailure=no']))
+    expect(args).not.toContain('ExitOnForwardFailure=yes')
     expect(args.indexOf('-D')).toBeLessThan(args.indexOf('--'))
     expect(args[args.indexOf('--') + 1]).toBe('orca@ssh.example.com')
     expect(spawnMock).toHaveBeenCalledOnce()

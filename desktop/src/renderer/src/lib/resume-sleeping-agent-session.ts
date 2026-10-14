@@ -11,6 +11,7 @@ import {
   recordPaneIsOwnedByPreservedPane,
   stablePaneHasLivePty
 } from './sleeping-agent-pane-ownership'
+import { isPaneSpawnDeferred } from './pane-spawn-deferral-registry'
 import {
   launchSleepingAgentSession,
   type ResumeSleepingAgentSessionsOptions
@@ -257,6 +258,11 @@ export function resumeSleepingAgentSessionsForWorktree(
     // hibernation wake for this session; its record clears when that spawn
     // succeeds. Launching or clearing here would double-resume the session.
     if (options?.skipClaimKeys?.has(claimKey)) {
+      continue
+    }
+    // Why: a pane whose restore its host deferred resumes this record itself when opened; its own
+    // queued startup matches the record, which must not read as a duplicate to clear.
+    if (isPaneSpawnDeferred(record.paneKey)) {
       continue
     }
     if (isInvalidWorktreeActivationRecord(record)) {

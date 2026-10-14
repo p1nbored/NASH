@@ -14,11 +14,8 @@ import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewp
 import { isXtermInstanceDisposed } from '@/lib/pane-manager/xterm-instance-disposed'
 import { readSplitRatio, SPLIT_RATIO_TOLERANCE } from '@/lib/pane-manager/pane-split-ratio'
 import { recordRendererCrashBreadcrumb } from '@/lib/crash-breadcrumb-recorder'
-import {
-  getLeftmostLeafId,
-  normalizeTerminalLayoutSnapshot,
-  resolveRootlessTerminalLayoutLeafId
-} from './terminal-layout-leaf-ids'
+import { getLeftmostLeafId, normalizeTerminalLayoutSnapshot } from './terminal-layout-leaf-ids'
+import { resolveRootlessTerminalLayoutLeafId } from '../../../../shared/workspace-layout/terminal-pane-tree'
 
 export {
   collectLeafIdsInOrder,

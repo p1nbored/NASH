@@ -273,7 +273,6 @@ describe('runTerminalViewportFitPass', () => {
       viewportRef: { current: overrides.viewport ?? null },
       viewportMeasuredRef: { current: overrides.viewportMeasured ?? false },
       subscribeSeqRef: { current: new Map([[HANDLE, 1]]) },
-      initializedHandlesRef: { current: new Set([HANDLE]) },
       terminalUnsubsRef,
       terminalFrameRef: { current: { width: 390, height: 600 } },
       getTerminalRef: () => webView,

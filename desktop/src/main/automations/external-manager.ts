@@ -22,7 +22,8 @@ import {
   type ExternalAutomationManagerCacheEntry
 } from './external-automation-manager-cache'
 import type { ExternalAutomationProbeScheduler } from './external-automation-probe-scheduler'
-import { listLocalManager, listRemoteManager } from './external-manager-discovery'
+import { listLocalManager } from './external-manager-discovery'
+import { SshHostNotServedError } from '../providers/ssh-host-not-served-error'
 import {
   createExternalAutomation,
   runExternalAutomationAction,
@@ -88,7 +89,7 @@ export function createScopedExternalAutomations(
             scopeKey: scope.ownerKey,
             run: () =>
               scope.sshTarget
-                ? listRemoteManager(scope.sshTarget, scope.provider)
+                ? Promise.reject(new SshHostNotServedError(scope.sshTarget.id))
                 : listLocalManager(scope.provider)
           }),
         { refresh: request.refresh }

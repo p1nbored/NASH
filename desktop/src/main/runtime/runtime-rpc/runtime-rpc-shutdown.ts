@@ -1,5 +1,6 @@
 import { getDotIngressPort } from '../dot-ingress/dot-ingress-control'
 import { RuntimeRpcMobilePairing } from './runtime-rpc-mobile-pairing'
+import { publishHostDescriptor } from '../host-descriptor'
 
 export type RuntimeRpcClientActivity = {
   openConnections: number
@@ -43,6 +44,10 @@ export class RuntimeRpcShutdown extends RuntimeRpcMobilePairing {
     }
     this.metadataOwnershipWatch?.stop()
     this.metadataOwnershipWatch = null
+    if (this.hostDescriptor) {
+      publishHostDescriptor(this.runtime.getRuntimeId(), null)
+    }
+    this.mobileSocketWiring?.dispose()
     this.mobileSocketWiring = null
     this.detachWebSocketWiring = null
     // Why: the dot endpoint removes its own discovery file; the CLI metadata file stays (see below).

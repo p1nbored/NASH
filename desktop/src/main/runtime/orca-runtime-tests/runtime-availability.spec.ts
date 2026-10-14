@@ -2,9 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   FLOATING_TERMINAL_WORKTREE_ID,
   OrcaRuntimeService,
-  electronMocks,
-  registerSshGitProvider,
-  unregisterSshGitProvider
+  electronMocks
 } from '../orca-runtime-test-mocks.spec'
 import {
   HEADLESS_LEAF_ID,
@@ -178,7 +176,6 @@ describe('OrcaRuntimeService', () => {
       getForegroundProcess: async () => null
     })
     const listWorktrees = vi.fn(() => new Promise<never>(() => {}))
-    registerSshGitProvider('ssh-target', { listWorktrees } as never)
 
     vi.useFakeTimers()
     try {
@@ -198,7 +195,7 @@ describe('OrcaRuntimeService', () => {
       expect(listWorktrees).not.toHaveBeenCalled()
       expect(listProcesses).toHaveBeenCalledOnce()
       expect(listProcesses).toHaveBeenCalledWith(
-        'ssh-target',
+        'ssh:ssh-target',
         expect.objectContaining({ deadlineMs: expect.any(Number) })
       )
       expect(result).toMatchObject({
@@ -207,7 +204,6 @@ describe('OrcaRuntimeService', () => {
       })
     } finally {
       vi.useRealTimers()
-      unregisterSshGitProvider('ssh-target')
     }
   })
 

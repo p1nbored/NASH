@@ -33,9 +33,6 @@ vi.mock('@/runtime/runtime-terminal-inspection', () => ({
   isRemoteRuntimePtyId: () => false,
   sendRuntimePtyInput: vi.fn()
 }))
-vi.mock('@/lib/agent-paste-draft', () => ({
-  getSettingsForAgentTabRuntimeOwner: () => ({})
-}))
 vi.mock('./native-chat-runtime-send', () => ({
   sendNativeChatMessage: vi.fn(),
   sendNativeChatTypedCommand: vi.fn(),
@@ -118,8 +115,7 @@ beforeEach(() => {
     configurable: true,
     value: {
       git: { discoverCommitMessageModels: vi.fn().mockResolvedValue({ success: false }) },
-      pty: { getMainBufferSnapshot: vi.fn().mockResolvedValue(null) },
-      ui: { onFileDrop: () => vi.fn() }
+      pty: { getMainBufferSnapshot: vi.fn().mockResolvedValue(null) }
     }
   })
 })

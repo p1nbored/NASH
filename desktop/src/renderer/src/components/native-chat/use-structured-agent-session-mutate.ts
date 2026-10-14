@@ -19,7 +19,7 @@ import {
 } from '../../../../shared/agent-session-write-failure'
 import { structuredAgentSessionPayloadFingerprint } from '../../../../shared/structured-agent-session-mutation'
 import { structuredSessionOperationId } from './structured-agent-session-operation-id'
-import type { RuntimeClientTarget } from '@/runtime/runtime-rpc-client'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 import {
   callStructuredAgentSession,

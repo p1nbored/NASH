@@ -7,7 +7,7 @@ const { waitForSentinel, request, dispose } = vi.hoisted(() => ({
   dispose: vi.fn()
 }))
 
-vi.mock('./ssh-relay-deploy-helpers', () => ({ waitForSentinel }))
+vi.mock('./ssh-relay-sentinel', () => ({ waitForSentinel }))
 vi.mock('./ssh-channel-multiplexer', () => ({
   SshChannelMultiplexer: class {
     request = request
@@ -15,7 +15,7 @@ vi.mock('./ssh-channel-multiplexer', () => ({
   }
 }))
 
-import { countRelayEndpointPtys } from './ssh-relay-endpoint-pty-count'
+import { countRelayEndpointPtys, relayBridgeConnectCommand } from './ssh-relay-endpoint-pty-count'
 
 const exec = vi.fn(async () => ({}))
 // Only exec is read; the bridge transport itself is mocked above.
@@ -58,5 +58,29 @@ describe('asking a relay how many PTYs it runs', () => {
       countRelayEndpointPtys(conn, '/usr/bin/node', '/tmp/.orca-relay-1000/relay-x/relay-abc.sock')
     ).resolves.toBeNull()
     expect(exec).not.toHaveBeenCalled()
+  })
+})
+
+describe('relayBridgeConnectCommand', () => {
+  it("runs the relay's own bridge from its version directory", () => {
+    expect(
+      relayBridgeConnectCommand(
+        '/usr/bin/node',
+        '/home/dev/.orca-remote/relay-0.1.0+f6e4b640b122/relay-92ff.sock'
+      )
+    ).toBe(
+      "cd '/home/dev/.orca-remote/relay-0.1.0+f6e4b640b122' && '/usr/bin/node' relay.js --connect " +
+        "--sock-path '/home/dev/.orca-remote/relay-0.1.0+f6e4b640b122/relay-92ff.sock' " +
+        "--credential-file '/home/dev/.orca-remote/relay-0.1.0+f6e4b640b122/relay-92ff.sock.credential'"
+    )
+  })
+
+  it('declines an endpoint that does not sit in its own version directory', () => {
+    expect(
+      relayBridgeConnectCommand('/usr/bin/node', '/tmp/.orca-relay-1000/relay-1a2b/relay-92ff.sock')
+    ).toBeNull()
+    expect(
+      relayBridgeConnectCommand('/usr/bin/node', '/home/dev/.orca-remote/relay-92ff.sock')
+    ).toBeNull()
   })
 })

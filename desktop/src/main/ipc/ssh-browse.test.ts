@@ -69,7 +69,9 @@ describe('registerSshBrowseHandler', () => {
         { name: 'README.md', isDirectory: false }
       ]
     })
-    expect(exec).toHaveBeenCalledWith('cd "$HOME" && pwd && command ls -1Ap')
+    expect(exec).toHaveBeenCalledWith(
+      expect.stringContaining('\ncd "$HOME" && pwd && command ls -1Ap\n')
+    )
     expect(channel.listenerCount('data')).toBe(0)
     expect(channel.listenerCount('exit')).toBe(0)
     expect(channel.listenerCount('close')).toBe(0)
@@ -78,7 +80,62 @@ describe('registerSshBrowseHandler', () => {
     expect(channel.stderr.listenerCount('error')).toBe(0)
   })
 
-  it('escapes remote browse paths before invoking command ls', async () => {
+  it('reads the status from close when exit fired before the channel was returned', async () => {
+    const channel = createMockChannel()
+    // ssh2 can parse exit-status in the same chunk as the exec ack, before listeners attach.
+    const exec = vi
+      .fn()
+      .mockImplementationOnce(async () => {
+        channel.emit('exit', 0)
+        return channel
+      })
+      .mockRejectedValue(new Error('unexpected PowerShell fallback'))
+    const getConnectionManager = () => ({
+      getConnection: () => ({ exec })
+    })
+    registerSshBrowseHandler(getConnectionManager as never)
+
+    const resultPromise = handler(null, { targetId: 'ssh-1', dirPath: '~' })
+    await Promise.resolve()
+    channel.emit('data', Buffer.from('/home/user\nsrc/\n'))
+    channel.emit('close', 0)
+
+    await expect(resultPromise).resolves.toEqual({
+      resolvedPath: '/home/user',
+      pathFlavor: 'posix',
+      entries: [{ name: 'src', isDirectory: true }]
+    })
+    expect(exec).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps an observed exit status over the close status', async () => {
+    const channel = createMockChannel()
+    const fallback = createMockChannel()
+    const exec = vi
+      .fn()
+      .mockResolvedValueOnce(channel)
+      .mockImplementationOnce(async () => {
+        fallback.emit('exit', 127)
+        return fallback
+      })
+    const getConnectionManager = () => ({
+      getConnection: () => ({ exec })
+    })
+    registerSshBrowseHandler(getConnectionManager as never)
+
+    const resultPromise = handler(null, { targetId: 'ssh-1', dirPath: '~' })
+    const rejected = expect(resultPromise).rejects.toThrow('Remote listing failed (exit 7)')
+    await Promise.resolve()
+    channel.emit('data', Buffer.from('/home/user\n'))
+    channel.emit('exit', 7)
+    channel.emit('close', 0)
+    await vi.waitFor(() => expect(fallback.listenerCount('close')).toBe(1))
+    fallback.emit('close', 127)
+
+    await rejected
+  })
+
+  it('escapes remote browse paths and reads the listing past rc-file stdout', async () => {
     const channel = createMockChannel()
     const exec = vi.fn().mockResolvedValue(channel)
     const getConnectionManager = () => ({
@@ -88,7 +145,12 @@ describe('registerSshBrowseHandler', () => {
 
     const resultPromise = handler(null, { targetId: 'ssh-1', dirPath: "/tmp/it's here" })
     await Promise.resolve()
-    channel.emit('data', Buffer.from("/tmp/it's here\n"))
+    // Login-shell rc output ahead of the fence must not become the resolved path.
+    const command = String(exec.mock.calls[0]?.[0])
+    const begin = (/__ORCA_SSH_CAPTURE_BEGIN_ \w+?__/.exec(command)?.[0] ?? '').replace(' ', '')
+    const end = (/__ORCA_SSH_CAPTURE_END_ \w+?__/.exec(command)?.[0] ?? '').replace(' ', '')
+    channel.emit('data', Buffer.from(`RC-BANNER stdout\n\u001b]0;t\u0007${begin}`))
+    channel.emit('data', Buffer.from(`/tmp/it's here\n${end}`))
     channel.emit('exit', 0)
     channel.emit('close')
 
@@ -97,7 +159,9 @@ describe('registerSshBrowseHandler', () => {
       pathFlavor: 'posix',
       entries: []
     })
-    expect(exec).toHaveBeenCalledWith("cd '/tmp/it'\\''s here' && pwd && command ls -1Ap")
+    expect(exec).toHaveBeenCalledWith(
+      expect.stringContaining("\ncd '/tmp/it'\\''s here' && pwd && command ls -1Ap\n")
+    )
   })
 
   it('falls back to PowerShell when a Windows SSH shell rejects POSIX exec', async () => {
@@ -137,7 +201,10 @@ describe('registerSshBrowseHandler', () => {
       ]
     })
     expect(exec).toHaveBeenCalledTimes(2)
-    expect(exec).toHaveBeenNthCalledWith(1, "cd 'C:/Users/alice' && pwd && command ls -1Ap")
+    expect(exec).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("\ncd 'C:/Users/alice' && pwd && command ls -1Ap\n")
+    )
     expect(exec.mock.calls[1]?.[0]).toMatch(/^powershell\.exe /)
     expect(exec.mock.calls[1]?.[1]).toEqual({ wrapCommand: false })
 

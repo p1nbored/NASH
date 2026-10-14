@@ -21,7 +21,6 @@ import {
 
 const REPO_SCAN_CONCURRENCY = 2
 const LOCAL_WORKTREE_SCAN_CONCURRENCY = 1
-const REMOTE_FALLBACK_SCAN_CONCURRENCY = 2
 const DU_TIMEOUT_MS = 120_000
 const DU_MAX_BUFFER_BYTES = 16 * 1024 * 1024
 
@@ -129,11 +128,7 @@ export async function analyzeWorkspaceSpace(
   }
   options.onProgress?.({ ...progress })
   const limiters: WorkspaceSpaceScanLimiters = {
-    localWorktree: createWorkspaceSpaceScanLimiter(LOCAL_WORKTREE_SCAN_CONCURRENCY, options.signal),
-    remoteFallbackTraversal: createWorkspaceSpaceScanLimiter(
-      REMOTE_FALLBACK_SCAN_CONCURRENCY,
-      options.signal
-    )
+    localWorktree: createWorkspaceSpaceScanLimiter(LOCAL_WORKTREE_SCAN_CONCURRENCY, options.signal)
   }
   const repoResults = await mapWithConcurrency(reposToScan, REPO_SCAN_CONCURRENCY, (repo) =>
     scanWorkspaceSpaceRepo({

@@ -4,21 +4,33 @@ import type { WorkspaceHostScope } from '../../../../shared/ui-chrome-types'
 import {
   ALL_EXECUTION_HOSTS_SCOPE,
   LOCAL_EXECUTION_HOST_ID,
+  toRuntimeExecutionHostId,
   type ExecutionHostId
 } from '../../../../shared/execution-host'
 import {
   buildExecutionHostRegistry,
   type ExecutionHostHealth
 } from '../../../../shared/execution-host-registry'
+import { getExecutionHostHealthLabel } from '../../../../shared/execution-host-health'
 import {
   expandEquivalentExecutionHostIds,
   pickerExecutionHosts
 } from '../../../../shared/managed-orcad-execution-host'
 import type { RuntimeCompatVerdict } from '../../../../shared/protocol-compat'
 import type { SshConnectionState, SshConnectionStatus } from '../../../../shared/ssh-types'
-import type { PublicKnownRuntimeEnvironment } from '../../../../shared/runtime-environments'
+import {
+  isWslHostRuntimeEnvironment,
+  type PublicKnownRuntimeEnvironment
+} from '../../../../shared/runtime-environments'
 import type { RuntimeEnvironmentStatus } from '../../../../shared/runtime-host-status'
+import type { WslHostStatus } from '../../../../shared/wsl-host-types'
 import { translate } from '@/i18n/i18n'
+import {
+  getWslHostRowDetail,
+  getWslHostRowHealth,
+  getWslHostRowServerFilesMissingDetail,
+  getWslHostRowTurnedOffDetail
+} from './wsl-host-row-status'
 
 export type SidebarHostOption = {
   id: ExecutionHostId
@@ -33,6 +45,10 @@ export type SidebarHostOption = {
   connectionStatus?: SshConnectionStatus
   aliasHostIds?: readonly ExecutionHostId[]
   mergedIntoHostId?: ExecutionHostId
+  /** Set on a WSL host's row: the distro its Orca server runs in. */
+  wslDistro?: string
+  /** Why a listed WSL host cannot run: the experiment is off, or this build lacks its server files. */
+  wslUnavailable?: 'turned-off' | 'server-files-missing'
 }
 
 export type SidebarHostScopeOption = {
@@ -57,6 +73,11 @@ export function buildSidebarHostOptions(args: {
   // Why: per-host display-label overrides rename hosts everywhere the sidebar
   // options feed (host headers, scope picker, focus menu).
   hostLabelOverrides?: ReadonlyMap<ExecutionHostId, string>
+  wslHostStatuses?: Readonly<Record<string, WslHostStatus>>
+  /** False keeps WSL hosts' rows but marks them turned off. */
+  wslHostsEnabled?: boolean
+  /** True keeps WSL hosts' rows but marks them unable to run in this build. */
+  wslHostServerFilesMissing?: boolean
 }): SidebarHostOption[] {
   const configuredSshTargetIds = new Set(args.sshTargetLabels.keys())
   const projectSshTargetIds = new Set<string>()
@@ -68,8 +89,17 @@ export function buildSidebarHostOptions(args: {
       projectSshTargetIds.add(decodeURIComponent(repo.executionHostId.slice('ssh:'.length)))
     }
   }
+  const wslDistroByHostId = new Map<ExecutionHostId, { environmentId: string; distro: string }>()
+  for (const environment of args.runtimeEnvironments ?? []) {
+    if (isWslHostRuntimeEnvironment(environment)) {
+      wslDistroByHostId.set(toRuntimeExecutionHostId(environment.id), {
+        environmentId: environment.id,
+        distro: environment.orcadDeployment.distro
+      })
+    }
+  }
   const activeRuntimeHostId = args.settings?.activeRuntimeEnvironmentId?.trim()
-    ? (`runtime:${encodeURIComponent(args.settings.activeRuntimeEnvironmentId.trim())}` as const)
+    ? toRuntimeExecutionHostId(args.settings.activeRuntimeEnvironmentId.trim())
     : null
   return buildExecutionHostRegistry({
     repos: args.repos,
@@ -96,8 +126,31 @@ export function buildSidebarHostOptions(args: {
             : 'active'
       }
     }
+    const wsl = wslDistroByHostId.get(host.id)
+    const status = wsl ? args.wslHostStatuses?.[wsl.environmentId] : undefined
     return {
       ...host,
+      ...(wsl && args.wslHostServerFilesMissing === true
+        ? {
+            wslDistro: wsl.distro,
+            wslUnavailable: 'server-files-missing' as const,
+            detail: getWslHostRowServerFilesMissingDetail(),
+            health: 'disconnected' as const
+          }
+        : wsl && args.wslHostsEnabled === false
+          ? {
+              wslDistro: wsl.distro,
+              wslUnavailable: 'turned-off' as const,
+              detail: getWslHostRowTurnedOffDetail(),
+              health: 'disconnected' as const
+            }
+          : wsl
+            ? {
+                wslDistro: wsl.distro,
+                detail: getWslHostRowDetail(status),
+                health: getWslHostRowHealth(host.health, status)
+              }
+            : {}),
       presence: host.id === activeRuntimeHostId ? 'active' : 'project'
     }
   })
@@ -161,22 +214,7 @@ export function getCheckedHostRows<T extends SidebarHostOption>(
 }
 
 export function getSidebarHostHealthLabel(health: SidebarHostScopeOption['health']): string {
-  switch (health) {
-    case 'local':
-      return 'Local'
-    case 'available':
-      return 'Connected'
-    case 'connecting':
-      return 'Connecting'
-    case 'blocked':
-      return 'Update needed'
-    case 'disconnected':
-      return 'Disconnected'
-    case 'error':
-      return 'Needs attention'
-    case 'mixed':
-      return 'Mixed'
-  }
+  return health === 'mixed' ? 'Mixed' : getExecutionHostHealthLabel(health)
 }
 
 /**

@@ -35,6 +35,12 @@ vi.mock('./ssh-connection', () => ({
 }))
 
 import { SshConnectionManager } from './ssh-connection-manager'
+import {
+  clearSshCredentialDeclined,
+  recordSshCredentialDeclined,
+  resetSshCredentialDeclinesForTests
+} from './ssh-credential-decline'
+import { isAuthError } from './ssh-connection-utils'
 
 const target = {
   id: 'target-1',
@@ -158,5 +164,43 @@ describe('SshConnectionManager', () => {
 
     expect(mockState.instances[0].disconnect).toHaveBeenCalledOnce()
     expect(manager.getConnection(target.id)).toBeUndefined()
+  })
+})
+
+describe('SshConnectionManager after a cancelled sign-in', () => {
+  beforeEach(() => {
+    mockState.connectResults.length = 0
+    mockState.instances.length = 0
+    resetSshCredentialDeclinesForTests()
+  })
+
+  it('refuses an automatic dial as an auth failure without opening a connection', async () => {
+    // Every automatic path (managed tunnel, host status, census, deploy) dials through here.
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    recordSshCredentialDeclined(target.id)
+
+    const error = await manager.connect(target).catch((err: unknown) => err)
+
+    expect(error instanceof Error && isAuthError(error)).toBe(true)
+    expect(mockState.instances).toHaveLength(0)
+  })
+
+  it('still reuses a connection that is already up', async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    const conn = await manager.connect(target)
+    recordSshCredentialDeclined(target.id)
+
+    await expect(manager.connect(target)).resolves.toBe(conn)
+  })
+
+  it('dials again once an explicit sign-in lifts the decline', async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    recordSshCredentialDeclined(target.id)
+    await expect(manager.connect(target)).rejects.toThrow()
+
+    clearSshCredentialDeclined(target.id)
+
+    await expect(manager.connect(target)).resolves.toBeDefined()
+    expect(mockState.instances).toHaveLength(1)
   })
 })

@@ -85,11 +85,11 @@ test('requires one canary or a bounded reviewed batch', () => {
   }
   assert.throws(() => validateSameCapWave({
     mode: 'canary-apply',
-    cellIds: 'production-gce-c35',
+    cellIds: 'production-gce-c36',
     targetDigest,
     rollbackDigest,
     drainPaceWindowMs: '300000',
-    confirmation: `ROLL_RELAY_SAME_CAP ${targetDigest} production-gce-c35`
+    confirmation: `ROLL_RELAY_SAME_CAP ${targetDigest} production-gce-c36`
   }), /cells/)
 })
 
@@ -136,11 +136,11 @@ test('the wave workflow chains exactly ten serial cell jobs', () => {
   assert.doesNotMatch(dispatch, /\n  cell_11:/)
 })
 
-test('lists only C17 and C18 as migration-only now that C34 is promoted, and C30-C34 as general', () => {
+test('lists only C17 and C18 as migration-only now that C35 is promoted, and C30-C35 as general', () => {
   assert.deepEqual(SAME_CAP_MIGRATION_ONLY_CELLS, ['production-gce-c17', 'production-gce-c18'])
   for (const cellId of [
     'production-gce-c30', 'production-gce-c31', 'production-gce-c32', 'production-gce-c33',
-    'production-gce-c34'
+    'production-gce-c34', 'production-gce-c35'
   ]) {
     assert.equal(SAME_CAP_CELLS.includes(cellId), true, cellId)
   }
@@ -216,6 +216,19 @@ test('rolls the migration-only cells but never mixes the two classes in one wave
     rollbackDigest,
     drainPaceWindowMs: '300000',
     confirmation: `ROLL_RELAY_SAME_CAP ${targetDigest} ${c34Mixed}`,
+    canaryRunId: '42'
+  }), /all general or all migration-only/)
+  // C35 is general once its Asia canary promotes it, so a rollback restores it general.
+  assert.equal(entryAdmission('production-gce-c35'), 'general')
+  assert.equal(selectorWaveDelta('production-gce-c35'), 2)
+  const c35Mixed = 'production-gce-c35,production-gce-c17'
+  assert.throws(() => validateSameCapWave({
+    mode: 'batch-apply',
+    cellIds: c35Mixed,
+    targetDigest,
+    rollbackDigest,
+    drainPaceWindowMs: '300000',
+    confirmation: `ROLL_RELAY_SAME_CAP ${targetDigest} ${c35Mixed}`,
     canaryRunId: '42'
   }), /all general or all migration-only/)
   const c31Mixed = 'production-gce-c31,production-gce-c18'
@@ -666,7 +679,7 @@ test('keeps Asia and migration-only cells on the default pace', () => {
   )
   for (const cellId of SAME_CAP_CELLS) {
     const fast = SAME_CAP_FAST_DRAIN_PACE_CELLS.includes(cellId)
-    const asia = ['c27', 'c28', 'c29', 'c30', 'c31', 'c34'].some(
+    const asia = ['c27', 'c28', 'c29', 'c30', 'c31', 'c34', 'c35'].some(
       (cell) => cellId === `production-gce-${cell}`
     )
     assert.equal(fast, entryAdmission(cellId) === 'general' && !asia, cellId)

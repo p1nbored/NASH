@@ -15,7 +15,6 @@ import {
   getSshProviderAuthority,
   isCurrentSshProviderAuthority
 } from '../../../ssh/ssh-provider-authority'
-import { getSshGitProvider } from '../../../providers/ssh-git-dispatch'
 import type { DetectedWorktreeRequestArgs } from '../ipc-context-schemas'
 import {
   hasValidDirectSshAuthority,
@@ -106,18 +105,13 @@ export function registerDetectedWorktreeHandlers(context: WorktreeIpcContext): v
         }
       }
       const connectionId = getSshTargetIdForExecutionHost(getRepoExecutionHostId(repo))
-      const provider = connectionId ? getSshGitProvider(connectionId) : undefined
       const authority = connectionId ? { ...getSshProviderAuthority(connectionId) } : undefined
       const result = await listDetectedWorktreesForCapturedRepo(
         store,
         repo,
         () =>
           isCapturedRepoCurrent(store, repo) &&
-          (!connectionId ||
-            (getSshGitProvider(connectionId) === provider &&
-              authority !== undefined &&
-              isCurrentSshProviderAuthority(authority))),
-        provider
+          (!connectionId || (authority !== undefined && isCurrentSshProviderAuthority(authority)))
       )
       return result && !('providerAbortStatus' in result)
         ? result

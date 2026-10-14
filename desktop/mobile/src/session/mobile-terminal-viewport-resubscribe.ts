@@ -196,7 +196,6 @@ export type TerminalViewportFitPassArgs = {
   viewportRef: MutableRef<TerminalViewportDims | null>
   viewportMeasuredRef: MutableRef<boolean>
   subscribeSeqRef: MutableRef<Map<string, number>>
-  initializedHandlesRef: MutableRef<Set<string>>
   terminalUnsubsRef: MutableRef<Map<string, () => void>>
   terminalFrameRef: MutableRef<TerminalFrame | null>
   getTerminalRef: (handle: string | null) => TerminalFitWebView | undefined
@@ -275,7 +274,6 @@ export function runTerminalViewportFitPass(args: TerminalViewportFitPassArgs): v
       }
       diagnostics.streamResubscribing(handle, seq, dims, budget.attempts(handle), decision.delayMs)
       args.unsubscribeTerminal(handle)
-      args.initializedHandlesRef.current.delete(handle)
       args.subscribeToTerminal(handle)
       // Why: only a resubscribe that actually armed spends budget; one turned away by its own gates never reached the host.
       if (args.terminalUnsubsRef.current.has(handle)) {

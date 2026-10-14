@@ -1,14 +1,14 @@
-/** Test-only: a bridge run as a local child, shaped like the SSH exec channel that runs it. */
+/** Test-only: a bridge run as a local child, shaped like the host exec channel that runs it. */
 import { createServer, type Server } from 'node:net'
 import { Duplex } from 'node:stream'
-import type { ClientChannel } from 'ssh2'
-import { spawnProcess } from '../../shared/child-process/run-process'
+import { spawnProcess } from '@orca/process-host'
+import type { RemoteCommandChannel } from './remote-install-transport'
 
 export function spawnLocalBridgeChannel(
   program: string,
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env
-): ClientChannel {
+): RemoteCommandChannel {
   const child = spawnProcess({ program, args, env })
   // Why emitClose off: like ssh2, `close` comes once, after the exit status.
   const channel = new Duplex({
@@ -34,7 +34,7 @@ export function spawnLocalBridgeChannel(
   child.on('close', () => channel.emit('close'))
   Object.assign(channel, { stderr: child.stderr, close: () => child.kill() })
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the bridge paths use only the stream, `stderr`, `close`, and the `exit`/`close` events assigned above.
-  return channel as unknown as ClientChannel
+  return channel as unknown as RemoteCommandChannel
 }
 
 /** A loopback echo server standing in for orcad. */

@@ -17,8 +17,6 @@ import {
   pointerCount,
   temporaryDirectories
 } from './orchestration-mailbox-notification-test-harness'
-import { SshChannelMultiplexer } from '../ssh/ssh-channel-multiplexer'
-import { writeToSshPtyWithSettlement } from '../providers/ssh-pty-write'
 import {
   MAILBOX_POINTER_ENTER_ATTEMPTED,
   MAILBOX_POINTER_WRITE_ATTEMPTED
@@ -81,53 +79,6 @@ describe('orchestration mailbox transport settlement', () => {
     await Promise.resolve()
     expect(pointerCount(restarted.write)).toBe(1)
     expect(db.getMessageById(message.id)?.delivered_at).toBeNull()
-    db.close()
-  })
-
-  it('does not replay pointer bytes after an in-flight SSH write loses its settlement', async () => {
-    vi.useFakeTimers()
-    const db = createDatabase('orca-mailbox-ambiguous-settlement-')
-    const first = createRuntime(db)
-    const transported: Buffer[] = []
-    const mux = new SshChannelMultiplexer({
-      supportsWriteSettlement: true,
-      write: (frame) => {
-        transported.push(frame)
-        return true
-      },
-      onData: () => {},
-      onClose: () => {}
-    })
-    const observed: WriteSettlement[] = []
-    first.runtime.setPtyController({
-      write: vi.fn(() => true),
-      writeWithSettlement: (ptyId, data) =>
-        writeToSshPtyWithSettlement(mux, ptyId, data).then((settlement) => {
-          observed.push(settlement)
-          return settlement
-        }),
-      kill: vi.fn(),
-      getForegroundProcess: async () => null
-    })
-    const run = createBoundRun(db, 'Ambiguous SSH pointer')
-    const message = insertDirectRunMessage(db, run.id, 'Keep one pointer')
-    await driveToLiveIdle(first.runtime)
-    expect(transported).toHaveLength(1)
-    mux.dispose('connection_lost')
-    await Promise.resolve()
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(observed).toEqual([
-      { outcome: 'unverifiable', reason: 'transport_settlement_lost', bytesHandedToTransport: true }
-    ])
-    expect(db.getMessageById(message.id)?.pointer_enter_pending).toBe(
-      MAILBOX_POINTER_WRITE_ATTEMPTED
-    )
-
-    const restarted = createRuntime(db)
-    await driveToLiveIdle(restarted.runtime)
-    expect(pointerCount(restarted.write)).toBe(0)
-    expect(db.getMessageById(message.id)?.read).toBe(0)
     db.close()
   })
 

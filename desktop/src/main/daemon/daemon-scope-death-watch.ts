@@ -1,8 +1,5 @@
-import {
-  spawnProcess,
-  type ProcessSpec,
-  type SpawnedProcess
-} from '../../shared/child-process/run-process'
+import { spawnProcess } from '@orca/process-host'
+import type { ProcessSpec, SpawnedProcess } from '@orca/process-host/process-spec'
 import { daemonScopeUnitName, detectOwnCgroupScopeUnit } from './daemon-cgroup-scope'
 
 // The pipe closes even on SIGKILL; a live/reused owner PID always vetoes cleanup.
@@ -21,12 +18,15 @@ while IFS= read -r cgroup; do
   esac
 done < /proc/self/cgroup
 [ "$owned" = 1 ] || exit 0
-exec systemctl --user --no-block stop "$2"
+# Slice first: stopping the scope kills this script before a second StopUnit is sent.
+exec systemctl --user --no-block stop \${3:+"$3"} "$2"
 `
 
 type ScopeDeathWatchOptions = {
   freshScope: boolean
   launchNonce?: string
+  /** The terminal ceiling slice; its scopes sit outside the daemon's and must be reaped too. */
+  ceilingSlice?: string | null
   log: (event: string, details?: Record<string, unknown>) => void
   platform?: NodeJS.Platform
   detectScope?: typeof detectOwnCgroupScopeUnit
@@ -48,7 +48,14 @@ export function startDaemonScopeDeathWatch(options: ScopeDeathWatchOptions): Spa
   try {
     const child = (options.spawn ?? spawnProcess)({
       program: '/bin/sh',
-      args: ['-c', SCOPE_DEATH_WATCH_SCRIPT, 'orca-daemon-scope-watch', String(process.pid), unit],
+      args: [
+        '-c',
+        SCOPE_DEATH_WATCH_SCRIPT,
+        'orca-daemon-scope-watch',
+        String(process.pid),
+        unit,
+        ...(options.ceilingSlice ? [options.ceilingSlice] : [])
+      ],
       env,
       detached: true,
       stdio: ['pipe', 'ignore', 'ignore']

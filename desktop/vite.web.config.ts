@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { createPdfjsViewerAssetsPlugin } from './config/build-plugins/pdfjs-viewer-assets'
+import { resolveBuildSourceCommit } from './config/scripts/build-source-commit.mjs'
 
 export default defineConfig({
   root: resolve('src/renderer'),
@@ -12,7 +13,8 @@ export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), createPdfjsViewerAssetsPlugin()],
   define: {
-    ORCA_FEATURE_WALL_ENABLED: 'true'
+    ORCA_FEATURE_WALL_ENABLED: 'true',
+    ORCA_BUILD_COMMIT: JSON.stringify(resolveBuildSourceCommit())
   },
   resolve: {
     alias: {

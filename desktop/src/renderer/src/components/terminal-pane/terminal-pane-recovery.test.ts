@@ -777,8 +777,8 @@ describe('requestTerminalPaneRecovery', () => {
 
     // One production reattach cycle: connect-pane-pty captures the epoch and
     // registers the xterm (connect-pane-pty.ts), the reattach answers
-    // unverifiable, recoverUnverifiableDirectSshReattach settles this pane's
-    // attempt 'failed' and re-requests, and the remount disposes that xterm —
+    // unverifiable, the pane settles its attempt 'failed' and re-requests, and
+    // the remount disposes that xterm —
     // session-reconcile-dispose unregisters the instance.
     async function driveUnverifiableReattachCycle(tabId: string): Promise<void> {
       const terminalRecoveryGeneration = captureTerminalPaneRecoveryGeneration(tabId)

@@ -83,15 +83,13 @@ describe('an AI button launched through the host', () => {
     expect(toast.error).toHaveBeenCalledOnce()
   })
 
-  it('says nothing and pastes nothing when the user closed the tab, or its pane explains', async () => {
-    for (const outcome of [{ kind: 'closed-by-user' }, { kind: 'pane-says' }] as const) {
-      deferredOutcome()(outcome)
-      await expect(launch().promptDeliveryResult).resolves.toEqual({
-        delivered: false,
-        failureNotified: true
-      })
-      await expect(sendGate()).resolves.toBe(false)
-    }
+  it('says nothing and pastes nothing when the user closed the tab', async () => {
+    deferredOutcome()({ kind: 'closed-by-user' })
+    await expect(launch().promptDeliveryResult).resolves.toEqual({
+      delivered: false,
+      failureNotified: true
+    })
+    await expect(sendGate()).resolves.toBe(false)
     expect(toast.error).not.toHaveBeenCalled()
   })
 })

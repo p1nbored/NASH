@@ -1,12 +1,12 @@
 import type { Readable } from 'node:stream'
-import type { ClientChannel } from 'ssh2'
-import type { SshConnection } from './ssh-connection'
+import type { RemoteCommandChannel, RemoteInstallTransport } from './remote-install-transport'
 import { createSshOperationAbortError, type SshExecOptions } from './ssh-connection-utils'
 import {
   redactRelayInstallMarkerError,
   redactRelayInstallMarkerTokens
 } from './ssh-relay-install-marker'
 import type { SystemSshCommandChannel } from './system-ssh-command'
+import { buildPosixStdoutFence } from '../../shared/posix-stdout-fence'
 
 const EXEC_TIMEOUT_MS = 30_000
 const COMMAND_CLOSE_GRACE_MS = 5_000
@@ -73,7 +73,7 @@ export function sshCommandExitError(
 }
 
 export async function execCommand(
-  conn: Pick<SshConnection, 'exec' | 'usesSystemSshTransport'>,
+  conn: Pick<RemoteInstallTransport, 'exec' | 'execWithClosedStdin' | 'usesSystemSshTransport'>,
   command: string,
   options?: ExecCommandOptions
 ): Promise<string> {
@@ -85,9 +85,17 @@ export async function execCommand(
   // Why: reconnect/disconnect can flip the connection back to ssh2 before a
   // killed local OpenSSH child emits close; the channel's transport is immutable.
   const openedWithSystemSsh = conn.usesSystemSshTransport?.() === true
-  let channel: ClientChannel
+  // Why: sshd runs the user's login shell before our /bin/sh wrapper, so rc-file stdout
+  // (an `echo`, a title escape) would otherwise be read as the command's answer.
+  const fence = execOptions.wrapCommand === false ? null : buildPosixStdoutFence(command, 'SSH')
+  const readPayload = (stdout: string): string => fence?.readStdout(stdout) ?? stdout
+  let channel: RemoteCommandChannel
   try {
-    channel = await conn.exec(command, execOptions)
+    // Why only without `stdin`: nothing below writes or ends the channel's stdin otherwise.
+    channel =
+      !stdin && conn.execWithClosedStdin
+        ? await conn.execWithClosedStdin(fence?.command ?? command, execOptions)
+        : await conn.exec(fence?.command ?? command, execOptions)
   } catch (error) {
     // Preserve identity/classifier fields while removing install-owner tokens.
     redactRelayInstallMarkerError(error)
@@ -190,13 +198,14 @@ export async function execCommand(
       } else if (code !== 0) {
         // Why: on the system-ssh transport channel.stderr carries local OpenSSH
         // client noise; preferring it masks the real failure in stdout (2>&1).
-        const output = [stderr.trim(), stdout.trim()].filter(Boolean).join('\n')
-        settle(reject, sshCommandExitError(command, code, stdout, output))
+        const payload = readPayload(stdout)
+        const output = [stderr.trim(), payload.trim()].filter(Boolean).join('\n')
+        settle(reject, sshCommandExitError(command, code, payload, output))
       } else {
         if (stderr && onStderr) {
           onStderr(redactRelayInstallMarkerTokens(stderr))
         }
-        settle(resolve, stdout)
+        settle(resolve, readPayload(stdout))
       }
     }
     const timeout = setTimeout(() => {

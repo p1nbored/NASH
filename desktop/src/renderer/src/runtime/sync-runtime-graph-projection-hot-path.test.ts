@@ -20,6 +20,7 @@ vi.mock('./sync-runtime-graph/editor-draft-hash', async (importOriginal) => {
 
 const { stableHashString } = await import('./sync-runtime-graph/editor-draft-hash')
 const {
+  AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS_FOR_TESTS: AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS,
   buildRuntimeMobileAgentStatusProjectionForTests,
   getRuntimeMobileSessionSyncKey,
   resetRuntimeMobileAgentStatusProjectionCacheForTests,
@@ -31,7 +32,6 @@ const {
   buildRuntimeMobileEditorDraftsProjection,
   buildRuntimeMobileOpenFilesProjection
 } = await import('./sync-runtime-graph/sync-projections')
-const { AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS } = await import('./sync-runtime-graph/graph-state')
 
 // ── Reference implementations: the pre-change bodies, kept verbatim ────────────────────
 

@@ -1,3 +1,4 @@
+import { pairedRuntimeConnectionFromOffer } from './paired-runtime-connection'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -62,7 +63,7 @@ describe('independent paired runtime SSH access persistence', () => {
       expectedEnvironment: prepare(expectedEnvironment),
       requestId: 'link-request',
       verifiedRuntimeId: 'host-runtime',
-      verifiedPairing,
+      verifiedConnection: pairedRuntimeConnectionFromOffer(verifiedPairing),
       tunnel,
       now: 90
     })
@@ -153,7 +154,7 @@ describe('independent paired runtime SSH access persistence', () => {
         expectedEnvironment: prepared,
         requestId: 'link-request',
         verifiedRuntimeId: 'host-runtime',
-        verifiedPairing: wrongPairing,
+        verifiedConnection: pairedRuntimeConnectionFromOffer(wrongPairing),
         tunnel
       })
     ).toThrow('did not verify')
@@ -236,7 +237,7 @@ describe('independent paired runtime SSH access persistence', () => {
       expectedEnvironment: prepared,
       requestId: 'link-request',
       verifiedRuntimeId: 'host-runtime',
-      verifiedPairing,
+      verifiedConnection: pairedRuntimeConnectionFromOffer(verifiedPairing),
       tunnel
     }
     expect(() =>

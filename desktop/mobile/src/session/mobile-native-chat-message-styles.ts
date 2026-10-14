@@ -29,6 +29,11 @@ export const styles = StyleSheet.create({
     lineHeight: TEXT_SIZE + 6,
     fontWeight: '500'
   },
+  contextBoundary: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderSubtle,
+    paddingTop: spacing.sm
+  },
   hostNotice: {
     color: colors.textMuted,
     fontSize: TEXT_SIZE,
@@ -68,6 +73,12 @@ export const styles = StyleSheet.create({
   },
   agentAttribution: {
     color: colors.textMuted,
+    fontSize: typography.metaSize
+  },
+  unsentNotice: {
+    maxWidth: '88%',
+    marginTop: spacing.xs,
+    color: colors.statusRed,
     fontSize: typography.metaSize
   },
   toolRun: {

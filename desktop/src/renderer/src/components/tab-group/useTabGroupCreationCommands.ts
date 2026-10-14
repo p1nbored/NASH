@@ -3,11 +3,9 @@ import { toast } from 'sonner'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import { useAppStore } from '../../store'
 import { focusTerminalTabSurface } from '../../lib/focus-terminal-tab-surface'
-import {
-  createWebRuntimeSessionBrowserTab,
-  createWebRuntimeSessionTerminal,
-  isWebRuntimeSessionActive
-} from '../../runtime/web-runtime-session'
+import { createWebRuntimeSessionBrowserTab } from '../../runtime/web-runtime-browser-creation'
+import { createWebRuntimeSessionTerminal } from '../../runtime/web-runtime-terminal-creation'
+import { isWebRuntimeSessionActive } from '../../runtime/web-runtime-session-environment'
 import { openTabBarEntry, type TabCreateEntryArgs } from '../tab-bar/tab-create-entry-action'
 import { openMobileEmulatorTab } from '@/lib/open-mobile-emulator-tab'
 import { ensureSimulatorTab, getSimulatorTabForWorktree } from '@/lib/ensure-simulator-tab'

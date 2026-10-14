@@ -4,22 +4,16 @@ import {
   makePaneKey,
   parseLegacyNumericPaneKey
 } from '../../../../shared/stable-pane-id'
-import { isRemoteAgentHooksEnabled } from '../../../../shared/agent-hook-relay'
 import {
   buildJcodeRuntimeDirEnv,
   JCODE_RUNTIME_DIR_ENV_KEY
 } from '../../../../shared/jcode-runtime-dir'
 import { isOpaqueRemintedPaneKey } from '../../../../shared/pane-key-alias'
 import { isValidTerminalTabId } from '../../../../shared/terminal-tab-id'
-import {
-  CLAUDE_AUTH_ENV_CONFLICT_MESSAGE,
-  hasClaudeAuthEnvConflict
-} from '../../../claude-accounts/environment'
 import { prewarmJcodeDaemon } from '../../../jcode/daemon-prewarm'
 import { LocalPtyProvider } from '../../../providers/local-pty-provider'
 import { resolvePathEnvKey } from '../../../pty/windows-environment-path'
 import { routesFreshSpawnsToLocalProvider } from '../host-env/fresh-spawn-routing'
-import { stripRemotePaneEnvWhenHooksDisabled } from '../provider/liveness'
 import { parseValidPaneKey } from '../pane/key-state'
 import { shouldRefreshNativeClaudeAgentTeamsEnv } from '../pane/launch-authority'
 import type { PtyIpcSpawnState } from './spawn-state'
@@ -28,16 +22,8 @@ import { prepareAntigravityAccountForLaunch } from '../../../antigravity/native-
 
 export async function assemblePtyIpcSpawnEnv(ctx: PtyIpcSpawnState): Promise<void> {
   const args = ctx.args
-  if (ctx.claudeAuth?.stripAuthEnv && hasClaudeAuthEnvConflict(args.env)) {
-    throw new Error(CLAUDE_AUTH_ENV_CONFLICT_MESSAGE)
-  }
   // Why: the daemon-backed provider skips LocalPtyProvider's buildSpawnEnv, so assemble the same host-local env here for parity.
-  // Safety: skip entirely for SSH — every injection is a loopback secret or a local path that leaks or misleads on the remote host.
-  // Why: forward pane env to SSH only when the relay hook path is enabled, or a newer relay could emit statuses this build can't route.
-  const sshSourceEnv = stripRemotePaneEnvWhenHooksDisabled(args.connectionId, args.env)
-  const baseEnvWithAuth = ctx.claudeAuth
-    ? { ...sshSourceEnv, ...ctx.claudeAuth.envPatch }
-    : sshSourceEnv
+  const baseEnvWithAuth = ctx.claudeAuth ? { ...args.env, ...ctx.claudeAuth.envPatch } : args.env
   const spawnPaneKey = baseEnvWithAuth?.ORCA_PANE_KEY
   const parsedSpawnPaneKey = parseValidPaneKey(spawnPaneKey)
   const verifiedPaneKey =
@@ -75,7 +61,6 @@ export async function assemblePtyIpcSpawnEnv(ctx: PtyIpcSpawnState): Promise<voi
   ctx.baseEnv = baseEnvWithAuth ? { ...baseEnvWithAuth } : undefined
   const shouldRefreshAgentTeamsEnv =
     !ctx.preAdoptedStablePane &&
-    !args.connectionId &&
     ctx.deps.runtime !== undefined &&
     ctx.stablePaneKey !== null &&
     shouldRefreshNativeClaudeAgentTeamsEnv({
@@ -119,17 +104,16 @@ export async function assemblePtyIpcSpawnEnv(ctx: PtyIpcSpawnState): Promise<voi
     ? ctx.baseEnv[resolvePathEnvKey(ctx.baseEnv, process.platform)]
     : undefined
   ctx.agentTeamsEnvToDelete = shouldRefreshAgentTeamsEnv ? ['TERM_PROGRAM'] : undefined
-  const canForwardPaneEnv = !args.connectionId || isRemoteAgentHooksEnabled()
-  if (ctx.baseEnv && ctx.stablePaneKey && canForwardPaneEnv) {
+  if (ctx.baseEnv && ctx.stablePaneKey) {
     ctx.baseEnv.ORCA_PANE_KEY = ctx.stablePaneKey
     if (typeof args.tabId === 'string') {
       ctx.baseEnv.ORCA_TAB_ID = args.tabId
-    } else if (!args.connectionId) {
+    } else {
       delete ctx.baseEnv.ORCA_TAB_ID
     }
     if (typeof args.worktreeId === 'string') {
       ctx.baseEnv.ORCA_WORKTREE_ID = args.worktreeId
-    } else if (!args.connectionId) {
+    } else {
       delete ctx.baseEnv.ORCA_WORKTREE_ID
     }
   } else if (ctx.baseEnv) {
@@ -143,7 +127,7 @@ export async function assemblePtyIpcSpawnEnv(ctx: PtyIpcSpawnState): Promise<voi
   // dir keeps every PTY on its own daemon (hooks inherit the pane key instead
   // of the first pane's). Local unix sockets only, and only when the pane key
   // survives into the spawn env (it is deleted in the else branch above).
-  if (ctx.baseEnv && ctx.stablePaneKey && !args.connectionId) {
+  if (ctx.baseEnv && ctx.stablePaneKey) {
     const jcodeEnv = buildJcodeRuntimeDirEnv(ctx.stablePaneKey)
     if (jcodeEnv) {
       // Why: LocalPtyProvider.spawn creates the dir async; daemon-host spawns
@@ -177,7 +161,7 @@ export async function assemblePtyIpcSpawnEnv(ctx: PtyIpcSpawnState): Promise<voi
     }
   }
   ctx.validatedPaneKey = ctx.stablePaneKey
-  // Why: SSH can strip ORCA_PANE_KEY when remote hooks are off; IPC tab/leaf metadata still names the pane.
+  // Why: IPC tab/leaf metadata names the pane even when ORCA_PANE_KEY was not proven.
   ctx.reservationPaneKey = ctx.metadataPaneKey ?? ctx.validatedPaneKey
   ctx.validatedLeafId = ctx.verifiedLeafId ?? ctx.metadataLeafId
   ctx.spawnTiming.mark('pane_env')

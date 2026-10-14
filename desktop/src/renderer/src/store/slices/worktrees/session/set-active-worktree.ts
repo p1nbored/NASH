@@ -1,6 +1,5 @@
 import type { WorktreeSlice } from '../../worktree-helpers'
 import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-slice-types'
-import type { AppState } from '../../../types'
 import type { WorktreeMeta } from '../../../../../../shared/worktree/meta-types'
 import { applyWorktreeUpdates } from '../../worktree-helpers'
 import { projectWorktreeTabModelReconciliation } from '../../tabs'
@@ -20,7 +19,8 @@ import {
 } from '../../../../../../shared/workspace-scope'
 import {
   applyDetectedWorktreeUpdates,
-  findKnownWorktreeById
+  findKnownWorktreeById,
+  folderWorkspaceMatchesHost
 } from '../listing/detected-worktree-meta'
 import { persistPassiveWorktreeMetaForOwner } from '../listing/worktree-owner-settings'
 import { resolveActivatedWorktreeSurface } from './active-worktree-surface'
@@ -57,9 +57,7 @@ export function createSetActiveWorktree(
     let shouldPrepareTerminalTabs = false
     let shouldTagTerminalTabs = false
     set((current) => {
-      const transitioned = stateTransition
-        ? ({ ...current, ...stateTransition.patch } as AppState)
-        : current
+      const transitioned = stateTransition ? { ...current, ...stateTransition.patch } : current
       const reconciliation = worktreeId
         ? projectWorktreeTabModelReconciliation(transitioned, worktreeId)
         : null
@@ -68,7 +66,7 @@ export function createSetActiveWorktree(
       )
       const s =
         reconciliation && reconciliationChanged
-          ? ({ ...transitioned, ...reconciliation.patch } as AppState)
+          ? { ...transitioned, ...reconciliation.patch }
           : transitioned
       const reconciledActiveTabId = reconciliation?.activeRenderableTabId ?? null
       if (!worktreeId) {
@@ -129,7 +127,8 @@ export function createSetActiveWorktree(
       const nextFolderWorkspaces =
         shouldClearUnread && workspaceScope?.type === 'folder'
           ? s.folderWorkspaces.map((workspace) =>
-              workspace.id === workspaceScope.folderWorkspaceId
+              workspace.id === workspaceScope.folderWorkspaceId &&
+              (!executionHostId || folderWorkspaceMatchesHost(workspace, executionHostId))
                 ? { ...workspace, isUnread: false }
                 : workspace
             )
@@ -180,6 +179,7 @@ export function createSetActiveWorktree(
         nextDetectedWorktrees !== s.detectedWorktreesByRepo ||
         nextFolderWorkspaces !== s.folderWorkspaces ||
         nextActiveRepoId !== s.activeRepoId ||
+        allDead ||
         reconciliationChanged ||
         stateTransition !== undefined
       if (!hasStateChange) {
@@ -275,7 +275,7 @@ export function createSetActiveWorktree(
     }
 
     // Why: activation is explicit enough to revalidate PR state now; the coordinator still coalesces and rate-guards.
-    if (worktreeId) {
+    if (worktreeId && workspaceScope?.type !== 'folder') {
       get().refreshGitHubForWorktreeIfStale(worktreeId)
     }
 
@@ -285,7 +285,11 @@ export function createSetActiveWorktree(
 
     if (shouldClearUnread) {
       if (workspaceScope?.type === 'folder') {
-        void get().updateFolderWorkspace(workspaceScope.folderWorkspaceId, { isUnread: false })
+        void get().updateFolderWorkspace(
+          workspaceScope.folderWorkspaceId,
+          { isUnread: false },
+          executionHostId ? { executionHostId } : undefined
+        )
         return true
       }
       persistPassiveWorktreeMetaForOwner(

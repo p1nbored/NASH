@@ -1,3 +1,5 @@
+import { routingAgentForTarget } from '../../../shared/routing-table/routing-cli-registry'
+import { taskAgentLaunchArgs } from '../../../shared/task-agent-launch-permissions'
 import { isEquivalentPaneKey } from '../orchestration/db/pane-key-match'
 import { releaseOrchestrationWorker } from '../rpc/methods/orchestration/worker/worker-release'
 import { workspaceKindForWorktreeId } from '../../../shared/workspace-launch-kind'
@@ -94,6 +96,8 @@ async function startWorker(
     getWorkflowRunStore(db).get(run.id)?.requestedAccess === 'read_only'
       ? 'read_only'
       : 'workspace_write'
+  const agent = routingAgentForTarget(route.target)
+  taskAgentLaunchArgs(agent, access, process.platform)
   const brief = [
     task.spec,
     'Expected outputs:',
@@ -119,12 +123,7 @@ async function startWorker(
     from: creator.handle,
     task: task.id,
     run: run.id,
-    agent:
-      route.target === 'codex_cli'
-        ? 'codex'
-        : route.target === 'claude_subagent'
-          ? 'claude'
-          : 'antigravity',
+    agent,
     model: route.availability.cli.model,
     ...(route.availability.cli.effort === null ? {} : { effort: route.availability.cli.effort }),
     ...(isolated
@@ -178,7 +177,19 @@ function routedWorkerMode(
   params: Parameters<typeof decideWorkerStartMode>[0]['params']
 ) {
   const mode = decideWorkerStartMode({ params, settings: readWorkerStartModeSettings(runtime) })
-  if (mode.mode !== 'structured' || runtime.getClientSettings().agentPermissionMode === 'manual') {
+  if (mode.mode !== 'structured') {
+    return mode
+  }
+  if (params.agent !== 'claude' && params.agent !== 'codex') {
+    return {
+      ...mode,
+      mode: 'terminal' as const,
+      reason: 'structured_sessions_unavailable' as const,
+      detail:
+        'Started a terminal worker to apply the routed task access policy through its native CLI.'
+    }
+  }
+  if (runtime.getClientSettings().agentPermissionMode === 'manual') {
     return mode
   }
   // Auto review needs original tool inputs and a dispatch-fenced decision; native prompts omit them.

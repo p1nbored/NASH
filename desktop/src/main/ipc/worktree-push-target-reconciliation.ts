@@ -10,7 +10,6 @@
 
 import { gitExecFileAsync } from '../git/runner'
 import { listWorktrees } from '../git/worktree'
-import type { SshGitProvider } from '../providers/ssh-git-provider'
 import type { GitPushTarget } from '../../shared/worktree/types'
 import { WORKTREE_ID_SEPARATOR, worktreeIdComparisonKey } from '../../shared/worktree/id'
 import { parseGitRemoteFetchUrls } from '../../shared/git-remote-url-index'
@@ -155,33 +154,5 @@ export async function reconcileOrphanedPrRemotes(
     )
   } catch (error) {
     console.warn(`[worktrees] Failed to reconcile orphaned PR remotes for ${repoPath}`, error)
-  }
-}
-
-/** SSH counterpart of {@link reconcileOrphanedPrRemotes}; the execution host owns the remotes. */
-export async function reconcileOrphanedPrRemotesSsh(
-  provider: SshGitProvider,
-  repoPath: string,
-  repoId: string,
-  store: WorktreePushTargetStore
-): Promise<void> {
-  if (!shouldReconcileNow(repoId)) {
-    return
-  }
-  lastReconciledAtByRepoId.set(repoId, Date.now())
-  try {
-    const liveWorktrees = await provider.listWorktrees(repoPath)
-    logReclaimed(
-      repoPath,
-      await reconcileOrphanedPrRemotesWithExec(
-        repoPath,
-        repoId,
-        store,
-        (args, cwd) => provider.exec(args, cwd),
-        liveWorktrees.map((worktree) => worktree.path)
-      )
-    )
-  } catch (error) {
-    console.warn(`[worktrees] Failed to reconcile orphaned PR remotes (SSH) for ${repoPath}`, error)
   }
 }

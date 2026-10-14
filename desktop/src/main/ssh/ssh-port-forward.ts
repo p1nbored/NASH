@@ -182,6 +182,20 @@ export class SshPortForwardManager {
     await Promise.all(toRemove.map((id) => this.removeForwardAsync(id)))
   }
 
+  /** Closes this connection's forwards that tunnel through a transport `conn` replaced. */
+  async closeStaleForwards(connectionId: string, conn: SshConnection): Promise<void> {
+    const stale = [...this.forwards.entries()]
+      .filter(([, forward]) => forward.entry.connectionId === connectionId)
+      .filter(([, forward]) => forward.isLive?.(conn) === false)
+      .map(([id]) => id)
+    await Promise.all(stale.map((id) => this.removeForwardAsync(id)))
+  }
+
+  /** Stops every forward and waits until each released its port; quit uses it. */
+  async closeAll(): Promise<void> {
+    await Promise.all([...this.forwards.keys()].map((id) => this.removeForwardAsync(id)))
+  }
+
   dispose(): void {
     const ids = [...this.forwards.keys()]
     for (const id of ids) {

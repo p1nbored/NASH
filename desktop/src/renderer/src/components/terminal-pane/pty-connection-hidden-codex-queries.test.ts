@@ -188,34 +188,40 @@ describe('connectPanePty', () => {
     binding.dispose()
   })
 
-  it('keeps hidden Codex terminal query chunks on the live xterm path', async () => {
-    const { connectPanePty } = await import('./pty-connection')
-    const transport = createMockTransport('pty-id')
-    const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
-    transport.connect.mockImplementation(async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
-      capturedDataCallback.current = callbacks.onData ?? null
-      return 'pty-id'
-    })
-    transportFactoryQueue.push(transport)
+  it.each(['codex', 'sleep 30 && codex', 'sleep 30 && claude'])(
+    'keeps hidden %s terminal query chunks on the live xterm path',
+    async (command) => {
+      const { connectPanePty } = await import('./pty-connection')
+      const transport = createMockTransport('pty-id')
+      const capturedDataCallback: { current: ((data: string) => void) | null } = { current: null }
+      transport.connect.mockImplementation(
+        async ({ callbacks }: { callbacks: ConnectCallbacks }) => {
+          capturedDataCallback.current = callbacks.onData ?? null
+          return 'pty-id'
+        }
+      )
+      transportFactoryQueue.push(transport)
 
-    const pane = createPane(1)
-    const manager = createManager(1)
-    const binding = connectPanePty(
-      pane as never,
-      manager as never,
-      createDeps({
-        isVisibleRef: { current: false },
-        startup: { command: 'codex' }
-      }) as never
-    )
-    await flushAsyncTicks(6)
+      const pane = createPane(1)
+      const manager = createManager(1)
+      const binding = connectPanePty(
+        pane as never,
+        manager as never,
+        // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: The connection fixture supplies the hidden pane APIs with this explicit startup command.
+        createDeps({
+          isVisibleRef: { current: false },
+          startup: { command }
+        }) as never
+      )
+      await flushAsyncTicks(6)
 
-    capturedDataCallback.current?.('\x1b[c')
+      capturedDataCallback.current?.('\x1b[c')
 
-    expect(pane.terminal.write).toHaveBeenCalledWith('\x1b[c', expect.any(Function))
+      expect(pane.terminal.write).toHaveBeenCalledWith('\x1b[c', expect.any(Function))
 
-    binding.dispose()
-  })
+      binding.dispose()
+    }
+  )
 
   it('keeps only coalesced hidden Codex terminal queries on the live xterm path', async () => {
     const { connectPanePty } = await import('./pty-connection')

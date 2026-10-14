@@ -14,10 +14,7 @@ import {
   type AntigravityWorkspaceResolver
 } from './session-scanner-antigravity-history'
 import { sessionCandidatesFromDiscoveries } from './session-scanner-candidates'
-import {
-  ensureSessionParseCacheLoaded,
-  scheduleSessionParseCachePersist
-} from './session-parse-cache-persistence'
+import { ensureSessionParseCacheLoaded } from './session-parse-cache-persistence'
 import {
   createSessionParseStats,
   parseAgentSessionFileCached,
@@ -142,8 +139,6 @@ async function scanAiVaultSessionStores(options: AiVaultScanOptions): Promise<Ai
         span.setAttribute('bytesRead', parseStats.bytesRead)
         span.setAttribute('issues', issues.length)
 
-        scheduleSessionParseCachePersist(parseStats)
-
         return {
           sessions: mergeSessions(cappedSessions, scopeSessions),
           issues: issues.map((issue) => ({ executionHostId, ...issue })),
@@ -235,9 +230,8 @@ async function parseSessionCandidates(args: {
   antigravityWorkspaceResolver?: AntigravityWorkspaceResolver
 }): Promise<AiVaultSession[]> {
   const sessions = new ScannedSessionCollection()
-  let index = 0
 
-  while (index < args.candidates.length) {
+  for (let index = 0; index < args.candidates.length;) {
     throwIfAiVaultScanCancelled(args.signal)
     if (
       canStopParsingSessions(sessions, args.limit, candidateFileTime(args.candidates[index]?.file))
@@ -261,6 +255,9 @@ async function parseSessionCandidates(args: {
         )
       )
     )
+    // An abort can land while a batch settles: a read it cut short is not that
+    // file's issue, and a partial parse must never be cached or returned.
+    throwIfAiVaultScanCancelled(args.signal)
 
     for (const result of results) {
       if (result.issue) {
@@ -274,9 +271,6 @@ async function parseSessionCandidates(args: {
     index += batchSize
   }
 
-  // An abort can land while the final batch settles; observe it here so a
-  // partial parse is never cached or returned as a complete scan.
-  throwIfAiVaultScanCancelled(args.signal)
   return [...sessions.values()]
 }
 

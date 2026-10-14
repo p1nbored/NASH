@@ -1,3 +1,6 @@
+import type { AgentLaunchRuntime } from '../../shared/agent-launch-runtime'
+import type { AgentLaunchTabViewerRule } from '../../shared/agent-launch-tab-publication'
+import type { SpawnIntent } from '../../shared/host-spawn-admission'
 import type { ParsedAgentStatusPayload } from '../../shared/agent-status-types'
 import type {
   AgentLaunchPreferences,
@@ -63,10 +66,18 @@ export type TerminalCreateOptions = {
    * the runtime still builds, so overriding them does not take the launch away from it.
    */
   agentArgs?: string | null
+  /** Main-internal: the runtime fact this agent's command was quoted for; its spawn takes the PTY
+   *  shell from it. Set by the host planner or a host caller that quoted with it, never a client. */
+  launchRuntime?: AgentLaunchRuntime
+  /** Account routing env merged over `startupAgent`'s plan env; an input to that plan, like
+   *  `agentArgs`, so not part of `callerSuppliedLaunch`. */
+  accountEnv?: Record<string, string>
   launchPreferences?: AgentLaunchPreferences
   terminalKittyKeyboardProtocol?: boolean
   terminalColorQueryReplies?: TerminalOscColorQueryReplyColors
   viewMode?: 'terminal' | 'chat'
+  /** The tab group a background create joins; defaults to the first group. */
+  targetGroupId?: string
   startupCommandDelivery?: WorktreeStartupLaunch['startupCommandDelivery']
   telemetry?: WorktreeStartupLaunch['telemetry']
   /** The surface that asked for this `startupAgent` launch; the runtime attributes every one it
@@ -74,10 +85,11 @@ export type TerminalCreateOptions = {
   launchSource?: string
   title?: string
   focus?: boolean
-  rendererBacked?: boolean
   activate?: boolean
   presentation?: RuntimeTerminalPresentation
   surfaceOwner?: false
+  /** Main-internal: recheck early publication when the host is ready to reveal its pane. */
+  agentLaunchViewer?: () => AgentLaunchTabViewerRule
   tabId?: string
   leafId?: string
   /** Refuse, rather than attach, when `tabId`/`leafId` name a pane whose PTY is already live. */
@@ -88,7 +100,11 @@ export type TerminalCreateOptions = {
   persistHostSessionBinding?: boolean
   agentSessionClaim?: AgentSessionExecutionClaim
   agentSessionCreateOperationId?: string
+  /** The paired client's declared intent; the host's fork gate validates and may defer it. */
+  spawnIntent?: SpawnIntent
   signal?: AbortSignal
+  /** Refuse (`worktree_terminals_sleeping`) instead of waking a worktree the host has put to sleep. */
+  refuseSleptWorktree?: boolean
   onPtySpawnCommitted?: () => void
   /** Called before the spawn request leaves this process; a throw before it proves nothing spawned. */
   onPtySpawnDispatched?: (launch?: {
@@ -151,11 +167,6 @@ export type HookLiveAgentRow = Pick<
   RuntimeAgentRowSnapshot,
   'payload' | 'updatedAt' | 'evidenceObservedAt' | 'stateStartedAt' | 'worktreeId'
 >
-
-export type RuntimePtyDataAdmission = Readonly<{
-  sequence: number
-  completion: Promise<void>
-}>
 
 export type TerminalHandleRecord = {
   handle: string

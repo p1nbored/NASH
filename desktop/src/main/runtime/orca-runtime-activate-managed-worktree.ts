@@ -8,16 +8,17 @@ import {
 } from '../../shared/runtime-navigation'
 import { getRepoExecutionHostId } from '../../shared/execution-host'
 import type { Repo } from '../../shared/repo-types'
+import type { TerminalWorkspaceLaunchScope } from './runtime-legacy-worker-terminal-recovery-types'
 import type { TuiAgent } from '../../shared/tui-agent'
 import type { RuntimeTerminalWait } from '../../shared/runtime-terminal-contracts'
-import type { WorktreeStartupLaunch } from '../../shared/worktree/launch-types'
 import type {
   WorktreeStartupDraftPaste,
   WorktreeStartupFollowup
 } from './runtime-worktree-agent-startup'
 import {
   buildWorktreeStartupForAgent,
-  buildWorktreeStartupForDraft
+  buildWorktreeStartupForDraft,
+  resolveWorktreeStartupDraftAgent
 } from './runtime-worktree-agent-startup'
 import type { AgentLaunchPreferences } from '../../shared/agent-session-host-authority'
 import type { Worktree } from '../../shared/worktree/types'
@@ -29,6 +30,7 @@ import type {
 } from '../../shared/worktree/lineage-types'
 import { recordCreatedWorktreeLineage as recordCreatedWorktreeLineageState } from './runtime-worktree-lineage-recording'
 import {
+  deliverWorktreeStartupFollowup,
   pasteWorktreeStartupDraftWhenReady,
   sendWorktreeStartupFollowupWhenReady,
   waitForWorktreeStartupDraft
@@ -85,14 +87,7 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
         this.notifyHostActivateWorktree(repo.id, worktree.id)
       }
       if (targetsClients) {
-        this.notifyClientsActivateWorktree(
-          repo.id,
-          worktree.id,
-          undefined,
-          undefined,
-          undefined,
-          navigation
-        )
+        this.notifyClientsActivateWorktree(repo.id, worktree.id, undefined, navigation)
       }
     }
     if (!targetsHost) {
@@ -131,16 +126,25 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
     return { repoId: repo.id, worktreeId: worktree.id, activated: true, sleepingAgentWake }
   }
 
+  /** The agent a create's linked draft starts, chosen as `buildStartupForDraft` chooses it, so a
+   *  launch can name the agent before the create runs. */
+  async resolveStartupDraftAgent(repo: Repo, requestedAgent?: TuiAgent): Promise<TuiAgent | null> {
+    if (!this.store) {
+      return null
+    }
+    return resolveWorktreeStartupDraftAgent({
+      repo,
+      settings: this.store.getSettings(),
+      ...(requestedAgent ? { requestedAgent } : {})
+    })
+  }
+
   protected async buildStartupForDraft(
     repo: Repo,
     draft: string,
     requestedAgent?: TuiAgent,
     launchSource?: string
-  ): Promise<{
-    agent: TuiAgent
-    startup: WorktreeStartupLaunch
-    draftPaste?: WorktreeStartupDraftPaste
-  } | null> {
+  ): ReturnType<typeof buildWorktreeStartupForDraft> {
     if (!this.store) {
       return null
     }
@@ -150,7 +154,7 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
       ...(requestedAgent ? { requestedAgent } : {}),
       ...(launchSource ? { launchSource } : {}),
       settings: this.store.getSettings(),
-      getLaunchPlatform: () => this.getAgentLaunchPlatformForRepo(repo)
+      getLaunchRuntime: (agent) => this.resolveStartupAgentLaunchRuntime(repo, agent)
     })
   }
 
@@ -161,10 +165,13 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
     launchPreferences?: AgentLaunchPreferences,
     launchInputs?: {
       agentArgs?: string | null
+      extraAgentArgs?: string
       launchSource?: string
       onPromptCarry?: (carried: boolean) => void
+      /** The existing workspace it starts in; absent is a new workspace of `repo`. */
+      launchScope?: TerminalWorkspaceLaunchScope
     }
-  ): { agent: TuiAgent; startup: WorktreeStartupLaunch; followup?: WorktreeStartupFollowup } {
+  ): ReturnType<typeof buildWorktreeStartupForAgent> {
     if (!this.store) {
       throw new Error('runtime_unavailable')
     }
@@ -174,10 +181,12 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
       ...(prompt !== undefined ? { prompt } : {}),
       ...(launchPreferences ? { launchPreferences } : {}),
       ...(launchInputs?.agentArgs !== undefined ? { agentArgs: launchInputs.agentArgs } : {}),
+      ...(launchInputs?.extraAgentArgs ? { extraAgentArgs: launchInputs.extraAgentArgs } : {}),
       ...(launchInputs?.launchSource ? { launchSource: launchInputs.launchSource } : {}),
       ...(launchInputs?.onPromptCarry ? { onPromptCarry: launchInputs.onPromptCarry } : {}),
       settings: this.store.getSettings(),
-      getLaunchPlatform: () => this.getAgentLaunchPlatformForRepo(repo),
+      getLaunchRuntime: (agent) =>
+        this.resolveStartupAgentLaunchRuntime(repo, agent, launchInputs?.launchScope),
       toSessionOptions: (preferences) => this.toAgentSessionOptions(preferences)
     })
   }
@@ -290,7 +299,12 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
     sendWorktreeStartupFollowupWhenReady(this.getWorktreeStartupReadinessHost(), handle, followup)
   }
 
-  protected async provisionManagedWorktreeTerminals(
+  /** The same follow-up write, awaited: true once the prompt was typed into the agent. */
+  deliverStartupFollowup(handle: string, followup: WorktreeStartupFollowup): Promise<boolean> {
+    return deliverWorktreeStartupFollowup(this.getWorktreeStartupReadinessHost(), handle, followup)
+  }
+
+  async provisionManagedWorktreeTerminals(
     args: {
       worktreeSelector: string
       worktreeId: string
@@ -299,6 +313,7 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
       defaultTabs?: CreateWorktreeResult['defaultTabs']
       primaryTerminalHandle?: string | null
       hasStartupTerminal: boolean
+      setupOnly?: boolean
       setupCommandPlatform: 'windows' | 'posix'
       observeSetupCompletion?: boolean
       // Why: when the agent startup is sequenced to wait for setup

@@ -9,7 +9,7 @@ import type { ServeReadiness } from '../server/serve-readiness'
 import { readOrcadActivationRecord } from './orcad-activation-record-store'
 import { orcadSlotDir, type OrcadSlotOptions } from './orcad-recovery-slot'
 import { gcOldOrcadVersions } from './orcad-remote-gc'
-import { relayRuntimeStorePins } from './ssh-relay-runtime-ladder'
+import { nodeRuntimeStorePins } from './pinned-runtime-host-target'
 
 /** The daemon's build when the readiness proves it; undefined when it cannot say. */
 export function provenLiveDaemonVersion(readiness: ServeReadiness): string | null | undefined {
@@ -40,8 +40,8 @@ export async function pruneManagedOrcadVersions(args: {
       currentDirAbsPath: orcadSlotDir(args.slot, args.activeVersion),
       record: await readOrcadActivationRecord(args.slot),
       liveDaemonVersion,
-      // Why the relay's pins: a compat orcad and a rung A relay share one runtime store.
-      nodeRuntimePins: relayRuntimeStorePins(args.serverTarget),
+      // Why both pins: a default and a compat orcad on one host share one runtime store.
+      nodeRuntimePins: nodeRuntimeStorePins(args.serverTarget),
       signal: args.slot.signal
     })
   } catch (error) {

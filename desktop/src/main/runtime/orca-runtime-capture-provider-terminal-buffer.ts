@@ -1,6 +1,6 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { OrcaRuntimeWithSerializeTerminalBufferFromAvailableState } from './orca-runtime-serialize-terminal-buffer-from-available-state'
-import type { PtyProviderBufferSnapshot } from '../providers/types'
+import type { PtyProviderBufferSnapshot } from '../providers/pty-provider-contract'
 import { TerminalKittyKeyboardModeTracker } from '../../shared/terminal-kitty-keyboard-mode-tracker'
 import type { RuntimeTerminalRead } from '../../shared/runtime-types'
 import type { RuntimeProviderSnapshotReadOptions } from './runtime-terminal-contracts'
@@ -111,7 +111,8 @@ export class OrcaRuntimeWithCaptureProviderTerminalBuffer extends OrcaRuntimeWit
           read,
           providerProjection.lines,
           opts.limit,
-          providerProjection.draft
+          providerProjection.draft,
+          providerProjection.tailRows
         )
       }
     }
@@ -143,7 +144,13 @@ export class OrcaRuntimeWithCaptureProviderTerminalBuffer extends OrcaRuntimeWit
     if (projection.lines.length === 0) {
       return read
     }
-    return buildVisibleSnapshotReadFallback(read, projection.lines, opts.limit, projection.draft)
+    return buildVisibleSnapshotReadFallback(
+      read,
+      projection.lines,
+      opts.limit,
+      projection.draft,
+      projection.tailRows
+    )
   }
 
   protected async readProviderTerminalTailLines(

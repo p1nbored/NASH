@@ -1,4 +1,3 @@
-import { recordManagedHookInstallFailure } from '../agent-hooks/install-telemetry'
 import { app, nativeTheme } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
@@ -17,12 +16,8 @@ import { handleGpuChildCrash } from './gpu-lifecycle'
 import { isGpuFallbackCrashCandidate } from '../crash-reporting/gpu-crash-fallback-decision'
 import { startCodexHooks } from '../codex/codex-hook-reconcile'
 import { hydrateAgentCliShellPath } from '../agent-hooks/local-agent-cli-presence'
-import {
-  installManagedAgentHooks,
-  isAgentStatusHooksEnabledForAgent,
-  resolveStartupManagedHookAction,
-  shouldContinueManagedHookStartup
-} from '../agent-hooks/managed-agent-hook-controls'
+import { isAgentStatusHooksEnabledForAgent } from '../agent-hooks/managed-agent-hook-controls'
+import { reconcileStartupManagedAgentHooks } from '../agent-hooks/managed-agent-hook-startup'
 import { shouldInstallManagedHooks } from './configure-process'
 import { mainProcessState as state } from './main-process-state'
 import { initializeMainProcessObservers } from './main-process-observers'
@@ -131,24 +126,13 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
       return state.codexRuntimeHome.resolveHostCodexHomePathForLaunchReadOnly()
     }
   })
-  const startupManagedHookSettings = store.getSettings()
-  const shouldReconcileStartupManagedHooks =
-    shouldInstallManagedHooks(is.dev) &&
-    resolveStartupManagedHookAction(startupManagedHookSettings) === 'install'
-  // Why skip rather than remove when the off switch is set: the hook files are user-global but this
-  // decision reads only THIS profile's settings, so removing here deletes the hooks every other Orca
-  // instance depends on (STA-5679). Skipping already keeps removed hooks from reappearing on launch.
   let managedHookInstall: Promise<unknown> = Promise.resolve()
-  if (shouldReconcileStartupManagedHooks) {
-    const managedHookStore = store
-    managedHookInstall = installManagedAgentHooks(managedHookStore.getSettings(), {
-      shouldHydrateShellPath: app.isPackaged,
-      onInstallError: recordManagedHookInstallFailure,
-      shouldContinue: (agent) =>
-        shouldContinueManagedHookStartup(state.isQuitting, managedHookStore.getSettings(), agent)
-    }).catch((error: unknown) =>
-      console.warn('[agent-hooks] failed to reconcile managed hooks on startup:', error)
-    )
+  if (shouldInstallManagedHooks(is.dev)) {
+    managedHookInstall = reconcileStartupManagedAgentHooks({
+      getSettings: () => store.getSettings(),
+      isQuitting: () => state.isQuitting,
+      shouldHydrateShellPath: app.isPackaged
+    })
   }
   if (shouldInstallManagedHooks(is.dev)) {
     void Promise.all([pathReady, managedHookInstall])

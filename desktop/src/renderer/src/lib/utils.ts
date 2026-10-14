@@ -7,7 +7,18 @@ import { extendTailwindMerge } from 'tailwind-merge'
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      text: ['caption', 'meta', 'body', 'body-lg', 'heading', 'title', 'display'],
+      text: [
+        'caption',
+        'meta',
+        'body',
+        'body-lg',
+        'heading',
+        'title',
+        'display',
+        '2xs',
+        '3xs',
+        'chat-code'
+      ],
       spacing: ['row', 'group', 'section']
     }
   }

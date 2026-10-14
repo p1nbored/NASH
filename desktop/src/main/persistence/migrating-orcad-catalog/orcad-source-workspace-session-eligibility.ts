@@ -9,7 +9,10 @@ import {
   unqualifyOrcadMigrationOwnerKey,
   type OrcadMigrationSourceScope
 } from './orcad-source-scope'
-import { paneBelongsToTerminalLayout } from '../../../shared/workspace-session-pane-ownership'
+import {
+  paneBelongsToTabs,
+  paneBelongsToTerminalLayout
+} from '../../../shared/workspace-session-pane-ownership'
 import { collectSessionOwnerKeys } from './orcad-source-workspace-session-fragments'
 
 export function countUnrepresentableMarkdownState(
@@ -34,7 +37,9 @@ export function countUnsupportedSessionState(
   session: WorkspaceSessionState,
   scope: OrcadMigrationSourceScope,
   sourceHostPartition: boolean,
-  terminalTabIds: ReadonlySet<string>
+  terminalTabIds: ReadonlySet<string>,
+  /** Every partition's source terminal tabs: a record is orphaned only when none lists its tab. */
+  sourceTerminalTabIds: ReadonlySet<string>
 ): number {
   const owns = (ownerKey: string): boolean => orcadMigrationOwnerMatchesScope(ownerKey, scope)
   const matches = (ownerKey: string): boolean =>
@@ -47,7 +52,9 @@ export function countUnsupportedSessionState(
   count += Object.values(session.sleepingAgentSessionsByPaneKey ?? {}).filter((record) => {
     const touchesSource = matches(record.worktreeId) || record.connectionId === scope.targetId
     return (
-      touchesSource && !transferableSleepingAgentSession(record, session, scope, terminalTabIds)
+      touchesSource &&
+      !transferableSleepingAgentSession(record, session, scope, terminalTabIds) &&
+      !retainedOrphanedSleepingAgentSession(record, scope, sourceTerminalTabIds)
     )
   }).length
   count += Object.entries(session.clientHostedBrowserPagesByWorktree ?? {})
@@ -158,11 +165,36 @@ export function transferableSleepingAgentSession(
   terminalTabIds: ReadonlySet<string>
 ): boolean {
   return (
+    sleepingAgentSessionMayLeave(record, scope) &&
+    ((record.origin ?? 'worktree-sleep') === 'worktree-sleep' ||
+      paneBelongsToTerminalLayout(record, session, terminalTabIds))
+  )
+}
+
+/** Closed panes keep their resume evidence on the source; migrating must not resurrect their tabs. */
+function retainedOrphanedSleepingAgentSession(
+  record: SleepingAgentSessionRecord,
+  scope: OrcadMigrationSourceScope,
+  sourceTerminalTabIds: ReadonlySet<string>
+): boolean {
+  const ownTab = record.tabId ?? record.paneKey.slice(0, record.paneKey.lastIndexOf(':'))
+  return (
+    sleepingAgentSessionMayLeave(record, scope) &&
+    (record.origin === 'quit' || record.origin === 'live') &&
+    // A tab any partition still lists is open, so its record is not an orphan.
+    paneBelongsToTabs(record.paneKey, new Set([ownTab])) &&
+    !paneBelongsToTabs(record.paneKey, sourceTerminalTabIds)
+  )
+}
+
+function sleepingAgentSessionMayLeave(
+  record: SleepingAgentSessionRecord,
+  scope: OrcadMigrationSourceScope
+): boolean {
+  return (
     orcadMigrationOwnerMatchesScope(record.worktreeId, scope) &&
     (record.connectionId == null || record.connectionId === scope.targetId) &&
     // Older profiles can still contain a worker-resume fence; never discard its authority.
-    (!('automaticResumeBlockedBy' in record) || record.automaticResumeBlockedBy === undefined) &&
-    ((record.origin ?? 'worktree-sleep') === 'worktree-sleep' ||
-      paneBelongsToTerminalLayout(record, session, terminalTabIds))
+    (!('automaticResumeBlockedBy' in record) || record.automaticResumeBlockedBy === undefined)
   )
 }

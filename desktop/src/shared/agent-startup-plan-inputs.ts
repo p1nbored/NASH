@@ -2,8 +2,10 @@ import type { GlobalSettings } from './global-settings-types'
 import type { SessionOptionValue } from './native-chat-session-options'
 import type { TuiAgent } from './tui-agent'
 import { resolveTuiAgentLaunchArgs, resolveTuiAgentLaunchEnv } from './tui-agent-launch-defaults'
-import type { AgentStartupShell } from './tui-agent-startup-shell'
+import { resolveStartupShell, type AgentStartupShell } from './tui-agent-startup-shell'
+import { hasExtraAgentArgs, mergeExtraAgentArgs } from './automation-extra-agent-args'
 import { resolveLocalWindowsAgentStartupShell } from './windows-terminal-shell'
+import { taskAgentLaunchArgs } from './task-agent-launch-permissions'
 
 /** The settings slice a launch reads; hosts pass their whole `GlobalSettings` row. */
 export type AgentStartupSettings = Partial<
@@ -43,41 +45,52 @@ export function resolveAgentStartupPlanInputs(args: {
   isRemote: boolean
   /** Replaces the configured default args for this launch; `null` is "no arguments". */
   agentArgs?: string | null
-  /** A requested shell is the one this PTY will be, so it owns the quoting family. */
-  windowsShellOverride?: string | null
+  /** An automation's saved extras, merged over the resolved args; invalid extras throw. */
+  extraAgentArgs?: string
+  /** The shell family this PTY will be; `undefined` reads it from the Settings shell, which is
+   *  right only where the Settings shell is the one the PTY gets. */
+  shell: AgentStartupShell | undefined
   sessionOptions?: Record<string, SessionOptionValue> | undefined
 }): AgentStartupPlanInputs {
   const { agent, settings, platform, isRemote, sessionOptions } = args
   const taskAccess = sessionOptions?.taskAccess
   const taskArgs =
     taskAccess === 'read_only' || taskAccess === 'workspace_write'
-      ? agent === 'codex'
-        ? `--sandbox ${taskAccess === 'read_only' ? 'read-only' : 'workspace-write'} --ask-for-approval on-request`
-        : agent === 'antigravity'
-          ? taskAccess === 'read_only'
-            ? '--sandbox'
-            : ''
-          : agent === 'claude'
-            ? `--permission-mode ${taskAccess === 'read_only' ? 'plan' : 'acceptEdits'}`
-            : undefined
+      ? taskAgentLaunchArgs(agent, taskAccess, platform)
       : undefined
+  // A per-launch override wins over the Settings default; `null` is "no arguments", so this
+  // tests for absence rather than falsiness.
+  let agentArgs =
+    taskArgs ??
+    (args.agentArgs !== undefined
+      ? args.agentArgs
+      : resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs))
+  const shell =
+    args.shell ??
+    resolveLocalWindowsAgentStartupShell({
+      platform,
+      isRemote,
+      terminalWindowsShell: settings.terminalWindowsShell
+    })
+  if (hasExtraAgentArgs(args.extraAgentArgs)) {
+    const merged = mergeExtraAgentArgs({
+      agent,
+      defaultArgs: agentArgs,
+      extraAgentArgs: args.extraAgentArgs,
+      shell: resolveStartupShell(platform, shell)
+    })
+    if (!merged.ok) {
+      throw new Error(merged.error)
+    }
+    agentArgs = merged.agentArgs
+  }
   return {
     agent,
     cmdOverrides: settings.agentCmdOverrides ?? {},
-    // A per-launch override wins over the Settings default; `null` is "no arguments", so this
-    // tests for absence rather than falsiness.
-    agentArgs:
-      taskArgs ??
-      (args.agentArgs !== undefined
-        ? args.agentArgs
-        : resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs)),
+    agentArgs,
     agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
     platform,
-    shell: resolveLocalWindowsAgentStartupShell({
-      platform,
-      isRemote,
-      terminalWindowsShell: args.windowsShellOverride ?? settings.terminalWindowsShell
-    }),
+    shell,
     isRemote,
     ...(sessionOptions ? { sessionOptions } : {}),
     // Why: session options are an explicit per-launch pick, so they outrank configured args —

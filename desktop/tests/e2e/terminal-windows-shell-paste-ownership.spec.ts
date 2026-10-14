@@ -140,9 +140,13 @@ async function configureActiveProjectWslRuntime(page: Page): Promise<string | nu
 
     // Why: WSL is selected through project/runtime preferences now; the global
     // Windows default shell setting only represents host shells.
-    await state.updateProject(activeProject.id, {
-      localWindowsRuntimePreference: { kind: 'wsl', distro: wslDistro }
-    })
+    await state.updateProject(
+      activeProject.id,
+      {
+        localWindowsRuntimePreference: { kind: 'wsl', distro: wslDistro }
+      },
+      'local'
+    )
     return wslDistro
   })
 }

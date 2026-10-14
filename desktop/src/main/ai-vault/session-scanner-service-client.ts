@@ -11,18 +11,22 @@ import {
   attachAiVaultServiceChild,
   cancelAiVaultServiceCall,
   clearAiVaultServiceCall,
+  createAiVaultServicePendingCall,
   createAiVaultServiceReadyWaiter,
   rejectAiVaultServiceCall,
   requeueOrRejectAiVaultServiceStart,
   retireAiVaultServiceChild,
-  sendAiVaultServiceCall,
+  stopAiVaultServiceChild,
   type AiVaultServiceClientOptions,
   type AiVaultServicePendingCall,
   type AiVaultServiceReadyWaiter
 } from './session-scanner-service-client-state'
+import {
+  noteAiVaultServiceScanProgress,
+  sendAiVaultServiceCall
+} from './session-scanner-service-request-deadline'
 import { AiVaultServiceRestartPolicy } from './session-scanner-service-restart-policy'
 import {
-  aiVaultServiceLane,
   isAiVaultServiceChildMessage,
   type AiVaultSessionSearchInit,
   type AiVaultServiceRequest,
@@ -56,22 +60,14 @@ export class AiVaultScannerServiceClient {
     }
     const request = { ...body, id: this.nextId++ } as AiVaultServiceRequest
     return new Promise<T>((resolve, reject) => {
-      const call: AiVaultServicePendingCall = {
+      const call = createAiVaultServicePendingCall(
         request,
-        lane: aiVaultServiceLane(request.operation),
         signal,
-        resolve: resolve as (value: unknown) => void,
+        // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: callers choose T as the result value of the operation they send, which is what the child answers with.
+        resolve as (value: unknown) => void,
         reject,
-        timer: null,
-        onAbort: null,
-        cancelled: false,
-        sent: false,
-        startRetried: false
-      }
-      if (signal) {
-        call.onAbort = () => this.cancel(call)
-        signal.addEventListener('abort', call.onAbort, { once: true })
-      }
+        (aborted) => this.cancel(aborted)
+      )
       this.queue.push(call)
       this.idleRetirement.clear()
       this.pump()
@@ -145,7 +141,7 @@ export class AiVaultScannerServiceClient {
             child,
             call,
             () => this.active.get(call.lane) === call,
-            (error) => this.onFault(error)
+            this.onDeadline
           ),
         (error: Error) => {
           if (this.active.get(lane) !== call) {
@@ -254,6 +250,10 @@ export class AiVaultScannerServiceClient {
     if (!call) {
       return
     }
+    if (message.type === 'progress') {
+      noteAiVaultServiceScanProgress(call, message.units, this.onDeadline)
+      return
+    }
     this.active.delete(call.lane)
     clearAiVaultServiceCall(call)
     if (!call.cancelled) {
@@ -276,14 +276,15 @@ export class AiVaultScannerServiceClient {
     })
   }
 
-  private onFault(error: Error): void {
+  private readonly onDeadline = (error: Error): void => this.onFault(error, true)
+
+  private onFault(error: Error, retire = false): void {
     const child = this.child
     if (!child) {
       return
     }
     this.child = null
-    child.removeAllListeners()
-    child.kill()
+    stopAiVaultServiceChild(child, retire)
     if (this.readyWaiter) {
       clearTimeout(this.readyWaiter.timer)
       this.readyWaiter.reject(error)

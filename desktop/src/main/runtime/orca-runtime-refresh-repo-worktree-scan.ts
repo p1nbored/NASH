@@ -14,11 +14,29 @@ import { readRepoWorktreeAdminFingerprint } from './repo-worktree-admin-fingerpr
 import type { RuntimeWorktreeScanResult } from './repo-worktree-resolution-scan'
 import { scanLocalRepoWorktreesForResolution } from './repo-worktree-resolution-scan'
 import { dropRepeatedWorktreeRows } from './repeated-worktree-rows'
-import { getSshGitProvider } from '../providers/ssh-git-dispatch'
 import type { GitWorktreeInfo } from '../../shared/worktree/types'
 import { listStoredWorktreeRowsForRepo } from './repo-worktree-row-resolution'
 import type { ResolvedWorktree } from './runtime-worktree-path-identity'
 import { getRepoExecutionHostId, getRepoSshConnectionId } from '../../shared/execution-host'
+
+const lastFingerprintUnknownWarnAt = new Map<string, number>()
+
+// Why once per reconcile window: a wedged mount answers "unknown" on every poll.
+function warnFingerprintUnknownOnce(repoId: string, reason: string): void {
+  const now = Date.now()
+  const last = lastFingerprintUnknownWarnAt.get(repoId)
+  if (last !== undefined && now - last < WORKTREE_SCAN_ADMIN_RECONCILE_INTERVAL_MS) {
+    return
+  }
+  lastFingerprintUnknownWarnAt.set(repoId, now)
+  console.warn(
+    '[worktree-scan] admin fingerprint unknown; reusing cached rows until the reconcile ceiling',
+    {
+      repoId,
+      reason
+    }
+  )
+}
 
 export class OrcaRuntimeWithRefreshRepoWorktreeScan extends OrcaRuntimeWithListKnownResolvedWorktreesForExplicitTarget {
   /**
@@ -48,28 +66,61 @@ export class OrcaRuntimeWithRefreshRepoWorktreeScan extends OrcaRuntimeWithListK
       scannedAt - cached.scannedAt < WORKTREE_SCAN_ADMIN_RECONCILE_INTERVAL_MS
         ? cached
         : null
-    if (probe && reusable) {
+    // Why reuse on "cannot tell": a probe that is still pending or timed out says nothing about
+    // the repo, and turning that into a full scan is the feedback loop of #19312 (slow mount →
+    // timeouts → scans → more load). The original `scannedAt` is kept, so the reconcile ceiling
+    // still forces a real scan on schedule.
+    const reuseCached = (): RuntimeWorktreeScanRefresh | null =>
+      reusable
+        ? {
+            result: reusable.result,
+            adminFingerprint: reusable.adminFingerprint,
+            adminFingerprintProbe: null,
+            scannedAt: reusable.scannedAt
+          }
+        : null
+    if (probe === 'in-flight') {
+      const reused = reuseCached()
+      if (reused) {
+        warnFingerprintUnknownOnce(repo.id, 'previous probe still pending')
+        return reused
+      }
+    } else if (probe && reusable) {
       // Why await only here: this is the one branch whose decision needs the probe. A scan-bound
       // caller must never wait on it, or every cold read pays filesystem latency it cannot use.
       const probed = await withTimeoutResult(probe, WORKTREE_SCAN_ADMIN_FINGERPRINT_TIMEOUT_MS)
       if (!probed.ok) {
-        // Why log: expiry and "fingerprint unavailable" both surface as `null`, so a wedged mount is
-        // otherwise indistinguishable from a repo that simply cannot be fingerprinted.
-        console.warn('[worktree-scan] admin fingerprint probe expired; running a full scan', {
-          repoId: repo.id,
-          timeoutMs: WORKTREE_SCAN_ADMIN_FINGERPRINT_TIMEOUT_MS
-        })
+        warnFingerprintUnknownOnce(repo.id, 'probe expired')
+        return (
+          reuseCached() ??
+          (await this.scanRepoWorktreesForRefresh(repo, projectRuntime, null, scannedAt))
+        )
       }
-      const current = probed.ok ? probed.value : null
-      if (current !== null && current === reusable.adminFingerprint) {
+      // A known fingerprint that matches proves nothing changed; null means the repo cannot be
+      // fingerprinted, which (like a mismatch) needs a real scan.
+      if (probed.value !== null && probed.value === reusable.adminFingerprint) {
         return {
           result: reusable.result,
-          adminFingerprint: current,
+          adminFingerprint: probed.value,
           adminFingerprintProbe: null,
           scannedAt: reusable.scannedAt
         }
       }
     }
+    return await this.scanRepoWorktreesForRefresh(
+      repo,
+      projectRuntime,
+      probe === 'in-flight' ? null : probe,
+      scannedAt
+    )
+  }
+
+  private async scanRepoWorktreesForRefresh(
+    repo: Repo,
+    projectRuntime: ProjectExecutionRuntimeResolution | undefined,
+    probe: Promise<string | null> | null,
+    scannedAt: number
+  ): Promise<RuntimeWorktreeScanRefresh> {
     const result = dropRepeatedWorktreeRows(
       await this.listRepoWorktreesForResolutionUncached(repo, projectRuntime)
     )
@@ -81,9 +132,11 @@ export class OrcaRuntimeWithRefreshRepoWorktreeScan extends OrcaRuntimeWithListK
    * Why the gate: `withTimeout` abandons a probe without cancelling it, and readdir/stat take no
    * AbortSignal — on a wedged mount a fresh probe per refresh would pin every libuv fs thread.
    */
-  protected startRepoWorktreeAdminFingerprintProbe(repo: Repo): Promise<string | null> | null {
+  protected startRepoWorktreeAdminFingerprintProbe(
+    repo: Repo
+  ): Promise<string | null> | 'in-flight' {
     if (this.worktreeAdminFingerprintProbes.has(repo.id)) {
-      return null
+      return 'in-flight'
     }
     this.worktreeAdminFingerprintProbes.add(repo.id)
     return readRepoWorktreeAdminFingerprint(repo.path)
@@ -107,14 +160,10 @@ export class OrcaRuntimeWithRefreshRepoWorktreeScan extends OrcaRuntimeWithListK
         getLocalProjectWorktreeGitOptionsForRuntime(repo, projectRuntime)
       )
     }
-    const provider = getSshGitProvider(sshConnectionId)
-    if (!provider) {
-      return { ok: false, worktrees: this.listStoredWorktreesForResolution(repo) }
-    }
-    try {
-      return { ok: true, worktrees: await provider.listWorktrees(repo.path) }
-    } catch {
-      return { ok: false, worktrees: this.listStoredWorktreesForResolution(repo) }
+    // Why: this process serves no SSH git, so an SSH repo answers from its stored rows.
+    return {
+      ok: false,
+      worktrees: this.listStoredWorktreesForResolution(repo)
     }
   }
 

@@ -5,6 +5,7 @@ import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'nod
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { resolveBuildSourceCommit } from './build-source-commit.mjs'
 
 // Why: the published bin key is the NASH command name from the shared identity (D-017).
 const { cliCommandName } = createRequire(import.meta.url)(
@@ -12,9 +13,9 @@ const { cliCommandName } = createRequire(import.meta.url)(
 )
 
 // Electron packaging restamps the channel-specific version after compilation.
-function buildOutPackageJson(version) {
+function buildOutPackageJson(version, commit) {
   return `${JSON.stringify(
-    { name: 'orca-compiled-output', type: 'commonjs', private: true, version },
+    { name: 'orca-compiled-output', type: 'commonjs', private: true, version, commit },
     null,
     2
   )}\n`
@@ -28,6 +29,7 @@ export function verifyPackageCliBin({
   projectDir = path.resolve(import.meta.dirname, '..', '..'),
   fixExecutable = false,
   fixPackageJson = false,
+  sourceCommit,
   runHelp = false
 } = {}) {
   const packageJsonPath = path.join(projectDir, 'package.json')
@@ -54,7 +56,11 @@ export function verifyPackageCliBin({
   const outPackageJsonPath = path.join(projectDir, 'out', 'package.json')
   if (fixPackageJson) {
     mkdirSync(path.dirname(outPackageJsonPath), { recursive: true })
-    writeFileSync(outPackageJsonPath, buildOutPackageJson(packageJson.version), 'utf8')
+    writeFileSync(
+      outPackageJsonPath,
+      buildOutPackageJson(packageJson.version, sourceCommit),
+      'utf8'
+    )
   }
   let outPackageJson
   try {
@@ -99,6 +105,7 @@ function main() {
   const result = verifyPackageCliBin({
     fixExecutable: args.has('--fix-executable'),
     fixPackageJson: args.has('--fix-package-json'),
+    sourceCommit: args.has('--fix-package-json') ? resolveBuildSourceCommit() : undefined,
     runHelp: args.has('--run-help')
   })
   console.log(

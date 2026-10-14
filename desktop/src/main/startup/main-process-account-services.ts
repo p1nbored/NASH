@@ -13,6 +13,7 @@ import { getOrcaManagedCodexHomePath } from '../codex/codex-home-paths'
 import { getInitialCodexRateLimitTarget } from '../rate-limits/codex-rate-limit-target'
 import { getInitialClaudeRateLimitTarget } from '../rate-limits/claude-rate-limit-target'
 import { getKimiRuntimeTarget, resolveKimiHome } from '../kimi/kimi-runtime-home'
+import { isWslDistroRunningForBackgroundWork } from '../wsl-background-distro-gate'
 import { readMiniMaxSessionCookie } from '../minimax/minimax-cookie-store'
 import { readMiniMaxApiKey } from '../minimax/minimax-api-key-store'
 import { readZcodePlanApiKey } from '../zcode/zcode-plan-api-key-store'
@@ -27,7 +28,22 @@ import { normalizeClaudeRuntimeSelection } from '../claude-accounts/runtime-sele
 import { agentHookServer } from '../agent-hooks/server'
 import { resolveHostCodexSessionSourceHome } from '../codex/codex-session-source-home'
 import { browserManager } from '../browser/browser-manager'
+import { prewarmStructuredAgentModelCatalogs } from '../runtime/structured-agent-model-catalog-wiring'
+import { agentModelCatalogStore } from '../native-chat/agent-model-catalog/agent-model-catalog-store'
+import { createAgentModelCatalogSettingsExpiry } from '../native-chat/agent-model-catalog/agent-model-catalog-account-expiry'
 import { mainProcessState as state } from './main-process-state'
+
+// Settings that change which account or binary a new chat's agent runs under.
+const MODEL_CATALOG_ACCOUNT_SETTINGS = [
+  'activeCodexManagedAccountId',
+  'activeCodexManagedAccountIdsByRuntime',
+  'codexManagedAccounts',
+  'activeClaudeManagedAccountId',
+  'activeClaudeManagedAccountIdsByRuntime',
+  'claudeManagedAccounts',
+  'agentDefaultEnv',
+  'agentCmdOverrides'
+] as const
 
 export function initializeMainProcessAccountServices(): void {
   const store = state.store
@@ -63,8 +79,12 @@ export function initializeMainProcessAccountServices(): void {
   state.codexSessionMigration.scheduleInitialRun()
   state.claudeRuntimeAuth = new ClaudeRuntimeAuthService(store)
   state.claudeAccounts = new ClaudeAccountService(store, state.rateLimits, state.claudeRuntimeAuth)
-  state.rateLimits.setCodexHomePathResolver((target) =>
-    state.codexRuntimeHome!.prepareForRateLimitFetch(target)
+  // Why: quota polls are background work and must not boot a stopped distro; user-driven
+  // resets call prepareForRateLimitFetch directly.
+  state.rateLimits.setCodexHomePathResolver(async (target) =>
+    target?.runtime === 'wsl' && !(await isWslDistroRunningForBackgroundWork(target.wslDistro))
+      ? { kind: 'skip' }
+      : state.codexRuntimeHome!.prepareForRateLimitFetch(target)
   )
   state.rateLimits.setCodexFetchTarget(getInitialCodexRateLimitTarget(store.getSettings()))
   // Why: Kimi's CLI refreshes its OAuth token in whichever runtime it runs in, so the
@@ -77,11 +97,20 @@ export function initializeMainProcessAccountServices(): void {
     state.rateLimits,
     store.getSettings()
   )
+  const expireModelCatalogs = createAgentModelCatalogSettingsExpiry(
+    agentModelCatalogStore,
+    store.getSettings()
+  )
   store.onSettingsChanged((updates, settings) => {
+    expireModelCatalogs(updates, settings)
     // Why: auto is a live policy; retarget only providers whose settings-derived runtime changed.
     void syncAccountRuntimeTargets(updates, settings).catch((error) =>
       console.warn('[rate-limits] Failed to apply account runtime target:', error)
     )
+    // An account switch would otherwise leave the next chat's picker on a cold catalog.
+    if (MODEL_CATALOG_ACCOUNT_SETTINGS.some((key) => key in updates)) {
+      prewarmStructuredAgentModelCatalogs()
+    }
     if ('opencodeSessionCookie' in updates || 'opencodeWorkspaceId' in updates) {
       state.rateLimits?.invalidateOpenCodeGoCredentialState()
       void state.rateLimits?.refresh().catch((error: unknown) => {

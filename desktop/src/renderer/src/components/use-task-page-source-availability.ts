@@ -25,6 +25,7 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
     linearListInvalidationToken,
     providerRuntimeContextKey,
     preflightStatusCurrent,
+    preflightDescribesDesktop,
     selectedRepos,
     selectedLinearWorkspaceId,
     selectedLinearWorkspace,
@@ -58,7 +59,8 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
         provider: taskSource,
         contexts: taskSourceRepoContexts,
         preflightStatus,
-        preflightReady: preflightStatusCurrent && preflightStatusChecked,
+        preflightReady:
+          preflightStatusCurrent && preflightStatusChecked && preflightDescribesDesktop,
         runtimePreflightStatusByHostId
       })
     ]
@@ -67,6 +69,7 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
     preflightStatus,
     preflightStatusChecked,
     preflightStatusCurrent,
+    preflightDescribesDesktop,
     runtimePreflightStatusByHostId,
     taskSource,
     taskSourceRepoContexts

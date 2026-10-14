@@ -39,7 +39,7 @@ export function assertOrcadDataRootIsPrivate(
   hooks: OrcadDataRootPrivacyHooks
 ): void {
   // Windows ACLs are not expressible as a POSIX mode, and `statSync().mode` there reports a
-  // synthesized one, so Windows restricts and verifies the ACL instead (icacls, no PowerShell).
+  // synthesized one, so Windows restricts and verifies the ACL instead, in-process.
   if ((hooks.platform ?? process.platform) === 'win32') {
     const restrict =
       hooks.restrictWindowsDataRoot ?? ((path: string) => restrictWindowsPathSync(path, true))

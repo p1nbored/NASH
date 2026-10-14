@@ -1,6 +1,7 @@
 import type { SshTarget, SshConnectionState } from '../../shared/ssh-types'
 import { SshConnection, type SshConnectionCallbacks } from './ssh-connection'
 import { recordSshConnectionOpened, recordSshConnectionReused } from './ssh-connection-attribution'
+import { createSshCredentialDeclinedError, isSshCredentialDeclined } from './ssh-credential-decline'
 
 export class SshConnectionManager {
   private connections = new Map<string, SshConnection>()
@@ -25,6 +26,12 @@ export class SshConnectionManager {
     if (existing?.getState().status === 'connected') {
       recordSshConnectionReused(existing)
       return existing
+    }
+
+    // Why: background dials (managed tunnel, host status, census) would retry a cancelled sign-in
+    // every few seconds; refuse them as an auth failure, without touching the network.
+    if (isSshCredentialDeclined(target.id)) {
+      throw createSshCredentialDeclinedError(target.label)
     }
 
     if (this.connectingTargets.has(target.id)) {

@@ -48,10 +48,17 @@ let rig: QueuedMessageTestRig
 const MANUAL_IDLE_SWEEP = { idleMs: 0, intervalMs: 60 * 60 * 1000 }
 
 beforeEach(async () => {
+  vi.useFakeTimers()
   rig = await createQueuedMessageTestRig({ restartable: true })
 })
 
-afterEach(() => rig.dispose())
+afterEach(async () => {
+  try {
+    await rig.dispose()
+  } finally {
+    vi.useRealTimers()
+  }
+})
 
 async function queuedDraft(text: string): Promise<string> {
   const queued = await rig.send(text, 'queue-if-active').result
@@ -87,7 +94,7 @@ function derivedPauses(): string[] {
 
 /** Lets the drain run its steps; none may hand a card off. */
 async function expectNothingSent(...draftIds: string[]): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 250))
+  await vi.advanceTimersByTimeAsync(250)
   for (const draftId of draftIds) {
     expect(await rig.handoff(draftId)).toBeUndefined()
   }
@@ -151,10 +158,7 @@ async function watchClient(): Promise<ClientView[]> {
       const hostWorking = isStructuredAgentSessionMainAgentWorking(running, all)
       // As use-structured-agent-session.ts derives it.
       const working = hostWorking || (nextQueuedMessageId !== null && !hostWorking)
-      const cards = projectQueuedMessageCards(queued, all, {
-        hasPendingPrompt: false,
-        queuePaused: queuePause !== null
-      })
+      const cards = projectQueuedMessageCards(queued, all, { queuePaused: queuePause !== null })
       // As use-structured-agent-session-queued-messages.ts derives them.
       const header = queuedMessagesQueuePause(cards, queuePause) !== null
       const queueHeld = header && !working
@@ -538,8 +542,8 @@ describe("the queue's next card on a history page", () => {
 })
 
 describe('where the host would refuse the send', () => {
-  /** An idle source a /clear replaced, still holding a card: a crash before the carry leaves it. */
-  async function cardLeftOnAClearedSource() {
+  /** A new card in the same conversation after /clear inherits no earlier pause. */
+  async function cardAddedAfterClear() {
     await rig.settleAccepted(await rig.workingSend(), 'a')
     const fields = { command: 'clear' as const }
     const cleared = await rig.host.conversationCommand(QUEUED_RIG_CALLER, {
@@ -549,12 +553,12 @@ describe('where the host would refuse the send', () => {
     expect(cleared).toMatchObject({ ok: true })
     const journal = rig.host.collaboratorsForTests().sessions.get(HOST_TEST_SESSION)?.journal
     if (!journal) {
-      throw new Error('expected the source open')
+      throw new Error('expected the conversation open')
     }
     const card = 'left-behind'
     await journal.queuedMessages.insert({
       messageId: card,
-      body: hostTestMessage('left on the source'),
+      body: hostTestMessage('queued after clear'),
       fingerprint: 'fp-left-behind',
       hostInstance: structuredAgentSessionHostInstance()
     })
@@ -565,17 +569,17 @@ describe('where the host would refuse the send', () => {
     return { card, journal, record, fence: record.lease.runtimeFence }
   }
 
-  it('a source a /clear replaced names no next card; the same idle state with no block names it', async () => {
-    const { card, journal, record, fence } = await cardLeftOnAClearedSource()
+  it('a card queued after clear is sendable with the completed clear record still present', async () => {
+    const { card, journal, record, fence } = await cardAddedAfterClear()
     const gate = structuredQueueSendGate(rig.store, HOST_TEST_SESSION)
-    expect(readQueuePublication(journal, gate).nextQueuedMessageId).toBeNull()
+    expect(readQueuePublication(journal, gate).nextQueuedMessageId).toBe(card)
     const { conversationCommand: _cleared, ...unblocked } = record
     const next = readQueuePublication(journal, () => ({ record: unblocked, fence }))
     expect(next.nextQueuedMessageId).toBe(card)
   })
 
   it('a rewind whose outcome is unknown names no next card', async () => {
-    const { journal, record, fence } = await cardLeftOnAClearedSource()
+    const { journal, record, fence } = await cardAddedAfterClear()
     const { conversationCommand: _cleared, ...unblocked } = record
     const rewind = {
       operationId: hostTestOperationId(),

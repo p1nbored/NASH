@@ -21,7 +21,7 @@ vi.mock('@/lib/worktree-activation', () => ({
   activateAndRevealWorktree: activateAndRevealWorktreeMock
 }))
 
-import { getLocalWorkspacePortSections } from './PortsPanel'
+import { getLocalWorkspacePortSections } from './local-workspace-port-sections'
 import {
   getPortOpenBrowserTooltipLabel,
   getPortSystemBrowserHint,

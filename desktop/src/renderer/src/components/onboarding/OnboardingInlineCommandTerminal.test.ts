@@ -1,8 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   getNextTerminalReadyRetryAttempt,
   READY_MAX_ATTEMPTS
 } from './OnboardingInlineCommandTerminal'
+
+vi.mock('@/components/terminal-pane/TerminalPane', () => ({
+  default: () => {
+    throw new Error('This suite must not render a terminal pane')
+  }
+}))
 
 describe('getNextTerminalReadyRetryAttempt', () => {
   it('stops scheduling readiness checks after the capped number of attempts', () => {

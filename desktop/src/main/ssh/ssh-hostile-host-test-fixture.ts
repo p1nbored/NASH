@@ -1,11 +1,10 @@
-/** Starts one hostile-host cell as an SSH target for the relay deploy: a Docker sshd or a loopback one. */
+/** Starts one hostile-host cell as an SSH target for the orcad deploy: a Docker sshd or a loopback one. */
 import { randomUUID } from 'node:crypto'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runProcess } from '../../shared/child-process/run-process'
+import { runProcess } from '@orca/process-host'
 import type { SshTarget } from '../../shared/ssh-types'
-import { shellEscape } from './ssh-connection-utils'
 import {
   FORBIDDEN_TOOL_LOG,
   FORBIDDEN_TOOLS,
@@ -23,7 +22,6 @@ import {
   stopLocalSshdTarget,
   type LocalSshdHostileHostTarget
 } from './ssh-hostile-host-local-sshd'
-import { localHostObserver, type HostileHostObserver } from './ssh-hostile-host-observer'
 
 export type DockerHostileHostTarget = {
   kind: 'docker'
@@ -263,34 +261,6 @@ export async function hostExecStatus(target: HostileHostTarget, command: string)
   return result.code ?? -1
 }
 
-/** Observes the container as root through `docker exec`, never through the SSH session under test. */
-function dockerHostObserver(target: DockerHostileHostTarget): HostileHostObserver {
-  return {
-    readForbiddenToolLog: () =>
-      hostExec(target, `cat ${shellEscape(target.forbiddenToolLog)} 2>/dev/null || true`),
-    plantIdleRuntime: async (storeDir, name, age) => {
-      const dir = `${storeDir}/${name}`
-      const stamp = age === 'old' ? '-t 200001010000 ' : ''
-      await hostExec(
-        target,
-        `mkdir -p ${shellEscape(`${dir}/bin`)} && touch ${stamp}${shellEscape(`${dir}/.verified`)}`
-      )
-    },
-    exists: async (path) => (await hostExecStatus(target, `test -e ${shellEscape(path)}`)) === 0,
-    isFile: async (path) => (await hostExecStatus(target, `test -f ${shellEscape(path)}`)) === 0,
-    fileStamp: (path) => hostExec(target, `stat -c '%i:%Y' ${shellEscape(path)}`),
-    fileSha256: async (path) =>
-      (await hostExec(target, `sha256sum ${shellEscape(path)}`)).split(/\s+/)[0]
-  }
-}
-
-/** A loopback sshd's host is this machine, so its files are read directly. */
-export function hostileHostObserver(target: HostileHostTarget): HostileHostObserver {
-  return target.kind === 'docker'
-    ? dockerHostObserver(target)
-    : localHostObserver(target.forbiddenToolLog)
-}
-
 export function hostileHostSshTarget(target: HostileHostTarget): SshTarget {
   return {
     id: `hostile-${target.cell.id}-${randomUUID()}`,
@@ -300,7 +270,6 @@ export function hostileHostSshTarget(target: HostileHostTarget): SshTarget {
     port: target.port,
     username: target.username,
     identityFile: target.identityFile,
-    identitiesOnly: true,
-    remoteRuntime: 'pinned-node'
+    identitiesOnly: true
   }
 }

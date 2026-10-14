@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { isNativeChatVisualFileName } from '../native-chat-visual-directive'
 import { SessionId } from './structured-agent-session-identifiers'
 
-// `agentSession.readVisual`: one HTML visual from a structured chat's visuals folder, read on the
+// `agentSession.readVisual`: one HTML visual from a structured chat's scratch folder, read on the
 // host that owns the chat. The client names only the session and a bare file name; the host
 // resolves its own folder, so no client path ever reaches another host.
 
